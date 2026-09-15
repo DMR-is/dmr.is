@@ -441,7 +441,7 @@ export class CompanyService implements ICompanyService {
    * mapping table is inferred rather than confirmed against live payloads, so
    * these log lines are how the real RSK vocabulary surfaces — each one names a
    * key to add to `LEGAL_FORM_SECTOR`. Unmapped forms stay UNKNOWN; they are
-   * never guessed as PRIVATE.
+   * never guessed as FYRIRTAEKI.
    */
   private resolveSectorLogged(
     nationalId: string,
@@ -858,13 +858,17 @@ export class CompanyService implements ICompanyService {
   /**
    * Manually set the ownership sector. This is the admin's escape hatch for the
    * companies automatic classification could not place — either RSK was never
-   * consulted for them (the pre-existing backlog) or it returned a legal form
-   * `LEGAL_FORM_SECTOR` does not map.
+   * consulted for them (the pre-existing backlog), it returned a legal form
+   * `LEGAL_FORM_SECTOR` does not map, or the company is a ministry (RADUNEYTI),
+   * which no legal form or ÍSAT code can distinguish from an ordinary
+   * central-government office — RADUNEYTI is therefore never set automatically
+   * and always comes through this endpoint.
    *
    * The override rule, chosen so admins have a natural undo:
-   *   PRIVATE | PUBLIC → `sectorOverride = true`. A deliberate human decision;
-   *       a backfill must leave the row alone from here on.
-   *   UNKNOWN          → `sectorOverride = false`. Reads as "I can't classify
+   *   FYRIRTAEKI | RADUNEYTI | RIKISADILI | SVEITARFELAG → `sectorOverride =
+   *       true`. A deliberate human decision; a backfill must leave the row
+   *       alone from here on.
+   *   UNKNOWN → `sectorOverride = false`. Reads as "I can't classify
    *       this either", so it hands the company back to automatic
    *       classification rather than pinning it as permanently unclassifiable.
    *

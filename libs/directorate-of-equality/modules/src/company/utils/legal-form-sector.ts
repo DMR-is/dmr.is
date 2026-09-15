@@ -22,31 +22,40 @@ import { CompanySectorEnum } from '../models/company.enums'
  */
 export const LEGAL_FORM_SECTOR: Record<string, CompanySectorEnum> = {
   // Private legal forms.
-  hf: CompanySectorEnum.PRIVATE,
-  ehf: CompanySectorEnum.PRIVATE,
-  sf: CompanySectorEnum.PRIVATE,
-  slf: CompanySectorEnum.PRIVATE,
-  slhf: CompanySectorEnum.PRIVATE,
-  einstaklingsfyrirtaeki: CompanySectorEnum.PRIVATE,
-  samvinnufelag: CompanySectorEnum.PRIVATE,
-  sameignarfelag: CompanySectorEnum.PRIVATE,
-  hlutafelag: CompanySectorEnum.PRIVATE,
-  einkahlutafelag: CompanySectorEnum.PRIVATE,
+  hf: CompanySectorEnum.FYRIRTAEKI,
+  ehf: CompanySectorEnum.FYRIRTAEKI,
+  sf: CompanySectorEnum.FYRIRTAEKI,
+  slf: CompanySectorEnum.FYRIRTAEKI,
+  slhf: CompanySectorEnum.FYRIRTAEKI,
+  einstaklingsfyrirtaeki: CompanySectorEnum.FYRIRTAEKI,
+  samvinnufelag: CompanySectorEnum.FYRIRTAEKI,
+  sameignarfelag: CompanySectorEnum.FYRIRTAEKI,
+  hlutafelag: CompanySectorEnum.FYRIRTAEKI,
+  einkahlutafelag: CompanySectorEnum.FYRIRTAEKI,
 
-  // Public legal forms — central government, municipalities, institutions.
+  // Municipalities and inter-municipal bodies.
+  sveitarfelag: CompanySectorEnum.SVEITARFELAG,
+  byggdasamlag: CompanySectorEnum.SVEITARFELAG,
+
+  // Central government other than a ministry — state agencies, state-owned
+  // companies, state institutions.
   //
-  // Note `ohf` (opinbert hlutafélag) belongs here, not above: despite being a
-  // hlutafélag it is the form used for state-owned companies (RÚV ohf., Isavia
-  // ohf.), which is exactly the case a naive "hf/ehf ⇒ private" rule gets wrong.
-  ohf: CompanySectorEnum.PUBLIC,
-  opinberthlutafelag: CompanySectorEnum.PUBLIC,
-  rikissjodur: CompanySectorEnum.PUBLIC,
-  rikisstofnun: CompanySectorEnum.PUBLIC,
-  stofnun: CompanySectorEnum.PUBLIC,
-  sveitarfelag: CompanySectorEnum.PUBLIC,
-  byggdasamlag: CompanySectorEnum.PUBLIC,
-  opinberstofnun: CompanySectorEnum.PUBLIC,
-  opinberthjonusta: CompanySectorEnum.PUBLIC,
+  // Note `ohf` (opinbert hlutafélag) belongs here, not with the private forms
+  // above: despite being a hlutafélag it is the form used for state-owned
+  // companies (RÚV ohf., Isavia ohf.), which is exactly the case a naive
+  // "hf/ehf ⇒ private" rule gets wrong.
+  //
+  // No legal form maps to RADUNEYTI: a ministry's rekstrarform looks exactly
+  // like any other central-government office's, so a ministry cannot be told
+  // apart from a state agency this way. RADUNEYTI is set by hand via
+  // `updateSector` (see `company.service.ts`) — never inferred here.
+  ohf: CompanySectorEnum.RIKISADILI,
+  opinberthlutafelag: CompanySectorEnum.RIKISADILI,
+  rikissjodur: CompanySectorEnum.RIKISADILI,
+  rikisstofnun: CompanySectorEnum.RIKISADILI,
+  stofnun: CompanySectorEnum.RIKISADILI,
+  opinberstofnun: CompanySectorEnum.RIKISADILI,
+  opinberthjonusta: CompanySectorEnum.RIKISADILI,
 }
 
 /**
@@ -102,9 +111,9 @@ export type ResolvedSector = {
  * Derive the ownership sector from an RSK legal form. Tries the form `id` first
  * (the stable machine key), then falls back to `name`.
  *
- * Returns UNKNOWN — never PRIVATE — when there is nothing to map or the form is
- * unrecognized. Guessing PRIVATE here would make "private companies" silently
- * include every company we failed to classify.
+ * Returns UNKNOWN — never FYRIRTAEKI — when there is nothing to map or the
+ * form is unrecognized. Guessing FYRIRTAEKI here would make "private
+ * companies" silently include every company we failed to classify.
  */
 export function resolveSector(legalForm: LegalFormDto | null): ResolvedSector {
   const legalFormId = legalForm?.id?.trim() || null

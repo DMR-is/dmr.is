@@ -55,15 +55,15 @@ How we handle it:
 
 > **Subject to change.** This is an interim design while the feature is in development. The long-term intent is to source classification directly from the RSK API once we have access; until then, the annual admin-uploaded file is the source of truth. The stored format (normalized leaf code) and admin ownership may change when that integration lands.
 
-## Sector (private vs government/state)
+## Sector (Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög)
 
-ÍSAT says what an entity **does**, not who owns it — a state-owned hospital and a private clinic both sit in `86xxx`, so section `O` (public administration) cannot answer "private vs government/state" on its own. `company.sector` is that separate axis, an enum of `UNKNOWN | PRIVATE | PUBLIC` derived from RSK's registered legal form (rekstrarform).
+ÍSAT says what an entity **does**, not who owns it — a state-owned hospital and a private clinic both sit in `86xxx`, so section `O` (public administration) cannot answer who owns the entity on its own. `company.sector` is that separate axis, an enum of `UNKNOWN | FYRIRTAEKI | RADUNEYTI | RIKISADILI | SVEITARFELAG`, primarily derived from RSK's registered legal form (rekstrarform) — see `RADUNEYTI` below for the one value that isn't.
 
 - **The raw legal form is stored too.** `company.legal_form_id` and `legal_form_name` keep RSK's own values alongside the derived `sector`. The id→sector mapping is currently **inferred, not confirmed against live payloads**; keeping the raw id means a corrected mapping can be re-derived with one local `UPDATE` instead of re-sweeping RSK, which matters because the registry has **no bulk endpoint** — only `GET /{nationalId}`, one call per company.
-- **`UNKNOWN` is first-class and never collapsed into `PRIVATE`.** An admin filtering for private companies must not be silently shown companies we merely failed to classify. Unmapped legal-form ids stay `UNKNOWN` and are logged so the real vocabulary surfaces from production traffic.
+- **`RADUNEYTI` (ministry) is never inferred, only set by hand.** A ministry's rekstrarform and ÍSAT code look exactly like any other central-government office's, so no automatic path can tell the two apart. It is set via `PATCH /company/:id/sector`, which sets `sector_override` like any other manual classification.
+- **`UNKNOWN` is first-class and never collapsed into `FYRIRTAEKI`.** An admin filtering for private companies must not be silently shown companies we merely failed to classify. Unmapped legal-form ids stay `UNKNOWN` and are logged so the real vocabulary surfaces from production traffic.
 - **`sector_override` protects manual corrections**, exactly like `salary_report_required_override`: when an admin sets a sector by hand, any backfill must skip that row rather than reset it to `UNKNOWN`.
-- **Not owned by the annual import.** Unlike the other authoritative company fields, the annual `.xlsx` carries no legal form, so the company import must leave `sector`, `sector_override`, and both `legal_form_*` columns untouched — this one column set is RSK- and admin-owned, not file-owned.
-- **`MUNICIPAL`** (municipalities as distinct from central government) is a plausible future value; add it with `ALTER TYPE company_sector_enum ADD VALUE`.
+- **Not owned by the annual import.** Unlike the other authoritative company fields, the annual `.xlsx` carries no legal form, so the company import must leave `sector`, `sector_override`, and both `legal_form_*` columns untouched — this one column set is RSK- and admin-owned, not file-owned. (The separate, one-off production load in `scripts/company-register-to-sql.ts` is the exception: its sheet carries a `Tegund` column and classifies `sector` from it — see that script's `readSector`.)
 
 **How rows actually get classified.** The three creation paths differ, and the difference matters when reading `sector` data:
 
@@ -886,9 +886,9 @@ The six pay children split into two bands, matching Launagögn columns J–O in
 Excel template 2.0. The two parent salary concepts are **derived, not stored** —
 each is the sum of its band, with a `NULL` child treated as `0`:
 
-- **viðbótarlaun** (`additionalSalary`) — *fastar greiðslur aðrar en grunnlaun*
+- **viðbótarlaun** (`additionalSalary`) — _fastar greiðslur aðrar en grunnlaun_
   = `additional_fixed_overtime` + `additional_fixed_car_allowance` + `additional_fixed_other`
-- **aukagreiðslur** (`bonusSalary`) — *tilfallandi greiðslur*
+- **aukagreiðslur** (`bonusSalary`) — _tilfallandi greiðslur_
   = `bonus_occasional_overtime` + `bonus_occasional_car_allowance` + `bonus_other`
 
 `ReportEmployeeModel` exposes both as computed getters and the API returns them
@@ -896,8 +896,7 @@ alongside the raw children. A `NULL` child means "not entered", distinct from an
 entered `0` — only stored children carry that distinction; the derived parents
 never do.
 
-⚠️ **Only viðbótarlaun feeds regluleg laun.** `regluleg laun = base_salary +
-additionalSalary`; aukagreiðslur are reported on their own and excluded from
+⚠️ **Only viðbótarlaun feeds regluleg laun.** `regluleg laun = base_salary + additionalSalary`; aukagreiðslur are reported on their own and excluded from
 every tímakaup figure. `paid_hours` is scoped to match — fixed overtime hours
 included, incidental hours excluded — so numerator and denominator cover the
 same ground. See [`docs/launagreining.md`](../docs/launagreining.md).
@@ -906,7 +905,7 @@ Two columns changed with template 2.0 (migration
 `m-20260908-report-employee-fixed-other`): `additional_fixed_other` was added
 for the reassigned column L, and `bonus_payments` was **merged into
 `bonus_other` and dropped** — `Bónusgreiðslur` no longer exists as a field, and
-bonuses now belong in *Aðrar tilfallandi greiðslur / hlunnindi*. The merge left
+bonuses now belong in _Aðrar tilfallandi greiðslur / hlunnindi_. The merge left
 every historic aukagreiðslur total unchanged (both columns summed into it with
 equal weight); only the per-component split of pre-2.0 rows was lost, and it is
 not recoverable from the migration's `down`.
@@ -980,14 +979,14 @@ Join: which sub-criteria steps apply to a given employee personally.
 
 Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 
-| Column                                | Type                                                                                                                                                                                                                                                                                                                           |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                                  | `uuid` PK                                                                                                                                                                                                                                                                                                                      |
-| `report_id`                           | `fk → report` (unique)                                                                                                                                                                                                                                                                                                         |
-| `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation                                                                                                                                                                                                                                                  |
+| Column                                | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                                  | `uuid` PK                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `report_id`                           | `fk → report` (unique)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `calculation_version`                 | `text` (column default `v1`, but every row written by `ReportResultService` is stamped `v4` explicitly — the default only applies to a hand-written insert. `v4` dropped aukagreiðslur from regluleg laun (template 2.0); the snapshot SHAPE is identical to `v3`, so a v3 row deserialises perfectly and is simply not comparable — anyone with incidental pay reads lower under v4. `v3` had a two-directional lágmarksmengi; `v2` had a lift-only one plus `isCorrectable`/`correctableCount`; `v1` evaluated FTE-adjusted monthly pay. None are comparable with each other) |
-| `salary_snapshot`                     | `jsonb` reglulegt tímakaup aggregate snapshot                                                                                                                                                                                                                                                                                  |
-| `wage_gap_decomposition_snapshot`     | `jsonb` Oaxaca-Blinder decomposition, NOT NULL                                                                                                                                                                                                                                                                                 |
+| `salary_snapshot`                     | `jsonb` reglulegt tímakaup aggregate snapshot                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `wage_gap_decomposition_snapshot`     | `jsonb` Oaxaca-Blinder decomposition, NOT NULL                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 `salary_snapshot` holds:
 

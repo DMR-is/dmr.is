@@ -659,7 +659,7 @@
             "name": "sector",
             "required": false,
             "in": "query",
-            "description": "Return only companies in one of the given ownership sectors — the premade \"private vs government/state\" filter. UNKNOWN is filterable on its own and is never included in PRIVATE.",
+            "description": "Return only companies in one of the given ownership sectors — the premade Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög filter (FYRIRTAEKI, RADUNEYTI, RIKISADILI, SVEITARFELAG). UNKNOWN is filterable on its own and is never included in any of the classified sectors.",
             "schema": {
               "type": "array",
               "items": { "$ref": "#/components/schemas/CompanySectorEnum" }
@@ -5655,7 +5655,13 @@
       },
       "CompanySectorEnum": {
         "type": "string",
-        "enum": ["UNKNOWN", "PRIVATE", "PUBLIC"]
+        "enum": [
+          "UNKNOWN",
+          "FYRIRTAEKI",
+          "RADUNEYTI",
+          "RIKISADILI",
+          "SVEITARFELAG"
+        ]
       },
       "CompanySortByEnum": {
         "type": "string",
@@ -5964,7 +5970,7 @@
         "type": "object",
         "properties": {
           "sector": {
-            "description": "The ownership sector to set. PRIVATE or PUBLIC marks the classification as admin-owned (`sectorOverride = true`), so a backfill will not overwrite it. UNKNOWN clears the override and hands the company back to automatic RSK classification.",
+            "description": "The ownership sector to set. FYRIRTAEKI, RADUNEYTI, RIKISADILI or SVEITARFELAG marks the classification as admin-owned (`sectorOverride = true`), so a backfill will not overwrite it. UNKNOWN clears the override and hands the company back to automatic RSK classification.",
             "allOf": [{ "$ref": "#/components/schemas/CompanySectorEnum" }]
           }
         },
@@ -6410,7 +6416,7 @@
           },
           "sector": {
             "type": "array",
-            "description": "Return only companies in one of the given ownership sectors — the premade \"private vs government/state\" filter. UNKNOWN is filterable on its own and is never included in PRIVATE.",
+            "description": "Return only companies in one of the given ownership sectors — the premade Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög filter (FYRIRTAEKI, RADUNEYTI, RIKISADILI, SVEITARFELAG). UNKNOWN is filterable on its own and is never included in any of the classified sectors.",
             "items": { "$ref": "#/components/schemas/CompanySectorEnum" }
           },
           "regionCode": {

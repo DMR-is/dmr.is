@@ -4,7 +4,7 @@ import { LEGAL_FORM_SECTOR, resolveSector } from './legal-form-sector'
 /**
  * Every key in the table, paired with the Icelandic spelling RSK would
  * realistically send. The table is self-described as inferred, so a wrong key
- * or a wrong PRIVATE/PUBLIC assignment would otherwise misclassify silently —
+ * or a wrong sector assignment would otherwise misclassify silently —
  * and a key that no spelling can normalize to is dead weight that reads as
  * coverage. The `expectedKey` column is what catches the second case: ð/þ/æ
  * have no NFD decomposition, so a normalizer that strips them instead of
@@ -19,77 +19,89 @@ const TABLE: Array<{
   {
     icelandic: 'Hlutafélag',
     expectedKey: 'hlutafelag',
-    sector: CompanySectorEnum.PRIVATE,
+    sector: CompanySectorEnum.FYRIRTAEKI,
   },
-  { icelandic: 'hf.', expectedKey: 'hf', sector: CompanySectorEnum.PRIVATE },
+  { icelandic: 'hf.', expectedKey: 'hf', sector: CompanySectorEnum.FYRIRTAEKI },
   {
     icelandic: 'Einkahlutafélag',
     expectedKey: 'einkahlutafelag',
-    sector: CompanySectorEnum.PRIVATE,
+    sector: CompanySectorEnum.FYRIRTAEKI,
   },
-  { icelandic: 'ehf.', expectedKey: 'ehf', sector: CompanySectorEnum.PRIVATE },
-  { icelandic: 'sf.', expectedKey: 'sf', sector: CompanySectorEnum.PRIVATE },
-  { icelandic: 'slf.', expectedKey: 'slf', sector: CompanySectorEnum.PRIVATE },
+  {
+    icelandic: 'ehf.',
+    expectedKey: 'ehf',
+    sector: CompanySectorEnum.FYRIRTAEKI,
+  },
+  { icelandic: 'sf.', expectedKey: 'sf', sector: CompanySectorEnum.FYRIRTAEKI },
+  {
+    icelandic: 'slf.',
+    expectedKey: 'slf',
+    sector: CompanySectorEnum.FYRIRTAEKI,
+  },
   {
     icelandic: 'slhf.',
     expectedKey: 'slhf',
-    sector: CompanySectorEnum.PRIVATE,
+    sector: CompanySectorEnum.FYRIRTAEKI,
   },
   {
     icelandic: 'Einstaklingsfyrirtæki',
     expectedKey: 'einstaklingsfyrirtaeki',
-    sector: CompanySectorEnum.PRIVATE,
+    sector: CompanySectorEnum.FYRIRTAEKI,
   },
   {
     icelandic: 'Samvinnufélag',
     expectedKey: 'samvinnufelag',
-    sector: CompanySectorEnum.PRIVATE,
+    sector: CompanySectorEnum.FYRIRTAEKI,
   },
   {
     icelandic: 'Sameignarfélag',
     expectedKey: 'sameignarfelag',
-    sector: CompanySectorEnum.PRIVATE,
+    sector: CompanySectorEnum.FYRIRTAEKI,
   },
-  { icelandic: 'ohf.', expectedKey: 'ohf', sector: CompanySectorEnum.PUBLIC },
+  {
+    icelandic: 'ohf.',
+    expectedKey: 'ohf',
+    sector: CompanySectorEnum.RIKISADILI,
+  },
   {
     icelandic: 'Opinbert hlutafélag',
     expectedKey: 'opinberthlutafelag',
-    sector: CompanySectorEnum.PUBLIC,
+    sector: CompanySectorEnum.RIKISADILI,
   },
   {
     icelandic: 'Ríkissjóður',
     expectedKey: 'rikissjodur',
-    sector: CompanySectorEnum.PUBLIC,
+    sector: CompanySectorEnum.RIKISADILI,
   },
   {
     icelandic: 'Ríkisstofnun',
     expectedKey: 'rikisstofnun',
-    sector: CompanySectorEnum.PUBLIC,
+    sector: CompanySectorEnum.RIKISADILI,
   },
   {
     icelandic: 'Stofnun',
     expectedKey: 'stofnun',
-    sector: CompanySectorEnum.PUBLIC,
+    sector: CompanySectorEnum.RIKISADILI,
   },
   {
     icelandic: 'Sveitarfélag',
     expectedKey: 'sveitarfelag',
-    sector: CompanySectorEnum.PUBLIC,
+    sector: CompanySectorEnum.SVEITARFELAG,
   },
   {
     icelandic: 'Byggðasamlag',
     expectedKey: 'byggdasamlag',
-    sector: CompanySectorEnum.PUBLIC,
+    sector: CompanySectorEnum.SVEITARFELAG,
   },
   {
     icelandic: 'Opinber stofnun',
     expectedKey: 'opinberstofnun',
-    sector: CompanySectorEnum.PUBLIC,
+    sector: CompanySectorEnum.RIKISADILI,
   },
   {
     icelandic: 'Opinber þjónusta',
     expectedKey: 'opinberthjonusta',
-    sector: CompanySectorEnum.PUBLIC,
+    sector: CompanySectorEnum.RIKISADILI,
   },
 ]
 
@@ -116,42 +128,42 @@ describe('resolveSector', () => {
   it('maps a private legal form by id', () => {
     const result = resolveSector({ id: 'ehf', name: 'Einkahlutafélag' })
 
-    expect(result.sector).toBe(CompanySectorEnum.PRIVATE)
+    expect(result.sector).toBe(CompanySectorEnum.FYRIRTAEKI)
     expect(result.unmappedKeys).toBeNull()
   })
 
-  it('maps ohf to PUBLIC — a state-owned hlutafélag is not private', () => {
-    expect(resolveSector({ id: 'ohf', name: 'Opinbert hlutafélag' }).sector).toBe(
-      CompanySectorEnum.PUBLIC,
-    )
+  it('maps ohf to RIKISADILI — a state-owned hlutafélag is not private', () => {
+    expect(
+      resolveSector({ id: 'ohf', name: 'Opinbert hlutafélag' }).sector,
+    ).toBe(CompanySectorEnum.RIKISADILI)
   })
 
   it('does not let the hf/ehf prefix rule leak into ohf', () => {
     // Guards against a substring-based mapping: 'ohf' contains 'hf'.
     expect(resolveSector({ id: 'ohf', name: null }).sector).toBe(
-      CompanySectorEnum.PUBLIC,
+      CompanySectorEnum.RIKISADILI,
     )
     expect(resolveSector({ id: 'hf', name: null }).sector).toBe(
-      CompanySectorEnum.PRIVATE,
+      CompanySectorEnum.FYRIRTAEKI,
     )
   })
 
   it('normalizes case, punctuation and accents', () => {
     expect(resolveSector({ id: 'Ehf.', name: null }).sector).toBe(
-      CompanySectorEnum.PRIVATE,
+      CompanySectorEnum.FYRIRTAEKI,
     )
     expect(resolveSector({ id: null, name: 'Ríkisstofnun' }).sector).toBe(
-      CompanySectorEnum.PUBLIC,
+      CompanySectorEnum.RIKISADILI,
     )
     expect(resolveSector({ id: null, name: '  SVEITARFÉLAG  ' }).sector).toBe(
-      CompanySectorEnum.PUBLIC,
+      CompanySectorEnum.SVEITARFELAG,
     )
   })
 
   it('falls back to the form name when the id does not map', () => {
     const result = resolveSector({ id: 'X7', name: 'Sveitarfélag' })
 
-    expect(result.sector).toBe(CompanySectorEnum.PUBLIC)
+    expect(result.sector).toBe(CompanySectorEnum.SVEITARFELAG)
     expect(result.legalFormId).toBe('X7')
   })
 
@@ -176,14 +188,14 @@ describe('resolveSector', () => {
     // NFD gives these three no decomposition, so a strip-only normalizer
     // silently drops them and no table key spelled with d/th/ae can be reached.
     expect(resolveSector({ id: null, name: 'Byggðasamlag' }).sector).toBe(
-      CompanySectorEnum.PUBLIC,
+      CompanySectorEnum.SVEITARFELAG,
     )
     expect(resolveSector({ id: null, name: 'Opinber þjónusta' }).sector).toBe(
-      CompanySectorEnum.PUBLIC,
+      CompanySectorEnum.RIKISADILI,
     )
     expect(
       resolveSector({ id: null, name: 'Einstaklingsfyrirtæki' }).sector,
-    ).toBe(CompanySectorEnum.PRIVATE)
+    ).toBe(CompanySectorEnum.FYRIRTAEKI)
   })
 
   it('reports a candidate that normalizes to nothing rather than swallowing it', () => {
@@ -222,12 +234,12 @@ describe('resolveSector', () => {
     }
   })
 
-  it('never infers PRIVATE as a default', () => {
-    // The filter contract: "private" must mean classified-private, not
+  it('never infers FYRIRTAEKI as a default', () => {
+    // The filter contract: "Fyrirtæki" must mean classified-as-such, not
     // "everything we could not classify".
     for (const id of ['', 'unknown-form', 'félagasamtök', '123']) {
       expect(resolveSector({ id, name: null }).sector).not.toBe(
-        CompanySectorEnum.PRIVATE,
+        CompanySectorEnum.FYRIRTAEKI,
       )
     }
   })
