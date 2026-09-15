@@ -1,5 +1,6 @@
 export * from './dto/partner-salary-payload.dto'
 export * from './dto/scoring-criterion.dto'
+export * from './dto/submit-partner-salary.dto'
 export * from './dto/scoring-model.dto'
 export * from './dto/scoring-role.dto'
 export * from './dto/scoring-step.dto'

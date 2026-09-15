@@ -34,6 +34,7 @@ import {
   SalaryAnalysisRequestDto,
   SalaryAnalysisResponseDto,
 } from '@dmr.is/doe-modules/report-statistics'
+import { PartnerSalaryPayloadFields } from '@dmr.is/doe-modules/scoring-model'
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
@@ -46,6 +47,7 @@ import { RequireApiScope } from '../../core/guards/api-key-scope/require-api-sco
 import { RequireApiScopeGuard } from '../../core/guards/api-key-scope/require-api-scope.guard'
 import { ApiKeyThrottlerGuard } from '../../core/guards/api-key-throttler/api-key-throttler.guard'
 import { PartnerCompanyGuard } from '../../core/guards/partner-company/partner-company.guard'
+import { PartnerSubmissionService } from '../submission/partner-submission.service'
 
 /**
  * The public third-party surface.
@@ -94,6 +96,7 @@ export class PartnerController {
   constructor(
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
+    private readonly submissionService: PartnerSubmissionService,
   ) {}
 
   @Get('company')
@@ -161,10 +164,10 @@ export class PartnerController {
       'Validates a payload and runs the outlier analysis over it, without submitting anything. **This is the first half of the salary flow and is not optional in practice:** it is where a vendor learns that its payload parses, that its criteria tree is accepted, and which employees will need an explanation — all of which the submission would otherwise refuse for the first time. Nothing is stored, so it can be called as often as the payload changes; when the answer looks right, the same payload goes to `POST /reports/salary`.',
   })
   analyzeSalaryReport(
-    @Body() input: SalaryAnalysisRequestDto,
+    @Body() input: PartnerSalaryPayloadFields,
     @CurrentCompany() company: CompanyDto,
   ): Promise<SalaryAnalysisResponseDto> {
-    return this.applicationService.salaryAnalysis(input, company)
+    return this.submissionService.salaryAnalysis(input, company)
   }
 
   @Post('reports/salary')
@@ -191,7 +194,7 @@ export class PartnerController {
     @CurrentCompany() company: CompanyDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {
-    const result = await this.applicationService.submitSalary(input, company)
+    const result = await this.submissionService.submitSalary(input, company)
 
     return this.answerCreated(res, result)
   }
