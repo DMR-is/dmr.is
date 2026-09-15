@@ -1417,6 +1417,8 @@ export const sharedText = {
     cancel: 'Hætta við',
     save: 'Vista',
     errorToast: 'Villa við innsendingu',
+    companyLoadError:
+      'Ekki tókst að sækja lista yfir fyrirtæki. Reyndu að endurhlaða síðuna.',
   },
   empty: {
     title: 'Ekkert fannst',
