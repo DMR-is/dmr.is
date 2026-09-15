@@ -9,13 +9,6 @@ import {
   PayloadIssueScope,
 } from '../../report/lib/parsed-payload-issues'
 import { collectParsedPayloadSemantics } from '../../report/lib/parsed-payload-semantics'
-import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
-import {
-  MANDATORY_JOB_BASED_CRITERIA,
-  MAX_PERSONAL_CRITERIA,
-  MAX_STEPS,
-  MIN_STEPS,
-} from '../../report-excel/workbook.schema'
 import { ScoringCriterionDto } from '../dto/scoring-criterion.dto'
 import { ScoringRoleDto } from '../dto/scoring-model.dto'
 import {
@@ -65,6 +58,15 @@ class ReasonBag {
   }
 
   /**
+   * Record that reasons were lost upstream rather than here. The filing gate
+   * caps its own list before this bag ever fills, so without this the notice
+   * below would only ever fire for faults the hand-written rules produced.
+   */
+  markTruncated(): void {
+    this.truncated = true
+  }
+
+  /**
    * The cap used to be silent: a badly broken model returned exactly
    * `MAX_REASONS` reasons and nothing said more existed, so a caller working
    * through the list would fix every one and still be refused. The notice costs
@@ -74,10 +76,24 @@ class ReasonBag {
     if (!this.truncated) return this.reasons
 
     return [
-      ...this.reasons.slice(0, MAX_REASONS - 1),
+      // Trim only if the notice would push the list past the cap. When
+      // truncation was reported from upstream the bag is typically short of
+      // `MAX_REASONS`, and slicing unconditionally would discard a real reason
+      // to make room for the notice saying reasons were discarded.
+      ...(this.reasons.length >= MAX_REASONS
+        ? this.reasons.slice(0, MAX_REASONS - 1)
+        : this.reasons),
       {
-        scope: ScoringValidationScopeEnum.CRITERIA,
-        message: `Fleiri en ${MAX_REASONS - 1} atriði eru óuppfyllt; listinn er styttur. Lagfærðu ofangreint og sæktu starfsmatið aftur til að sjá afganginn.`,
+        // `MODEL`, not `CRITERIA`: this reason is about the list, not about any
+        // region of the model, and the scope enum documents CRITERIA's meanings
+        // exhaustively — a caller filing reasons by scope would have shown this
+        // one against the criteria section, where it is false.
+        scope: ScoringValidationScopeEnum.MODEL,
+        // No count in the wording: truncation can now be reported from the
+        // filing gate, which fills before this bag does, so any figure stated
+        // here would be the wrong one in that case.
+        message:
+          'Listinn er styttur — fleiri atriði eru óuppfyllt en hér eru talin. Lagfærðu ofangreint og sæktu starfsmatið aftur til að sjá afganginn.',
       },
     ]
   }
@@ -263,6 +279,15 @@ const runFilingGate = (
     if (!MODEL_LEVEL_SCOPES.has(issue.scope)) continue
     reasons.add(toValidationScope(issue.scope), issue.message)
   }
+
+  // The gate has a cap of its own, and when it fills it says so in an issue
+  // scoped `REPORT` — which the filter above drops, because `REPORT` is not a
+  // scope a model with no employees can own. So a model broken enough to
+  // saturate the gate came back with a full list and nothing anywhere saying it
+  // had been cut short: the exact failure `ReasonBag`'s notice exists to
+  // prevent, reintroduced one layer up. Carry the fact across instead of the
+  // sentence, and let `ReasonBag` word it in the model's own vocabulary.
+  if (issues.isFull) reasons.markTruncated()
 }
 
 export const validateScoringModel = (

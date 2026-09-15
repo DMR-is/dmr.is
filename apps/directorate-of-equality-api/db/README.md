@@ -804,6 +804,11 @@ through the partner API sits on the same stig scale as one filed through any oth
 put the top step above the scale's own maximum — and a scale holds between `MIN_STEPS` (2)
 and `MAX_STEPS` (8) þrep, the same bounds the filing enforces.
 
+Also `UNIQUE (id, scoring_sub_criterion_id)`. Redundant as a uniqueness claim, since `id` is
+already the primary key; it exists because Postgres will only let a foreign key reference a
+column list that carries a unique index, and `scoring_role_step` references exactly that pair
+— see below.
+
 ### `scoring_role`
 
 A job (starf) in the model. A role owns the job-based criteria: every employee holding it
@@ -827,13 +832,32 @@ shape `report_employee_role_criterion_step` uses.
 | `id`                            | `uuid` PK                                   |
 | `scoring_role_id`               | `fk → scoring_role` (cascade)               |
 | `scoring_sub_criterion_id`      | `fk → scoring_sub_criterion` (cascade)      |
-| `scoring_sub_criterion_step_id` | `fk → scoring_sub_criterion_step` (cascade) |
+| `scoring_sub_criterion_step_id` | part of the composite fk below              |
 
 `UNIQUE (scoring_role_id, scoring_sub_criterion_id)` — at most one assignment per job per
 sub-criterion. `scoring_sub_criterion_id` is denormalised from the step's own parent so that
-uniqueness can be a table constraint; the service asserts the step really belongs to that
-sub-criterion. Completeness — every job assigned on every job-based sub-criterion — is a
-validation concern, not one the table can hold.
+uniqueness can be a table constraint.
+
+The two step columns are **one composite foreign key**, not two single-column ones:
+
+```
+FOREIGN KEY (scoring_sub_criterion_step_id, scoring_sub_criterion_id)
+  REFERENCES scoring_sub_criterion_step (id, scoring_sub_criterion_id) ON DELETE CASCADE
+```
+
+A pair of single-column FKs would each resolve on its own, so a row naming þrep X — which
+belongs to sub-criterion A — alongside sub-criterion B satisfied both, and the expansion
+would emit B at X's order: a silently wrong score. Referencing the pair makes that
+unrepresentable rather than merely caught. The service and the expander both refuse it too,
+but neither is the table's own guarantee.
+
+Both cascading columns are indexed — `scoring_role_step_step_id_idx` and
+`scoring_role_step_sub_id_idx`. The second is not covered by the UNIQUE above, where
+`scoring_sub_criterion_id` is the trailing column and so unusable as a btree prefix, and
+deleting a sub-criterion cascades through exactly it.
+
+Completeness — every job assigned on every job-based sub-criterion — is a validation
+concern, not one the table can hold.
 
 ### `company`
 

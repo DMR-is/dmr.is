@@ -19,10 +19,18 @@
  *
  * ## The index that was missing
  *
- * `scoring_role_step.scoring_sub_criterion_step_id` is an FK with ON DELETE
- * CASCADE and had no index at all, so deleting a þrep — which the scale-replace
- * path does on every write — had to sequentially scan the assignment table to
- * find the rows to cascade.
+ * Two FKs on `scoring_role_step` cascade and had no usable index.
+ *
+ * `scoring_sub_criterion_step_id` had none at all, so deleting a þrep — which
+ * the scale-replace path does on every write — had to sequentially scan the
+ * assignment table to find the rows to cascade.
+ *
+ * `scoring_sub_criterion_id` has the identical shape: also ON DELETE CASCADE,
+ * and the only index containing it is `UNIQUE (scoring_role_id,
+ * scoring_sub_criterion_id)`, where it is the *trailing* column and so unusable
+ * as a btree prefix. `deleteSubCriterion` cascades through exactly it on an
+ * ordinary edit, so leaving it out would have applied this migration's own
+ * reasoning to one of the two columns it describes.
  *
  * ## The composite FK
  *
@@ -52,12 +60,33 @@ module.exports = {
       CREATE INDEX IF NOT EXISTS scoring_role_step_step_id_idx
         ON scoring_role_step (scoring_sub_criterion_step_id);
 
+      CREATE INDEX IF NOT EXISTS scoring_role_step_sub_id_idx
+        ON scoring_role_step (scoring_sub_criterion_id);
+
       -- The target the composite FK references. Redundant as a uniqueness claim
       -- (id is already the primary key) and required as an FK target: Postgres
       -- will only reference a column list that carries a unique index.
       ALTER TABLE scoring_sub_criterion_step
         ADD CONSTRAINT scoring_sub_criterion_step_id_sub_key
         UNIQUE (id, scoring_sub_criterion_id);
+
+      -- ADD CONSTRAINT validates every existing row and aborts the whole block
+      -- if one fails, naming only the constraint. Surface the offenders first,
+      -- so a failure here says which assignments are cross-wired rather than
+      -- leaving someone to find them by hand.
+      DO $$
+      DECLARE bad int;
+      BEGIN
+        SELECT count(*) INTO bad
+        FROM scoring_role_step rs
+        JOIN scoring_sub_criterion_step st ON st.id = rs.scoring_sub_criterion_step_id
+        WHERE st.scoring_sub_criterion_id IS DISTINCT FROM rs.scoring_sub_criterion_id;
+
+        IF bad > 0 THEN
+          RAISE EXCEPTION
+            '% scoring_role_step row(s) name a þrep belonging to a different sub-criterion; resolve them before this migration can add the composite FK', bad;
+        END IF;
+      END $$;
 
       -- Replaces the single-column FK on the step: the pair has to resolve
       -- together, so a þrep from another sub-criterion cannot be named.
@@ -69,6 +98,15 @@ module.exports = {
         FOREIGN KEY (scoring_sub_criterion_step_id, scoring_sub_criterion_id)
         REFERENCES scoring_sub_criterion_step (id, scoring_sub_criterion_id)
         ON DELETE CASCADE;
+
+      -- m-20260914 set this comment to say "the service asserts the step belongs
+      -- to this sub-criterion", which was true when the table had two
+      -- independent FKs. It is now the table's own guarantee, and the comment is
+      -- a live database object rather than a line of source, so correcting it
+      -- means re-issuing it here — editing the applied migration would change
+      -- nothing in any database that has already run it.
+      COMMENT ON COLUMN scoring_role_step.scoring_sub_criterion_id IS
+        'Denormalised from the step''s own parent so the one-assignment-per-sub-criterion uniqueness can be a table constraint. The composite FK scoring_role_step_step_matches_sub_fkey ties the pair together, so a step from another sub-criterion cannot be named.';
 
       COMMIT;
     `)
@@ -90,7 +128,11 @@ module.exports = {
       ALTER TABLE scoring_sub_criterion_step
         DROP CONSTRAINT IF EXISTS scoring_sub_criterion_step_id_sub_key;
 
+      COMMENT ON COLUMN scoring_role_step.scoring_sub_criterion_id IS
+        'Denormalised from the step''s own parent so the one-assignment-per-sub-criterion uniqueness can be a table constraint. The service asserts the step belongs to this sub-criterion.';
+
       DROP INDEX IF EXISTS scoring_role_step_step_id_idx;
+      DROP INDEX IF EXISTS scoring_role_step_sub_id_idx;
 
       CREATE INDEX IF NOT EXISTS scoring_role_step_role_id_idx
         ON scoring_role_step (scoring_role_id);

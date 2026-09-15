@@ -1,12 +1,11 @@
 import { Transaction } from 'sequelize'
-import { Sequelize } from 'sequelize-typescript'
 
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { InjectConnection, InjectModel } from '@nestjs/sequelize'
+import { InjectModel } from '@nestjs/sequelize'
 
 import { CompanyDto } from '../company/dto/company.dto'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
@@ -48,7 +47,6 @@ import { IScoringModelService } from './scoring-model.service.interface'
 @Injectable()
 export class ScoringModelService implements IScoringModelService {
   constructor(
-    @InjectConnection() private readonly sequelize: Sequelize,
     @InjectModel(ScoringModelModel)
     private readonly scoringModelModel: typeof ScoringModelModel,
     @InjectModel(ScoringCriterionModel)
@@ -182,13 +180,16 @@ export class ScoringModelService implements IScoringModelService {
   private async findOwnedSubCriterion(
     criterionId: string,
     subCriterionId: string,
-    transaction?: Transaction,
   ): Promise<ScoringSubCriterionModel> {
     const sub = await this.subCriterionModel.findOne({
       where: { id: subCriterionId, scoringCriterionId: criterionId },
-      // Locked when a transaction is passed: the replace-whole writes take the
-      // parent row so two of them cannot interleave.
-      ...(transaction ? { transaction, lock: Transaction.LOCK.UPDATE } : {}),
+      // `FOR UPDATE`, unconditionally. `Sequelize.useCLS` is on and
+      // `CLSMiddleware` opens one transaction per request, so this query
+      // auto-enlists in it and the lock is held until the request commits or
+      // rolls back — without naming a transaction here and without taking a
+      // second connection. Making it opt-in would leave the guarantee
+      // depending on which caller remembered to ask.
+      lock: Transaction.LOCK.UPDATE,
     })
 
     if (!sub) {
@@ -411,38 +412,45 @@ export class ScoringModelService implements IScoringModelService {
     await this.findOwnedModel(company, modelId)
     await this.findOwnedCriterion(modelId, criterionId)
 
-    // The whole replace runs under one transaction with the parent row locked.
-    // Two callers replacing the same scale concurrently would otherwise
-    // interleave their destroy and bulkCreate and collide on
-    // UNIQUE (scoring_sub_criterion_id, step_order) — surfacing as a raw 500
-    // rather than the last write winning.
-    await this.sequelize.transaction(async (transaction) => {
-      await this.findOwnedSubCriterion(criterionId, subCriterionId, transaction)
+    // No `sequelize.transaction()` wrapper here, deliberately. It reads like it
+    // would add atomicity and it removes it: with no parent in its options it
+    // does not nest under CLS, so it opens a top-level transaction on a second
+    // pooled connection. The destroy and bulkCreate would then commit
+    // immediately and survive the rollback `CLSMiddleware` performs on any
+    // non-2xx — leaving the scale replaced, and every assignment onto the old
+    // þrep cascade-deleted, behind a response that reported failure. Measured,
+    // not inferred: the inner transaction's `parent` is undefined, its backend
+    // pid differs from the ambient one, and its write outlives the ambient
+    // ROLLBACK.
+    //
+    // The ambient request transaction already makes these two statements atomic
+    // together. The `FOR UPDATE` taken in `findOwnedSubCriterion` is what was
+    // genuinely missing, and it holds for the rest of the request — so two
+    // callers replacing the same scale serialise rather than colliding on
+    // UNIQUE (scoring_sub_criterion_id, step_order).
+    await this.findOwnedSubCriterion(criterionId, subCriterionId)
 
-      // Replace rather than reconcile. Any role assignment onto the old steps
-      // goes with them through the FK cascade, and the model then reports that
-      // job as missing an assignment — dropped where the caller can see it,
-      // rather than re-homed onto a step they did not choose.
-      await this.stepModel.destroy({
-        where: { scoringSubCriterionId: subCriterionId },
-        transaction,
-      })
+    // Replace rather than reconcile. Any role assignment onto the old þrep goes
+    // with them through the FK cascade, and the model then reports that job as
+    // missing an assignment — dropped where the caller can see it, rather than
+    // re-homed onto a þrep they did not choose.
+    await this.stepModel.destroy({
+      where: { scoringSubCriterionId: subCriterionId },
+    })
 
     // No empty-array branch: `SetScoringStepsDto` carries
     // `@ArrayMinSize(MIN_STEPS)`, so the only route that reaches this method
     // cannot deliver one. A clear-to-empty path that nothing can call is a path
     // nothing keeps honest.
-      await this.stepModel.bulkCreate(
-        input.steps.map((step, index) => ({
-          scoringSubCriterionId: subCriterionId,
-          // Position is the þrep number. Deriving it here is what makes a gap
-          // impossible rather than something the validator has to catch.
-          stepOrder: index + 1,
-          description: step.description,
-        })),
-        { transaction },
-      )
-    })
+    await this.stepModel.bulkCreate(
+      input.steps.map((step, index) => ({
+        scoringSubCriterionId: subCriterionId,
+        // Position is the þrep number. Deriving it here is what makes a gap
+        // impossible rather than something the validator has to catch.
+        stepOrder: index + 1,
+        description: step.description,
+      })),
+    )
 
     return this.reload(company, modelId)
   }
@@ -451,11 +459,11 @@ export class ScoringModelService implements IScoringModelService {
   private async findOwnedRole(
     modelId: string,
     roleId: string,
-    transaction?: Transaction,
   ): Promise<ScoringRoleModel> {
     const role = await this.roleModel.findOne({
       where: { id: roleId, scoringModelId: modelId },
-      ...(transaction ? { transaction, lock: Transaction.LOCK.UPDATE } : {}),
+      // See `findOwnedSubCriterion` — same reasoning, same unconditional lock.
+      lock: Transaction.LOCK.UPDATE,
     })
 
     if (!role) {
@@ -530,7 +538,6 @@ export class ScoringModelService implements IScoringModelService {
     input: SetScoringRoleStepAssignmentsDto,
   ): Promise<ScoringModelDto> {
     const model = await this.findOwnedModel(company, modelId)
-    await this.findOwnedRole(modelId, roleId)
 
     // An incomplete set is reported by the validator, not refused here. An
     // incoherent one is refused: it does not describe a model that could exist,
@@ -582,34 +589,31 @@ export class ScoringModelService implements IScoringModelService {
       seen.add(assignment.subCriterionId)
     }
 
-    // Validation first, outside the transaction — it reads only the tree that
-    // was already loaded, and refusing before opening one keeps the lock held
-    // for the write alone.
+    // Same reasoning as `setSteps`: no `sequelize.transaction()` wrapper, because
+    // it would take these two statements out of the request transaction rather
+    // than into one, and they would then survive a rollback.
     //
-    // The replace then runs under one transaction with the job's row locked:
-    // two callers replacing the same job's assignments concurrently would
-    // otherwise interleave and collide on
-    // UNIQUE (scoring_role_id, scoring_sub_criterion_id), which surfaces as a
-    // raw 500 instead of the last write winning.
-    await this.sequelize.transaction(async (transaction) => {
-      await this.findOwnedRole(modelId, roleId, transaction)
+    // The lock in `findOwnedRole` serialises two callers replacing the *same
+    // job's* assignments. It does not serialise this against a concurrent
+    // `setSteps` on a sub-criterion these assignments name — that takes a
+    // different row's lock, and the composite FK added in
+    // m-20260915-scoring-index-and-fk turns the collision into a raw 500. The
+    // fix for that is ordering the two locks, which is a larger change than the
+    // race it closes; recorded here rather than implied by a comment that
+    // claims more than the lock delivers.
+    await this.findOwnedRole(modelId, roleId)
 
-      await this.roleStepModel.destroy({
-        where: { scoringRoleId: roleId },
-        transaction,
-      })
+    await this.roleStepModel.destroy({ where: { scoringRoleId: roleId } })
 
-      if (input.assignments.length > 0) {
-        await this.roleStepModel.bulkCreate(
-          input.assignments.map((assignment) => ({
-            scoringRoleId: roleId,
-            scoringSubCriterionId: assignment.subCriterionId,
-            scoringSubCriterionStepId: assignment.stepId,
-          })),
-          { transaction },
-        )
-      }
-    })
+    if (input.assignments.length > 0) {
+      await this.roleStepModel.bulkCreate(
+        input.assignments.map((assignment) => ({
+          scoringRoleId: roleId,
+          scoringSubCriterionId: assignment.subCriterionId,
+          scoringSubCriterionStepId: assignment.stepId,
+        })),
+      )
+    }
 
     return this.reload(company, modelId)
   }

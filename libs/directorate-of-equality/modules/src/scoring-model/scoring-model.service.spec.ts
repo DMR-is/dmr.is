@@ -1,5 +1,7 @@
+import { Transaction } from 'sequelize'
+
 import { BadRequestException, NotFoundException } from '@nestjs/common'
-import { getConnectionToken, getModelToken } from '@nestjs/sequelize'
+import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
 import { CompanyDto } from '../company/dto/company.dto'
@@ -22,7 +24,6 @@ const MODEL_ID = 'model-1'
 const CRITERION_ID = 'criterion-1'
 const SUB_ID = 'sub-1'
 
-const TRANSACTION = Symbol('transaction')
 
 const COMPANY = {
   id: 'company-1',
@@ -81,16 +82,6 @@ describe('ScoringModelService', () => {
     const module = await Test.createTestingModule({
       providers: [
         ScoringModelService,
-        {
-          // The two replace-whole writes take a row lock inside a transaction,
-          // so the service needs a connection. Run the callback inline with a
-          // sentinel: the assertions are about what the writes do and in which
-          // order, not about Sequelize's transaction machinery.
-          provide: getConnectionToken(),
-          useValue: {
-            transaction: (fn: (t: unknown) => unknown) => fn(TRANSACTION),
-          },
-        },
         {
           provide: getModelToken(ScoringModelModel),
           useValue: {
@@ -170,8 +161,11 @@ describe('ScoringModelService', () => {
         service.deleteSubCriterion(COMPANY, MODEL_ID, CRITERION_ID, SUB_ID),
       ).rejects.toThrow(NotFoundException)
 
+      // Exact, not `objectContaining` — the lock is part of the call's meaning,
+      // and a loose matcher is how it went unpinned the first time.
       expect(subFindOne).toHaveBeenCalledWith({
         where: { id: SUB_ID, scoringCriterionId: CRITERION_ID },
+        lock: Transaction.LOCK.UPDATE,
       })
     })
   })
@@ -362,7 +356,6 @@ describe('ScoringModelService', () => {
           { scoringSubCriterionId: SUB_ID, stepOrder: 2, description: 'mið' },
           { scoringSubCriterionId: SUB_ID, stepOrder: 3, description: 'hæst' },
         ],
-        { transaction: TRANSACTION },
       )
     })
 
@@ -371,28 +364,30 @@ describe('ScoringModelService', () => {
         steps: [{ description: 'a' }, { description: 'b' }],
       })
 
-      // Both halves inside the same transaction — that is what stops two
-      // concurrent replaces interleaving onto the same scale.
+      // Neither half names a transaction. `Sequelize.useCLS` is on and
+      // `CLSMiddleware` opens one per request, so both auto-enlist in it — an
+      // explicit `sequelize.transaction()` here would have opened a *second*,
+      // top-level transaction on another connection, which commits even when the
+      // request rolls back.
       expect(stepDestroy).toHaveBeenCalledWith({
         where: { scoringSubCriterionId: SUB_ID },
-        transaction: TRANSACTION,
       })
       expect(stepDestroy.mock.invocationCallOrder[0]).toBeLessThan(
         stepBulkCreate.mock.invocationCallOrder[0],
       )
     })
 
-    it('locks the parent row for the duration of the replace', async () => {
+    // The lock is unconditional and carries no transaction option: that is the
+    // whole mechanism. Pin both halves — a `lock` that came back with a
+    // transaction beside it would mean the second-connection bug had returned.
+    it('locks the parent row with FOR UPDATE, enlisting in the ambient transaction', async () => {
       await service.setSteps(COMPANY, MODEL_ID, CRITERION_ID, SUB_ID, {
         steps: [{ description: 'a' }, { description: 'b' }],
       })
 
-      expect(subFindOne).toHaveBeenCalledWith(
-        expect.objectContaining({
-          transaction: TRANSACTION,
-          lock: expect.anything(),
-        }),
-      )
+      const [args] = subFindOne.mock.calls[0]
+      expect(args.lock).toBe(Transaction.LOCK.UPDATE)
+      expect(args).not.toHaveProperty('transaction')
     })
 
     it('refuses a sub-criterion outside the named criterion', async () => {
@@ -463,7 +458,6 @@ describe('ScoringModelService', () => {
 
       expect(roleStepDestroy).toHaveBeenCalledWith({
         where: { scoringRoleId: ROLE_ID },
-        transaction: TRANSACTION,
       })
       expect(roleStepBulkCreate).toHaveBeenCalledWith(
         [
@@ -473,8 +467,20 @@ describe('ScoringModelService', () => {
             scoringSubCriterionStepId: JOB_STEP,
           },
         ],
-        { transaction: TRANSACTION },
       )
+    })
+
+    // The equivalent of the setSteps lock test. Without it the role path could
+    // lose its lock and nothing here would fail — which is exactly how the
+    // original review found it missing.
+    it('locks the job row with FOR UPDATE, enlisting in the ambient transaction', async () => {
+      await service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
+        assignments: [{ subCriterionId: JOB_SUB, stepId: JOB_STEP }],
+      })
+
+      const [args] = roleFindOne.mock.calls[0]
+      expect(args.lock).toBe(Transaction.LOCK.UPDATE)
+      expect(args).not.toHaveProperty('transaction')
     })
 
     // Incomplete is reported by the validator; only incoherent is refused.
