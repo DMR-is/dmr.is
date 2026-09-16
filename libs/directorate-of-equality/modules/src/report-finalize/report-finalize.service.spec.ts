@@ -7,7 +7,11 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanySizeEnum } from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
-import { ReportStatusEnum, ReportTypeEnum } from '../report/models/report.enums'
+import {
+  EqualityCoverageSourceEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
 import { AutoReviewDecisionEnum } from '../report/models/report-event.model'
@@ -38,7 +42,7 @@ describe('ReportFinalizeService', () => {
   let companyReportBulkCreate: jest.Mock
   let companyReportFindAll: jest.Mock
   let autoReviewEvaluate: jest.Mock
-  let findActiveEqualityForCompany: jest.Mock
+  let resolveEqualityCoverage: jest.Mock
 
   beforeEach(async () => {
     reportFindAll = jest.fn().mockResolvedValue([])
@@ -58,7 +62,7 @@ describe('ReportFinalizeService', () => {
       signals: {},
     })
 
-    findActiveEqualityForCompany = jest.fn().mockResolvedValue(null)
+    resolveEqualityCoverage = jest.fn().mockResolvedValue(null)
 
     const module = await Test.createTestingModule({
       providers: [
@@ -89,7 +93,7 @@ describe('ReportFinalizeService', () => {
         },
         {
           provide: IReportService,
-          useValue: { findActiveEqualityForCompany },
+          useValue: { resolveEqualityCoverage },
         },
       ],
     }).compile()
@@ -228,20 +232,24 @@ describe('ReportFinalizeService', () => {
   })
 
   /**
-   * The submission's own resolution of the equality report it will be filed
-   * against. Had no direct test: its only coverage was mock-call ordering in
-   * the report-create spec, which mis-asserts rather than fails if a query is
-   * inserted.
+   * The submission's own resolution of what it will be filed against. Had no
+   * direct test: its only coverage was mock-call ordering in the report-create
+   * spec, which mis-asserts rather than fails if a query is inserted.
    */
-  describe('resolveActiveEqualityReportId', () => {
-    it('returns the id the shared lookup resolves', async () => {
-      findActiveEqualityForCompany.mockResolvedValue({ id: 'equality-1' })
+  describe('resolveEqualityCoverage', () => {
+    it('returns the coverage the shared lookup resolves', async () => {
+      const coverage = {
+        source: EqualityCoverageSourceEnum.REPORT,
+        report: { id: 'equality-1' },
+        legacyValidUntil: null,
+      }
+      resolveEqualityCoverage.mockResolvedValue(coverage)
 
       await expect(
-        service.resolveActiveEqualityReportId('company-1'),
-      ).resolves.toBe('equality-1')
+        service.resolveEqualityCoverage('company-1'),
+      ).resolves.toEqual(coverage)
 
-      expect(findActiveEqualityForCompany).toHaveBeenCalledWith('company-1')
+      expect(resolveEqualityCoverage).toHaveBeenCalledWith('company-1')
     })
 
     // The regression this replaced: the resolution used to filter
@@ -253,25 +261,49 @@ describe('ReportFinalizeService', () => {
     // `equalityReportId`. Delegating is what keeps the pre-check and the
     // submission from disagreeing, so the delegation itself is the assertion.
     it('asks the same lookup the eligibility routes answer from, so a subsidiary resolves too', async () => {
-      findActiveEqualityForCompany.mockResolvedValue({ id: 'group-equality' })
+      resolveEqualityCoverage.mockResolvedValue({
+        source: EqualityCoverageSourceEnum.REPORT,
+        report: { id: 'group-equality' },
+        legacyValidUntil: null,
+      })
 
-      await expect(
-        service.resolveActiveEqualityReportId('subsidiary-company'),
-      ).resolves.toBe('group-equality')
+      const coverage = await service.resolveEqualityCoverage(
+        'subsidiary-company',
+      )
 
+      expect(coverage.report?.id).toBe('group-equality')
       // No second query of its own: a divergent one is how the two answers
       // drifted apart in the first place.
       expect(companyReportFindAll).not.toHaveBeenCalled()
     })
 
-    it('404s with the sentence the active-report route answers with', async () => {
-      findActiveEqualityForCompany.mockResolvedValue(null)
+    // Same delegation, second class of company: the ~540 whose equality plan
+    // exists only on the retired register. They have no report row to name, and
+    // requiring one is what left them unable to file at all.
+    it('passes legacy coverage through, dates and all', async () => {
+      resolveEqualityCoverage.mockResolvedValue({
+        source: EqualityCoverageSourceEnum.LEGACY,
+        report: null,
+        legacyValidUntil: '2028-03-31',
+      })
 
       await expect(
-        service.resolveActiveEqualityReportId('company-1'),
+        service.resolveEqualityCoverage('legacy-company'),
+      ).resolves.toEqual({
+        source: EqualityCoverageSourceEnum.LEGACY,
+        report: null,
+        legacyValidUntil: '2028-03-31',
+      })
+    })
+
+    it('404s with the sentence the active-report route answers with', async () => {
+      resolveEqualityCoverage.mockResolvedValue(null)
+
+      await expect(
+        service.resolveEqualityCoverage('company-1'),
       ).rejects.toThrow(NotFoundException)
       await expect(
-        service.resolveActiveEqualityReportId('company-1'),
+        service.resolveEqualityCoverage('company-1'),
       ).rejects.toThrow('No approved equality report is in force')
     })
   })

@@ -6,6 +6,7 @@ import {
   ApiOptionalBoolean,
   ApiOptionalDtoArray,
   ApiOptionalString,
+  ApiOptionalUUID,
   ApiString,
   ApiUUID,
 } from '@dmr.is/decorators'
@@ -30,11 +31,27 @@ import {
  * for the island.is client change that pairs with its removal.
  */
 export class SubmitSalaryReportDto {
-  @ApiUUID({
+  /**
+   * Optional since legacy coverage became fileable. A company whose equality
+   * plan exists only on the Directorate's retired register has no report id to
+   * send — `GET reports/equality/active` answers `source: LEGACY` with a null
+   * `id` for exactly those companies — and requiring the field left them unable
+   * to submit at all. Omit it and the server resolves the same coverage the
+   * eligibility route reported, which is also what the partner API does on
+   * every submission.
+   */
+  @ApiOptionalUUID({
+    // `nullable`, not just optional, and for a concrete reason: the value comes
+    // straight off `GET reports/equality/active`, whose `id` is null on LEGACY
+    // coverage. A client that forwards that null unchanged — the obvious thing
+    // to write — must not be sending something the published contract forbids.
+    // `IsOptional()` already skips null at runtime, so this documents what the
+    // server has always accepted rather than widening it.
+    nullable: true,
     description:
-      'FK to the approved EQUALITY report this salary was audited against.',
+      'FK to the approved EQUALITY report this salary was audited against. Send null, or omit it, when `GET reports/equality/active` answered `source: LEGACY` (there is no id to send) — or to have the server resolve the company’s current coverage, which is the same answer that route gave.',
   })
-  equalityReportId!: string
+  equalityReportId?: string | null
 
   @ApiBoolean()
   importedFromExcel!: boolean

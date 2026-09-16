@@ -4,6 +4,7 @@ import { UniqueConstraintError } from 'sequelize'
 
 import {
   BadRequestException,
+  NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
@@ -21,6 +22,7 @@ import {
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../../constants'
 import { REPORT_IDENTIFIER_INDEX } from '../../report/lib/report-identifier'
 import {
+  EqualityCoverageSourceEnum,
   ReportStatusEnum,
   ReportTypeEnum,
   SalaryDataBasisEnum,
@@ -38,6 +40,8 @@ import { ReportDraftSubmitService } from './report-draft-submit.service'
 
 const REPORT_ID = 'report-id-1'
 const EQUALITY_REPORT_ID = 'eq-1'
+/** What the server resolves when the caller names none — deliberately not `EQUALITY_REPORT_ID`. */
+const RESOLVED_EQUALITY_ID = 'eq-resolved-1'
 
 // A payroll month inside the API's 36-month reporting window, derived from the
 // clock so the fixture cannot age out of the bound.
@@ -82,6 +86,7 @@ describe('ReportDraftSubmitService', () => {
   let getDetectedOutlierEmployeeIds: jest.Mock
   let createForReport: jest.Mock
   let assertEqualityReportApproved: jest.Mock
+  let resolveEqualityCoverage: jest.Mock
   let withdrawInflightSibling: jest.Mock
   let createCompanyReportSnapshots: jest.Mock
   let emitSubmittedEvent: jest.Mock
@@ -124,6 +129,7 @@ describe('ReportDraftSubmitService', () => {
     getDetectedOutlierEmployeeIds = jest.fn().mockResolvedValue(new Set())
     createForReport = jest.fn().mockResolvedValue({ id: 'result-1' })
     assertEqualityReportApproved = jest.fn().mockResolvedValue(undefined)
+    resolveEqualityCoverage = jest.fn().mockResolvedValue(null)
     withdrawInflightSibling = jest.fn().mockResolvedValue([])
     createCompanyReportSnapshots = jest.fn().mockResolvedValue(undefined)
     emitSubmittedEvent = jest.fn().mockResolvedValue(undefined)
@@ -159,6 +165,7 @@ describe('ReportDraftSubmitService', () => {
           provide: IReportFinalizeService,
           useValue: {
             assertEqualityReportApproved,
+            resolveEqualityCoverage,
             withdrawInflightSibling,
             createCompanyReportSnapshots,
             emitSubmittedEvent,
@@ -193,8 +200,66 @@ describe('ReportDraftSubmitService', () => {
     service = module.get(ReportDraftSubmitService)
   })
 
-  it('400s a salary submit without equalityReportId', async () => {
+  // Omitting the field used to be a 400. It is now a request to resolve the
+  // coverage server-side, which is the only way a company certified on the
+  // retired register can submit at all — it has no report id to send.
+  it('resolves the coverage itself when the salary submit names no equality report', async () => {
     findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+    getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set())
+    resolveEqualityCoverage.mockResolvedValueOnce({
+      source: EqualityCoverageSourceEnum.REPORT,
+      report: { id: RESOLVED_EQUALITY_ID },
+      legacyValidUntil: null,
+    })
+
+    await service.submitDraft(
+      PROVIDER_ID,
+      COMPANY,
+      salaryBody({ equalityReportId: null }),
+    )
+
+    expect(resolveEqualityCoverage).toHaveBeenCalledWith(COMPANY.id)
+    expect(reportUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        equalityReportId: RESOLVED_EQUALITY_ID,
+        equalitySource: EqualityCoverageSourceEnum.REPORT,
+        equalityLegacyValidUntil: null,
+      }),
+    )
+  })
+
+  it('records the legacy basis and expiry when the coverage is a legacy certificate', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+    getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set())
+    resolveEqualityCoverage.mockResolvedValueOnce({
+      source: EqualityCoverageSourceEnum.LEGACY,
+      report: null,
+      legacyValidUntil: '2028-03-31',
+    })
+
+    await service.submitDraft(
+      PROVIDER_ID,
+      COMPANY,
+      salaryBody({ equalityReportId: null }),
+    )
+
+    // Nothing to check the approval of, and checking would 404 a submission
+    // the eligibility route had just approved.
+    expect(assertEqualityReportApproved).not.toHaveBeenCalled()
+    expect(reportUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        equalityReportId: null,
+        equalitySource: EqualityCoverageSourceEnum.LEGACY,
+        equalityLegacyValidUntil: '2028-03-31',
+      }),
+    )
+  })
+
+  it('refuses the salary submit when nothing covers the company', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+    resolveEqualityCoverage.mockRejectedValueOnce(
+      new NotFoundException('No approved equality report is in force'),
+    )
 
     await expect(
       service.submitDraft(
@@ -202,7 +267,9 @@ describe('ReportDraftSubmitService', () => {
         COMPANY,
         salaryBody({ equalityReportId: null }),
       ),
-    ).rejects.toThrow(BadRequestException)
+    ).rejects.toThrow(NotFoundException)
+
+    expect(reportUpdate).not.toHaveBeenCalled()
   })
 
   it('400s when the payload parent company does not match the authenticated company', async () => {
@@ -321,6 +388,8 @@ describe('ReportDraftSubmitService', () => {
       status: ReportStatusEnum.SUBMITTED,
       identifier: IDENTIFIER,
       equalityReportId: EQUALITY_REPORT_ID,
+      equalitySource: EqualityCoverageSourceEnum.REPORT,
+      equalityLegacyValidUntil: null,
       salaryDataBasis: SalaryDataBasisEnum.MONTH,
       salaryDataPeriod: PERIOD_STORED,
     })

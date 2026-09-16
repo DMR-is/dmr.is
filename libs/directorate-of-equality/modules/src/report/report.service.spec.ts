@@ -13,6 +13,7 @@ import {
 import {
   CommunicationStatusEnum,
   EqualityContentTypeEnum,
+  EqualityCoverageSourceEnum,
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
@@ -145,6 +146,13 @@ const makeService = () => {
     findAll: outlierGroupFindAll,
   } as unknown as typeof import('../report-employee/models/report-outlier-group.model').ReportOutlierGroupModel
 
+  // The retired register. Defaults to "this company has no archived row", so
+  // every pre-existing test keeps asserting the filed-report path only.
+  const legacyFindOne = jest.fn().mockResolvedValue(null)
+  const legacyReportModel = {
+    findOne: legacyFindOne,
+  } as unknown as typeof import('../company/models/legacy-report.model').LegacyReportModel
+
   const service = new ReportService(
     logger,
     reportModel,
@@ -152,6 +160,7 @@ const makeService = () => {
     reportEmployeeOutlierModel,
     companyReportModel,
     reportOutlierGroupModel,
+    legacyReportModel,
   )
   return {
     service,
@@ -164,6 +173,7 @@ const makeService = () => {
     outlierCount,
     companyReportFindAll,
     outlierGroupFindAll,
+    legacyFindOne,
     logger,
   }
 }
@@ -1234,6 +1244,7 @@ describe('ReportService.getActiveEqualityForCompany', () => {
     // report's content with — `GET /application/reports/:providerId`. Neither
     // `id` (admin-only route) nor `identifier` (display code) resolves there.
     expect(result).toEqual({
+      source: EqualityCoverageSourceEnum.REPORT,
       id: 'eq-1',
       identifier: 'EQ-2025-001',
       providerId: 'island-is-application-eq-1',
@@ -1317,6 +1328,120 @@ describe('ReportService.getActiveEqualityForCompany', () => {
 
     expect(result?.providerId).toBeNull()
     expect(result?.id).toBe('eq-2')
+  })
+})
+
+describe('ReportService.resolveEqualityCoverage', () => {
+  const COMPANY_ID = '00000000-0000-0000-0000-0000000000c1'
+
+  const makeApprovedReport = () => ({
+    id: 'eq-1',
+    identifier: 'EQ-2025-001',
+    providerType: ReportProviderEnum.ISLAND_IS,
+    providerId: 'island-is-application-eq-1',
+    approvedAt: new Date('2025-06-01T00:00:00.000Z'),
+    validUntil: new Date('2028-06-01T00:00:00.000Z'),
+  })
+
+  it('answers from the retired register when the company filed nothing here', async () => {
+    // The regression this whole change exists for: 1 507 of the loaded
+    // companies at 25+ hold no `report` row, and ~540 of them hold an equality
+    // plan the Directorate records as in force. Reading only `report` told
+    // every one of them they had none.
+    const { service, findOne, legacyFindOne } = makeService()
+    findOne.mockResolvedValueOnce(null)
+    legacyFindOne.mockResolvedValueOnce({ equalityValidUntil: '2028-03-31' })
+
+    const coverage = await service.resolveEqualityCoverage(COMPANY_ID)
+
+    expect(coverage).toEqual({
+      source: EqualityCoverageSourceEnum.LEGACY,
+      report: null,
+      legacyValidUntil: '2028-03-31',
+    })
+  })
+
+  it('takes the furthest-out archived date, and never a null one', async () => {
+    // `legacy_report` has no unique constraint on `company_id` — a renamed
+    // ministry or a shared kennitala leaves two rows — and Postgres sorts NULLs
+    // FIRST on DESC, so the sort alone would surface a row with no equality
+    // date at all.
+    const { service, findOne, legacyFindOne } = makeService()
+    findOne.mockResolvedValueOnce(null)
+    legacyFindOne.mockResolvedValueOnce({ equalityValidUntil: '2028-03-31' })
+
+    await service.resolveEqualityCoverage(COMPANY_ID)
+
+    const callArg = legacyFindOne.mock.calls[0][0]
+    expect(callArg.where.companyId).toBe(COMPANY_ID)
+    expect(callArg.where.equalityValidUntil).toEqual({ [Op.ne]: null })
+    expect(callArg.order).toEqual([['equalityValidUntil', 'DESC']])
+  })
+
+  it('does not count an archived certificate whose stated date has passed', async () => {
+    const { service, findOne, legacyFindOne } = makeService()
+    findOne.mockResolvedValueOnce(null)
+    legacyFindOne.mockResolvedValueOnce({ equalityValidUntil: '2020-01-01' })
+
+    expect(await service.resolveEqualityCoverage(COMPANY_ID)).toBeNull()
+  })
+
+  it('counts the certificate through the whole of its last stated day', async () => {
+    // The date is a calendar day with no time on it. Read as midnight, a
+    // certificate stated valid "until today" would be expired for every hour of
+    // the day it is still valid — which is why the admin register tests
+    // `>= CURRENT_DATE` and this converts to end of day.
+    jest.useFakeTimers().setSystemTime(new Date('2026-09-16T11:00:00.000Z'))
+    try {
+      const { service, findOne, legacyFindOne } = makeService()
+      findOne.mockResolvedValueOnce(null)
+      legacyFindOne.mockResolvedValueOnce({ equalityValidUntil: '2026-09-16' })
+
+      const coverage = await service.resolveEqualityCoverage(COMPANY_ID)
+
+      expect(coverage?.source).toBe(EqualityCoverageSourceEnum.LEGACY)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  it('prefers a filed report over an archived certificate, without querying the archive', async () => {
+    // The report is the newer statement of the same obligation and the only one
+    // of the two with an id a salary report can link.
+    const { service, findOne, legacyFindOne } = makeService()
+    findOne.mockResolvedValueOnce(makeApprovedReport())
+
+    const coverage = await service.resolveEqualityCoverage(COMPANY_ID)
+
+    expect(coverage?.source).toBe(EqualityCoverageSourceEnum.REPORT)
+    expect(coverage?.report?.id).toBe('eq-1')
+    expect(legacyFindOne).not.toHaveBeenCalled()
+  })
+
+  it('returns null when neither source covers the company', async () => {
+    const { service, findOne, legacyFindOne } = makeService()
+    findOne.mockResolvedValueOnce(null)
+    legacyFindOne.mockResolvedValueOnce(null)
+
+    expect(await service.resolveEqualityCoverage(COMPANY_ID)).toBeNull()
+  })
+
+  it('maps legacy coverage to a summary with no identity fields', async () => {
+    // Nothing to quote: the register load mints no `report` row, so there is no
+    // id, no identifier and no channel handle. A caller must branch on
+    // `source`, not on a null id.
+    const { service, findOne, legacyFindOne } = makeService()
+    findOne.mockResolvedValueOnce(null)
+    legacyFindOne.mockResolvedValueOnce({ equalityValidUntil: '2028-03-31' })
+
+    expect(await service.getActiveEqualityForCompany(COMPANY_ID)).toEqual({
+      source: EqualityCoverageSourceEnum.LEGACY,
+      id: null,
+      identifier: null,
+      providerId: null,
+      approvedAt: null,
+      validUntil: new Date('2028-03-31T23:59:59.000Z'),
+    })
   })
 })
 

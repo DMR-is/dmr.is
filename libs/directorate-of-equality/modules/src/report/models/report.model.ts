@@ -23,9 +23,11 @@ import type { EqualityReportDto } from '../dto/equality-report.dto'
 import type { EqualityReportSummaryDto } from '../dto/equality-report-summary.dto'
 import type { ReportDto } from '../dto/report.dto'
 import { ReportListItemDto } from '../dto/report-list-item.dto'
+import { legacyValidUntilToDate } from '../lib/legacy-equality-coverage'
 import {
   CommunicationStatusEnum,
   EqualityContentTypeEnum,
+  EqualityCoverageSourceEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -38,6 +40,7 @@ import {
 export {
   CommunicationStatusEnum,
   EqualityContentTypeEnum,
+  EqualityCoverageSourceEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -92,6 +95,8 @@ type ReportAttributes = {
   identifier: string | null
 
   equalityReportId: string | null
+  equalitySource: EqualityCoverageSourceEnum
+  equalityLegacyValidUntil: string | null
   reviewerUserId: string | null
 
   approvedAt: Date | null
@@ -131,6 +136,8 @@ type ReportCreateAttributes = {
   identifier?: string | null
 
   equalityReportId?: string | null
+  equalitySource?: EqualityCoverageSourceEnum
+  equalityLegacyValidUntil?: string | null
   reviewerUserId?: string | null
 
   approvedAt?: Date | null
@@ -381,6 +388,37 @@ export class ReportModel extends MutableModel<
   @Column({ type: DataType.UUID, allowNull: true, field: 'equality_report_id' })
   equalityReportId!: string | null
 
+  /**
+   * What met the equality obligation this salary report was audited against.
+   * REPORT on every equality report and on every salary report that links one;
+   * LEGACY when the company was covered by an unexpired certificate from the
+   * retired register, which mints no `report` row to link. See the CHECK in
+   * m-20260916 — the three columns are constrained together.
+   */
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
+    defaultValue: EqualityCoverageSourceEnum.REPORT,
+    field: 'equality_source',
+  })
+  equalitySource!: EqualityCoverageSourceEnum
+
+  /**
+   * The legacy certificate's stated expiry, snapshotted at filing. Non-null
+   * exactly when `equalitySource` is LEGACY.
+   *
+   * `DATEONLY`, so it reads back as the `YYYY-MM-DD` the sheet stated rather
+   * than a timestamp in whatever zone the process runs in — the same choice
+   * `LegacyReportModel` makes for the column this is copied from, and the
+   * reason the coverage test is `>= CURRENT_DATE` rather than `> NOW()`.
+   */
+  @Column({
+    type: DataType.DATEONLY,
+    allowNull: true,
+    field: 'equality_legacy_valid_until',
+  })
+  equalityLegacyValidUntil!: string | null
+
   @ForeignKey(() => UserModel)
   @Column({ type: DataType.UUID, allowNull: true, field: 'reviewer_user_id' })
   reviewerUserId!: string | null
@@ -469,6 +507,7 @@ export class ReportModel extends MutableModel<
     clientProviderId: string | null,
   ): EqualityReportSummaryDto {
     return {
+      source: EqualityCoverageSourceEnum.REPORT,
       id: model.id,
       identifier: model.identifier,
       providerId: clientProviderId,
@@ -506,6 +545,13 @@ export class ReportModel extends MutableModel<
           ? model.status === ReportStatusEnum.POSTPONED
           : null,
       equalityReportId: model.equalityReportId,
+      equalitySource: model.equalitySource,
+      // Widened from the stored calendar day to the end of it, so the admin UI
+      // and the portal render the same instant for the same certificate — see
+      // `legacyValidUntilToDate` for why midnight would be wrong.
+      equalityLegacyValidUntil: model.equalityLegacyValidUntil
+        ? legacyValidUntilToDate(model.equalityLegacyValidUntil)
+        : null,
       reviewerUserId: model.reviewerUserId,
       approvedAt: model.approvedAt,
       validUntil: model.validUntil,

@@ -121,7 +121,7 @@ export class PartnerController {
     type: EqualityReportSummaryDto,
     include404: true,
     description:
-      'The company’s currently approved equality report. Its `id` is what a salary submission must reference as `equalityReportId` — a salary report cannot be filed without an approved equality report behind it, so this is the first call in the salary flow.',
+      'Whatever currently meets the company’s equality obligation, and `source` says which of the two it is. `REPORT` is an approved equality report filed through this system. `LEGACY` is an unexpired certificate from the Directorate’s retired register, which has no report row behind it — `id`, `identifier`, `providerId` and `approvedAt` are all null there and only `validUntil` is populated. Either satisfies the precondition for filing a salary report, which is resolved server-side on submission, so nothing here has to be passed back. First call in the salary flow: a 404 means neither kind of coverage is in force and no salary report can be filed.',
   })
   getActiveEqualityReport(
     @CurrentCompany() company: CompanyDto,
@@ -135,7 +135,7 @@ export class PartnerController {
     operationId: 'getPartnerSalaryReportEligibility',
     type: SalaryReportEligibilityDto,
     description:
-      'Whether the company may file a salary report now, and why not if it may not. Worth calling before building a payload: it is cheaper than discovering the renewal window from a rejected submission.',
+      'Whether the company may file a salary report now, and why not if it may not. `MISSING_EQUALITY_REPORT` covers both kinds of coverage being absent — a filed equality report and an unexpired legacy certificate count equally. Worth calling before building a payload: it is cheaper than discovering the renewal window from a rejected submission.',
   })
   getSalaryReportEligibility(
     @CurrentCompany() company: CompanyDto,
@@ -195,7 +195,7 @@ export class PartnerController {
         'Replayed. The `providerId` had already been used, so nothing was filed and `reportId` names the report that submission created earlier — the body just sent was not read. A corrected re-file needs a NEW `providerId`; see `replayed`.',
     },
     description:
-      'Files a salary report. The equality report it is audited against is resolved server-side — the company’s approved, in-force one, the same report `GET /reports/equality/active` returns — so it is not part of this body; a **404** means either there is none, or the `scoringModelId` names a model this key’s company does not own. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, the renewal window is not open, or a previous report is still in review — the response says which.',
+      'Files a salary report. What it is audited against is resolved server-side — the company’s approved, in-force equality report, or the unexpired legacy certificate covering it, whichever `GET /reports/equality/active` returns — so it is not part of this body, and the filed report records which of the two it was; a **404** means either there is none, or the `scoringModelId` names a model this key’s company does not own. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, the renewal window is not open, or a previous report is still in review — the response says which.',
   })
   async submitSalaryReport(
     @Body() input: SubmitPartnerSalaryReportDto,

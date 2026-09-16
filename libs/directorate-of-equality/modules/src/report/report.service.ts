@@ -30,6 +30,7 @@ import {
 } from '@dmr.is/utils-server/serverUtils'
 
 import { CompanyReportModel } from '../company/models/company-report.model'
+import { LegacyReportModel } from '../company/models/legacy-report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
@@ -65,13 +66,19 @@ import {
   ReportTimelineItemKindEnum,
 } from './dto/report-timeline-item.dto'
 import {
+  isLegacyEqualityCoverageActive,
+  toLegacyEqualitySummary,
+} from './lib/legacy-equality-coverage'
+import {
   EqualityContentTypeEnum,
+  EqualityCoverageSourceEnum,
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
 } from './models/report.enums'
 import { ReportModel } from './models/report.model'
 import { ReportEventModel } from './models/report-event.model'
+import { EqualityCoverage } from './types/equality-coverage'
 import {
   buildFreeTextWhere,
   buildImprovementPlanWhere,
@@ -103,6 +110,8 @@ export class ReportService implements IReportService {
     private readonly companyReportModel: typeof CompanyReportModel,
     @InjectModel(ReportOutlierGroupModel)
     private readonly reportOutlierGroupModel: typeof ReportOutlierGroupModel,
+    @InjectModel(LegacyReportModel)
+    private readonly legacyReportModel: typeof LegacyReportModel,
   ) {}
 
   async list(query: GetReportsQueryDto): Promise<GetReportsResponseDto> {
@@ -522,26 +531,119 @@ export class ReportService implements IReportService {
    *
    * Returns null when there's no active equality — callers translate that
    * into a 404 at the API surface.
+   *
+   * ⚠️ This answers "did the company file an equality report here", which since
+   * the register hand-over is a narrower question than "is the company's
+   * equality obligation met". Use `resolveEqualityCoverage` for the second —
+   * only callers that specifically need the report ROW (to link it, or to read
+   * columns off it) should be here.
    */
   async getActiveEqualityForCompany(
     companyId: string,
   ): Promise<EqualityReportSummaryDto | null> {
-    const report = await this.findActiveEqualityForCompany(companyId)
+    const coverage = await this.resolveEqualityCoverage(companyId)
 
-    if (!report) {
+    if (!coverage) {
       return null
+    }
+
+    if (coverage.source === EqualityCoverageSourceEnum.LEGACY) {
+      return toLegacyEqualitySummary(coverage.legacyValidUntil)
     }
 
     // This accessor serves the ADMIN surface, where the handle's only meaning is
     // the island.is application UUID the DTO documents. A channel-aware caller
-    // wants `findActiveEqualityForCompany` and its own channel's
+    // wants `resolveEqualityCoverage` and its own channel's
     // `toClientProviderId` instead — see ApplicationService.
     return ReportModel.toEqualitySummary(
-      report,
-      report.providerType === ReportProviderEnum.ISLAND_IS
-        ? report.providerId
+      coverage.report,
+      coverage.report.providerType === ReportProviderEnum.ISLAND_IS
+        ? coverage.report.providerId
         : null,
     )
+  }
+
+  /**
+   * What currently meets the company's equality obligation, from either of the
+   * two places it can come from — an APPROVED, in-force report filed here, or
+   * an unexpired certificate on the retired register.
+   *
+   * The legacy branch is not an edge case. At hand-over 1 507 of the 1 753
+   * loaded companies at 25+ hold no `report` row at all, and the Directorate
+   * records the equality plan of ~540 of them as in force. The admin register
+   * has counted those as coverage since m-20260901
+   * (`activeLegacyCertificationExists`); until this method existed the
+   * application portal did not, so exactly those companies were told they had
+   * no equality plan — by the very route they were sent to check — and could
+   * file nothing. "Has not filed here" is not "is out of compliance", and both
+   * surfaces are asking the second question.
+   *
+   * **A filed report wins when both are live.** Not an arbitrary tie-break: the
+   * report is the newer statement of the same obligation, it carries an id the
+   * salary report can link, and a company that re-filed here should not have
+   * its submission recorded against a superseded paper certificate. The legacy
+   * date can outlast it, which is why this is a preference and not a short
+   * circuit — `reportCovered` OR's the two for the same reason.
+   */
+  async resolveEqualityCoverage(
+    companyId: string,
+  ): Promise<EqualityCoverage | null> {
+    const report = await this.findActiveEqualityForCompany(companyId)
+
+    if (report) {
+      return {
+        source: EqualityCoverageSourceEnum.REPORT,
+        report,
+        legacyValidUntil: null,
+      }
+    }
+
+    const legacyValidUntil =
+      await this.findActiveLegacyEqualityValidUntil(companyId)
+
+    if (!legacyValidUntil) {
+      return null
+    }
+
+    return {
+      source: EqualityCoverageSourceEnum.LEGACY,
+      report: null,
+      legacyValidUntil,
+    }
+  }
+
+  /**
+   * The furthest-out unexpired `equality_valid_until` the retired register
+   * holds for this company, or null.
+   *
+   * Furthest-out, because `legacy_report` has no unique constraint on
+   * `company_id`: one row per *sheet* row, and where two sheet rows collapsed
+   * to one company — a renamed ministry, a kennitala shared by two police
+   * districts — both were archived. The later date is the certificate the
+   * company actually holds; the earlier one is the superseded record beside it.
+   *
+   * `IS NOT NULL` is explicit rather than left to the sort, because Postgres
+   * orders NULLs FIRST on DESC and a company whose sheet row never carried an
+   * equality date would otherwise come back as the top row.
+   *
+   * The expiry test itself is done in `isLegacyEqualityCoverageActive` rather
+   * than in SQL, so the date-only end-of-day rule lives in one place and this
+   * query cannot drift from the admin register's `>= CURRENT_DATE`.
+   */
+  private async findActiveLegacyEqualityValidUntil(
+    companyId: string,
+  ): Promise<string | null> {
+    const legacy = await this.legacyReportModel.findOne({
+      where: { companyId, equalityValidUntil: { [Op.ne]: null } },
+      attributes: ['equalityValidUntil'],
+      order: [['equalityValidUntil', 'DESC']],
+    })
+
+    if (!isLegacyEqualityCoverageActive(legacy?.equalityValidUntil ?? null)) {
+      return null
+    }
+
+    return legacy?.equalityValidUntil ?? null
   }
 
   async findActiveEqualityForCompany(
@@ -870,12 +972,27 @@ export class ReportService implements IReportService {
    * The field projection lives on the model as
    * `ReportModel.fromModelToEqualityReport` — this method just decides
    * *which* report to project from.
+   *
+   * ⚠️ **`equalitySource` is read before the link, and a LEGACY row returns
+   * null rather than throwing.** That row has no equality report to project and
+   * never did: the company was covered by a certificate on the retired
+   * register, which mints no `report` row, so there is nothing to load. The
+   * "missing link = data-integrity error" rule still holds for every other
+   * salary report, and keeping the two apart is the whole reason
+   * `equality_source` is a stored column rather than an inference from a null
+   * FK — before it existed, the only two states were "linked" and "broken", and
+   * a legitimate legacy filing would have read as the second and 500'd the
+   * admin detail screen.
    */
   private async resolveEqualityReport(
     report: ReportModel,
-  ): Promise<EqualityReportDto> {
+  ): Promise<EqualityReportDto | null> {
     if (report.type === ReportTypeEnum.EQUALITY) {
       return ReportModel.fromModelToEqualityReport(report)
+    }
+
+    if (report.equalitySource === EqualityCoverageSourceEnum.LEGACY) {
+      return null
     }
 
     if (!report.equalityReportId) {

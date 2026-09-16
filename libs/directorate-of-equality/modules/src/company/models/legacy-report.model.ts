@@ -43,11 +43,21 @@ import { CompanyModel } from './company.model'
  * "is this company covered" and "for how much longer", off the same two
  * columns, and drift between them is what `report-status.ts` exists to prevent.
  *
- * Nothing else derives from this table, and in particular the application
- * portal's own gate does not: `getSalaryReportEligibility` still requires a
- * real `report`, because the salary report references its equality report by
- * id and a legacy certificate has none to give. See the note on `reportCovered`
- * in `report-status.ts` for why that divergence is the intended one.
+ * ## What derives from it: the application portal's gate
+ *
+ * `equality_valid_until` is read a third time, by `resolveEqualityCoverage`, so
+ * that an unexpired legacy certificate satisfies the precondition for filing a
+ * salary report. It did not used to, on the reasoning that a salary report
+ * references its equality report by id and a legacy certificate has none to
+ * give — which was true about the schema and wrong about the company: the ~540
+ * companies whose plan exists only here read SATISFACTORY in the admin register
+ * while the portal told them they had no plan and let them file nothing. The
+ * salary row now records `equality_source = 'LEGACY'` and snapshots the date,
+ * rather than borrowing an id that does not exist (see m-20260916).
+ *
+ * The salary side is NOT read that way: `getSalaryReportEligibility` asks about
+ * the equality obligation only, and a legacy *salary* certificate is what the
+ * new report replaces rather than a substitute for filing it.
  *
  * ## Everything is TEXT, and deliberately so
  *

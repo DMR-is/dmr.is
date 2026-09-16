@@ -202,14 +202,21 @@ export function legacyCertificationExpiringSql(interval: string): string {
  * displayed `reportStatus` column and the list status filter so the two can
  * never disagree.
  *
- * ⚠️ This is deliberately *wider* than the application portal's own gate.
- * `getSalaryReportEligibility` still demands a real `report` row, because a
- * salary report references its equality report by id (`equalityReportId`) and a
- * legacy certificate has no id to give. So a legacy-certified company reads
- * SATISFACTORY here while the portal still answers MISSING_EQUALITY_REPORT if
- * it tries to file a salary report. That divergence is intended: this column
- * answers "is this company in compliance", the portal answers "can this
- * submission be built" — and the second needs a row the first does not.
+ * ⚠️ This used to be *wider* than the application portal's own gate, which
+ * demanded a real `report` row because a salary report references its equality
+ * report by id and a legacy certificate has none to give. A legacy-certified
+ * company therefore read SATISFACTORY here while the portal answered
+ * MISSING_EQUALITY_REPORT and let it file nothing — a divergence that was
+ * documented as intended right up until someone tried to use the portal from
+ * one of those ~540 companies. The portal now answers from
+ * `resolveEqualityCoverage`, which applies the same two rules this does, and a
+ * salary report filed on legacy coverage records that in `equality_source`
+ * instead of an id.
+ *
+ * The two still differ in expression — SQL here, because this decorates a list
+ * query; a pair of model reads there — so a change to what counts as coverage
+ * has to be made in both. `equality_valid_until >= CURRENT_DATE` and
+ * `legacyValidUntilToDate` are the two halves of that one rule.
  */
 function reportCovered(type: ReportTypeEnum): string {
   return `(${activeReportExists(type)} OR ${activeLegacyCertificationExists(
