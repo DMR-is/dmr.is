@@ -167,6 +167,9 @@ const makeService = () => {
     findAndCountAll,
     scope: reportModel.scope,
     findByPkOrThrow,
+    // The linked-equality lookup in `resolveEqualityReport`. Exposed so a test
+    // can assert it was NOT reached; the mock itself already existed.
+    findByPk,
     findOne,
     outlierFindAll,
     outlierFindAndCountAll,
@@ -750,6 +753,30 @@ describe('ReportService.getById', () => {
       )
     })
 
+    // The call site that 500'd before this PR, and the one the new admin tab
+    // consumes. `equalitySource` is read BEFORE the link, so a legacy filing —
+    // which has no equality report to load and never did — returns null instead
+    // of tripping the data-integrity throw immediately below.
+    it('returns a null equalityReport for a salary report filed on legacy coverage', async () => {
+      const { service, findByPkOrThrow, findByPk, logger } = makeService()
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.SALARY,
+          equalityReportId: null,
+          equalitySource: EqualityCoverageSourceEnum.LEGACY,
+          equalityLegacyValidUntil: '2028-03-31',
+        }) as unknown as ReportModel,
+      )
+
+      const detail = await service.getById(baseReport.id)
+
+      expect(detail.equalityReport).toBeNull()
+      // Nothing to load, so nothing is looked up — and this is emphatically not
+      // the data-integrity case, so it must not be logged as one.
+      expect(findByPk).not.toHaveBeenCalled()
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
     it('throws when a salary report has no equalityReportId (data integrity)', async () => {
       const { service, findByPkOrThrow, logger } = makeService()
       findByPkOrThrow.mockResolvedValueOnce(
@@ -1222,115 +1249,6 @@ describe('ReportService.getOutliers', () => {
   })
 })
 
-describe('ReportService.getActiveEqualityForCompany', () => {
-  const COMPANY_ID = '00000000-0000-0000-0000-0000000000c1'
-
-  it('returns a slim summary when an APPROVED EQUALITY report still in its validity window exists for the company', async () => {
-    const { service, findOne } = makeService()
-    const approvedAt = new Date('2025-06-01T00:00:00.000Z')
-    const validUntil = new Date('2028-06-01T00:00:00.000Z')
-    findOne.mockResolvedValueOnce({
-      id: 'eq-1',
-      identifier: 'EQ-2025-001',
-      providerType: ReportProviderEnum.ISLAND_IS,
-      providerId: 'island-is-application-eq-1',
-      approvedAt,
-      validUntil,
-    })
-
-    const result = await service.getActiveEqualityForCompany(COMPANY_ID)
-
-    // `providerId` is the only handle the applicant portal can fetch the
-    // report's content with — `GET /application/reports/:providerId`. Neither
-    // `id` (admin-only route) nor `identifier` (display code) resolves there.
-    expect(result).toEqual({
-      source: EqualityCoverageSourceEnum.REPORT,
-      id: 'eq-1',
-      identifier: 'EQ-2025-001',
-      providerId: 'island-is-application-eq-1',
-      approvedAt,
-      validUntil,
-    })
-
-    // Verify the where-clause filters the way the README describes.
-    const callArg = findOne.mock.calls[0][0]
-    expect(callArg.where).toEqual(
-      expect.objectContaining({
-        type: ReportTypeEnum.EQUALITY,
-        status: ReportStatusEnum.APPROVED,
-      }),
-    )
-    expect(callArg.where.validUntil).toEqual({ [Op.gt]: expect.any(Date) })
-    expect(callArg.order).toEqual([['approvedAt', 'DESC']])
-    expect(callArg.include[0]).toEqual(
-      expect.objectContaining({
-        as: 'companyReport',
-        where: { companyId: COMPANY_ID },
-        required: true,
-      }),
-    )
-  })
-
-  it('returns null when no equality report matches the requested company', async () => {
-    const { service, findOne } = makeService()
-    findOne.mockResolvedValueOnce(null)
-
-    expect(await service.getActiveEqualityForCompany(COMPANY_ID)).toBeNull()
-
-    const callArg = findOne.mock.calls[0][0]
-    expect(callArg.include[0]).toEqual(
-      expect.objectContaining({
-        where: { companyId: COMPANY_ID },
-        required: true,
-      }),
-    )
-  })
-
-  it('returns null when the matching equality report is not APPROVED', async () => {
-    const { service, findOne } = makeService()
-    findOne.mockResolvedValueOnce(null)
-
-    expect(await service.getActiveEqualityForCompany(COMPANY_ID)).toBeNull()
-
-    const callArg = findOne.mock.calls[0][0]
-    expect(callArg.where).toEqual(
-      expect.objectContaining({
-        type: ReportTypeEnum.EQUALITY,
-        status: ReportStatusEnum.APPROVED,
-      }),
-    )
-  })
-
-  it('returns null when the matching equality report is expired', async () => {
-    const { service, findOne } = makeService()
-    findOne.mockResolvedValueOnce(null)
-
-    expect(await service.getActiveEqualityForCompany(COMPANY_ID)).toBeNull()
-
-    const callArg = findOne.mock.calls[0][0]
-    expect(callArg.where.validUntil).toEqual({ [Op.gt]: expect.any(Date) })
-  })
-
-  it('withholds the provider handle when the report did not originate on island.is', async () => {
-    const { service, findOne } = makeService()
-    findOne.mockResolvedValueOnce({
-      id: 'eq-2',
-      identifier: 'EQ-2025-002',
-      providerType: ReportProviderEnum.SYSTEM,
-      // A stray handle on a non-island.is report would only ever 404 against
-      // `GET /application/reports/:providerId`, which filters on ISLAND_IS.
-      providerId: 'not-an-island-is-application',
-      approvedAt: new Date('2025-06-01T00:00:00.000Z'),
-      validUntil: new Date('2028-06-01T00:00:00.000Z'),
-    })
-
-    const result = await service.getActiveEqualityForCompany(COMPANY_ID)
-
-    expect(result?.providerId).toBeNull()
-    expect(result?.id).toBe('eq-2')
-  })
-})
-
 describe('ReportService.resolveEqualityCoverage', () => {
   const COMPANY_ID = '00000000-0000-0000-0000-0000000000c1'
 
@@ -1426,23 +1344,6 @@ describe('ReportService.resolveEqualityCoverage', () => {
     expect(await service.resolveEqualityCoverage(COMPANY_ID)).toBeNull()
   })
 
-  it('maps legacy coverage to a summary with no identity fields', async () => {
-    // Nothing to quote: the register load mints no `report` row, so there is no
-    // id, no identifier and no channel handle. A caller must branch on
-    // `source`, not on a null id.
-    const { service, findOne, legacyFindOne } = makeService()
-    findOne.mockResolvedValueOnce(null)
-    legacyFindOne.mockResolvedValueOnce({ equalityValidUntil: '2028-03-31' })
-
-    expect(await service.getActiveEqualityForCompany(COMPANY_ID)).toEqual({
-      source: EqualityCoverageSourceEnum.LEGACY,
-      id: null,
-      identifier: null,
-      providerId: null,
-      approvedAt: null,
-      validUntil: new Date('2028-03-31T23:59:59.000Z'),
-    })
-  })
 })
 
 describe('ReportService.getOutlierGroups', () => {

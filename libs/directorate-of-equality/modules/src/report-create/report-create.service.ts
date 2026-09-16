@@ -169,9 +169,14 @@ export class ReportCreateService implements IReportCreateService {
     // (see `LegacyReportModel`). The certificate's stated expiry is copied onto
     // the row because `legacy_report` is replaced wholesale by the next
     // register load, and this audit trail has to outlive it.
-    const equalitySource = equalityReportId
-      ? EqualityCoverageSourceEnum.REPORT
-      : EqualityCoverageSourceEnum.LEGACY
+    // Read off the coverage, NOT inferred from `!equalityReportId`. The two
+    // cannot disagree today — `resolveEqualityCoverage` throws rather than
+    // answering null, so a null id means LEGACY and nothing else — but that is
+    // an invariant held one call away, and inferring the basis from a null FK
+    // is the exact reading `EqualityCoverage` documents as the thing not to do.
+    // Null coverage means the caller named a report, which is REPORT by
+    // definition.
+    const equalitySource = coverage?.source ?? EqualityCoverageSourceEnum.REPORT
 
     const equalityLegacyValidUntil =
       coverage?.source === EqualityCoverageSourceEnum.LEGACY

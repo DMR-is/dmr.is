@@ -39,7 +39,6 @@ import { ReportEmployeeRoleModel } from '../report-employee/models/report-employ
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { UserModel } from '../user/models/user.model'
 import { EqualityReportDto } from './dto/equality-report.dto'
-import { EqualityReportSummaryDto } from './dto/equality-report-summary.dto'
 import { GetReportOutlierGroupsResponseDto } from './dto/get-report-outlier-groups-response.dto'
 import {
   GetReportOutliersQueryDto,
@@ -65,14 +64,10 @@ import {
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
 } from './dto/report-timeline-item.dto'
-import {
-  isLegacyEqualityCoverageActive,
-  toLegacyEqualitySummary,
-} from './lib/legacy-equality-coverage'
+import { isLegacyEqualityCoverageActive } from './lib/legacy-equality-coverage'
 import {
   EqualityContentTypeEnum,
   EqualityCoverageSourceEnum,
-  ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
 } from './models/report.enums'
@@ -522,45 +517,6 @@ export class ReportService implements IReportService {
     }
 
     return { items, total }
-  }
-
-  /**
-   * Find the company's currently-active EQUALITY report. "Active" means
-   * APPROVED with a `valid_until` strictly in the future. Prefer the most
-   * recently approved report if more than one active row exists.
-   *
-   * Returns null when there's no active equality — callers translate that
-   * into a 404 at the API surface.
-   *
-   * ⚠️ This answers "did the company file an equality report here", which since
-   * the register hand-over is a narrower question than "is the company's
-   * equality obligation met". Use `resolveEqualityCoverage` for the second —
-   * only callers that specifically need the report ROW (to link it, or to read
-   * columns off it) should be here.
-   */
-  async getActiveEqualityForCompany(
-    companyId: string,
-  ): Promise<EqualityReportSummaryDto | null> {
-    const coverage = await this.resolveEqualityCoverage(companyId)
-
-    if (!coverage) {
-      return null
-    }
-
-    if (coverage.source === EqualityCoverageSourceEnum.LEGACY) {
-      return toLegacyEqualitySummary(coverage.legacyValidUntil)
-    }
-
-    // This accessor serves the ADMIN surface, where the handle's only meaning is
-    // the island.is application UUID the DTO documents. A channel-aware caller
-    // wants `resolveEqualityCoverage` and its own channel's
-    // `toClientProviderId` instead — see ApplicationService.
-    return ReportModel.toEqualitySummary(
-      coverage.report,
-      coverage.report.providerType === ReportProviderEnum.ISLAND_IS
-        ? coverage.report.providerId
-        : null,
-    )
   }
 
   /**

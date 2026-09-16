@@ -1,7 +1,6 @@
 import { PagingQuery } from '@dmr.is/shared-dto'
 
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
-import { EqualityReportSummaryDto } from './dto/equality-report-summary.dto'
 import { GetReportOutlierGroupsResponseDto } from './dto/get-report-outlier-groups-response.dto'
 import { GetReportOutliersQueryDto } from './dto/get-report-outliers.query.dto'
 import { GetReportsQueryDto } from './dto/get-reports.query.dto'
@@ -46,9 +45,6 @@ export interface IReportService {
     query: GetReportOutliersQueryDto,
   ): Promise<GetReportOutliersResponseDto>
   getOutlierGroups(reportId: string): Promise<GetReportOutlierGroupsResponseDto>
-  getActiveEqualityForCompany(
-    companyId: string,
-  ): Promise<EqualityReportSummaryDto | null>
   /**
    * Whether the company's equality obligation is met, and by what — a filed
    * report or an unexpired certificate on the retired register.

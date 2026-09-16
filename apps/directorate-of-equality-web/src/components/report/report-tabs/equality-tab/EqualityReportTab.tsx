@@ -13,7 +13,7 @@ import {
   EqualityCoverageSourceEnum,
   EqualityReportDto,
 } from '../../../../gen/fetch'
-import { formatDateIS } from '../../../../lib/constants'
+import { formatCalendarDateIS } from '../../../../lib/constants'
 import { reportText } from '../../../../lib/text'
 import { Empty } from '../../../Empty'
 import { EqualityReportInputs } from './EqualityReportInputs'
@@ -65,7 +65,7 @@ export const EqualityReportTab = ({
           legacyValidUntil
             ? `${reportText.equalityTab.legacyMessage} ${
                 reportText.equalityTab.legacyValidUntilLabel
-              }: ${formatDateIS(legacyValidUntil)}.`
+              }: ${formatCalendarDateIS(legacyValidUntil)}.`
             : reportText.equalityTab.legacyMessage
         }
       />

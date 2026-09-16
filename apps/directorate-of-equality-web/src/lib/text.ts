@@ -322,7 +322,7 @@ export const reportText = {
     // opposite of what the register records.
     legacyTitle: 'Jafnréttisáætlun úr eldra kerfi',
     legacyMessage:
-      'Þessi launagreining var skilað á grundvelli jafnréttisáætlunar sem var í gildi í eldra skráningarkerfi Jafnréttisstofu. Áætlunin sjálf var aldrei skráð í þetta kerfi og er því ekki aðgengileg hér — sjá flipann „Eldri gögn“ á fyrirtækinu.',
+      'Þessari launagreiningu var skilað á grundvelli jafnréttisáætlunar sem var í gildi í eldra skráningarkerfi Jafnréttisstofu. Áætlunin sjálf var aldrei skráð í þetta kerfi og er því ekki aðgengileg hér — sjá flipann „Eldri gögn“ á fyrirtækinu.',
     legacyValidUntilLabel: 'Gildir til',
     approvedDateLabel: 'Dagsetning samþykktar',
     expiryLabel: 'Gildistími',

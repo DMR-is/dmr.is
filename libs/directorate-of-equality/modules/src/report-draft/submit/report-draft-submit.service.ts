@@ -114,14 +114,13 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       await this.finalizeService.assertEqualityReportApproved(equalityReportId)
     }
 
-    // A salary report with no link is a legacy filing and says so on the row;
-    // an equality report has nothing to be audited against and stays REPORT.
-    // See the CHECK in m-20260916 — the three columns are constrained together,
-    // so writing them apart is not an option.
-    const equalitySource =
-      isSalary && !equalityReportId
-        ? EqualityCoverageSourceEnum.LEGACY
-        : EqualityCoverageSourceEnum.REPORT
+    // Read off the coverage rather than inferred from `!equalityReportId`, so
+    // the basis and the date below come from one fact — see the CHECK in
+    // m-20260916, which constrains the three columns together and would reject
+    // any row where the two derivations drifted. Coverage is only resolved for
+    // a salary report that named none, so an equality draft and a caller-named
+    // report both fall to REPORT, which is what each of them is.
+    const equalitySource = coverage?.source ?? EqualityCoverageSourceEnum.REPORT
 
     const equalityLegacyValidUntil =
       coverage?.source === EqualityCoverageSourceEnum.LEGACY
