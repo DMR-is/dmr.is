@@ -24,6 +24,7 @@ import {
   ReportEventTypeEnum,
 } from '../report/models/report-event.model'
 import { IReportService } from '../report/report.service.interface'
+import { EqualityCoverage } from '../report/types/equality-coverage'
 import { AUTO_REVIEW_ENFORCE } from '../report-auto-review/report-auto-review.constants'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
@@ -50,9 +51,10 @@ export class ReportFinalizeService implements IReportFinalizeService {
   ) {}
 
   /**
-   * The equality report a new salary submission will be filed against, for a
-   * caller that does not name one — every partner-API submission, since that
-   * contract omits the field.
+   * What a new salary submission will be filed against, for a caller that does
+   * not name it — every partner-API submission, since that contract omits the
+   * field, and every island.is submission from a company whose coverage has no
+   * id to name.
    *
    * Lives beside `assertEqualityReportApproved` and is called from the same
    * place, which is the point: this must run **after** the idempotent replay
@@ -61,10 +63,6 @@ export class ReportFinalizeService implements IReportFinalizeService {
    * active, instead of replaying — a report that was successfully filed
    * becoming un-retryable because a precondition for NEW submissions had since
    * lapsed.
-   *
-   * Ordered by `approvedAt DESC`, which decides the rare case of two approved
-   * plans still in force: a company that re-filed before the previous one
-   * expired is working under the newer.
    *
    * **Delegates rather than querying**, and that is the whole point. This
    * resolution has to select exactly what `GET /reports/salary/eligibility` and
@@ -79,19 +77,23 @@ export class ReportFinalizeService implements IReportFinalizeService {
    *
    * Sharing the lookup is what keeps the pre-check and the submission from ever
    * disagreeing again. It also collapses two round trips into one indexed join.
+   * `resolveEqualityCoverage` is now that shared lookup, and it answers with a
+   * legacy certificate as readily as with a report — which is the same class of
+   * bug caught a second time, and at far greater scale: the ~540 companies
+   * whose equality plan exists only on the retired register were told by both
+   * read routes that they had none, and could file no salary report at all.
    */
-  async resolveActiveEqualityReportId(companyId: string): Promise<string> {
-    const equalityReport =
-      await this.reportService.findActiveEqualityForCompany(companyId)
+  async resolveEqualityCoverage(companyId: string): Promise<EqualityCoverage> {
+    const coverage = await this.reportService.resolveEqualityCoverage(companyId)
 
-    if (!equalityReport) {
+    if (!coverage) {
       // The same sentence `GET .../reports/equality/active` answers with, so a
       // caller that skipped the eligibility pre-check reads one message from
       // either route.
       throw new NotFoundException('No approved equality report is in force')
     }
 
-    return equalityReport.id
+    return coverage
   }
 
   /**

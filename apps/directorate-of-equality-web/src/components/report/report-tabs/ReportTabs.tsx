@@ -52,6 +52,8 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
       <EqualityReportTab
         report={report.equalityReport}
         supervisor={report.contactName ?? undefined}
+        source={report.equalitySource}
+        legacyValidUntil={report.equalityLegacyValidUntil}
       />
     ),
   }

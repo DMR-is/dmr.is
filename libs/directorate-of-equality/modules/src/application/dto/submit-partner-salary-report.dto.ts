@@ -59,7 +59,7 @@ export type SubmitSalaryReportInput = Omit<
   SubmitPartnerSalaryReportDto,
   'scoringModelId' | 'employees'
 > & {
-  equalityReportId?: string
+  equalityReportId?: string | null
   importedFromExcel?: boolean
   parsed: ParsedReportDto
 }

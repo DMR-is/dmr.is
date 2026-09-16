@@ -1,4 +1,9 @@
-import { ReportStatusEnum } from './report.enums'
+import {
+  EqualityContentTypeEnum,
+  EqualityCoverageSourceEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from './report.enums'
 import { ReportModel } from './report.model'
 
 /**
@@ -82,5 +87,45 @@ describe('ReportModel.fromModelToEqualityReport', () => {
     const dto = ReportModel.fromModelToEqualityReport(makeModel(null))
 
     expect(dto.content).toBeNull()
+  })
+})
+
+/**
+ * `equality_legacy_valid_until` is a DATEONLY — the calendar day the retired
+ * register stated the plan runs to — and `fromModel` is the one place it
+ * becomes a timestamp for the API. Pinned here because the service specs stub
+ * `fromModel` on their fixture rows, so nothing else exercises this widening.
+ */
+describe('ReportModel.fromModel — legacy equality expiry', () => {
+  const makeRow = (equalityLegacyValidUntil: string | null): ReportModel =>
+    ({
+      id: 'r1',
+      type: ReportTypeEnum.SALARY,
+      status: ReportStatusEnum.SUBMITTED,
+      equalityReportId: null,
+      equalitySource: equalityLegacyValidUntil
+        ? EqualityCoverageSourceEnum.LEGACY
+        : EqualityCoverageSourceEnum.REPORT,
+      equalityLegacyValidUntil,
+      equalityReportContentType: EqualityContentTypeEnum.HTML,
+    }) as unknown as ReportModel
+
+  it('widens the stated day to the end of it, so the last day still counts', () => {
+    // Midnight would expire a certificate for the whole of the day it is still
+    // valid — the same reason the register load writes 23:59:59 and the admin
+    // register compares `>= CURRENT_DATE`.
+    const dto = ReportModel.fromModel(makeRow('2028-03-31'))
+
+    expect(dto.equalityLegacyValidUntil).toEqual(
+      new Date('2028-03-31T23:59:59.000Z'),
+    )
+    expect(dto.equalitySource).toBe(EqualityCoverageSourceEnum.LEGACY)
+  })
+
+  it('leaves the field null on a report with no legacy basis', () => {
+    const dto = ReportModel.fromModel(makeRow(null))
+
+    expect(dto.equalityLegacyValidUntil).toBeNull()
+    expect(dto.equalitySource).toBe(EqualityCoverageSourceEnum.REPORT)
   })
 })

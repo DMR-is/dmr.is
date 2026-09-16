@@ -25,6 +25,7 @@ import {
 } from '../report/lib/parsed-payload.testing'
 import { REPORT_IDENTIFIER_INDEX } from '../report/lib/report-identifier'
 import {
+  EqualityCoverageSourceEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -106,7 +107,7 @@ describe('ReportCreateService', () => {
   let subCriterionStepBulkCreate: jest.Mock
   let reportResultCreateForReport: jest.Mock
   let autoReviewEvaluate: jest.Mock
-  let findActiveEqualityForCompany: jest.Mock
+  let resolveEqualityCoverage: jest.Mock
   let configGetByKey: jest.Mock
 
   beforeEach(async () => {
@@ -165,7 +166,7 @@ describe('ReportCreateService', () => {
     reportResultCreateForReport = jest
       .fn()
       .mockResolvedValue({ id: 'result-1' })
-    findActiveEqualityForCompany = jest.fn().mockResolvedValue(null)
+    resolveEqualityCoverage = jest.fn().mockResolvedValue(null)
     autoReviewEvaluate = jest.fn().mockResolvedValue({
       decision: AutoReviewDecisionEnum.AUTO_APPROVE,
       reason: 'Engin frávik greind.',
@@ -263,7 +264,7 @@ describe('ReportCreateService', () => {
         },
         {
           provide: IReportService,
-          useValue: { findActiveEqualityForCompany },
+          useValue: { resolveEqualityCoverage },
         },
         {
           provide: IConfigService,
@@ -900,21 +901,73 @@ describe('ReportCreateService', () => {
       const input = withoutEqualityReportId()
       // Resolution delegates to the same lookup the eligibility routes answer
       // from; the remaining `findOne` is the schema invariant check.
-      findActiveEqualityForCompany.mockResolvedValue({
-        id: RESOLVED_EQUALITY_ID,
+      resolveEqualityCoverage.mockResolvedValue({
+        source: EqualityCoverageSourceEnum.REPORT,
+        report: { id: RESOLVED_EQUALITY_ID },
+        legacyValidUntil: null,
       })
       reportFindOne.mockResolvedValueOnce({ id: RESOLVED_EQUALITY_ID })
 
       await service.createSalary(input)
 
       expect(reportCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ equalityReportId: RESOLVED_EQUALITY_ID }),
+        expect.objectContaining({
+          equalityReportId: RESOLVED_EQUALITY_ID,
+          equalitySource: EqualityCoverageSourceEnum.REPORT,
+          equalityLegacyValidUntil: null,
+        }),
       )
     })
 
-    it('refuses a new submission when no approved report is in force', async () => {
+    // The companies this whole change is for: covered by a certificate on the
+    // retired register, which mints no `report` row, so there is no id to link
+    // and requiring one refused the submission outright. The row records WHY
+    // the FK is null rather than leaving a null to be interpreted, and copies
+    // the stated expiry because the next register load replaces the archive
+    // wholesale.
+    it('files against legacy coverage, recording the basis and the stated expiry', async () => {
       const input = withoutEqualityReportId()
-      findActiveEqualityForCompany.mockResolvedValue(null)
+      resolveEqualityCoverage.mockResolvedValue({
+        source: EqualityCoverageSourceEnum.LEGACY,
+        report: null,
+        legacyValidUntil: '2028-03-31',
+      })
+
+      await service.createSalary(input)
+
+      expect(reportCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          equalityReportId: null,
+          equalitySource: EqualityCoverageSourceEnum.LEGACY,
+          equalityLegacyValidUntil: '2028-03-31',
+        }),
+      )
+    })
+
+    it('does not run the approved-report invariant check on legacy coverage', async () => {
+      // There is no report to check. Running it would look up `null` and 404 a
+      // submission the eligibility route had just approved.
+      const input = withoutEqualityReportId()
+      resolveEqualityCoverage.mockResolvedValue({
+        source: EqualityCoverageSourceEnum.LEGACY,
+        report: null,
+        legacyValidUntil: '2028-03-31',
+      })
+
+      await service.createSalary(input)
+
+      expect(reportFindOne).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            type: ReportTypeEnum.EQUALITY,
+          }),
+        }),
+      )
+    })
+
+    it('refuses a new submission when nothing covers the company', async () => {
+      const input = withoutEqualityReportId()
+      resolveEqualityCoverage.mockResolvedValue(null)
 
       await expect(service.createSalary(input)).rejects.toThrow(
         NotFoundException,

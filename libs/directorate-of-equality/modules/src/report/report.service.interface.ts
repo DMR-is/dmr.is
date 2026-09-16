@@ -1,7 +1,6 @@
 import { PagingQuery } from '@dmr.is/shared-dto'
 
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
-import { EqualityReportSummaryDto } from './dto/equality-report-summary.dto'
 import { GetReportOutlierGroupsResponseDto } from './dto/get-report-outlier-groups-response.dto'
 import { GetReportOutliersQueryDto } from './dto/get-report-outliers.query.dto'
 import { GetReportsQueryDto } from './dto/get-reports.query.dto'
@@ -11,6 +10,7 @@ import { ReportDetailDto } from './dto/report-detail.dto'
 import { ReportOverviewDto } from './dto/report-overview.dto'
 import { ReportOverviewStatisticsDto } from './dto/report-overview-statistics.dto'
 import { ReportModel } from './models/report.model'
+import { EqualityCoverage } from './types/equality-coverage'
 
 /** An uploaded equality plan, decoded and ready to stream. */
 export type EqualityContentPdf = {
@@ -45,13 +45,25 @@ export interface IReportService {
     query: GetReportOutliersQueryDto,
   ): Promise<GetReportOutliersResponseDto>
   getOutlierGroups(reportId: string): Promise<GetReportOutlierGroupsResponseDto>
-  getActiveEqualityForCompany(
-    companyId: string,
-  ): Promise<EqualityReportSummaryDto | null>
   /**
-   * The same lookup as above, unmapped. For callers that must resolve the
-   * caller-facing `providerId` through their own channel, which needs columns
-   * the summary DTO does not carry.
+   * Whether the company's equality obligation is met, and by what — a filed
+   * report or an unexpired certificate on the retired register.
+   *
+   * This is the shared answer behind `GET reports/equality/active`,
+   * `GET reports/salary/eligibility` and the salary submission, so that the
+   * three cannot tell a company different things about the same obligation.
+   * Prefer it over `findActiveEqualityForCompany` unless the report ROW itself
+   * is what is wanted.
+   */
+  resolveEqualityCoverage(companyId: string): Promise<EqualityCoverage | null>
+  /**
+   * The filed-report half of the lookup, unmapped. For callers that must
+   * resolve the caller-facing `providerId` through their own channel, which
+   * needs columns the summary DTO does not carry.
+   *
+   * ⚠️ Answers "did the company file here", not "is the company covered" — a
+   * legacy-certified company reads null. Use `resolveEqualityCoverage` for the
+   * second question.
    */
   findActiveEqualityForCompany(companyId: string): Promise<ReportModel | null>
   getOverview(nationalId: string): Promise<ReportOverviewDto>

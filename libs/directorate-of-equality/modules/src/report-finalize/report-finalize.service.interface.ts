@@ -1,8 +1,9 @@
 import { ReportStatusEnum, ReportTypeEnum } from '../report/models/report.model'
+import { EqualityCoverage } from '../report/types/equality-coverage'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
 
 export interface IReportFinalizeService {
-  resolveActiveEqualityReportId(companyId: string): Promise<string>
+  resolveEqualityCoverage(companyId: string): Promise<EqualityCoverage>
   assertEqualityReportApproved(equalityReportId: string): Promise<void>
   withdrawInflightSibling(
     companyId: string,

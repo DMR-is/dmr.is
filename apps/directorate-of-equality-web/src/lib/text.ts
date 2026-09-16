@@ -315,6 +315,15 @@ export const reportText = {
     emptyTitle: 'Engin jafnréttisáætlun',
     emptyMessage:
       'Engin jafnréttisáætlun fannst fyrir þessa skýrslu. Vinsamlegast hafðu samband við fyrirtækið til að fá frekari upplýsingar.',
+    // A salary report filed against a certificate from the retired register.
+    // There is no plan to render here and there never was — the company was
+    // certified before this system took over — so the tab has to say that
+    // rather than fall through to "engin jafnréttisáætlun", which claims the
+    // opposite of what the register records.
+    legacyTitle: 'Jafnréttisáætlun úr eldra kerfi',
+    legacyMessage:
+      'Þessari launagreiningu var skilað á grundvelli jafnréttisáætlunar sem var í gildi í eldra skráningarkerfi Jafnréttisstofu. Áætlunin sjálf var aldrei skráð í þetta kerfi og er því ekki aðgengileg hér — sjá flipann „Eldri gögn“ á fyrirtækinu.',
+    legacyValidUntilLabel: 'Gildir til',
     approvedDateLabel: 'Dagsetning samþykktar',
     expiryLabel: 'Gildistími',
     responsibleLabel: 'Ábyrgðaraðili',
