@@ -485,7 +485,7 @@ const scalar = (value: ExcelJS.CellValue): ExcelJS.CellValue =>
   value &&
   typeof value === 'object' &&
   ('formula' in value || 'sharedFormula' in value)
-    ? value.result ?? null
+    ? (value.result ?? null)
     : value
 
 const readString = (cell: Cell | undefined): string | null => {
@@ -1471,7 +1471,7 @@ const main = async (): Promise<void> => {
   const sheet = sheetFlag
     ? /^\d+$/.test(sheetFlag)
       ? workbook.worksheets[Number(sheetFlag) - 1]
-      : workbook.getWorksheet(sheetFlag) ?? undefined
+      : (workbook.getWorksheet(sheetFlag) ?? undefined)
     : workbook.worksheets[0]
   if (!sheet) {
     console.error(
@@ -1554,7 +1554,7 @@ const main = async (): Promise<void> => {
 
     // Corrections come before validation: two of the three kennitölur below
     // would otherwise be refused for being 9 digits long.
-    const sanitized = rawKt ? sanitize(rawKt) ?? rawKt.trim() : null
+    const sanitized = rawKt ? (sanitize(rawKt) ?? rawKt.trim()) : null
     const correction = KENNITALA_CORRECTIONS.find(
       (c) =>
         c.sheet === (sanitized ?? '') &&
@@ -1592,7 +1592,7 @@ const main = async (): Promise<void> => {
 
     // ÍSAT: an unknown code would fail the FK, so drop it to NULL and report.
     const isatCell = readString(cell(rowNo, HEADERS.isat))
-    const isatFixed = isatCell ? ISAT_CORRECTIONS[isatCell] ?? null : null
+    const isatFixed = isatCell ? (ISAT_CORRECTIONS[isatCell] ?? null) : null
     const isatRaw = isatFixed ?? normalizeIsatCode(isatCell)
     const isat = isatRaw && knownIsat.has(isatRaw) ? isatRaw : null
 
@@ -1750,9 +1750,9 @@ const main = async (): Promise<void> => {
 
     const preferred = PREFERRED_ROWS.find((p) => p.nationalId === nationalId)
     const winner = preferred
-      ? group.find(
+      ? (group.find(
           (r) => headerKey(r.sheetName) === headerKey(preferred.sheetName),
-        ) ?? null
+        ) ?? null)
       : [...group].sort(
           (a, b) => modifiedRank(b) - modifiedRank(a) || a.row - b.row,
         )[0]

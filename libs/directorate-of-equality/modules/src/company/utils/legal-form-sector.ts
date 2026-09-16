@@ -71,10 +71,11 @@ export const LEGAL_FORM_SECTOR: Record<string, CompanySectorEnum> = {
  * into `rikissjour`, "Opinber þjónusta" into `opinberjonusta` and
  * "Einstaklingsfyrirtæki" into `einstaklingsfyrirtki`, none of which any key in
  * `LEGAL_FORM_SECTOR` spells. Those four keys were therefore unreachable via
- * the name fallback, and three of them are PUBLIC — the exact under-reporting
- * bias this filter must not have. The table uses the ordinary Icelandic ASCII
- * transliteration (ð→d, þ→th, æ→ae); this keeps the lookup agreeing with it,
- * and the spec asserts every key is reachable from its Icelandic spelling.
+ * the name fallback, and three of them are government forms (one municipal,
+ * two central) — the exact under-reporting bias this filter must not have. The
+ * table uses the ordinary Icelandic ASCII transliteration (ð→d, þ→th, æ→ae);
+ * this keeps the lookup agreeing with it, and the spec asserts every key is
+ * reachable from its Icelandic spelling.
  */
 function normalizeFormKey(value: string): string {
   return value

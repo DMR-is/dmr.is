@@ -29,7 +29,22 @@ module.exports = {
     //
     // The match is on a lower-cased prefix because the stored values are RSK's
     // raw, accented strings ('Sveitarfélag', 'Byggðasamlag'); the prefixes stop
-    // before the first accented character so no unaccenting is needed.
+    // before the first non-ASCII character so no unaccenting is needed. Note
+    // 'bygg%' cannot be tightened to 'byggd%': the stored value has ð, not d,
+    // and LIKE does no collation folding, so 'byggd%' matches nothing.
+    //
+    // Both columns are tested independently, NOT via coalesce(id, name):
+    // `resolveSector` tries the form id and falls back to the name on a lookup
+    // MISS, whereas coalesce falls back only on NULL. Those differ for exactly
+    // the rows `legal-form-sector.spec.ts` pins — `{ id: 'X7', name:
+    // 'Sveitarfélag' }` — and if RSK's id is an opaque code rather than a word,
+    // that is every classified row rather than an edge case.
+    //
+    // This does drop `resolveSector`'s id-before-name precedence: a form whose
+    // id maps to a state form while its name starts 'sveitarf' would resolve
+    // RIKISADILI in code and SVEITARFELAG here. Unreachable in practice — no
+    // ohf./ríkisstofnun is named 'Sveitarfélag' — and mirroring the precedence
+    // exactly would mean restating the whole lookup table in SQL.
     //
     // ⚠️ Rows that carry NO legal form cannot be recovered this way — the sheet
     // load (scripts/company-register-to-sql.ts) writes sector but never
@@ -91,8 +106,10 @@ module.exports = {
                     WHEN 'PRIVATE' THEN 'FYRIRTAEKI'
                     WHEN 'PUBLIC' THEN
                       CASE
-                        WHEN lower(coalesce(legal_form_id, legal_form_name, '')) LIKE 'sveitarf%'
-                          OR lower(coalesce(legal_form_id, legal_form_name, '')) LIKE 'bygg%'
+                        WHEN lower(coalesce(legal_form_id, '')) LIKE 'sveitarf%'
+                          OR lower(coalesce(legal_form_id, '')) LIKE 'bygg%'
+                          OR lower(coalesce(legal_form_name, '')) LIKE 'sveitarf%'
+                          OR lower(coalesce(legal_form_name, '')) LIKE 'bygg%'
                         THEN 'SVEITARFELAG'
                         ELSE 'RIKISADILI'
                       END

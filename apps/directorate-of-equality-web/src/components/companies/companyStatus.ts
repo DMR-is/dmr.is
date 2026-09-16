@@ -125,10 +125,11 @@ export const SALARY_DETAIL_LABEL: Record<
  * shared, so this is expressed as an override rather than a second full map —
  * a second map would drift.
  */
-export const SALARY_OBLIGATION_TAG_VARIANT: typeof OBLIGATION_STATUS_TAG_VARIANT = {
-  ...OBLIGATION_STATUS_TAG_VARIANT,
-  [CompanyObligationStatusEnum.MISSING]: 'purple',
-}
+export const SALARY_OBLIGATION_TAG_VARIANT: typeof OBLIGATION_STATUS_TAG_VARIANT =
+  {
+    ...OBLIGATION_STATUS_TAG_VARIANT,
+    [CompanyObligationStatusEnum.MISSING]: 'purple',
+  }
 
 /**
  * The two default-on hides, as opt-in reveals.

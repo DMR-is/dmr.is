@@ -124,8 +124,7 @@ export const overviewText = {
       analyzing: 'Greini frávik…',
       analyzeError:
         'Ekki tókst að greina frávik. Reyndu að flytja skrána inn aftur.',
-      none:
-        'Óskýrður launamunur er undir viðmiði. Engar úrbætur nauðsynlegar — hægt er að senda skýrsluna beint inn.',
+      none: 'Óskýrður launamunur er undir viðmiði. Engar úrbætur nauðsynlegar — hægt er að senda skýrsluna beint inn.',
       // ⚠️ Remedy-NEUTRAL by design. This used to read "Launahækkun þessara
       // starfsmanna færir hann undir viðmiðið" — naming a specific remedy (a
       // pay rise) and asserting an arithmetic outcome, neither of which the
@@ -449,8 +448,7 @@ export const reportText = {
       // figure on this page does. Stated rather than assumed: a reviewer
       // counting heads against the company's own records needs to know which
       // convention produced the two numbers.
-      hint:
-        'Kynsegin og hlutlaus skráning kyns eru talin með konum, eins og í öllum útreikningum á síðunni.',
+      hint: 'Kynsegin og hlutlaus skráning kyns eru talin með konum, eins og í öllum útreikningum á síðunni.',
     },
     chartTitle: 'Stig á móti reglulegu tímakaupi',
     chartDescription:
