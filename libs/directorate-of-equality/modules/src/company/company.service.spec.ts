@@ -1368,10 +1368,10 @@ function makeLegacyReportModel(
     nationalId: '5501234567',
     ...overrides,
   }
-  return ({
+  return {
     ...fields,
     fromModel: () => ({ ...fields }),
-  } as unknown) as LegacyReportModel
+  } as unknown as LegacyReportModel
 }
 
 function makeRegistryEntity(
@@ -1399,8 +1399,8 @@ function makeCompanyModel(overrides: Partial<CompanyModel> = {}): CompanyModel {
     employeeCountCategory: CompanySizeEnum.SMALL,
     ...overrides,
   }
-  return ({
+  return {
     ...fields,
     fromModel: () => ({ ...fields }),
-  } as unknown) as CompanyModel
+  } as unknown as CompanyModel
 }

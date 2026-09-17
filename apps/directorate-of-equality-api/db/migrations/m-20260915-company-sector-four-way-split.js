@@ -59,10 +59,34 @@ module.exports = {
     //     reload never touches these, so any that are actually a
     //     municipality — not a state agency — need a manual
     //     PATCH /company/:id/sector after this migration.
+    //
+    // Those guessed rows are enumerable, so the manual follow-up above is a
+    // query rather than a hunt: every RIKISADILI the RSK path derived carries
+    // a legal form, and the ELSE branch below is the only thing that produces
+    // one without.
+    //   SELECT id, name, national_id, sector_override FROM company
+    //    WHERE sector = 'RIKISADILI'
+    //      AND legal_form_id IS NULL
+    //      AND legal_form_name IS NULL;
+    // Exact only until the next sheet load, which also writes RIKISADILI rows
+    // carrying no legal form (COMPANY_COLUMNS has no legal_form_*), so run it
+    // before re-running scripts/company-register-to-sql.ts, not after.
+    //
     // RADUNEYTI (ministry) is never produced by this migration: no
     // rekstrarform or ÍSAT code identifies a ministry, so every ministry
     // among the existing rows needs the same manual reclassification
     // regardless of override state.
+    //
+    // ⚠️ Deploy assumption: this is a one-shot enum rebuild, and the API
+    // image runs `sequelize-cli db:migrate && node main.js` as its CMD (see
+    // the Dockerfile), so the migration lands while ECS is still draining the
+    // old tasks. Those tasks still write 'PRIVATE'/'PUBLIC' through
+    // CompanyService.getOrCreateByNationalId, and the rebuilt enum rejects
+    // both (Postgres 22P02) until they are gone. Reads are unaffected, and on
+    // a low-traffic admin system the window is short enough that this is
+    // accepted rather than staged across two deploys — but a company created
+    // through the RSK lookup path during the rollout will fail, and needs
+    // creating again once it has finished.
     //
     // Follows the shape m-20260624 was rewritten into after an incident: ONE
     // `sql.transaction()` that Sequelize actually knows about (a literal

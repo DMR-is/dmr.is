@@ -53,6 +53,19 @@ export const LEGAL_FORM_SECTOR: Record<string, CompanySectorEnum> = {
   opinberthlutafelag: CompanySectorEnum.RIKISADILI,
   rikissjodur: CompanySectorEnum.RIKISADILI,
   rikisstofnun: CompanySectorEnum.RIKISADILI,
+  // The three below say "public" without saying "state": a bare `Stofnun`,
+  // `Opinber stofnun` or `Opinber þjónusta` could just as well be owned by a
+  // municipality, where the four keys above name the state outright. The old
+  // two-bucket enum never had to choose — all of them were simply PUBLIC.
+  //
+  // They resolve to RIKISADILI rather than UNKNOWN on purpose. UNKNOWN would
+  // tell the admin nothing extra — either way the row needs the same manual
+  // check, and the `sectorOverride` hint on the detail view already shows the
+  // value was derived, not chosen — while dropping it out of every government
+  // filter, which is precisely the under-reporting bias this classification
+  // must not have. A municipal institution filed as RIKISADILI is at least
+  // still counted on the government side, and an admin can move it with
+  // PATCH /company/:id/sector.
   stofnun: CompanySectorEnum.RIKISADILI,
   opinberstofnun: CompanySectorEnum.RIKISADILI,
   opinberthjonusta: CompanySectorEnum.RIKISADILI,

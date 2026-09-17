@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import {
+  zCompanySectorEnum,
   zCreateCompanyBody,
   zCreateCompanyCommentBody,
   zCreateCompanyCommentPath,
@@ -55,17 +56,10 @@ const zGetCompaniesQuery = z.object({
   includeInactive: z.boolean().optional(),
   isatCategoryCode: z.array(z.string()).optional(),
   isatSection: z.array(z.string()).optional(),
-  sector: z
-    .array(
-      z.enum([
-        'UNKNOWN',
-        'FYRIRTAEKI',
-        'RADUNEYTI',
-        'RIKISADILI',
-        'SVEITARFELAG',
-      ]),
-    )
-    .optional(),
+  // From the generated schema, not a literal list: a hand-written copy of the
+  // enum would let the next value through as a silently-rejected filter rather
+  // than a compile error.
+  sector: z.array(zCompanySectorEnum).optional(),
   regionCode: z.array(z.string()).optional(),
   postcode: z.array(z.string()).optional(),
   sortBy: z.enum(['name', 'employeeCount', 'nextReportDue']).optional(),
