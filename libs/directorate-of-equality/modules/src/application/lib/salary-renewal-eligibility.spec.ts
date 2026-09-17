@@ -61,5 +61,30 @@ describe('salary-renewal-eligibility', () => {
         new Date('2026-06-25T00:00:00.000Z'),
       )
     })
+
+    it('floors earliestSubmissionDate to the start of the day, not the due date time of day', () => {
+      // Due dates are end-of-day deadlines — 23:59:59 from the register load,
+      // `endOfUtcDay` from the approval flow. Carrying that time of day over
+      // would name 2026-12-24 to the applicant and then refuse all of it.
+      const dueAt = new Date('2027-06-24T23:59:59.999Z')
+
+      const result = evaluateSalaryRenewalEligibility(dueAt, now)
+
+      expect(result.earliestSubmissionDate).toEqual(
+        new Date('2026-12-24T00:00:00.000Z'),
+      )
+    })
+
+    it('opens the window from the first instant of the earliest day', () => {
+      const dueAt = new Date('2026-12-24T23:59:59.999Z')
+      // Midnight on the day `earliestSubmissionDate` names: eligible, where an
+      // un-floored boundary would have refused until 23:59:59.
+      const atMidnight = new Date('2026-06-24T00:00:00.000Z')
+
+      const result = evaluateSalaryRenewalEligibility(dueAt, atMidnight)
+
+      expect(result.eligible).toBe(true)
+      expect(result.reason).toBeNull()
+    })
   })
 })

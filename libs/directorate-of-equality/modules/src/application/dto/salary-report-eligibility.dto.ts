@@ -27,15 +27,20 @@ export class SalaryReportEligibilityDto {
 
   @ApiOptionalDateTime({
     nullable: true,
+    // The decorator's default example is a mid-day instant, which is what these
+    // two fields are deliberately not. Overridden so the shape the consumer
+    // sees is the shape it gets.
+    example: '2029-10-03T23:59:59.999Z',
     description:
-      "The company's next salary-report due date (`next_salary_report_due_at`). Null when no obligation is on record.",
+      "The company's next salary-report due date (`next_salary_report_due_at`). An end-of-day deadline — the company is not late until the named day is over. Null when no obligation is on record.",
   })
   dueAt!: Date | null
 
   @ApiOptionalDateTime({
     nullable: true,
+    example: '2029-04-03T00:00:00.000Z',
     description:
-      'Earliest moment the company may submit (due date minus the 6-month window). Null when there is no due date to anchor on.',
+      'Earliest moment the company may submit (due date minus the 6-month window), normalised to 00:00 on that day — the whole of the named date can be filed on. Null when there is no due date to anchor on.',
   })
   earliestSubmissionDate!: Date | null
 }
