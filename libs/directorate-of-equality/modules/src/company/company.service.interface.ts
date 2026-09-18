@@ -55,6 +55,16 @@ export interface ICompanyService {
   ): Promise<CompanyMailRecipient[]>
 
   /**
+   * Every company matching `filter`, unpaged, as full DTOs — the data export.
+   *
+   * Same contract as `findMailRecipientsByFilter` above and for the same
+   * reason: an export that silently stopped at page one would be indis-
+   * tinguishable from a complete one once it is a file on someone's desk.
+   * Paging params on `filter` are ignored.
+   */
+  findAllByFilter(filter: GetCompaniesQueryDto): Promise<CompanyDto[]>
+
+  /**
    * The named companies as mail recipients. Ids that match nothing are simply
    * absent from the result — the caller compares counts and decides whether a
    * missing company is an error.
