@@ -1,20 +1,26 @@
-import { Op, WhereOptions } from 'sequelize'
+import { literal, Op, WhereOptions } from 'sequelize'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-
-import { CompanyStatusEnum } from '../../modules/company/models/company.enums'
-import { CompanyModel } from '../../modules/company/models/company.model'
 import {
   CompanyDeadlineReminderEventType,
   CompanyEventTypeEnum,
+  CompanyModel,
   CompanyReminderTierEnum,
-} from '../../modules/company/models/company-event.model'
-import { ICompanyEventService } from '../../modules/company-event/company-event.service.interface'
-import { IDoeMailService } from '../../modules/mail/doe-mail.service.interface'
-import { ReportTypeEnum } from '../../modules/report/models/report.enums'
+  CompanyStatusEnum,
+  equalityRequiredSql,
+  salaryRequiredSql,
+} from '@dmr.is/doe-modules/company'
+import { ICompanyEventService } from '@dmr.is/doe-modules/company-event'
+import {
+  IDoeMailService,
+  looksLikeOneAddress,
+  MailSendError,
+} from '@dmr.is/doe-modules/mail'
+import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
 import { REPORT_DEADLINE_REMINDER_LOGGING_CONTEXT } from '../constants'
 import { IReportDeadlineReminderService } from './report-deadline-reminder.service.interface'
 
@@ -25,6 +31,27 @@ type DeadlineKind = {
   /** Company column holding the due date. */
   dueField: 'nextEqualityReportDueAt' | 'nextSalaryReportDueAt'
   reportType: ReportTypeEnum
+  /**
+   * SQL boolean: does the company actually owe this report?
+   *
+   * ⚠️ Load-bearing, and imported rather than restated. A due date being in the
+   * past is NOT the same as a deadline being owed: the register load seeds
+   * `next_equality_report_due_at` from the old SharePoint sheet's `Gildistíma
+   * jafnréttisáætlunar` for companies of EVERY size, so companies below 25 —
+   * which owe no plan at all — carry live dates. Without this gate they fall
+   * into the tiers below and are mailed a statutory deadline notice for an
+   * obligation they do not have.
+   *
+   * The salary side was never exposed to that (the load size-gates it on insert
+   * and clears it on upsert), but it is gated here too: an admin clearing
+   * `salary_report_required_override` must not leave the company being mailed
+   * against a date the approval flow wrote while the override stood.
+   *
+   * These are the same expressions the register's own status columns and list
+   * filter are built from (`@dmr.is/doe-modules/company`), so the mailer and the
+   * admin UI cannot come to disagree about who owes what.
+   */
+  obligation: string
   /** Event recorded once a reminder is sent. */
   sentEventType: CompanyDeadlineReminderEventType
   /** Event recorded when a reminder is due but no email is on file. */
@@ -35,6 +62,7 @@ const DEADLINE_KINDS: DeadlineKind[] = [
   {
     dueField: 'nextEqualityReportDueAt',
     reportType: ReportTypeEnum.EQUALITY,
+    obligation: equalityRequiredSql,
     sentEventType: CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
     noEmailEventType:
       CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
@@ -42,6 +70,7 @@ const DEADLINE_KINDS: DeadlineKind[] = [
   {
     dueField: 'nextSalaryReportDueAt',
     reportType: ReportTypeEnum.SALARY,
+    obligation: salaryRequiredSql,
     sentEventType: CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT,
     noEmailEventType:
       CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
@@ -131,15 +160,22 @@ export class ReportDeadlineReminderService
     tier: Tier,
     now: Date,
   ): Promise<void> {
-    // Active, non-quarantined companies whose deadline currently sits in this
-    // tier's band. `quarantined` is an admin halt switch — no outbound activity
-    // for those companies (see PR #1321) — so they are excluded at the query
-    // level. Per-tier dedup happens per-company below.
+    // Active, non-quarantined companies that OWE this report and whose deadline
+    // currently sits in this tier's band. `quarantined` is an admin halt switch
+    // — no outbound activity for those companies (see PR #1321) — so they are
+    // excluded at the query level. Per-tier dedup happens per-company below.
+    //
+    // ⚠️ `kind.obligation` is raw SQL qualified with the `CompanyModel` alias,
+    // which is what Sequelize names the table in this very query
+    // (`FROM "company" AS "CompanyModel"`). It is not user input — the two
+    // values are module constants. See the note on `DeadlineKind.obligation`
+    // for why a due date alone is not enough.
     const companies = await this.companyModel.findAll({
       where: {
         status: CompanyStatusEnum.ACTIVE,
         quarantined: false,
         [kind.dueField]: tier.dueRange(now),
+        [Op.and]: literal(kind.obligation),
       },
     })
 
@@ -151,7 +187,72 @@ export class ReportDeadlineReminderService
     }
 
     for (const company of companies) {
-      await this.remindCompany(company, kind, tier.tier)
+      /*
+       * ⚠️ **Per-company, so one bad recipient cannot abort the run.**
+       *
+       * `sendReportDeadlineReminder` throws on a failed send — that is its
+       * contract, and what keeps a failure out of the SENT event so the next run
+       * retries it. But nothing above this used to catch, and
+       * `AdvisoryLockService` runs the whole task inside one transaction: the
+       * first failure aborted every remaining company, every remaining tier and
+       * the second report kind, and rolled back the `job_runs` bookkeeping with
+       * it.
+       *
+       * That is worse than the bug it replaced. `company.email` is admin-set,
+       * nullable, and validated by nothing, so one permanently bad-but-truthy
+       * address would re-abort every run — and because the SENT event is written
+       * only after a successful send, that company stays in the band and keeps
+       * blocking everyone after it. Statutory deadline notices, withheld
+       * indefinitely.
+       *
+       * ⚠️ **Only a `MailSendError`.** Everything else rethrows, and it has to:
+       * `AdvisoryLockService` runs this whole task in one transaction and CLS is
+       * live for this app, so the model queries here enlist in it. A DB error
+       * therefore aborts the transaction — every later statement fails `25P02`,
+       * a blanket catch swallows each one, and Postgres answers the eventual
+       * `COMMIT` on an aborted transaction with a silent `ROLLBACK`. The task
+       * would report success having mailed every company in the band while every
+       * `SENT` event and the `job_runs` cooldown were discarded, and the next run
+       * would mail them all again. A deterministic fault on the event insert
+       * turns that into a repeating storm.
+       *
+       * So a database fault must stay loud, exactly as it did before this catch
+       * existed.
+       *
+       * ⚠️ **"Loud" means the PROCESS, not the run.** The rethrow reaches an
+       * `async` `@Cron` method; cron does not await the callback, so this becomes
+       * an unhandled rejection, and this repo's winston config sets
+       * `exitOnError` with `rejectionHandlers`, which exits the container. ECS
+       * restarts it. That is `main`'s behaviour for every error in this task
+       * already — `main`'s `processTier` has no catch at all — so it is not
+       * introduced here, and `report-deadline-reminder.task.ts` now catches at
+       * the `@Cron` boundary so the run aborts without taking the API with it.
+       *
+       * The `job_runs` row rolls back with the abort. That is the right trade,
+       * but it is not free: SES is not transactional, so any company already
+       * emailed in this run WILL be emailed again on the next one, because its
+       * `SENT` event rolled back too. Bounded by where the fault hits, and far
+       * better than the blanket catch it replaced, which mailed the entire band
+       * with nothing recorded.
+       */
+      try {
+        await this.remindCompany(company, kind, tier.tier)
+      } catch (error) {
+        if (!(error instanceof MailSendError)) {
+          throw error
+        }
+
+        this.logger.error(
+          `Could not email company ${company.id} its ${kind.reportType} ${tier.tier} reminder — continuing with the rest of the batch`,
+          {
+            context: LOGGING_CONTEXT,
+            companyId: company.id,
+            reportType: kind.reportType,
+            tier: tier.tier,
+            message: error instanceof Error ? error.message : String(error),
+          },
+        )
+      }
     }
   }
 
@@ -174,8 +275,22 @@ export class ReportDeadlineReminderService
       )
     if (alreadySent) return
 
-    const to = company.email
-    if (!to) {
+    /*
+     * ⚠️ Same rule as the report mail — `looksLikeOneAddress`, from the mail
+     * module — not a truthiness test.
+     *
+     * `company.email` is admin-set, nullable and validated by nothing, so a
+     * truthy-but-unusable value used to sail past this check into a send that
+     * could never succeed. Because the `SENT` event is only written after a
+     * successful send and `flagMissingEmail` was skipped, that company got no
+     * event of either kind: silently retried every run, forever, with nothing on
+     * its timeline for an admin to notice.
+     *
+     * An unusable address is now the same finding as a missing one — it is, from
+     * the company's side — so it lands on the timeline once per tier per cycle.
+     */
+    const to = company.email?.trim()
+    if (!looksLikeOneAddress(to)) {
       await this.flagMissingEmail(company, kind, tier, dueDateIso)
       return
     }
@@ -200,7 +315,11 @@ export class ReportDeadlineReminderService
   /**
    * Records a NO_EMAIL event on the company timeline so the gap is visible to
    * admins. Deduped per (tier, due date) — same key as the sent event — so a
-   * company with no email gets one event per tier per cycle, not one per run.
+   * company with no usable email gets one event per tier per cycle, not one per
+   * run.
+   *
+   * Covers a stored value that cannot be mailed as well as a null one: both leave
+   * the company un-notified, which is the thing an admin needs to see.
    */
   private async flagMissingEmail(
     company: CompanyModel,
@@ -218,7 +337,7 @@ export class ReportDeadlineReminderService
     if (alreadyFlagged) return
 
     this.logger.warn(
-      `Tried to send ${kind.reportType} ${tier} reminder for company ${company.id} but no email is on file`,
+      `Tried to send ${kind.reportType} ${tier} reminder for company ${company.id} but no usable email is on file`,
       {
         context: LOGGING_CONTEXT,
         companyId: company.id,

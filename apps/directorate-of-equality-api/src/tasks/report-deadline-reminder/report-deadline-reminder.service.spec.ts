@@ -3,17 +3,17 @@ import { Op } from 'sequelize'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
-import { LOGGER_PROVIDER } from '@dmr.is/logging'
-
-import { CompanyStatusEnum } from '../../modules/company/models/company.enums'
-import { CompanyModel } from '../../modules/company/models/company.model'
 import {
   CompanyEventTypeEnum,
+  CompanyModel,
   CompanyReminderTierEnum,
-} from '../../modules/company/models/company-event.model'
-import { ICompanyEventService } from '../../modules/company-event/company-event.service.interface'
-import { IDoeMailService } from '../../modules/mail/doe-mail.service.interface'
-import { ReportTypeEnum } from '../../modules/report/models/report.enums'
+  CompanyStatusEnum,
+} from '@dmr.is/doe-modules/company'
+import { ICompanyEventService } from '@dmr.is/doe-modules/company-event'
+import { IDoeMailService, MailSendError } from '@dmr.is/doe-modules/mail'
+import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
+import { LOGGER_PROVIDER } from '@dmr.is/logging'
+
 import { ReportDeadlineReminderService } from './report-deadline-reminder.service'
 
 const mockLogger = {
@@ -103,8 +103,13 @@ describe('ReportDeadlineReminderService', () => {
   }
 
   const returnCompanyAtCall = (index: number, company: CompanyModel) => {
+    returnCompaniesAtCall(index, [company])
+  }
+
+  /** Same, for a band holding more than one company. */
+  const returnCompaniesAtCall = (index: number, companies: CompanyModel[]) => {
     for (let i = 0; i < index; i++) findAll.mockResolvedValueOnce([])
-    findAll.mockResolvedValueOnce([company])
+    findAll.mockResolvedValueOnce(companies)
   }
 
   describe('run – band selection', () => {
@@ -128,6 +133,31 @@ describe('ReportDeadlineReminderService', () => {
         expect(where.status).toBe(CompanyStatusEnum.ACTIVE)
         expect(where.quarantined).toBe(false)
       }
+    })
+
+    it('gates every band on the obligation, not the due date alone', async () => {
+      // ⚠️ The bug this guards is not hypothetical and not cosmetic: the
+      // register load seeds next_equality_report_due_at from the old SharePoint
+      // sheet for companies of EVERY size, so companies below 25 — which owe no
+      // jafnréttisáætlun at all — carry live past dates. Selecting on the date
+      // alone mails them a statutory deadline notice for an obligation they do
+      // not have, and does it to the whole band in one un-deduped pass the
+      // first time EMAIL_REMINDER_JOB_ENABLED reads true.
+      await service.run()
+
+      for (const call of findAll.mock.calls) {
+        const and = call[0].where[Op.and]
+        expect(and).toBeDefined()
+        expect(and.val).toContain('"CompanyModel"."salary_report_required"')
+      }
+
+      // The equality tiers additionally admit anyone 25+, which the salary
+      // tiers must NOT — a 25-49 company owes the plan but not the analysis.
+      const equalityGate = findAll.mock.calls[0][0].where[Op.and].val
+      const salaryGate = findAll.mock.calls[4][0].where[Op.and].val
+
+      expect(equalityGate).toContain("IN ('MEDIUM', 'LARGE')")
+      expect(salaryGate).not.toContain("IN ('MEDIUM', 'LARGE')")
     })
 
     it('builds contiguous, non-overlapping bands per tier', async () => {
@@ -223,6 +253,56 @@ describe('ReportDeadlineReminderService', () => {
       )
     })
 
+    /*
+     * ⚠️ **A stored value that cannot be mailed is the same finding as none.**
+     *
+     * `company.email` is admin-set, nullable and validated by nothing. A
+     * truthy-but-unusable value used to sail past the old `if (!to)` into a send
+     * that could never succeed — and because the `SENT` event is written only
+     * after a successful send and `flagMissingEmail` was skipped, that company
+     * got NO event of either kind. Silently retried every run, forever, with
+     * nothing on its timeline for an admin to notice.
+     *
+     * Same rule as the report mail now (`looksLikeOneAddress`). Revert to
+     * `if (!to)` and every case here fails.
+     */
+    it.each([
+      ['whitespace only', '   '],
+      ['a missing at-sign', 'acme.acme.is'],
+      ['a comma-separated list', 'a@acme.is, b@acme.is'],
+      ['an angle-bracketed display name', 'Acme <acme@acme.is>'],
+    ])(
+      'records NO_EMAIL instead of sending when the address is %s',
+      async (_label, email) => {
+        returnCompanyAtCall(CALL.equalitySixMonths, makeCompany({ email }))
+
+        await service.run()
+
+        expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+        expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+          'company-1',
+          CompanyStatusEnum.ACTIVE,
+          CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+          CompanyReminderTierEnum.SIX_MONTHS,
+          EQUALITY_DUE.toISOString(),
+        )
+      },
+    )
+
+    it('trims a padded address rather than treating it as unusable', async () => {
+      returnCompanyAtCall(
+        CALL.equalitySixMonths,
+        makeCompany({ email: '  acme@acme.is  ' }),
+      )
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).toHaveBeenCalledWith(
+        'acme@acme.is',
+        expect.anything(),
+      )
+    })
+
     it('does not re-emit NO_EMAIL when one already exists for the tier', async () => {
       returnCompanyAtCall(CALL.equalitySixMonths, makeCompany({ email: null }))
       hasDeadlineReminderEvent.mockResolvedValue(true)
@@ -233,13 +313,84 @@ describe('ReportDeadlineReminderService', () => {
       expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
     })
 
-    it('does not record the sent event when the email send fails', async () => {
+    /**
+     * ⚠️ This used to assert `rejects.toThrow('SES down')`. That was written when
+     * `sendReportDeadlineReminder` could not throw at all, so once the send
+     * genuinely started throwing the assertion certified a whole-task outage
+     * instead of catching it: one bad recipient aborted every remaining company,
+     * tier and report kind, and rolled back the `job_runs` row.
+     *
+     * The contract is unchanged — a throw still means "not sent", so no SENT
+     * event and a retry next run — but it is now contained per company.
+     *
+     * ⚠️ A `MailSendError`, which is what the real service throws, NOT a bare
+     * Error: containment keys on the type. See the DB-error test below for why.
+     */
+    it('keeps going when one company\'s email send fails', async () => {
       returnCompanyAtCall(CALL.equalitySixMonths, makeCompany())
-      sendReportDeadlineReminder.mockRejectedValue(new Error('SES down'))
+      sendReportDeadlineReminder.mockRejectedValue(new MailSendError('SES down'))
 
-      await expect(service.run()).rejects.toThrow('SES down')
+      await expect(service.run()).resolves.toBeUndefined()
 
+      // Not recorded, so the next run retries this company.
       expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    // The actual regression guard: a failure must not swallow the companies
+    // behind it. Two companies in the same band, the first one failing.
+    it('reminds the companies after one that failed', async () => {
+      returnCompaniesAtCall(CALL.equalitySixMonths, [
+        makeCompany({ id: 'company-bad' }),
+        makeCompany({ id: 'company-good' }),
+      ])
+      sendReportDeadlineReminder
+        .mockRejectedValueOnce(new MailSendError('SES down'))
+        .mockResolvedValue(undefined)
+
+      await expect(service.run()).resolves.toBeUndefined()
+
+      expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(2)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+        'company-good',
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+      )
+    })
+
+    /*
+     * ⚠️ **The other half of the containment, and the reason it is typed.**
+     *
+     * `AdvisoryLockService` runs this whole task inside one transaction and CLS
+     * is live for this app, so every query here enlists in it. A DB error
+     * therefore aborts the transaction: if the catch were blanket, each later
+     * statement would fail `25P02` and be swallowed the same way, the loop would
+     * keep calling SES for every remaining company, and Postgres would answer
+     * the eventual COMMIT on an aborted transaction with a silent ROLLBACK. The
+     * task would report success having mailed everyone while every SENT event
+     * and the `job_runs` cooldown were discarded — and the next run would mail
+     * them all again.
+     *
+     * So anything that is not a mail failure has to come back out. Widen the
+     * catch to `catch (error)` and this test fails.
+     */
+    it('aborts loudly when the event write fails, rather than mailing on', async () => {
+      returnCompaniesAtCall(CALL.equalitySixMonths, [
+        makeCompany({ id: 'company-1' }),
+        makeCompany({ id: 'company-2' }),
+      ])
+      emitDeadlineReminderEvent.mockRejectedValue(
+        new Error('column does not exist'),
+      )
+
+      await expect(service.run()).rejects.toThrow('column does not exist')
+
+      // Stopped at the first company instead of mailing the rest with nothing
+      // durable recorded.
+      expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(1)
     })
 
     it('uses the salary event type and column for the salary kind', async () => {

@@ -1,0 +1,2247 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import ExcelJS from 'exceljs'
+import JSZip from 'jszip'
+
+import { BadRequestException } from '@nestjs/common'
+
+import { MAX_INFLATED_ARCHIVE_BYTES } from '../../import-upload'
+import { GenderEnum } from '../../report/models/report.model'
+import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
+import { ParsedReportDto } from '../dto/parsed-report.dto'
+import { TEMPLATE_BASE64 } from '../template-data'
+import {
+  resolveTemplateVersion,
+  TEMPLATE_ID,
+  type TemplateMetadata,
+  TemplateVersionSourceEnum,
+} from './template-version.assert'
+import {
+  NO_TEMPLATE_METADATA,
+  parseLoadedWorkbook,
+  parseWorkbook,
+} from './workbook.parser'
+
+// CI runs this project's tests concurrently with several other Nx projects on
+// shared CPU, and exceljs's xlsx generation/parsing is heavy enough to
+// occasionally exceed Jest's 5000ms default under that contention (surfaces
+// as "Exceeded timeout... for a hook/test" even though nothing is actually
+// hanging). Same underlying full-suite-load sensitivity as the corrupted-zip
+// issue `serialize()` retries below, different symptom.
+jest.setTimeout(20000)
+
+const templateBuffer = () => Buffer.from(TEMPLATE_BASE64, 'base64')
+
+/** `docProps/custom.xml` exactly as `template.xlsx` ships it. */
+const TEMPLATE_CUSTOM_PROPS_XML =
+  '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+  '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/custom-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">' +
+  '<property fmtid="{D5CDD505-2E9C-101B-9397-08002B2CF9AE}" pid="2" name="TemplateId"><vt:lpwstr>jafnrettisstofa-launagreining</vt:lpwstr></property>' +
+  '<property fmtid="{D5CDD505-2E9C-101B-9397-08002B2CF9AE}" pid="3" name="TemplateReleased"><vt:lpwstr>2026-09-08</vt:lpwstr></property>' +
+  '<property fmtid="{D5CDD505-2E9C-101B-9397-08002B2CF9AE}" pid="4" name="TemplateVersion"><vt:lpwstr>2.0</vt:lpwstr></property>' +
+  '</Properties>'
+
+/**
+ * The uncompressed size jszip reads out of the central directory. Not on the
+ * public `JSZipObject` type — `workbook.parser.ts` reaches for the same field,
+ * and the guard under test is the reason it does.
+ */
+type DeclaredSize = { uncompressedSize: number }
+
+/**
+ * A Node `Buffer` may be a view into a larger shared pool, so `.buffer` alone
+ * can hand exceljs bytes beyond this buffer's own region. Slice to the exact
+ * range — same guard the parser applies (see `parseWorkbook`). Passing the raw
+ * `.buffer` intermittently corrupts the load under full-suite memory pressure.
+ */
+const toArrayBuffer = (buf: Buffer): ArrayBuffer =>
+  buf.buffer.slice(
+    buf.byteOffset,
+    buf.byteOffset + buf.byteLength,
+  ) as ArrayBuffer
+
+const loadTemplate = async (): Promise<ExcelJS.Workbook> => {
+  const wb = new ExcelJS.Workbook()
+  await wb.xlsx.load(toArrayBuffer(templateBuffer()))
+  return wb
+}
+
+/**
+ * The shipped template is 606KB zipped but ~9.6MB of uncompressed sheet XML, so
+ * `loadTemplate()` costs ~350ms of exceljs SAX parsing — per test, ~25 times
+ * over. Load it once and deep-clone the parsed model instead, which is still a
+ * fully independent workbook each caller can mutate freely.
+ *
+ * `structuredClone`, not `JSON.parse(JSON.stringify(…))`: the model serialises
+ * to ~106MB of JSON and going through a string is several times SLOWER than the
+ * structured algorithm.
+ *
+ * Costs peak RSS in exchange for wall time: measured at 1.36 -> 2.22 GB for
+ * this spec file in isolation (+64%). Fine today - CI is ubuntu-latest with
+ * 16 GB, nx.json sets parallel: 1, and nothing raises
+ * --max-old-space-size, so Node's default ceiling leaves headroom. Given this
+ * library's exceljs OOM history that is a number worth having rather than
+ * guessing at: if this file ever runs short of heap, dropping back to a plain
+ * `loadTemplate()` here is the first thing to try.
+ */
+let cachedTemplateModel: ExcelJS.Workbook['model'] | undefined
+
+const freshTemplate = async (): Promise<ExcelJS.Workbook> => {
+  if (!cachedTemplateModel) {
+    cachedTemplateModel = (await loadTemplate()).model
+  }
+  const wb = new ExcelJS.Workbook()
+  const model = structuredClone(cachedTemplateModel)
+  // A model round trip is NOT a lossless clone. exceljs' Worksheet model
+  // getter emits merges as `merges`, but its setter reads `mergeCells` - the
+  // names do not match, so `wb.model = wb.model` drops every merged range
+  // (660 across the shipped template) and every continuation cell then reads
+  // null. Nothing asserted today lands on one, but the byte-path tests
+  // serialize from this clone, so without it they would be asserting against a
+  // workbook that differs from the real template in 660 places.
+  ;(
+    model as unknown as { worksheets: Array<Record<string, unknown>> }
+  ).worksheets.forEach((ws) => {
+    ws.mergeCells = ws.merges
+  })
+  wb.model = model
+  return wb
+}
+
+/** xlsx is a zip; every valid file starts with the local-file-header magic `PK\x03\x04`. */
+const isValidXlsx = (buf: Buffer): boolean =>
+  buf.length > 4 &&
+  buf[0] === 0x50 &&
+  buf[1] === 0x4b &&
+  buf[2] === 0x03 &&
+  buf[3] === 0x04
+
+type WorksheetModelWithTables = ExcelJS.Worksheet['model'] & {
+  tables?: Array<{ style?: ExcelJS.TableStyleProperties | null }>
+}
+
+/**
+ * Surfaces as `Cannot read properties of null (reading 'theme')` on
+ * `writeBuffer()` — named here because the message points at themes and the
+ * cause is a null table style, which costs anyone debugging it real time.
+ */
+/**
+ * Surfaces as `Cannot read properties of null (reading 'theme')` from
+ * `writeBuffer()`. Named here because the message points at themes and the
+ * cause is a null table style, so anyone re-serializing the template chases
+ * the wrong thing.
+ */
+const normaliseTableStylesForExcelJsWrite = (wb: ExcelJS.Workbook): void => {
+  for (const ws of wb.worksheets) {
+    // exceljs can load table XML with `style: null`, but its writer assumes a
+    // style object and crashes when tests re-serialize the template. The
+    // nullable table list is an internal model detail, so keep the cast narrow.
+    const tables = (ws.model as WorksheetModelWithTables).tables ?? []
+    for (const table of tables) {
+      table.style ??= {
+        showFirstColumn: false,
+        showLastColumn: false,
+        showRowStripes: false,
+        showColumnStripes: false,
+      }
+    }
+  }
+}
+
+/**
+ * exceljs's `writeBuffer()` occasionally emits a truncated/empty zip under the
+ * parallelised full-suite run (surfaces as "Corrupted zip: expected N records,
+ * got 0" on the subsequent load). It's non-deterministic and re-serialising
+ * fixes it, so validate the output and retry a couple of times before giving up.
+ */
+/**
+ * ⚠️ **exceljs drops `docProps/custom.xml` on write**, and strips `cp:version`
+ * from `core.xml` as well — so a workbook round-tripped through `writeBuffer`
+ * loses the template version and reads as 1.x to `checkTemplateVersion`.
+ *
+ * That is an artefact of the test harness, not of anything a submitter does:
+ * real files come from Excel, which preserves both, and the download endpoint
+ * serves `template.xlsx` byte-for-byte. Re-injecting the properties here keeps
+ * these fixtures faithful to a real upload.
+ *
+ * If a test ever needs to exercise the gate itself, build the buffer WITHOUT
+ * this — see the version-gate tests, which strip the entry back out on purpose.
+ * Do not "fix" a failing round-trip by relaxing the gate.
+ */
+const injectTemplateProps = async (buf: Buffer): Promise<Buffer> => {
+  const zip = await JSZip.loadAsync(buf)
+  zip.file('docProps/custom.xml', TEMPLATE_CUSTOM_PROPS_XML)
+  return zip.generateAsync({ type: 'nodebuffer' })
+}
+
+const serialize = async (wb: ExcelJS.Workbook): Promise<Buffer> => {
+  normaliseTableStylesForExcelJsWrite(wb)
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const buf = Buffer.from(
+      (await wb.xlsx.writeBuffer()) as unknown as ArrayBuffer,
+    )
+    if (isValidXlsx(buf)) return injectTemplateProps(buf)
+  }
+  throw new Error(
+    'exceljs writeBuffer produced an invalid xlsx after 3 attempts',
+  )
+}
+
+/**
+ * Async shim over the value-level entrypoint, so the existing
+ * `expectBadRequest` helper (and every `await` below) still applies.
+ *
+ * `NO_TEMPLATE_METADATA` is not a way around the version gate — it is the
+ * archive tier answering "nothing", which leaves the gate to the three
+ * sheet-level sources. The shipped template resolves to 2.0 through
+ * `INSTRUCTIONS_CELL` on its own, so these tests exercise the fallback chain
+ * rather than skipping it. `serialize()` injects the custom properties, so the
+ * byte-path tests below cover the `CUSTOM_PROPERTIES` tier.
+ *
+ * Tests whose subject is the BYTES deliberately keep going through
+ * `parseInMemory(wb)` and are marked where they appear.
+ */
+const parseInMemory = async (wb: ExcelJS.Workbook): Promise<ParsedReportDto> =>
+  parseLoadedWorkbook(wb, NO_TEMPLATE_METADATA)
+
+// Let the worker reclaim the cached model before the next suite in it starts;
+// see the RSS figure on `freshTemplate` above.
+afterAll(() => {
+  cachedTemplateModel = undefined
+})
+
+const writeEmployeeRow = (
+  wb: ExcelJS.Workbook,
+  ordinal: number,
+  values: {
+    name: string
+    role: string
+    gender: string
+    paidHours: number
+    baseSalary: number
+    additionalFixedOvertime: number | null
+    additionalFixedCarAllowance: number | null
+    additionalFixedOther: number | null
+    bonusOccasionalOvertime: number | null
+    bonusOccasionalCarAllowance: number | null
+    bonusOther: number | null
+    field: string
+    department: string
+    startDate: Date
+  },
+) => {
+  const s = wb.getWorksheet('Launagögn')!
+  const r = 5 + ordinal
+  s.getCell(`A${r}`).value = ordinal
+  s.getCell(`B${r}`).value = values.name
+  s.getCell(`C${r}`).value = values.role
+  s.getCell(`D${r}`).value = values.gender
+  s.getCell(`E${r}`).value = values.paidHours
+  s.getCell(`F${r}`).value = values.field
+  s.getCell(`G${r}`).value = values.department
+  s.getCell(`H${r}`).value = values.startDate
+  s.getCell(`I${r}`).value = values.baseSalary
+  s.getCell(`J${r}`).value = values.additionalFixedOvertime
+  s.getCell(`K${r}`).value = values.additionalFixedCarAllowance
+  s.getCell(`L${r}`).value = values.additionalFixedOther
+  s.getCell(`M${r}`).value = values.bonusOccasionalOvertime
+  s.getCell(`N${r}`).value = values.bonusOccasionalCarAllowance
+  s.getCell(`O${r}`).value = values.bonusOther
+}
+
+// Step-order inputs sit on every SECOND column (score column interleaved after
+// each): role rows start at row 11 and job-sub columns start at G (col 7);
+// employee rows start at row 11 and personal-sub columns start at F (col 6).
+// Written by numeric coordinate so helpers follow the named-range geometry
+// (`ROLE_STEP_INPUTS` = Starfsmat!G11:GX110, `EMP_STEP_INPUTS` =
+// Einstaklingsmat!F11:BC510).
+const fillRoleClassification = (
+  wb: ExcelJS.Workbook,
+  rolesInOrder: number[][],
+) => {
+  const sheet = wb.getWorksheet('Starfsmat')!
+  rolesInOrder.forEach((roleSteps, roleIdx) => {
+    roleSteps.forEach((stepOrder, subIdx) => {
+      sheet.getCell(11 + roleIdx, 7 + 2 * subIdx).value = stepOrder
+    })
+  })
+}
+
+const fillEmployeeClassification = (
+  wb: ExcelJS.Workbook,
+  empsInOrder: number[][],
+) => {
+  const sheet = wb.getWorksheet('Einstaklingsmat')!
+  empsInOrder.forEach((empSteps, empIdx) => {
+    empSteps.forEach((stepOrder, subIdx) => {
+      sheet.getCell(11 + empIdx, 6 + 2 * subIdx).value = stepOrder
+    })
+  })
+}
+
+/**
+ * The bundled template ships with empty weights and no selected subcriteria.
+ * Tests fill the required rows explicitly so they do not depend on catalog
+ * lookup formula caches.
+ */
+const setCriterionWeight = (
+  wb: ExcelJS.Workbook,
+  viðmiðRow: number,
+  weightPct: number,
+) => {
+  wb.getWorksheet('Viðmið')!.getCell(`E${viðmiðRow}`).value = weightPct
+}
+
+const addPersonalCriterion = (
+  wb: ExcelJS.Workbook,
+  viðmiðRow: number,
+  title: string,
+  weightPct: number,
+) => {
+  const s = wb.getWorksheet('Viðmið')!
+  s.getCell(`C${viðmiðRow}`).value = title
+  s.getCell(`D${viðmiðRow}`).value = `${title} description`
+  s.getCell(`E${viðmiðRow}`).value = weightPct
+}
+
+const addSubCriterion = (
+  wb: ExcelJS.Workbook,
+  undirviðmiðRow: number,
+  parentTitle: string,
+  subTitle: string,
+  weightPct: number,
+  stepDescriptions: string[],
+  /**
+   * `Fjöldi þrepa` as DECLARED in column G. Defaults to the number of
+   * descriptions written, which is the consistent case; pass a different
+   * value to exercise the step bound, which reads column G rather than
+   * counting descriptions (matching `Starfsmat!G$8`'s own validation).
+   */
+  declaredNumSteps: number = stepDescriptions.length,
+) => {
+  const s = wb.getWorksheet('Undirviðmið')!
+  s.getCell(`B${undirviðmiðRow}`).value = parentTitle
+  s.getCell(`C${undirviðmiðRow}`).value = subTitle
+  // D is the computed `Tegund (sjálfvirkt)` column — deliberately not written.
+  // E/F/G are Skilgreining / Vægi (%) / Fjöldi þrepa.
+  s.getCell(`E${undirviðmiðRow}`).value = `${subTitle} description`
+  s.getCell(`F${undirviðmiðRow}`).value = weightPct
+  s.getCell(`G${undirviðmiðRow}`).value = declaredNumSteps
+  // Step descriptions live in columns J…Q (Þrep 1…8). Col index 10 = J.
+  stepDescriptions.forEach((desc, i) => {
+    s.getCell(undirviðmiðRow, 10 + i).value = desc
+  })
+}
+
+const FIVE_STEPS = ['Lágt', 'Frekar lágt', 'Miðlungs', 'Hátt', 'Mjög hátt']
+const JOB_SUB_COUNT = 4
+
+const fillCriteriaAndSubCriteria = (wb: ExcelJS.Workbook) => {
+  setCriterionWeight(wb, 6, 30)
+  setCriterionWeight(wb, 7, 20)
+  setCriterionWeight(wb, 8, 20)
+  setCriterionWeight(wb, 9, 20)
+  addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
+
+  addSubCriterion(wb, 6, 'Ábyrgð', 'Ábyrgð á gæðum', 30, FIVE_STEPS)
+  addSubCriterion(wb, 7, 'Álag', 'Álag í starfi', 20, FIVE_STEPS)
+  addSubCriterion(wb, 8, 'Vinnuaðstæður', 'Vinnuumhverfi', 20, FIVE_STEPS)
+  addSubCriterion(wb, 9, 'Hæfni', 'Formleg menntun', 20, FIVE_STEPS)
+  addSubCriterion(wb, 10, 'Sérhæfing', 'Tungumál', 10, FIVE_STEPS)
+}
+
+const expectBadRequest = async (
+  promise: Promise<unknown>,
+): Promise<{
+  message: string[]
+  errors: {
+    message: string
+    sheet: string
+    row: number | null
+    column: string | null
+  }[]
+}> => {
+  await expect(promise).rejects.toBeInstanceOf(BadRequestException)
+  try {
+    await promise
+  } catch (e) {
+    return (e as BadRequestException).getResponse() as {
+      message: string[]
+      errors: {
+        message: string
+        sheet: string
+        row: number | null
+        column: string | null
+      }[]
+    }
+  }
+  throw new Error('unreachable')
+}
+
+const buildValidFilled = async (): Promise<Buffer> => {
+  const wb = await freshTemplate()
+  writeEmployeeRow(wb, 1, {
+    name: 'Nafn 1',
+    role: 'Forstöðumaður',
+    gender: 'Kona',
+    paidHours: 173.33,
+    baseSalary: 900000,
+    additionalFixedOvertime: 100000,
+    additionalFixedCarAllowance: null,
+    additionalFixedOther: null,
+    bonusOccasionalOvertime: null,
+    bonusOccasionalCarAllowance: null,
+    bonusOther: null,
+    field: 'Stjórnun',
+    department: 'Framkvæmd',
+    startDate: new Date('2023-01-01'),
+  })
+  writeEmployeeRow(wb, 2, {
+    name: 'Nafn 2',
+    role: 'Sérfræðingur',
+    gender: 'Karl',
+    paidHours: 173.33,
+    baseSalary: 700000,
+    additionalFixedOvertime: 50000,
+    additionalFixedCarAllowance: null,
+    additionalFixedOther: null,
+    bonusOccasionalOvertime: null,
+    bonusOccasionalCarAllowance: null,
+    bonusOther: null,
+    field: 'Tækni',
+    department: 'Tækni',
+    startDate: new Date('2023-06-01'),
+  })
+  writeEmployeeRow(wb, 3, {
+    name: 'Nafn 3',
+    role: 'Verkstjóri',
+    gender: 'Kona',
+    paidHours: 173.33,
+    baseSalary: 600000,
+    additionalFixedOvertime: 40000,
+    additionalFixedCarAllowance: null,
+    additionalFixedOther: null,
+    bonusOccasionalOvertime: null,
+    bonusOccasionalCarAllowance: null,
+    bonusOther: null,
+    field: 'Rekstur',
+    department: 'Verkstæði',
+    startDate: new Date('2022-03-15'),
+  })
+
+  fillCriteriaAndSubCriteria(wb)
+
+  // Template fixture has 4 job-based sub-criteria; 3 distinct roles.
+  fillRoleClassification(wb, [
+    [3, 3, 3, 3], // Forstöðumaður
+    [2, 2, 2, 2], // Sérfræðingur
+    [1, 1, 1, 1], // Verkstjóri
+  ])
+  // 1 personal sub-criterion, 3 employees.
+  fillEmployeeClassification(wb, [[1], [3], [5]])
+
+  return serialize(wb)
+}
+
+describe('parseWorkbook', () => {
+  describe('empty template', () => {
+    it('rejects with weight-sum + minimum-population errors', async () => {
+      // Empty template ships with 4 job-based criteria, empty weights, and no
+      // selected subcriteria. Weight validation catches the incomplete state.
+      const { errors } = await expectBadRequest(parseWorkbook(templateBuffer()))
+      const messages = errors.map((e) => e.message)
+      expect(messages).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('Vægi viðmiða leggst saman í 0%'),
+          expect.stringContaining('Vægi undirviðmiða leggst saman í 0%'),
+          'Að minnsta kosti eitt starf er nauðsynlegt',
+          'Að minnsta kosti einn starfsmaður er nauðsynlegur',
+        ]),
+      )
+    })
+  })
+
+  describe('filled + valid template', () => {
+    let report: ParsedReportDto
+
+    beforeAll(async () => {
+      const buf = await buildValidFilled()
+      report = await parseWorkbook(buf)
+    })
+
+    it('parses all 5 criteria (4 mandatory + 1 employer-added personal)', () => {
+      expect(report.criteria).toHaveLength(5)
+      const types = report.criteria.map((c) => c.type).sort()
+      expect(types).toEqual(
+        [
+          ReportCriterionTypeEnum.RESPONSIBILITY,
+          ReportCriterionTypeEnum.STRAIN,
+          ReportCriterionTypeEnum.CONDITION,
+          ReportCriterionTypeEnum.COMPETENCE,
+          ReportCriterionTypeEnum.PERSONAL,
+        ].sort(),
+      )
+    })
+
+    it('computes step scores linearly: stepOrder/numSteps × weight × 10', () => {
+      // Ábyrgð á gæðum: 30% weight, 5 steps → step 1 = 60, step 5 = 300
+      const resp = report.criteria.find(
+        (c) => c.type === ReportCriterionTypeEnum.RESPONSIBILITY,
+      )
+      const sub = resp?.subCriteria.find((s) => s.title === 'Ábyrgð á gæðum')
+      expect(sub?.steps.map((s) => Math.round(s.score))).toEqual([
+        60, 120, 180, 240, 300,
+      ])
+    })
+
+    it('derives 3 distinct roles from Launagögn in first-appearance order', () => {
+      expect(report.roles.map((r) => r.title)).toEqual([
+        'Forstöðumaður',
+        'Sérfræðingur',
+        'Verkstjóri',
+      ])
+    })
+
+    it('attaches a job-based step assignment per role per job-based sub', () => {
+      const role = report.roles.find((r) => r.title === 'Forstöðumaður')
+      expect(role?.stepAssignments.every((a) => a.stepOrder === 3)).toBe(true)
+      expect(role?.stepAssignments).toHaveLength(JOB_SUB_COUNT)
+    })
+
+    it('parses employees with Icelandic → enum translation + paidHours preserved as 0…1', () => {
+      const emp = report.employees.find((e) => e.ordinal === 3)
+      expect(emp).toEqual(
+        expect.objectContaining({
+          ordinal: 3,
+          roleTitle: 'Verkstjóri',
+          gender: GenderEnum.FEMALE,
+          paidHours: 173.33,
+          baseSalary: 600000,
+          startDate: '2022-03-15',
+        }),
+      )
+    })
+
+    it('does NOT include employee names (PII stripped)', () => {
+      const serialized = JSON.stringify(report.employees)
+      expect(serialized).not.toMatch(/Nafn [123]/)
+    })
+
+    it('attaches 1 personal step assignment per employee (one personal sub defined)', () => {
+      report.employees.forEach((e) => {
+        expect(e.personalStepAssignments).toHaveLength(1)
+      })
+    })
+
+    it('assigns each employee a pseudonymous identifier, same prefix across the import', () => {
+      const identifiers = report.employees.map((e) => e.identifier)
+      identifiers.forEach((id) => expect(id).toMatch(/^[A-Z]{3}-\d{3,}$/))
+      const prefixes = new Set(identifiers.map((id) => id.slice(0, 3)))
+      expect(prefixes.size).toBe(1)
+      // Ordinal portion matches the employee's ordinal
+      report.employees.forEach((e) => {
+        expect(e.identifier.endsWith(String(e.ordinal).padStart(3, '0'))).toBe(
+          true,
+        )
+      })
+    })
+
+    it('reads cached formula results from Undirviðmið autofill cells', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'A',
+        role: 'R',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+
+      const s = wb.getWorksheet('Undirviðmið')!
+      s.getCell('E6').value = {
+        formula: 'CATALOG_DESC()',
+        result: 'Cached description',
+      } as ExcelJS.CellValue
+      s.getCell('G6').value = {
+        formula: 'CATALOG_STEPS()',
+        result: 2,
+      } as ExcelJS.CellValue
+      s.getCell('J6').value = {
+        formula: 'CATALOG_STEP_1()',
+        result: 'Cached step 1',
+      } as ExcelJS.CellValue
+      s.getCell('K6').value = {
+        formula: 'CATALOG_STEP_2()',
+        result: 'Cached step 2',
+      } as ExcelJS.CellValue
+
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      // BYTE PATH, deliberately: whether exceljs preserves a cached formula
+      // result THROUGH serialization is the whole point here.
+      const formulaReport = await parseWorkbook(await serialize(wb))
+      const resp = formulaReport.criteria.find(
+        (c) => c.type === ReportCriterionTypeEnum.RESPONSIBILITY,
+      )
+      const sub = resp?.subCriteria.find((s) => s.title === 'Ábyrgð á gæðum')
+
+      expect(sub?.description).toBe('Cached description')
+      expect(sub?.steps.map((step) => step.description)).toEqual([
+        'Cached step 1',
+        'Cached step 2',
+      ])
+    })
+
+    it('rejects Undirviðmið formulas without cached results with an exact cell location', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'A',
+        role: 'R',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+
+      const s = wb.getWorksheet('Undirviðmið')!
+      s.getCell('F6').value = {
+        formula: 'CATALOG_STEPS()',
+      } as ExcelJS.CellValue
+
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(
+        // BYTE PATH, deliberately: see the sibling test above.
+        parseWorkbook(await serialize(wb)),
+      )
+
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sheet: 'Undirviðmið',
+            row: 6,
+            column: 'F',
+            message: expect.stringContaining('formúlu án reiknaðs gildis'),
+          }),
+        ]),
+      )
+    })
+  })
+
+  describe('ordinal derivation (column A is a formula in the real template)', () => {
+    it('derives ordinal from row position, ignoring the =ROW()-5 formula in column A', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'A',
+        role: 'R',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      writeEmployeeRow(wb, 2, {
+        name: 'B',
+        role: 'R',
+        gender: 'Karl',
+        paidHours: 173.33,
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+
+      // Mirror the shipped template: column A holds the auto-numbering formula,
+      // NOT a literal. Before the row-position fix this made every non-empty
+      // row fail with "Raðnúmer vantar".
+      const s = wb.getWorksheet('Launagögn')!
+      s.getCell('A6').value = { formula: 'ROW()-5', result: 1 }
+      s.getCell('A7').value = { formula: 'ROW()-5', result: 2 }
+
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1], [1]])
+
+      const report = await parseInMemory(wb)
+
+      // Row 6 → ordinal 1, row 7 → ordinal 2 (matches the sheet's "#" column).
+      expect(report.employees.map((e) => e.ordinal)).toEqual([1, 2])
+    })
+  })
+
+  describe('inflated rowCount (whole-column formatting)', () => {
+    it('stays bounded and parses correctly when a stray far-down cell inflates sheet.rowCount', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'A',
+        role: 'R',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+
+      // Simulate what whole-column formatting does to a hand-edited file: a
+      // stray value far below the data pushes sheet.rowCount into the tens of
+      // thousands. The scan must break on the long blank run rather than
+      // materialise a cell object for every row down to here (the OOM cause).
+      const s = wb.getWorksheet('Launagögn')!
+      s.getCell('B40000').value = 'stray'
+      expect(s.rowCount).toBeGreaterThan(30000)
+
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      // BYTE PATH, deliberately: `sheet.rowCount` after a load is what
+      // inflates; setting the stray cell in memory would not reproduce it.
+      const report = await parseWorkbook(await serialize(wb))
+
+      // Only the real row is parsed; the stray far-down cell is never reached.
+      expect(report.employees.map((e) => e.ordinal)).toEqual([1])
+    })
+  })
+
+  describe('parse-layer errors', () => {
+    it('rejects unknown gender value', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'X',
+        role: 'R',
+        gender: 'Other',
+        paidHours: 173.33,
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(parseInMemory(wb))
+      expect(errors.some((e) => e.message.includes('Óþekkt kyn „Other“'))).toBe(
+        true,
+      )
+    })
+
+    /**
+     * The layout gate. Column letters are hard-coded in every table parser, so
+     * an older template silently feeds each one the wrong field — and the
+     * resulting per-row errors blame the submitter's data. This asserts the
+     * upload is rejected once, on the header, naming the stale sheet.
+     */
+    describe('workbook layout', () => {
+      it('accepts the shipped template', async () => {
+        // The positive case matters as much as the negative one: an assertion
+        // that is too strict would reject every real upload.
+        const wb = await freshTemplate()
+        writeEmployeeRow(wb, 1, {
+          name: 'X',
+          role: 'R',
+          gender: 'Kona',
+          paidHours: 173.33,
+          baseSalary: 650000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          additionalFixedOther: null,
+          bonusOccasionalOvertime: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOther: null,
+          field: 'X',
+          department: 'X',
+          startDate: new Date('2024-01-01'),
+        })
+        fillCriteriaAndSubCriteria(wb)
+        fillRoleClassification(wb, [[1, 1, 1, 1]])
+        fillEmployeeClassification(wb, [[1]])
+
+        // BYTE PATH, deliberately: the shipped template surviving a full
+        // serialize -> guards -> load round trip is the assertion.
+        await expect(parseWorkbook(await serialize(wb))).resolves.toBeDefined()
+      })
+
+      it.each([
+        ['Launagögn', 'E', 'Starfshlutfall (0-1)'],
+        ['Undirviðmið', 'G', 'Hámarksstig'],
+        // The three template-2.0 REASSIGNMENTS, spelled with their real 1.x
+        // headers. Unlike the two above, these columns never moved — they sit
+        // where they always did and mean something else, which is why the
+        // header is the only thing left to tell them apart. If a future edit
+        // shortens the M/N prefixes in `layout.assert.ts` to a shared
+        // `Tilfallandi / mæld`, the N case here is what fails.
+        ['Launagögn', 'L', 'Tilfallandi / mældur bifreiðastyrkur (kr.)'],
+        ['Launagögn', 'N', 'Bónusgreiðslur (kr.)'],
+        ['Launagögn', 'O', 'Önnur hlunnindi eða greiðslur (kr.)'],
+      ])(
+        'rejects a stale %s layout at %s and says so once',
+        async (sheetName, column, staleHeader) => {
+          const wb = await freshTemplate()
+          const sheet = wb.getWorksheet(sheetName)
+          if (!sheet) throw new Error(`no ${sheetName} sheet`)
+          // Reproduce the pre-shift header without touching any data row.
+          sheet.getCell(`${column}5`).value = staleHeader
+
+          const { errors } = await expectBadRequest(parseInMemory(wb))
+
+          expect(
+            errors.some((e) =>
+              e.message.includes('Sniðmátið er af eldri útgáfu'),
+            ),
+          ).toBe(true)
+          // The point of bailing early: no per-row noise about the data.
+          expect(errors.every((e) => e.row === 5)).toBe(true)
+        },
+      )
+    })
+
+    /**
+     * The version gate — four sources in trust order, because the most
+     * trustworthy one is the one an editor is likeliest to throw away.
+     *
+     * It matters more than the layout assertion because template 2.0
+     * REASSIGNED Launagögn L, N and O without moving them. A 1.x workbook whose
+     * headers were edited (or a sheet rebuilt by a tool that rewrites them)
+     * parses to completion and files fixed pay as incidental — a complete,
+     * confident, wrong answer.
+     *
+     * ⚠️ **Each tier is tested by DISABLING the ones above it**, not by
+     * stripping custom.xml and hoping. A test that only removed the top source
+     * would pass against a gate that had stopped checking versions entirely,
+     * which is the one bug this chain could plausibly introduce. `SOURCES`
+     * below names every disabling step so a tier cannot be added without
+     * saying how to switch it off.
+     */
+    describe('template version', () => {
+      const stripTemplateProps = async (buf: Buffer): Promise<Buffer> => {
+        const zip = await JSZip.loadAsync(buf)
+        zip.remove('docProps/custom.xml')
+        return zip.generateAsync({ type: 'nodebuffer' })
+      }
+
+      const setTemplateVersion = async (
+        buf: Buffer,
+        version: string,
+      ): Promise<Buffer> => {
+        const zip = await JSZip.loadAsync(buf)
+        zip.file(
+          'docProps/custom.xml',
+          TEMPLATE_CUSTOM_PROPS_XML.replace(
+            '<vt:lpwstr>2.0</vt:lpwstr>',
+            `<vt:lpwstr>${version}</vt:lpwstr>`,
+          ),
+        )
+        return zip.generateAsync({ type: 'nodebuffer' })
+      }
+
+      /**
+       * Put `cp:version` back into `docProps/core.xml`.
+       *
+       * ⚠️ It has to be re-added rather than merely left alone: exceljs's
+       * writer drops `cp:version` while keeping `cp:category`, so a serialized
+       * fixture reaches this suite with source 2 already half-disabled. The
+       * shipped `template.xlsx` does carry it.
+       */
+      const setCoreVersion = async (
+        buf: Buffer,
+        version: string,
+      ): Promise<Buffer> => {
+        const zip = await JSZip.loadAsync(buf)
+        const core = await zip.file('docProps/core.xml')!.async('string')
+        zip.file(
+          'docProps/core.xml',
+          core.replace(
+            '<cp:category>',
+            `<cp:version>${version}</cp:version><cp:category>`,
+          ),
+        )
+        return zip.generateAsync({ type: 'nodebuffer' })
+      }
+
+      /** Blank the visible version mirror on Leiðbeiningar (source 3). */
+      const clearInstructionsCell = (wb: ExcelJS.Workbook): void => {
+        wb.getWorksheet('Leiðbeiningar')!.getCell('C4').value = null
+      }
+
+      /**
+       * Blank Launagögn's fixed/incidental column bands (source 4), which is
+       * the state 1.x shipped in — row 4 entirely empty.
+       *
+       * Written at the merge ANCHORS (`I4`, `M4`), since that is where the
+       * value lives and where the assert reads it.
+       */
+      const clearColumnBands = (wb: ExcelJS.Workbook): void => {
+        const sheet = wb.getWorksheet('Launagögn')!
+        sheet.getCell('I4').value = null
+        sheet.getCell('M4').value = null
+      }
+
+      /** Every sheet-level source, for the tests that need a genuine 1.x shape. */
+      const clearSheetSources = (wb: ExcelJS.Workbook): void => {
+        clearInstructionsCell(wb)
+        clearColumnBands(wb)
+      }
+
+      /**
+       * A workbook that is otherwise entirely valid, so only the version can
+       * fail it. `mutate` runs before serialization, which is the only point
+       * the sheet-level sources can be reached.
+       *
+       * The un-mutated form is deterministic and is what most of the tests
+       * below want, so it is built once. Every consumer either parses it or
+       * reopens it through `JSZip.loadAsync`, both of which read — nothing in
+       * this block writes through the returned Buffer. A `mutate` call is
+       * never cached: that is the whole point of passing one.
+       */
+      let cachedValidWorkbook: Buffer | undefined
+
+      const validWorkbookBuffer = async (
+        mutate?: (wb: ExcelJS.Workbook) => void,
+      ): Promise<Buffer> => {
+        if (!mutate && cachedValidWorkbook) return cachedValidWorkbook
+        const wb = await freshTemplate()
+        writeEmployeeRow(wb, 1, {
+          name: 'X',
+          role: 'R',
+          gender: 'Kona',
+          paidHours: 173.33,
+          baseSalary: 650000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          additionalFixedOther: null,
+          bonusOccasionalOvertime: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOther: null,
+          field: 'X',
+          department: 'X',
+          startDate: new Date('2024-01-01'),
+        })
+        fillCriteriaAndSubCriteria(wb)
+        fillRoleClassification(wb, [[1, 1, 1, 1]])
+        fillEmployeeClassification(wb, [[1]])
+        mutate?.(wb)
+        const buffer = await serialize(wb)
+        if (!mutate) cachedValidWorkbook = buffer
+        return buffer
+      }
+
+      /**
+       * A workbook with NO version evidence anywhere — the genuine pre-2.0
+       * shape, and the only state the gate may still reject on absence.
+       *
+       * Cached for the same reason and on the same terms as the valid one.
+       */
+      let cachedNoVersionEvidence: Buffer | undefined
+
+      const noVersionEvidenceBuffer = async (): Promise<Buffer> => {
+        if (!cachedNoVersionEvidence) {
+          cachedNoVersionEvidence = await stripTemplateProps(
+            await validWorkbookBuffer(clearSheetSources),
+          )
+        }
+        return cachedNoVersionEvidence
+      }
+
+      it('accepts the shipped template version', async () => {
+        await expect(
+          parseWorkbook(await validWorkbookBuffer()),
+        ).resolves.toBeDefined()
+      })
+
+      // Files predating the 2.0 release declare a version in none of the four
+      // places, so absence across ALL of them is positive evidence of an old
+      // template. Absence from custom.xml alone is not — see the tier tests.
+      it('rejects a workbook with no version evidence anywhere as pre-2.0', async () => {
+        const { errors } = await expectBadRequest(
+          parseWorkbook(await noVersionEvidenceBuffer()),
+        )
+
+        expect(errors).toHaveLength(1)
+        expect(errors[0].message).toContain('Sniðmátið er af eldri útgáfu')
+      })
+
+      /**
+       * The regression this chain was built for: a 2.0 workbook re-saved by an
+       * editor that re-authors the package rather than editing it loses its
+       * CUSTOM properties, and used to be told to migrate a template it was
+       * already on — after being filled in offline over days.
+       *
+       * Each case disables everything above the tier under test, so it is the
+       * named source doing the accepting and nothing else.
+       */
+      describe('falls back through the source chain', () => {
+        it('accepts on core.xml cp:version when custom.xml is gone', async () => {
+          const buffer = await setCoreVersion(
+            await stripTemplateProps(
+              await validWorkbookBuffer(clearSheetSources),
+            ),
+            '2.0',
+          )
+
+          await expect(parseWorkbook(buffer)).resolves.toBeDefined()
+        })
+
+        it('accepts on the Leiðbeiningar mirror when both archive parts are gone', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer(clearColumnBands),
+          )
+
+          await expect(parseWorkbook(buffer)).resolves.toBeDefined()
+        })
+
+        it('accepts on the Launagögn column bands when nothing names a version', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer(clearInstructionsCell),
+          )
+
+          await expect(parseWorkbook(buffer)).resolves.toBeDefined()
+        })
+
+        /**
+         * The bands cannot name a version, only attest the shape — so a 1.x
+         * version reached through the mirror must still reject even though the
+         * bands look current. A tier that accepts on shape ALONE while a more
+         * trustworthy source says 1.x would let exactly the misread this gate
+         * exists to prevent through.
+         */
+        it('rejects an old version from the mirror despite current bands', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer((wb) => {
+              wb.getWorksheet('Leiðbeiningar')!.getCell('C4').value =
+                '1.4 (2026-08-25) • jafnrettisstofa-launagreining'
+            }),
+          )
+
+          const { errors } = await expectBadRequest(parseWorkbook(buffer))
+          expect(errors[0].message).toContain('(1.4)')
+        })
+
+        /**
+         * Identity survives the fallback too: the mirror carries the template
+         * id after the bullet, so a foreign workbook is still named as foreign
+         * rather than as out of date.
+         */
+        it('rejects a foreign id read from the mirror', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer((wb) => {
+              wb.getWorksheet('Leiðbeiningar')!.getCell('C4').value =
+                '2.0 (2026-09-08) • einhver-onnur-skra'
+              clearColumnBands(wb)
+            }),
+          )
+
+          const { errors } = await expectBadRequest(parseWorkbook(buffer))
+          expect(errors[0].message).toContain(
+            'ekki launagreiningarsniðmát Jafnréttisstofu',
+          )
+          expect(errors[0].message).not.toContain('eldri útgáfu')
+        })
+      })
+
+      /**
+       * Which tier answered, asserted directly. The behavioural tests above
+       * prove each source can carry a file on its own; this proves the ORDER,
+       * which they cannot — every one of them would still pass if the chain
+       * silently collapsed to its last tier.
+       */
+      describe('reports which source resolved the version', () => {
+        const resolveOn = async (
+          mutate?: (wb: ExcelJS.Workbook) => void,
+          metadata: TemplateMetadata = {
+            version: null,
+            templateId: null,
+            source: TemplateVersionSourceEnum.NONE,
+          },
+        ) => {
+          const wb = await freshTemplate()
+          mutate?.(wb)
+          return resolveTemplateVersion(metadata, wb)
+        }
+
+        it('prefers the archive properties over both cells', async () => {
+          const resolved = await resolveOn(undefined, {
+            version: '2.1',
+            templateId: TEMPLATE_ID,
+            source: TemplateVersionSourceEnum.CUSTOM_PROPERTIES,
+          })
+
+          expect(resolved.source).toBe(
+            TemplateVersionSourceEnum.CUSTOM_PROPERTIES,
+          )
+          expect(resolved.version).toBe('2.1')
+        })
+
+        it('prefers the mirror over the bands', async () => {
+          const resolved = await resolveOn()
+
+          expect(resolved.source).toBe(
+            TemplateVersionSourceEnum.INSTRUCTIONS_CELL,
+          )
+          expect(resolved.version).toBe('2.0')
+          expect(resolved.templateId).toBe(TEMPLATE_ID)
+        })
+
+        it('falls to the bands, which name no version', async () => {
+          const resolved = await resolveOn(clearInstructionsCell)
+
+          expect(resolved.source).toBe(TemplateVersionSourceEnum.COLUMN_BANDS)
+          expect(resolved.version).toBeNull()
+        })
+
+        it('reports NONE on a 1.x-shaped sheet', async () => {
+          const resolved = await resolveOn(clearSheetSources)
+
+          expect(resolved.source).toBe(TemplateVersionSourceEnum.NONE)
+          expect(resolved.version).toBeNull()
+        })
+      })
+
+      // The bands are intact on this fixture, so it doubles as proof that a
+      // declared old version beats a current-looking sheet.
+      it('rejects an explicitly older version', async () => {
+        const { errors } = await expectBadRequest(
+          parseWorkbook(
+            await setTemplateVersion(await validWorkbookBuffer(), '1.4'),
+          ),
+        )
+
+        expect(errors[0].message).toContain('(1.4)')
+      })
+
+      // Componentwise compare, not string compare: '2.10' must read as newer
+      // than '2.9', which a lexical comparison gets backwards.
+      it.each(['2.0', '2.1', '2.10', '3.0'])(
+        'accepts version %s',
+        async (version) => {
+          await expect(
+            parseWorkbook(
+              await setTemplateVersion(await validWorkbookBuffer(), version),
+            ),
+          ).resolves.toBeDefined()
+        },
+      )
+
+      /**
+       * A current-enough version on a workbook that is not ours. Without the
+       * id check this reaches the column parsers with only `assertWorkbookLayout`
+       * in the way. The message must NOT say "out of date" — the file isn't.
+       */
+      it('rejects a foreign workbook that carries a recent TemplateVersion', async () => {
+        const buf = await validWorkbookBuffer()
+        const zip = await JSZip.loadAsync(buf)
+        zip.file(
+          'docProps/custom.xml',
+          TEMPLATE_CUSTOM_PROPS_XML.replace(
+            'jafnrettisstofa-launagreining',
+            'einhver-onnur-skra',
+          ),
+        )
+
+        const { errors } = await expectBadRequest(
+          parseWorkbook(await zip.generateAsync({ type: 'nodebuffer' })),
+        )
+
+        expect(errors[0].message).toContain(
+          'ekki launagreiningarsniðmát Jafnréttisstofu',
+        )
+        expect(errors[0].message).not.toContain('eldri útgáfu')
+      })
+
+      /**
+       * The message is the whole cost of rejecting: the workbook is filled in
+       * offline over days, so "wrong version" alone throws that work away
+       * without saying what to redo. It has to name the columns that moved and
+       * the one whose definition changed.
+       */
+      it('tells the submitter what actually changed', async () => {
+        const { errors } = await expectBadRequest(
+          parseWorkbook(await noVersionEvidenceBuffer()),
+        )
+
+        const message = errors[0].message
+        expect(message).toContain('A–K')
+        expect(message).toContain('L–O')
+        expect(message).toContain('Greiddar stundir')
+      })
+
+      /**
+       * `message` becomes `ApiErrorDto.details`, which the island.is portal
+       * renders as a bulleted list when it holds more than one entry and as
+       * plain text when it holds one. These are migration steps, so they must
+       * arrive split — re-joining them into a single entry silently turns the
+       * applicant's instructions back into a wall of text.
+       */
+      it('delivers the migration steps as separate details entries', async () => {
+        const { message, errors } = await expectBadRequest(
+          parseWorkbook(await noVersionEvidenceBuffer()),
+        )
+
+        expect(Array.isArray(message)).toBe(true)
+        expect(message.length).toBeGreaterThan(1)
+        // No entry may smuggle a newline: the portal renders each verbatim.
+        message.forEach((entry) => expect(entry).not.toContain('\n'))
+        // One structured error, though — this is one bad workbook, not five.
+        expect(errors).toHaveLength(1)
+      })
+    })
+
+    /**
+     * The mirror of the 2080 case: column E previously held
+     * `Starfshlutfall (0–1)`, so a value carried over from an older sheet — or
+     * from a submitter filling in the field they remember — is a plain positive
+     * number that inflates reglulegt tímakaup by up to ~173×.
+     *
+     * `1` is the important one. It is the most common starfshlutfall there is,
+     * and a `>= 1` floor (the bound the Directorate's R reference uses) would
+     * admit it. Both must be rejected.
+     */
+    it.each([0.8, 1])(
+      'rejects a carried-over starfshlutfall of %s as paid hours',
+      async (paidHours) => {
+        const wb = await freshTemplate()
+        writeEmployeeRow(wb, 1, {
+          name: 'X',
+          role: 'R',
+          gender: 'Kona',
+          paidHours,
+          baseSalary: 650000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          additionalFixedOther: null,
+          bonusOccasionalOvertime: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOther: null,
+          field: 'X',
+          department: 'X',
+          startDate: new Date('2024-01-01'),
+        })
+        fillCriteriaAndSubCriteria(wb)
+        fillRoleClassification(wb, [[1, 1, 1, 1]])
+        fillEmployeeClassification(wb, [[1]])
+
+        const { errors } = await expectBadRequest(parseInMemory(wb))
+        expect(
+          errors.some((e) =>
+            e.message.includes(
+              `Greiddar stundir ${paidHours} eru utan leyfilegs bils`,
+            ),
+          ),
+        ).toBe(true)
+      },
+    )
+
+    // 2080 is the mistake this bound exists for: the annual total entered
+    // where the 12-month basis asks for a monthly average.
+    it('rejects paid hours above the template bound', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'X',
+        role: 'R',
+        gender: 'Kona',
+        paidHours: 2080,
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(parseInMemory(wb))
+      expect(
+        errors.some((e) =>
+          e.message.includes('Greiddar stundir 2080 eru utan leyfilegs bils'),
+        ),
+      ).toBe(true)
+    })
+
+    it('rejects required missing field with specific column reference', async () => {
+      const wb = await freshTemplate()
+      // Only fill partial row — omit role (Starf), which is still required.
+      // field (Svið) and department (Deild) are intentionally optional.
+      writeEmployeeRow(wb, 1, {
+        name: 'X',
+        role: '',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(parseInMemory(wb))
+      expect(
+        errors.some(
+          (e) =>
+            e.message.includes('Nauðsynlegan reit vantar') &&
+            e.message.includes('Starf'),
+        ),
+      ).toBe(true)
+    })
+
+    it('rejects step order outside 1..numSteps', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'X',
+        role: 'R',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[99, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(parseInMemory(wb))
+      expect(
+        errors.some((e) =>
+          e.message.includes('Þrep 99 er utan leyfilegs bils'),
+        ),
+      ).toBe(true)
+    })
+  })
+
+  describe('capacity beyond the legacy layout', () => {
+    it('parses roles past the old 8-column limit (named-range driven)', async () => {
+      const wb = await freshTemplate()
+      const roleTitles = Array.from(
+        { length: 9 },
+        (_, i) => `Hlutverk ${i + 1}`,
+      )
+      roleTitles.forEach((role, i) =>
+        writeEmployeeRow(wb, i + 1, {
+          name: `Nafn ${i + 1}`,
+          role,
+          gender: i % 2 === 0 ? 'Kona' : 'Karl',
+          paidHours: 173.33,
+          baseSalary: 500000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          additionalFixedOther: null,
+          bonusOccasionalOvertime: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOther: null,
+          field: 'Svið',
+          department: 'Deild',
+          startDate: new Date('2023-01-01'),
+        }),
+      )
+      fillCriteriaAndSubCriteria(wb)
+      // 9 roles × 4 job-based subs, and 9 employees × 1 personal sub. The
+      // 9th role lands in a row the old role-column layout could not address.
+      fillRoleClassification(
+        wb,
+        roleTitles.map(() => [1, 1, 1, 1]),
+      )
+      fillEmployeeClassification(
+        wb,
+        roleTitles.map(() => [1]),
+      )
+
+      const report = await parseInMemory(wb)
+
+      expect(report.roles).toHaveLength(9)
+      expect(report.roles[8].title).toBe('Hlutverk 9')
+      expect(report.roles[8].stepAssignments).toHaveLength(JOB_SUB_COUNT)
+    })
+
+    // Einstaklingsmat ships 500 employee rows (EMP_STEP_INPUTS = F11:BC510).
+    // That is provisioning, not capacity: an employer with more staff copies
+    // rows down, so the parser must never treat 500 as a ceiling. The domain
+    // ceiling is MAX_EMPLOYEES (10 000), enforced elsewhere.
+    const EMPLOYEES_PAST_PROVISIONED_ROWS = 502
+
+    const writeManyEmployees = (wb: ExcelJS.Workbook, count: number) => {
+      for (let i = 1; i <= count; i++) {
+        writeEmployeeRow(wb, i, {
+          name: `Nafn ${i}`,
+          role: 'Hlutverk',
+          gender: i % 2 === 0 ? 'Kona' : 'Karl',
+          paidHours: 173.33,
+          baseSalary: 500000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          additionalFixedOther: null,
+          bonusOccasionalOvertime: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOther: null,
+          field: 'Svið',
+          department: 'Deild',
+          startDate: new Date('2023-01-01'),
+        })
+      }
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+    }
+
+    it('parses more employees than Einstaklingsmat provisions rows for, once the employer extends the sheet', async () => {
+      const wb = await freshTemplate()
+      writeManyEmployees(wb, EMPLOYEES_PAST_PROVISIONED_ROWS)
+      // The employer's own extension: one personal step per employee, running
+      // past the shipped row 510.
+      fillEmployeeClassification(
+        wb,
+        Array.from({ length: EMPLOYEES_PAST_PROVISIONED_ROWS }, () => [1]),
+      )
+
+      const report = await parseInMemory(wb)
+
+      expect(report.employees).toHaveLength(EMPLOYEES_PAST_PROVISIONED_ROWS)
+      // The tail employees are the ones the old 500-row cap rejected outright.
+      const last = report.employees[EMPLOYEES_PAST_PROVISIONED_ROWS - 1]
+      expect(last.ordinal).toBe(EMPLOYEES_PAST_PROVISIONED_ROWS)
+      expect(last.personalStepAssignments).toHaveLength(1)
+    })
+
+    it('rejects when Einstaklingsmat is shorter than the employee list rather than silently dropping steps', async () => {
+      const wb = await freshTemplate()
+      writeManyEmployees(wb, EMPLOYEES_PAST_PROVISIONED_ROWS)
+      // Employer extended Launagögn but NOT Einstaklingsmat: blanks would read
+      // as "no assignment" and understate every tail employee's score.
+      fillEmployeeClassification(
+        wb,
+        Array.from({ length: 500 }, () => [1]),
+      )
+
+      const { errors } = await expectBadRequest(parseInMemory(wb))
+
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sheet: 'Einstaklingsmat',
+            message: expect.stringContaining('nær aðeins til'),
+          }),
+        ]),
+      )
+    })
+  })
+
+  /**
+   * The classification matrices lay out one column pair per Undirviðmið row,
+   * in ROW order (`Starfsmat!G4` = `SMALL(IF(Undirviðmið!$D$6:$D$205=
+   * "Starfsbundið", ROW(…)-5), (COLUMN()-5)/2)`). `fillCriteriaAndSubCriteria`
+   * happens to enter its sub-criteria already sorted by the Viðmið criterion
+   * order, so a parser that flattened the criterion TREE instead read the
+   * right columns by luck. Nothing in the template requires that sorting.
+   */
+  describe('Undirviðmið row order drives the matrix columns', () => {
+    // Viðmið rows 6–9 are the fixed job-based criteria in this order:
+    // Ábyrgð, Álag, Vinnuaðstæður, Hæfni. These sub-criteria are entered in a
+    // DIFFERENT order, so criterion-grouped order ≠ sheet column order.
+    const SHUFFLED_SUBS = [
+      { parent: 'Hæfni', sub: 'Formleg menntun', weight: 20 },
+      { parent: 'Vinnuaðstæður', sub: 'Vinnuumhverfi', weight: 20 },
+      { parent: 'Ábyrgð', sub: 'Ábyrgð á gæðum', weight: 30 },
+      { parent: 'Álag', sub: 'Álag í starfi', weight: 20 },
+    ]
+
+    const buildShuffled = async (): Promise<Buffer> => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'Nafn 1',
+        role: 'Forstöðumaður',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 900000,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'Stjórnun',
+        department: 'Framkvæmd',
+        startDate: new Date('2023-01-01'),
+      })
+
+      setCriterionWeight(wb, 6, 30) // Ábyrgð
+      setCriterionWeight(wb, 7, 20) // Álag
+      setCriterionWeight(wb, 8, 20) // Vinnuaðstæður
+      setCriterionWeight(wb, 9, 20) // Hæfni
+      addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
+
+      SHUFFLED_SUBS.forEach(({ parent, sub, weight }, i) => {
+        addSubCriterion(wb, 6 + i, parent, sub, weight, FIVE_STEPS)
+      })
+      addSubCriterion(wb, 10, 'Sérhæfing', 'Tungumál', 10, FIVE_STEPS)
+
+      // One distinct value per column, so a shifted read is unambiguous:
+      // column G→1, I→2, K→3, M→4.
+      fillRoleClassification(wb, [[1, 2, 3, 4]])
+      fillEmployeeClassification(wb, [[1]])
+
+      return serialize(wb)
+    }
+
+    it('maps each column to the sub-criterion its own header names', async () => {
+      const report = await parseWorkbook(await buildShuffled())
+      const role = report.roles.find((r) => r.title === 'Forstöðumaður')
+
+      // Undirviðmið rows 6…9 → columns G / I / K / M, which were filled with
+      // 1 / 2 / 3 / 4. Criterion-grouped order would shift every one of them.
+      expect(role?.stepAssignments).toEqual([
+        { criterionTitle: 'Hæfni', subTitle: 'Formleg menntun', stepOrder: 1 },
+        {
+          criterionTitle: 'Vinnuaðstæður',
+          subTitle: 'Vinnuumhverfi',
+          stepOrder: 2,
+        },
+        { criterionTitle: 'Ábyrgð', subTitle: 'Ábyrgð á gæðum', stepOrder: 3 },
+        { criterionTitle: 'Álag', subTitle: 'Álag í starfi', stepOrder: 4 },
+      ])
+    })
+  })
+
+  /**
+   * Column identity is DERIVED (from Undirviðmið row order), not read, so a
+   * wrong derivation lands values on the wrong sub-criterion instead of
+   * failing — and only the subset exceeding the wrong column's step count
+   * errors at all. The cached header on each column pair is the independent
+   * check that turns that silent class into one message.
+   */
+  describe('column alignment guard', () => {
+    it('refuses to read Starfsmat when a column header contradicts the resolved sub-criterion', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'Nafn 1',
+        role: 'Forstöðumaður',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 900000,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'Stjórnun',
+        department: 'Framkvæmd',
+        startDate: new Date('2023-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      // Starfsmat rows 5/6 label each column pair (`INDEX(Undirviðmið!…, G$4)`).
+      // The shipped template stores them as formulas with no cached result;
+      // writing a stale pair simulates a workbook saved without recalculating.
+      const starfsmat = wb.getWorksheet('Starfsmat')!
+      starfsmat.getCell('G5').value = 'Hæfni'
+      starfsmat.getCell('G6').value = 'Eitthvað allt annað'
+
+      const { errors } = await expectBadRequest(parseInMemory(wb))
+
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sheet: 'Starfsmat',
+            column: 'G',
+            message: expect.stringContaining('Eitthvað allt annað'),
+          }),
+        ]),
+      )
+      // Bails instead of reading the matrix, so no per-cell cascade.
+      expect(
+        errors.filter((e) => e.message.includes('utan leyfilegs bils')),
+      ).toHaveLength(0)
+    })
+
+    it('accepts headers that agree with the resolved sub-criterion', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'Nafn 1',
+        role: 'Forstöðumaður',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 900000,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'Stjórnun',
+        department: 'Framkvæmd',
+        startDate: new Date('2023-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      // `fillCriteriaAndSubCriteria` writes Undirviðmið rows 6…9 as
+      // Ábyrgð / Álag / Vinnuaðstæður / Hæfni → columns G / I / K / M.
+      const starfsmat = wb.getWorksheet('Starfsmat')!
+      starfsmat.getCell('G5').value = 'Ábyrgð'
+      starfsmat.getCell('G6').value = 'Ábyrgð á gæðum'
+      starfsmat.getCell('M5').value = 'Hæfni'
+      starfsmat.getCell('M6').value = 'Formleg menntun'
+
+      const report = await parseInMemory(wb)
+      expect(report.roles[0].stepAssignments).toHaveLength(JOB_SUB_COUNT)
+    })
+  })
+
+  /**
+   * A slot on the matrices is allocated by Undirviðmið's computed `Tegund`
+   * column, which resolves through `MATCH` against the Viðmið *cell* — not
+   * through whether the parser accepted that row. So a row either sheet
+   * rejects must still consume its column pair, or every later column in the
+   * bucket shifts and lands on the wrong sub-criterion.
+   *
+   * Each test below writes the cached column headers, which makes the
+   * alignment guard active: a shift shows up as a guard error naming the
+   * wrong column, so these fail loudly if the placeholder is dropped.
+   */
+  describe('rejected rows still reserve their column slot', () => {
+    const EMPLOYEE = {
+      name: 'Nafn 1',
+      role: 'Forstöðumaður',
+      gender: 'Kona',
+      paidHours: 173.33,
+      baseSalary: 900000,
+      additionalFixedOvertime: 0,
+      additionalFixedCarAllowance: null,
+      additionalFixedOther: null,
+      bonusOccasionalOvertime: null,
+      bonusOccasionalCarAllowance: null,
+      bonusOther: null,
+      field: 'Stjórnun',
+      department: 'Framkvæmd',
+      startDate: new Date('2023-01-01'),
+    }
+
+    /**
+     * `fillCriteriaAndSubCriteria` writes Undirviðmið rows 6…9 in Viðmið
+     * order, so the job-based columns are G / I / K / M. Writing the headers
+     * they *should* carry turns any shift into a guard error.
+     */
+    const writeStarfsmatHeaders = (wb: ExcelJS.Workbook) => {
+      const sheet = wb.getWorksheet('Starfsmat')!
+      const expected: [string, string, string][] = [
+        ['G', 'Ábyrgð', 'Ábyrgð á gæðum'],
+        ['I', 'Álag', 'Álag í starfi'],
+        ['K', 'Vinnuaðstæður', 'Vinnuumhverfi'],
+        ['M', 'Hæfni', 'Formleg menntun'],
+      ]
+      expected.forEach(([col, criterion, sub]) => {
+        sheet.getCell(`${col}5`).value = criterion
+        sheet.getCell(`${col}6`).value = sub
+      })
+    }
+
+    const alignmentErrors = (errors: { message: string }[]) =>
+      errors.filter((e) => e.message.includes('samkvæmt röð undirviðmiðanna'))
+
+    it('keeps later columns aligned when a middle Undirviðmið row is rejected', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, EMPLOYEE)
+      fillCriteriaAndSubCriteria(wb)
+      // Row 7 is Álag → column I. Blanking Skilgreining makes the parser
+      // reject it, but the sheet still allocates its column pair.
+      wb.getWorksheet('Undirviðmið')!.getCell('E7').value = null
+      writeStarfsmatHeaders(wb)
+      fillRoleClassification(wb, [[1, 2, 3, 4]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(parseInMemory(wb))
+
+      // The row reports its own problem, and nothing else moves.
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sheet: 'Undirviðmið',
+            row: 7,
+            message: expect.stringContaining('Röð vantar yfirviðmið'),
+          }),
+        ]),
+      )
+      expect(alignmentErrors(errors)).toHaveLength(0)
+    })
+
+    it('does not blame Undirviðmið when its parent Viðmið row was the rejected one', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, EMPLOYEE)
+      fillCriteriaAndSubCriteria(wb)
+      // Viðmið row 8 is Vinnuaðstæður. Blanking its Lýsing rejects the
+      // criterion while leaving the title in place, so `MATCH` still
+      // resolves and Undirviðmið row 8 keeps column K.
+      wb.getWorksheet('Viðmið')!.getCell('D8').value = null
+      writeStarfsmatHeaders(wb)
+      fillRoleClassification(wb, [[1, 2, 3, 4]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(parseInMemory(wb))
+
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sheet: 'Viðmið',
+            row: 8,
+            message: 'Röð vantar heiti eða lýsingu',
+          }),
+        ]),
+      )
+      // The sub-criterion row is a casualty of the Viðmið error, not a
+      // second independent problem: saying its parent "was not found" would
+      // point the user at the wrong sheet.
+      expect(
+        errors.filter((e) => e.message.includes('fannst ekki á blaðinu')),
+      ).toHaveLength(0)
+      expect(alignmentErrors(errors)).toHaveLength(0)
+    })
+  })
+
+  describe('step bound comes from the declared Fjöldi þrepa', () => {
+    it('accepts a step order above the description count when column G declares it', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'Nafn 1',
+        role: 'Forstöðumaður',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 900000,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'Stjórnun',
+        department: 'Framkvæmd',
+        startDate: new Date('2023-01-01'),
+      })
+      setCriterionWeight(wb, 6, 30)
+      setCriterionWeight(wb, 7, 20)
+      setCriterionWeight(wb, 8, 20)
+      setCriterionWeight(wb, 9, 20)
+      addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
+
+      // Declares 5 steps but describes only 3. Excel's own cell validation
+      // caps input at column G, so a 5 is a value the user was allowed to
+      // type — the missing descriptions are the actual defect, and the step
+      // bound must not report a second, invented one.
+      addSubCriterion(
+        wb,
+        6,
+        'Ábyrgð',
+        'Ábyrgð á gæðum',
+        30,
+        FIVE_STEPS.slice(0, 3),
+        5,
+      )
+      // Þrep 4/5 (columns M/N) ship as autofill formulas with no cached
+      // result. Blank them so the row is short on *descriptions* rather than
+      // on formula caches, which is the case under test.
+      const undirviðmið = wb.getWorksheet('Undirviðmið')!
+      undirviðmið.getCell(6, 13).value = null
+      undirviðmið.getCell(6, 14).value = null
+      addSubCriterion(wb, 7, 'Álag', 'Álag í starfi', 20, FIVE_STEPS)
+      addSubCriterion(wb, 8, 'Vinnuaðstæður', 'Vinnuumhverfi', 20, FIVE_STEPS)
+      addSubCriterion(wb, 9, 'Hæfni', 'Formleg menntun', 20, FIVE_STEPS)
+      addSubCriterion(wb, 10, 'Sérhæfing', 'Tungumál', 10, FIVE_STEPS)
+
+      fillRoleClassification(wb, [[5, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(parseInMemory(wb))
+
+      expect(errors.map((e) => e.message)).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('Lýsingu vantar fyrir þrep 4'),
+          expect.stringContaining('Lýsingu vantar fyrir þrep 5'),
+        ]),
+      )
+      // `steps.length` (3) as the bound would reject the 5 as out of range.
+      expect(
+        errors.filter((e) => e.message.includes('utan leyfilegs bils')),
+      ).toHaveLength(0)
+    })
+  })
+
+  describe('unreadable column headers', () => {
+    it('treats a non-text header as unverifiable rather than a mismatch', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'Nafn 1',
+        role: 'Forstöðumaður',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 900000,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'Stjórnun',
+        department: 'Framkvæmd',
+        startDate: new Date('2023-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      // A row inserted between the header rows and the grid slides the
+      // header offsets onto the numeric Vægi row. `readString` would
+      // stringify that to e.g. "30" and reject every column; the workbook
+      // itself is fine, so the guard must stand down instead.
+      const starfsmat = wb.getWorksheet('Starfsmat')!
+      starfsmat.getCell('G5').value = 30
+      starfsmat.getCell('G6').value = 30
+
+      const report = await parseInMemory(wb)
+      expect(report.roles[0].stepAssignments).toHaveLength(JOB_SUB_COUNT)
+    })
+  })
+
+  /**
+   * The user-facing `details` list is these lines verbatim, so the sheet has
+   * to be identifiable at a glance. Several sheet names double as domain terms
+   * inside the messages (Starfsmat, Viðmið, Undirviðmið), which made a bare
+   * leading `Starfsmat:` read as part of the sentence.
+   */
+  describe('error line formatting', () => {
+    it('labels the sheet, with no location to report', async () => {
+      const { message } = await expectBadRequest(
+        parseWorkbook(templateBuffer()),
+      )
+
+      expect(message).toEqual(
+        expect.arrayContaining([
+          'Blað: Launagögn – Að minnsta kosti eitt starf er nauðsynlegt',
+        ]),
+      )
+    })
+
+    it('labels the sheet and keeps the column location', async () => {
+      const wb = await freshTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'X',
+        role: 'R',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        additionalFixedOther: null,
+        bonusOccasionalOvertime: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[99, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { message } = await expectBadRequest(parseInMemory(wb))
+
+      expect(message).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(
+            /^Blað: Starfsmat \(dálkur G\) – Þrep 99 er utan leyfilegs bils/,
+          ),
+        ]),
+      )
+    })
+  })
+
+  it('rejects a non-xlsx payload with a descriptive error', async () => {
+    const { message } = await expectBadRequest(
+      parseWorkbook(Buffer.from('not a workbook')),
+    )
+    expect(message).toMatch(/Ekki tókst að lesa vinnubókina/)
+  })
+
+  /**
+   * The missing-shared-strings guard is the first thing an uploaded archive
+   * touches, before any workbook validation, and it only engages when
+   * `xl/sharedStrings.xml` is absent. It therefore has to stay well-behaved
+   * on markup no spreadsheet editor would produce — which is what these
+   * cover, as opposed to the valid-workbook cases above.
+   */
+  describe('archives with malformed shared-string markup', () => {
+    /**
+     * Deliberately not a valid xlsx: reaching the guard only needs a
+     * worksheet member and no shared-strings table. Anything that gets past
+     * it fails at `workbook.xlsx.load`, which is fine — the guard is not
+     * where a malformed upload should be spending its time.
+     */
+    const zipWithSheet = async (sheetXml: string): Promise<Buffer> => {
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/worksheets/sheet1.xml', sheetXml)
+      return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
+    }
+
+    it('scans a sheet whose cell markup never closes in linear time', async () => {
+      // A cell tag left open, followed by a long run of values. Matching this
+      // has to stay proportional to the sheet — a pattern that can re-scan
+      // per value instead grows with its square, and this sheet is large
+      // enough for the difference to be minutes rather than milliseconds. The
+      // bound below is orders of magnitude looser than the scan needs, so it
+      // fails on the behaviour rather than on CI timing noise.
+      const payload = await zipWithSheet(
+        '<c t="s">' + '<v>1</v>'.repeat(262144),
+      )
+
+      const started = Date.now()
+      await expectBadRequest(parseWorkbook(payload))
+      expect(Date.now() - started).toBeLessThan(5000)
+    })
+
+    it('rejects an out-of-range shared-string index instead of allocating for it', async () => {
+      // The index sizes the table `emptySharedStringsXml` builds, so one far
+      // outside the range a real workbook uses has to be refused rather than
+      // allocated for.
+      const { message, errors } = await expectBadRequest(
+        parseWorkbook(await zipWithSheet('<c t="s"><v>999999999</v></c>')),
+      )
+
+      // `errors` only reaches the server log, so the headline is what decides
+      // whether the user is told anything useful.
+      expect(message).toContain('of margar strengjafærslur')
+      expect(errors.map((e) => e.message)).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('Hæsta strengjavísun'),
+        ]),
+      )
+    })
+
+    it('rejects an archive that inflates past the budget', async () => {
+      // 40MB inflated, over the 32MB budget, from an archive well under the
+      // 20MB compressed limit `ImportUploadService` enforces — compressed
+      // size says little about what a sheet inflates to.
+      const { message } = await expectBadRequest(
+        parseWorkbook(await zipWithSheet('<v>1</v>'.repeat(5 * 1024 * 1024))),
+      )
+
+      // Not "is this a valid xlsx file?" — it is one, it is just too big.
+      expect(message).toContain('of stór til lestrar')
+    })
+
+    it('refuses an oversized member from its declared size, without inflating it', async () => {
+      // A member declaring 320MB. Reading the size the archive declares costs
+      // nothing; inflating first to discover the same thing costs the memory
+      // and the time, which is the whole point of checking before rather than
+      // after.
+      //
+      // The size is stated rather than built. It is a number in the central
+      // directory, so a hostile archive can claim anything — which is the case
+      // this guard exists for, and the parser's own comment says as much. An
+      // earlier version allocated a real 320MB string and inferred "did not
+      // inflate" from finishing inside 1000ms; that made it the slowest test in
+      // the file and tied it to how loaded the runner is, on a file that
+      // already raises the Jest timeout for exactly that reason. Recording the
+      // inflate calls asserts the property directly.
+      //
+      // Both entry points are recorded. `async` is how the shared-strings scan
+      // reads a member; `nodeStream` is how the budget counts one. Watching
+      // only `async` would leave the assertion true for a reason unrelated to
+      // the guard, since the counting path never calls it.
+      const payload = await zipWithSheet('<v>1</v>')
+      const inflated: string[] = []
+
+      const loadAsync = JSZip.loadAsync.bind(JSZip)
+      jest
+        .spyOn(JSZip, 'loadAsync')
+        .mockImplementation(async (...args: Parameters<typeof loadAsync>) => {
+          const zip = await loadAsync(...args)
+          for (const entry of Object.values(zip.files)) {
+            if (entry.dir) continue
+
+            const data = (entry as unknown as { _data: DeclaredSize })._data
+            data.uncompressedSize = 320 * 1024 * 1024
+
+            const inflate = entry.async.bind(entry)
+            entry.async = ((...call: Parameters<typeof inflate>) => {
+              inflated.push(entry.name)
+              return inflate(...call)
+            }) as typeof entry.async
+
+            const stream = entry.nodeStream.bind(entry)
+            entry.nodeStream = ((...call: Parameters<typeof stream>) => {
+              inflated.push(entry.name)
+              return stream(...call)
+            }) as typeof entry.nodeStream
+          }
+          return zip
+        })
+
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+
+      expect(message).toContain('of stór til lestrar')
+      expect(inflated).toEqual([])
+    })
+
+    it('counts a shared-string cell that carries a formula before its value', async () => {
+      // `<f>` is the only element the schema allows between `<c>` and `<v>`.
+      // Excel never pairs it with t="s", but this guard exists for producers
+      // that are already off-schema, and missing a cell is the harmful
+      // direction — the synthesized table comes out short and the load fails.
+      // An index over the ceiling is the observable proof the cell was seen.
+      for (const cell of [
+        '<c t="s"><f>A2</f><v>70000</v></c>',
+        '<c t="s"><f/><v>70000</v></c>',
+        '<c t="s"><f t="shared" si="0"/><v>70000</v></c>',
+      ]) {
+        const { message } = await expectBadRequest(
+          parseWorkbook(await zipWithSheet(cell)),
+        )
+        expect(message).toContain('of margar strengjafærslur')
+      }
+    })
+
+    it('does not read a value out of the cell after a self-closing one', async () => {
+      // The tolerance above must not reach past the cell it started in: an
+      // ISK amount in the next cell is easily large enough to trip the
+      // ceiling and reject a workbook that was fine.
+      const { message } = await expectBadRequest(
+        parseWorkbook(
+          await zipWithSheet('<c t="s"/><c t="n"><v>850000000</v></c>'),
+        ),
+      )
+
+      expect(message).not.toContain('of margar strengjafærslur')
+    })
+
+    /**
+     * Rewrite one member's uncompressed-size fields to `claimed`.
+     *
+     * Walked structurally rather than by scanning for `PK` signatures: a
+     * deflate stream contains those bytes by coincidence — on the fixture
+     * below, 5 hits each against 3 real members — so a scan finds offsets
+     * inside the compressed payload and can corrupt it. That failure would
+     * surface as an inflate error and read like a regression in the bound
+     * rather than a broken fixture.
+     *
+     * So: locate the end-of-central-directory record, walk the central
+     * directory by each entry's declared name/extra/comment lengths, and
+     * follow the matching entry's pointer to its local file header.
+     */
+    const understateSize = (
+      archive: Buffer,
+      member: string,
+      claimed: number,
+    ): Buffer => {
+      const out = Buffer.from(archive)
+
+      let eocd = -1
+      for (let i = out.length - 22; i >= 0; i--) {
+        if (out.readUInt32LE(i) === 0x06054b50) {
+          eocd = i
+          break
+        }
+      }
+      if (eocd < 0) throw new Error('fixture: no end-of-central-directory')
+
+      let cursor = out.readUInt32LE(eocd + 16)
+      const count = out.readUInt16LE(eocd + 10)
+      let rewritten = 0
+
+      for (let i = 0; i < count; i++) {
+        if (out.readUInt32LE(cursor) !== 0x02014b50) {
+          throw new Error('fixture: central directory entry expected')
+        }
+        const nameLen = out.readUInt16LE(cursor + 28)
+        const extraLen = out.readUInt16LE(cursor + 30)
+        const commentLen = out.readUInt16LE(cursor + 32)
+        const name = out.subarray(cursor + 46, cursor + 46 + nameLen).toString()
+
+        if (name === member) {
+          out.writeUInt32LE(claimed, cursor + 24)
+          const lfh = out.readUInt32LE(cursor + 42)
+          if (out.readUInt32LE(lfh) !== 0x04034b50) {
+            throw new Error('fixture: local file header expected')
+          }
+          out.writeUInt32LE(claimed, lfh + 22)
+          rewritten++
+        }
+        cursor += 46 + nameLen + extraLen + commentLen
+      }
+
+      // Loud if the walk ever stops finding the member, rather than silently
+      // testing an unmodified archive.
+      if (rewritten !== 1) {
+        throw new Error(`fixture: rewrote ${rewritten} entries, expected 1`)
+      }
+      return out
+    }
+
+    it('bounds a member that under-declares its size in the central directory', async () => {
+      // The declared size is part of the archive, and jszip only compares it
+      // against reality once the member has fully inflated. Trusting it would
+      // mean a member claiming 1KB and delivering 80MB is paid for in full
+      // before anything objects, so the bound has to come from counting bytes
+      // as they arrive.
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/sharedStrings.xml', '<sst/>')
+      zip.file(
+        'xl/worksheets/sheet1.xml',
+        Buffer.alloc(80 * 1024 * 1024, '<v>1</v>'),
+      )
+      const honest = (await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      const lying = understateSize(honest, 'xl/worksheets/sheet1.xml', 1024)
+
+      const { message } = await expectBadRequest(parseWorkbook(lying))
+
+      // The message is what distinguishes the two outcomes. Counting as the
+      // bytes arrive stops this at the budget and reports it as too large.
+      // Trusting the declared 1KB instead lets all 80MB through to exceljs,
+      // which inflates it and only then notices the size mismatch — so the
+      // upload still fails, but as an unreadable file, after the memory has
+      // been spent. Asserting only that it was rejected cannot tell those
+      // apart; asserting on the reason can.
+      expect(message).toContain('of stór til lestrar')
+    })
+
+    it('bounds an archive whose members are individually small', async () => {
+      // The budget is the archive's, not any one member's — 10 sheets of
+      // 4MB each clear every per-member check and still total 40MB.
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/sharedStrings.xml', '<sst/>')
+      for (let i = 1; i <= 10; i++) {
+        zip.file(`xl/worksheets/sheet${i}.xml`, '<v>1</v>'.repeat(512 * 1024))
+      }
+      const payload = (await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+      expect(message).toContain('of stór til lestrar')
+    })
+
+    it('accepts an archive that lands exactly on the budget', async () => {
+      // The check is `>`, not `>=`, so the budget is inclusive. Left untested
+      // that choice is invisible, and an off-by-one here rejects a workbook
+      // for being exactly as large as it is allowed to be.
+      const filler = 'x'.repeat(MAX_INFLATED_ARCHIVE_BYTES - '<Types/>'.length)
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/sharedStrings.xml', filler)
+      const payload = (await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+
+      // Rejected as an unreadable workbook (it is one) — not for its size.
+      expect(message).not.toContain('of stór til lestrar')
+    })
+
+    it('does not reject an archive with no members', async () => {
+      const payload = (await new JSZip().generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+
+      expect(message).not.toContain('of stór til lestrar')
+    })
+
+    it('still repairs a workbook that legitimately lost its shared-strings table', async () => {
+      const zip = await JSZip.loadAsync(templateBuffer())
+      zip.remove('xl/sharedStrings.xml')
+      const stripped = await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })
+
+      // The template's cells do reference shared strings, so without an
+      // injected table exceljs dereferences undefined during load. The load
+      // failure path reports against the synthetic `(workbook)` sheet; real
+      // sheet names in the error list mean the archive was repaired, loaded,
+      // and got as far as layout validation — which then reports the headers
+      // as blank, because the strings genuinely are gone. That is the
+      // documented outcome: repair the structure, let validation report the
+      // missing data.
+      const { errors } = await expectBadRequest(parseWorkbook(stripped))
+
+      expect(errors.length).toBeGreaterThan(0)
+      expect(errors.map((e) => e.sheet)).not.toContain('(workbook)')
+      expect(errors.map((e) => e.sheet)).toContain('Launagögn')
+    })
+  })
+})

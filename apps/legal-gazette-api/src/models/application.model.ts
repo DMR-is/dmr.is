@@ -1,5 +1,4 @@
-import { Type } from 'class-transformer'
-import { IsArray, IsOptional, ValidateNested } from 'class-validator'
+// Association annotations use a type-only alias - see `models.md`.
 import {
   BelongsTo,
   Column,
@@ -10,16 +9,6 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import { ApiProperty } from '@nestjs/swagger'
-
-import {
-  ApiBoolean,
-  ApiEnum,
-  ApiNumber,
-  ApiOptionalString,
-  ApiString,
-  ApiUUId,
-} from '@dmr.is/decorators'
 import {
   ApplicationTypeEnum,
   CommonApplicationAnswers,
@@ -31,10 +20,15 @@ import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { LegalGazetteModels } from '../core/constants'
 import { isEstateOpen } from '../core/utils/estate.util'
-import { DetailedDto } from '../modules/shared/dto/detailed.dto'
-import { AdvertDto, AdvertModel } from './advert.model'
+import { AdvertModel } from './advert.model'
 import { AdvertPublicationModel } from './advert-publication.model'
+// Type-only: `application.dto.ts` imports this module back for
+// `ApplicationStatusEnum`, and the DTOs are only ever mapper return types here.
+// See `models.md`.
+import type { ApplicationDetailedDto, ApplicationDto } from './application.dto'
+import type { CaseModel as CaseModelRef } from './case.model'
 import { CaseModel } from './case.model'
+import type { SettlementModel as SettlementModelRef } from './settlement.model'
 import { SettlementModel } from './settlement.model'
 
 export enum ApplicationStatusEnum {
@@ -44,10 +38,14 @@ export enum ApplicationStatusEnum {
   FINISHED = 'FINISHED',
 }
 
+// Duplicate of the canonical enum in @dmr.is/legal-gazette-schemas
+// (libs/legal-gazette/schemas/src/lib/constants.ts) - keep both in sync.
 export enum ApplicationRequirementStatementEnum {
   LIQUIDATORLOCATION = 'LIQUIDATOR_LOCATION',
   CUSTOMLIQUIDATORLOCATION = 'CUSTOM_LIQUIDATOR_LOCATION',
   CUSTOMLIQUIDATOREMAIL = 'CUSTOM_LIQUIDATOR_EMAIL',
+  CUSTOMLIQUIDATORURL = 'CUSTOM_LIQUIDATOR_URL',
+  CUSTOMOTHER = 'CUSTOM_OTHER',
 }
 export enum IslandIsCommonApplicationEventsEnum {
   APPROVE = 'APPROVE',
@@ -171,10 +169,10 @@ export class ApplicationModel extends ParanoidModel<
   answers!: ApplicationAnswers
 
   @BelongsTo(() => CaseModel)
-  case!: CaseModel
+  case!: CaseModelRef
 
   @BelongsTo(() => SettlementModel)
-  settlement?: SettlementModel
+  settlement?: SettlementModelRef
 
   @HasMany(() => AdvertModel)
   adverts?: AdvertModel[]
@@ -285,52 +283,4 @@ export class ApplicationModel extends ParanoidModel<
   fromModelToDetailedDto() {
     return ApplicationModel.fromModelToDetailedDto(this)
   }
-}
-
-export class ApplicationDto extends DetailedDto {
-  @ApiUUId()
-  id!: string
-
-  @ApiUUId()
-  caseId!: string
-
-  @ApiString()
-  applicantNationalId!: string
-
-  @ApiOptionalString()
-  submittedByNationalId?: string
-
-  @ApiEnum(ApplicationStatusEnum, { enumName: 'ApplicationStatusEnum' })
-  status!: ApplicationStatusEnum
-
-  @ApiString()
-  title!: string
-
-  @ApiOptionalString()
-  subtitle?: string
-
-  @ApiEnum(ApplicationTypeEnum, { enumName: 'ApplicationTypeEnum' })
-  type!: ApplicationTypeEnum
-
-  @ApiProperty({
-    type: () => AdvertDto,
-    isArray: true,
-    required: false,
-  })
-  @IsOptional()
-  @IsArray()
-  @Type(() => AdvertDto)
-  @ValidateNested({ each: true })
-  adverts?: AdvertDto[]
-
-  @ApiBoolean()
-  canAddAdverts!: boolean
-
-  @ApiNumber()
-  currentStep!: number
-}
-
-export class ApplicationDetailedDto extends ApplicationDto {
-  @ApiProperty({ type: Object, default: {} })
-  answers!: Record<string, any>
 }

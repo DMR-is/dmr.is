@@ -6,6 +6,8 @@ import * as z from 'zod'
 import {
   ApplicationRequirementStatementEnum,
   companySchema,
+  getRequirementStatementLocationLabel,
+  requirementsStatementOptions,
   settlementSchemaRefined,
 } from '@dmr.is/legal-gazette-schemas'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
@@ -16,6 +18,7 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { toCalendarDateIso } from '@dmr.is/utils-shared/date/calendarDate'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { CreateDeceasedCompanies } from './CreateDeceasedCompanies'
@@ -34,21 +37,6 @@ const schema = settlementSchemaRefined.extend({
   partnerNationalId: z.string().optional().nullable(),
   partnerDateOfDeath: z.string().optional().nullable(),
 })
-
-const requirementsStatementOptions = [
-  {
-    label: 'Staðsetning skiptastjóra',
-    value: 'LIQUIDATOR_LOCATION',
-  },
-  {
-    label: 'Slá inn staðsetningu',
-    value: 'CUSTOM_LIQUIDATOR_LOCATION',
-  },
-  {
-    label: 'Tölvupóstur',
-    value: 'CUSTOM_LIQUIDATOR_EMAIL',
-  },
-]
 
 const settlementTypeOptions = [
   {
@@ -180,7 +168,7 @@ export const CreateDeceasedSettlement = ({ onChange }: Props) => {
             handleChange={(date) =>
               setState((prev) => ({
                 ...prev,
-                dateOfDeath: date.toISOString(),
+                dateOfDeath: toCalendarDateIso(date),
               }))
             }
           />
@@ -267,7 +255,7 @@ export const CreateDeceasedSettlement = ({ onChange }: Props) => {
                 handleChange={(date) =>
                   setState((prev) => ({
                     ...prev,
-                    partnerDateOfDeath: date.toISOString(),
+                    partnerDateOfDeath: toCalendarDateIso(date),
                   }))
                 }
               />
@@ -340,15 +328,9 @@ export const CreateDeceasedSettlement = ({ onChange }: Props) => {
               ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
             }
             value={state.recallRequirementStatementLocation}
-            label={
-              state.recallRequirementStatementType ===
-              ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
-                ? 'Staðsetning skiptastjóra'
-                : state.recallRequirementStatementType ===
-                    ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION
-                  ? 'Slá inn staðsetningu'
-                  : 'Tölvupóstur'
-            }
+            label={getRequirementStatementLocationLabel(
+              state.recallRequirementStatementType,
+            )}
             onChange={(e) =>
               setState((prev) => ({
                 ...prev,

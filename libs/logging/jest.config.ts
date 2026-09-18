@@ -1,7 +1,7 @@
 export default {
   preset: './jest.preset.js',
   rootDir: '../..',
-  roots: [__dirname],
+  roots: ['<rootDir>/libs/logging'],
   transform: {
     '^.+\\.[tj]sx?$': ['@swc/jest'],
   },

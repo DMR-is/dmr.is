@@ -1,10 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { JWT } from 'next-auth/jwt'
+import { encode } from 'next-auth/jwt'
 
-import { updateCookie } from './middleware-helpers'
+import { tryToUpdateCookie, updateCookie } from './middleware-helpers'
+import { resetRefreshSingleFlight } from './refresh-single-flight'
+import { refreshAccessToken, TransientRefreshError } from './token-service'
+
 // Mock next-auth/jwt
 jest.mock('next-auth/jwt', () => ({
   encode: jest.fn(),
   JWT: {},
+}))
+jest.mock('@dmr.is/logging-next', () => ({
+  getLogger: () => ({
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  }),
+}))
+// Keep the real error helpers, stub only the network call
+jest.mock('./token-service', () => ({
+  ...jest.requireActual('./token-service'),
+  refreshAccessToken: jest.fn(),
 }))
 describe('middleware-helpers', () => {
   const SESSION_COOKIE = 'next-auth.session-token'
@@ -299,6 +317,90 @@ describe('middleware-helpers', () => {
         expect(chunk0).toBeDefined()
         expect(chunk1).toBeDefined()
       })
+    })
+  })
+
+  describe('tryToUpdateCookie', () => {
+    const mockedRefresh = refreshAccessToken as jest.MockedFunction<
+      typeof refreshAccessToken
+    >
+    const mockedEncode = encode as jest.MockedFunction<typeof encode>
+    const currentToken = {
+      accessToken: 'old-access',
+      idToken: 'old-id',
+      refreshToken: 'old-refresh',
+    }
+
+    // Refreshes are deduplicated by refresh token in module-level state, which
+    // would otherwise let one case answer the next case's refresh.
+    beforeEach(() => resetRefreshSingleFlight())
+
+    const run = (
+      request = createMockRequest({ [SESSION_COOKIE]: 'current' }),
+    ) =>
+      tryToUpdateCookie(
+        'client-id',
+        'client-secret',
+        request,
+        currentToken as JWT,
+        NextResponse.next(),
+        'https://web.example.is',
+      )
+
+    it('writes the refreshed session on success', async () => {
+      mockedRefresh.mockResolvedValue({ ...currentToken, accessToken: 'new' })
+      mockedEncode.mockResolvedValue('encoded-new-session')
+
+      const result = await run()
+
+      expect(result.newSessionToken).toBe('encoded-new-session')
+      expect(result.response.cookies.get(SESSION_COOKIE)?.value).toBe(
+        'encoded-new-session',
+      )
+    })
+
+    it('writes the invalidated session when the refresh token is unusable', async () => {
+      mockedRefresh.mockResolvedValue({
+        ...currentToken,
+        invalid: true,
+        error: 'invalid_grant',
+      })
+      mockedEncode.mockResolvedValue('encoded-invalid-session')
+
+      const result = await run()
+
+      expect(result.response.cookies.get(SESSION_COOKIE)?.value).toBe(
+        'encoded-invalid-session',
+      )
+    })
+
+    // The whole point of the transient/terminal split: an unreachable IDS must
+    // not end the session, because `isExpired` returns false once `invalid` is
+    // set and the middleware would then never attempt another refresh.
+    it('leaves the session cookie untouched when the refresh was transient', async () => {
+      mockedRefresh.mockRejectedValue(
+        new TransientRefreshError('Could not reach identity server'),
+      )
+
+      const request = createMockRequest({ [SESSION_COOKIE]: 'current' })
+      const result = await run(request)
+
+      expect(result.newSessionToken).toBeUndefined()
+      expect(result.response.cookies.get(SESSION_COOKIE)).toBeUndefined()
+      expect(request.cookies.get(SESSION_COOKIE)?.value).toBe('current')
+      expect(mockedEncode).not.toHaveBeenCalled()
+    })
+
+    it('leaves the session cookie untouched when encoding fails', async () => {
+      mockedRefresh.mockResolvedValue({ ...currentToken, accessToken: 'new' })
+      mockedEncode.mockRejectedValue(new Error('no NEXTAUTH_SECRET'))
+
+      const request = createMockRequest({ [SESSION_COOKIE]: 'current' })
+      const result = await run(request)
+
+      expect(result.newSessionToken).toBeUndefined()
+      expect(result.response.cookies.get(SESSION_COOKIE)).toBeUndefined()
+      expect(request.cookies.get(SESSION_COOKIE)?.value).toBe('current')
     })
   })
 })

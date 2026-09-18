@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `src/models.md`.
 import {
   BelongsTo,
   BelongsToMany,
@@ -10,6 +11,7 @@ import {
 
 import { AdvertCategoryModel } from './advert-category.model'
 import { AdvertCategoryCategoriesModel } from './advert-category-categories.model'
+import type { AdvertDepartmentModel as AdvertDepartmentModelRef } from './advert-department.model'
 import { AdvertDepartmentModel } from './advert-department.model'
 
 @Table({ tableName: 'advert_main_category', timestamps: false })
@@ -40,7 +42,7 @@ export class AdvertMainCategoryModel extends Model {
   departmentId!: string
 
   @BelongsTo(() => AdvertDepartmentModel)
-  department!: AdvertDepartmentModel
+  department!: AdvertDepartmentModelRef
 
   @BelongsToMany(() => AdvertCategoryModel, {
     through: { model: () => AdvertCategoryCategoriesModel },

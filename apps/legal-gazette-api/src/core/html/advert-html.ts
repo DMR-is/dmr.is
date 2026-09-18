@@ -15,18 +15,28 @@ import { AdvertVersionEnum } from '../../models/advert-publication.model'
 
 type HTMLVersion = 'A' | 'B' | 'C'
 
-const DEFAULT_VERSION = AdvertVersionEnum.A
+// Resolved per call, never at module evaluation. `AdvertVersionEnum` comes from
+// `advert-publication.model`, which imports `advert.model` back, and
+// `advert.model` imports this file at module scope - so a module-level read
+// fires inside that cycle and yields `undefined` whenever the graph is entered
+// through `advert-publication.model`. See `models/models.md`.
+const defaultVersion = () => AdvertVersionEnum.A
 
 const mapVersion = (
-  version: AdvertVersionEnum | undefined = DEFAULT_VERSION,
+  version: AdvertVersionEnum | undefined = defaultVersion(),
 ): HTMLVersion => version as HTMLVersion
 
+// Mirrored in libs/legal-gazette/html/src/lib/preview/application.ts - keep in sync.
 const mapStatementType = (
   statementType?: string | null,
-): 'location' | 'custom' | 'email' => {
+): 'location' | 'custom' | 'email' | 'url' | 'other' => {
   switch (statementType) {
     case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL:
       return 'email'
+    case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORURL:
+      return 'url'
+    case ApplicationRequirementStatementEnum.CUSTOMOTHER:
+      return 'other'
     case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION:
       return 'custom'
     default:
@@ -82,10 +92,10 @@ const getPublicationData = (
     publishedAt?: Date | string | null
     scheduledAt: Date | string
   }>,
-  version: AdvertVersionEnum | undefined = DEFAULT_VERSION,
+  version: AdvertVersionEnum | undefined = defaultVersion(),
   errorMessage: string,
 ) => {
-  const resolvedVersion = version ?? DEFAULT_VERSION
+  const resolvedVersion = version ?? defaultVersion()
   const publication = publications.find(
     (pub) => pub.versionLetter === resolvedVersion,
   )
@@ -147,7 +157,7 @@ const buildBaseProps = ({
 
 export function getAdvertHtmlMarkup(
   model: AdvertModel,
-  version: AdvertVersionEnum | undefined = DEFAULT_VERSION,
+  version: AdvertVersionEnum | undefined = defaultVersion(),
 ): string {
   const publication = getPublicationData(
     model.publications,

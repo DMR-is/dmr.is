@@ -11,23 +11,29 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
+import {
+  AdminEqualityReportDto,
+  AdminSalaryReportDto,
+  IAdminReportService,
+} from '@dmr.is/doe-modules/admin-report'
+import {
+  IImportUploadService,
+  ImportKeyDto,
+  ImportUploadBoundary,
+} from '@dmr.is/doe-modules/import-upload'
+import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
+import {
+  IReportExcelService,
+  ParsedReportDto,
+} from '@dmr.is/doe-modules/report-excel'
+import {
+  SalaryAnalysisRequestDto,
+  SalaryAnalysisResponseDto,
+} from '@dmr.is/doe-modules/report-statistics'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
-import {
-  IImportUploadService,
-  ImportUploadBoundary,
-} from '../import-upload/import-upload.service.interface'
-import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
-import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
-import { IReportExcelService } from '../report-excel/report-excel.service.interface'
-import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
-import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
-import { AdminEqualityReportDto } from './dto/admin-equality-report.dto'
-import { AdminSalaryReportDto } from './dto/admin-salary-report.dto'
-import { IAdminReportService } from './admin-report.service.interface'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -74,17 +80,29 @@ export class AdminReportController {
     @Param('companyId', ParseUUIDPipe) _companyId: string,
     @Body() body: ImportKeyDto,
   ): Promise<ParsedReportDto> {
-    const buffer = await this.importUploadService.fetchWorkbook(
-      body.key,
-      ImportUploadBoundary.ADMIN,
-    )
+    // Not a `finally`. The download happens inside `importWorkbook` now, so a
+    // transient S3 failure reaches this scope — and deleting the staged object
+    // there destroys the only copy of an upload the caller can still retry.
+    // `cleanupAfter` owns which outcomes are terminal; see `import-upload`.
     try {
-      return await this.reportExcelService.importWorkbook(
-        buffer,
+      // The key, not a buffer: the service downloads under the parse gate so
+      // the workbook is never in memory without a slot.
+      const parsed = await this.reportExcelService.importWorkbook(
+        body.key,
         ImportUploadBoundary.ADMIN,
       )
-    } finally {
-      await this.importUploadService.cleanup(body.key)
+      await this.importUploadService.cleanupAfter(
+        body.key,
+        ImportUploadBoundary.ADMIN,
+      )
+      return parsed
+    } catch (e) {
+      await this.importUploadService.cleanupAfter(
+        body.key,
+        ImportUploadBoundary.ADMIN,
+        e,
+      )
+      throw e
     }
   }
 

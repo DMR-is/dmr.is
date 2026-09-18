@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertModel } from '../../../models/advert.model'
@@ -10,7 +10,9 @@ import { IRecallApplicationService } from './recall-application.service.interfac
 @Module({
   imports: [
     SequelizeModule.forFeature([AdvertModel, ApplicationModel]),
-    AdvertProviderModule,
+    // Closes the Advert -> PriceCalculator -> Application -> Recall -> Advert
+    // module cycle; the other three legs already use forwardRef.
+    forwardRef(() => AdvertProviderModule),
   ],
   providers: [
     {

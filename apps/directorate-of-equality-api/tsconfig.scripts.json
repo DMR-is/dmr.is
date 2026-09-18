@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.preset-nestjs.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": ["node"]
+  },
+  "include": ["scripts/**/*.ts"],
+  "exclude": ["scripts/**/*.spec.ts"]
+}

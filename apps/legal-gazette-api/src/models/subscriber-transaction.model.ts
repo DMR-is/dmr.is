@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import {
   BelongsTo,
   Column,
@@ -8,7 +9,9 @@ import {
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
+import type { SubscriberModel as SubscriberModelRef } from './subscriber.model'
 import { SubscriberModel } from './subscriber.model'
+import type { TBRTransactionModel as TBRTransactionModelRef } from './tbr-transactions.model'
 import { TBRTransactionModel } from './tbr-transactions.model'
 
 export type SubscriberTransactionAttributes = {
@@ -62,8 +65,8 @@ export class SubscriberTransactionModel extends ParanoidModel<
   isCurrent!: boolean
 
   @BelongsTo(() => SubscriberModel)
-  subscriber!: SubscriberModel
+  subscriber!: SubscriberModelRef
 
   @BelongsTo(() => TBRTransactionModel)
-  transaction!: TBRTransactionModel
+  transaction!: TBRTransactionModelRef
 }

@@ -1,0 +1,30 @@
+import { Module } from '@nestjs/common'
+
+import {
+  ApplicationCoreModule,
+  EXTERNAL_PROVIDER_CHANNEL,
+} from '@dmr.is/doe-modules/application'
+import { CompanyCoreModule } from '@dmr.is/doe-modules/company'
+import { ScoringModelCoreModule } from '@dmr.is/doe-modules/scoring-model'
+
+import { ApiKeyCoreModule } from '../api-key/api-key.core.module'
+import { PartnerSubmissionService } from '../submission/partner-submission.service'
+import { PartnerController } from './partner.controller'
+
+/**
+ * `EXTERNAL_PROVIDER_CHANNEL` is the whole reason this module differs from its
+ * island.is counterpart: it stamps submissions as `OTHER` and namespaces
+ * `provider_id` with the authenticated company's kennitala. Everything else
+ * behind the controller is the same code the island.is surface runs.
+ */
+@Module({
+  imports: [
+    ApplicationCoreModule.forChannel(EXTERNAL_PROVIDER_CHANNEL),
+    CompanyCoreModule,
+    ApiKeyCoreModule,
+    ScoringModelCoreModule,
+  ],
+  controllers: [PartnerController],
+  providers: [PartnerSubmissionService],
+})
+export class PartnerApiModule {}

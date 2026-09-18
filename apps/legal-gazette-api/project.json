@@ -8,7 +8,10 @@
     "tsc": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["tsc -p tsconfig.app.json --noEmit"],
+        "commands": [
+          "tsc -p tsconfig.app.json --noEmit",
+          "tsc -p tsconfig.spec.json --noEmit"
+        ],
         "cwd": "apps/legal-gazette-api",
         "forwardAllArgs": false
       }
@@ -32,6 +35,12 @@
       }
     },
     "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/varlock-run.sh legal-gazette-api nx run legal-gazette-api:serve-raw"
+      }
+    },
+    "serve-raw": {
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "options": {
@@ -58,7 +67,7 @@
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",
-      "dependsOn": ["build"],
+      "dependsOn": ["flatten-env"],
       "options": {
         "engine": "docker",
         "metadata": {
@@ -77,14 +86,14 @@
     "migrate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "sequelize-cli db:migrate",
+        "command": "../../scripts/varlock-run.sh legal-gazette-api sequelize-cli db:migrate",
         "cwd": "apps/legal-gazette-api"
       }
     },
     "seed": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "sequelize-cli db:seed:all",
+        "command": "../../scripts/varlock-run.sh legal-gazette-api sequelize-cli db:seed:all",
         "cwd": "apps/legal-gazette-api"
       }
     },
@@ -97,6 +106,14 @@
           "yarn nx run legal-gazette-api:seed"
         ],
         "parallel": false
+      }
+    },
+    "flatten-env": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "apps/legal-gazette-api",
+        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env && find dist/env -type f ! -name '.env.schema' -delete"
       }
     }
   }

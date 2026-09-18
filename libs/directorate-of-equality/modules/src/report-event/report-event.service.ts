@@ -1,0 +1,162 @@
+import { Inject, Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
+import { ReportStatusEnum } from '../report/models/report.model'
+import {
+  ReportEventModel,
+  ReportEventTypeEnum,
+} from '../report/models/report-event.model'
+import { IReportEventService } from './report-event.service.interface'
+
+const LOGGING_CONTEXT = 'ReportEventService'
+
+@Injectable()
+export class ReportEventService implements IReportEventService {
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @InjectModel(ReportEventModel)
+    private readonly reportEventModel: typeof ReportEventModel,
+  ) {}
+
+  async emitSubmitted(reportId: string, companyId: string): Promise<void> {
+    this.logger.info(`Emitting SUBMITTED event for report ${reportId}`, {
+      context: LOGGING_CONTEXT,
+      reportId: reportId,
+    })
+
+    await this.reportEventModel.create({
+      reportId,
+      eventType: ReportEventTypeEnum.SUBMITTED,
+      actorUserId: null,
+      reportStatus: ReportStatusEnum.SUBMITTED,
+      companyId,
+    })
+  }
+
+  /**
+   * `reportStatus` is the status the report is left in, which the caller has to
+   * supply: assignment no longer implies a transition, so it is only IN_REVIEW
+   * when this assignment was also the reviewer taking the report on.
+   */
+  async emitAssigned(
+    reportId: string,
+    actorUserId: string,
+    assignedUserId: string,
+    reportStatus: ReportStatusEnum,
+  ): Promise<void> {
+    this.logger.info(`Emitting ASSIGNED event for report ${reportId}`, {
+      context: LOGGING_CONTEXT,
+      reportId: reportId,
+    })
+
+    await this.reportEventModel.create({
+      reportId,
+      eventType: ReportEventTypeEnum.ASSIGNED,
+      actorUserId,
+      reportStatus,
+      assignedUserId,
+    })
+  }
+
+  async emitUnassigned(
+    reportId: string,
+    actorUserId: string,
+    previousAssigneeUserId: string | null,
+    reportStatus: ReportStatusEnum,
+  ): Promise<void> {
+    this.logger.info(`Emitting UNASSIGNED event for report ${reportId}`, {
+      context: LOGGING_CONTEXT,
+      reportId: reportId,
+    })
+
+    await this.reportEventModel.create({
+      reportId,
+      eventType: ReportEventTypeEnum.UNASSIGNED,
+      actorUserId,
+      reportStatus,
+      assignedUserId: previousAssigneeUserId,
+    })
+  }
+
+  async emitStatusChanged(
+    reportId: string,
+    fromStatus: ReportStatusEnum,
+    toStatus: ReportStatusEnum,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void> {
+    this.logger.info(
+      `Emitting STATUS_CHANGED event for report ${reportId}: ${fromStatus} → ${toStatus}`,
+      { context: LOGGING_CONTEXT, reportId: reportId, fromStatus, toStatus },
+    )
+
+    await this.reportEventModel.create({
+      reportId,
+      eventType: ReportEventTypeEnum.STATUS_CHANGED,
+      actorUserId: actorUserId ?? null,
+      reportStatus: toStatus,
+      fromStatus,
+      toStatus,
+      reason: reason ?? null,
+    })
+  }
+
+  async emitEdited(
+    reportId: string,
+    reportStatus: ReportStatusEnum,
+    companyId: string,
+  ): Promise<void> {
+    this.logger.info(`Emitting EDITED event for report ${reportId}`, {
+      context: LOGGING_CONTEXT,
+      reportId: reportId,
+    })
+
+    await this.reportEventModel.create({
+      reportId,
+      eventType: ReportEventTypeEnum.EDITED,
+      actorUserId: null,
+      reportStatus,
+      companyId,
+    })
+  }
+
+  async emitSuperseded(
+    reportId: string,
+    relatedReportId: string,
+  ): Promise<void> {
+    this.logger.info(`Emitting SUPERSEDED event for report ${reportId}`, {
+      context: LOGGING_CONTEXT,
+      reportId: reportId,
+      relatedReportId: relatedReportId,
+    })
+
+    await this.reportEventModel.create({
+      reportId,
+      eventType: ReportEventTypeEnum.SUPERSEDED,
+      actorUserId: null,
+      reportStatus: ReportStatusEnum.SUPERSEDED,
+      relatedReportId,
+    })
+  }
+
+  async emitWithdrawn(
+    reportId: string,
+    relatedReportId: string,
+  ): Promise<void> {
+    this.logger.info(`Emitting WITHDRAWN event for report ${reportId}`, {
+      context: LOGGING_CONTEXT,
+      reportId: reportId,
+      relatedReportId: relatedReportId,
+    })
+
+    await this.reportEventModel.create({
+      reportId,
+      eventType: ReportEventTypeEnum.WITHDRAWN,
+      actorUserId: null,
+      reportStatus: ReportStatusEnum.WITHDRAWN,
+      relatedReportId,
+    })
+  }
+}

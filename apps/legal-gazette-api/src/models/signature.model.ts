@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import {
@@ -9,6 +10,7 @@ import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../modules/shared/dto/detailed.dto'
+import type { AdvertModel as AdvertModelRef } from './advert.model'
 import { AdvertModel } from './advert.model'
 
 type SignatureAttributes = {
@@ -49,7 +51,7 @@ export class SignatureModel extends ParanoidModel<
   advertId!: string
 
   @BelongsTo(() => AdvertModel)
-  advert!: AdvertModel
+  advert!: AdvertModelRef
 
   static fromModel(model: SignatureModel): SignatureDto {
     return {

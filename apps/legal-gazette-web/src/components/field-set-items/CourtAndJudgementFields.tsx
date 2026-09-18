@@ -5,6 +5,10 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import {
+  fromCalendarDateIso,
+  toCalendarDateIso,
+} from '@dmr.is/utils-shared/date/calendarDate'
 
 import { CourtDistrictDto } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
@@ -65,9 +69,9 @@ export const CourtAndJudgementFields = ({
             backgroundColor="blue"
             placeholderText=""
             label="Úrskurðardagur"
-            selected={judgementDate ? new Date(judgementDate) : null}
+            selected={judgementDate ? fromCalendarDateIso(judgementDate) : null}
             handleChange={(date) => {
-              date?.toISOString() && updateJudgementDay(date?.toISOString())
+              date && updateJudgementDay(toCalendarDateIso(date))
             }}
           />
         </GridColumn>

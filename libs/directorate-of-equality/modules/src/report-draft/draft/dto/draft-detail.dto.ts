@@ -1,0 +1,135 @@
+import {
+  ApiBoolean,
+  ApiDto,
+  ApiEnum,
+  ApiNumber,
+  ApiOptionalDateTime,
+  ApiOptionalEnum,
+  ApiOptionalNumber,
+  ApiOptionalString,
+  ApiUUId,
+} from '@dmr.is/decorators'
+
+import {
+  EqualityContentTypeEnum,
+  GenderEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+  SalaryDataBasisEnum,
+} from '../../../report/models/report.enums'
+
+/** Row counts of the draft's child collections — full data via list endpoints. */
+export class DraftCountsDto {
+  @ApiNumber()
+  employees!: number
+
+  @ApiNumber()
+  criteria!: number
+
+  @ApiNumber()
+  outlierGroups!: number
+}
+
+/**
+ * Company-facing view of an in-progress DRAFT report. Carries the report-level
+ * header the applicant has filled in so far plus child-collection counts; the
+ * children themselves are paginated through their own list endpoints. A draft
+ * has no `company_report` snapshot or computed result yet — those are produced
+ * at submit — so neither is part of this shape.
+ */
+export class DraftDetailDto {
+  @ApiUUId()
+  id!: string
+
+  @ApiEnum(ReportTypeEnum, { enumName: 'ReportTypeEnum' })
+  type!: ReportTypeEnum
+
+  @ApiEnum(ReportStatusEnum, { enumName: 'ReportStatusEnum' })
+  status!: ReportStatusEnum
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      "Short pseudonymous handle (`KTPQZW`) used to refer to the report without quoting the company's kennitala. Always null while the report is a DRAFT — the server mints it at submit.",
+  })
+  identifier!: string | null
+
+  @ApiOptionalString({ nullable: true })
+  companyAdminName!: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description: 'Job title (starfsheiti) of the company executive.',
+  })
+  companyAdminTitle!: string | null
+
+  @ApiOptionalString({ nullable: true })
+  companyAdminEmail!: string | null
+
+  @ApiOptionalEnum(GenderEnum, { nullable: true, enumName: 'GenderEnum' })
+  companyAdminGender!: GenderEnum | null
+
+  @ApiOptionalString({ nullable: true })
+  contactName!: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description: 'Job title (starfsheiti) of the company contact (tengiliður).',
+  })
+  contactTitle!: string | null
+
+  @ApiOptionalString({ nullable: true })
+  contactEmail!: string | null
+
+  @ApiOptionalString({ nullable: true })
+  contactPhone!: string | null
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeMaleCount!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeFemaleCount!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeNeutralCount!: number | null
+
+  @ApiOptionalEnum(SalaryDataBasisEnum, {
+    nullable: true,
+    enumName: 'SalaryDataBasisEnum',
+    description:
+      'Salary-only. Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). Null until the applicant declares it; required to submit a salary report.',
+  })
+  salaryDataBasis!: SalaryDataBasisEnum | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'The payroll month the salary data is based on (`YYYY-MM-01`). Set when `salaryDataBasis` is `MONTH`, always null for `AVERAGE`.',
+  })
+  salaryDataPeriod!: string | null
+
+  /** Null when `equalityReportContentType` is PDF — see `EqualityReportDto.content`. */
+  @ApiOptionalString({ nullable: true })
+  equalityReportContent!: string | null
+
+  @ApiEnum(EqualityContentTypeEnum, { enumName: 'EqualityContentTypeEnum' })
+  equalityReportContentType!: EqualityContentTypeEnum
+
+  @ApiOptionalString({ nullable: true })
+  equalityReportContentFilename!: string | null
+
+  @ApiBoolean({
+    description:
+      "Whether this draft's scoring content was uploaded as an Excel workbook (`POST …/draft/import`) rather than keyed in through the portal UI. Set by the server when the parser runs; sticky, so hand-editing rows afterwards does not clear it. False on a draft that has never been imported.",
+  })
+  importedFromExcel!: boolean
+
+  @ApiDto(DraftCountsDto)
+  counts!: DraftCountsDto
+
+  @ApiOptionalDateTime({ nullable: true })
+  createdAt!: Date | null
+
+  @ApiOptionalDateTime({ nullable: true })
+  updatedAt!: Date | null
+}

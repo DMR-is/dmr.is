@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import {
   BelongsTo,
   Column,
@@ -7,13 +8,14 @@ import {
   PrimaryKey,
 } from 'sequelize-typescript'
 
-import { ApiDto, ApiDtoArray } from '@dmr.is/decorators'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { BaseEntityDto } from '../modules/base-entity/dto/base-entity.dto'
-import { CategoryDto, CategoryModel } from './category.model'
-import { TypeDto, TypeModel } from './type.model'
+import type { CategoryModel as CategoryModelRef } from './category.model'
+import { CategoryModel } from './category.model'
+import type { TypeModel as TypeModelRef } from './type.model'
+import { TypeModel } from './type.model'
+import type { TypeCategoryDto } from './type-categories.dto'
 
 type TypeCategoriesAttributes = {
   typeId: string
@@ -52,10 +54,10 @@ export class TypeCategoriesModel extends ParanoidModel<
   categoryId!: string
 
   @BelongsTo(() => TypeModel)
-  type!: TypeModel
+  type!: TypeModelRef
 
   @BelongsTo(() => CategoryModel)
-  category!: CategoryModel
+  category!: CategoryModelRef
 
   static fromModel(model: TypeCategoriesModel): TypeCategoryDto {
     return {
@@ -67,17 +69,4 @@ export class TypeCategoriesModel extends ParanoidModel<
   fromModel(): TypeCategoryDto {
     return TypeCategoriesModel.fromModel(this)
   }
-}
-
-export class TypeCategoryDto {
-  @ApiDto(TypeDto)
-  type!: TypeDto
-
-  @ApiDto(CategoryDto)
-  category!: CategoryDto
-}
-
-export class TypeWithCategoriesDto extends BaseEntityDto {
-  @ApiDtoArray(CategoryDto)
-  categories!: CategoryDto[]
 }

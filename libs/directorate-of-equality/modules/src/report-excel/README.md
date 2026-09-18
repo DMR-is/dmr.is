@@ -1,0 +1,152 @@
+# `report-excel` module
+
+Stateless Excel I/O for DoE salary reports. The third-party application
+system downloads a blank template, the company fills it out, the app system
+POSTs the filled workbook back, and we return a nested `ParsedReportDto` the
+app system uses to prefill its UI. **No persistence** — report creation
+lives on a future `/reports` endpoint.
+
+The response contains only what the workbook carries: criteria tree, roles,
+employees. Report-level metadata (admin / contact) and company identification
+stay with the app-system's auth context and are never echoed back.
+
+## Endpoints
+
+| Method | Path                             | What it does                                                                                  |
+| ------ | -------------------------------- | --------------------------------------------------------------------------------------------- |
+| `GET`  | `/api/v1/reports/excel/template` | Streams the blank salary-report xlsx                                                          |
+| `POST` | `/api/v1/reports/excel/import`   | `ImportKeyDto` JSON (`{ "key": … }`, from the presign endpoint) → `ParsedReportDto`, or `400` with structured error list |
+
+Both routes are behind `TokenJwtAuthGuard` and `AdminGuard`
+(`report-excel.controller.ts`). An earlier note here said the auth guard was
+commented out for local development; it is not, and had not been for some time.
+
+## Local testing
+
+### Boot the API
+
+```bash
+# Postgres + migrations + seed (once)
+yarn nx run doe-api:dev-init
+
+# Serve
+yarn nx run doe-api:serve
+```
+
+API listens on `http://localhost:5100/api/v1/` unless
+`DIRECTORATE_OF_EQUALITY_API_PORT` is set.
+
+### Download the blank template
+
+```bash
+curl -o /tmp/doe-template.xlsx \
+  http://localhost:5100/api/v1/reports/excel/template
+```
+
+Open in Excel or Numbers, fill out **Viðmið**, **Undirviðmið**,
+**Launagögn**, **Starfsmat**, **Einstaklingsmat**, save.
+`Leiðbeiningar`, `Yfirlit`, and `Undirviðmiðalisti (Lýsigögn)` are ignored
+on parse.
+
+### Import a filled workbook
+
+The route takes a **key**, not the file. Upload the workbook to the presigned
+URL first, then import by key — the API downloads it itself, under the parse
+gate, so the bytes are never in memory without a slot.
+
+```bash
+# 1. ask for somewhere to put it
+PRESIGN=$(curl -s -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  http://localhost:5100/api/v1/imports/presign)
+URL=$(echo "$PRESIGN" | jq -r .url)
+KEY=$(echo "$PRESIGN" | jq -r .key)
+
+# 2. PUT the workbook there
+curl -s -X PUT --upload-file /tmp/doe-template-filled.xlsx "$URL"
+
+# 3. import it by key
+curl -s -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d "{\"key\":\"$KEY\"}" \
+  http://localhost:5100/api/v1/reports/excel/import | jq
+```
+
+Both routes are guarded, so the bearer token is not optional — the examples
+above omitted it while the paragraph above said the guards were live.
+
+On success you'll get a `ParsedReportDto` tree. On failure, `400` with:
+
+```json
+{
+  "statusCode": 400,
+  "message": [
+    "Launagögn (röð 7, dálkur D): Óþekkt kyn „Other“",
+    "Viðmið: Vægi viðmiða leggst saman í 95%, á að vera 100%"
+  ],
+  "errors": [
+    { "sheet": "Launagögn", "row": 7, "column": "D", "message": "Óþekkt kyn „Other“" },
+    { "sheet": "Viðmið", "row": null, "column": null, "message": "Vægi viðmiða leggst saman í 95%, á að vera 100%" }
+  ]
+}
+```
+
+All problems are returned in one response — parser and semantic errors
+accumulate into the same list, so there's no whack-a-mole.
+
+`message` is the flat list of human-readable lines (sheet/row/column baked
+in) that the web client surfaces to the user; `errors` keeps the structured
+form for logging. User-facing messages are in Icelandic.
+
+## Editing the template
+
+The bundled template is `template.xlsx` in this folder; its bytes are
+base64-inlined into `template-data.ts` so the API has no filesystem
+dependency at runtime. After editing the xlsx:
+
+```bash
+node scripts/refresh-template-data.js
+```
+
+Commit both the updated xlsx and the regenerated `template-data.ts`.
+
+The `Undirviðmiðalisti (Lýsigögn)` sheet feeds a second generated file — the
+sub-criterion catalog the application portal reads — so a new workbook needs
+that regenerated too:
+
+```bash
+node scripts/refresh-sub-criterion-catalog.js
+```
+
+Both are committed, not built, and neither is run by the build, so a workbook
+shipped without re-running them leaves stale data being served. Review each
+diff; output is prettier-formatted, so no content change means no diff. See
+`modules/application/sub-criterion-catalog/`.
+
+## Module layout
+
+```
+report-excel/
+├── dto/                        Output DTOs (ParsedReportDto tree + ImportErrorDto)
+├── parser/
+│   ├── cell.ts                 Scalar extraction (string/number/date/rich-text)
+│   ├── errors.ts               ErrorBag — accumulate issues with sheet+row+col
+│   ├── criteria.parser.ts      Viðmið + Undirviðmið → nested tree, step scores
+│   ├── employees.parser.ts     Launagögn → employees + auto-derived roles
+│   ├── classifications.parser.ts  Matrix sheets → step assignments by position
+│   └── workbook.parser.ts      Orchestrator: chain the passes, run semantic validator
+├── validators/
+│   └── semantic.validator.ts   Weights sum, mandatory criteria, completeness
+├── template.xlsx               Source asset (hand-authored)
+├── template-data.ts            Base64-inlined bytes
+└── workbook.schema.ts          Parser constants: enum translation, named ranges
+```
+
+## Known pending work
+
+- **Auth**: controller uses `PLACEHOLDER_META/COMPANY` until
+  `@CurrentUser()` is wired back to extract company context from the token.
+- **Export**: `GET /reports/:id/export` deferred — needs persisted reports
+  to exist first (future `/reports` endpoint).
+- **Outliers**: handled post-scoring on the `/reports` side, not here.

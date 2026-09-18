@@ -62,7 +62,7 @@ export const FilterGroup = ({
         className={styles.filterExpandButton}
       >
         <Inline alignY="center" space={1}>
-          {loading && <LoadingDots single large={false} />}
+          {loading && <LoadingDots single />}
           <Text color="dark400" variant="h5">
             {label}
           </Text>

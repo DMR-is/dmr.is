@@ -1,7 +1,7 @@
-import { ApiOptionalDateTime, ApiOptionalString } from '@dmr.is/decorators'
+import { ApiOptionalDate, ApiOptionalString } from '@dmr.is/decorators'
 
 export class UpdateSignatureDto {
-  @ApiOptionalDateTime({ nullable: true })
+  @ApiOptionalDate({ nullable: true })
   date?: Date | null
 
   @ApiOptionalString({ nullable: true })

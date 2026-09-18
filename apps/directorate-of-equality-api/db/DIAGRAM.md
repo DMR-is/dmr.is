@@ -2,6 +2,15 @@
 
 Entity-relationship diagram of the DoE salary equality reporting schema. Entities show only PK + FK columns + a few key fields for readability. Full column lists live in [`README.md`](./README.md) under the Tables section.
 
+The `scoring_*` tables are the company-scoped starfsmat the partner API files
+against, and they sit **apart from the report graph on purpose**: a filing
+materialises its own `report_criterion` / `report_sub_criterion` /
+`report_employee_role` rows from a scoring model, and there is no FK from a
+report back to the model it came from. That is what lets a company rework its
+starfsmat without disturbing a report already filed under the old one — the
+report owns a frozen copy, which is also why the scoring model carries no
+version.
+
 Relationship labels are the FK column name. Cardinality notation:
 
 - `|o` = zero-or-one (nullable FK)
@@ -71,6 +80,7 @@ erDiagram
         uuid report_id FK
         uuid report_employee_role_id FK
         GenderEnum gender
+        decimal paid_hours "greiddar stundir, CHECK > 0"
         decimal score "nullable, NULL until submit"
     }
     report_employee_role {
@@ -106,18 +116,9 @@ erDiagram
         uuid id PK
         uuid report_id FK
         decimal salary_difference_threshold_percent
-        text calculation_version
-        jsonb base_snapshot
-        jsonb full_snapshot
-        jsonb outlier_analysis_snapshot
-    }
-    report_role_result {
-        uuid id PK
-        uuid report_result_id FK
-        uuid report_employee_role_id FK
-        text role_title "snapshot"
-        jsonb base_snapshot
-        jsonb full_snapshot
+        text calculation_version "v2 = reglulegt tímakaup"
+        jsonb salary_snapshot
+        jsonb wage_gap_decomposition_snapshot
     }
     public_report {
         uuid id PK
@@ -151,6 +152,19 @@ erDiagram
         timestamp updated_at "unused; present for ParanoidModel fit"
         timestamp deleted_at "nullable, soft delete"
     }
+    doe_api_key {
+        uuid id PK
+        uuid company_id FK
+        text company_national_id "denormalised"
+        text key_id "unique, public half"
+        text secret_hash
+        text_array scopes
+        ApiKeyOriginEnum created_via
+        uuid created_by_user_id FK "nullable, ADMIN path"
+        text created_by_national_id "nullable, ISLAND_IS path"
+        timestamptz last_used_at "nullable"
+        timestamptz revoked_at "nullable"
+    }
     company_event {
         uuid id PK
         uuid company_id FK
@@ -173,6 +187,42 @@ erDiagram
         int job_key PK
         timestamp last_run_at
         text container_id "nullable"
+    }
+
+    scoring_model {
+        uuid id PK
+        uuid company_id FK
+        text name
+    }
+    scoring_criterion {
+        uuid id PK
+        uuid scoring_model_id FK
+        report_criterion_type_enum type
+        text title
+        text description
+    }
+    scoring_sub_criterion {
+        uuid id PK
+        uuid scoring_criterion_id FK
+        text title
+        numeric weight
+    }
+    scoring_sub_criterion_step {
+        uuid id PK
+        uuid scoring_sub_criterion_id FK
+        integer step_order
+        text description
+    }
+    scoring_role {
+        uuid id PK
+        uuid scoring_model_id FK
+        text title
+    }
+    scoring_role_step {
+        uuid id PK
+        uuid scoring_role_id FK
+        uuid scoring_sub_criterion_id FK
+        uuid scoring_sub_criterion_step_id FK
     }
 
     company ||--o{ company_report : "company_id"
@@ -200,8 +250,6 @@ erDiagram
     report_sub_criterion_step ||--o{ report_employee_personal_criterion_step : "report_sub_criterion_step_id"
 
     report ||--|| report_result : "report_id"
-    report_result ||--o{ report_role_result : "report_result_id"
-    report_employee_role ||--o{ report_role_result : "report_employee_role_id"
 
     report ||--o| public_report : "source_report_id"
 
@@ -214,8 +262,20 @@ erDiagram
     report ||--o{ report_comment : "report_id"
     doe_user |o--o{ report_comment : "author_user_id"
 
+    company ||--o{ doe_api_key : "company_id"
+    doe_user |o--o{ doe_api_key : "created_by_user_id"
+    doe_user |o--o{ doe_api_key : "revoked_by_user_id"
     company ||--o{ company_event : "company_id"
     doe_user |o--o{ company_event : "actor_user_id"
     company ||--o{ company_comment : "company_id"
     doe_user |o--o{ company_comment : "author_user_id"
+
+    company ||--o{ scoring_model : "company_id"
+    scoring_model ||--o{ scoring_criterion : "scoring_model_id"
+    scoring_criterion ||--o{ scoring_sub_criterion : "scoring_criterion_id"
+    scoring_sub_criterion ||--o{ scoring_sub_criterion_step : "scoring_sub_criterion_id"
+    scoring_model ||--o{ scoring_role : "scoring_model_id"
+    scoring_role ||--o{ scoring_role_step : "scoring_role_id"
+    scoring_sub_criterion ||--o{ scoring_role_step : "scoring_sub_criterion_id"
+    scoring_sub_criterion_step ||--o{ scoring_role_step : "scoring_sub_criterion_step_id"
 ```

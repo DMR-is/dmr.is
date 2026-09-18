@@ -6,6 +6,11 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { OwnershipGuard } from '../../../core/guards/ownership.guard'
+import {
+  CreateDivisionEndingDto,
+  CreateDivisionMeetingDto,
+  GetMinDateResponseDto,
+} from '../dto/application-extra.dto'
 import { RecallApplicationController } from './recall-application.controller'
 import { IRecallApplicationService } from './recall-application.service.interface'
 describe('RecallApplicationController - Ownership Validation (H-2)', () => {
@@ -41,8 +46,8 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       scope: ['@logbirtingablad.is/lg-application-web'],
     },
   }
-  const mockMinDateResponse = {
-    minDate: '2026-01-15T00:00:00.000Z',
+  const mockMinDateResponse: GetMinDateResponseDto = {
+    minDate: new Date('2026-01-15T00:00:00.000Z'),
   }
   beforeEach(async () => {
     const mockService: Partial<IRecallApplicationService> = {
@@ -135,8 +140,8 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
     })
   })
   describe('addDivisionMeeting', () => {
-    const createMeetingDto = {
-      meetingDate: '2026-01-15T00:00:00.000Z',
+    const createMeetingDto: CreateDivisionMeetingDto = {
+      meetingDate: new Date('2026-01-15T00:00:00.000Z'),
       meetingLocation: 'Test Location',
       signature: {
         date: new Date('2026-01-15'),
@@ -179,7 +184,7 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
     })
   })
   describe('addDivisionEnding', () => {
-    const createEndingDto = {
+    const createEndingDto: CreateDivisionEndingDto = {
       declaredClaims: 123456,
       scheduledAt: new Date('2026-02-01'),
       endingDate: new Date('2026-03-01'),

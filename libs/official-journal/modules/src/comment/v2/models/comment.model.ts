@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `src/models.md`.
 import {
   BelongsTo,
   Column,
@@ -9,9 +10,16 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import type {
+  CaseModel as CaseModelRef,
+  CaseStatusModel as CaseStatusModelRef,
+} from '../../../case/models'
 import { CaseModel, CaseStatusModel } from '../../../case/models'
+import type { AdvertInvolvedPartyModel as AdvertInvolvedPartyModelRef } from '../../../journal/models'
 import { AdvertInvolvedPartyModel } from '../../../journal/models'
+import type { UserModel as UserModelRef } from '../../../user/models/user.model'
 import { UserModel } from '../../../user/models/user.model'
+import type { CaseActionModel as CaseActionModelRef } from './case-action.model'
 import { CaseActionModel } from './case-action.model'
 
 @DefaultScope(() => ({
@@ -107,34 +115,34 @@ export class CommentModel extends Model {
   comment!: string | null
 
   @BelongsTo(() => CaseModel)
-  case!: CaseModel
+  case!: CaseModelRef
 
   @BelongsTo(() => CaseStatusModel, {
     foreignKey: 'case_status_id',
     as: 'createdCaseStatus',
   })
-  createdCaseStatus!: CaseStatusModel
+  createdCaseStatus!: CaseStatusModelRef
 
   @BelongsTo(() => CaseActionModel)
-  caseAction!: CaseActionModel
+  caseAction!: CaseActionModelRef
 
   @BelongsTo(() => UserModel, {
     as: 'userCreator',
   })
-  userCreator?: UserModel
+  userCreator?: UserModelRef
 
   @BelongsTo(() => AdvertInvolvedPartyModel)
-  institutionCreator?: AdvertInvolvedPartyModel
+  institutionCreator?: AdvertInvolvedPartyModelRef
 
   @BelongsTo(() => CaseStatusModel, {
     foreignKey: 'case_status_receiver_id',
     as: 'caseStatusReceiver',
   })
-  caseStatusReceiver?: CaseStatusModel
+  caseStatusReceiver?: CaseStatusModelRef
 
   @BelongsTo(() => UserModel, {
     foreignKey: 'user_receiver_id',
     as: 'userReceiver',
   })
-  userReceiver?: UserModel
+  userReceiver?: UserModelRef
 }

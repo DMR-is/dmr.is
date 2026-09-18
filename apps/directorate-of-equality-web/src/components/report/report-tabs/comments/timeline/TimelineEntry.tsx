@@ -8,20 +8,21 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import {
   CommentVisibilityEnum,
   ReportEventTypeEnum,
-  ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
 } from '../../../../../gen/fetch'
 import { reportText, sharedText } from '../../../../../lib/text'
+import { CompanyEmailDetail } from '../../../../company/company-timeline/CompanyEmailDetail'
 import { TimelineEntryIcon } from './TimelineEntryIcon'
 import {
   formatRelativeDate,
   renderSystemReason,
   timelineEntryKind,
   timelineEntryText,
+  TimelineItem,
 } from './timelineHelpers'
 
 type Props = {
-  item: ReportTimelineItemDto
+  item: TimelineItem
   companyName?: string | null
   currentUserId?: string | null
   onDelete: (commentId: string) => void
@@ -87,6 +88,14 @@ export function TimelineEntry({
           <Box paddingRight={6}>
             <Text marginTop={1}>{bodyContent}</Text>
           </Box>
+        )}
+
+        {/*
+          Only CUSTOM_EMAIL_* company events carry this. The body above shows
+          the subject; this is how a reader gets to what was actually sent.
+        */}
+        {item.event?.companyEmailId && (
+          <CompanyEmailDetail companyEmailId={item.event.companyEmailId} />
         )}
 
         {isExternal && (

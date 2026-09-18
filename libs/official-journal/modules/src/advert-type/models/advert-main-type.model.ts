@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `src/models.md`.
 import {
   BelongsTo,
   Column,
@@ -10,6 +11,7 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
+import type { AdvertDepartmentModel as AdvertDepartmentModelRef } from '../../journal/models'
 import { AdvertDepartmentModel } from '../../journal/models'
 import { AdvertTypeModel } from './advert-type.model'
 import { allCapsTitle } from './stringUtils'
@@ -48,7 +50,7 @@ export class AdvertMainTypeModel extends Model {
   departmentId!: string
 
   @BelongsTo(() => AdvertDepartmentModel, 'department_id')
-  department!: AdvertDepartmentModel
+  department!: AdvertDepartmentModelRef
 
   @HasMany(() => AdvertTypeModel, 'main_type_id')
   types?: AdvertTypeModel[]

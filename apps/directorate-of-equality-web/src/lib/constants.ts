@@ -1,9 +1,33 @@
-export const NAV_PATHS = {
-  frontpage: { title: 'Forsíða', href: '/' },
-  heildarlisti: { title: 'Vinnslusvæði', href: '/yfirlit' },
-  fyrirtaeki: { title: 'Fyrirtæki', href: '/fyrirtaeki' },
-  ritstjorn: { title: 'Ritstjórar', href: '/ritstjorar' },
+export type NavPath = {
+  title: string
+  href: string
+  /**
+   * Route is ADMIN-only. Read by the nav (`ControlPanel`) to hide the entry and
+   * by `requireNavAccess` to refuse the page itself — both halves, so adding an
+   * entry here is all that is needed to protect a new admin route.
+   */
+  adminOnly: boolean
 }
+
+export const NAV_PATHS = {
+  frontpage: { title: 'Forsíða', href: '/', adminOnly: false },
+  heildarlisti: { title: 'Vinnslusvæði', href: '/yfirlit', adminOnly: false },
+  fyrirtaeki: { title: 'Fyrirtæki', href: '/fyrirtaeki', adminOnly: false },
+  ritstjorn: { title: 'Ritstjórar', href: '/ritstjorar', adminOnly: true },
+  kerfisstillingar: {
+    title: 'Kerfisstillingar',
+    href: '/kerfisstillingar',
+    adminOnly: true,
+  },
+} satisfies Record<string, NavPath>
+
+/**
+ * Config key holding the annual gender base-salary difference threshold (%).
+ * Read-mostly: the Kerfisstillingar page is the only place it is written, and
+ * the API only ever lets it be lowered.
+ */
+export const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
+  'salary_difference_threshold_percent'
 
 const IS_MONTHS = [
   'janúar',
@@ -24,6 +48,28 @@ export const formatDateIS = (dateStr: string) => {
   const d = new Date(dateStr)
   const day = String(d.getDate()).padStart(2, '0')
   return `${day}. ${IS_MONTHS[d.getMonth()]} ${d.getFullYear()}`
+}
+
+/**
+ * Calendar-day date as "31. mars 2028", parsed off the string rather than
+ * through `new Date()`.
+ *
+ * For values that name a DAY rather than an instant — `equalityLegacyValidUntil`
+ * is `legacy_report.equality_valid_until`, a DATEONLY the API widens to
+ * 23:59:59Z so the last stated day still counts as covered. Read through
+ * `formatDateIS`, that timestamp renders as the NEXT day anywhere east of
+ * Greenwich, because `getDate()` is local. Harmless in Iceland, which is UTC
+ * year round, and wrong for a reviewer working from anywhere else.
+ *
+ * Same reasoning, and the same fix, as `formatMonthYearIS` below. Deliberately
+ * a sibling rather than a change to `formatDateIS`, whose other call sites pass
+ * real instants and want local rendering.
+ */
+export const formatCalendarDateIS = (dateStr: string) => {
+  const [year, month, day] = dateStr.slice(0, 10).split('-')
+  const name = IS_MONTHS[Number(month) - 1]
+
+  return name ? `${day}. ${name} ${year}` : dateStr
 }
 
 /**
@@ -54,11 +100,11 @@ export enum ReportStatusTranslatedEnum {
 
 export enum CommunicationStatusTranslatedEnum {
   NOT_STARTED = 'Ekki hafin',
-  OPEN = 'Opin',
   AWAITING_RESPONSE = 'Beðið eftir svörum',
   RESPONSE_RECEIVED = 'Svör hafa borist',
-  CLOSED = 'Lokað',
+  CLOSED = 'Lokið',
 }
+import { type ReportStatusEnum } from '../gen/fetch/types.gen'
 import { overviewText, reportText, sharedText } from './text'
 
 import { type ColumnDef } from '@tanstack/react-table'
@@ -72,9 +118,16 @@ export type Case = {
   companyAdminGender: string
   kennitala: string
   status: string
+  /**
+   * Untranslated status. `status` is the Icelandic label the table renders, so
+   * anything that has to *decide* something off the status (the reviewer cell
+   * asking whether the API will accept an assignment) needs the raw enum too.
+   */
+  rawStatus: ReportStatusEnum
   email: string
   isatCode: string
   reviewer: string
+  reviewerId: string | null
   employeeCount: string
   communicationStatus: string
   companyFinesStarted: boolean

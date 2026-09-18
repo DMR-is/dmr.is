@@ -27,6 +27,8 @@ import { AdvertModel } from '../../models/advert.model'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
+} from '../../models/application.dto'
+import {
   ApplicationModel,
   ApplicationStatusEnum,
 } from '../../models/application.model'

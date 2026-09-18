@@ -7,10 +7,8 @@ import { BaseEntityDto } from '../modules/base-entity/dto/base-entity.dto'
 import { AdvertTypeFeeCodeModel } from './advert-type-fee-code.model'
 import { CategoryModel } from './category.model'
 import { FeeCodeModel } from './fee-code.model'
-import {
-  TypeCategoriesModel,
-  TypeWithCategoriesDto,
-} from './type-categories.model'
+import type { TypeWithCategoriesDto } from './type-categories.dto'
+import { TypeCategoriesModel } from './type-categories.model'
 
 export enum TypeIdEnum {
   RECALL_BANKRUPTCY = '065C3FD9-58D1-436F-9FB8-C1F5C214FA50',

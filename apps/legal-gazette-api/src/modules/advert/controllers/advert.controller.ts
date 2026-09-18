@@ -19,9 +19,7 @@ import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { OwnershipGuard } from '../../../core/guards/ownership.guard'
 import { ApplicationWebScopes } from '../../../core/guards/scope-guards/scopes.decorator'
-import {
-  AdvertDetailedDto,
-} from '../../../models/advert.model'
+import { AdvertDetailedDto } from '../../../models/advert.dto'
 import { IAdvertService } from '../../../modules/advert/advert.service.interface'
 import {
   GetAdvertsDto,

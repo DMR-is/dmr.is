@@ -1,3 +1,23 @@
+// Jest transform config for @swc/jest.
+//
+// Nothing in the repo references this file by path - every project whose
+// jest.config.ts uses bare ['@swc/jest'] reads it implicitly. It therefore
+// looks orphaned and is not: editing or deleting it changes those suites
+// silently, and a lost flag mostly fails by passing.
+//
+// Inline transform options REPLACE this file rather than merging with it, so
+// pass none: ['@swc/jest'], never ['@swc/jest', { ... }].
+//
+// decoratorMetadata emits design:type and design:paramtypes. Sequelize needs
+// design:type wherever a @Column declares no explicit type:, and Nest needs
+// design:paramtypes for constructor injection without @Inject. Some projects
+// pass without it, which is what makes turning it off look safe -
+// legal-gazette-api loses 40 of 44 suites without it.
+//
+// legacyDecorator and useDefineForClassFields:false match the decorator
+// semantics the production build compiles under (tsconfig.preset-nestjs.json).
+// keepClassNames preserves Model and provider class names, which Sequelize and
+// Nest both read at runtime.
 {
   "$schema": "https://json.schemastore.org/swcrc",
   "jsc": {

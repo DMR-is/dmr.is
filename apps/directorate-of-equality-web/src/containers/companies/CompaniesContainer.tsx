@@ -17,11 +17,13 @@ import {
 import { CompanyImportModal } from '../../components/companies/CompanyImportModal'
 import { CompanyTable } from '../../components/companies/CompanyTable'
 import { CreateCompanyModal } from '../../components/companies/CreateCompanyModal'
+import { SendCompanyEmailModal } from '../../components/companies/SendCompanyEmailModal'
 import {
   CompanyExpiryFilterEnum,
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
+  CompanyStatusEnum,
 } from '../../gen/fetch'
 import { useCompanies } from '../../hooks/useCompanies'
 import { useIsTablet } from '../../hooks/useIsTablet'
@@ -33,15 +35,28 @@ export const CompaniesContainer = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
 
-  const { data, isError, filter, setFilter, resetFilter } = useCompanies({
-    pageSize: 10,
-  })
+  /**
+   * The filter the email modal is addressed by, captured when it is opened;
+   * non-null is what "open" means.
+   *
+   * Held here rather than read live inside the modal, so changing the filter
+   * behind it cannot change who the message goes to. The modal cannot capture
+   * it on mount, because it is always mounted.
+   */
+  const [emailFilter, setEmailFilter] = useState<Record<
+    string,
+    unknown
+  > | null>(null)
+
+  const { data, isError, filter, setFilter, resetFilter, recipientFilter } =
+    useCompanies({ pageSize: 10 })
 
   const [filters, setFilters] = useState<CompanyFilters>({
     employees: filter.employeeCountCategory
       ? [filter.employeeCountCategory]
       : [],
     status: (filter.companyStatus ?? []) as CompanyReportStatusEnum[],
+    registerStatus: (filter.status ?? []) as CompanyStatusEnum[],
     expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
     flags: [
       ...(filter.finesStarted ? ['fines'] : []),
@@ -53,6 +68,10 @@ export const CompaniesContainer = () => {
     isatCategoryCode: filter.isatCategoryCode ?? [],
     isatSection: filter.isatSection ?? [],
     sector: (filter.sector ?? []) as CompanySectorEnum[],
+    visibility: [
+      ...(filter.includeNotObliged ? ['notObliged'] : []),
+      ...(filter.includeInactive ? ['inactive'] : []),
+    ],
   })
 
   const trpc = useTRPC()
@@ -118,6 +137,13 @@ export const CompaniesContainer = () => {
     setFilters((prev) => ({ ...prev, [key]: val }))
     if (key === 'status') {
       setFilter({ companyStatus: val as CompanyReportStatusEnum[], page: 1 })
+    } else if (key === 'registerStatus') {
+      // Empty selection clears the param rather than sending both values —
+      // same result, but an unfiltered URL stays unfiltered.
+      setFilter({
+        status: val.length ? (val as CompanyStatusEnum[]) : null,
+        page: 1,
+      })
     } else if (key === 'employees') {
       // API supports a single employeeCountCategory; pass first selected value.
       // Multi-select >1 categories would require an API change.
@@ -127,6 +153,15 @@ export const CompaniesContainer = () => {
       })
     } else if (key === 'expires') {
       setFilter({ expiresWithin: val as CompanyExpiryFilterEnum[], page: 1 })
+    } else if (key === 'visibility') {
+      // Combined multi-select; each value maps to its own boolean server param.
+      // `null` rather than `false` so an unset reveal leaves the URL clean —
+      // the server hides by default, so absence already means "hidden".
+      setFilter({
+        includeNotObliged: val.includes('notObliged') ? true : null,
+        includeInactive: val.includes('inactive') ? true : null,
+        page: 1,
+      })
     } else if (key === 'flags') {
       // Combined multi-select; each value maps to its own boolean server param.
       setFilter({
@@ -153,6 +188,7 @@ export const CompaniesContainer = () => {
     setFilters({
       employees: [],
       status: [],
+      registerStatus: [],
       expires: [],
       flags: [],
       regionCode: [],
@@ -160,11 +196,20 @@ export const CompaniesContainer = () => {
       isatCategoryCode: [],
       isatSection: [],
       sector: [],
+      visibility: [],
     })
   }
 
   // All filtering (incl. daily fines + overdue) is server-side via useCompanies.
   const rows = data?.companies ?? []
+
+  /*
+   * Every company the filter matches, not the page on screen — the send is
+   * addressed by the filter. It can exceed the count the confirmation step
+   * shows, which excludes companies with no address and quarantined ones and
+   * lists them with the reason.
+   */
+  const matchCount = data?.paging?.totalItems ?? 0
 
   const newButton = (
     <Box display="flex" flexDirection="column" rowGap={1} marginTop={2}>
@@ -189,6 +234,18 @@ export const CompaniesContainer = () => {
         fluid
       >
         {companiesText.importModal.button}
+      </Button>
+      <Button
+        icon="mail"
+        iconType="outline"
+        onClick={() => setEmailFilter(recipientFilter)}
+        size="small"
+        variant="utility"
+        colorScheme="white"
+        disabled={matchCount === 0}
+        fluid
+      >
+        {`${companiesText.sendEmail.listButton} (${matchCount})`}
       </Button>
     </Box>
   )
@@ -236,6 +293,18 @@ export const CompaniesContainer = () => {
       <CompanyImportModal
         isOpen={isImportOpen}
         onClose={() => setIsImportOpen(false)}
+      />
+      {/*
+        Always mounted and toggled through `isOpen`, not conditionally mounted.
+        `ModalBase` opens the reakit dialog from a mount effect, and the click
+        that mounted it is still in flight while `hideOnClickOutside` arms — so
+        reakit hides it again and the modal never opens. The filter snapshot
+        conditional mounting was buying is taken in `emailFilter` instead.
+      */}
+      <SendCompanyEmailModal
+        isOpen={emailFilter !== null}
+        onClose={() => setEmailFilter(null)}
+        target={{ mode: 'filter', filter: emailFilter ?? {} }}
       />
     </GridContainer>
   )

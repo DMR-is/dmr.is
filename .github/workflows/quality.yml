@@ -22,10 +22,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ♻️ Use Node.js 20.x
+      - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.19.0
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
@@ -33,7 +33,7 @@ jobs:
           cache-install-state: true
           cache-node-modules: true
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       - name: Linting
         run: yarn run nx affected -t lint
@@ -45,10 +45,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ♻️ Use Node.js 20.x
+      - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.19.0
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
@@ -59,17 +59,25 @@ jobs:
       - name: Check formatting
         run: yarn nx format:write --all
 
-  testing:
+  generated-files:
+    # The DoE salary-report workbook feeds two committed TS files that no build
+    # step regenerates. Both now live in @dmr.is/doe-modules; the generators stay
+    # in the app, since they are repo maintenance rather than either app's runtime: the base64-inlined template bytes and Jafnréttisstofa's
+    # sub-criterion catalog served to the island.is portal. Both generators are
+    # deterministic and prettier-format their own output, so re-running them on a
+    # clean tree must be a no-op. Without this gate a new template.xlsx committed
+    # without regenerating serves stale data on a green build — a changed
+    # description or step wording leaves every assertion in the specs passing.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: ♻️ Use Node.js 20.x
+      - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.19.0
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
@@ -77,8 +85,41 @@ jobs:
           cache-install-state: true
           cache-node-modules: true
 
+      - name: Regenerate DoE workbook-derived files
+        working-directory: apps/directorate-of-equality-api
+        run: |
+          node scripts/refresh-template-data.js
+          node scripts/refresh-sub-criterion-catalog.js
 
-      - uses: nrwl/nx-set-shas@v4
+      - name: Fail if regenerating changed anything
+        run: |
+          git diff --exit-code -- \
+            libs/directorate-of-equality/modules/src/report-excel/template-data.ts \
+            libs/directorate-of-equality/modules/src/application/sub-criterion-catalog/sub-criterion-catalog.data.ts \
+            || {
+              echo "::error::A committed generated file is out of date. Run both refresh scripts in apps/directorate-of-equality-api/scripts/ and commit the result."
+              exit 1
+            }
+
+  testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ♻️ Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: 📥 Monorepo install
+        uses: ./.github/actions/yarn-install
+        with:
+          cache-install-state: true
+          cache-node-modules: true
+
+      - uses: nrwl/nx-set-shas@v5
 
       - name: Run tests
         run: yarn run nx affected -t test
@@ -90,10 +131,13 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: ♻️ Use Node.js 20.x
+      - name: 🌱 Apply submodule sparse-checkout
+        run: ./.gitscripts/checkout-submodules.sh
+
+      - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.19.0
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
@@ -101,10 +145,7 @@ jobs:
           cache-install-state: true
           cache-node-modules: true
 
-      - uses: nrwl/nx-set-shas@v4
-
-      - name: patch submodules
-        run: yarn run postinstall
+      - uses: nrwl/nx-set-shas@v5
 
       - name: tsc
         run: yarn run nx affected -t tsc
@@ -120,10 +161,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ♻️ Use Node.js 20.x
+      - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.19.0
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install

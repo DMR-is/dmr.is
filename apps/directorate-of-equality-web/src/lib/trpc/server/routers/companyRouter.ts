@@ -1,11 +1,13 @@
 import { z } from 'zod'
 
 import {
+  zCompanySectorEnum,
   zCreateCompanyBody,
   zCreateCompanyCommentBody,
   zCreateCompanyCommentPath,
   zDeleteCompanyCommentPath,
   zGetCompanyCommentsPath,
+  zGetCompanyLegacyReportsPath,
   zGetCompanyTimelinePath,
   zGetRskCompanyPreviewPath,
   zRskLookupCompanyPath,
@@ -17,6 +19,8 @@ import {
   zUpdateCompanyQuarantinePath,
   zUpdateCompanySectorBody,
   zUpdateCompanySectorPath,
+  zUpdateCompanyStatusBody,
+  zUpdateCompanyStatusPath,
 } from '../../../../gen/fetch/zod.gen'
 import { protectedProcedure, router } from '../trpc'
 
@@ -37,13 +41,25 @@ const zGetCompaniesQuery = z.object({
       ]),
     )
     .optional(),
+  // Register lifecycle, not compliance — see `companyStatus` directly above.
+  // Omitted means both, which is what the list has always shown.
+  status: z.array(z.enum(['ACTIVE', 'INACTIVE'])).optional(),
   expiresWithin: z.array(z.enum(['30d', '3m', 'soon'])).optional(),
   finesStarted: z.boolean().optional(),
   quarantined: z.boolean().optional(),
   overdue: z.boolean().optional(),
+  // ⚠️ The two default-on hides, as opt-in reveals. This schema is hand-written
+  // and strips anything it does not name, so omitting these here would drop
+  // them silently — the toggle would appear to do nothing, with no error
+  // anywhere. Absent means "hidden", which is the server's default.
+  includeNotObliged: z.boolean().optional(),
+  includeInactive: z.boolean().optional(),
   isatCategoryCode: z.array(z.string()).optional(),
   isatSection: z.array(z.string()).optional(),
-  sector: z.array(z.enum(['UNKNOWN', 'PRIVATE', 'PUBLIC'])).optional(),
+  // From the generated schema, not a literal list: a hand-written copy of the
+  // enum would let the next value through as a silently-rejected filter rather
+  // than a compile error.
+  sector: z.array(zCompanySectorEnum).optional(),
   regionCode: z.array(z.string()).optional(),
   postcode: z.array(z.string()).optional(),
   sortBy: z.enum(['name', 'employeeCount', 'nextReportDue']).optional(),
@@ -77,7 +93,9 @@ export const companyRouter = router({
   // Backs the premade industry filter — the 22 ÍSAT sections (bálkar) with
   // labels, so "Opinber stjórnsýsla" is one choice instead of every leaf under
   // division 84. Static reference data, no input.
-  isatSections: protectedProcedure.query(({ ctx }) => ctx.api.listIsatSections()),
+  isatSections: protectedProcedure.query(({ ctx }) =>
+    ctx.api.listIsatSections(),
+  ),
 
   rskLookup: protectedProcedure
     .input(zRskLookupCompanyPath)
@@ -101,6 +119,15 @@ export const companyRouter = router({
     .input(zGetCompanyTimelinePath)
     .query(({ ctx, input }) =>
       ctx.api.getCompanyTimeline({ path: { id: input.id } }),
+    ),
+
+  // The company's rows from the retired SharePoint register, backing the
+  // "Eldri gögn" tab. A list, not a row: a few companies resolved from two
+  // sheet rows each.
+  legacyReports: protectedProcedure
+    .input(zGetCompanyLegacyReportsPath)
+    .query(({ ctx, input }) =>
+      ctx.api.getCompanyLegacyReports({ path: { id: input.id } }),
     ),
 
   comments: router({
@@ -148,8 +175,9 @@ export const companyRouter = router({
     ),
 
   // Manual sector classification — the admin escape hatch for companies
-  // automatic RSK classification left UNKNOWN. PRIVATE/PUBLIC pins the value
-  // (sectorOverride); UNKNOWN hands it back to automatic classification.
+  // automatic RSK classification left UNKNOWN, and the only way RADUNEYTI
+  // (ministry) ever gets set. Any classified value pins it (sectorOverride);
+  // UNKNOWN hands it back to automatic classification.
   updateSector: protectedProcedure
     .input(zUpdateCompanySectorPath.extend(zUpdateCompanySectorBody.shape))
     .mutation(({ ctx, input }) =>
@@ -167,6 +195,21 @@ export const companyRouter = router({
       ctx.api.updateCompanyEmail({
         path: { id: input.id },
         body: { email: input.email },
+      }),
+    ),
+
+  // Register lifecycle status. INACTIVE means the company is no longer in the
+  // authoritative register (bankruptcy, merger, or absent from the latest
+  // import); ACTIVE puts it back. Idempotent server-side, and the change is
+  // recorded as a STATUS_CHANGED event with `reason` on the company timeline —
+  // the status column keeps no history of its own, so that event is the only
+  // record of why.
+  updateStatus: protectedProcedure
+    .input(zUpdateCompanyStatusPath.extend(zUpdateCompanyStatusBody.shape))
+    .mutation(({ ctx, input }) =>
+      ctx.api.updateCompanyStatus({
+        path: { id: input.id },
+        body: { status: input.status, reason: input.reason },
       }),
     ),
 

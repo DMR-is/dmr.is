@@ -15,6 +15,7 @@ import ReactSelect, {
 import { theme } from '@dmr.is/island-ui-theme'
 
 import { Icon } from './Icon'
+import { islandSelectStyles } from './selectStyles'
 import { Text } from './Text'
 
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -283,23 +284,11 @@ const checkboxCheckedStyle: CSSProperties = {
 }
 
 const customStyles: StylesConfig<MultiSelectOption, true> = {
-  control: (base, state) => ({
-    ...base,
-    minHeight: 40,
-    backgroundColor: theme.color.white,
-    // Flatten the bottom corners when open so the menu connects flush.
-    borderRadius: state.selectProps.menuIsOpen ? '8px 8px 0 0' : 8,
-    border: 'none',
-    // Match the island-ui input: inset box-shadow border, 3px mint focus ring.
-    boxShadow: state.isFocused
-      ? `inset 0 0 0 3px ${theme.color.mint400}`
-      : `inset 0 0 0 1px ${theme.color.blue200}`,
-    transition: 'box-shadow 0.2s',
-    ':hover': {
-      boxShadow: state.isFocused
-        ? `inset 0 0 0 3px ${theme.color.mint400}`
-        : `inset 0 0 0 1px ${theme.color.blue400}`,
-    },
+  ...islandSelectStyles<MultiSelectOption, true>({
+    controlMinHeight: 40,
+    optionPadding: '16px 24px',
+    // The menu renders in flow here, so it has to be lifted itself.
+    menuZIndex: 20,
   }),
   valueContainer: (base) => ({
     ...base,
@@ -320,35 +309,6 @@ const customStyles: StylesConfig<MultiSelectOption, true> = {
     margin: 0,
     padding: 0,
     color: theme.color.dark400,
-  }),
-  // Connect the menu to the control and continue the mint focus ring around
-  // its sides + bottom, matching the island-ui Select.
-  menu: (base) => ({
-    ...base,
-    marginTop: -3,
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
-    boxShadow: 'none',
-    borderTop: `1px solid ${theme.color.blue200}`,
-    borderRight: `3px solid ${theme.color.mint400}`,
-    borderLeft: `3px solid ${theme.color.mint400}`,
-    borderBottom: `3px solid ${theme.color.mint400}`,
-    boxSizing: 'border-box',
-    overflow: 'hidden',
-    zIndex: 20,
-  }),
-  menuList: (base) => ({ ...base, padding: 0 }),
-  option: (base, state) => ({
-    ...base,
-    padding: '16px 24px',
-    fontSize: 14,
-    color: theme.color.dark400,
-    backgroundColor: state.isFocused ? theme.color.blue100 : theme.color.white,
-    borderBottom: `1px solid ${theme.color.blue200}`,
-    cursor: 'pointer',
-    ':active': { backgroundColor: theme.color.blue100 },
   }),
   // Inset the indicators from the right edge to match the island-ui Select,
   // where the chevron sits well inside rather than hugging the border.

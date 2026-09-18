@@ -21,6 +21,7 @@ import {
   sharedText,
 } from '../../../../lib/text'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
+import { formatTimestampDate } from '../../../../lib/utils'
 
 const t = companiesText.detailView
 
@@ -86,7 +87,7 @@ export const CompanyReportsTab = ({ companyId }: Props) => {
             }
             text={
               report.createdAt
-                ? new Date(report.createdAt).toLocaleDateString('is-IS')
+                ? formatTimestampDate(report.createdAt)
                 : ''
             }
             tag={{

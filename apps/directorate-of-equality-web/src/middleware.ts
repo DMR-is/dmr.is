@@ -8,7 +8,7 @@ import {
 } from '@dmr.is/auth/middleware-helpers'
 import { isExpired } from '@dmr.is/auth/token-service'
 
-import { identityServerConfig } from './lib/auth/authOptions'
+import { identityServerConfig } from './lib/auth/identityServerConfig'
 
 export default withAuth(
   async function middleware(req: NextRequestWithAuth) {
@@ -26,9 +26,7 @@ export default withAuth(
       : false
 
     if (accessExpired || idTokenExpired) {
-      const redirectUri =
-        process.env.DOE_WEB_URL ??
-        (process.env.IDENTITY_SERVER_LOGOUT_URL as string)
+      const redirectUri = process.env.BASE_URL as string
 
       const result = await tryToUpdateCookie(
         identityServerConfig.clientId,

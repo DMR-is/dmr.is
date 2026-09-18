@@ -5,6 +5,7 @@ import { useFormContext } from 'react-hook-form'
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette-schemas'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { toCalendarDateIso } from '@dmr.is/utils-shared/date/calendarDate'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import { DatePickerController } from '../../../controllers/DatePickerController'
@@ -64,7 +65,7 @@ export const RecallSettlementUndivided = () => {
               updateLocalOnly({
                 fields: {
                   settlementFields: {
-                    partnerDateOfDeath: val.toISOString(),
+                    partnerDateOfDeath: toCalendarDateIso(val),
                   },
                 },
               })

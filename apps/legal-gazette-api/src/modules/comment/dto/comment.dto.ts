@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { ApiString } from '@dmr.is/decorators'
 
-import { CommentDto } from '../../../models/comment.model'
+import { CommentDto } from '../../../models/comment.dto'
 
 export class GetCommentsDto {
   @ApiProperty({ type: [CommentDto] })

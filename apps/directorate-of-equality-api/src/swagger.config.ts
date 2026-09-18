@@ -1,4 +1,4 @@
-import { ApplicationApiModule } from './modules/application/application.api.module'
+import { DoeApplicationSwaggerModule } from './modules/swagger/doe-application.swagger.module'
 import { DoeWebSwaggerModule } from './modules/swagger/doe-web.swagger.module'
 import { SetupSwaggerOptions } from './setupSwaggerDocument'
 
@@ -22,10 +22,12 @@ export const SWAGGER_CONFIG: SetupSwaggerOptions[] = [
     swaggerDescription:
       'Public-facing API for equality report submissions through island.is. ' +
       'Covers company information lookup, Excel template download, workbook import, ' +
-      'salary analysis, and equality report submission. ' +
+      'salary analysis, the draft-report lifecycle (create → bulk sync → submit) ' +
+      'that holds report content the application system cannot store itself, ' +
+      'and equality report submission. ' +
       'Consumed by the island.is application system on behalf of employers.',
     tag: 'Application API',
-    modules: [ApplicationApiModule],
+    modules: [DoeApplicationSwaggerModule],
     autoTagControllers: true,
   },
 ]

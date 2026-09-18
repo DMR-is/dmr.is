@@ -6,7 +6,7 @@ import { AwsModule } from '@dmr.is/shared-modules'
 import { AdvertModel } from '../../../../models/advert.model'
 import { ApplicationModel } from '../../../../models/application.model'
 import { TBRTransactionModel } from '../../../../models/tbr-transactions.model'
-import { TBRModule } from '../../../tbr/tbr.module'
+import { TBRSharedModule } from '../../../tbr/tbr.shared-module'
 import { PriceCalculatorProviderModule } from '../../calculator/price-calculator.provider.module'
 import { PdfProviderModule } from '../../pdf/pdf.provider.module'
 import { PublicationProviderModule } from '../publication.provider.module'
@@ -24,11 +24,7 @@ import { DivisionEndingPublishedListener } from './division-ending-published.lis
     PriceCalculatorProviderModule,
     PdfProviderModule,
     PublicationProviderModule,
-    TBRModule.forRoot({
-      credentials: process.env.LG_TBR_CREDENTIALS!,
-      officeId: process.env.LG_TBR_OFFICE_ID!,
-      tbrBasePath: process.env.LG_TBR_PATH!,
-    }),
+    TBRSharedModule,
   ],
   controllers: [],
   providers: [AdvertPublishedListener, DivisionEndingPublishedListener],

@@ -11,6 +11,7 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
@@ -28,18 +29,20 @@ import {
   type SalaryAnalysisOutlierDto,
   SalaryDataBasisEnum,
 } from '../../gen/fetch/types.gen'
+import { useAllCompanies } from '../../hooks/useAllCompanies'
 import { formatMonthYearIS } from '../../lib/constants'
 import { putWorkbookToPresignedUrl } from '../../lib/import-upload'
 import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import {
-  formatNationalId,
-  formatSalary,
+  foldDeviationDirection,
+  formatHourlyRate,
+  formatPercent,
   parseInflightConflictStatus,
 } from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type ColumnDef } from '@tanstack/react-table'
 
 const OUTLIERS_PAGE_SIZE = 10
@@ -73,6 +76,7 @@ const EMPTY_FORM = {
   companyAdminEmail: '',
   companyAdminGender: GenderEnum.MALE,
   contactName: '',
+  contactTitle: '',
   contactEmail: '',
   contactPhone: '',
   averageEmployeeMaleCount: '',
@@ -89,6 +93,8 @@ type OutlierGroupForm = {
   action: string
   signatureName: string
   signatureRole: string
+  /** `YYYY-MM-DD`, or '' while unset. See `toIsoDate` for why not a `Date`. */
+  remedyDate: string
   ordinals: number[]
 }
 
@@ -98,8 +104,51 @@ const makeGroup = (id: string): OutlierGroupForm => ({
   action: '',
   signatureName: '',
   signatureRole: '',
+  remedyDate: '',
   ordinals: [],
 })
+
+/**
+ * The window the API accepts for `remedyDate`: strictly future, and no further
+ * out than the next reporting cycle. Bounding the picker means an out-of-range
+ * date cannot be chosen at all, rather than being rejected on submit with a
+ * message pointing at one field inside one accordion item.
+ *
+ * ⚠️ Mirrors `parseRemedyDate` in the API (`report-employee/lib/remedy-date.ts`)
+ * — change both together. The client bound is a convenience; the API's is the
+ * one that decides.
+ */
+const remedyDateBounds = () => {
+  const min = new Date()
+  min.setHours(0, 0, 0, 0)
+  min.setDate(min.getDate() + 1)
+  const max = new Date()
+  max.setHours(0, 0, 0, 0)
+  max.setFullYear(max.getFullYear() + 3)
+  return { min, max }
+}
+
+/**
+ * A picked `Date` as `YYYY-MM-DD`, read off its LOCAL parts.
+ *
+ * ⚠️ Not `toISOString().slice(0, 10)`. The picker hands back local midnight, so
+ * in any timezone ahead of UTC that serialises to the previous day — a company
+ * west of the date line aside, an Icelandic reviewer is at UTC+0 and would
+ * never see it, which is precisely how it would ship.
+ */
+const toIsoDate = (date: Date): string => {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+/** Inverse of `toIsoDate` — builds a LOCAL date, so it round-trips exactly. */
+const fromIsoDate = (value: string): Date | undefined => {
+  if (!value) return undefined
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return undefined
+  return new Date(year, month - 1, day)
+}
 
 function parseOutlierOrdinals(message: string): number[] | null {
   const match = message.match(/employee ordinal\(s\): ([\d,\s]+)/)
@@ -126,6 +175,14 @@ export const CreateSalaryReportDrawer = () => {
   const [salaryDataMonth, setSalaryDataMonth] = useState('')
   const [parsedReport, setParsedReport] = useState<ParsedReportDto | null>(null)
   const [outliers, setOutliers] = useState<SalaryAnalysisOutlierDto[]>([])
+  /**
+   * Null until analysed, and null for a report with no computable gap. False
+   * means the listed employees do not account for the whole óskýrt — see the
+   * caveat rendered in `OutlierEditor`.
+   */
+  const [minimumSetClosesGap, setMinimumSetClosesGap] = useState<
+    boolean | null
+  >(null)
   const [importErrors, setImportErrors] = useState<string[] | null>(null)
   const [postpone, setPostpone] = useState(false)
   const [postponeReason, setPostponeReason] = useState('')
@@ -149,21 +206,18 @@ export const CreateSalaryReportDrawer = () => {
     })
   }, [])
 
-  const companiesQuery = useQuery(
-    trpc.company.list.queryOptions({ pageSize: 1000 }),
-  )
-
-  const companyOptions = (companiesQuery.data?.companies ?? []).map((c) => ({
-    label: `${c.name} (${formatNationalId(c.nationalId)})`,
-    value: c.id,
-  }))
+  const {
+    companies,
+    options: companyOptions,
+    isLoading: isLoadingCompanies,
+    isError: companyLoadFailed,
+  } = useAllCompanies()
 
   // A salary report must reference an approved, in-force equality report. The
   // company's server-computed report status already tells us when one is
   // missing, so we can warn the admin up front rather than let them fill in the
   // whole form and hit a 404 on submit.
-  const selectedCompany =
-    companiesQuery.data?.companies.find((c) => c.id === companyId) ?? null
+  const selectedCompany = companies.find((c) => c.id === companyId) ?? null
   const missingEqualityReport =
     selectedCompany?.reportStatus ===
     CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
@@ -176,6 +230,9 @@ export const CreateSalaryReportDrawer = () => {
     ...trpc.adminReport.analyzeSalary.mutationOptions(),
     onSuccess: (data) => {
       setOutliers(data.outliers)
+      setMinimumSetClosesGap(
+        data.wageGapDecomposition?.minimumSetClosesGap ?? null,
+      )
       // Groups start empty; the admin builds them by selecting rows in the
       // outlier table and clicking "create group".
       setGroups([])
@@ -262,9 +319,7 @@ export const CreateSalaryReportDrawer = () => {
   }
 
   const updateGroup = (id: string, patch: Partial<OutlierGroupForm>) =>
-    setGroups((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, ...patch } : g)),
-    )
+    setGroups((prev) => prev.map((g) => (g.id === id ? { ...g, ...patch } : g)))
 
   const removeGroup = (id: string) =>
     setGroups((prev) => prev.filter((g) => g.id !== id))
@@ -292,7 +347,11 @@ export const CreateSalaryReportDrawer = () => {
       g.reason.trim() &&
       g.action.trim() &&
       g.signatureName.trim() &&
-      g.signatureRole.trim(),
+      g.signatureRole.trim() &&
+      // Part of the API's all-or-none block, so an otherwise complete group
+      // with no date is still an incomplete explanation, not a complete one
+      // missing an optional extra.
+      g.remedyDate.trim(),
   )
   const explanationsValid =
     activeGroups.length > 0 && allOutliersAssigned && groupsComplete
@@ -314,6 +373,7 @@ export const CreateSalaryReportDrawer = () => {
       companyAdminEmail: form.companyAdminEmail,
       companyAdminGender: form.companyAdminGender,
       contactName: form.contactName,
+      contactTitle: form.contactTitle || null,
       contactEmail: form.contactEmail,
       contactPhone: form.contactPhone,
       averageEmployeeMaleCount: Number(form.averageEmployeeMaleCount),
@@ -336,6 +396,7 @@ export const CreateSalaryReportDrawer = () => {
               action: g.action,
               signatureName: g.signatureName,
               signatureRole: g.signatureRole,
+              remedyDate: g.remedyDate,
               employeeOrdinals: g.ordinals,
             }))
           : undefined,
@@ -441,11 +502,20 @@ export const CreateSalaryReportDrawer = () => {
                 setImportErrors(null)
                 if (fileInputRef.current) fileInputRef.current.value = ''
               }}
-              isLoading={companiesQuery.isLoading}
+              isLoading={isLoadingCompanies}
               size="xs"
               backgroundColor="blue"
             />
           </GridColumn>
+          {/* Without this the admin sees an empty dropdown with no spinner —
+              indistinguishable from a register that genuinely has no
+              companies. The hook deliberately does not fall back to a partial
+              list, so a failed fetch empties the field entirely. */}
+          {companyLoadFailed && (
+            <GridColumn span="12/12">
+              <AlertMessage type="error" message={s.form.companyLoadError} />
+            </GridColumn>
+          )}
           {missingEqualityReport && (
             <GridColumn span="12/12">
               <AlertMessage
@@ -580,6 +650,7 @@ export const CreateSalaryReportDrawer = () => {
               ) : (
                 <OutlierEditor
                   outliers={outliers}
+                  minimumSetClosesGap={minimumSetClosesGap}
                   identifierForOrdinal={identifierForOrdinal}
                   postpone={postpone}
                   setPostpone={setPostpone}
@@ -662,6 +733,16 @@ export const CreateSalaryReportDrawer = () => {
               size="xs"
               value={form.contactName}
               onChange={(e) => set('contactName')(e.target.value)}
+              disabled={!companyId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <TextInput
+              name="contactTitle"
+              label={s.form.jobTitleLabel}
+              size="xs"
+              value={form.contactTitle}
+              onChange={(e) => set('contactTitle')(e.target.value)}
               disabled={!companyId}
             />
           </GridColumn>
@@ -801,6 +882,8 @@ export const CreateSalaryReportDrawer = () => {
 
 type OutlierEditorProps = {
   outliers: SalaryAnalysisOutlierDto[]
+  /** False → the list does not account for the whole gap; render the caveat. */
+  minimumSetClosesGap: boolean | null
   identifierForOrdinal: (ordinal: number) => string
   postpone: boolean
   setPostpone: (v: boolean) => void
@@ -815,8 +898,36 @@ type OutlierEditorProps = {
   groupsComplete: boolean
 }
 
+/**
+ * The direction prompt above a group's reason/action fields.
+ *
+ * Its own component so the "nothing to say" case is a `return null` rather than
+ * a ternary inside JSX: `group.ordinals` can be empty, and an ordinal can fail
+ * to resolve against `outliers`, both of which yield no direction. Rendering the
+ * mixed prompt there would ask the submitter to explain pay that is
+ * simultaneously high and low.
+ */
+const GroupDirectionPrompt = ({
+  payStatuses,
+}: {
+  payStatuses: readonly (SalaryAnalysisOutlierDto['payStatus'] | undefined)[]
+}) => {
+  const direction = foldDeviationDirection(payStatuses)
+
+  if (!direction) return null
+
+  return (
+    <Box marginBottom={1}>
+      <Text variant="small" color="dark300">
+        {d.directionPrompt[direction]}
+      </Text>
+    </Box>
+  )
+}
+
 const OutlierEditor = ({
   outliers,
+  minimumSetClosesGap,
   identifierForOrdinal,
   postpone,
   setPostpone,
@@ -832,6 +943,11 @@ const OutlierEditor = ({
 }: OutlierEditorProps) => {
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [page, setPage] = useState(1)
+
+  // Computed once per mount rather than per render: the bounds move only with
+  // the calendar day, and a fresh pair of Dates each render would reset the
+  // picker's internal state on every keystroke elsewhere in the form.
+  const remedyBounds = useMemo(remedyDateBounds, [])
 
   // Once an outlier is put into a group it leaves the table — the group card
   // below owns it from then on. Removing a group frees its members back here.
@@ -910,18 +1026,39 @@ const OutlierEditor = ({
     {
       id: 'salary',
       header: d.tableSalary,
-      cell: ({ row }) => `${formatSalary(row.original.adjustedBaseSalary)} kr.`,
+      cell: ({ row }) => formatHourlyRate(row.original.regularHourlyWage),
+    },
+    {
+      id: 'expected',
+      header: d.tableExpected,
+      cell: ({ row }) => formatHourlyRate(row.original.expectedHourlyWage),
     },
     {
       id: 'difference',
       header: d.tableDifference,
+      // ⚠️ The direction suffix is BACK, and for the opposite reason it was
+      // removed. It was dropped when the set became lift-only: every row was
+      // underpaid, so the word told the reader nothing. The set is
+      // two-directional now, so a row can be listed for being paid ABOVE its
+      // stig — which is precisely what a submitter would not expect, and the
+      // sign alone relies on them knowing the convention.
       cell: ({ row }) => {
-        const o = row.original
-        const below = o.differencePercent < 0
-        return `${Math.abs(o.differencePercent).toFixed(1)}% ${
-          below ? d.directionBelow : d.directionAbove
-        }`
+        const percent = formatPercent(row.original.deviationPercent, {
+          signed: true,
+        })
+        const word =
+          row.original.payStatus === 'UNDERPAID'
+            ? d.directionBelow
+            : row.original.payStatus === 'OVERPAID'
+              ? d.directionAbove
+              : null
+        return word ? `${percent} (${word})` : percent
       },
+    },
+    {
+      id: 'contribution',
+      header: d.tableContribution,
+      cell: ({ row }) => formatPercent(row.original.contributionShare),
     },
   ]
 
@@ -930,6 +1067,19 @@ const OutlierEditor = ({
       <Box marginBottom={2}>
         <Text variant="small">{d.intro}</Text>
       </Box>
+
+      {/*
+        Only when the engine says so. `false` is the meaningful case; `null`
+        means no computable gap, and rendering the caveat then would assert
+        something about a figure that does not exist.
+      */}
+      {minimumSetClosesGap === false && (
+        <Box marginBottom={2}>
+          <Text variant="small" color="dark300">
+            {d.introDoesNotClose}
+          </Text>
+        </Box>
+      )}
 
       <Checkbox
         label={d.postponeOption}
@@ -1006,6 +1156,22 @@ const OutlierEditor = ({
                     {d.removeGroup}
                   </Button>
                 </Box>
+                {/*
+                  ⚠️ Folded over THIS group's own members, which is correct here
+                  and would not be on the reviewer's side: the explanation lives
+                  on the group, the submitter composes groups freely, and all
+                  members are in local state rather than paged. A group holding
+                  both directions gets the `mixed` prompt — a real third case,
+                  because "why is this pay low" and "why is this pay high" are
+                  different questions and one group can contain both.
+                */}
+                <GroupDirectionPrompt
+                  payStatuses={group.ordinals.map(
+                    (ordinal) =>
+                      outliers.find((o) => o.employeeOrdinal === ordinal)
+                        ?.payStatus,
+                  )}
+                />
                 <GridRow rowGap={1}>
                   <GridColumn span="12/12">
                     <TextInput
@@ -1052,6 +1218,24 @@ const OutlierEditor = ({
                       value={group.signatureRole}
                       onChange={(e) =>
                         updateGroup(group.id, { signatureRole: e.target.value })
+                      }
+                    />
+                  </GridColumn>
+                  <GridColumn span={['12/12', '6/12']}>
+                    <DatePicker
+                      name={`remedyDate-${group.id}`}
+                      label={d.remedyDateLabel}
+                      placeholderText={d.remedyDatePlaceholder}
+                      locale="is"
+                      size="xs"
+                      icon={{ name: 'calendar', type: 'outline' }}
+                      minDate={remedyBounds.min}
+                      maxDate={remedyBounds.max}
+                      selected={fromIsoDate(group.remedyDate)}
+                      handleChange={(date) =>
+                        updateGroup(group.id, {
+                          remedyDate: date ? toIsoDate(date) : '',
+                        })
                       }
                     />
                   </GridColumn>

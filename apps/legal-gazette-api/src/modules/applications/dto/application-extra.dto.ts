@@ -14,6 +14,7 @@ import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import {
   ApiBoolean,
+  ApiDate,
   ApiDateTime,
   ApiDto,
   ApiHTML,
@@ -27,7 +28,7 @@ import { Paging } from '@dmr.is/shared-dto'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
-} from '../../../models/application.model'
+} from '../../../models/application.dto'
 import { CreateSignatureDto } from '../../advert/signature/dto/signature.dto'
 
 export class GetApplicationsDto {
@@ -80,7 +81,7 @@ export class CreateDivisionEndingDto {
   @ApiDateTime()
   scheduledAt!: Date
 
-  @ApiDateTime()
+  @ApiDate()
   endingDate!: Date
 
   @ApiOptionalNumber()

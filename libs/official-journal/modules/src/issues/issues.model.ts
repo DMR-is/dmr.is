@@ -1,13 +1,10 @@
-import {
-  BelongsTo,
-  Column,
-  DataType,
-  DefaultScope,
-} from 'sequelize-typescript'
+// Association annotations use a type-only alias - see `src/models.md`.
+import { BelongsTo, Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { advertDepartmentMigrate } from '../journal/migrations'
+import type { AdvertDepartmentModel as AdvertDepartmentModelRef } from '../journal/models'
 import { AdvertDepartmentModel } from '../journal/models'
 import { IssueDto } from './issues.dto'
 import { getMonthName, mapDepartmentIdToTitle } from './utils'
@@ -85,7 +82,7 @@ export class IssuesModel extends ParanoidModel<
   url!: string
 
   @BelongsTo(() => AdvertDepartmentModel, 'departmentId')
-  department!: AdvertDepartmentModel
+  department!: AdvertDepartmentModelRef
 
   formatTitle() {
     const monthNumber = this.startDate.getMonth() + 1

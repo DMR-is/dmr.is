@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import {
   BelongsTo,
   Column,
@@ -10,6 +11,7 @@ import { ApiDateTime, ApiNumber, ApiString, ApiUUId } from '@dmr.is/decorators'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
+import type { ForeclosureModel as ForeclosureModelRef } from './foreclosure.model'
 import { ForeclosureModel } from './foreclosure.model'
 
 export type ForeclosurePropertyModelAttributes = {
@@ -59,7 +61,7 @@ export class ForeclosurePropertyModel extends ParanoidModel<
   respondent!: string
 
   @BelongsTo(() => ForeclosureModel)
-  foreclosure!: ForeclosureModel
+  foreclosure!: ForeclosureModelRef
 
   static fromModel(model: ForeclosurePropertyModel): ForeclosurePropertyDto {
     return {

@@ -1,10 +1,80 @@
+import {
+  hasLoginCooldown,
+  loginCooldownCookie,
+} from '@dmr.is/auth/loginCooldown'
 import { forceLogin } from '@dmr.is/auth/useLogOut'
 
-import { defaultShouldDehydrateQuery, QueryClient } from '@tanstack/react-query'
+import {
+  defaultShouldDehydrateQuery,
+  MutationCache,
+  QueryClient,
+} from '@tanstack/react-query'
 import { TRPCClientError } from '@trpc/react-query'
+
+/**
+ * A dead session makes every in-flight call fail at once, and each failure would
+ * otherwise kick off its own redirect to IDS. Only the first one is allowed to.
+ *
+ * This only covers one page load. The cooldown cookie below is what stops a loop
+ * across reloads.
+ */
+let redirectingToLogin = false
+
+const isUnauthorized = (error: unknown): boolean => {
+  if (error instanceof TRPCClientError && error.data?.httpStatus === 401) {
+    return true
+  }
+
+  if (error instanceof Error) {
+    return (
+      error.message === 'UNAUTHORIZED' || error.message === 'No session found'
+    )
+  }
+
+  return false
+}
+
+/**
+ * Bounces the user through IDS when the session behind the request is gone.
+ *
+ * The session cookie can die mid-session (expired tokens the middleware could
+ * not refresh), and nothing about the loaded page reflects that — so without
+ * this the user keeps clicking on a UI that answers 401 to everything.
+ *
+ * @returns whether the error was an auth failure, so callers can skip retrying.
+ */
+const forceLoginOnUnauthorized = (error: unknown): boolean => {
+  if (!isUnauthorized(error)) {
+    return false
+  }
+
+  if (typeof window === 'undefined' || redirectingToLogin) {
+    return true
+  }
+
+  if (hasLoginCooldown(document.cookie)) {
+    // Already tried recently and we are still being told 401, so this is not a
+    // session we can fix by signing in again. Let the error reach the UI.
+    return true
+  }
+
+  redirectingToLogin = true
+  document.cookie = loginCooldownCookie()
+  forceLogin(window.location.pathname)
+
+  return true
+}
 
 export const makeQueryClient = () => {
   return new QueryClient({
+    // Mutations need the same 401 handling as queries, but a default
+    // `mutations.onError` would be overwritten by any mutation passing its own
+    // (which most of them do, for toasts). The cache-level callback always runs.
+    mutationCache: new MutationCache({
+      onError: (error) => {
+        forceLoginOnUnauthorized(error)
+      },
+    }),
     defaultOptions: {
       queries: {
         staleTime: 30 * 1000,
@@ -13,21 +83,9 @@ export const makeQueryClient = () => {
             if (error.data?.httpStatus === 404) {
               return false
             }
-            if (error.data?.httpStatus === 401) {
-              if (typeof window !== 'undefined') {
-                forceLogin(window.location.pathname)
-              }
-              return false
-            }
           }
 
-          if (
-            error.message === 'UNAUTHORIZED' ||
-            error.message === 'No session found'
-          ) {
-            if (typeof window !== 'undefined') {
-              forceLogin(window.location.pathname)
-            }
+          if (forceLoginOnUnauthorized(error)) {
             return false
           }
 

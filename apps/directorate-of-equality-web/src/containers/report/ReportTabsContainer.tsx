@@ -27,7 +27,7 @@ export function ReportTabsContainer({ report }: ReportTabsContainerProps) {
     isLoading: salaryLoading,
     isError: salaryError,
   } = useQuery({
-    ...trpc.reportStatistics.baseSalaryByGenderAndScoreAll.queryOptions({
+    ...trpc.reportStatistics.regularHourlyWageByScoreAll.queryOptions({
       reportId: data.id,
     }),
     enabled: isSalary,

@@ -7,14 +7,16 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
+import {
+  GetPostcodesQueryDto,
+  ILocationService,
+  PostcodeDto,
+  RegionDto,
+} from '@dmr.is/doe-modules/location'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { GetPostcodesQueryDto } from './dto/get-postcodes-query.dto'
-import { PostcodeDto } from './dto/postcode.dto'
-import { RegionDto } from './dto/region.dto'
-import { ILocationService } from './location.service.interface'
 
 @Controller({
   path: 'location',

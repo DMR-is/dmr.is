@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 
+import { IReportDraftService } from '@dmr.is/doe-modules/report-draft'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AdvisoryLockService } from '@dmr.is/shared-modules'
 
-import { IReportDraftService } from '../../modules/report-draft/draft/report-draft.service.interface'
 import {
   DOE_TASK_JOB_IDS,
   DOE_TASK_NAMESPACE,

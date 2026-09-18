@@ -22,7 +22,7 @@ export const ControlPanel = () => {
   const isAdmin = session?.user?.role === 'ADMIN'
 
   const navPaths = Object.values(NAV_PATHS).filter(
-    (path) => isAdmin || path.href !== NAV_PATHS.ritstjorn.href,
+    (path) => isAdmin || !path.adminOnly,
   )
 
   useEffect(() => {
