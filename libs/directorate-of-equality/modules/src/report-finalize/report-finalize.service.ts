@@ -185,8 +185,16 @@ export class ReportFinalizeService implements IReportFinalizeService {
       ReportStatusEnum.POSTPONED,
     ]
 
+    // Pinned to `parentCompanyId: null` — reports this company filed itself.
+    // A subsidiary also has a snapshot row on its parent's group report, and
+    // without the pin that row would resolve to the PARENT's report: a
+    // subsidiary's own submission would then withdraw a SUBMITTED parent
+    // report, or 409 against an IN_REVIEW one and leak its providerId. This
+    // is the opposite choice from `assertEqualityReportApproved`, which joins
+    // on `companyId` alone on purpose: coverage flows down a group, ownership
+    // of an in-flight filing does not.
     const parentSnapshots = await this.companyReportModel.findAll({
-      where: { companyId },
+      where: { companyId, parentCompanyId: null },
       attributes: ['reportId'],
     })
 

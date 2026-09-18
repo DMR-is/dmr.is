@@ -195,6 +195,19 @@ describe('ReportFinalizeService', () => {
       expect(reportUpdate).not.toHaveBeenCalled()
     })
 
+    it('searches only reports the company filed as the parent', async () => {
+      await service.withdrawInflightSibling(COMPANY_ID, ReportTypeEnum.SALARY)
+
+      // A subsidiary's snapshot on its parent's group report must not resolve
+      // to the parent's report — that pin is what stops a subsidiary from
+      // withdrawing a parent's SUBMITTED filing.
+      expect(companyReportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { companyId: COMPANY_ID, parentCompanyId: null },
+        }),
+      )
+    })
+
     it('throws 409 when an IN_REVIEW sibling exists', async () => {
       companyReportFindAll.mockResolvedValueOnce([{ reportId: PRIOR_REPORT_ID }])
       reportFindAll.mockResolvedValueOnce([

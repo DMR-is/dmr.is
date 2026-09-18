@@ -159,8 +159,12 @@ export class ReportCreateService implements IReportCreateService {
         : null)
 
     if (equalityReportId) {
-      // Scoped to the submitting (parent) company: a caller-named id is only
-      // accepted when that report covers the company filing this one.
+      // Scoped to the parent entry of `input.companies`: a caller-named id is
+      // only accepted when that report covers the company filing this one.
+      // `getSubmittingCompany` does not check that entry against any
+      // authenticated principal — the live callers (`ApplicationService`,
+      // `AdminReportService`) build `companies[]` server-side, and this guard
+      // is only as strong as that convention.
       await this.finalizeService.assertEqualityReportApproved(
         equalityReportId,
         submittingCompany.companyId,
