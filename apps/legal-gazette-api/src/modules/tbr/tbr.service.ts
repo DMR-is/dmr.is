@@ -85,12 +85,15 @@ export class TBRService implements ITBRService {
   ) {
     const endpoint = new URL(`${this.config.tbrBasePath}${path}`).toString()
     try {
-      this.logger.info(`Making TBR ${index !== undefined ? `request #${index} to` : 'request to'}:`, {
-        message: `/${endpoint.split('/').slice(-2).join('/')}`,
-        path: path,
-        method: options?.method || 'GET',
-        context: LOGGING_CONTEXT,
-      })
+      this.logger.info(
+        `Making TBR ${index !== undefined ? `request #${index} to` : 'request to'}:`,
+        {
+          message: `/${endpoint.split('/').slice(-2).join('/')}`,
+          path: path,
+          method: options?.method || 'GET',
+          context: LOGGING_CONTEXT,
+        },
+      )
 
       const response = await fetchWithTimeout(endpoint, {
         headers: {
@@ -133,13 +136,16 @@ export class TBRService implements ITBRService {
           throw new NotFoundException('TBR claim not found')
         }
 
-        this.logger.error(`TBR request ${index !== undefined ? `#${index} ` : ''}failed`, {
-          url: path,
-          statusCode: response.status,
-          context: LOGGING_CONTEXT,
-          error: err,
-          detail: err?.error?.detail,
-        })
+        this.logger.error(
+          `TBR request ${index !== undefined ? `#${index} ` : ''}failed`,
+          {
+            url: path,
+            statusCode: response.status,
+            context: LOGGING_CONTEXT,
+            error: err,
+            detail: err?.error?.detail,
+          },
+        )
 
         throw new InternalServerErrorException('TBR request failed')
       }
@@ -153,25 +159,31 @@ export class TBRService implements ITBRService {
         responseBody = await clonedResponse.text()
       }
 
-      this.logger.info(`TBR request ${index !== undefined ? `#${index} ` : ''}successful`, {
-        path: path,
-        method: options?.method || 'GET',
-        statusCode: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        responseBody: responseBody,
-        context: LOGGING_CONTEXT,
-      })
+      this.logger.info(
+        `TBR request ${index !== undefined ? `#${index} ` : ''}successful`,
+        {
+          path: path,
+          method: options?.method || 'GET',
+          statusCode: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          responseBody: responseBody,
+          context: LOGGING_CONTEXT,
+        },
+      )
 
       return response
     } catch (error) {
-      this.logger.error(`TBR request error when requesting ${index !== undefined ? `#${index} ` : ''}:`, {
-        message: endpoint,
-        url: path,
-        context: LOGGING_CONTEXT,
-        error: error,
-        detail: error instanceof Error ? error.message : undefined,
-      })
+      this.logger.error(
+        `TBR request error when requesting ${index !== undefined ? `#${index} ` : ''}:`,
+        {
+          message: endpoint,
+          url: path,
+          context: LOGGING_CONTEXT,
+          error: error,
+          detail: error instanceof Error ? error.message : undefined,
+        },
+      )
       throw error
     }
   }

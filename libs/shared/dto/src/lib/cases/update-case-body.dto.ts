@@ -82,7 +82,8 @@ export class UpdateCaseBody {
 
   @ApiProperty({
     type: String,
-    description: 'Application type: ad, base_regulation, or amending_regulation',
+    description:
+      'Application type: ad, base_regulation, or amending_regulation',
     required: false,
     nullable: true,
   })

@@ -44,7 +44,8 @@ const contextWith = (
   } as never
 }
 
-const guard = () => new DeclaredAccessGuard(mockLogger as never, new Reflector())
+const guard = () =>
+  new DeclaredAccessGuard(mockLogger as never, new Reflector())
 
 const FULL_CHAIN = [
   ApiKeyGuard,
@@ -89,15 +90,23 @@ describe('DeclaredAccessGuard', () => {
   })
 
   it('allows an explicitly public route with no guards at all', () => {
-    expect(guard().canActivate(contextWith([], [], 'liveness probe'))).toBe(true)
+    expect(guard().canActivate(contextWith([], [], 'liveness probe'))).toBe(
+      true,
+    )
   })
 
   describe('refuses', () => {
     const cases: Array<[string, unknown[]]> = [
       ['no guards at all', []],
       ['authentication only', [ApiKeyGuard]],
-      ['authentication without scope enforcement', [ApiKeyGuard, PartnerCompanyGuard]],
-      ['identity without authentication', [PartnerCompanyGuard, RequireApiScopeGuard]],
+      [
+        'authentication without scope enforcement',
+        [ApiKeyGuard, PartnerCompanyGuard],
+      ],
+      [
+        'identity without authentication',
+        [PartnerCompanyGuard, RequireApiScopeGuard],
+      ],
       ['scope enforcement alone', [RequireApiScopeGuard]],
       // Added for the reason the scope case exists: the decorator was declared
       // on the controller while its own spec mocked the reflector for every
@@ -123,9 +132,9 @@ describe('DeclaredAccessGuard', () => {
       try {
         guard().canActivate(contextWith([]))
       } catch (error) {
-        expect(JSON.stringify((error as ForbiddenException).getResponse())).not.toContain(
-          'UseGuards',
-        )
+        expect(
+          JSON.stringify((error as ForbiddenException).getResponse()),
+        ).not.toContain('UseGuards')
       }
 
       expect(mockLogger.error).toHaveBeenCalledWith(

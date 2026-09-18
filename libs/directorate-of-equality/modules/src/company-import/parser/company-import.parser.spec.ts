@@ -104,7 +104,9 @@ describe('company-import parser', () => {
     const buf = await buildBook([row({ kt: '0000000000' })])
     const result = await parseCompanyImport(buf)
     expect(result.rows).toHaveLength(0)
-    expect(result.errors[0]).toMatchObject({ reason: 'Invalid or missing kennitala' })
+    expect(result.errors[0]).toMatchObject({
+      reason: 'Invalid or missing kennitala',
+    })
   })
 
   it('rejects a row missing the company name', async () => {
@@ -122,7 +124,9 @@ describe('company-import parser', () => {
     const result = await parseCompanyImport(buf)
     expect(result.rows).toHaveLength(0)
     expect(result.errors).toHaveLength(2)
-    expect(result.errors.every((e) => e.reason.includes('Duplicate'))).toBe(true)
+    expect(result.errors.every((e) => e.reason.includes('Duplicate'))).toBe(
+      true,
+    )
   })
 
   it('skips fully blank rows', async () => {
@@ -136,7 +140,10 @@ describe('company-import parser', () => {
   })
 
   it('returns null year when rows disagree', async () => {
-    const buf = await buildBook([row({ year: 2025 }), row({ kt: kt2, year: 2024 })])
+    const buf = await buildBook([
+      row({ year: 2025 }),
+      row({ kt: kt2, year: 2024 }),
+    ])
     const result = await parseCompanyImport(buf)
     expect(result.year).toBeNull()
   })
@@ -248,7 +255,9 @@ describe('company-import parser', () => {
       )
 
       expect(thrown).toBeInstanceOf(BadRequestException)
-      expect((thrown as Error).message).toMatch(/expands beyond the \d+MB limit/)
+      expect((thrown as Error).message).toMatch(
+        /expands beyond the \d+MB limit/,
+      )
     }, 20000)
 
     it('still parses a workbook well inside the budget', async () => {
@@ -256,5 +265,4 @@ describe('company-import parser', () => {
       expect(result.rows).toHaveLength(1)
     })
   })
-
 })

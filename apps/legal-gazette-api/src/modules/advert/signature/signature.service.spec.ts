@@ -3,14 +3,9 @@ import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { AdvertModel } from '../../../models/advert.model'
-import {
-  SignatureModel,
-} from '../../../models/signature.model'
+import { SignatureModel } from '../../../models/signature.model'
 import { StatusIdEnum } from '../../../models/status.model'
-import {
-  CreateSignatureDto,
-  UpdateSignatureDto,
-} from './dto/signature.dto'
+import { CreateSignatureDto, UpdateSignatureDto } from './dto/signature.dto'
 import { SignatureService } from './signature.service'
 // ==========================================
 // Mock Factories

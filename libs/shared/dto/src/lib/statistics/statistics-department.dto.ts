@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-
 class StatisticsStatusCount {
   @ApiProperty({
     type: String,

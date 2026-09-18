@@ -51,7 +51,6 @@ const dash = '–'
 const formatSpreadMagnitude = (value: number): string =>
   Math.abs(value).toFixed(2).replace('.', ',')
 
-
 const genderMap: Record<string, string> = {
   MALE: sharedText.genders.male,
   FEMALE: sharedText.genders.female,

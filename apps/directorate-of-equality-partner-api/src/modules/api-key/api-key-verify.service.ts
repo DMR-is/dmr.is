@@ -129,7 +129,9 @@ export class ApiKeyVerifyService implements IApiKeyVerifyService {
       // Not an UnauthorizedException: the caller's credential may be perfectly
       // good and this service cannot tell. Saying 401 would send an integrator
       // chasing their own key over our misconfiguration.
-      throw new Error(`Missing required environment variable: ${HMAC_SECRET_VAR}`)
+      throw new Error(
+        `Missing required environment variable: ${HMAC_SECRET_VAR}`,
+      )
     }
 
     return secret

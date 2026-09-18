@@ -7,11 +7,7 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
-import {
-  ApiOptionalString,
-  ApiString,
-  ApiUUId,
-} from '@dmr.is/decorators'
+import { ApiOptionalString, ApiString, ApiUUId } from '@dmr.is/decorators'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'

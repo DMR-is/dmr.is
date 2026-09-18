@@ -11,10 +11,10 @@ output in `src/gen/fetch` is **git-ignored** and produced by the `codegen` targe
 
 ## Endpoints
 
-| Method | Path                     | SDK function            | Returns          |
-| ------ | ------------------------ | ----------------------- | ---------------- |
-| GET    | `/{nationalId}`          | `getNationalid`         | `LegalEntity`    |
-| GET    | `/{nationalId}/overview` | `getNationalidOverview` | PDF (binary)     |
+| Method | Path                     | SDK function            | Returns       |
+| ------ | ------------------------ | ----------------------- | ------------- |
+| GET    | `/{nationalId}`          | `getNationalid`         | `LegalEntity` |
+| GET    | `/{nationalId}/overview` | `getNationalidOverview` | PDF (binary)  |
 
 Both accept an optional `language` query parameter (`'is'` \| `'en'`, default `'is'`).
 

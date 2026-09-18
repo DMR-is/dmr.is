@@ -40,12 +40,7 @@ export default function ProtectedError({
           noBorder={false}
           imgSrc="/assets/tolfraedi-image.svg"
         />
-        <Box
-          display="flex"
-          justifyContent="center"
-          columnGap={2}
-          marginTop={4}
-        >
+        <Box display="flex" justifyContent="center" columnGap={2} marginTop={4}>
           <Button variant="primary" onClick={() => reset()}>
             {serverErrorText.tryAgain}
           </Button>

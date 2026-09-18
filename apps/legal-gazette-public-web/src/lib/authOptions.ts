@@ -98,7 +98,6 @@ export const authOptions: AuthOptions = {
         } as JWT
       }
 
-
       // If we trigger update, we need to refetch the user to see if isActive has changed
       if (trigger === 'update') {
         const member = await authorize(

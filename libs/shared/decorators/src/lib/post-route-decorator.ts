@@ -1,4 +1,4 @@
-import { applyDecorators,Post } from '@nestjs/common'
+import { applyDecorators, Post } from '@nestjs/common'
 import {
   ApiBody,
   ApiNoContentResponse,

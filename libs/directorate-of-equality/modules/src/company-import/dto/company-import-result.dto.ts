@@ -32,7 +32,10 @@ export class CompanyImportFieldChangeDto {
   @ApiOptionalString({ nullable: true, description: 'Previous value.' })
   from!: string | null
 
-  @ApiOptionalString({ nullable: true, description: 'New value from the file.' })
+  @ApiOptionalString({
+    nullable: true,
+    description: 'New value from the file.',
+  })
   to!: string | null
 }
 
@@ -53,7 +56,8 @@ export class CompanyImportRowResultDto {
 
   @ApiOptionalString({
     nullable: true,
-    description: 'Soft notice, e.g. an unresolved postcode that was left unset.',
+    description:
+      'Soft notice, e.g. an unresolved postcode that was left unset.',
   })
   note!: string | null
 }
@@ -90,7 +94,9 @@ export class CompanyImportResultDto {
   })
   year!: number | null
 
-  @ApiNumber({ description: 'Notice from a soft issue, e.g. an unresolved postcode.' })
+  @ApiNumber({
+    description: 'Notice from a soft issue, e.g. an unresolved postcode.',
+  })
   noticeCount!: number
 
   @ApiDtoArray(CompanyImportRowResultDto)

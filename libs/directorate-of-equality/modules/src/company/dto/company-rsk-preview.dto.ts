@@ -39,7 +39,8 @@ export class CompanyRskPreviewDto {
 
   @ApiOptionalString({
     nullable: true,
-    description: 'Resolved ÍSAT2008 classification, e.g. "62.01.0 Computer programming".',
+    description:
+      'Resolved ÍSAT2008 classification, e.g. "62.01.0 Computer programming".',
   })
   isatCategory!: string | null
 

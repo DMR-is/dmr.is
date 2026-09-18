@@ -38,11 +38,9 @@ const build = async <T>(
   const reflector = new Reflector()
   jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined as never)
 
-  const guard = new Guard(...([
-    OPTIONS,
-    storageFor(increment),
-    reflector,
-  ] as never[]))
+  const guard = new Guard(
+    ...([OPTIONS, storageFor(increment), reflector] as never[]),
+  )
 
   await (guard as { onModuleInit(): Promise<void> }).onModuleInit()
 

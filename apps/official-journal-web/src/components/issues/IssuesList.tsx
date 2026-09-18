@@ -2,11 +2,7 @@
 
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
-import {
-  parseAsInteger,
-  parseAsString,
-  useQueryStates,
-} from 'nuqs'
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'

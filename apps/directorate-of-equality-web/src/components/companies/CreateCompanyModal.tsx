@@ -153,8 +153,8 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
                 message={
                   isActive
                     ? companiesText.createModal.activeMessage
-                    : lookupQuery.data?.statusReason ??
-                      companiesText.createModal.inactiveFallbackReason
+                    : (lookupQuery.data?.statusReason ??
+                      companiesText.createModal.inactiveFallbackReason)
                 }
               />
             </Box>

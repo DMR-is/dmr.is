@@ -49,7 +49,9 @@ export class PartnerEmployeeDto {
   })
   identifier!: string
 
-  @ApiUUId({ description: 'The job this employee holds, from the scoring model.' })
+  @ApiUUId({
+    description: 'The job this employee holds, from the scoring model.',
+  })
   roleId!: string
 
   @ApiEnum(GenderEnum, { enumName: 'GenderEnum' })

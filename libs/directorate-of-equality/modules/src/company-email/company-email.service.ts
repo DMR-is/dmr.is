@@ -80,7 +80,8 @@ const EVENT_FOR_STATUS: Record<
   CompanyEmailRecipientStatusEnum,
   CompanyCustomEmailEventType | null
 > = {
-  [CompanyEmailRecipientStatusEnum.SENT]: CompanyEventTypeEnum.CUSTOM_EMAIL_SENT,
+  [CompanyEmailRecipientStatusEnum.SENT]:
+    CompanyEventTypeEnum.CUSTOM_EMAIL_SENT,
   [CompanyEmailRecipientStatusEnum.FAILED]:
     CompanyEventTypeEnum.CUSTOM_EMAIL_FAILED,
   [CompanyEmailRecipientStatusEnum.SKIPPED_NO_EMAIL]:
@@ -707,7 +708,8 @@ export class CompanyEmailService implements ICompanyEmailService {
     await row.update({
       status,
       error,
-      sentAt: status === CompanyEmailRecipientStatusEnum.SENT ? new Date() : null,
+      sentAt:
+        status === CompanyEmailRecipientStatusEnum.SENT ? new Date() : null,
     })
 
     await this.emitOutcome(
@@ -934,7 +936,9 @@ const normaliseRecipientEmails = (values: string[] | undefined): string[] => {
 }
 
 /** The copy address, or null when the admin cleared the field. Same rules. */
-const normaliseCopyToEmail = (value: string | null | undefined): string | null => {
+const normaliseCopyToEmail = (
+  value: string | null | undefined,
+): string | null => {
   const address = value?.trim()
   if (!address) return null
 

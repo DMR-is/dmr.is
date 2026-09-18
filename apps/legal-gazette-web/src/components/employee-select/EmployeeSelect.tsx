@@ -9,13 +9,12 @@ import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 import { StatusIdEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
-
 type Props = {
   advertId: string
 }
 
 export const EmployeeSelect = ({ advertId }: Props) => {
-    const trpc = useTRPC()
+  const trpc = useTRPC()
 
   const { data: usersData, isLoading } = useQuery(
     trpc.getEmployees.queryOptions(),

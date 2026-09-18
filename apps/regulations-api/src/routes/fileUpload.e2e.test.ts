@@ -61,7 +61,6 @@ import type { FastifyInstance } from 'fastify'
  */
 jest.setTimeout(30000)
 
-
 type UploadParams = {
   Bucket: string
   Key: string
@@ -249,7 +248,9 @@ const locationOf = (res: { body: string }) => JSON.parse(res.body).location
 const uploaded = (): UploadParams => {
   const call = mockUploadCalls[0]
   if (!call) {
-    throw new Error('expected an S3 upload to have been attempted, but none was')
+    throw new Error(
+      'expected an S3 upload to have been attempted, but none was',
+    )
   }
   return call
 }
@@ -278,9 +279,7 @@ describe('POST /api/v1/file-upload — an ordinary file', () => {
 
     expect(mockUploadCalls).toHaveLength(1)
     expect(uploaded().Bucket).toBe('test-bucket')
-    expect(uploaded().Key).toBe(
-      'admin-drafts/files/foo/barchart--f5d6d878.png',
-    )
+    expect(uploaded().Key).toBe('admin-drafts/files/foo/barchart--f5d6d878.png')
     expect(uploaded().ACL).toBe('private')
     expect(uploaded().StorageClass).toBe('STANDARD')
     expect(uploaded().ContentType).toBe('image/png')
@@ -297,9 +296,7 @@ describe('POST /api/v1/file-upload — an ordinary file', () => {
 
     const res = await upload(app, { filename: 'barchart.png' })
 
-    expect(locationOf(res)).toBe(
-      'https://files.reglugerd.is/' + uploaded().Key,
-    )
+    expect(locationOf(res)).toBe('https://files.reglugerd.is/' + uploaded().Key)
   })
 })
 
@@ -330,9 +327,7 @@ describe('POST /api/v1/file-upload — a pasted blob', () => {
       'https://files.reglugerd.is/admin-drafts/files/foo/image--f5d6d878.png',
     )
 
-    expect(uploaded().Key).toBe(
-      'admin-drafts/files/foo/image--f5d6d878.jpg',
-    )
+    expect(uploaded().Key).toBe('admin-drafts/files/foo/image--f5d6d878.jpg')
   })
 
   it('the hash survives the extension rewrite unchanged', async () => {
@@ -433,7 +428,10 @@ describe('POST /api/v1/file-upload — folder and rootFolder in the returned URL
     // Media really is sitting under `files/undefined/` in production.
     app = build()
 
-    const res = await upload(app, { filename: 'barchart.png', query: '?scope=foo' })
+    const res = await upload(app, {
+      filename: 'barchart.png',
+      query: '?scope=foo',
+    })
 
     expect(locationOf(res)).toBe(
       'https://files.reglugerd.is/admin-drafts/files/undefined/barchart--f5d6d878.png',

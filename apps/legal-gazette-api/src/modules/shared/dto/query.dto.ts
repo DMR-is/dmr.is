@@ -1,4 +1,8 @@
-import { ApiOptionalDateTime, ApiOptionalEnum, ApiOptionalString } from '@dmr.is/decorators'
+import {
+  ApiOptionalDateTime,
+  ApiOptionalEnum,
+  ApiOptionalString,
+} from '@dmr.is/decorators'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
 export enum SortDirectionEnum {

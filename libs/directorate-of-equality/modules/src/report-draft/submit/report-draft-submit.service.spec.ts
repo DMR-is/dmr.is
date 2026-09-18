@@ -51,13 +51,13 @@ const PERIOD_STORED = `${PERIOD_MONTH}-01`
 const COMPANY_NATIONAL_ID = '5500000000'
 const PROVIDER_ID = 'island-is-application-uuid-draft'
 
-const COMPANY = ({
+const COMPANY = {
   id: 'company-1',
   nationalId: COMPANY_NATIONAL_ID,
   employeeCountCategory: CompanySizeEnum.LARGE,
   status: CompanyStatusEnum.ACTIVE,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
-} as unknown) as CompanyDto
+} as unknown as CompanyDto
 
 /** What the stubbed `IReportIdentifierService.allocate` hands back. */
 const IDENTIFIER = 'KTPQZW'

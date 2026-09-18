@@ -6,11 +6,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 
-import {
-  DoeUserRole,
-  UserModel,
-} from '@dmr.is/doe-modules/user'
-
+import { DoeUserRole, UserModel } from '@dmr.is/doe-modules/user'
 
 @Injectable()
 export class RequireAdminRoleGuard implements CanActivate {

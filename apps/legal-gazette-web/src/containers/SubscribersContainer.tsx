@@ -78,26 +78,24 @@ export const SubscribersContainer = () => {
     }),
   )
 
-  const {
-    mutate: updateSubscriberMutation,
-    isPending: isUpdatingSubscriber,
-  } = useMutation(
-    trpc.updateSubscriberEndDate.mutationOptions({
-      onMutate: async () => {
-        setShouldResetUpdateState(false)
-        await queryClient.cancelQueries(trpc.getSubscribers.queryFilter())
-      },
-      onSuccess: () => {
-        toast.success(`Áskrift uppfærð`)
-        setShouldResetUpdateState(true)
-        setIsUpdateModalOpen(true)
-        queryClient.invalidateQueries(trpc.getSubscribers.queryFilter())
-      },
-      onError: () => {
-        toast.error(`Ekki tókst að uppfæra áskrift`)
-      },
-    }),
-  )
+  const { mutate: updateSubscriberMutation, isPending: isUpdatingSubscriber } =
+    useMutation(
+      trpc.updateSubscriberEndDate.mutationOptions({
+        onMutate: async () => {
+          setShouldResetUpdateState(false)
+          await queryClient.cancelQueries(trpc.getSubscribers.queryFilter())
+        },
+        onSuccess: () => {
+          toast.success(`Áskrift uppfærð`)
+          setShouldResetUpdateState(true)
+          setIsUpdateModalOpen(true)
+          queryClient.invalidateQueries(trpc.getSubscribers.queryFilter())
+        },
+        onError: () => {
+          toast.error(`Ekki tókst að uppfæra áskrift`)
+        },
+      }),
+    )
 
   const {
     mutate: activateSubscriberMutation,

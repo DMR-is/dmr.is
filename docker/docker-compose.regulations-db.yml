@@ -15,12 +15,12 @@ services:
     healthcheck:
       test:
         [
-          "CMD",
-          "pg_isready",
-          "-U",
-          "${REGULATIONS_DB_USER}",
-          "-d",
-          "${REGULATIONS_DB_NAME}"
+          'CMD',
+          'pg_isready',
+          '-U',
+          '${REGULATIONS_DB_USER}',
+          '-d',
+          '${REGULATIONS_DB_NAME}',
         ]
       interval: 5s
       timeout: 5s
@@ -29,7 +29,7 @@ services:
   redis:
     image: redis:latest
     container_name: redis
-    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    command: ['redis-server', '/usr/local/etc/redis/redis.conf']
     volumes:
       - redis_data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf

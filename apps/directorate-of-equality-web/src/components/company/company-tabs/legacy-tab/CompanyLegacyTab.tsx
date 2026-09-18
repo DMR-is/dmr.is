@@ -8,7 +8,11 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { LegacyReportDto } from '../../../../gen/fetch'
-import { companiesText, serverErrorText, sharedText } from '../../../../lib/text'
+import {
+  companiesText,
+  serverErrorText,
+  sharedText,
+} from '../../../../lib/text'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import {
   formatIsoDate,
@@ -32,7 +36,8 @@ type Props = {
 const value = (v: string | number | null | undefined) =>
   v === null || v === undefined || v === '' ? t.unknown : String(v)
 
-const date = (v: string | null | undefined) => (v ? formatIsoDate(v) : t.unknown)
+const date = (v: string | null | undefined) =>
+  v ? formatIsoDate(v) : t.unknown
 
 /**
  * A SharePoint Created/Modified stamp — a real instant, unlike the sheet's day

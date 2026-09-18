@@ -109,7 +109,11 @@ export class CategoryTypeChangeLogModel extends Model<
   })
   affectedAdvertCount!: number
 
-  @Column({ type: DataType.JSONB, allowNull: true, field: 'affected_advert_ids' })
+  @Column({
+    type: DataType.JSONB,
+    allowNull: true,
+    field: 'affected_advert_ids',
+  })
   affectedAdvertIds!: string[] | null
 
   @Column({ type: DataType.UUID, allowNull: true, field: 'reverts_audit_id' })
@@ -123,7 +127,9 @@ export class CategoryTypeChangeLogModel extends Model<
   })
   override createdAt!: Date
 
-  static fromModel(model: CategoryTypeChangeLogModel): CategoryTypeChangeLogDto {
+  static fromModel(
+    model: CategoryTypeChangeLogModel,
+  ): CategoryTypeChangeLogDto {
     return {
       id: model.id,
       actorId: model.actorId,

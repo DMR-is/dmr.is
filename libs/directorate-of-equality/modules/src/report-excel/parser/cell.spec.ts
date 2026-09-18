@@ -28,7 +28,9 @@ describe('readDate', () => {
 
   it('reads cached formula results when present', () => {
     expect(
-      readDate(cell({ formula: 'TODAY()', result: 45000 } as ExcelJS.CellValue)),
+      readDate(
+        cell({ formula: 'TODAY()', result: 45000 } as ExcelJS.CellValue),
+      ),
     ).not.toBeNull()
     expect(
       readNumber(cell({ formula: '1+1', result: 2 } as ExcelJS.CellValue)),
@@ -41,7 +43,9 @@ describe('readDate', () => {
   })
 
   it('returns null for formula cells without cached results', () => {
-    expect(readDate(cell({ formula: 'TODAY()' } as ExcelJS.CellValue))).toBeNull()
+    expect(
+      readDate(cell({ formula: 'TODAY()' } as ExcelJS.CellValue)),
+    ).toBeNull()
   })
 
   it('returns null for empty cells', () => {

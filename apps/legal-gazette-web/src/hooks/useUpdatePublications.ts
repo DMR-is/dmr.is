@@ -60,7 +60,9 @@ const createOptimisticDataForPublication = (
   const version = prevData.publications.length
   const previousPublication = prevData.publications[version - 1]
   const scheduledAt = addDays(
-    previousPublication ? new Date(previousPublication.scheduledAt) : new Date(),
+    previousPublication
+      ? new Date(previousPublication.scheduledAt)
+      : new Date(),
     14,
   )
   const versionEnum =

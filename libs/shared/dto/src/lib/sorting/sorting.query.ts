@@ -29,7 +29,9 @@ export class SortingQuery {
   @IsOptional()
   @Expose()
   @Transform(({ value }) => {
-    return value?.toUpperCase() === 'DESC' ? 'DESC' : DEFAULT_CASE_SORT_DIRECTION
+    return value?.toUpperCase() === 'DESC'
+      ? 'DESC'
+      : DEFAULT_CASE_SORT_DIRECTION
   })
   direction!: string
 }

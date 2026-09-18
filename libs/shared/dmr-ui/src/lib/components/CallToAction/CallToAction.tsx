@@ -1,6 +1,6 @@
-import { ArrowLink } from "../../island-is/lib/ArrowLink"
-import { Stack } from "../../island-is/lib/Stack"
-import { Text } from "../../island-is/lib/Text"
+import { ArrowLink } from '../../island-is/lib/ArrowLink'
+import { Stack } from '../../island-is/lib/Stack'
+import { Text } from '../../island-is/lib/Text'
 
 export type CallToActionProps = {
   title?: string

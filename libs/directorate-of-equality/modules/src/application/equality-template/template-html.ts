@@ -94,8 +94,7 @@ const SECTIONS: Section[] = [
     title: 'Eftirfylgni og endurskoðun',
     passages: [
       {
-        text:
-          'Mikilvægt er að verkefnum jafnréttisáætlunarinnar sé fylgt eftir. Gott er að fara yfir stöðu allra verkefnanna a.m.k. árlega með framkvæmdastjóra, framkvæmdaraðilum og helstu stjórnendum. Einnig er gagnlegt að kynna reglulega fyrir starfsfólki hvað hefur tekist vel og hvað má betur fara. Áætlunin verður þá lifandi plagg sem líklegra er að skili árangri. Jafnréttisáætlun og jafnréttissjónarmið í starfsmannastefnu skal endurskoða á þriggja ára fresti.',
+        text: 'Mikilvægt er að verkefnum jafnréttisáætlunarinnar sé fylgt eftir. Gott er að fara yfir stöðu allra verkefnanna a.m.k. árlega með framkvæmdastjóra, framkvæmdaraðilum og helstu stjórnendum. Einnig er gagnlegt að kynna reglulega fyrir starfsfólki hvað hefur tekist vel og hvað má betur fara. Áætlunin verður þá lifandi plagg sem líklegra er að skili árangri. Jafnréttisáætlun og jafnréttissjónarmið í starfsmannastefnu skal endurskoða á þriggja ára fresti.',
       },
     ],
     goals: [

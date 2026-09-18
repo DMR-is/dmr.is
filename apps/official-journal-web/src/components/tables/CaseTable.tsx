@@ -1,8 +1,4 @@
-import {
-  parseAsInteger,
-  parseAsString,
-  useQueryState,
-} from 'nuqs'
+import { parseAsInteger, parseAsString, useQueryState } from 'nuqs'
 import { useState } from 'react'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'

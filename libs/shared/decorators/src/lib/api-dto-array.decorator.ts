@@ -11,13 +11,11 @@ export function ApiDtoArray<T>(
   options?: ApiPropertyOptions,
 ) {
   return applyDecorators(
-    ApiProperty(
-      {
-        type: () => classRef,
-        isArray: true,
-        ...options,
-      } as ApiPropertyOptions,
-    ),
+    ApiProperty({
+      type: () => classRef,
+      isArray: true,
+      ...options,
+    } as ApiPropertyOptions),
     IsDefined(),
     IsArray(),
     Type(() => classRef),

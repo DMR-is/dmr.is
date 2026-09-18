@@ -40,17 +40,18 @@ export class ReportDraftPruneTask {
     name: 'report-draft-prune-task',
   })
   async run(): Promise<void> {
-    const { ran, reason } = await this.advisoryLockService.runWithDistributedLock(
-      DOE_TASK_NAMESPACE,
-      DOE_TASK_JOB_IDS.reportDraftPrune,
-      async () => {
-        await this.reportDraftService.pruneStaleDrafts(this.cutoff())
-      },
-      {
-        cooldownMs: 12 * 60 * 60 * 1000,
-        containerId: 'report-draft-prune',
-      },
-    )
+    const { ran, reason } =
+      await this.advisoryLockService.runWithDistributedLock(
+        DOE_TASK_NAMESPACE,
+        DOE_TASK_JOB_IDS.reportDraftPrune,
+        async () => {
+          await this.reportDraftService.pruneStaleDrafts(this.cutoff())
+        },
+        {
+          cooldownMs: 12 * 60 * 60 * 1000,
+          containerId: 'report-draft-prune',
+        },
+      )
 
     if (!ran) {
       this.logger.debug(`Skipped report draft prune task: ${reason}`, {

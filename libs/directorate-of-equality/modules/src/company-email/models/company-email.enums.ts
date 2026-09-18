@@ -31,4 +31,3 @@ export enum CompanyEmailRecipientStatusEnum {
   SKIPPED_NO_EMAIL = 'SKIPPED_NO_EMAIL',
   SKIPPED_QUARANTINED = 'SKIPPED_QUARANTINED',
 }
-

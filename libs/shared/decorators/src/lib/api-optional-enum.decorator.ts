@@ -8,13 +8,11 @@ export function ApiOptionalEnum<T extends Record<string, string | number>>(
   options: ApiPropertyOptions = {},
 ) {
   return applyDecorators(
-    ApiProperty(
-      {
-        enum: enumRef,
-        required: false,
-        ...options,
-      } as ApiPropertyOptions,
-    ),
+    ApiProperty({
+      enum: enumRef,
+      required: false,
+      ...options,
+    } as ApiPropertyOptions),
     IsOptional(),
     IsEnum(enumRef),
   )

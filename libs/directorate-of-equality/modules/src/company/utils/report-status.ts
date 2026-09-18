@@ -337,14 +337,14 @@ export function salaryReportMissingSql(): string {
 export function companyReportStatusCaseSql(): string {
   return `(CASE
     WHEN ${equalityReportMissingSql()} THEN '${
-    CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
-  }'
+      CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
+    }'
     WHEN ${actionPlanMissingSql()} THEN '${
-    CompanyReportStatusEnum.MISSING_ACTION_PLAN
-  }'
+      CompanyReportStatusEnum.MISSING_ACTION_PLAN
+    }'
     WHEN ${salaryReportMissingSql()} THEN '${
-    CompanyReportStatusEnum.MISSING_SALARY_REPORT
-  }'
+      CompanyReportStatusEnum.MISSING_SALARY_REPORT
+    }'
     ELSE '${CompanyReportStatusEnum.SATISFACTORY}'
   END)`
 }
@@ -363,11 +363,11 @@ export function companyReportStatusLiteral() {
 export function equalityObligationStatusCaseSql(): string {
   return `(CASE
     WHEN NOT ${equalityRequiredSql} THEN '${
-    CompanyObligationStatusEnum.NOT_REQUIRED
-  }'
+      CompanyObligationStatusEnum.NOT_REQUIRED
+    }'
     WHEN ${equalityReportMissingSql()} THEN '${
-    CompanyObligationStatusEnum.MISSING
-  }'
+      CompanyObligationStatusEnum.MISSING
+    }'
     ELSE '${CompanyObligationStatusEnum.COVERED}'
   END)`
 }
@@ -397,14 +397,14 @@ export function equalityObligationStatusCaseSql(): string {
 export function salaryObligationStatusCaseSql(): string {
   return `(CASE
     WHEN ${actionPlanMissingSql()} THEN '${
-    CompanyObligationStatusEnum.ACTION_PLAN_MISSING
-  }'
+      CompanyObligationStatusEnum.ACTION_PLAN_MISSING
+    }'
     WHEN NOT ${salaryRequiredSql} THEN '${
-    CompanyObligationStatusEnum.NOT_REQUIRED
-  }'
+      CompanyObligationStatusEnum.NOT_REQUIRED
+    }'
     WHEN ${salaryReportMissingSql()} THEN '${
-    CompanyObligationStatusEnum.MISSING
-  }'
+      CompanyObligationStatusEnum.MISSING
+    }'
     ELSE '${CompanyObligationStatusEnum.COVERED}'
   END)`
 }

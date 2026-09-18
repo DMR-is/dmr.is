@@ -26,9 +26,7 @@ export interface IReportPdfService {
    * already carries that as a finding ("engar úrbætur nauðsynlegar"); attaching
    * a page that says nothing would read as a plan that failed to print.
    */
-  generateImprovementPlanPdf(
-    reportId: string,
-  ): Promise<ReportPdfResult | null>
+  generateImprovementPlanPdf(reportId: string): Promise<ReportPdfResult | null>
 }
 
 export const IReportPdfService = Symbol('IReportPdfService')

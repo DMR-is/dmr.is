@@ -18,10 +18,8 @@ import { UtilityModule } from '../utility/utility.module'
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
 
-
 export { IApplicationService } from './application.service.interface'
 export { ApplicationService } from './application.service'
-
 
 @Module({
   imports: [

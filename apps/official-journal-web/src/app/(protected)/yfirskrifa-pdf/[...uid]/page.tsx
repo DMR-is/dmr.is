@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation'
 
-import { fetchQueryWithHandler, HydrateClient } from '@dmr.is/trpc/client/server'
+import {
+  fetchQueryWithHandler,
+  HydrateClient,
+} from '@dmr.is/trpc/client/server'
 
 import { trpc } from '../../../../lib/trpc/client/server'
 import { AdvertPdfReplacementClient } from './_components/AdvertPdfReplacementClient'

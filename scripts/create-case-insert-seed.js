@@ -2647,8 +2647,8 @@ function main() {
             textPlacementRand > 0.33
               ? 'right'
               : textPlacementRand > 0.66
-              ? 'above'
-              : 'below'
+                ? 'above'
+                : 'below'
 
           members.push({
             id: v4(),

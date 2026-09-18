@@ -3,10 +3,7 @@
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 
-import {
-  type CompanyDto,
-  CompanySizeEnum,
-} from '../../gen/fetch/types.gen'
+import { type CompanyDto, CompanySizeEnum } from '../../gen/fetch/types.gen'
 import { companiesText } from '../../lib/text'
 import {
   EQUALITY_DETAIL_LABEL,

@@ -48,12 +48,7 @@ export const LinkCard = ({
               flexDirection="column"
               justifyContent="flexStart"
             >
-              <Text
-                variant="h3"
-                as="h3"
-                color="blue400"
-                fontWeight="semiBold"
-              >
+              <Text variant="h3" as="h3" color="blue400" fontWeight="semiBold">
                 {title}
               </Text>
               {description && <Text paddingTop={2}>{description}</Text>}

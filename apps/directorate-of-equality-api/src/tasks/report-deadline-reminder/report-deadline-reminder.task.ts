@@ -79,21 +79,21 @@ export class ReportDeadlineReminderTask {
 
     // One container does the work per run; the rest see the held lock or the
     // cooldown. 12h cooldown comfortably covers a once-a-day schedule.
-    const { ran, reason } = await this.advisoryLockService.runWithDistributedLock(
-      DOE_TASK_NAMESPACE,
-      DOE_TASK_JOB_IDS.reportDeadlineReminder,
-      () => this.reminderService.run(),
-      {
-        cooldownMs: 12 * 60 * 60 * 1000,
-        containerId: 'report-deadline-reminder',
-      },
-    )
+    const { ran, reason } =
+      await this.advisoryLockService.runWithDistributedLock(
+        DOE_TASK_NAMESPACE,
+        DOE_TASK_JOB_IDS.reportDeadlineReminder,
+        () => this.reminderService.run(),
+        {
+          cooldownMs: 12 * 60 * 60 * 1000,
+          containerId: 'report-deadline-reminder',
+        },
+      )
 
     if (!ran) {
-      this.logger.debug(
-        `Skipped report deadline reminder task: ${reason}`,
-        { context: LOGGING_CONTEXT },
-      )
+      this.logger.debug(`Skipped report deadline reminder task: ${reason}`, {
+        context: LOGGING_CONTEXT,
+      })
     }
   }
 }

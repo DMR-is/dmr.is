@@ -1,7 +1,14 @@
 'use client'
 
 import cn from 'classnames'
-import React, { MouseEvent, ReactElement, useCallback, useEffect, useRef, useState } from 'react'
+import React, {
+  MouseEvent,
+  ReactElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 
 import { Box } from '@island.is/island-ui/core/Box/Box'
 import { Button } from '@island.is/island-ui/core/Button/Button'
@@ -87,11 +94,7 @@ export const DropdownMenu = ({
     : {}
 
   return (
-    <div
-      ref={containerRef}
-      className={styles.menuContainer}
-      {...hoverProps}
-    >
+    <div ref={containerRef} className={styles.menuContainer} {...hoverProps}>
       {disclosure ? (
         React.cloneElement(disclosure, {
           onClick: (e: MouseEvent<HTMLElement>) => {

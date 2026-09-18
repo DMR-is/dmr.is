@@ -13,7 +13,9 @@ import { SWAGGER_CONFIG } from '../../swagger.config'
  * Controllers allowed to answer without a credential. Anything here is served to
  * the open internet.
  */
-const PUBLIC_ROUTE_ALLOWLIST: ReadonlySet<string> = new Set(['HealthController'])
+const PUBLIC_ROUTE_ALLOWLIST: ReadonlySet<string> = new Set([
+  'HealthController',
+])
 
 const GUARDS_METADATA = '__guards__'
 
@@ -31,7 +33,12 @@ const guardsForHandler = (controller: Function, method: string): unknown[] => [
 const routedHandlers = (app: INestApplication): Array<[Function, string]> => {
   const modules = (
     app as unknown as {
-      container: { getModules: () => Map<unknown, { controllers: Map<unknown, { metatype: Function }> }> }
+      container: {
+        getModules: () => Map<
+          unknown,
+          { controllers: Map<unknown, { metatype: Function }> }
+        >
+      }
     }
   ).container.getModules()
 
@@ -47,7 +54,8 @@ const routedHandlers = (app: INestApplication): Array<[Function, string]> => {
         const handler = (controller.prototype as Record<string, unknown>)[name]
         if (typeof handler !== 'function') continue
         // A routed handler carries a path; anything else is a helper.
-        if (Reflect.getMetadata('path', handler as object) === undefined) continue
+        if (Reflect.getMetadata('path', handler as object) === undefined)
+          continue
         out.push([controller, name])
       }
     }

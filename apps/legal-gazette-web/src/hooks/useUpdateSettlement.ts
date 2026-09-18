@@ -3,7 +3,10 @@ import { useCallback } from 'react'
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { ApplicationRequirementStatementEnum, SettlementType } from '../gen/fetch'
+import {
+  ApplicationRequirementStatementEnum,
+  SettlementType,
+} from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 import { AdvertDetails } from '../lib/trpc/types'
 
@@ -17,9 +20,7 @@ const createOptimisticDataForSettlement = (
     return prevData
   }
 
-  const toIsoStringOrNull = (
-    value: unknown,
-  ): string | null | undefined => {
+  const toIsoStringOrNull = (value: unknown): string | null | undefined => {
     if (value === undefined) return undefined
     if (value === null) return null
     return value instanceof Date ? value.toISOString() : String(value)
@@ -106,7 +107,9 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
           }
 
           const filteredSettlementData = Object.fromEntries(
-            Object.entries(variables).filter(([_, value]) => value !== undefined),
+            Object.entries(variables).filter(
+              ([_, value]) => value !== undefined,
+            ),
           )
 
           const optimisticData = createOptimisticDataForSettlement(
@@ -525,7 +528,12 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
         },
       )
     },
-    [advertId, settlementId, updateSettlementMutation, advert?.settlement?.type],
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.type,
+    ],
   )
 
   return {

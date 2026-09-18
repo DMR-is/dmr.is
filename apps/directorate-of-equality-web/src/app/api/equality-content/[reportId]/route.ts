@@ -21,7 +21,8 @@ const isTimeout = (error: unknown): boolean =>
   error instanceof Error && error.name === 'TimeoutError'
 
 const FETCH_FAILED_MESSAGE = 'Ekki var unnt að sækja jafnréttisáætlunina.'
-const FETCH_TIMEOUT_MESSAGE = 'Sókn skjalsins tók of langan tíma. Prófaðu aftur.'
+const FETCH_TIMEOUT_MESSAGE =
+  'Sókn skjalsins tók of langan tíma. Prófaðu aftur.'
 const NOT_FOUND_MESSAGE =
   'Engin jafnréttisáætlun á PDF-formi fylgir þessari skýrslu.'
 
@@ -112,8 +113,7 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error:
-          res.status === 404 ? NOT_FOUND_MESSAGE : FETCH_FAILED_MESSAGE,
+        error: res.status === 404 ? NOT_FOUND_MESSAGE : FETCH_FAILED_MESSAGE,
       },
       { status: res.status },
     )

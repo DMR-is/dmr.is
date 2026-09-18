@@ -29,9 +29,7 @@ type Props = {
 
 export const CommonFormContainer = ({ application }: Props) => {
   const trpc = useTRPC()
-  const { data: baseEntities } = useQuery(
-    trpc.getBaseEntities.queryOptions(),
-  )
+  const { data: baseEntities } = useQuery(trpc.getBaseEntities.queryOptions())
 
   if (!application) {
     return null
@@ -49,10 +47,11 @@ export const CommonFormContainer = ({ application }: Props) => {
     caseId: application.caseId,
     type: ApplicationTypeEnum.COMMON,
     isBankruptcy: false,
-    typeOptions: baseEntities?.types.map((type) => ({
-      label: type.title,
-      value: type,
-    })) || [],
+    typeOptions:
+      baseEntities?.types.map((type) => ({
+        label: type.title,
+        value: type,
+      })) || [],
   }
 
   const methods = useForm<CommonApplicationWebSchema>(
@@ -117,7 +116,10 @@ export const CommonFormContainer = ({ application }: Props) => {
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
         <ApplicationShell form={CommonFormSteps} title={stepToRender.title}>
           <Box paddingY={[2, 3]}>
-            <FormStep items={stepToRender.fields} loading={!methods.formState.isReady} />
+            <FormStep
+              items={stepToRender.fields}
+              loading={!methods.formState.isReady}
+            />
           </Box>
         </ApplicationShell>
       </form>

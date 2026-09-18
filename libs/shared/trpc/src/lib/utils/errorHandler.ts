@@ -257,7 +257,10 @@ export async function createTRPCError(error: unknown): Promise<ApiTRPCError> {
 
     return new ApiTRPCError({
       code: trpcErrorCode,
-      message: error.details?.[0] ?? error.message ?? `API Error (${error.statusCode})`,
+      message:
+        error.details?.[0] ??
+        error.message ??
+        `API Error (${error.statusCode})`,
       cause: error,
     })
   }
@@ -349,7 +352,10 @@ export const apiErrorMiddleware = async <T>(opts: {
     const result = await opts.next()
 
     if (!result.ok && result.error?.cause) {
-      return { ...result, error: await createTRPCError(result.error.cause) } as T
+      return {
+        ...result,
+        error: await createTRPCError(result.error.cause),
+      } as T
     }
 
     return result as T

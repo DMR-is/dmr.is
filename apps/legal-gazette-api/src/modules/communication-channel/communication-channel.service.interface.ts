@@ -1,6 +1,4 @@
-import {
-  CommunicationChannelDto,
-} from '../../models/communication-channel.model'
+import { CommunicationChannelDto } from '../../models/communication-channel.model'
 import {
   CreateCommunicationChannelDto,
   GetCommunicationChannelsDto,

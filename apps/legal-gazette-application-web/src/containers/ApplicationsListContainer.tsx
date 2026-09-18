@@ -1,9 +1,7 @@
 'use client'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import {
-  Box
-} from '@dmr.is/ui/components/island-is/Box'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'

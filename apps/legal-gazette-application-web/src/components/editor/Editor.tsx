@@ -12,7 +12,13 @@ type Props = {
   withZIndex?: boolean
 }
 
-export const Editor = ({ onChange, onBlur, defaultValue, error, withZIndex = true }: Props) => {
+export const Editor = ({
+  onChange,
+  onBlur,
+  defaultValue,
+  error,
+  withZIndex = true,
+}: Props) => {
   return (
     <>
       <Box

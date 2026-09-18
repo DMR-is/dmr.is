@@ -43,14 +43,16 @@ describe('DoeMailService', () => {
       contactEmail: 'contact@example.is',
       companyAdminEmail: 'admin@example.is',
       ...overrides,
-    } as ReportModel)
+    }) as ReportModel
 
-  const makeComment = (overrides: Partial<ReportCommentModel> = {}): ReportCommentModel =>
+  const makeComment = (
+    overrides: Partial<ReportCommentModel> = {},
+  ): ReportCommentModel =>
     ({
       id: 'comment-1',
       body: 'Hello there',
       ...overrides,
-    } as ReportCommentModel)
+    }) as ReportCommentModel
 
   it('sends to contactEmail when present', async () => {
     aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
@@ -130,13 +132,14 @@ describe('DoeMailService', () => {
     )
 
     const [message] = aws.sendMail.mock.calls[0]
-    const expectedUrl = 'https://island.is/umsoknir/jafnrettisstofa-skyrslugjof/abc-123'
+    const expectedUrl =
+      'https://island.is/umsoknir/jafnrettisstofa-skyrslugjof/abc-123'
     expect(message.html).toContain(`href="${expectedUrl}"`)
     expect(message.html).toContain('Skoða umsókn')
     expect(message.text).toContain(expectedUrl)
   })
 
-    it('includes the island.is application link when provider is ISLAND_IS, for equality reports', async () => {
+  it('includes the island.is application link when provider is ISLAND_IS, for equality reports', async () => {
     aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
     await service.sendExternalCommentNotification(
@@ -149,7 +152,8 @@ describe('DoeMailService', () => {
     )
 
     const [message] = aws.sendMail.mock.calls[0]
-    const expectedUrl = 'https://island.is/umsoknir/jafnrettisstofa-jafnrettisaaetlun/abc-123'
+    const expectedUrl =
+      'https://island.is/umsoknir/jafnrettisstofa-jafnrettisaaetlun/abc-123'
     expect(message.html).toContain(`href="${expectedUrl}"`)
     expect(message.html).toContain('Skoða umsókn')
     expect(message.text).toContain(expectedUrl)
@@ -372,20 +376,20 @@ describe('DoeMailService', () => {
     it.each([
       ['empty string', ''],
       ['whitespace', '   '],
-    ])('falls back to companyAdminEmail when contactEmail is %s', async (
-      _label,
-      contactEmail,
-    ) => {
-      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+    ])(
+      'falls back to companyAdminEmail when contactEmail is %s',
+      async (_label, contactEmail) => {
+        aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
-      await service.sendReportDenied(
-        makeReport({ type: ReportTypeEnum.SALARY, contactEmail }),
-        'reason',
-      )
+        await service.sendReportDenied(
+          makeReport({ type: ReportTypeEnum.SALARY, contactEmail }),
+          'reason',
+        )
 
-      const [message] = aws.sendMail.mock.calls[0]
-      expect(message.to).toBe('admin@example.is')
-    })
+        const [message] = aws.sendMail.mock.calls[0]
+        expect(message.to).toBe('admin@example.is')
+      },
+    )
 
     it('trims a padded recipient', async () => {
       aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))

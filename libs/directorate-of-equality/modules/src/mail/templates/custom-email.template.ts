@@ -35,7 +35,10 @@ const decodeEntities = (value: string): string =>
     )
     // Ampersand last, so a `&amp;lt;` in the source decodes to the literal
     // `&lt;` rather than being decoded twice into `<`.
-    .replace(/&(?:amp|lt|gt|quot|apos|nbsp|#39);/g, (m) => NAMED_ENTITIES[m] ?? m)
+    .replace(
+      /&(?:amp|lt|gt|quot|apos|nbsp|#39);/g,
+      (m) => NAMED_ENTITIES[m] ?? m,
+    )
 
 /**
  * A plain-text alternative derived from the HTML body.

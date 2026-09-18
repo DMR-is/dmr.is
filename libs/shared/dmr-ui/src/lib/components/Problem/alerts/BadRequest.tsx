@@ -11,5 +11,11 @@ export const BadRequest = ({
   title = problemMessages.alerts.badRequest.title,
   message = problemMessages.alerts.badRequest.message,
 }: BadRequestProps) => {
-  return <AlertMessage type={mapProblemTypeToAlertMessageType('bad-request')} title={title} message={message} />
+  return (
+    <AlertMessage
+      type={mapProblemTypeToAlertMessageType('bad-request')}
+      title={title}
+      message={message}
+    />
+  )
 }

@@ -9,11 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-import {
-  ApiProperty,
-  IntersectionType,
-  PartialType,
-} from '@nestjs/swagger'
+import { ApiProperty, IntersectionType, PartialType } from '@nestjs/swagger'
 
 import { ApiOptionalString } from '@dmr.is/decorators'
 

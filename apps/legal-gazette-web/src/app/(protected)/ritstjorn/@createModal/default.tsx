@@ -1,3 +1,3 @@
 export default function CreateModalSlot() {
-  return null;
+  return null
 }

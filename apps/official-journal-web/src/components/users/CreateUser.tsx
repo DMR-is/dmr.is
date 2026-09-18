@@ -7,7 +7,7 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { CreateUserDto,Institution, UserRoleDto } from '../../gen/fetch'
+import { CreateUserDto, Institution, UserRoleDto } from '../../gen/fetch'
 import { useUserContext } from '../../hooks/useUserContext'
 import { OJOISelect } from '../select/OJOISelect'
 
@@ -34,8 +34,8 @@ export const CreateUser = ({
     displayName: '',
     roleId: isAdmin
       ? ''
-      : availableRoles.find((r) => r.value.slug !== 'innsendandi')?.value.id ??
-        '',
+      : (availableRoles.find((r) => r.value.slug !== 'innsendandi')?.value.id ??
+        ''),
     involvedParties:
       availableInvolvedParties.length === 1
         ? [availableInvolvedParties[0].value.id]

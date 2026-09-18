@@ -21,7 +21,10 @@
  * failure it was written for.
  */
 export class MailSendError extends Error {
-  constructor(message: string, readonly cause?: unknown) {
+  constructor(
+    message: string,
+    readonly cause?: unknown,
+  ) {
     super(message)
     this.name = 'MailSendError'
   }

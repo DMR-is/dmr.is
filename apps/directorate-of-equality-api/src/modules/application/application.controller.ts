@@ -317,10 +317,8 @@ export class ApplicationController {
     @Param('providerId') providerId: string,
     @CurrentCompany() company: CompanyDto,
   ): Promise<StreamableFile> {
-    const { pdf, fileName } = await this.applicationService.getEqualityContentPdf(
-      providerId,
-      company,
-    )
+    const { pdf, fileName } =
+      await this.applicationService.getEqualityContentPdf(providerId, company)
 
     return new StreamableFile(pdf, {
       type: 'application/pdf',

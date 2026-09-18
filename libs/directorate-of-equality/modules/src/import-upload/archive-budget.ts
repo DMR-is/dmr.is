@@ -212,9 +212,7 @@ const countInflatedBytes = (
  *
  * @throws {ArchiveTooLargeError}
  */
-export const assertArchiveWithinBudget = async (
-  zip: JSZip,
-): Promise<void> => {
+export const assertArchiveWithinBudget = async (zip: JSZip): Promise<void> => {
   let inflatedBytes = 0
 
   for (const entry of Object.values(zip.files)) {

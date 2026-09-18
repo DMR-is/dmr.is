@@ -1,10 +1,5 @@
 import { Type } from 'class-transformer'
-import {
-  IsBoolean,
-  IsDate,
-  IsEmail,
-  IsOptional,
-} from 'class-validator'
+import { IsBoolean, IsDate, IsEmail, IsOptional } from 'class-validator'
 import { Column, DataType, DefaultScope, HasMany } from 'sequelize-typescript'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'

@@ -291,8 +291,12 @@ export function computePayDispersion(
   // A shared cap would also let one direction crowd out the other entirely: a
   // company with 40 people above expected and 3 below would print no `below`
   // rows at all under a global top-10.
-  const below = shortlist(qualifying.filter((row) => row.studentizedResidual < 0))
-  const above = shortlist(qualifying.filter((row) => row.studentizedResidual > 0))
+  const below = shortlist(
+    qualifying.filter((row) => row.studentizedResidual < 0),
+  )
+  const above = shortlist(
+    qualifying.filter((row) => row.studentizedResidual > 0),
+  )
 
   return {
     available: true,
@@ -365,7 +369,10 @@ function shortlist(rows: StudentizedResidual[]): {
   const listed: StudentizedResidual[] = []
   let index = 0
 
-  while (index < sorted.length && listed.length < PAY_DISPERSION_SHORTLIST_SIZE) {
+  while (
+    index < sorted.length &&
+    listed.length < PAY_DISPERSION_SHORTLIST_SIZE
+  ) {
     const value = Math.abs(sorted[index].studentizedResidual)
 
     let end = index

@@ -53,9 +53,7 @@ describe('RequireApiScopeGuard', () => {
     const guard = withRequiredScope(ApiKeyScopeEnum.SALARY_SUBMIT)
 
     expect(() =>
-      guard.canActivate(
-        contextFor(keyWithScopes(ApiKeyScopeEnum.REPORT_READ)),
-      ),
+      guard.canActivate(contextFor(keyWithScopes(ApiKeyScopeEnum.REPORT_READ))),
     ).toThrow(ForbiddenException)
   })
 
@@ -63,9 +61,7 @@ describe('RequireApiScopeGuard', () => {
     const guard = withRequiredScope(ApiKeyScopeEnum.EQUALITY_SUBMIT)
 
     expect(() =>
-      guard.canActivate(
-        contextFor(keyWithScopes(ApiKeyScopeEnum.REPORT_READ)),
-      ),
+      guard.canActivate(contextFor(keyWithScopes(ApiKeyScopeEnum.REPORT_READ))),
     ).toThrow(/equality:submit/)
   })
 

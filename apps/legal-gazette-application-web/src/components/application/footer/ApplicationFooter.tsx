@@ -85,7 +85,15 @@ export const ApplicationFooter = () => {
         },
       },
     )
-  }, [canGoBack, updateApplication, currentStep, setValue, getValues, getMergedData, clearErrors])
+  }, [
+    canGoBack,
+    updateApplication,
+    currentStep,
+    setValue,
+    getValues,
+    getMergedData,
+    clearErrors,
+  ])
 
   const goForward = useCallback(() => {
     if (!canContinue) return

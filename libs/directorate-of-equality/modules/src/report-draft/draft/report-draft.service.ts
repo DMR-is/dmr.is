@@ -454,10 +454,13 @@ export class ReportDraftService implements IReportDraftService {
         }),
       )
 
-      this.logger.info(`Created DRAFT ${input.type} report row "${report.id}"`, {
-        context: LOGGING_CONTEXT,
-        reportId: report.id,
-      })
+      this.logger.info(
+        `Created DRAFT ${input.type} report row "${report.id}"`,
+        {
+          context: LOGGING_CONTEXT,
+          reportId: report.id,
+        },
+      )
 
       return { reportId: report.id, replayed: false }
     } catch (error) {

@@ -37,9 +37,7 @@ export class PartnerCompanyGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context
-      .switchToHttp()
-      .getRequest<PartnerCompanyRequest>()
+    const request = context.switchToHttp().getRequest<PartnerCompanyRequest>()
 
     if (!request.apiKeyContext) {
       // Logged, not returned — see the note on RequireApiScopeGuard.

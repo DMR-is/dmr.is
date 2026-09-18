@@ -18,12 +18,10 @@ export const FormGroup = ({
   const hasSubTitle = !!subTitle
 
   return (
-    <GridRow rowGap={[2,3]} marginBottom={2}>
+    <GridRow rowGap={[2, 3]} marginBottom={2}>
       {title !== '' && (
         <GridColumn span="12/12">
-          <Text variant="h4">
-            {title}
-          </Text>
+          <Text variant="h4">{title}</Text>
           {hasSubTitle && typeof subTitle === 'string' && (
             <Text variant="small" color="dark400">
               {subTitle}
@@ -34,7 +32,7 @@ export const FormGroup = ({
       )}
       {error && (
         <GridColumn span="12/12">
-          <Text variant="small" fontWeight='semiBold' color="red600">
+          <Text variant="small" fontWeight="semiBold" color="red600">
             {error}
           </Text>
         </GridColumn>

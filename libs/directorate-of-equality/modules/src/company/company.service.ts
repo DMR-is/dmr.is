@@ -239,9 +239,8 @@ export class CompanyService implements ICompanyService {
       { context: LOGGING_CONTEXT },
     )
 
-    const result = await this.nationalRegistryService.getEntityByNationalId(
-      nationalId,
-    )
+    const result =
+      await this.nationalRegistryService.getEntityByNationalId(nationalId)
 
     if (!result.entity) {
       throw new NotFoundException(
@@ -325,9 +324,7 @@ export class CompanyService implements ICompanyService {
    * "every new company is sector-classified" is NOT true; do not write code
    * that assumes it, and do not expect an automated backfill to arrive.
    */
-  private async resolveRskEnrichment(
-    nationalId: string,
-  ): Promise<{
+  private async resolveRskEnrichment(nationalId: string): Promise<{
     status?: CompanyStatusEnum
     address?: string | null
     postcodeId?: string | null
@@ -407,9 +404,7 @@ export class CompanyService implements ICompanyService {
    * form we do not map all yield UNKNOWN, which an admin can correct by hand
    * later. `sectorOverride` stays false — nothing here is an admin decision.
    */
-  private async resolveSectorOnly(
-    nationalId: string,
-  ): Promise<{
+  private async resolveSectorOnly(nationalId: string): Promise<{
     sector: CompanySectorEnum
     legalFormId: string | null
     legalFormName: string | null
@@ -485,9 +480,10 @@ export class CompanyService implements ICompanyService {
       { context: LOGGING_CONTEXT },
     )
 
-    const entity = await this.rskCompanyRegistryService.getLegalEntityByNationalId(
-      nationalId,
-    )
+    const entity =
+      await this.rskCompanyRegistryService.getLegalEntityByNationalId(
+        nationalId,
+      )
 
     const mapped = mapRskLegalEntity(entity)
 
@@ -570,9 +566,8 @@ export class CompanyService implements ICompanyService {
       return existing.fromModel()
     }
 
-    const registry = await this.nationalRegistryService.getEntityByNationalId(
-      nationalId,
-    )
+    const registry =
+      await this.nationalRegistryService.getEntityByNationalId(nationalId)
 
     const name = registry.entity?.nafn ?? fallbackName
 

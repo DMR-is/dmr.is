@@ -126,9 +126,7 @@ describe('validateScoringModel', () => {
       extra.title = 'Aukaábyrgð'
       model.criteria.push(extra)
 
-      expect(scopesOf(model)).not.toContain(
-        ScoringValidationScopeEnum.CRITERIA,
-      )
+      expect(scopesOf(model)).not.toContain(ScoringValidationScopeEnum.CRITERIA)
     })
 
     it('refuses two criteria sharing a title, which the filing rejects', () => {
@@ -233,11 +231,11 @@ describe('validateScoringModel', () => {
     it('says the model has nothing to score when it has no sub-criteria', () => {
       const model = validModel()
       model.criteria = model.criteria.map((c) => ({ ...c, subCriteria: [] }))
-      model.roles = [{ id: 'role-1', title: 'Sérfræðingur', stepAssignments: [] }]
+      model.roles = [
+        { id: 'role-1', title: 'Sérfræðingur', stepAssignments: [] },
+      ]
 
-      expect(scopesOf(model)).toContain(
-        ScoringValidationScopeEnum.SUB_CRITERIA,
-      )
+      expect(scopesOf(model)).toContain(ScoringValidationScopeEnum.SUB_CRITERIA)
     })
   })
 
@@ -360,7 +358,9 @@ describe('validateScoringModel', () => {
         expect.arrayContaining([
           // The filing gate's wording, since the rule is now run rather than
           // restated: a job is only scored on job-based criteria.
-          expect.stringContaining('störf eru aðeins metin á starfsbundin viðmið'),
+          expect.stringContaining(
+            'störf eru aðeins metin á starfsbundin viðmið',
+          ),
         ]),
       )
     })

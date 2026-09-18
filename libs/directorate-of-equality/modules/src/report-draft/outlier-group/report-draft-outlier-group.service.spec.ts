@@ -132,9 +132,9 @@ describe('ReportDraftOutlierGroupService', () => {
     })
 
     it('400s when name is missing', async () => {
-      await expect(
-        service.createGroup(report, GROUP_ID, {}),
-      ).rejects.toThrow(BadRequestException)
+      await expect(service.createGroup(report, GROUP_ID, {})).rejects.toThrow(
+        BadRequestException,
+      )
     })
 
     it('creates a fully-explained group', async () => {
@@ -293,7 +293,7 @@ describe('ReportDraftOutlierGroupService', () => {
       expect(outlierDestroy).not.toHaveBeenCalled()
     })
 
-    it('deletes the employee\'s membership row', async () => {
+    it("deletes the employee's membership row", async () => {
       await service.clearEmployeeGroup(report, EMPLOYEE_ID)
 
       expect(outlierDestroy).toHaveBeenCalledWith({

@@ -303,7 +303,10 @@ describe('CompanyEmailService', () => {
   describe('send', () => {
     it('sanitises the body once, before storing it', async () => {
       await service.send(
-        { ...validDto, bodyHtml: '<p onclick="steal()">Halló</p><script>x()</script>' },
+        {
+          ...validDto,
+          bodyHtml: '<p onclick="steal()">Halló</p><script>x()</script>',
+        },
         'user-1',
       )
 
@@ -355,7 +358,10 @@ describe('CompanyEmailService', () => {
   })
 
   describe('attachments', () => {
-    const attachment = { key: 'doe-imports/mail-attachment/x.pdf', filename: 'bref.pdf' }
+    const attachment = {
+      key: 'doe-imports/mail-attachment/x.pdf',
+      filename: 'bref.pdf',
+    }
 
     it('fetches through the mail-attachment boundary', async () => {
       uploadService.fetchObject.mockResolvedValue(Buffer.alloc(10))
@@ -617,9 +623,9 @@ describe('CompanyEmailService', () => {
         expect(recipientModel.bulkCreate).toHaveBeenCalledWith([
           expect.objectContaining({ email: 'skra@fyrirtaeki.is' }),
         ])
-        expect(companyEventService.emitCustomEmailOutcome).toHaveBeenCalledTimes(
-          1,
-        )
+        expect(
+          companyEventService.emitCustomEmailOutcome,
+        ).toHaveBeenCalledTimes(1)
       })
 
       it('rejects a copy address that is not a single address', async () => {

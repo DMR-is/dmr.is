@@ -135,7 +135,11 @@ describe('ReportDraftCriterionService', () => {
       subFindAll.mockResolvedValueOnce([
         { id: 'sub-1', title: 'Mannaforráð', reportCriterionId: CRITERION_ID },
         { id: 'sub-2', title: 'Fjárhagsleg', reportCriterionId: CRITERION_ID },
-        { id: 'sub-3', title: 'Vinnuálag', reportCriterionId: 'criterion-id-2' },
+        {
+          id: 'sub-3',
+          title: 'Vinnuálag',
+          reportCriterionId: 'criterion-id-2',
+        },
       ])
       stepFindAll.mockResolvedValueOnce([
         { id: 'step-1', order: 1, reportSubCriterionId: 'sub-1', score: 10 },

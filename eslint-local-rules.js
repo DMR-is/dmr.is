@@ -380,7 +380,10 @@ module.exports = {
           if (!isController) return
 
           // Check for @PublicController() - bypasses all auth checks
-          const isPublicController = hasDecorator(decorators, 'PublicController')
+          const isPublicController = hasDecorator(
+            decorators,
+            'PublicController',
+          )
           if (isPublicController) return
 
           // Check if this is an abstract/base controller (no HTTP method decorators)
@@ -685,7 +688,9 @@ module.exports = {
           let hasType = false
 
           // Check direct type annotation
-          if (param.typeAnnotation?.typeAnnotation?.typeName?.name === 'Cache') {
+          if (
+            param.typeAnnotation?.typeAnnotation?.typeName?.name === 'Cache'
+          ) {
             hasType = true
           }
 

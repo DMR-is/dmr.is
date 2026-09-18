@@ -20,7 +20,9 @@ export default function ReportNotFound() {
         />
         <Box display="flex" justifyContent="center" marginTop={4}>
           <Link href="/yfirlit">
-            <Button variant="primary">{reportNotFoundText.backToOverview}</Button>
+            <Button variant="primary">
+              {reportNotFoundText.backToOverview}
+            </Button>
           </Link>
         </Box>
       </Box>

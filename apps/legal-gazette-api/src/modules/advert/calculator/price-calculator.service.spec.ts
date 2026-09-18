@@ -55,10 +55,12 @@ describe('PriceCalculatorService', () => {
   beforeEach(async () => {
     jest.clearAllMocks()
     // Mock isPersonKennitala - return true for IDs starting with 0-3, false for 4-9
-    jest.mocked(Kennitala.isPersonKennitala).mockImplementation((id: string) => {
-      const firstDigit = parseInt(id[0], 10)
-      return firstDigit <= 3
-    })
+    jest
+      .mocked(Kennitala.isPersonKennitala)
+      .mockImplementation((id: string) => {
+        const firstDigit = parseInt(id[0], 10)
+        return firstDigit <= 3
+      })
     // Create mock implementations
     const mockLogger = {
       info: jest.fn(),

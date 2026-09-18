@@ -14,24 +14,18 @@
         "cwd": "apps/directorate-of-equality-partner-api",
         "forwardAllArgs": false
       },
-      "dependsOn": [
-        "^codegen"
-      ]
+      "dependsOn": ["^codegen"]
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/directorate-of-equality-partner-api/jest.config.ts"
       }
     },
     "build": {
       "executor": "@nx/webpack:webpack",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
         "target": "node",
@@ -48,10 +42,7 @@
         },
         "production": {}
       },
-      "dependsOn": [
-        "^build",
-        "^codegen"
-      ]
+      "dependsOn": ["^build", "^codegen"]
     },
     "format": {
       "executor": "nx:run-commands",
@@ -75,9 +66,7 @@
       "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "options": {
         "buildTarget": "directorate-of-equality-partner-api:build",
         "runBuildTargetDependencies": false
@@ -96,9 +85,7 @@
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",
-      "dependsOn": [
-        "flatten-env"
-      ],
+      "dependsOn": ["flatten-env"],
       "options": {
         "engine": "docker",
         "metadata": {
@@ -109,9 +96,7 @@
     },
     "flatten-env": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "options": {
         "cwd": "apps/directorate-of-equality-partner-api",
         "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env && find dist/env -type f ! -name '.env.schema' -delete"

@@ -154,9 +154,7 @@ describe('buildImprovementPlanHtml', () => {
     // Group A's heading must precede group B's members, i.e. the rows are not
     // flattened back into one table.
     expect(html.indexOf('Hópur A')).toBeLessThan(html.indexOf('Hópur B'))
-    expect(html.indexOf('Ástæða A')).toBeLessThan(
-      html.indexOf('Starfsmaður 2'),
-    )
+    expect(html.indexOf('Ástæða A')).toBeLessThan(html.indexOf('Starfsmaður 2'))
   })
 
   /**

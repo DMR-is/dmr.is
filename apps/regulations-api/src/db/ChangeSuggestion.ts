@@ -201,9 +201,7 @@ export async function createChangeSuggestion(
       }
 
       // v2 handed back a Buffer here; v3 streams, so the read is explicit.
-      textContent = (await s3Object.Body.transformToString(
-        'utf-8',
-      )) as HTMLText
+      textContent = (await s3Object.Body.transformToString('utf-8')) as HTMLText
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error'

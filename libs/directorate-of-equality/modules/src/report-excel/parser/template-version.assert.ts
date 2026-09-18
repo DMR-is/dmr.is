@@ -254,10 +254,14 @@ const instructionsVersionCell = (
     NAMED_RANGES.TEMPLATE_VERSION,
   )?.ranges
   const named = ranges?.length === 1 ? ranges[0] : undefined
-  const parsed = named?.match(/^'?([^'!]{1,255})'?!\$?([A-Z]{1,3})\$?(\d{1,7})$/)
+  const parsed = named?.match(
+    /^'?([^'!]{1,255})'?!\$?([A-Z]{1,3})\$?(\d{1,7})$/,
+  )
 
   const sheetName = parsed?.[1] ?? SHEETS.INSTRUCTIONS
-  const address = parsed ? `${parsed[2]}${parsed[3]}` : INSTRUCTIONS_VERSION_CELL
+  const address = parsed
+    ? `${parsed[2]}${parsed[3]}`
+    : INSTRUCTIONS_VERSION_CELL
 
   const sheet = workbook.getWorksheet(sheetName)
   return sheet ? sheet.getCell(address) : null
@@ -288,7 +292,9 @@ const attestsCurrentBands = (workbook: ExcelJS.Workbook): boolean => {
   const sheet = workbook.getWorksheet(SHEETS.EMPLOYEES)
   if (!sheet) return false
   return BAND_LABELS.every(({ cell, startsWith }) =>
-    normalise(readString(sheet.getCell(cell))).startsWith(normalise(startsWith)),
+    normalise(readString(sheet.getCell(cell))).startsWith(
+      normalise(startsWith),
+    ),
   )
 }
 

@@ -120,7 +120,10 @@ describe('PartnerSubmissionService', () => {
 
       await expect(
         service.salaryAnalysis(
-          { scoringModelId: 'someone-elses-model', employees: EMPLOYEES } as never,
+          {
+            scoringModelId: 'someone-elses-model',
+            employees: EMPLOYEES,
+          } as never,
           COMPANY,
         ),
       ).rejects.toThrow(NotFoundException)

@@ -707,7 +707,8 @@ export class CaseController {
   @ApiOperation({ operationId: 'correctionPDFReplacement' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'Handles uploading a replacement PDF for an advert correction.',
+    description:
+      'Handles uploading a replacement PDF for an advert correction.',
     required: true,
     schema: {
       type: 'object',
@@ -1160,10 +1161,7 @@ export class CaseController {
     involvedPartyId: string,
   ) {
     ResultWrapper.unwrap(
-      await this.caseService.deleteCaseAdditionalParty(
-        caseId,
-        involvedPartyId,
-      ),
+      await this.caseService.deleteCaseAdditionalParty(caseId, involvedPartyId),
     )
   }
 

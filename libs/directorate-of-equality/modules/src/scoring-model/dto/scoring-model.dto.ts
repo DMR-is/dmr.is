@@ -1,9 +1,4 @@
-import {
-  ApiDto,
-  ApiDtoArray,
-  ApiString,
-  ApiUUId,
-} from '@dmr.is/decorators'
+import { ApiDto, ApiDtoArray, ApiString, ApiUUId } from '@dmr.is/decorators'
 
 import { ScoringCriterionDto } from './scoring-criterion.dto'
 import { ScoringModelValidationDto } from './scoring-validation.dto'

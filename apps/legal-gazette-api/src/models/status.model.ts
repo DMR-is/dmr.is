@@ -17,7 +17,10 @@ type StatusAttributes = {
 }
 
 @ParanoidTable({ tableName: LegalGazetteModels.ADVERT_STATUS })
-export class StatusModel extends ParanoidModel<StatusAttributes, StatusAttributes> {
+export class StatusModel extends ParanoidModel<
+  StatusAttributes,
+  StatusAttributes
+> {
   @Column({
     type: DataType.ENUM(...Object.values(StatusIdEnum)),
     allowNull: false,

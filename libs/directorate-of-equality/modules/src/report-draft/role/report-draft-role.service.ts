@@ -197,11 +197,7 @@ export class ReportDraftRoleService implements IReportDraftRoleService {
   }
 
   /** A client-minted id must not collide with a row on another report. */
-  private assertOwned(
-    rowReportId: string,
-    reportId: string,
-    id: string,
-  ): void {
+  private assertOwned(rowReportId: string, reportId: string, id: string): void {
     if (rowReportId !== reportId) {
       throw new BadRequestException(
         `Role "${id}" belongs to a different report`,
