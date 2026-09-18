@@ -67,6 +67,22 @@ while read -r submodule; do
       echo "⚠️  ${NAME}: fetch failed, continuing with local objects" >&2
   fi
 
+  # `submodule update` checked out the *gitlink*; the checkout below wants
+  # config.json's SHA, and the two can drift (warned about further down). On a
+  # full clone the fetch above brings the pin in. On the depth-1 CI clone it does
+  # not - a shallow, single-branch fetch honours its own boundary, so a pin
+  # behind the tip stays absent and `checkout` dies with "unable to read tree"
+  # under `set -e`, naming neither cause. Fetch the commit itself; GitHub serves
+  # unadvertised SHAs. --depth 1 only when already shallow, because on a full
+  # clone it would make the clone shallow.
+  if ! git -C "${SUBMODULE_PATH}" cat-file -e "${SHA}^{commit}" 2>/dev/null; then
+    if [ "$(git -C "${SUBMODULE_PATH}" rev-parse --is-shallow-repository 2>/dev/null)" = "true" ]; then
+      git -C "${SUBMODULE_PATH}" fetch --quiet --depth 1 origin "${SHA}"
+    else
+      git -C "${SUBMODULE_PATH}" fetch --quiet origin "${SHA}"
+    fi || echo "⚠️  ${NAME}: could not fetch pinned commit ${SHA}, continuing with local objects" >&2
+  fi
+
   # Checkout to the specified SHA quietly
   git -C "${SUBMODULE_PATH}" checkout --quiet "${SHA}"
 
