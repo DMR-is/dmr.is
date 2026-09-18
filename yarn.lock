@@ -4592,6 +4592,7 @@ __metadata:
     "@dmr.is/shared-dto": "npm:*"
     "@dmr.is/trpc": "npm:*"
     "@dmr.is/ui": "npm:*"
+    "@dmr.is/utils-server": "npm:*"
     "@dmr.is/utils-shared": "npm:*"
     "@rehooks/component-size": "npm:^1.0.3"
     "@tanstack/react-query": "npm:5.90.2"
