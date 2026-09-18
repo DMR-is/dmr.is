@@ -21,6 +21,14 @@ import {
 } from '../../components/companies/CompanyFilter'
 import { CompanyTable } from '../../components/companies/CompanyTable'
 import {
+  EMPTY_REPORT_FILTERS,
+  type ReportDateKey,
+  type ReportDateRanges,
+  ReportExportFilter,
+  type ReportFilters,
+} from '../../components/data-export/ReportExportFilter'
+import { ReportExportTable } from '../../components/data-export/ReportExportTable'
+import {
   CompanyExpiryFilterEnum,
   CompanyReportStatusEnum,
   CompanySectorEnum,
@@ -30,7 +38,7 @@ import {
 import { useIsTablet } from '../../hooks/useIsTablet'
 import { dataExportText, serverErrorText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { buildFilterSummary } from './filterSummary'
+import { buildFilterSummary, buildReportFilterSummary } from './filterSummary'
 
 const DATASETS = ['companies', 'reports'] as const
 type Dataset = (typeof DATASETS)[number]
@@ -74,6 +82,9 @@ export const DataExportContainer = () => {
   )
 
   const [draft, setDraft] = useState<CompanyFilters>(EMPTY_FILTERS)
+  const [reportDraft, setReportDraft] =
+    useState<ReportFilters>(EMPTY_REPORT_FILTERS)
+  const [reportDates, setReportDates] = useState<ReportDateRanges>({})
   const [query, setQuery] = useState('')
 
   /**
@@ -159,12 +170,65 @@ export const DataExportContainer = () => {
     [],
   )
 
+  const toReportQuery = useCallback(
+    (
+      filters: ReportFilters,
+      dates: ReportDateRanges,
+      q: string,
+    ): Record<string, unknown> => ({
+      ...(q.trim() ? { q: q.trim() } : {}),
+      ...(filters.type.length ? { type: filters.type } : {}),
+      ...(filters.status.length ? { status: filters.status } : {}),
+      ...(filters.communicationStatus.length
+        ? { communicationStatus: filters.communicationStatus }
+        : {}),
+      ...(filters.equalitySource.length
+        ? { equalitySource: filters.equalitySource }
+        : {}),
+      ...(filters.employees.length
+        ? { employeeCountCategory: filters.employees }
+        : {}),
+      ...(filters.sector.length ? { sector: filters.sector } : {}),
+      ...(filters.isatSection.length
+        ? { isatSection: filters.isatSection }
+        : {}),
+      ...(filters.isatCategoryCode.length
+        ? { isatCategoryCode: filters.isatCategoryCode }
+        : {}),
+      ...(filters.regionCode.length ? { regionCode: filters.regionCode } : {}),
+      ...(filters.postcode.length ? { postcode: filters.postcode } : {}),
+      // The API takes ISO datetimes; the pickers give local Dates.
+      ...Object.fromEntries(
+        Object.entries(dates)
+          .filter(([, value]) => value instanceof Date)
+          .map(([key, value]) => [key, (value as Date).toISOString()]),
+      ),
+    }),
+    [],
+  )
+
+  const isCompanies = dataset === 'companies'
+
   const { data, isFetching, isError } = useQuery(
     trpc.company.list.queryOptions(
       { ...(submitted ?? {}), page, pageSize: PAGE_SIZE },
       {
         // Nothing is fetched until the admin asks for it.
-        enabled: submitted !== null && dataset === 'companies',
+        enabled: submitted !== null && isCompanies,
+        placeholderData: (prev) => prev,
+      },
+    ),
+  )
+
+  const {
+    data: reportData,
+    isFetching: isFetchingReports,
+    isError: isReportError,
+  } = useQuery(
+    trpc.reports.list.queryOptions(
+      { ...(submitted ?? {}), page, pageSize: PAGE_SIZE },
+      {
+        enabled: submitted !== null && !isCompanies,
         placeholderData: (prev) => prev,
       },
     ),
@@ -180,9 +244,28 @@ export const DataExportContainer = () => {
     setDraft((prev) => ({ ...prev, [key]: val }))
   }
 
+  const handleReportFiltersChange = (
+    key: keyof ReportFilters,
+    val: string[],
+  ) => {
+    if (key === 'regionCode') {
+      setReportDraft((prev) => ({ ...prev, regionCode: val, postcode: [] }))
+      return
+    }
+    setReportDraft((prev) => ({ ...prev, [key]: val }))
+  }
+
+  const handleDateChange = (key: ReportDateKey, value: Date | undefined) => {
+    setReportDates((prev) => ({ ...prev, [key]: value }))
+  }
+
   const handleSubmit = () => {
     setPage(1)
-    setSubmitted(toServerQuery(draft, query))
+    setSubmitted(
+      isCompanies
+        ? toServerQuery(draft, query)
+        : toReportQuery(reportDraft, reportDates, query),
+    )
     // Deferred to the paint after the results render, otherwise focus moves to
     // a heading that still says "choose your filters".
     requestAnimationFrame(() => resultsRef.current?.focus())
@@ -190,13 +273,19 @@ export const DataExportContainer = () => {
 
   const handleReset = () => {
     setDraft(EMPTY_FILTERS)
+    setReportDraft(EMPTY_REPORT_FILTERS)
+    setReportDates({})
     setQuery('')
     setSubmitted(null)
     setPage(1)
   }
 
   const rows = data?.companies ?? []
-  const total = data?.paging?.totalItems ?? 0
+  const reportRows = reportData?.reports ?? []
+  const paging = isCompanies ? data?.paging : reportData?.paging
+  const total = paging?.totalItems ?? 0
+  const fetching = isCompanies ? isFetching : isFetchingReports
+  const errored = isCompanies ? isError : isReportError
 
   /**
    * The export link carries the SUBMITTED filter and no paging — the file is
@@ -217,12 +306,23 @@ export const DataExportContainer = () => {
 
     // Reaches the workbook's "Um útdráttinn" sheet, so the file records the
     // filter in the same words the admin saw on screen.
-    for (const line of buildFilterSummary(draft, query)) {
+    const summary = isCompanies
+      ? buildFilterSummary(draft, query)
+      : buildReportFilterSummary(reportDraft, reportDates, query)
+    for (const line of summary) {
       params.append('filterSummary', line)
     }
 
     return `/api/export/${dataset}?${params.toString()}`
-  }, [submitted, dataset, draft, query])
+  }, [
+    submitted,
+    dataset,
+    isCompanies,
+    draft,
+    reportDraft,
+    reportDates,
+    query,
+  ])
 
   return (
     <GridContainer>
@@ -256,20 +356,34 @@ export const DataExportContainer = () => {
         <GridRow>
           <GridColumn span={['12/12', '12/12', '12/12', '3/12']}>
             <Stack space={2}>
-              <CompanyFilter
-                query={query}
-                onQueryChange={setQuery}
-                filters={draft}
-                onFiltersChange={handleFiltersChange}
-                onReset={handleReset}
-                regionOptions={regionOptions}
-                postcodeOptions={postcodeOptions}
-              />
+              {isCompanies ? (
+                <CompanyFilter
+                  query={query}
+                  onQueryChange={setQuery}
+                  filters={draft}
+                  onFiltersChange={handleFiltersChange}
+                  onReset={handleReset}
+                  regionOptions={regionOptions}
+                  postcodeOptions={postcodeOptions}
+                />
+              ) : (
+                <ReportExportFilter
+                  query={query}
+                  onQueryChange={setQuery}
+                  filters={reportDraft}
+                  onFiltersChange={handleReportFiltersChange}
+                  dates={reportDates}
+                  onDateChange={handleDateChange}
+                  onReset={handleReset}
+                  regionOptions={regionOptions}
+                  postcodeOptions={postcodeOptions}
+                />
+              )}
               <Button
                 icon="search"
                 iconType="outline"
                 onClick={handleSubmit}
-                loading={isFetching}
+                loading={fetching}
                 size="small"
                 fluid
               >
@@ -290,7 +404,7 @@ export const DataExportContainer = () => {
                 ref={resultsRef}
                 tabIndex={-1}
                 aria-live="polite"
-                aria-busy={isFetching}
+                aria-busy={fetching}
                 outline="none"
               >
                 {submitted === null ? (
@@ -301,7 +415,7 @@ export const DataExportContainer = () => {
                 ) : (
                   <Inline space={2} alignY="center" justifyContent="spaceBetween">
                     <Text variant="h4">
-                      {isFetching
+                      {fetching
                         ? dataExportText.searching
                         : dataExportText.resultCount(total)}
                     </Text>
@@ -323,7 +437,7 @@ export const DataExportContainer = () => {
                 )}
               </Box>
 
-              {isError && (
+              {errored && (
                 <AlertMessage
                   type="error"
                   title={serverErrorText.title}
@@ -331,7 +445,7 @@ export const DataExportContainer = () => {
                 />
               )}
 
-              {submitted !== null && total === 0 && !isFetching && !isError && (
+              {submitted !== null && total === 0 && !fetching && !errored && (
                 <AlertMessage
                   type="info"
                   title={dataExportText.emptyHeading}
@@ -339,13 +453,22 @@ export const DataExportContainer = () => {
                 />
               )}
 
-              {submitted !== null && data?.paging && total > 0 && (
-                <CompanyTable
-                  rows={rows}
-                  paging={data.paging}
-                  onPageChange={setPage}
-                />
-              )}
+              {submitted !== null &&
+                paging &&
+                total > 0 &&
+                (isCompanies ? (
+                  <CompanyTable
+                    rows={rows}
+                    paging={paging}
+                    onPageChange={setPage}
+                  />
+                ) : (
+                  <ReportExportTable
+                    rows={reportRows}
+                    paging={paging}
+                    onPageChange={setPage}
+                  />
+                ))}
             </Stack>
             {isTablet && <Box paddingTop={2} />}
           </GridColumn>
