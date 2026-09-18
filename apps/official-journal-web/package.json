@@ -12,6 +12,7 @@
     "@dmr.is/shared-dto": "*",
     "@dmr.is/trpc": "*",
     "@dmr.is/ui": "*",
+    "@dmr.is/utils-server": "*",
     "@dmr.is/utils-shared": "*",
     "@rehooks/component-size": "^1.0.3",
     "@tanstack/react-query": "5.90.2",
