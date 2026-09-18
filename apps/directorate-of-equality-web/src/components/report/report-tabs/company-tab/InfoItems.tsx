@@ -21,7 +21,11 @@ const InfoItem = ({ label, children }: InfoItemProps) => {
       {isValidElement(children) ? (
         children
       ) : (
-        <Text>{children ? children : 'Óþekkt'}</Text>
+        <Text>
+          {children === undefined || children === null || children === ''
+            ? 'Óþekkt'
+            : children}
+        </Text>
       )}
     </div>
   )

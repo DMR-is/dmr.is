@@ -1,0 +1,32 @@
+import { Module } from '@nestjs/common'
+import { SequelizeModule } from '@nestjs/sequelize'
+
+import { CompanyModel } from '../company/models/company.model'
+import { IsatCategoryModel } from '../company/models/isat-category.model'
+import { CompanyEventCoreModule } from '../company-event/company-event.core.module'
+import { ImportUploadCoreModule } from '../import-upload/import-upload.core.module'
+import { PostcodeModel } from '../location/models/postcode.model'
+import { ParseGateCoreModule } from '../parse-gate/parse-gate.core.module'
+import { CompanyImportService } from './company-import.service'
+import { ICompanyImportService } from './company-import.service.interface'
+
+@Module({
+  imports: [
+    SequelizeModule.forFeature([
+      CompanyModel,
+      IsatCategoryModel,
+      PostcodeModel,
+    ]),
+    CompanyEventCoreModule,
+    ParseGateCoreModule,
+    ImportUploadCoreModule,
+  ],
+  providers: [
+    {
+      provide: ICompanyImportService,
+      useClass: CompanyImportService,
+    },
+  ],
+  exports: [ICompanyImportService],
+})
+export class CompanyImportCoreModule {}

@@ -5,10 +5,7 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
-import {
-  COMMON_ADVERT_TYPES_IDS,
-  UNASSIGNABLE_TYPE_IDS,
-} from '../../../core/constants'
+import { COMMON_ADVERT_TYPES_IDS } from '../../../core/constants'
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
@@ -63,14 +60,10 @@ export class TypeController extends BaseEntityController<
   @LGResponse({ operationId: 'getTypes', type: GetTypesDto })
   async getTypes(@Query() query?: GetTypesQueryDto): Promise<GetTypesDto> {
     const where: WhereOptions<TypeModel> = {}
-    if (query?.excludeUnassignable && query?.excludeTypes) {
-      const merged = [
-        ...new Set([...UNASSIGNABLE_TYPE_IDS, ...query.excludeTypes]),
-      ]
-      where.id = { [Op.notIn]: merged }
-    } else if (query?.excludeUnassignable) {
-      where.id = { [Op.notIn]: UNASSIGNABLE_TYPE_IDS }
-    } else if (query?.excludeTypes) {
+    if (query?.excludeUnassignable) {
+      where.active = true
+    }
+    if (query?.excludeTypes) {
       where.id = { [Op.notIn]: query.excludeTypes }
     }
 

@@ -10,8 +10,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@nx/devkit": "22.5.1",
-    "@nx/next": "22.5.1",
+    "@nx/devkit": "22.7.8",
+    "@nx/next": "22.7.8",
     "tslib": "^2.6.3"
   }
 }

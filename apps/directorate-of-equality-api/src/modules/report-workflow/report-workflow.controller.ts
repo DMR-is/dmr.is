@@ -8,16 +8,18 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
+import { type ReportResourceContext } from '@dmr.is/doe-modules/report'
+import {
+  AssignReportDto,
+  DenyReportDto,
+  IReportWorkflowService,
+} from '@dmr.is/doe-modules/report-workflow'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { CurrentReportResourceContext } from '../../core/decorators/current-report-resource-context.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
-import { type ReportResourceContext } from '../report/types/report-resource-context'
-import { AssignReportDto } from './dto/assign-report.dto'
-import { DenyReportDto } from './dto/deny-report.dto'
-import { IReportWorkflowService } from './report-workflow.service.interface'
 
 @Controller({
   path: 'reports/:reportId',

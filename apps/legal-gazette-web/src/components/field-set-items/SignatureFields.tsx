@@ -5,6 +5,10 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import {
+  fromCalendarDateIso,
+  toCalendarDateIso,
+} from '@dmr.is/utils-shared/date/calendarDate'
 
 import { useUpdateSignature } from '../../hooks/useUpdateSignature'
 import { AdvertSignature } from '../../lib/trpc/types'
@@ -75,10 +79,12 @@ export const SignatureFields = ({
             placeholderText=""
             size="sm"
             label="Dagsetning undirritunar"
-            selected={signature.date ? new Date(signature.date) : null}
+            selected={
+              signature.date ? fromCalendarDateIso(signature.date) : null
+            }
             disabled={isDisabled}
             handleChange={(date) =>
-              updateSignatureDate(date?.toISOString() || '')
+              updateSignatureDate(date ? toCalendarDateIso(date) : '')
             }
           />
         </GridColumn>

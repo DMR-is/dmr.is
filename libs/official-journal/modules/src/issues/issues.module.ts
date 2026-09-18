@@ -33,5 +33,3 @@ import { IIssuesService } from './issues.service.interface'
   exports: [IIssuesService],
 })
 export class IssuesModule {}
-
-export { IssuesTaskModule } from './task/issues.task.module'

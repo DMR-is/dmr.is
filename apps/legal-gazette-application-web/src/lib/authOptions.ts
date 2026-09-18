@@ -4,29 +4,24 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 
 import { decodeJwt } from 'jose'
 
-import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 
 // This session timeout will be used to set the maxAge of the session cookie
 // IDS has a max timeout on refresh tokens, so we set our session timeout to be slightly more
 const SESSION_TIMEOUT = 60 * 60 * 8 + 30 // 8 hours and 30 seconds
 
-export const localIdentityServerConfig = {
-  id: identityServerId,
-  name: 'Iceland authentication service',
+// Local and deployed environments now use the same variable names. The previous
+// LG_APPLICATION_WEB_CLIENT_ID / LG_APPLICATION_WEB_CLIENT_SECRET pair existed
+// only because every app shared one shell: three web apps could not each hold
+// their own ISLAND_IS_DMR_WEB_CLIENT_ID, so local dev used per-app names and
+// switched back to the shared ones in production. Configuration now resolves per
+// app, in that app's own process, so the workaround and the NODE_ENV branch are
+// unnecessary. The app-specific scope stays -- that is genuinely per client, not
+// per environment.
+export const identityServerConfig = {
+  ...sharedIdentityServerConfig,
   scope: `openid offline_access profile @logbirtingablad.is/lg-application-web`,
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  clientId: process.env.LG_APPLICATION_WEB_CLIENT_ID!,
-  clientSecret: process.env.LG_APPLICATION_WEB_CLIENT_SECRET ?? '',
 }
-
-export const identityServerConfig =
-  process.env.NODE_ENV !== 'production'
-    ? localIdentityServerConfig
-    : {
-        ...sharedIdentityServerConfig,
-        scope: localIdentityServerConfig.scope,
-      }
 
 export const authOptions: AuthOptions = {
   pages: {

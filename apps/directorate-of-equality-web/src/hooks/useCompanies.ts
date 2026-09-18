@@ -41,6 +41,14 @@ export function useCompanies(fixedQuery?: Partial<GetCompaniesInput>) {
       ) as Parameters<typeof setFilter>[0],
     )
 
+  /**
+   * The filter as the server sees it, minus paging. The other consumer is "send
+   * an email to everyone matching this filter", where `page`/`pageSize` are
+   * ignored but would still land in the batch's audit snapshot, reading as
+   * though the send had been limited to a page.
+   */
+  const { page: _page, pageSize: _pageSize, ...recipientFilter } = activeFilter
+
   return {
     data,
     isLoading,
@@ -49,5 +57,6 @@ export function useCompanies(fixedQuery?: Partial<GetCompaniesInput>) {
     filter,
     setFilter,
     resetFilter,
+    recipientFilter,
   }
 }

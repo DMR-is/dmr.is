@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common'
 
+import { AuthorizationCoreModule } from '@dmr.is/doe-modules/authorization'
+import { ConfigCoreModule } from '@dmr.is/doe-modules/config'
+
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { AuthorizationCoreModule } from '../authorization/authorization.core.module'
+import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'
 import { ConfigController } from './config.controller'
-import { ConfigCoreModule } from './config.core.module'
 
 @Module({
   imports: [ConfigCoreModule, AuthorizationCoreModule],
   controllers: [ConfigController],
-  providers: [AdminGuard],
+  providers: [AdminGuard, RequireAdminRoleGuard],
 })
 export class ConfigApiModule {}

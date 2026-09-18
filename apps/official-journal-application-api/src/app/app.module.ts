@@ -63,8 +63,13 @@ import { PartyGuard } from './guards/party.guard'
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    // `'*'` rather than `'/**'`: path-to-regexp 8, which Express 5 uses, has no
+    // rule for `/**` and throws `PathError: Missing parameter name at index 2`
+    // at boot. `'*'` mounts the middleware on both -- Nest 11's
+    // LegacyRouteConverter rewrites it to `'{*path}'` for path-to-regexp 8.
+    // Measured in src/middleware-wildcard-routes.spec.ts.
     consumer
       .apply(LogRequestMiddleware)
-      .forRoutes({ path: '/**', method: RequestMethod.ALL })
+      .forRoutes({ path: '*', method: RequestMethod.ALL })
   }
 }

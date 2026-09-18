@@ -4,8 +4,9 @@ export default {
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
-    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json', diagnostics: false }],
+    '^.+\\.[tj]s$': ['@swc/jest'],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
+  setupFiles: ['<rootDir>/src/test-env.ts'],
   coverageDirectory: '../../coverage/apps/legal-gazette-api',
 }

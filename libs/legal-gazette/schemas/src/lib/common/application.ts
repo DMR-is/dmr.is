@@ -17,8 +17,14 @@ export const commonFieldsSchema = z.object({
 })
 
 export const commonFieldsSchemaRefined = z.object({
-  type: baseEntitySchema,
-  category: baseEntitySchema,
+  // Rebuilt from the shape rather than reusing baseEntitySchema directly so the
+  // missing/null case reports an Icelandic message instead of Zod's default.
+  type: z.object(baseEntitySchema.shape, {
+    error: 'Tegund auglýsingar er nauðsynleg',
+  }),
+  category: z.object(baseEntitySchema.shape, {
+    error: 'Flokkur er nauðsynlegur',
+  }),
   caption: z
     .string('Yfirskrift er nauðsynleg')
     .min(1, { message: 'Yfirskrift er nauðsynleg' }),

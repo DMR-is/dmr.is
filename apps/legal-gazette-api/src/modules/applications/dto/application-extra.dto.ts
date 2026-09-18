@@ -1,4 +1,4 @@
-import { Transform, Type } from 'class-transformer'
+import { Type } from 'class-transformer'
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -9,11 +9,12 @@ import {
   IsOptional,
   ValidateNested,
 } from 'class-validator'
-import { isBase64 } from 'validator'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import {
+  ApiBoolean,
+  ApiDate,
   ApiDateTime,
   ApiDto,
   ApiHTML,
@@ -27,7 +28,7 @@ import { Paging } from '@dmr.is/shared-dto'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
-} from '../../../models/application.model'
+} from '../../../models/application.dto'
 import { CreateSignatureDto } from '../../advert/signature/dto/signature.dto'
 
 export class GetApplicationsDto {
@@ -80,7 +81,7 @@ export class CreateDivisionEndingDto {
   @ApiDateTime()
   scheduledAt!: Date
 
-  @ApiDateTime()
+  @ApiDate()
   endingDate!: Date
 
   @ApiOptionalNumber()
@@ -106,13 +107,7 @@ export class IslandIsSubmitApplicationDto extends PickType(
   @ApiString()
   caption!: string
 
-  @ApiString()
-  @Transform(({ value }) => {
-    if (isBase64(value)) {
-      return Buffer.from(value, 'base64').toString('utf-8')
-    }
-    return value
-  })
+  @ApiHTML()
   html!: string
 
   @ApiProperty({ type: [String] })
@@ -140,6 +135,20 @@ export class GetApplicationEstimatedPriceDto {
   @ApiProperty({ type: Number })
   @IsNumber()
   price!: number
+}
+
+export class GetApplicationAdvertPriceDto {
+  @ApiOptionalNumber({
+    description:
+      'Total price of the adverts belonging to the application. Omitted when the price cannot be calculated.',
+  })
+  totalPrice?: number
+
+  @ApiBoolean({
+    description:
+      'True when at least one of the adverts has not been charged yet, meaning the total is an estimate.',
+  })
+  isEstimate!: boolean
 }
 
 export { ApplicationDetailedDto }

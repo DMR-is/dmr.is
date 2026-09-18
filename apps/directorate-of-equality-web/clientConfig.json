@@ -1,6 +1,57 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/admin-report/reports/excel/template": {
+      "get": {
+        "operationId": "getAdminBlankExcelTemplate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Blank salary report template",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Admin Report"]
+      }
+    },
     "/api/v1/admin-report/companies/{companyId}/reports/excel/import": {
       "post": {
         "operationId": "importAdminSalaryReportWorkbook",
@@ -26,6 +77,76 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ParsedReportDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Admin Report"]
+      }
+    },
+    "/api/v1/admin-report/companies/{companyId}/reports/salary/analyze": {
+      "post": {
+        "operationId": "analyzeAdminSalaryReport",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalaryAnalysisRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryAnalysisResponseDto"
+                }
               }
             }
           },
@@ -205,6 +326,222 @@
         "tags": ["Admin Report"]
       }
     },
+    "/api/v1/companies/{companyId}/api-keys": {
+      "post": {
+        "description": "Issues an API key on a company’s behalf. Requires the ADMIN role. **The secret is shown exactly once** — it is stored only as a hash, cannot be retrieved again, and has to be delivered to the company from this response. Intended as the fallback when a company has lost its key and has no open island.is application to mint a new one from.",
+        "operationId": "issueCompanyApiKey",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateApiKeyDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/IssuedApiKeyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["API keys"]
+      },
+      "get": {
+        "description": "Every API key a company holds, newest first. Revoked and expired keys are included so the list doubles as an audit view — it shows who minted each key and when it was last used. Never contains a secret; none is recoverable.",
+        "operationId": "getCompanyApiKeys",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetApiKeysResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["API keys"]
+      }
+    },
+    "/api/v1/companies/{companyId}/api-keys/{id}": {
+      "delete": {
+        "description": "Revokes one of the company’s keys. Requires the ADMIN role. Idempotent — re-revoking leaves the original actor and timestamp intact rather than overwriting the audit trail.",
+        "operationId": "revokeCompanyApiKey",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The key’s `id` as listed, not the `keyId` inside the credential.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiKeyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["API keys"]
+      }
+    },
     "/api/v1/companies": {
       "get": {
         "operationId": "getCompanies",
@@ -248,6 +585,16 @@
             }
           },
           {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose register lifecycle status is one of the provided values. Omit for no constraint, i.e. both ACTIVE and INACTIVE. ⚠️ Not to be confused with `companyStatus` above, which is the compliance axis (what the company still owes): this one is whether the company is in the authoritative register at all.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/CompanyStatusEnum" }
+            }
+          },
+          {
             "name": "expiresWithin",
             "required": false,
             "in": "query",
@@ -281,11 +628,42 @@
             "schema": { "type": "boolean" }
           },
           {
+            "name": "includeNotObliged",
+            "required": false,
+            "in": "query",
+            "description": "When true, also return companies that owe no report at all (\"ekki lagaskylt\": under 25 employees with no salary-report override). These are HIDDEN BY DEFAULT — the admin register is a list of who owes what, and ~250 companies that owe nothing crowd it out. Companies of UNKNOWN size are never hidden: an unestablished size is an open question, not a settled \"owes nothing\". Ignored when `employeeCountCategory` is set, which is a more specific request about the same axis.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "description": "When true, also return companies that are off the register (status = INACTIVE). HIDDEN BY DEFAULT. Ignored when `status` is set — filtering explicitly to INACTIVE must not return an empty page.",
+            "schema": { "type": "boolean" }
+          },
+          {
             "name": "isatCategoryCode",
             "required": false,
             "in": "query",
             "description": "Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. \"01110\").",
             "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "isatSection",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose ÍSAT2008 section (bálkur) is one of the given letters, e.g. \"O\" for public administration. Case-insensitive. The premade industry filter — resolved via the company ÍSAT category, so companies with no ÍSAT code are excluded.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "sector",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies in one of the given ownership sectors — the premade Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög filter (FYRIRTAEKI, RADUNEYTI, RIKISADILI, SVEITARFELAG). UNKNOWN is filterable on its own and is never included in any of the classified sectors.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/CompanySectorEnum" }
+            }
           },
           {
             "name": "regionCode",
@@ -491,6 +869,60 @@
         "tags": ["Companies"]
       }
     },
+    "/api/v1/companies/isat-sections": {
+      "get": {
+        "operationId": "listIsatSections",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/IsatSectionDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
     "/api/v1/companies/lookup/{nationalId}": {
       "get": {
         "operationId": "rskLookupCompany",
@@ -557,6 +989,74 @@
         "tags": ["Companies"]
       }
     },
+    "/api/v1/companies/preview/{nationalId}": {
+      "get": {
+        "operationId": "getRskCompanyPreview",
+        "parameters": [
+          {
+            "name": "nationalId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyRskPreviewDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
     "/api/v1/companies/{id}/status": {
       "patch": {
         "operationId": "updateCompanyStatus",
@@ -574,6 +1074,82 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateCompanyStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/sector": {
+      "patch": {
+        "operationId": "updateCompanySector",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanySectorDto"
               }
             }
           }
@@ -1068,6 +1644,75 @@
         "tags": ["Companies"]
       }
     },
+    "/api/v1/companies/{id}/legacy-reports": {
+      "get": {
+        "operationId": "getCompanyLegacyReports",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LegacyReportDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
     "/api/v1/companies/{id}/comments": {
       "get": {
         "operationId": "getCompanyComments",
@@ -1274,6 +1919,316 @@
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Companies"]
+      }
+    },
+    "/api/v1/company-emails/attachments/presign": {
+      "post": {
+        "description": "Staging target for one attachment. The client PUTs the file to the returned URL, then passes `key` back with the send.",
+        "operationId": "presignCompanyEmailAttachment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresignCompanyEmailAttachmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignUploadResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Emails"]
+      }
+    },
+    "/api/v1/company-emails/attachments/discard": {
+      "post": {
+        "description": "Delete a staged attachment the admin removed, or cancelled the whole message with, before it was sent. Best-effort and idempotent — a key already gone is still a success. Refused unless the key sits inside the mail-attachment prefix, so it cannot be aimed at an import workbook. Never call it for an attachment already submitted with a batch: until the archive runs, the staged object is that message’s only copy.",
+        "operationId": "discardCompanyEmailAttachment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscardCompanyEmailAttachmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Emails"]
+      }
+    },
+    "/api/v1/company-emails/preview": {
+      "post": {
+        "description": "Resolve the recipients without writing or sending anything. Returns both the companies that will receive the message and the ones excluded, with the reason — the excluded list is what explains any gap between the count on the button and the count actually written to.",
+        "operationId": "previewCompanyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SendCompanyEmailDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyEmailPreviewDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Emails"]
+      }
+    },
+    "/api/v1/company-emails": {
+      "post": {
+        "description": "202, not 200: recipients are resolved and recorded inside the request, and the sending runs after the commit. The returned counts describe what was queued, not what was delivered — a send addressed at the whole register takes minutes, and holding the request open for it would time out and report a false failure for mail that went out. Per-recipient outcomes land on each company timeline.",
+        "operationId": "sendCompanyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SendCompanyEmailDto" }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendCompanyEmailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Emails"]
+      }
+    },
+    "/api/v1/company-emails/{id}": {
+      "get": {
+        "description": "A sent message, read back — backs the company timeline expanding a CUSTOM_EMAIL_* entry into what was actually sent.",
+        "operationId": "getCompanyEmail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyEmailDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Emails"]
       }
     },
     "/api/v1/companies/import/preview": {
@@ -2447,6 +3402,79 @@
         "tags": ["Reports"]
       }
     },
+    "/api/v1/reports/company/{companyId}": {
+      "get": {
+        "description": "Reports that include the given company — whether it filed on its own behalf or was included as a subsidiary on a parent company's group submission. Powers the company-detail reports tab. Newest first.",
+        "operationId": "listReportsForCompany",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetReportsForCompanyResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
     "/api/v1/reports/{id}": {
       "get": {
         "operationId": "getReportById",
@@ -2513,9 +3541,75 @@
         "tags": ["Reports"]
       }
     },
+    "/api/v1/reports/{id}/equality-content/pdf": {
+      "get": {
+        "operationId": "getEqualityContentPdf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the uploaded jafnréttisáætlun PDF verbatim. 404 when the report's equality content is HTML rather than an uploaded PDF.",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
     "/api/v1/reports/{id}/outliers": {
       "get": {
-        "description": "Paginated list of a report's employee outliers — the rows behind the Úrbótaáætlun table. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Defaults to `employeeOrdinal` ascending; override with `sortBy` + `direction`.",
+        "description": "Paginated list of a report's employee outliers — the rows behind the Úrbótaáætlun table. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Defaults to role title ascending, then `employeeOrdinal` ascending — the same grouped-by-role order the draft employee lists serve; override with `sortBy` + `direction`.",
         "operationId": "getReportOutliers",
         "parameters": [
           {
@@ -3083,10 +4177,10 @@
         "tags": ["Report Workflow"]
       }
     },
-    "/api/v1/reports/{reportId}/statistics/base-salary-by-gender-and-score-all": {
+    "/api/v1/reports/{reportId}/statistics/regular-hourly-wage-by-score-all": {
       "get": {
-        "description": "Adjusted base salary (baseSalary / workRatio) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
-        "operationId": "getBaseSalaryByGenderAndScoreAll",
+        "description": "Reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
+        "operationId": "getRegularHourlyWageByScoreAll",
         "parameters": [
           {
             "name": "reportId",
@@ -3152,10 +4246,10 @@
         "tags": ["Report Statistics"]
       }
     },
-    "/api/v1/reports/{reportId}/statistics/base-salary-by-gender-and-score-work": {
+    "/api/v1/reports/{reportId}/statistics/regular-hourly-wage-by-score-work": {
       "get": {
-        "description": "Adjusted base salary (baseSalary / workRatio) by gender and work score (mandatory criteria only, excludes PERSONAL). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
-        "operationId": "getBaseSalaryByGenderAndScoreWork",
+        "description": "Reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir) by gender and work score (mandatory criteria only, excludes PERSONAL). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
+        "operationId": "getRegularHourlyWageByScoreWork",
         "parameters": [
           {
             "name": "reportId",
@@ -3221,146 +4315,10 @@
         "tags": ["Report Statistics"]
       }
     },
-    "/api/v1/reports/{reportId}/statistics/full-salary-by-gender-and-score-all": {
+    "/api/v1/reports/{reportId}/statistics/regular-hourly-wage-gender-wage-gap": {
       "get": {
-        "description": "Adjusted full salary ((baseSalary + additionalSalary + bonusSalary) / workRatio) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
-        "operationId": "getFullSalaryByGenderAndScoreAll",
-        "parameters": [
-          {
-            "name": "reportId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SalaryByGenderAndScoreDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Report Statistics"]
-      }
-    },
-    "/api/v1/reports/{reportId}/statistics/base-salary-gender-wage-gap": {
-      "get": {
-        "description": "Gender wage gap for adjusted base salary (baseSalary / workRatio). Returns average and median salaries per gender with both average-based and median-based wage gap percentages.",
-        "operationId": "getBaseSalaryGenderWageGap",
-        "parameters": [
-          {
-            "name": "reportId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GenderWageGapDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Report Statistics"]
-      }
-    },
-    "/api/v1/reports/{reportId}/statistics/full-salary-gender-wage-gap": {
-      "get": {
-        "description": "Gender wage gap for adjusted full salary ((baseSalary + additionalSalary + bonusSalary) / workRatio). Returns average and median salaries per gender with both average-based and median-based wage gap percentages.",
-        "operationId": "getFullSalaryGenderWageGap",
+        "description": "Gender wage gap for reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir). Returns average and median hourly wages per gender with both average-based and median-based wage gap percentages.",
+        "operationId": "getRegularHourlyWageGenderWageGap",
         "parameters": [
           {
             "name": "reportId",
@@ -3426,7 +4384,7 @@
     },
     "/api/v1/reports/{reportId}/statistics/benefits-breakdown": {
       "get": {
-        "description": "Average bonus salary (aukagreiðslur) and additional salary (viðbótarlaun) by gender. Raw values, not adjusted for work ratio. Returns per-gender breakdown with wage gap for each component and total.",
+        "description": "Average bonus salary (aukagreiðslur) and additional salary (viðbótarlaun) by gender. Raw monthly component sums, NOT converted to an hourly rate — they do not sit on the same scale as the reglulegt tímakaup figures. Returns per-gender breakdown with wage gap for each component and total.",
         "operationId": "getBenefitsBreakdown",
         "parameters": [
           {
@@ -3558,6 +4516,72 @@
         "summary": "",
         "tags": ["Report PDF"]
       }
+    },
+    "/api/v1/reports/{reportId}/pdf/urbotaaetlun": {
+      "get": {
+        "operationId": "getReportImprovementPlanPdf",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Generates and returns the úrbótaáætlun (\"Dagsetning úrbóta\" and the lágmarksmengi grouped by the groups the company defined) as a PDF. Salary reports only — 400 for an equality report, which has no outlier groups, and 404 when the report has no groups at all (a compliant company has no plan, and its salary report states that as a finding).",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report PDF"]
+      }
     }
   },
   "info": {
@@ -3573,6 +4597,49 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
+      "ApiErrorDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": { "type": "number" },
+          "timestamp": { "type": "string" },
+          "name": {
+            "type": "string",
+            "enum": [
+              "NotFound",
+              "ValidationError",
+              "ForeignKeyConstraintError",
+              "UniqueConstraintError",
+              "TimeoutError",
+              "Unauthorized",
+              "Forbidden",
+              "BadRequest",
+              "InternalServerError",
+              "ConnectionAcquireTimeoutError",
+              "UnknownError"
+            ],
+            "example": [
+              "NotFound",
+              "ValidationError",
+              "ForeignKeyConstraintError",
+              "UniqueConstraintError",
+              "TimeoutError",
+              "Unauthorized",
+              "Forbidden",
+              "BadRequest",
+              "InternalServerError",
+              "ConnectionAcquireTimeoutError",
+              "UnknownError"
+            ]
+          },
+          "message": { "type": "string" },
+          "translatedMessage": {
+            "type": "string",
+            "description": "User-facing, localized message safe to display directly in the client. Absent when the error has no curated translation."
+          },
+          "details": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["statusCode", "timestamp"]
+      },
       "ImportKeyDto": {
         "type": "object",
         "properties": {
@@ -3657,29 +4724,22 @@
           "ordinal": { "type": "number" },
           "identifier": { "type": "string" },
           "roleTitle": { "type": "string" },
-          "education": {
-            "type": "string",
-            "enum": [
-              "COMPULSORY",
-              "UPPER_SECONDARY",
-              "VOCATIONAL",
-              "BACHELOR",
-              "MASTER",
-              "DOCTORATE",
-              "PROFESSIONAL"
-            ]
-          },
           "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
-          "field": { "type": "string" },
-          "department": { "type": "string" },
+          "field": { "type": "string", "nullable": true },
+          "department": { "type": "string", "nullable": true },
           "startDate": { "type": "string" },
-          "workRatio": { "type": "number" },
+          "paidHours": {
+            "type": "number",
+            "description": "Greiddar stundir í mánuðinum, fastar yfirvinnustundir meðtaldar en ekki tilfallandi greiddar stundir. Nefnari reglulegs tímakaups.",
+            "minimum": 4,
+            "maximum": 750
+          },
           "baseSalary": { "type": "number" },
           "additionalFixedOvertime": { "type": "number", "nullable": true },
           "additionalFixedCarAllowance": { "type": "number", "nullable": true },
-          "bonusOccasionalCarAllowance": { "type": "number", "nullable": true },
+          "additionalFixedOther": { "type": "number", "nullable": true },
           "bonusOccasionalOvertime": { "type": "number", "nullable": true },
-          "bonusPayments": { "type": "number", "nullable": true },
+          "bonusOccasionalCarAllowance": { "type": "number", "nullable": true },
           "bonusOther": { "type": "number", "nullable": true },
           "personalStepAssignments": {
             "type": "array",
@@ -3690,12 +4750,9 @@
           "ordinal",
           "identifier",
           "roleTitle",
-          "education",
           "gender",
-          "field",
-          "department",
           "startDate",
-          "workRatio",
+          "paidHours",
           "baseSalary",
           "personalStepAssignments"
         ]
@@ -3718,48 +4775,552 @@
         },
         "required": ["criteria", "roles", "employees"]
       },
-      "ApiErrorDto": {
+      "SalaryAnalysisRequestDto": {
         "type": "object",
         "properties": {
-          "statusCode": { "type": "number" },
-          "timestamp": { "type": "string" },
-          "name": {
-            "type": "string",
-            "enum": [
-              "NotFound",
-              "ValidationError",
-              "ForeignKeyConstraintError",
-              "UniqueConstraintError",
-              "TimeoutError",
-              "Unauthorized",
-              "Forbidden",
-              "BadRequest",
-              "InternalServerError",
-              "ConnectionAcquireTimeoutError",
-              "UnknownError"
-            ],
-            "example": [
-              "NotFound",
-              "ValidationError",
-              "ForeignKeyConstraintError",
-              "UniqueConstraintError",
-              "TimeoutError",
-              "Unauthorized",
-              "Forbidden",
-              "BadRequest",
-              "InternalServerError",
-              "ConnectionAcquireTimeoutError",
-              "UnknownError"
-            ]
-          },
-          "message": { "type": "string" },
-          "translatedMessage": {
-            "type": "string",
-            "description": "User-facing, localized message safe to display directly in the client. Absent when the error has no curated translation."
-          },
-          "details": { "type": "array", "items": { "type": "string" } }
+          "parsed": {
+            "description": "Parsed workbook payload from an excel import endpoint.",
+            "allOf": [{ "$ref": "#/components/schemas/ParsedReportDto" }]
+          }
         },
-        "required": ["statusCode", "timestamp"]
+        "required": ["parsed"]
+      },
+      "SalaryAnalysisOutlierDto": {
+        "type": "object",
+        "properties": {
+          "employeeOrdinal": { "type": "number" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+          "roleTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Starf — the title of the employee's role, denormalized here so the úrbótaáætlun table needs no client-side join against the draft roles list. Mirrors `ReportEmployeeOutlierDto.roleTitle`, which the submitted-report endpoints already carry. Null only when the caller could not resolve a title for the ordinal."
+          },
+          "score": { "type": "number" },
+          "regularHourlyWage": {
+            "type": "number",
+            "description": "Raun reglulegt tímakaup (kr./klst.)."
+          },
+          "expectedHourlyWage": {
+            "type": "number",
+            "description": "Væntanlegt tímakaup at this score, from the pooled log fit — exp(fitted), so a curve in krónur space, not the chart line."
+          },
+          "deviationPercent": {
+            "type": "number",
+            "description": "frávik %: (raun − væntanlegt) / væntanlegt × 100. Signed."
+          },
+          "payStatus": {
+            "type": "string",
+            "enum": ["UNDERPAID", "OVERPAID", "ON_LINE"]
+          },
+          "contributionShare": {
+            "type": "number",
+            "nullable": true,
+            "description": "Share of óskýrt this employee carries, in percent. Null when óskýrt is 0."
+          }
+        },
+        "required": [
+          "employeeOrdinal",
+          "gender",
+          "score",
+          "regularHourlyWage",
+          "expectedHourlyWage",
+          "deviationPercent",
+          "payStatus"
+        ]
+      },
+      "ScatterDataPointDto": {
+        "type": "object",
+        "properties": {
+          "score": { "type": "number" },
+          "regularHourlyWage": { "type": "number" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] }
+        },
+        "required": ["score", "regularHourlyWage", "gender"]
+      },
+      "RegressionLineDto": {
+        "type": "object",
+        "properties": {
+          "slope": {
+            "type": "number",
+            "nullable": true,
+            "description": "kr./klst. per stig. 3dp — the slope dropped from ~1.000 kr/month-per-stig to ~8 kr./klst.-per-stig with the hourly switch, so 2dp would leave only two significant figures."
+          },
+          "intercept": {
+            "type": "number",
+            "nullable": true,
+            "description": "kr./klst. at score 0 — predicted pay for a job no company has, so treat it as \"where the line starts\" rather than as a wage."
+          },
+          "rSquared": {
+            "type": "number",
+            "nullable": true,
+            "description": "How much of the pay variation the starfsmatsstig actually explain — i.e. how much the line deserves to be trusted. Null when there is no variation to explain."
+          }
+        }
+      },
+      "ScoreBucketDto": {
+        "type": "object",
+        "properties": {
+          "rangeFrom": { "type": "number" },
+          "rangeTo": { "type": "number" },
+          "maleAverageSalary": { "type": "number", "nullable": true },
+          "femaleAverageSalary": { "type": "number", "nullable": true },
+          "overallAverageSalary": { "type": "number" },
+          "maleMedianSalary": { "type": "number", "nullable": true },
+          "femaleMedianSalary": { "type": "number", "nullable": true },
+          "overallMedianSalary": { "type": "number" },
+          "wageGapPercent": { "type": "number", "nullable": true },
+          "maleCount": { "type": "number" },
+          "femaleCount": { "type": "number" }
+        },
+        "required": [
+          "rangeFrom",
+          "rangeTo",
+          "overallAverageSalary",
+          "overallMedianSalary",
+          "maleCount",
+          "femaleCount"
+        ]
+      },
+      "SalaryTotalsDto": {
+        "type": "object",
+        "properties": {
+          "maleAverageSalary": { "type": "number" },
+          "femaleAverageSalary": { "type": "number" },
+          "overallAverageSalary": { "type": "number" },
+          "maleMedianSalary": { "type": "number" },
+          "femaleMedianSalary": { "type": "number" },
+          "overallMedianSalary": { "type": "number" },
+          "wageGapPercent": { "type": "number", "nullable": true },
+          "maleCount": { "type": "number" },
+          "femaleCount": { "type": "number" }
+        },
+        "required": [
+          "maleAverageSalary",
+          "femaleAverageSalary",
+          "overallAverageSalary",
+          "maleMedianSalary",
+          "femaleMedianSalary",
+          "overallMedianSalary",
+          "maleCount",
+          "femaleCount"
+        ]
+      },
+      "SalaryByGenderAndScoreDto": {
+        "type": "object",
+        "properties": {
+          "dataPoints": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ScatterDataPointDto" }
+          },
+          "regressionLine": {
+            "$ref": "#/components/schemas/RegressionLineDto"
+          },
+          "scoreBuckets": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ScoreBucketDto" }
+          },
+          "totals": { "$ref": "#/components/schemas/SalaryTotalsDto" }
+        },
+        "required": ["dataPoints", "regressionLine", "scoreBuckets", "totals"]
+      },
+      "WageGapCountsDto": {
+        "type": "object",
+        "properties": {
+          "male": { "type": "number" },
+          "female": { "type": "number" },
+          "excluded": {
+            "type": "number",
+            "description": "Rows excluded for a non-positive hourly wage."
+          }
+        },
+        "required": ["male", "female", "excluded"]
+      },
+      "WageGapPooledFitDto": {
+        "type": "object",
+        "properties": {
+          "slope": { "type": "number", "nullable": true },
+          "intercept": { "type": "number", "nullable": true },
+          "sampleCount": { "type": "number" },
+          "xMean": { "type": "number", "nullable": true },
+          "yMean": { "type": "number", "nullable": true },
+          "xSumSquares": {
+            "type": "number",
+            "description": "Σ(score − mean)². Zero means no slope is identifiable — test THIS, not slope !== null, because a degenerate fit returns slope 0."
+          },
+          "rSquared": { "type": "number", "nullable": true },
+          "xRangeFrom": { "type": "number", "nullable": true },
+          "xRangeTo": { "type": "number", "nullable": true }
+        },
+        "required": ["sampleCount", "xSumSquares"]
+      },
+      "WageGapTwofoldDto": {
+        "type": "object",
+        "properties": {
+          "explained": {
+            "type": "number",
+            "nullable": true,
+            "description": "skýrt — the part explained by starfsmatsstig, log points."
+          },
+          "unexplained": {
+            "type": "number",
+            "nullable": true,
+            "description": "óskýrt — the residual. Identical to oskyrtLog."
+          }
+        }
+      },
+      "WageGapEmployeeDto": {
+        "type": "object",
+        "properties": {
+          "ordinal": { "type": "number" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+          "score": { "type": "number" },
+          "hourlyWage": {
+            "type": "number",
+            "description": "Raun reglulegt tímakaup (kr./klst.)."
+          },
+          "expectedHourlyWage": {
+            "type": "number",
+            "description": "Væntanlegt tímakaup at this score, from the pooled fit."
+          },
+          "deviationPercent": {
+            "type": "number",
+            "description": "frávik %: (raun − væntanlegt) / væntanlegt × 100."
+          },
+          "residualLog": {
+            "type": "number",
+            "description": "Residual in log points. Signed."
+          },
+          "contributionLog": {
+            "type": "number",
+            "description": "This employee's contribution to óskýrt, in log points. Signed; sums exactly to oskyrtLog across all employees."
+          },
+          "contributionShare": {
+            "type": "number",
+            "nullable": true,
+            "description": "contributionLog / oskyrtLog × 100. Null when óskýrt is 0."
+          },
+          "payStatus": {
+            "type": "string",
+            "enum": ["UNDERPAID", "OVERPAID", "ON_LINE"]
+          },
+          "widensGap": {
+            "type": "boolean",
+            "description": "Whether this employee CARRIES part of óskýrt: their framlag shares its sign, so correcting them narrows the gap. Two quadrants qualify — underpaid on the disadvantaged side, and overpaid on the advantaged side. Which side they sit on is payStatus. The other two quadrants offset the gap and are never candidates."
+          },
+          "inMinimumSet": {
+            "type": "boolean",
+            "description": "Member of the lágmarksmengi: the fewest corrections that bring óskýrt under the benchmark."
+          }
+        },
+        "required": [
+          "ordinal",
+          "gender",
+          "score",
+          "hourlyWage",
+          "expectedHourlyWage",
+          "deviationPercent",
+          "residualLog",
+          "contributionLog",
+          "payStatus",
+          "widensGap",
+          "inMinimumSet"
+        ]
+      },
+      "WageGapDecompositionDto": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["OAXACA_BLINDER_LOG_REGULAR_HOURLY_WAGE_BY_SCORE"]
+          },
+          "pooledReferenceMode": { "type": "string", "enum": ["POOLED_OLS"] },
+          "rawGapAvailable": { "type": "boolean" },
+          "rawGapBlockers": {
+            "type": "array",
+            "description": "Codes only — the web maps these to Icelandic copy. Empty when the raw gap is available.",
+            "items": {
+              "type": "string",
+              "enum": ["EMPTY_MALE_COHORT", "EMPTY_FEMALE_COHORT"]
+            }
+          },
+          "oskyrtAvailable": { "type": "boolean" },
+          "oskyrtBlockers": {
+            "type": "array",
+            "description": "Echoes the raw-tier blockers so consumers need not reason about tiers.",
+            "items": {
+              "type": "string",
+              "enum": ["EMPTY_MALE_COHORT", "EMPTY_FEMALE_COHORT"]
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "description": "Soft: the figures ARE computed but must be shown caveated.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ROWS_EXCLUDED_NON_POSITIVE_WAGE",
+                "NO_SCORE_OVERLAP",
+                "NO_SCORE_VARIATION"
+              ]
+            }
+          },
+          "counts": {
+            "description": "Always real numbers, even when the figures are unavailable — this is the actionable part of the message.",
+            "allOf": [{ "$ref": "#/components/schemas/WageGapCountsDto" }]
+          },
+          "pooledFit": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/WageGapPooledFitDto" }]
+          },
+          "rawGapLog": {
+            "type": "number",
+            "nullable": true,
+            "description": "Δ in log points. Signed."
+          },
+          "oskyrtLog": {
+            "type": "number",
+            "nullable": true,
+            "description": "óskýrt in log points. Signed. Source of truth for the benchmark test."
+          },
+          "twofold": { "$ref": "#/components/schemas/WageGapTwofoldDto" },
+          "meanHourlyWageMale": {
+            "type": "number",
+            "nullable": true,
+            "description": "Arithmetic mean, kr./klst."
+          },
+          "meanHourlyWageFemale": {
+            "type": "number",
+            "nullable": true,
+            "description": "Arithmetic mean, kr./klst."
+          },
+          "rawGapPercent": {
+            "type": "number",
+            "nullable": true,
+            "description": "ÓLEIÐRÉTTUR as displayed: (higher − lower) / higher on arithmetic means. Magnitude."
+          },
+          "rawGapDirection": {
+            "type": "string",
+            "enum": ["FEMALE", "MALE", "NONE"],
+            "nullable": true
+          },
+          "rawGapPercentGeometric": {
+            "type": "number",
+            "nullable": true,
+            "description": "Geometric equivalent of rawGapPercent. Stored for basis swaps."
+          },
+          "oskyrtPercent": {
+            "type": "number",
+            "nullable": true,
+            "description": "LEIÐRÉTTUR launamunur: 1 − exp(−|óskýrt|). Magnitude. THE figure tested against the benchmark."
+          },
+          "oskyrtDirection": {
+            "type": "string",
+            "enum": ["FEMALE", "MALE", "NONE"],
+            "nullable": true
+          },
+          "oskyrtPercentLowerBase": {
+            "type": "number",
+            "nullable": true,
+            "description": "exp(|óskýrt|) − 1 — the lower-paid-group basis. Stored, not displayed."
+          },
+          "disadvantagedGender": {
+            "type": "string",
+            "enum": ["FEMALE", "MALE", "NONE"],
+            "nullable": true
+          },
+          "employees": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WageGapEmployeeDto" }
+          },
+          "gapCarrierCount": {
+            "type": "number",
+            "description": "How many employees carry part of óskýrt (widensGap). A POPULATION, not a compliance signal — it is the pool the lágmarksmengi is selected from, and a compliant company can still have a large one. For compliance read oskyrtWithinBenchmark."
+          },
+          "minimumSetSize": {
+            "type": "number",
+            "description": "Size of the lágmarksmengi — the fewest employees who must be accounted for in the úrbótaáætlun. 0 when already within the benchmark. The counterfactual correction used to pick them is a SELECTION device, not a prescribed raise."
+          },
+          "oskyrtWithinBenchmark": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "THE compliance flag: whether |óskýrt| is within the benchmark, evaluated on the unrounded log gap. Null when no gap is computable. Read this rather than testing minimumSetSize > 0 or comparing a rounded percentage to the benchmark — an empty set is reachable on a company that is over the benchmark, because the walk declines candidates that would push the gap further out."
+          },
+          "oskyrtLogAfterMinimumSet": {
+            "type": "number",
+            "nullable": true,
+            "description": "óskýrt in log points after the set's counterfactual correction — RECOMPUTED by refitting, not |óskýrt| minus the summed contributions. Magnitude; the direction is oskyrtDirectionAfterMinimumSet."
+          },
+          "oskyrtDirectionAfterMinimumSet": {
+            "type": "string",
+            "enum": ["FEMALE", "MALE", "NONE"],
+            "nullable": true,
+            "description": "Which gender óskýrt disfavours AFTER the set's correction. Needed because the figure above is a magnitude and a two-sided correction can overshoot, leaving a residual gap running the other way. NONE when it lands on zero. AUDIT TRAIL ONLY — no surface renders it today, and none should render it as a company's current position: it describes a counterfactual in which every listed employee has been moved onto the line. The company's actual direction is oskyrtDirection."
+          },
+          "minimumSetClosesGap": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether correcting the set would bring óskýrt within the benchmark. False means the walk could not land inside the benchmark — see oskyrtDirectionAfterMinimumSet for which way the residual gap runs. The list is still the right list to account for; it just must NOT be presented as closing the gap. Null when no gap is computable. Read this flag; do not re-derive it by comparing oskyrtLogAfterMinimumSet to thresholdLog."
+          },
+          "thresholdLog": {
+            "type": "number",
+            "description": "The benchmark in log points: −log(1 − benchmark/100)."
+          },
+          "benchmarkPercent": {
+            "type": "number",
+            "description": "The configured benchmark percent (e.g. 3.9)."
+          }
+        },
+        "required": [
+          "method",
+          "pooledReferenceMode",
+          "rawGapAvailable",
+          "rawGapBlockers",
+          "oskyrtAvailable",
+          "oskyrtBlockers",
+          "warnings",
+          "counts",
+          "twofold",
+          "employees",
+          "gapCarrierCount",
+          "minimumSetSize",
+          "thresholdLog",
+          "benchmarkPercent"
+        ]
+      },
+      "PayDispersionEmployeeDto": {
+        "type": "object",
+        "properties": {
+          "employeeOrdinal": { "type": "number" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+          "score": { "type": "number" },
+          "regularHourlyWage": {
+            "type": "number",
+            "description": "Raun reglulegt tímakaup (kr./klst.)."
+          },
+          "expectedHourlyWage": {
+            "type": "number",
+            "description": "Væntanlegt tímakaup at this score, from the same pooled log fit every other figure on the report is measured against."
+          },
+          "deviationPercent": {
+            "type": "number",
+            "description": "frávik %: (raun − væntanlegt) / væntanlegt × 100. Signed."
+          },
+          "payStatus": {
+            "type": "string",
+            "enum": ["UNDERPAID", "OVERPAID", "ON_LINE"]
+          },
+          "studentizedResidual": {
+            "type": "number",
+            "description": "Signed studentized residual: the employee's residual divided by the cohort's residual spread, leverage-corrected. |t| >= the reported threshold is why this row is listed. NOT a percentage and not comparable to deviationPercent — it is a count of spreads."
+          }
+        },
+        "required": [
+          "employeeOrdinal",
+          "gender",
+          "score",
+          "regularHourlyWage",
+          "expectedHourlyWage",
+          "deviationPercent",
+          "payStatus",
+          "studentizedResidual"
+        ]
+      },
+      "PayDispersionDto": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "description": "False when no list could be produced; `blockers` says why. An empty `employees` array with `available: true` and no blockers is a genuine all-clear and must not be rendered as \"not assessed\"."
+          },
+          "blockers": {
+            "type": "array",
+            "description": "Codes only — the web maps these to Icelandic copy. Empty when available.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "GAP_NOT_COMPUTABLE",
+                "COHORT_TOO_SMALL",
+                "NO_SCORE_VARIATION"
+              ]
+            }
+          },
+          "population": {
+            "type": "string",
+            "enum": ["ALL_EMPLOYEES", "EXCLUDING_MINIMUM_SET"],
+            "description": "⚠️ CLIENTS: render a LIST only for ALL_EMPLOYEES. EXCLUDING_MINIMUM_SET is computed and shipped so the contract is ready, but has not been requested yet — do NOT render its rows. ⚠️ Gate on the list, not on the section: when `available` is false there are no rows to withhold, so render the `blockers` reason whatever the population says. Otherwise a company over the benchmark and under the 12-employee floor is shown nothing at all. Both DMR surfaces do exactly this. This field describes which employees were eligible for the list; it does NOT change how the statistic was computed."
+          },
+          "threshold": {
+            "type": "number",
+            "description": "The |studentizedResidual| cut-off applied, in spreads. 2 today."
+          },
+          "cohortResidualSpreadPercentUp": {
+            "type": "number",
+            "nullable": true,
+            "description": "The cohort's own residual spread, UPWARD, in percent — exp(s) − 1. Context for the reader: it is why the cut-off is not a fixed percentage. Typically 19–26% on real workforces, which is why a fixed 20%-off-expected rule flags a third of a workforce. WARNING: do NOT render this as a symmetric plus-or-minus — the spread is symmetric in log space and asymmetric in percent, so pair it with cohortResidualSpreadPercentDown. Null when not available."
+          },
+          "cohortResidualSpreadPercentDown": {
+            "type": "number",
+            "nullable": true,
+            "description": "The same spread DOWNWARD, in percent — exp(-s) − 1, so always negative and always smaller in magnitude than the upward figure (+19,55% / −16,35% on a real cohort). Exists so a surface can state the band honestly instead of printing one end with a plus-or-minus in front of it. Null when not available."
+          },
+          "employees": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PayDispersionEmployeeDto" }
+          },
+          "countBelowExpected": {
+            "type": "number",
+            "description": "CONTEXT — how many employees sit more than `threshold` spreads BELOW the fitted line. This is the POOL the ábendingar were drawn from, not a count of ábendingar: the list is the most extreme few per direction, and `employees` holds all of them. Print it to show the instrument is a triage of something larger; do not present it as a number of findings. Zero when unavailable."
+          },
+          "countAboveExpected": {
+            "type": "number",
+            "description": "The same for ABOVE the fitted line — context, not a count of ábendingar. Zero when unavailable."
+          },
+          "chanceCriticalSpreads": {
+            "type": "number",
+            "nullable": true,
+            "description": "CONTEXT ONLY — never a filter. The familywise critical value z(0,05 / 2n): the distance past which chance alone would rarely put ANY of this company's employees. It grows with headcount (3,5 at 120 employees, 4,6 at 10 000) because screening more people produces more extremes, and it exists so a reader can tell a long list on a large workforce from a real finding. ⚠️ Do NOT filter rows on it: `threshold` decides membership. Null when no list could be produced."
+          }
+        },
+        "required": [
+          "available",
+          "blockers",
+          "population",
+          "threshold",
+          "employees",
+          "countBelowExpected",
+          "countAboveExpected"
+        ]
+      },
+      "SalaryAnalysisResponseDto": {
+        "type": "object",
+        "properties": {
+          "outliers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SalaryAnalysisOutlierDto" }
+          },
+          "regularHourlyWageByScoreAll": {
+            "$ref": "#/components/schemas/SalaryByGenderAndScoreDto"
+          },
+          "wageGapDecomposition": {
+            "$ref": "#/components/schemas/WageGapDecompositionDto"
+          },
+          "payDispersion": {
+            "description": "ÁBENDINGAR um launadreifingu — a SECOND, informational list over the same data, answering a different question from `outliers` above. `outliers` (the lágmarksmengi) is \"who carries the company's gender pay gap\"; ábendingar is \"whose pay is far from what their starfsmatsstig imply\". It exists because óskýrður launamunur is a difference between the cohorts MEAN deviations, so deviations that offset each other inside one cohort cancel exactly — a company can be well under 3,9% while individuals sit a long way off the fitted line. ⚠️ IT ASKS NOTHING: never render it with the reason/action/signature inputs the úrbótaáætlun uses, never require it to be filled in, never submit it. The employer owes no explanation for these rows and they cannot affect how the report is decided. ⚠️ Gate the LIST, not the section: render rows only for population = ALL_EMPLOYEES (EXCLUDING_MINIMUM_SET is shipped so the contract is ready but has not been requested yet), but when `available` is false there are no rows to withhold, so render the `blockers` reason whatever the population says — otherwise a company over the benchmark and under the 12-employee floor is shown nothing at all. Confirm with DMR before rendering those rows. Derived from wageGapDecomposition on read, never stored. See docs/launagreining.md §10.",
+            "allOf": [{ "$ref": "#/components/schemas/PayDispersionDto" }]
+          }
+        },
+        "required": [
+          "outliers",
+          "regularHourlyWageByScoreAll",
+          "wageGapDecomposition",
+          "payDispersion"
+        ]
+      },
+      "SalaryDataBasisEnum": {
+        "type": "string",
+        "enum": ["MONTH", "AVERAGE"],
+        "description": "Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`)."
       },
       "CreateReportOutlierGroupDto": {
         "type": "object",
@@ -3772,6 +5333,12 @@
           "action": { "type": "string", "minLength": 1 },
           "signatureName": { "type": "string", "minLength": 1 },
           "signatureRole": { "type": "string", "minLength": 1 },
+          "remedyDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2027-03-01",
+            "description": "Date the company commits to having this group’s improvements completed by (\"Dagsetning úrbóta\"), as `YYYY-MM-DD`. Required alongside the rest of the explanation. Must be in the future and no more than three years out — the next reporting cycle, beyond which the date belongs to a period this report cannot speak for."
+          },
           "employeeOrdinals": {
             "description": "Ordinals of the employees in `parsed.employees[]` this group covers.",
             "type": "array",
@@ -3783,6 +5350,7 @@
           "action",
           "signatureName",
           "signatureRole",
+          "remedyDate",
           "employeeOrdinals"
         ]
       },
@@ -3796,17 +5364,36 @@
           },
           "providerId": { "type": "string", "nullable": true },
           "companyAdminName": { "type": "string" },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string" },
           "companyAdminGender": {
             "type": "string",
             "enum": ["MALE", "FEMALE", "NEUTRAL"]
           },
           "contactName": { "type": "string" },
+          "contactTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company contact (tengiliður)."
+          },
           "contactEmail": { "type": "string" },
           "contactPhone": { "type": "string" },
           "averageEmployeeMaleCount": { "type": "number" },
           "averageEmployeeFemaleCount": { "type": "number" },
           "averageEmployeeNeutralCount": { "type": "number" },
+          "salaryDataBasis": {
+            "description": "Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`).",
+            "allOf": [{ "$ref": "#/components/schemas/SalaryDataBasisEnum" }]
+          },
+          "salaryDataPeriod": {
+            "type": "string",
+            "nullable": true,
+            "description": "The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; the day is normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that has already happened, no earlier than 36 months ago."
+          },
           "parsed": {
             "description": "Parsed workbook payload from the excel import endpoint. Contains the criteria tree, role list, and employee rows.",
             "allOf": [{ "$ref": "#/components/schemas/ParsedReportDto" }]
@@ -3831,6 +5418,7 @@
           "averageEmployeeMaleCount",
           "averageEmployeeFemaleCount",
           "averageEmployeeNeutralCount",
+          "salaryDataBasis",
           "parsed"
         ]
       },
@@ -3841,9 +5429,13 @@
             "type": "string",
             "format": "uuid",
             "description": "Identifier of the newly created report row."
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "True when the providerId had already been used and this call filed nothing — the report named here is the earlier one, and the body just sent was not read. A corrected re-file needs a new providerId."
           }
         },
-        "required": ["reportId"]
+        "required": ["reportId", "replayed"]
       },
       "AdminEqualityReportDto": {
         "type": "object",
@@ -3854,19 +5446,39 @@
           },
           "providerId": { "type": "string", "nullable": true },
           "companyAdminName": { "type": "string" },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string" },
           "companyAdminGender": {
             "type": "string",
             "enum": ["MALE", "FEMALE", "NEUTRAL"]
           },
           "contactName": { "type": "string" },
+          "contactTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company contact (tengiliður)."
+          },
           "contactEmail": { "type": "string" },
           "contactPhone": { "type": "string" },
           "equalityReportContent": {
             "type": "string",
-            "minLength": 1,
-            "description": "Narrative gender-equality plan. Persisted as `report.equality_report_content`."
-          }
+            "description": "Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`. Mutually exclusive with `equalityReportPdf`."
+          },
+          "equalityReportPdf": {
+            "type": "string",
+            "description": "Narrative gender-equality plan as a base64-encoded PDF, stored verbatim. Mutually exclusive with `equalityReportContent`. Max 4MB decoded."
+          },
+          "equalityReportPdfFilename": {
+            "type": "string",
+            "description": "File name of the uploaded PDF, shown in the review UI. Required when `equalityReportPdf` is supplied."
+          },
+          "averageEmployeeMaleCount": { "type": "number", "nullable": true },
+          "averageEmployeeFemaleCount": { "type": "number", "nullable": true },
+          "averageEmployeeNeutralCount": { "type": "number", "nullable": true }
         },
         "required": [
           "providerType",
@@ -3875,9 +5487,168 @@
           "companyAdminGender",
           "contactName",
           "contactEmail",
-          "contactPhone",
-          "equalityReportContent"
+          "contactPhone"
         ]
+      },
+      "CreateApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "nullable": true,
+            "description": "Free-text label to tell this key apart from the others in a list, e.g. the name of the payroll system it was issued for."
+          },
+          "scopes": {
+            "type": "array",
+            "description": "What the key may do. Omit for the default set — `report:read`, `salary:submit` and `equality:submit`, which is everything a vendor needs to file. `scoring:write` is never granted implicitly and must be named here: it authors the company’s starfsmat, which is a different act from filing against one, and it carries a delete that cascades the whole model away. An unrecognised scope is rejected rather than stored.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "salary:submit",
+                "equality:submit",
+                "report:read",
+                "scoring:write"
+              ]
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the key stops being accepted. Omit for no expiry."
+          }
+        }
+      },
+      "IssuedApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The full plaintext key. Shown exactly once — it cannot be retrieved again, only replaced."
+          },
+          "id": { "type": "string", "format": "uuid" },
+          "keyId": { "type": "string" },
+          "label": { "type": "string", "nullable": true },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "salary:submit",
+                "equality:submit",
+                "report:read",
+                "scoring:write"
+              ]
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": ["key", "id", "keyId", "scopes", "createdAt"]
+      },
+      "ApiKeyOriginEnum": {
+        "type": "string",
+        "enum": ["ISLAND_IS", "ADMIN"],
+        "description": "Which issuance path minted the key — self-service through island.is, or a DoE reviewer."
+      },
+      "ApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "keyId": {
+            "type": "string",
+            "description": "Public half of the key, as it appears in the issued credential. Not a secret."
+          },
+          "label": {
+            "type": "string",
+            "nullable": true,
+            "description": "Free-text label set by whoever issued the key."
+          },
+          "scopes": {
+            "type": "array",
+            "description": "What this key is permitted to do.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "salary:submit",
+                "equality:submit",
+                "report:read",
+                "scoring:write"
+              ]
+            }
+          },
+          "createdVia": {
+            "description": "Which issuance path minted the key — self-service through island.is, or a DoE reviewer.",
+            "allOf": [{ "$ref": "#/components/schemas/ApiKeyOriginEnum" }]
+          },
+          "createdByNationalId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Kennitala of the person who minted the key on the island.is path. Null on the admin path, where `createdByUserId` names the reviewer instead."
+          },
+          "createdByUserId": {
+            "type": "string",
+            "nullable": true,
+            "description": "DoE reviewer who minted the key. Null on the island.is path."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the key stops being accepted. Null means no expiry."
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "Last time the key authenticated a request. Written at most once a minute per key, so it is an activity indicator rather than an exact timestamp."
+          },
+          "revokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "revokedByNationalId": { "type": "string", "nullable": true },
+          "revokedByUserId": { "type": "string", "nullable": true },
+          "revokedReason": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "companyId",
+          "keyId",
+          "scopes",
+          "createdVia",
+          "createdAt"
+        ]
+      },
+      "GetApiKeysResponseDto": {
+        "type": "object",
+        "properties": {
+          "apiKeys": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ApiKeyDto" }
+          }
+        },
+        "required": ["apiKeys"]
       },
       "CompanySizeEnum": {
         "type": "string",
@@ -3892,16 +5663,44 @@
           "SATISFACTORY"
         ]
       },
+      "CompanyStatusEnum": { "type": "string", "enum": ["ACTIVE", "INACTIVE"] },
       "CompanyExpiryFilterEnum": {
         "type": "string",
         "enum": ["30d", "3m", "soon"]
+      },
+      "CompanySectorEnum": {
+        "type": "string",
+        "enum": [
+          "UNKNOWN",
+          "FYRIRTAEKI",
+          "RADUNEYTI",
+          "RIKISADILI",
+          "SVEITARFELAG"
+        ]
       },
       "CompanySortByEnum": {
         "type": "string",
         "enum": ["name", "employeeCount", "nextReportDue"]
       },
       "CompanySortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
-      "CompanyStatusEnum": { "type": "string", "enum": ["ACTIVE", "INACTIVE"] },
+      "IsatSectionDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "ÍSAT2008 section (bálkur) letter: \"A\"–\"U\", or \"X\" for unknown activity."
+          },
+          "description": {
+            "type": "string",
+            "description": "Icelandic description."
+          },
+          "descriptionEn": {
+            "type": "string",
+            "description": "English description."
+          }
+        },
+        "required": ["code", "description", "descriptionEn"]
+      },
       "IsatCategoryDto": {
         "type": "object",
         "properties": {
@@ -3920,9 +5719,35 @@
           "descriptionEn": {
             "type": "string",
             "description": "English description."
+          },
+          "section": {
+            "type": "string",
+            "description": "ÍSAT2008 section (bálkur) letter this leaf rolls up into: \"A\"–\"U\", or \"X\" for unknown activity."
+          },
+          "division": {
+            "type": "string",
+            "description": "ÍSAT2008 division — the 2-digit code prefix, e.g. \"01\"."
+          },
+          "isatSection": {
+            "nullable": true,
+            "description": "The resolved section, when it was joined in. Null when not loaded — read `section` for the letter itself.",
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/IsatSectionDto" }]
           }
         },
-        "required": ["code", "codeDotted", "description", "descriptionEn"]
+        "required": [
+          "code",
+          "codeDotted",
+          "description",
+          "descriptionEn",
+          "section",
+          "division"
+        ]
+      },
+      "CompanyObligationStatusEnum": {
+        "type": "string",
+        "description": "One reporting obligation's own state. NOT_REQUIRED means the company does not owe this report at all — it is the absence of an obligation, not a compliance failure. ACTION_PLAN_MISSING applies only to a salary report, which alone can be postponed pending outlier explanations.",
+        "enum": ["NOT_REQUIRED", "MISSING", "ACTION_PLAN_MISSING", "COVERED"]
       },
       "CompanyDto": {
         "type": "object",
@@ -3976,20 +5801,56 @@
           },
           "isatCategory": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/IsatCategoryDto" }]
           },
+          "sector": {
+            "description": "Ownership sector (private vs government/state), derived from the RSK legal form. UNKNOWN means unclassified — it does NOT mean private.",
+            "allOf": [{ "$ref": "#/components/schemas/CompanySectorEnum" }]
+          },
+          "sectorOverride": {
+            "type": "boolean",
+            "description": "True when an admin set the sector by hand; a backfill must not overwrite it."
+          },
+          "legalFormId": {
+            "type": "string",
+            "nullable": true,
+            "description": "RSK's raw legal-form code (rekstrarform), as returned."
+          },
+          "legalFormName": {
+            "type": "string",
+            "nullable": true,
+            "description": "RSK's raw legal-form name. Useful for seeing the form behind an UNKNOWN sector."
+          },
           "reportStatus": {
+            "description": "Derived roll-up: the single most pressing compliance problem, in priority order. Drives the detail header, list sorting and the status filter. Collapses a company missing several obligations to one value — render per-obligation columns from `equalityObligationStatus` / `salaryObligationStatus` instead.",
             "allOf": [
               { "$ref": "#/components/schemas/CompanyReportStatusEnum" }
             ]
           },
+          "equalityObligationStatus": {
+            "description": "Derived: the equality plan's own state. NOT_REQUIRED below 25 employees (and for UNKNOWN) with no salary obligation. Never ACTION_PLAN_MISSING — an equality report has no outlier groups and cannot be postponed.",
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyObligationStatusEnum" }
+            ]
+          },
+          "salaryObligationStatus": {
+            "description": "Derived: the salary report's own state. NOT_REQUIRED unless 50+ employees or an admin override. ACTION_PLAN_MISSING means the report was filed and sits in POSTPONED awaiting outlier explanations — it is a state of the report, so it is mutually exclusive with MISSING.",
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyObligationStatusEnum" }
+            ]
+          },
           "equalityReportOverdue": {
             "type": "boolean",
-            "description": "Derived: the company's next equality-report due date has passed."
+            "description": "Derived: the company owes an equality plan AND its next due date has passed. Gated on the obligation — the register load seeded due dates for companies of every size, so an ungated read marks companies below 25 as overdue against a plan they do not owe."
           },
           "salaryReportOverdue": {
             "type": "boolean",
-            "description": "Derived: the company's next salary-report due date has passed."
+            "description": "Derived: the company owes a salary report AND its next due date has passed. Gated on the obligation, as above."
+          },
+          "hasLegacyReports": {
+            "type": "boolean",
+            "description": "Derived: the Directorate's retired SharePoint register holds at least one row for this company. Drives whether the detail view offers the legacy-data tab; says nothing about compliance — the row may record a lapsed or surrendered certificate."
           }
         },
         "required": [
@@ -4002,9 +5863,14 @@
           "salaryReportRequiredOverride",
           "finesStarted",
           "quarantined",
+          "sector",
+          "sectorOverride",
           "reportStatus",
+          "equalityObligationStatus",
+          "salaryObligationStatus",
           "equalityReportOverdue",
-          "salaryReportOverdue"
+          "salaryReportOverdue",
+          "hasLegacyReports"
         ]
       },
       "Paging": {
@@ -4054,6 +5920,42 @@
         },
         "required": ["name", "nationalId"]
       },
+      "CompanyRskPreviewDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "statusReason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Reason the company is not active (null when active). Shown on the create screen."
+          },
+          "address": { "type": "string", "nullable": true },
+          "postcode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Resolved postcode, e.g. \"105 Reykjavík\"."
+          },
+          "isatCategory": {
+            "type": "string",
+            "nullable": true,
+            "description": "Resolved ÍSAT2008 classification, e.g. \"62.01.0 Computer programming\"."
+          },
+          "sector": {
+            "description": "Ownership sector derived from the RSK legal form, exactly as `create` will store it. UNKNOWN here means the legal form is one we do not map yet — the create screen is the cheapest place for an admin to notice that, rather than after the row exists.",
+            "allOf": [{ "$ref": "#/components/schemas/CompanySectorEnum" }]
+          },
+          "legalFormName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Raw RSK legal form name (rekstrarform) the sector was derived from, e.g. \"Einkahlutafélag\". Null when RSK carried no legal form."
+          }
+        },
+        "required": ["name", "nationalId", "status", "sector"]
+      },
       "CreateCompanyDto": {
         "type": "object",
         "properties": {
@@ -4078,6 +5980,16 @@
           }
         },
         "required": ["status"]
+      },
+      "UpdateCompanySectorDto": {
+        "type": "object",
+        "properties": {
+          "sector": {
+            "description": "The ownership sector to set. FYRIRTAEKI, RADUNEYTI, RIKISADILI or SVEITARFELAG marks the classification as admin-owned (`sectorOverride = true`), so a backfill will not overwrite it. UNKNOWN clears the override and hands the company back to automatic RSK classification.",
+            "allOf": [{ "$ref": "#/components/schemas/CompanySectorEnum" }]
+          }
+        },
+        "required": ["sector"]
       },
       "UpdateCompanyIsatDto": {
         "type": "object",
@@ -4145,7 +6057,12 @@
           "EQUALITY_REPORT_DEADLINE_REMINDER_SENT",
           "SALARY_REPORT_DEADLINE_REMINDER_SENT",
           "EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL",
-          "SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL"
+          "SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL",
+          "API_KEY_ISSUED",
+          "API_KEY_REVOKED",
+          "CUSTOM_EMAIL_SENT",
+          "CUSTOM_EMAIL_FAILED",
+          "CUSTOM_EMAIL_SKIPPED"
         ]
       },
       "CompanyReminderTierEnum": {
@@ -4184,6 +6101,12 @@
               { "$ref": "#/components/schemas/CompanyReminderTierEnum" }
             ]
           },
+          "companyEmailId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The custom-email batch this event belongs to, on CUSTOM_EMAIL_* events only; null otherwise. The timeline uses it to fetch the message that was actually sent."
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -4211,13 +6134,17 @@
             "type": "string",
             "description": "Plain text comment body"
           },
+          "isSystem": {
+            "type": "boolean",
+            "description": "True when the system wrote the comment rather than a person — render it as \"Kerfið\", not as an unnamed member of staff. Distinct from `authorName` being null, which only means no user is attached."
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
             "example": "2026-02-19T10:30:00.000Z"
           }
         },
-        "required": ["id", "companyId", "body", "createdAt"]
+        "required": ["id", "companyId", "body", "isSystem", "createdAt"]
       },
       "CompanyTimelineItemDto": {
         "type": "object",
@@ -4234,14 +6161,174 @@
           },
           "event": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/CompanyEventDto" }]
           },
           "comment": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/CompanyCommentDto" }]
           }
         },
         "required": ["kind", "createdAt"]
+      },
+      "LegacyReportDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "nationalId": {
+            "type": "string",
+            "description": "Kennitala exactly as the legacy list held it — unvalidated and possibly malformed. The resolved company is `companyId`."
+          },
+          "legacyStatus": {
+            "type": "string",
+            "nullable": true,
+            "description": "Staða — the legacy workflow state: \"ólokið\", \"Lokið\", \"undanþága\", \"hætt\" or \"í vinnslu\"."
+          },
+          "validity": {
+            "type": "string",
+            "nullable": true,
+            "description": "Í gildi — \"Í gildi\" or \"Útrunnið\". Blank where the list never recorded one, which in practice means never certified."
+          },
+          "changeType": {
+            "type": "string",
+            "nullable": true,
+            "description": "Breyting — what changed about the row since the previous list (\"Nýtt\", \"Dottið út\", \"Nafn\", \"Stærðarflokkun\"). Multi-valued, joined with \";#\"."
+          },
+          "certificationType": {
+            "type": "string",
+            "nullable": true,
+            "description": "Jafnlaunavottun/staðfesting — \"Vottun\" (accredited body) or \"Staðfesting\" (confirmed by the Directorate)."
+          },
+          "certifiedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date",
+            "example": "2024-03-26",
+            "description": "Dags. Staðf/Vottunar — when the certification was issued, as `YYYY-MM-DD`."
+          },
+          "salaryValidUntil": {
+            "type": "string",
+            "nullable": true,
+            "format": "date",
+            "example": "2027-12-20",
+            "description": "Gildistími vottunar/staðfestingar — the certificate’s stated expiry, as `YYYY-MM-DD`. Not the live deadline: that is `company.nextSalaryReportDueAt`."
+          },
+          "equalityValidUntil": {
+            "type": "string",
+            "nullable": true,
+            "format": "date",
+            "example": "2027-05-31",
+            "description": "Gildistíma jafnréttisáætlunar — when the equality plan lapses, as `YYYY-MM-DD`."
+          },
+          "round": {
+            "type": "string",
+            "nullable": true,
+            "description": "Númer hrings — which certification round the company was on (\"1.\" … \"4.\")."
+          },
+          "caseNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "Málsnúmer — the Directorate’s case number for the salary certification."
+          },
+          "equalityCaseNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "Jafnréttisáætlun - málsnúmer. A separate case from the salary one; some rows hold prose (\"vantar\", \"svf.\") instead of a number."
+          },
+          "certifier": {
+            "type": "string",
+            "nullable": true,
+            "description": "Vottunaraðili — the accrediting body, with SharePoint’s lookup-id suffix stripped."
+          },
+          "maleCount": {
+            "type": "number",
+            "nullable": true,
+            "description": "Fjöldi kk — male headcount as counted for the certification."
+          },
+          "femaleCount": {
+            "type": "number",
+            "nullable": true,
+            "description": "Fjöldi kvk — female headcount as counted for the certification."
+          },
+          "neutralCount": {
+            "type": "number",
+            "nullable": true,
+            "description": "Hlutlaus skráning kyns — employees registered with a neutral gender."
+          },
+          "topManagerGender": {
+            "type": "string",
+            "nullable": true,
+            "description": "Kyn æðsta stjórnanda — \"Karl\" or \"Kona\"."
+          },
+          "genderPayGap": {
+            "type": "string",
+            "nullable": true,
+            "description": "Kynb. launamunur. A string, not a number: the few populated rows mix a percentage with what appear to be ISK amounts."
+          },
+          "employeeCount": {
+            "type": "number",
+            "nullable": true,
+            "description": "Starfsmannafjöldi — informational only, and often at odds with the size buckets. `company.employeeCountCategory` comes from `sizeCategoryNew`."
+          },
+          "sizeCategoryNew": {
+            "type": "string",
+            "nullable": true,
+            "description": "Nýr stærðarflokkur — the authoritative bucket (\"0\", \"25-49\", \"50+\"), and what the company’s size was mapped from."
+          },
+          "sizeCategoryOld": {
+            "type": "string",
+            "nullable": true,
+            "description": "Stærðarflokkur — the older, finer bucketing (\"50-89\", \"90-149\", \">249\"). Used as fallback where the new bucket is blank."
+          },
+          "contactName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Tengiliður — the named contact. The company record keeps only the email address."
+          },
+          "incomeYear": {
+            "type": "string",
+            "nullable": true,
+            "description": "Tekjuár — the year the figures were drawn from. A string: some rows say \"0\"."
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true,
+            "description": "Breytingar / Áður flokkað — the admins’ free-text notes. Also seeded onto the company timeline as a system comment."
+          },
+          "reminderSent6Months": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the legacy list had already sent its 6-month reminder. Not read by the reminder task here."
+          },
+          "reminderSent2Weeks": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the legacy list had already sent its 2-week reminder. Not read by the reminder task here."
+          },
+          "legacyCreatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the row was created in SharePoint."
+          },
+          "legacyModifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the row was last edited in SharePoint. This is what resolves duplicate kennitölur — the latest edit wins."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "When this archive row was loaded into our register."
+          }
+        },
+        "required": ["id", "companyId", "nationalId", "createdAt"]
       },
       "CreateCompanyCommentDto": {
         "type": "object",
@@ -4249,6 +6336,366 @@
           "body": { "type": "string", "description": "Plain text comment body" }
         },
         "required": ["body"]
+      },
+      "PresignCompanyEmailAttachmentDto": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "Original file name. Only its extension is used, to build the staging key — the name the recipient sees is sent with the message itself, so this is never what the object is stored as. An extension outside the mail-attachment allow-list is a 400."
+          }
+        },
+        "required": ["filename"]
+      },
+      "PresignUploadResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Presigned S3 PUT URL the client uploads the .xlsx to. Expires in 1h."
+          },
+          "key": {
+            "type": "string",
+            "description": "Object key the upload lands at. Pass this back to the import endpoint."
+          }
+        },
+        "required": ["url", "key"]
+      },
+      "DiscardCompanyEmailAttachmentDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Staging key of an attachment the admin removed before sending. Refused unless it sits inside the mail-attachment prefix, so this cannot be pointed at an import workbook or an already-archived message."
+          }
+        },
+        "required": ["key"]
+      },
+      "GetCompaniesQueryDto": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "number", "example": 1, "default": 1 },
+          "pageSize": { "type": "number", "example": 10, "default": 10 },
+          "q": {
+            "type": "string",
+            "description": "Free-text search on company name or national ID."
+          },
+          "employeeCountCategory": {
+            "description": "Return only companies whose employee-count bucket matches.",
+            "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
+          },
+          "companyStatus": {
+            "type": "array",
+            "description": "Return only companies whose report status is one of the provided values (same status shown on each company). Omit for no constraint.",
+            "items": { "$ref": "#/components/schemas/CompanyReportStatusEnum" }
+          },
+          "status": {
+            "type": "array",
+            "description": "Return only companies whose register lifecycle status is one of the provided values. Omit for no constraint, i.e. both ACTIVE and INACTIVE. ⚠️ Not to be confused with `companyStatus` above, which is the compliance axis (what the company still owes): this one is whether the company is in the authoritative register at all.",
+            "items": { "$ref": "#/components/schemas/CompanyStatusEnum" }
+          },
+          "expiresWithin": {
+            "type": "array",
+            "description": "Return only companies that have an approved report expiring within the given window. Multiple values are OR-ed; the largest window wins.",
+            "items": { "$ref": "#/components/schemas/CompanyExpiryFilterEnum" }
+          },
+          "finesStarted": {
+            "type": "boolean",
+            "description": "When true, return only companies in the daily-fines process (finesStarted = true)."
+          },
+          "quarantined": {
+            "type": "boolean",
+            "description": "When true, return only quarantined companies (quarantined = true)."
+          },
+          "overdue": {
+            "type": "boolean",
+            "description": "When true, return only companies whose next equality or salary report due date has passed."
+          },
+          "includeNotObliged": {
+            "type": "boolean",
+            "description": "When true, also return companies that owe no report at all (\"ekki lagaskylt\": under 25 employees with no salary-report override). These are HIDDEN BY DEFAULT — the admin register is a list of who owes what, and ~250 companies that owe nothing crowd it out. Companies of UNKNOWN size are never hidden: an unestablished size is an open question, not a settled \"owes nothing\". Ignored when `employeeCountCategory` is set, which is a more specific request about the same axis."
+          },
+          "includeInactive": {
+            "type": "boolean",
+            "description": "When true, also return companies that are off the register (status = INACTIVE). HIDDEN BY DEFAULT. Ignored when `status` is set — filtering explicitly to INACTIVE must not return an empty page."
+          },
+          "isatCategoryCode": {
+            "description": "Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. \"01110\").",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "isatSection": {
+            "description": "Return only companies whose ÍSAT2008 section (bálkur) is one of the given letters, e.g. \"O\" for public administration. Case-insensitive. The premade industry filter — resolved via the company ÍSAT category, so companies with no ÍSAT code are excluded.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "sector": {
+            "type": "array",
+            "description": "Return only companies in one of the given ownership sectors — the premade Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög filter (FYRIRTAEKI, RADUNEYTI, RIKISADILI, SVEITARFELAG). UNKNOWN is filterable on its own and is never included in any of the classified sectors.",
+            "items": { "$ref": "#/components/schemas/CompanySectorEnum" }
+          },
+          "regionCode": {
+            "description": "Return only companies located in one of the given regions (landshluti), by region code (e.g. \"CAPITAL\"). Resolved via the company postcode.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "postcode": {
+            "description": "Return only companies with one of the given postcodes (póstnúmer, e.g. \"101\").",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "sortBy": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanySortByEnum" }]
+          },
+          "direction": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanySortDirectionEnum" }
+            ]
+          }
+        }
+      },
+      "CompanyEmailAttachmentInputDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Staging key returned by the attachment presign endpoint. Validated against the mail-attachment prefix server-side."
+          },
+          "filename": {
+            "type": "string",
+            "description": "File name as the recipient should see it."
+          }
+        },
+        "required": ["key", "filename"]
+      },
+      "SendCompanyEmailDto": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "Subject line, plain text."
+          },
+          "bodyHtml": {
+            "type": "string",
+            "description": "Message body as HTML from the admin editor. Sanitised server-side before it is stored, previewed or sent."
+          },
+          "companyIds": {
+            "description": "Send to these companies explicitly. Mutually exclusive with `filter`.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "filter": {
+            "description": "Send to every company matching this company-list filter. Resolved with the identical query the list itself runs, and deliberately unpaged — `page`/`pageSize` are ignored. Mutually exclusive with `companyIds`.",
+            "allOf": [{ "$ref": "#/components/schemas/GetCompaniesQueryDto" }]
+          },
+          "recipientEmails": {
+            "description": "Addresses for a single-company send, replacing the company's stored contact email. Each one gets its own message — they are not a joint To line and no recipient sees the others — and each gets its own recipient row and timeline entry, so `recipientCount` counts addresses here rather than companies. Ignored when more than one company is addressed: there is no one company whose address these could be. An entry that is not a single address is a 400, not a silent skip.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "copyToEmail": {
+            "type": "string",
+            "nullable": true,
+            "description": "Send **one** copy of the message to this address, whoever the batch is addressed to — normally the admin sending it. Deliberately one copy per batch and not a per-message BCC: a send aimed at the whole register would otherwise put ~1 700 identical copies in one inbox. The copy is not a recipient row, gets no timeline entry, and its failure never fails the batch."
+          },
+          "attachments": {
+            "description": "Files to attach, previously staged via the presign endpoint.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyEmailAttachmentInputDto"
+            }
+          }
+        },
+        "required": ["subject", "bodyHtml"]
+      },
+      "CompanyEmailRecipientPreviewDto": {
+        "type": "object",
+        "properties": {
+          "companyId": { "type": "string", "format": "uuid" },
+          "companyName": {
+            "type": "string",
+            "description": "Company name — what the recipient list shows."
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "description": "Address the message will go to, revealed when the recipient row is expanded. Null when no address could be resolved — the company has none on file, or was skipped for quarantine and happens to have none either. `reason` says which."
+          }
+        },
+        "required": ["companyId", "companyName"]
+      },
+      "CompanyEmailRecipientStatusEnum": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "SENT",
+          "FAILED",
+          "SKIPPED_NO_EMAIL",
+          "SKIPPED_QUARANTINED"
+        ],
+        "description": "Why this company is excluded — SKIPPED_NO_EMAIL or SKIPPED_QUARANTINED."
+      },
+      "CompanyEmailSkippedPreviewDto": {
+        "type": "object",
+        "properties": {
+          "companyId": { "type": "string", "format": "uuid" },
+          "companyName": {
+            "type": "string",
+            "description": "Company name — what the recipient list shows."
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "description": "Address the message will go to, revealed when the recipient row is expanded. Null when no address could be resolved — the company has none on file, or was skipped for quarantine and happens to have none either. `reason` says which."
+          },
+          "reason": {
+            "description": "Why this company is excluded — SKIPPED_NO_EMAIL or SKIPPED_QUARANTINED.",
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyEmailRecipientStatusEnum" }
+            ]
+          }
+        },
+        "required": ["companyId", "companyName", "reason"]
+      },
+      "CompanyEmailPreviewDto": {
+        "type": "object",
+        "properties": {
+          "bodyHtml": {
+            "type": "string",
+            "description": "The message body as it will be delivered — already run through the same sanitiser the send applies, so the confirmation step shows the bytes that go out rather than the raw editor state."
+          },
+          "recipients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyEmailRecipientPreviewDto"
+            }
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyEmailSkippedPreviewDto"
+            }
+          },
+          "recipientCount": {
+            "type": "number",
+            "description": "Messages that will be sent. One per company as a rule — but a single-company send may name several addresses, and each of those is its own message, so this counts addresses rather than companies."
+          },
+          "skippedCount": {
+            "type": "number",
+            "description": "Companies excluded, for either skip reason."
+          }
+        },
+        "required": [
+          "bodyHtml",
+          "recipients",
+          "skipped",
+          "recipientCount",
+          "skippedCount"
+        ]
+      },
+      "SendCompanyEmailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The batch, for reading the message back later."
+          },
+          "recipientCount": {
+            "type": "number",
+            "description": "Messages queued. One per company as a rule — but a single-company send may name several addresses, and each is queued as its own message."
+          },
+          "skippedCount": {
+            "type": "number",
+            "description": "Companies excluded before sending — no address on file, or quarantined."
+          }
+        },
+        "required": ["id", "recipientCount", "skippedCount"]
+      },
+      "CompanyEmailStatusEnum": {
+        "type": "string",
+        "enum": ["QUEUED", "SENDING", "COMPLETED", "FAILED"]
+      },
+      "CompanyEmailAttachmentDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "filename": {
+            "type": "string",
+            "description": "File name as the recipient saw it."
+          },
+          "sizeBytes": { "type": "number" }
+        },
+        "required": ["id", "filename", "sizeBytes"]
+      },
+      "CompanyEmailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "subject": { "type": "string" },
+          "bodyHtml": {
+            "type": "string",
+            "description": "The sanitised HTML exactly as delivered. Safe to render — it was sanitised once, before being stored."
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyEmailStatusEnum" }]
+          },
+          "createdByName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Reviewer who sent it, or null if their user row is gone."
+          },
+          "sentCount": {
+            "type": "number",
+            "description": "Recipients delivered to."
+          },
+          "failedCount": {
+            "type": "number",
+            "description": "Recipients whose send failed."
+          },
+          "skippedCount": {
+            "type": "number",
+            "description": "Recipients skipped before any attempt."
+          },
+          "pendingCount": {
+            "type": "number",
+            "description": "Recipients not yet attempted."
+          },
+          "copyToEmail": {
+            "type": "string",
+            "nullable": true,
+            "description": "Address that received a copy of this message — normally the sender. Null when none was asked for. One copy per batch, never a per-recipient BCC, and no company received it as a recipient."
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyEmailAttachmentDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "subject",
+          "bodyHtml",
+          "status",
+          "sentCount",
+          "failedCount",
+          "skippedCount",
+          "pendingCount",
+          "attachments",
+          "createdAt"
+        ]
       },
       "CompanyImportOutcomeEnum": {
         "type": "string",
@@ -4381,20 +6828,6 @@
           "reactivated",
           "invalid"
         ]
-      },
-      "PresignUploadResponseDto": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "Presigned S3 PUT URL the client uploads the .xlsx to. Expires in 1h."
-          },
-          "key": {
-            "type": "string",
-            "description": "Object key the upload lands at. Pass this back to the import endpoint."
-          }
-        },
-        "required": ["url", "key"]
       },
       "UserDto": {
         "type": "object",
@@ -4609,6 +7042,15 @@
         ]
       },
       "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
+      "CommunicationStatusEnum": {
+        "type": "string",
+        "enum": [
+          "NOT_STARTED",
+          "AWAITING_RESPONSE",
+          "RESPONSE_RECEIVED",
+          "CLOSED"
+        ]
+      },
       "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
       "ReportListItemDto": {
         "type": "object",
@@ -4621,6 +7063,11 @@
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
           },
+          "communicationStatus": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CommunicationStatusEnum" }
+            ]
+          },
           "companyName": { "type": "string", "nullable": true },
           "companyNationalId": { "type": "string", "nullable": true },
           "companyIsatCategory": { "type": "string", "nullable": true },
@@ -4629,6 +7076,11 @@
             "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
           },
           "companyAdminName": { "type": "string", "nullable": true },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string", "nullable": true },
           "companyAdminGender": {
             "nullable": true,
@@ -4636,6 +7088,7 @@
           },
           "reviewer": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
           },
           "companyFinesStarted": {
@@ -4645,10 +7098,6 @@
           "companyQuarantined": {
             "type": "boolean",
             "description": "Quarantine flag. `true` means the company is currently quarantined."
-          },
-          "waitingForAction": {
-            "type": "boolean",
-            "description": "True when the most recent activity on this report is a comment authored by the company (application side). Resets to false whenever a reviewer action/event or reviewer comment supersedes it."
           },
           "includesImprovementPlan": {
             "type": "boolean",
@@ -4677,9 +7126,9 @@
           "id",
           "type",
           "status",
+          "communicationStatus",
           "companyFinesStarted",
           "companyQuarantined",
-          "waitingForAction",
           "includesImprovementPlan"
         ]
       },
@@ -4707,10 +7156,27 @@
         },
         "required": ["reports", "paging", "statusCounts"]
       },
+      "GetReportsForCompanyResponseDto": {
+        "type": "object",
+        "properties": {
+          "reports": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportListItemDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["reports", "paging"]
+      },
       "ReportProviderEnum": {
         "type": "string",
         "enum": ["SYSTEM", "ISLAND_IS", "OTHER"]
       },
+      "EqualityCoverageSourceEnum": {
+        "type": "string",
+        "enum": ["REPORT", "LEGACY"],
+        "description": "What met the equality obligation this report was filed under: `REPORT` (linked via `equalityReportId`) or `LEGACY` (an unexpired certificate from the retired register, which has no report row to link). Always `REPORT` on equality reports and on everything filed before the legacy basis was accepted."
+      },
+      "EqualityContentTypeEnum": { "type": "string", "enum": ["HTML", "PDF"] },
       "CompanyReportDto": {
         "type": "object",
         "properties": {
@@ -4754,6 +7220,16 @@
             "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
           },
           "content": { "type": "string", "nullable": true },
+          "contentType": {
+            "allOf": [
+              { "$ref": "#/components/schemas/EqualityContentTypeEnum" }
+            ]
+          },
+          "contentFilename": {
+            "type": "string",
+            "nullable": true,
+            "description": "File name of the uploaded PDF. Non-null exactly when `contentType` is PDF."
+          },
           "approvedAt": {
             "type": "string",
             "format": "date-time",
@@ -4773,7 +7249,7 @@
             "nullable": true
           }
         },
-        "required": ["id", "status"]
+        "required": ["id", "status", "contentType"]
       },
       "ReportTimelineItemKindEnum": {
         "type": "string",
@@ -4789,7 +7265,9 @@
           "SUPERSEDED",
           "EDITED",
           "WITHDRAWN",
-          "SYSTEM_AUTO_REVIEW"
+          "SYSTEM_AUTO_REVIEW",
+          "COMMUNICATION_OPENED",
+          "COMMUNICATION_CLOSED"
         ]
       },
       "AutoReviewDecisionEnum": {
@@ -4910,10 +7388,12 @@
           },
           "event": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/ReportEventDto" }]
           },
           "comment": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/ReportCommentDto" }]
           }
         },
@@ -4995,87 +7475,6 @@
         },
         "required": ["totals", "scoreBuckets"]
       },
-      "SalaryOutlierRegressionDto": {
-        "type": "object",
-        "properties": {
-          "slope": { "type": "number", "nullable": true },
-          "intercept": { "type": "number", "nullable": true },
-          "sampleCount": { "type": "number" },
-          "scoreMean": { "type": "number", "nullable": true },
-          "adjustedBaseSalaryMean": { "type": "number", "nullable": true },
-          "rSquared": { "type": "number", "nullable": true },
-          "scoreRangeFrom": { "type": "number", "nullable": true },
-          "scoreRangeTo": { "type": "number", "nullable": true }
-        },
-        "required": ["sampleCount"]
-      },
-      "SalaryOutlierRegressionsDto": {
-        "type": "object",
-        "properties": {
-          "overall": {
-            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
-          },
-          "male": { "$ref": "#/components/schemas/SalaryOutlierRegressionDto" },
-          "female": {
-            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
-          },
-          "neutral": {
-            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
-          }
-        },
-        "required": ["overall", "male", "female", "neutral"]
-      },
-      "SalaryOutlierAnalysisEmployeeDto": {
-        "type": "object",
-        "properties": {
-          "ordinal": { "type": "number" },
-          "score": { "type": "number" },
-          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
-          "adjustedBaseSalary": { "type": "number" },
-          "predictedBaseSalary": { "type": "number", "nullable": true },
-          "scoreBucketRangeFrom": { "type": "number", "nullable": true },
-          "scoreBucketRangeTo": { "type": "number", "nullable": true },
-          "direction": { "type": "string", "nullable": true },
-          "differencePercent": { "type": "number", "nullable": true },
-          "allowedDifferencePercent": { "type": "number" },
-          "isOutlier": { "type": "boolean" }
-        },
-        "required": [
-          "ordinal",
-          "score",
-          "gender",
-          "adjustedBaseSalary",
-          "allowedDifferencePercent",
-          "isOutlier"
-        ]
-      },
-      "SalaryOutlierAnalysisDto": {
-        "type": "object",
-        "properties": {
-          "method": {
-            "type": "string",
-            "enum": ["BASE_SALARY_LINEAR_REGRESSION_BY_SCORE"]
-          },
-          "thresholdPercent": { "type": "number" },
-          "allowedDifferencePercent": { "type": "number" },
-          "regressions": {
-            "$ref": "#/components/schemas/SalaryOutlierRegressionsDto"
-          },
-          "employees": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SalaryOutlierAnalysisEmployeeDto"
-            }
-          }
-        },
-        "required": [
-          "method",
-          "thresholdPercent",
-          "allowedDifferencePercent",
-          "regressions",
-          "employees"
-        ]
-      },
       "ReportResultDto": {
         "type": "object",
         "properties": {
@@ -5086,46 +7485,27 @@
             "nullable": true
           },
           "calculationVersion": { "type": "string" },
-          "base": {
-            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          "salary": {
+            "description": "Frosin samantekt á reglulegu tímakaupi við innsendingu (heildartölur + stigabil).",
+            "allOf": [
+              { "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto" }
+            ]
           },
-          "full": {
-            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          "wageGapDecomposition": {
+            "$ref": "#/components/schemas/WageGapDecompositionDto"
           },
-          "outlierAnalysis": {
-            "$ref": "#/components/schemas/SalaryOutlierAnalysisDto"
+          "payDispersion": {
+            "description": "ÁBENDINGAR um launadreifingu — the informational counterpart to the lágmarksmengi, asking whose pay is far from what their starfsmatsstig imply rather than who carries the gender gap. Carries NO obligation: no reason, no action, no signature, no reviewer step, never a basis for rejection, and invisible to auto-review. ⚠️ DERIVED ON READ from wageGapDecomposition, not part of the frozen snapshot — an advisory rule must stay tunable without rewriting published history, which is also why it is a sibling of wageGapDecomposition rather than a field inside it. ⚠️ Gate the LIST, not the section: render rows only for population = ALL_EMPLOYEES (EXCLUDING_MINIMUM_SET is shipped so the contract is ready but has not been requested yet), but when `available` is false there are no rows to withhold, so render the `blockers` reason whatever the population says — otherwise a company over the benchmark and under the 12-employee floor is shown nothing at all. See docs/launagreining.md §10.",
+            "allOf": [{ "$ref": "#/components/schemas/PayDispersionDto" }]
           }
         },
         "required": [
           "id",
           "reportId",
           "calculationVersion",
-          "base",
-          "full",
-          "outlierAnalysis"
-        ]
-      },
-      "ReportRoleResultDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "reportResultId": { "type": "string", "format": "uuid" },
-          "reportEmployeeRoleId": { "type": "string", "format": "uuid" },
-          "roleTitle": { "type": "string" },
-          "base": {
-            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
-          },
-          "full": {
-            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
-          }
-        },
-        "required": [
-          "id",
-          "reportResultId",
-          "reportEmployeeRoleId",
-          "roleTitle",
-          "base",
-          "full"
+          "salary",
+          "wageGapDecomposition",
+          "payDispersion"
         ]
       },
       "ReportDetailDto": {
@@ -5138,19 +7518,44 @@
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
           },
+          "communicationStatus": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CommunicationStatusEnum" }
+            ]
+          },
           "companyAdminName": { "type": "string", "nullable": true },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string", "nullable": true },
           "companyAdminGender": {
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/GenderEnum" }]
           },
           "contactName": { "type": "string", "nullable": true },
+          "contactTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company contact (tengiliður)."
+          },
           "companyNationalId": { "type": "string", "nullable": true },
           "contactEmail": { "type": "string", "nullable": true },
           "contactPhone": { "type": "string", "nullable": true },
           "averageEmployeeMaleCount": { "type": "number", "nullable": true },
           "averageEmployeeFemaleCount": { "type": "number", "nullable": true },
           "averageEmployeeNeutralCount": { "type": "number", "nullable": true },
+          "salaryDataBasis": {
+            "nullable": true,
+            "description": "Salary-only. Whether the submitted salary data describes one specific payroll month (`MONTH`, with the month in `salaryDataPeriod`) or a twelve-month average (`AVERAGE`). Null on equality reports and on salary reports submitted before the field existed.",
+            "allOf": [{ "$ref": "#/components/schemas/SalaryDataBasisEnum" }]
+          },
+          "salaryDataPeriod": {
+            "type": "string",
+            "nullable": true,
+            "description": "The payroll month the salary data is based on, as an ISO date normalised to the 1st of that month (`YYYY-MM-01`). Set when `salaryDataBasis` is `MONTH`, null for `AVERAGE`."
+          },
           "providerType": {
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/ReportProviderEnum" }]
@@ -5166,7 +7571,21 @@
           "equalityReportId": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "Salary-only. FK to the approved EQUALITY report this salary was audited against. Null on equality reports, and on a salary report filed against a legacy certificate — read `equalitySource` rather than inferring from this field."
+          },
+          "equalitySource": {
+            "description": "What met the equality obligation this report was filed under: `REPORT` (linked via `equalityReportId`) or `LEGACY` (an unexpired certificate from the retired register, which has no report row to link). Always `REPORT` on equality reports and on everything filed before the legacy basis was accepted.",
+            "allOf": [
+              { "$ref": "#/components/schemas/EqualityCoverageSourceEnum" }
+            ]
+          },
+          "equalityLegacyValidUntil": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "Salary-only, and non-null exactly when `equalitySource` is `LEGACY`: the legacy certificate’s stated expiry as it read at filing, returned as the end of that calendar day."
           },
           "reviewerUserId": {
             "type": "string",
@@ -5192,8 +7611,18 @@
             "nullable": true
           },
           "equalityReportContent": { "type": "string", "nullable": true },
+          "equalityReportContentType": {
+            "allOf": [
+              { "$ref": "#/components/schemas/EqualityContentTypeEnum" }
+            ]
+          },
+          "equalityReportContentFilename": {
+            "type": "string",
+            "nullable": true
+          },
           "reviewer": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
           },
           "createdAt": {
@@ -5207,7 +7636,9 @@
             "items": { "$ref": "#/components/schemas/CompanyReportDto" }
           },
           "equalityReport": {
-            "$ref": "#/components/schemas/EqualityReportDto"
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/EqualityReportDto" }]
           },
           "timeline": {
             "type": "array",
@@ -5215,11 +7646,8 @@
           },
           "result": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/ReportResultDto" }]
-          },
-          "roleResults": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ReportRoleResultDto" }
           },
           "companyFinesStarted": {
             "type": "boolean",
@@ -5238,13 +7666,14 @@
           "id",
           "type",
           "status",
+          "communicationStatus",
           "importedFromExcel",
+          "equalitySource",
+          "equalityReportContentType",
           "createdAt",
           "company",
           "subsidiaries",
-          "equalityReport",
           "timeline",
-          "roleResults",
           "companyFinesStarted",
           "companyQuarantined",
           "includesImprovementPlan"
@@ -5262,7 +7691,7 @@
           "employeeOrdinal": {
             "type": "number",
             "nullable": true,
-            "description": "1-indexed ordinal of the outlier employee in the report's parsed employee list. Mirrors `report_employee.ordinal` — used to cross-reference the canonical detected set on `report_result.outlier_analysis_snapshot.employees`."
+            "description": "1-indexed ordinal of the outlier employee in the report's parsed employee list. Mirrors `report_employee.ordinal` — used to cross-reference the canonical detected set on `report_result.wage_gap_decomposition_snapshot.employees`."
           },
           "gender": {
             "nullable": true,
@@ -5288,32 +7717,37 @@
           "action": { "type": "string", "nullable": true },
           "signatureName": { "type": "string", "nullable": true },
           "signatureRole": { "type": "string", "nullable": true },
-          "adjustedBaseSalary": {
-            "type": "number",
-            "nullable": true,
-            "description": "Employee's full-time-equivalent base salary at submission, projected from the matching `outlier_analysis_snapshot.employees` entry. Null if the snapshot has no matching ordinal."
-          },
-          "predictedBaseSalary": {
-            "type": "number",
-            "nullable": true,
-            "description": "Salary predicted by the regression line at the employee's exact score. Null when the regression had no slope (insufficient sample) or no matching snapshot entry exists."
-          },
-          "scoreBucketRangeFrom": { "type": "number", "nullable": true },
-          "scoreBucketRangeTo": { "type": "number", "nullable": true },
-          "direction": {
+          "remedyDate": {
             "type": "string",
             "nullable": true,
-            "description": "Sign of the deviation from the predicted salary: 'ABOVE' | 'BELOW' | 'EQUAL'. Null when no prediction was available."
+            "format": "date",
+            "example": "2027-03-01",
+            "description": "Date the group commits to having its improvements completed by (\"Dagsetning úrbóta\"), as `YYYY-MM-DD`. Denormalized from the outlier group like the rest of the explanation — every outlier in the same group carries the same value."
           },
-          "differencePercent": {
+          "regularHourlyWage": {
             "type": "number",
             "nullable": true,
-            "description": "Signed percent deviation of the employee's adjusted base salary from the predicted salary."
+            "description": "Reglulegt tímakaup (kr./klst.) at submission, projected from the matching `wage_gap_decomposition_snapshot.employees` entry. Null if the snapshot has no matching ordinal."
           },
-          "allowedDifferencePercent": {
+          "expectedHourlyWage": {
             "type": "number",
             "nullable": true,
-            "description": "Half-threshold band (in percent) used to flag this row as an outlier — i.e. the report-wide allowed deviation at submission time."
+            "description": "Væntanlegt tímakaup at this employee's score, from the pooled log fit. Null when no matching snapshot entry exists."
+          },
+          "deviationPercent": {
+            "type": "number",
+            "nullable": true,
+            "description": "Signed percent deviation of the actual tímakaup from the expected one."
+          },
+          "payStatus": {
+            "type": "string",
+            "nullable": true,
+            "description": "'UNDERPAID' | 'OVERPAID' | 'ON_LINE' relative to the pooled fit. A member of the lágmarksmengi may be either UNDERPAID or OVERPAID — the set is two-directional, drawn from whoever carries óskýrt. Render this: the two cases are different questions, and a reader cannot tell them apart from the signed percentage alone. ON_LINE never appears in the set (a zero residual carries none of the gap)."
+          },
+          "contributionShare": {
+            "type": "number",
+            "nullable": true,
+            "description": "Share of the company-wide óskýrt figure this employee carries, in percent. This — not any individual tolerance — is why the row is on the list."
           }
         },
         "required": ["id", "reportEmployeeId", "groupId"]
@@ -5345,7 +7779,14 @@
           },
           "action": { "type": "string", "nullable": true },
           "signatureName": { "type": "string", "nullable": true },
-          "signatureRole": { "type": "string", "nullable": true }
+          "signatureRole": { "type": "string", "nullable": true },
+          "remedyDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date",
+            "example": "2027-03-01",
+            "description": "Date the company commits to having this group’s improvements completed by (\"Dagsetning úrbóta\"), as `YYYY-MM-DD`. Not a signature date, and distinct from the report-level `correctionDeadline`, which is the deadline imposed on the whole report. Null on the same terms as the rest of the explanation block."
+          }
         },
         "required": ["id", "reportId", "name"]
       },
@@ -5376,7 +7817,12 @@
             "type": "string",
             "format": "uuid",
             "nullable": true,
-            "description": "Target reviewer user id. Omit to assign to the caller, pass a UUID to assign to a specific active user, or pass null to unassign (returns the report to the SUBMITTED queue)."
+            "description": "Target reviewer user id. Omit to assign to the caller, pass a UUID to assign to a specific active user, or pass null to unassign."
+          },
+          "updateStatus": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the assignment also moves the report through the review pipeline: `SUBMITTED` → `IN_REVIEW` when a reviewer is set, and `IN_REVIEW` → `SUBMITTED` when one is cleared. Defaults to true, which is the \"take this report\" action. Pass false to change only the reviewer and leave the status alone — assigning work ahead of it actually being picked up."
           }
         }
       },
@@ -5384,90 +7830,6 @@
         "type": "object",
         "properties": { "denialReason": { "type": "string" } },
         "required": ["denialReason"]
-      },
-      "ScatterDataPointDto": {
-        "type": "object",
-        "properties": {
-          "score": { "type": "number" },
-          "adjustedSalary": { "type": "number" },
-          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] }
-        },
-        "required": ["score", "adjustedSalary", "gender"]
-      },
-      "RegressionLineDto": {
-        "type": "object",
-        "properties": {
-          "slope": { "type": "number" },
-          "intercept": { "type": "number" }
-        },
-        "required": ["slope", "intercept"]
-      },
-      "ScoreBucketDto": {
-        "type": "object",
-        "properties": {
-          "rangeFrom": { "type": "number" },
-          "rangeTo": { "type": "number" },
-          "maleAverageSalary": { "type": "number", "nullable": true },
-          "femaleAverageSalary": { "type": "number", "nullable": true },
-          "overallAverageSalary": { "type": "number" },
-          "maleMedianSalary": { "type": "number", "nullable": true },
-          "femaleMedianSalary": { "type": "number", "nullable": true },
-          "overallMedianSalary": { "type": "number" },
-          "wageGapPercent": { "type": "number", "nullable": true },
-          "maleCount": { "type": "number" },
-          "femaleCount": { "type": "number" }
-        },
-        "required": [
-          "rangeFrom",
-          "rangeTo",
-          "overallAverageSalary",
-          "overallMedianSalary",
-          "maleCount",
-          "femaleCount"
-        ]
-      },
-      "SalaryTotalsDto": {
-        "type": "object",
-        "properties": {
-          "maleAverageSalary": { "type": "number" },
-          "femaleAverageSalary": { "type": "number" },
-          "overallAverageSalary": { "type": "number" },
-          "maleMedianSalary": { "type": "number" },
-          "femaleMedianSalary": { "type": "number" },
-          "overallMedianSalary": { "type": "number" },
-          "wageGapPercent": { "type": "number", "nullable": true },
-          "maleCount": { "type": "number" },
-          "femaleCount": { "type": "number" }
-        },
-        "required": [
-          "maleAverageSalary",
-          "femaleAverageSalary",
-          "overallAverageSalary",
-          "maleMedianSalary",
-          "femaleMedianSalary",
-          "overallMedianSalary",
-          "maleCount",
-          "femaleCount"
-        ]
-      },
-      "SalaryByGenderAndScoreDto": {
-        "type": "object",
-        "properties": {
-          "dataPoints": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ScatterDataPointDto" }
-          },
-          "regressionLine": {
-            "$ref": "#/components/schemas/RegressionLineDto"
-          },
-          "scoreBuckets": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ScoreBucketDto" }
-          },
-          "totals": { "$ref": "#/components/schemas/SalaryTotalsDto" },
-          "allowedDifferencePercent": { "type": "number", "nullable": true }
-        },
-        "required": ["dataPoints", "regressionLine", "scoreBuckets", "totals"]
       },
       "GenderWageGapDto": {
         "type": "object",
@@ -5479,7 +7841,6 @@
           "femaleMedianSalary": { "type": "number" },
           "overallMedianSalary": { "type": "number" },
           "averageWageGapPercent": { "type": "number", "nullable": true },
-          "medianWageGapPercent": { "type": "number", "nullable": true },
           "maleCount": { "type": "number" },
           "femaleCount": { "type": "number" }
         },

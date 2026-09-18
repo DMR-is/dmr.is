@@ -20,8 +20,8 @@
   "peerDependencies": {
     "@vanilla-extract/css": "^1.7.0",
     "@vanilla-extract/recipes": "^0.5.7",
-    "next": "16.1.6",
-    "next-auth": "4.24.13",
+    "next": "16.3.5",
+    "next-auth": "4.24.15",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -33,11 +33,13 @@
     "@dmr.is/shared-dto": "*",
     "@dmr.is/utils-shared": "*",
     "@tanstack/react-table": "8.21.3",
+    "@tanstack/react-virtual": "3.14.5",
     "classnames": "^2.5.1",
     "next-usequerystate": "1.20.0",
     "react-animate-height": "^3.1.2",
     "react-hook-form": "7.62.0",
     "react-is": "19",
+    "react-select": "5.10.2",
     "react-top-loading-bar": "^2.3.1",
     "react-use": "^15.3.3"
   },

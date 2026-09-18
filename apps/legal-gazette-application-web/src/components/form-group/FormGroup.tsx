@@ -3,7 +3,7 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 type Props = {
-  title?: string
+  title?: string | React.ReactNode
   subTitle?: string | React.ReactNode
   children?: React.ReactNode
   error?: string

@@ -7,6 +7,7 @@ import * as z from 'zod'
 import {
   getAdvertHTMLMarkup,
   LegalGazetteHTMLTemplates,
+  toPossessiveCourtDistrict,
 } from '@dmr.is/legal-gazette-html'
 import { createDivisionEndingInput } from '@dmr.is/legal-gazette-schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
@@ -21,6 +22,10 @@ import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
 } from '@dmr.is/utils-client/dateUtils'
+import {
+  toCalendarDate,
+  toCalendarDateIso,
+} from '@dmr.is/utils-shared/date/calendarDate'
 import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { ApplicationTypeEnum } from '../../gen/fetch'
@@ -92,9 +97,10 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
   )
 
   const preview = getAdvertHTMLMarkup({
-    templateType: ApplicationTypeEnum.RECALLBANKRUPTCY
-      ? LegalGazetteHTMLTemplates.DIVISION_ENDING_BANKRUPTCY
-      : LegalGazetteHTMLTemplates.DIVISION_ENDING_DECEASED,
+    templateType:
+      application?.type === ApplicationTypeEnum.RECALLDECEASED
+        ? LegalGazetteHTMLTemplates.DIVISION_ENDING_DECEASED
+        : LegalGazetteHTMLTemplates.DIVISION_ENDING_BANKRUPTCY,
     signature: state.signature,
     endingDate: state.endingDate,
     title: 'Skiptalok',
@@ -102,9 +108,8 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
     additionalText: state.additionalText,
     content: state.content,
     settlementDeclaredClaims: state.declaredClaims,
-    courtDistrict: courtDistrictInfo?.courtDistrict?.title?.replace(
-      'Héraðsdómur',
-      'Héraðsdóms',
+    courtDistrict: toPossessiveCourtDistrict(
+      courtDistrictInfo?.courtDistrict?.title,
     ),
     judgementDate: courtDistrictInfo?.judgmentDate,
     settlementName: settlementInfo?.name,
@@ -166,7 +171,9 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
             hasError={!!errors?.properties?.endingDate?.errors.length}
             errorMessage={errors?.properties?.endingDate?.errors[0]}
             onChange={(date) => {
-              handleSetState('endingDate', date)
+              // Snapped the same way the server snaps it, so the preview below
+              // cannot name a different day from the advert that gets published.
+              handleSetState('endingDate', toCalendarDate(date))
               setErrors((prev) =>
                 prev?.properties
                   ? {
@@ -202,12 +209,32 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
             }}
           />
         </FormGroup>
-        <FormGroup title="Efni auglýsingar">
+        <FormGroup
+          title={
+            <>
+              Hvernig var skiptum lokið{' '}
+              <Text fontWeight="regular" color="red600" as="span">
+                *
+              </Text>
+            </>
+          }
+        >
           <FormElement
             width="full"
             type="editor"
             withZIndex={false}
-            onChange={(val) => handleSetState('content', val || undefined)}
+            error={errors?.properties?.content?.errors[0]}
+            onChange={(val) => {
+              handleSetState('content', val || undefined)
+              setErrors((prev) =>
+                prev?.properties
+                  ? {
+                      ...prev,
+                      properties: { ...prev.properties, content: undefined },
+                    }
+                  : prev,
+              )
+            }}
           />
         </FormGroup>
         <FormGroup title="Lýstar kröfur búsins">
@@ -279,7 +306,7 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
             onChange={(date) => {
               handleSetState('signature', {
                 ...state.signature,
-                date: date.toISOString(),
+                date: toCalendarDateIso(date),
               })
               setErrors((prev) =>
                 prev?.properties
@@ -293,7 +320,7 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
           />
           <FormElement
             type="text"
-            label="Fyrir hönd undirritara"
+            label="Fyrir hönd"
             onChange={(e) =>
               handleSetState('signature', {
                 ...state.signature,

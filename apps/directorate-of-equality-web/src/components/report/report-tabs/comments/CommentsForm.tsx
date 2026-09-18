@@ -7,18 +7,23 @@ import { ReportTimelineItemDto } from '../../../../gen/fetch'
 import { reportText } from '../../../../lib/text'
 import { TimelineFeed } from './timeline/TimelineFeed'
 import { CommentInputForm } from './CommentInputForm'
+import { ExternalCommentConfirmModal } from './ExternalCommentConfirmModal'
 
 type Props = {
   timeline: ReportTimelineItemDto[]
   companyName?: string | null
   currentUserId?: string | null
   readonly?: boolean
+  canSendExternal?: boolean
   body: string
   isExternal: boolean
   isPending: boolean
+  isConfirmOpen: boolean
   onBodyChange: (value: string) => void
   onExternalChange: (value: boolean) => void
   onSubmit: () => void
+  onConfirmExternal: () => void
+  onCancelExternal: () => void
   onDelete: (commentId: string) => void
 }
 
@@ -27,12 +32,16 @@ export const CommentsForm = ({
   companyName,
   currentUserId,
   readonly = false,
+  canSendExternal = false,
   body,
   isExternal,
   isPending,
+  isConfirmOpen,
   onBodyChange,
   onExternalChange,
   onSubmit,
+  onConfirmExternal,
+  onCancelExternal,
   onDelete,
 }: Props) => {
   return (
@@ -59,6 +68,7 @@ export const CommentsForm = ({
             <CommentInputForm
               body={body}
               isExternal={isExternal}
+              canSendExternal={canSendExternal}
               isPending={isPending}
               onBodyChange={onBodyChange}
               onExternalChange={onExternalChange}
@@ -67,6 +77,15 @@ export const CommentsForm = ({
           </Box>
         )}
       </Box>
+
+      <ExternalCommentConfirmModal
+        visible={isConfirmOpen}
+        body={body}
+        isLoading={isPending}
+        onBodyChange={onBodyChange}
+        onClose={onCancelExternal}
+        onSubmit={onConfirmExternal}
+      />
     </>
   )
 }

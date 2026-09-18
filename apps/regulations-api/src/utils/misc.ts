@@ -29,8 +29,10 @@ export type QStr<keys extends string = string> = {
 // ---------------------------------------------------------------------------
 
 const HOURS = 60 * 60
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const cacheControl = (res: FastifyReply<any>, ttl_hrs: number): void => {
+// Fastify 5 reordered FastifyReply's generics — the first slot is now
+// RouteGeneric, not RawServer — so the old `FastifyReply<any>` silently changed
+// meaning while still compiling. The bare type is what was always intended.
+export const cacheControl = (res: FastifyReply, ttl_hrs: number): void => {
   res.headers({
     'Cache-Control':
       'public, max-age=' + ttl_hrs * HOURS + (ttl_hrs ? ', immutable' : ''),

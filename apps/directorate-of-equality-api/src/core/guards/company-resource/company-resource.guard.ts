@@ -7,11 +7,13 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
+import {
+  CompanyDto,
+  ICompanyService,
+} from '@dmr.is/doe-modules/company'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { ICompanyService } from '../../../modules/company/company.service.interface'
-import { CompanyDto } from '../../../modules/company/dto/company.dto'
 import { AUTO_PROVISION_COMPANY_METADATA } from '../../decorators/auto-provision-company.decorator'
 
 export type CompanyResourceRequest = {

@@ -1,0 +1,431 @@
+/**
+ * Parses the two "Flokkun" matrix sheets into step-assignment records that
+ * attach onto roles (Starfsmat) and employees (Einstaklingsmat).
+ *
+ * ## Layout recap
+ *
+ * Both sheets are wide matrices. Their row/column semantics are **derived
+ * from the raw-data sheets**, not read out of the matrix headers (which are
+ * formulas we don't evaluate):
+ *
+ * - **Starfsmat**
+ *   - Rows map 1:1 to distinct roles in the order they first appear on
+ *     Launagögn.
+ *   - Step-order columns hold one value per job-based sub-criterion in the
+ *     order they appear on Undirviðmið (filtered to `type != PERSONAL`). A
+ *     computed score column is interleaved after each, so inputs sit on every
+ *     second column.
+ *
+ * - **Einstaklingsmat**
+ *   - Rows map 1:1 to employees in ordinal order.
+ *   - Step-order columns hold one value per personal sub-criterion, in the
+ *     order personal subs appear on Undirviðmið (same every-second-column
+ *     interleaving).
+ *
+ * ⚠️ **"The order they appear on Undirviðmið" means ROW order** — not the
+ * criterion tree flattened parent-by-parent. The two differ whenever the
+ * employer's Undirviðmið rows are not already sorted into the Viðmið criterion
+ * order, and nothing in the template asks them to be. The column order is
+ * therefore supplied by {@link SubCriteriaSheetOrder}, built while walking the
+ * sheet, and cross-checked against each column's own cached header by
+ * {@link assertColumnAlignment} before a single value is read.
+ *
+ * The row/column geometry of each step-input region is read from the
+ * `ROLE_STEP_INPUTS` / `EMP_STEP_INPUTS` named ranges (see
+ * {@link readStepInputGrid}) rather than hard-coded.
+ *
+ * ⚠️ **Rows are provisioning, columns are capacity.** Einstaklingsmat ships
+ * with 500 employee rows, but an employer with more is expected to extend the
+ * sheet — the per-row formulas pull from Launagögn, which spans 10 000. So the
+ * employee bound is `MAX_EMPLOYEES`, not the named range's row extent. The
+ * COLUMN extent *is* a real bound: widening the matrix means inserting
+ * interleaved Þrep/Stig pairs, which an employer is not expected to do.
+ *
+ * Blank cells mean "no assignment" and are skipped, so a short Einstaklingsmat
+ * would silently understate scores rather than fail. Nothing downstream catches
+ * that — `assertParsedPayloadIntegrity` validates the assignments that ARE
+ * present, never that every employee has one — so this parser checks that the
+ * sheet reaches every employee before reading it.
+ */
+
+import ExcelJS from 'exceljs'
+
+import {
+  ParsedEmployeeDto,
+  ParsedRoleDto,
+  ParsedStepAssignmentDto,
+} from '../dto/parsed-report.dto'
+import { NAMED_RANGES, SHEETS } from '../workbook.schema'
+import { readInteger, readString } from './cell'
+import { SubCriteriaSheetOrder, SubCriterionRef } from './criteria.parser'
+import { ErrorBag } from './errors'
+
+/**
+ * Geometry of a classification matrix's step-input region, derived from a
+ * template named range rather than hard-coded column letters.
+ *
+ * Step-order inputs occupy every SECOND column (a computed score column is
+ * interleaved after each), starting at `firstCol` on `firstRow`. So input
+ * column slot N lives at column `firstCol + 2·N`. Reading the geometry from
+ * the named range means the sub-criterion counts are bounded by what the
+ * template physically provisions, and grow if the template does — no code
+ * change.
+ *
+ * `rowCapacity` is a real bound for **roles** (Starfsmat provisions 100, which
+ * is also `MAX_ROLES`) but only provisioning for **employees** — see the file
+ * docblock.
+ */
+type StepInputGrid = {
+  firstRow: number
+  lastRow: number
+  firstCol: number
+  lastCol: number
+  rowCapacity: number
+  columnPairCapacity: number
+}
+
+/** `'AB'` → 28. */
+const colToNum = (letters: string): number =>
+  letters.split('').reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
+
+/**
+ * Parse a single rectangular named range (e.g. `Starfsmat!$G$11:$GX$110`)
+ * into the step-input grid it describes. Returns null if the name is absent or
+ * not a single `$COL$ROW:$COL$ROW` range — callers surface that as an error.
+ */
+const readStepInputGrid = (
+  workbook: ExcelJS.Workbook,
+  definedName: string,
+): StepInputGrid | null => {
+  const ranges = workbook.definedNames.getRanges(definedName)?.ranges
+  if (!ranges || ranges.length !== 1) return null
+  const m = ranges[0].match(/\$([A-Z]+)\$(\d+):\$([A-Z]+)\$(\d+)$/)
+  if (!m) return null
+  const firstCol = colToNum(m[1])
+  const firstRow = Number(m[2])
+  const lastCol = colToNum(m[3])
+  const lastRow = Number(m[4])
+  return {
+    firstRow,
+    lastRow,
+    firstCol,
+    lastCol,
+    rowCapacity: lastRow - firstRow + 1,
+    columnPairCapacity: Math.floor((lastCol - firstCol) / 2) + 1,
+  }
+}
+
+/**
+ * Rows above a matrix's step-input grid that label each column pair, as
+ * offsets from the grid's first data row (row 11 on both sheets, so these
+ * resolve to rows 5 and 6). Both are `INDEX(Undirviðmið!…, <col>$4)` formulas
+ * — the sheet's own statement of which sub-criterion a column belongs to.
+ *
+ * The offsets are relative because `grid.firstRow` comes from a named range
+ * Excel rewrites on row insert, and the header rows move with it. That holds
+ * only for rows inserted above the headers; one inserted *between* them and
+ * the grid slides the offsets onto the Vægi row instead, which is why
+ * {@link readHeaderLabel} refuses to read a non-text header.
+ */
+const HEADER_ROW_OFFSET = {
+  criterionTitle: -6,
+  subTitle: -5,
+} as const
+
+/**
+ * Read a column header, treating anything that is not text as absent.
+ *
+ * `readString` stringifies numbers, so without this a header offset that has
+ * slid onto the numeric Vægi row would yield e.g. `"30"` — a confident,
+ * wrong answer that reads as a mismatch on every column and hard-rejects a
+ * workbook that would otherwise parse. A header we cannot identify is not
+ * evidence of a mismatch, so it is reported as unverifiable instead.
+ */
+const readHeaderLabel = (cell: ExcelJS.Cell): string | null => {
+  const raw = cell.value
+  const inner =
+    raw && typeof raw === 'object' && 'formula' in raw ? raw.result : raw
+  if (typeof inner === 'number' || typeof inner === 'boolean') return null
+  return readString(cell)
+}
+
+/**
+ * Verify that the sub-criterion the parser resolved for each column pair is
+ * the one the column's own header names, and refuse to read the matrix if not.
+ *
+ * This is the backstop for the whole positional scheme. Column identity is
+ * derived (from Undirviðmið row order) rather than read, so a wrong derivation
+ * does not fail loudly — it lands every assignment one or more columns off,
+ * and only the subset whose step value happens to exceed the wrong column's
+ * step count produces an error. The rest is silent corruption. Comparing
+ * against the cached headers turns that entire failure class into one message.
+ *
+ * Skips any column whose header carries no cached value: the shipped template
+ * stores these as formulas with no result, and ExcelJS does not evaluate
+ * formulas. An unverifiable header is not evidence of a mismatch.
+ *
+ * @returns `true` when every checkable column agrees.
+ */
+const assertColumnAlignment = (
+  sheet: ExcelJS.Worksheet,
+  grid: StepInputGrid,
+  refs: readonly (SubCriterionRef | null)[],
+  sheetName: string,
+  errors: ErrorBag,
+): boolean => {
+  const mismatches: {
+    column: string
+    sheetLabel: string
+    ref: SubCriterionRef
+  }[] = []
+
+  refs.forEach((ref, subIdx) => {
+    if (!ref) return
+    const col = grid.firstCol + 2 * subIdx
+    const sheetSubTitle = readHeaderLabel(
+      sheet.getCell(grid.firstRow + HEADER_ROW_OFFSET.subTitle, col),
+    )
+    if (!sheetSubTitle) return
+
+    const sheetCriterionTitle = readHeaderLabel(
+      sheet.getCell(grid.firstRow + HEADER_ROW_OFFSET.criterionTitle, col),
+    )
+    if (
+      sheetSubTitle === ref.subTitle &&
+      (!sheetCriterionTitle || sheetCriterionTitle === ref.criterionTitle)
+    ) {
+      return
+    }
+
+    mismatches.push({
+      column: sheet.getColumn(col).letter,
+      sheetLabel: [sheetCriterionTitle, sheetSubTitle]
+        .filter(Boolean)
+        .join(' → '),
+      ref,
+    })
+  })
+
+  if (mismatches.length === 0) return true
+
+  // One message, not one per column: a single-slot shift misaligns every
+  // column after it, and the cause is shared. The first mismatch names what
+  // went wrong; the rest are listed as columns only.
+  const [first, ...rest] = mismatches
+  const alsoAffected = rest.length
+    ? ` Sömu skekkju er að finna í dálkunum ${rest.map((m) => m.column).join(', ')}.`
+    : ''
+  errors.add(
+    sheetName,
+    `Dálkurinn er merktur „${first.sheetLabel}“ en samkvæmt röð undirviðmiðanna á blaðinu ${SHEETS.SUB_CRITERIA} ætti hann að vera „${first.ref.criterionTitle} → ${first.ref.subTitle}“ — raðaðu undirviðmiðunum í upprunalega röð eða sæktu nýtt eyðublað${alsoAffected ? '.' + alsoAffected : ''}`,
+    {
+      row: grid.firstRow + HEADER_ROW_OFFSET.subTitle,
+      column: first.column,
+    },
+  )
+
+  return false
+}
+
+const buildAssignment = (
+  ref: SubCriterionRef,
+  stepOrder: number,
+  sheetName: string,
+  cellAddress: string,
+  errors: ErrorBag,
+): ParsedStepAssignmentDto | null => {
+  if (
+    !Number.isInteger(stepOrder) ||
+    stepOrder < 1 ||
+    stepOrder > ref.numSteps
+  ) {
+    errors.add(
+      sheetName,
+      `Þrep ${stepOrder} er utan leyfilegs bils 1–${ref.numSteps} fyrir undirviðmið „${ref.subTitle}“`,
+      { column: cellAddress.replace(/\d+$/, '') },
+    )
+    return null
+  }
+  return {
+    criterionTitle: ref.criterionTitle,
+    subTitle: ref.subTitle,
+    stepOrder,
+  }
+}
+
+export const parseRoleClassifications = (
+  workbook: ExcelJS.Workbook,
+  sheetOrder: SubCriteriaSheetOrder,
+  roles: ParsedRoleDto[],
+  errors: ErrorBag,
+): void => {
+  const sheet = workbook.getWorksheet(SHEETS.ROLE_CLASSIFICATION)
+  if (!sheet) {
+    errors.add(
+      SHEETS.ROLE_CLASSIFICATION,
+      `Nauðsynlegt blað „${SHEETS.ROLE_CLASSIFICATION}“ vantar`,
+    )
+    return
+  }
+
+  const jobBased = sheetOrder.jobBased
+
+  const grid = readStepInputGrid(workbook, NAMED_RANGES.ROLE_STEP_INPUTS)
+  if (!grid) {
+    errors.add(
+      SHEETS.ROLE_CLASSIFICATION,
+      `Nafngreint svæði „${NAMED_RANGES.ROLE_STEP_INPUTS}“ vantar eða er gallað`,
+    )
+    return
+  }
+
+  if (roles.length > grid.rowCapacity) {
+    errors.add(
+      SHEETS.ROLE_CLASSIFICATION,
+      `Að hámarki ${grid.rowCapacity} ólík störf eru studd; fjöldi var ${roles.length}`,
+    )
+    return
+  }
+
+  if (jobBased.length > grid.columnPairCapacity) {
+    errors.add(
+      SHEETS.ROLE_CLASSIFICATION,
+      `Að hámarki ${grid.columnPairCapacity} starfsbundin undirviðmið eru studd; fjöldi var ${jobBased.length}`,
+    )
+    return
+  }
+
+  if (
+    !assertColumnAlignment(
+      sheet,
+      grid,
+      jobBased,
+      SHEETS.ROLE_CLASSIFICATION,
+      errors,
+    )
+  ) {
+    return
+  }
+
+  roles.forEach((role, roleIdx) => {
+    const row = grid.firstRow + roleIdx
+    jobBased.forEach((ref, subIdx) => {
+      // Reserved slot: the column exists but its Undirviðmið row was
+      // rejected, so there is nothing to assign against. The row's own error
+      // already fails the upload.
+      if (!ref) return
+      const col = grid.firstCol + 2 * subIdx
+      const cell = sheet.getCell(row, col)
+      const stepOrder = readInteger(cell)
+      if (stepOrder == null) return
+      const assignment = buildAssignment(
+        ref,
+        stepOrder,
+        SHEETS.ROLE_CLASSIFICATION,
+        cell.address,
+        errors,
+      )
+      if (assignment) role.stepAssignments.push(assignment)
+    })
+  })
+}
+
+export const parseEmployeeClassifications = (
+  workbook: ExcelJS.Workbook,
+  sheetOrder: SubCriteriaSheetOrder,
+  employees: ParsedEmployeeDto[],
+  errors: ErrorBag,
+): void => {
+  const sheet = workbook.getWorksheet(SHEETS.EMPLOYEE_CLASSIFICATION)
+  if (!sheet) {
+    errors.add(
+      SHEETS.EMPLOYEE_CLASSIFICATION,
+      `Nauðsynlegt blað „${SHEETS.EMPLOYEE_CLASSIFICATION}“ vantar`,
+    )
+    return
+  }
+
+  const personal = sheetOrder.personal
+
+  // Nothing readable on this sheet ⇒ its geometry is irrelevant. Returning
+  // early matters: the row check below would otherwise reject a large
+  // submission over a sheet it never needed to touch. Reserved (null) slots
+  // count as nothing to read — their Undirviðmið rows already failed, so the
+  // upload is rejected on those errors rather than on this sheet's extent.
+  if (!personal.some(Boolean)) return
+
+  const grid = readStepInputGrid(workbook, NAMED_RANGES.EMP_STEP_INPUTS)
+  if (!grid) {
+    errors.add(
+      SHEETS.EMPLOYEE_CLASSIFICATION,
+      `Nafngreint svæði „${NAMED_RANGES.EMP_STEP_INPUTS}“ vantar eða er gallað`,
+    )
+    return
+  }
+
+  if (personal.length > grid.columnPairCapacity) {
+    errors.add(
+      SHEETS.EMPLOYEE_CLASSIFICATION,
+      `Að hámarki ${grid.columnPairCapacity} persónubundin undirviðmið eru studd; fjöldi var ${personal.length}`,
+    )
+    return
+  }
+
+  if (
+    !assertColumnAlignment(
+      sheet,
+      grid,
+      personal,
+      SHEETS.EMPLOYEE_CLASSIFICATION,
+      errors,
+    )
+  ) {
+    return
+  }
+
+  // The named range's ROW extent is what the template SHIPS with, not a limit:
+  // Einstaklingsmat provisions 500 employee rows, and a larger employer is
+  // expected to extend the sheet itself (the per-row formulas pull from
+  // Launagögn, which spans 10 000). So rows are bounded by `MAX_EMPLOYEES` and
+  // by how far the uploaded sheet actually reaches — never by `grid.rowCapacity`.
+  //
+  // The column extent IS a real bound (checked above): widening the matrix means
+  // inserting interleaved Þrep/Stig column pairs, not copying a row down.
+  const lastReachableRow = sheet.rowCount
+  const reachableEmployees = Math.max(lastReachableRow - grid.firstRow + 1, 0)
+
+  // Reading past the sheet's extent would return blanks, and blank means "no
+  // assignment" (see docblock) — so an employer who added employees to
+  // Launagögn without extending Einstaklingsmat would get silently incomplete
+  // scores rather than an error. Nothing downstream catches that:
+  // `assertParsedPayloadIntegrity` validates the assignments that ARE present,
+  // never that every employee has one. Hence an explicit, actionable error.
+  if (employees.length > reachableEmployees) {
+    errors.add(
+      SHEETS.EMPLOYEE_CLASSIFICATION,
+      `Einstaklingsmat nær aðeins til ${reachableEmployees} starfsmanna en skýrslan er með ${employees.length}; ` +
+        `bættu við röðum á blaðið svo hver starfsmaður hafi sína röð`,
+    )
+    return
+  }
+
+  employees.forEach((employee, empIdx) => {
+    const row = grid.firstRow + empIdx
+    personal.forEach((ref, subIdx) => {
+      // Reserved slot — see `parseRoleClassifications`.
+      if (!ref) return
+      const col = grid.firstCol + 2 * subIdx
+      const cell = sheet.getCell(row, col)
+      const stepOrder = readInteger(cell)
+      if (stepOrder == null) return
+      const assignment = buildAssignment(
+        ref,
+        stepOrder,
+        SHEETS.EMPLOYEE_CLASSIFICATION,
+        cell.address,
+        errors,
+      )
+      if (assignment) employee.personalStepAssignments.push(assignment)
+    })
+  })
+}

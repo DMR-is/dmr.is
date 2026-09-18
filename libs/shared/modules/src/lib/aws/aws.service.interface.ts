@@ -6,6 +6,18 @@ import { ResultWrapper } from '@dmr.is/types'
 
 import 'multer'
 
+/** Options for {@link IAWSService.getObjectBuffer}. */
+export type GetObjectBufferOptions = {
+  /**
+   * Maximum number of bytes to accept for the object. When set, the download is
+   * aborted and a `PayloadTooLargeException` thrown as soon as the object is
+   * known to exceed the limit — either from the advertised `Content-Length` or
+   * from the running total of bytes read — so the bytes are never fully
+   * buffered. Leave unset for no limit.
+   */
+  maxBytes?: number
+}
+
 export interface IAWSService {
   uploadApplicationAttachments(
     applicationId: string,
@@ -34,9 +46,16 @@ export interface IAWSService {
 
   getObject(key: string): Promise<ResultWrapper<string>>
 
+  /**
+   * Downloads an object from S3 into a Buffer.
+   * @param key The key of the object to download
+   * @param s3Bucket Optional bucket override (defaults to the application files bucket)
+   * @param options See {@link GetObjectBufferOptions}
+   */
   getObjectBuffer(
     key: string,
     s3Bucket?: string,
+    options?: GetObjectBufferOptions,
   ): Promise<ResultWrapper<Buffer>>
 
   uploadObject(

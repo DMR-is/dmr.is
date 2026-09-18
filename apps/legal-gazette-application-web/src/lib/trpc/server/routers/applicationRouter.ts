@@ -189,6 +189,13 @@ export const applicationRouter = router({
         applicationId: input.applicationId,
       })
     }),
+  getApplicationAdvertPrice: protectedProcedure
+    .input(z.object({ applicationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.api.getApplicationAdvertPrice({
+        applicationId: input.applicationId,
+      })
+    }),
   deleteApplication: protectedProcedure
     .input(z.object({ applicationId: z.string() }))
     .mutation(async ({ ctx, input }) => {

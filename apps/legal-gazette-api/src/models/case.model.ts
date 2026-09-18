@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import { Op } from 'sequelize'
 import {
   BeforeCreate,
@@ -20,6 +21,7 @@ import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../modules/shared/dto/detailed.dto'
 import { AdvertCreateAttributes, AdvertModel } from './advert.model'
+import type { ApplicationModel as ApplicationModelRef } from './application.model'
 import {
   ApplicationCreateAttributes,
   ApplicationModel,
@@ -73,7 +75,7 @@ export class CaseModel extends ParanoidModel<CaseAttributes, CaseCreateAttribute
   adverts!: AdvertModel[]
 
   @HasOne(() => ApplicationModel)
-  application?: ApplicationModel
+  application?: ApplicationModelRef
 
   @BeforeDestroy
   static async markAdvertsAsWithdrawn(instance: CaseModel) {

@@ -9,7 +9,10 @@
     "tsc": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["tsc -p tsconfig.lib.json --noEmit"],
+        "commands": [
+          "tsc -p tsconfig.lib.json --noEmit",
+          "tsc -p tsconfig.spec.json --noEmit"
+        ],
         "cwd": "libs/clients/national-registry",
         "forwardAllArgs": false
       }

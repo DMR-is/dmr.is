@@ -1,5 +1,5 @@
 # Install dependencies only when needed
-FROM docker.io/node:20-alpine as deps
+FROM docker.io/node:24-alpine as deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
@@ -11,7 +11,7 @@ COPY ./libs/shared/sequelize/src/lib/sequelize.config.js ./
 RUN npm install pg --legacy-peer-deps
 RUN npm install --omit=dev --legacy-peer-deps
 # Production image, copy all the files and run nest
-FROM docker.io/node:lts-alpine as runner
+FROM docker.io/node:24-alpine as runner
 RUN apk add --no-cache \
   dumb-init \
   udev \
@@ -28,8 +28,22 @@ COPY --from=deps /usr/src/app/.sequelizerc ./
 COPY --from=deps /usr/src/app/sequelize.config.js ./
 COPY ./apps/legal-gazette-api/dist .
 RUN npm install -g sequelize-cli
+# Validate the environment at container start. The image is built with an empty
+# environment and run with ECS supplying the values, so boot is the only moment
+# this can be checked. ./env is the flattened schema produced by the app's
+# flatten-env target -- the Dockerfile packages apps/<app>/dist only, and the
+# root .env.schema is not in there. Pinned from npm rather than curl | sh.
+#
+# The version is STILL duplicated: nothing passes VARLOCK_VERSION today, so this
+# default is what every build uses, and it is one of seven places holding 1.17.0
+# (here, the five sibling Dockerfiles, and the root package.json). The arg only
+# means a build CAN override it without editing six files. Keep the default in
+# step with package.json -- the varlock that flattens the schema at build time
+# and the one that reads it at boot have to agree.
+ARG VARLOCK_VERSION=1.17.0
+RUN npm install -g varlock@${VARLOCK_VERSION}
 USER node
 EXPOSE 4100
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["sh", "-c", "sequelize-cli db:migrate && node main.js"]
+CMD ["varlock", "run", "--path", "./env", "--", "sh", "-c", "sequelize-cli db:migrate && node main.js"]
 

@@ -7,7 +7,7 @@ import { SubscriberTransactionModel } from '../../models/subscriber-transaction.
 import { TBRTransactionModel } from '../../models/tbr-transactions.model'
 import { PriceCalculatorProviderModule } from '../advert/calculator/price-calculator.provider.module'
 import { PgAdvisoryLockModule } from '../advert/tasks/lock.module'
-import { TBRModule } from '../tbr/tbr.module'
+import { TBRSharedModule } from '../tbr/tbr.shared-module'
 import { SubscriberCreatedListener } from './listeners/subscriber-created.listener'
 import { SubscriberService } from './subscriber.service'
 import { ISubscriberService } from './subscriber.service.interface'
@@ -22,11 +22,7 @@ import { ISubscriberService } from './subscriber.service.interface'
     ]),
     PriceCalculatorProviderModule,
     PgAdvisoryLockModule,
-    TBRModule.forRoot({
-      credentials: process.env.LG_TBR_CREDENTIALS || '',
-      officeId: process.env.LG_TBR_OFFICE_ID || '',
-      tbrBasePath: process.env.LG_TBR_PATH || '',
-    }),
+    TBRSharedModule,
   ],
   controllers: [],
   providers: [

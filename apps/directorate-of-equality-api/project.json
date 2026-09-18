@@ -7,8 +7,13 @@
   "targets": {
     "tsc": {
       "executor": "nx:run-commands",
+      "dependsOn": ["^codegen"],
       "options": {
-        "commands": ["tsc -p tsconfig.app.json --noEmit"],
+        "commands": [
+          "tsc -p tsconfig.app.json --noEmit",
+          "tsc -p tsconfig.spec.json --noEmit",
+          "tsc -p tsconfig.scripts.json --noEmit"
+        ],
         "cwd": "apps/directorate-of-equality-api",
         "forwardAllArgs": false
       }
@@ -23,6 +28,7 @@
     "build": {
       "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
+      "dependsOn": ["^build", "^codegen"],
       "defaultConfiguration": "production",
       "options": {
         "target": "node",
@@ -53,6 +59,13 @@
     },
     "serve": {
       "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/varlock-run.sh directorate-of-equality-api nx run directorate-of-equality-api:serve-raw"
+      }
+    },
+    "serve-raw": {
+      "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "dependsOn": ["build"],
@@ -82,15 +95,74 @@
     "migrate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "sequelize-cli db:migrate",
+        "command": "../../scripts/varlock-run.sh directorate-of-equality-api sequelize-cli db:migrate",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "refresh-reference-company": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node --project tsconfig.app.json -O '{\"module\":\"commonjs\"}' scripts/refresh-reference-company.ts",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "company-register-to-sql": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node --project tsconfig.app.json -O '{\"module\":\"commonjs\"}' scripts/company-register-to-sql.ts",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "generate-test-workbooks": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --max-old-space-size=6144 ../../node_modules/.bin/ts-node --project tsconfig.app.json -O '{\"module\":\"commonjs\"}' scripts/generate-test-workbooks.ts",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "refresh-wage-gap-fixtures": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node --project tsconfig.app.json -O '{\"module\":\"commonjs\"}' scripts/refresh-wage-gap-fixtures.ts",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "migrate/generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli migration:generate --name $(whoami)",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "migrate/undo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli db:migrate:undo",
         "cwd": "apps/directorate-of-equality-api"
       }
     },
     "seed": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "sequelize-cli db:seed:all",
+        "command": "../../scripts/varlock-run.sh directorate-of-equality-api sequelize-cli db:seed:all",
         "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "seed/undo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli db:seed:undo:all",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "reseed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "yarn nx run directorate-of-equality-api:seed/undo",
+          "yarn nx run directorate-of-equality-api:seed"
+        ],
+        "parallel": false
       }
     },
     "dev-init": {
@@ -106,13 +178,21 @@
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",
-      "dependsOn": ["build"],
+      "dependsOn": ["flatten-env"],
       "options": {
         "engine": "docker",
         "metadata": {
           "load": true
         },
         "file": "apps/directorate-of-equality-api/Dockerfile"
+      }
+    },
+    "flatten-env": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "apps/directorate-of-equality-api",
+        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env && find dist/env -type f ! -name '.env.schema' -delete"
       }
     }
   }

@@ -8,11 +8,124 @@ TODO
 
 ## Start by running submodules checkout and install dependencies
 
+Node is pinned in `.nvmrc` — run `nvm use` (or the equivalent for your version manager) first.
+
 ```bash
+nvm use
 ./.gitscripts/checkout-submodules.sh
 brew install pkg-config cairo pango libpng jpeg giflib librsvg pixman
 yarn
 ```
+
+## Local environment setup
+
+Environment variables are **declared** in `.env.schema` files — names, types and which values are
+sensitive, never the values themselves. There is one at the repo root holding everything shared, one
+per app that imports only the names that app actually reads, and, for a migrated app, one saying
+where its values come from:
+
+```text
+.env.schema                        shared names, imported by the app schemas
+apps/<app>/.env.schema             app-specific, imports the root schema with a pick list
+config/1password/<app>/.env.schema local-only: which 1Password environments to resolve from
+```
+
+Values are **resolved** per app, inside that app's own process, by [varlock](https://varlock.dev).
+Nothing is exported into your shell. `scripts/varlock-run.sh` is the entry point, and the `serve`,
+`migrate` and `seed` targets of every migrated app already go through it:
+
+```bash
+scripts/varlock-run.sh <app> <command>   # e.g. nx serve <app>, sequelize-cli db:migrate
+```
+
+Because nothing lands in the shell, ad-hoc commands need the same wrapper — `echo $DB_NAME` in your
+terminal returns nothing for a migrated app.
+
+An app is migrated once it has a directory under `config/1password/`. Six do today:
+`legal-gazette-api`, `legal-gazette-web`, `legal-gazette-application-web`,
+`legal-gazette-public-web`, `directorate-of-equality-api` and `directorate-of-equality-web`.
+Everything else still reads the gitignored secrets file out of the shell via `direnv`, and keeps
+working unchanged.
+
+Deployed services never use 1Password — ECS task definitions fill the same variables — so local and
+deployed environments differ only in who populates `process.env`.
+
+One-time setup:
+
+```bash
+brew install direnv 1password-cli
+```
+
+1. **Install varlock globally**, before the token step below. From the maintainers' own tap,
+   which shadows the `homebrew/core` formula of the same name — both track the same releases, and
+   the tap is what this setup is tested against:
+
+   ```bash
+   brew install dmno-dev/tap/varlock
+   ```
+
+   Or without Homebrew:
+
+   ```bash
+   curl -sSfL https://varlock.dev/install.sh | sh -s
+   ```
+
+   Do not skip this in favour of the copy `yarn install` puts in `node_modules/.bin`. Both ship
+   varlock's native helper, the daemon holding your decryption session belongs to whichever copy
+   started it, and alternating between them tears that session down and re-prompts. That is why
+   `scripts/varlock-run.sh` resolves through a global `varlock` when there is one and only falls
+   back to the workspace copy otherwise. `VARLOCK_BIN=<path>` overrides the choice for one command.
+2. Enable the 1Password CLI integration: **Settings → Developer → Integrate with 1Password CLI**.
+   That is enough on its own, but desktop-app auth authorises **per run**, so you get a prompt on
+   every launch.
+3. Put a scoped 1Password service-account token in the macOS login Keychain, so authentication is a
+   genuinely one-time step rather than a prompt on every command:
+
+   ```bash
+   varlock keychain set OP_TOKEN --account dmr.is:local:OP_TOKEN
+   security find-generic-password -s varlock -a dmr.is:local:OP_TOKEN -w
+   ```
+
+   Paste the token at the masked prompt. The second command raises the Keychain access dialog —
+   **click "Always Allow", not "Allow"**. That is the entire trick: it adds `/usr/bin/security` to
+   the item's trusted-application list, and every later read is silent. Nothing else is needed.
+
+   One token serves every app: `OP_TOKEN` is declared once in `config/1password/.env.schema` and
+   imported by each app's config, where it resolves via
+   `exec(security find-generic-password …)`. Keep the token in 1Password too — after this it lives
+   only in your Keychain.
+
+   The token needs read access to every environment it resolves: the shared one plus each app's.
+   Miss that and resolution fails at the first `setValuesBulk` with a generic "an unexpected error
+   occurred while processing the request", which looks nothing like a permissions problem.
+
+   Do not reach for varlock's own `keychain()` or `varlock()` resolvers here. Both route reads
+   through varlock's native helper, which on macOS is gated by Secure Enclave user presence and
+   whose dialog offers **no "Always Allow"** — so it cannot be granted persistently. That path
+   prompts on every run, or once per terminal, no matter what you do to the item's ACL. See
+   [config/1password/README.md](config/1password/README.md) for the full account.
+
+   Skipping this step is survivable, and is what a non-macOS developer does: `allowAppAuth=true`
+   means anyone without the Keychain item falls back to 1Password desktop auth, which works but
+   prompts per run.
+4. `direnv allow`
+
+Check resolution by asking for a single value:
+
+```bash
+scripts/varlock-run.sh legal-gazette-api printenv DB_NAME
+```
+
+Do **not** use `varlock load` for this. It reports values already present in your shell, which is
+exactly what the wrapper scrubs before resolving.
+
+The 1Password environment ids are committed on purpose (`OP_SHARED_ENVIRONMENT`,
+`OP_APP_ENVIRONMENT`) — an id is an identifier, not a credential, and is useless without
+authentication. See [config/1password/README.md](config/1password/README.md) for the model: which
+keys are shared, which belong to a single app, and how to migrate the next one.
+
+**When you add a `process.env.X` read, declare `X`** — in `apps/<app>/.env.schema` if only that app
+uses it, or in the root schema (and the app's `pick` list) if more than one does.
 
 ## Generate client and schemas for web app
 

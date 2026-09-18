@@ -1,0 +1,961 @@
+import { GenderEnum } from '../models/report.model'
+import {
+  computeWageGapDecomposition,
+  gapPercentFromLog,
+  gapPercentFromMeans,
+  PayStatusEnum,
+  PooledReferenceModeEnum,
+  roundWageGapDecompositionSnapshot,
+  thresholdLogFor,
+  WageGapBlockerEnum,
+  type WageGapEmployeeInput,
+  WageGapWarningEnum,
+} from './wage-gap-decomposition'
+
+/** Narrows a nullable snapshot field, failing the test rather than asserting `!`. */
+function assertNumber(value: number | null): asserts value is number {
+  if (value === null) {
+    throw new Error('expected a computed number, got null')
+  }
+}
+
+const BENCHMARK = 3.9
+
+const employee = (
+  ordinal: number,
+  gender: GenderEnum,
+  score: number,
+  hourlyWage: number,
+): WageGapEmployeeInput => ({ ordinal, gender, score, hourlyWage })
+
+/** Deterministic mixed company: both genders across a range of scores. */
+const mixedCompany = (): WageGapEmployeeInput[] => [
+  employee(1, GenderEnum.MALE, 200, 3100),
+  employee(2, GenderEnum.MALE, 300, 3800),
+  employee(3, GenderEnum.MALE, 400, 4300),
+  employee(4, GenderEnum.MALE, 500, 5200),
+  employee(5, GenderEnum.MALE, 600, 6100),
+  employee(6, GenderEnum.FEMALE, 200, 2900),
+  employee(7, GenderEnum.FEMALE, 300, 3500),
+  employee(8, GenderEnum.FEMALE, 400, 4150),
+  employee(9, GenderEnum.FEMALE, 500, 4800),
+  employee(10, GenderEnum.FEMALE, 600, 5600),
+]
+
+/**
+ * Cohorts with genuinely different score composition — men concentrated in
+ * higher-scoring roles. Needed wherever `explained` must be non-zero: with
+ * identical score distributions the term is `(s̄_M − s̄_W)·β* = 0` for ANY β*,
+ * so the reference-convention choice cannot show up at all.
+ */
+const segregatedCompany = (): WageGapEmployeeInput[] => [
+  employee(1, GenderEnum.MALE, 500, 5200),
+  employee(2, GenderEnum.MALE, 600, 6100),
+  employee(3, GenderEnum.MALE, 700, 6600),
+  employee(4, GenderEnum.MALE, 400, 4300),
+  employee(5, GenderEnum.FEMALE, 200, 2900),
+  employee(6, GenderEnum.FEMALE, 300, 3500),
+  employee(7, GenderEnum.FEMALE, 400, 4150),
+  employee(8, GenderEnum.FEMALE, 500, 4700),
+]
+
+const run = (employees: WageGapEmployeeInput[]) =>
+  computeWageGapDecomposition({ employees, benchmarkPercent: BENCHMARK })
+
+describe('wage-gap-decomposition', () => {
+  describe('the identities — the primary correctness gate', () => {
+    // Holds for ANY β*, which is what makes it a real invariant rather than a
+    // restatement of the fitting procedure. Catches sign errors and
+    // wrong-reference-group bugs.
+    it('skýrt + óskýrt = Δ', () => {
+      const s = run(mixedCompany())
+
+      expect(
+        Math.abs(
+          (s.twofold.explained ?? 0) +
+            (s.twofold.unexplained ?? 0) -
+            (s.rawGapLog ?? 0),
+        ),
+      ).toBeLessThan(1e-9)
+    })
+
+    it('Δ equals the difference in mean log wage between the cohorts', () => {
+      const rows = mixedCompany()
+      const s = run(rows)
+
+      const logMean = (filter: (e: WageGapEmployeeInput) => boolean) => {
+        const subset = rows.filter(filter)
+        return (
+          subset.reduce((t, e) => t + Math.log(e.hourlyWage), 0) / subset.length
+        )
+      }
+      const expected =
+        logMean((e) => e.gender === GenderEnum.MALE) -
+        logMean((e) => e.gender !== GenderEnum.MALE)
+
+      expect(Math.abs((s.rawGapLog ?? 0) - expected)).toBeLessThan(1e-9)
+    })
+
+    // The identity that replaced the fixed ±1,95% band: each employee's share
+    // of the company gap is an identified quantity, not an approximation.
+    it('Σ framlag ≡ óskýrt, exactly', () => {
+      const s = run(mixedCompany())
+      const sum = s.employees.reduce((t, e) => t + e.contributionLog, 0)
+
+      expect(Math.abs(sum - (s.oskyrtLog ?? 0))).toBeLessThan(1e-9)
+    })
+
+    // Σ leif = 0 under OLS with an intercept — the reason the "óskýrt above the
+    // threshold with nobody to correct" state is impossible.
+    it('residuals sum to zero, so a gap always has at least one correctable driver', () => {
+      const s = run(mixedCompany())
+      const residualSum = s.employees.reduce((t, e) => t + e.residualLog, 0)
+
+      expect(Math.abs(residualSum)).toBeLessThan(1e-9)
+      expect(s.gapCarrierCount).toBeGreaterThan(0)
+    })
+
+    it('óskýrt equals mean(leif | karlar) − mean(leif | konur)', () => {
+      const s = run(mixedCompany())
+      const side = (male: boolean) =>
+        s.employees.filter((e) => (e.gender === GenderEnum.MALE) === male)
+      const meanRes = (rows: typeof s.employees) =>
+        rows.reduce((t, e) => t + e.residualLog, 0) / rows.length
+
+      expect(
+        Math.abs(
+          meanRes(side(true)) - meanRes(side(false)) - (s.oskyrtLog ?? 0),
+        ),
+      ).toBeLessThan(1e-9)
+    })
+  })
+
+  describe('percentage conversion', () => {
+    // ⚠️ The ordering is load-bearing: abs(convert(Δ)) ≠ convert(abs(Δ)), and a
+    // direction-agnostic statutory test cannot report two different figures for
+    // the same inequality.
+    it('is symmetric under direction reversal', () => {
+      const forward = gapPercentFromLog(Math.log(100 / 96))
+      const reverse = gapPercentFromLog(Math.log(96 / 100))
+
+      expect(forward.percent).toBeCloseTo(reverse.percent ?? 0, 10)
+      expect(forward.direction).toBe('FEMALE')
+      expect(reverse.direction).toBe('MALE')
+    })
+
+    it('uses the higher-paid group as the denominator', () => {
+      // Karlar 100, konur 96 → 4,00% of men's pay, not 4,17% of women's.
+      expect(gapPercentFromLog(Math.log(100 / 96)).percent).toBeCloseTo(4, 6)
+    })
+
+    it('reports arithmetic means for óleiðréttur, higher-paid base', () => {
+      const { percent, direction } = gapPercentFromMeans(2875, 2798)
+
+      expect(percent).toBeCloseTo(((2875 - 2798) / 2875) * 100, 10)
+      expect(direction).toBe('FEMALE')
+    })
+
+    it('nulls rather than guesses on missing or non-positive input', () => {
+      expect(gapPercentFromLog(null).percent).toBeNull()
+      expect(gapPercentFromMeans(null, 2798).percent).toBeNull()
+      expect(gapPercentFromMeans(0, 2798).percent).toBeNull()
+    })
+
+    it('carries both denominators, so the basis can be swapped in one line', () => {
+      const s = run(mixedCompany())
+
+      assertNumber(s.oskyrtPercent)
+      assertNumber(s.oskyrtPercentLowerBase)
+
+      // exp(|Δ|)−1 always exceeds 1−exp(−|Δ|) for a non-zero gap.
+      expect(s.oskyrtPercentLowerBase).toBeGreaterThan(s.oskyrtPercent)
+    })
+
+    // The two displayed figures use different averages BY DESIGN and do not
+    // decompose into one another.
+    it('derives óleiðréttur from arithmetic means, not from the log gap', () => {
+      const s = run(mixedCompany())
+
+      expect(s.rawGapPercent).not.toBeCloseTo(s.rawGapPercentGeometric ?? 0, 6)
+    })
+  })
+
+  describe('the lágmarksmengi', () => {
+    /**
+     * The two defects the recompute walk fixes. Both were reachable while the
+     * walk subtracted contributions from a fit it never recomputed, and neither
+     * was covered: the single hand-built fixture below happened to avoid both.
+     */
+    describe('membership does not depend on input order', () => {
+      /**
+       * Employees 1 and 2 are on an identical rate at an identical score — an
+       * ordinary pay grade, not an exotic shape. Their residuals are equal, so
+       * their `|contributionLog|` is bit-identical at 0,057181317, and only ONE
+       * of them is needed to bring óskýrt (5,33% í óhag karla) under the
+       * benchmark.
+       *
+       * `Array#sort` is stable, so without the ordinal tie-break the winner is
+       * decided by whichever row the database happens to return first. That is
+       * not cosmetic — the preview and the submit run the same engine over two
+       * separate queries, so the submit guard could reject a set the preview had
+       * just produced with "Detected outlier(s) missing from the outlier groups
+       * for employee ordinal(s): …".
+       */
+      const tiedCohort = (): WageGapEmployeeInput[] => [
+        employee(1, GenderEnum.MALE, 600, 2324),
+        employee(2, GenderEnum.MALE, 600, 2324),
+        employee(3, GenderEnum.MALE, 500, 4739),
+        employee(4, GenderEnum.FEMALE, 600, 3587),
+        employee(5, GenderEnum.MALE, 300, 4035),
+        employee(6, GenderEnum.FEMALE, 300, 3513),
+      ]
+
+      const membership = (employees: WageGapEmployeeInput[]): number[] =>
+        run(employees)
+          .employees.filter((candidate) => candidate.inMinimumSet)
+          .map((candidate) => candidate.ordinal)
+          .sort((a, b) => a - b)
+
+      it('has a genuine tie to break', () => {
+        const snapshot = run(tiedCohort())
+        const first = snapshot.employees.find((e) => e.ordinal === 1)
+        const second = snapshot.employees.find((e) => e.ordinal === 2)
+
+        // Bit-identical, not merely close — that is what makes the order matter.
+        expect(Math.abs(first?.contributionLog ?? 0)).toBe(
+          Math.abs(second?.contributionLog ?? 1),
+        )
+        // Exactly one of the pair is needed, so the tie decides membership.
+        expect(membership(tiedCohort())).toEqual([1])
+      })
+
+      it('resolves the tie by ordinal, whatever order the rows arrive in', () => {
+        const forward = membership(tiedCohort())
+
+        expect(membership([...tiedCohort()].reverse())).toEqual(forward)
+
+        // A few deterministic rotations — no RNG, so a failure is reproducible.
+        for (let offset = 1; offset < 6; offset++) {
+          const rotated = tiedCohort()
+          expect(
+            membership([...rotated.slice(offset), ...rotated.slice(0, offset)]),
+          ).toEqual(forward)
+        }
+      })
+    })
+
+    describe('sufficiency is reported, not assumed', () => {
+      /**
+       * Every man exactly +0.04 log points above the pooled line, every woman
+       * exactly −0.04 below, with real score variation so the fit is not
+       * degenerate.
+       *
+       * ⚠️ **This is the cohort two-directional analysis exists for.** Lifting
+       * EVERY underpaid woman to the line removes only A/n_W = 0.04 while óskýrt
+       * is (A−B)(1/n_M + 1/n_W) = 0.08, so a lift-only walk exhausts the
+       * disadvantaged side and still cannot reach the 0.0398 threshold. Reaching
+       * the men above the line closes it.
+       *
+       * Not an exotic shape either: it is what a workforce looks like when the
+       * advantaged group sits well above the line.
+       */
+      const symmetricallySplitCohort = (): WageGapEmployeeInput[] => {
+        const rows: WageGapEmployeeInput[] = []
+        let ordinal = 1
+        for (let i = 1; i <= 10; i++) {
+          const base = Math.log(3000) + 0.001 * (i * 100)
+          rows.push({
+            ordinal: ordinal++,
+            score: i * 100,
+            gender: GenderEnum.MALE,
+            hourlyWage: Math.exp(base + 0.04),
+          })
+          rows.push({
+            ordinal: ordinal++,
+            score: i * 100,
+            gender: GenderEnum.FEMALE,
+            hourlyWage: Math.exp(base - 0.04),
+          })
+        }
+        return rows
+      }
+
+      it('closes a gap a lift-only walk could not, by reaching the other side', () => {
+        const s = run(symmetricallySplitCohort())
+
+        expect(s.minimumSetClosesGap).toBe(true)
+        assertNumber(s.oskyrtLogAfterMinimumSet)
+        expect(s.oskyrtLogAfterMinimumSet).toBeLessThanOrEqual(s.thresholdLog)
+
+        // The proof it reached across: the liftable side alone is 10 people and
+        // exhausting it leaves the gap open, so any closing set MUST contain
+        // someone from the overpaid advantaged side.
+        const members = s.employees.filter((e) => e.inMinimumSet)
+        expect(
+          members.some((e) => e.payStatus === PayStatusEnum.OVERPAID),
+        ).toBe(true)
+      })
+
+      /**
+       * Non-closure survives, but its MEANING has inverted.
+       *
+       * It used to mean "the walk ran out of people to lift". It now means the
+       * opposite problem: correcting the carriers overshoots. óskýrt here is
+       * 9,46% í óhag KARLA, and moving the single carrier onto the line lands at
+       * 0,0687 í óhag KVENNA — past the benchmark, on the far side. Nothing in
+       * the pool lands inside the window, so the walk reports what it found and
+       * says plainly that it does not close.
+       *
+       * This is why `oskyrtDirectionAfterMinimumSet` exists: the after-figure is
+       * a magnitude, and without a direction the copy cannot tell a reader that
+       * the residual gap now runs the other way.
+       */
+      const overshootCohort = (): WageGapEmployeeInput[] => [
+        employee(1, GenderEnum.MALE, 500, 3724),
+        employee(2, GenderEnum.MALE, 500, 2049),
+        employee(3, GenderEnum.FEMALE, 400, 3487),
+        employee(4, GenderEnum.FEMALE, 200, 2846),
+        employee(5, GenderEnum.FEMALE, 500, 3253),
+        employee(6, GenderEnum.FEMALE, 600, 2773),
+      ]
+
+      it('reports non-closure when every correction overshoots the benchmark', () => {
+        const s = run(overshootCohort())
+
+        expect(s.oskyrtDirection).toBe('MALE')
+        expect(s.minimumSetClosesGap).toBe(false)
+        expect(s.oskyrtWithinBenchmark).toBe(false)
+        assertNumber(s.oskyrtLogAfterMinimumSet)
+        expect(s.oskyrtLogAfterMinimumSet).toBeGreaterThan(s.thresholdLog)
+
+        // Overshot: the gap that disfavoured men now disfavours women.
+        expect(s.oskyrtDirectionAfterMinimumSet).toBe('FEMALE')
+      })
+
+      it('never claims closure while the recomputed gap is still over', () => {
+        const s = run(overshootCohort())
+
+        assertNumber(s.oskyrtLogAfterMinimumSet)
+        expect(s.minimumSetClosesGap).toBe(
+          s.oskyrtLogAfterMinimumSet <= s.thresholdLog,
+        )
+      })
+
+      /**
+       * The refit invariant: the reported "after" figure must be what the engine
+       * actually returns once the counterfactual corrections are applied. Under
+       * the old linear subtraction these two diverged — measurably, and in both
+       * directions, so the estimate was not even conservative.
+       *
+       * ⚠️ This is also the negative-delta exactness check. `mixedCompany`'s set
+       * is mixed, so the corrections applied below include at least one DOWNWARD
+       * move; the incremental refit's algebra is linear in Δ and takes no
+       * absolute value, and this is what proves it.
+       */
+      it('reports an after-figure that survives re-running the engine', () => {
+        const rows = mixedCompany()
+        const s = run(rows)
+        expect(s.minimumSetSize).toBeGreaterThan(0)
+
+        const members = s.employees.filter((e) => e.inMinimumSet)
+
+        // Both directions present, or this test is not exercising what its
+        // docblock claims.
+        expect(
+          members.some((e) => e.payStatus === PayStatusEnum.UNDERPAID),
+        ).toBe(true)
+        expect(
+          members.some((e) => e.payStatus === PayStatusEnum.OVERPAID),
+        ).toBe(true)
+        expect(members.some((e) => e.expectedHourlyWage < e.hourlyWage)).toBe(
+          true,
+        )
+
+        const corrected = new Map(
+          members.map((e) => [e.ordinal, e.expectedHourlyWage]),
+        )
+        const after = run(
+          rows.map((row) => ({
+            ...row,
+            hourlyWage: corrected.get(row.ordinal) ?? row.hourlyWage,
+          })),
+        )
+
+        assertNumber(s.oskyrtLogAfterMinimumSet)
+        assertNumber(after.oskyrtLog)
+        // Same quantity, so they must agree to floating-point noise. A linear
+        // estimate would sit visibly off.
+        expect(s.oskyrtLogAfterMinimumSet).toBeCloseTo(
+          Math.abs(after.oskyrtLog),
+          9,
+        )
+      })
+
+      /**
+       * The incremental walk's safety net.
+       *
+       * `selectMinimumSet` updates óskýrt in O(1) per step rather than refitting —
+       * necessary, because refitting per candidate is quadratic and took 32 s at
+       * `MAX_EMPLOYEES` — so the claim that it equals a full refit has to be
+       * tested over MANY steps, not just the handful the small fixture needs. This
+       * cohort is large and lopsided enough that the walk takes dozens of them.
+       */
+      it('matches a full refit after many incremental steps', () => {
+        const rows: WageGapEmployeeInput[] = []
+        for (let i = 0; i < 200; i++) {
+          const isMale = i % 4 === 0 // lopsided, so the walk runs long
+          const score = 100 + ((i * 37) % 700)
+          rows.push({
+            ordinal: i + 1,
+            score,
+            gender: isMale ? GenderEnum.MALE : GenderEnum.FEMALE,
+            hourlyWage: Math.exp(
+              Math.log(3000) +
+                0.0015 * score +
+                ((i % 7) - 3) * 0.01 +
+                (isMale ? 0 : -0.12),
+            ),
+          })
+        }
+
+        const s = run(rows)
+        expect(s.minimumSetSize).toBeGreaterThan(20)
+
+        const lifted = new Map(
+          s.employees
+            .filter((e) => e.inMinimumSet)
+            .map((e) => [e.ordinal, e.expectedHourlyWage]),
+        )
+        const after = run(
+          rows.map((row) => ({
+            ...row,
+            hourlyWage: lifted.get(row.ordinal) ?? row.hourlyWage,
+          })),
+        )
+
+        assertNumber(s.oskyrtLogAfterMinimumSet)
+        assertNumber(after.oskyrtLog)
+        expect(s.oskyrtLogAfterMinimumSet).toBeCloseTo(
+          Math.abs(after.oskyrtLog),
+          9,
+        )
+      })
+
+      it('closes the gap for real when it says it does', () => {
+        const s = run(mixedCompany())
+        expect(s.minimumSetClosesGap).toBe(true)
+        assertNumber(s.oskyrtLogAfterMinimumSet)
+        expect(s.oskyrtLogAfterMinimumSet).toBeLessThanOrEqual(s.thresholdLog)
+      })
+    })
+
+    it('is drawn only from employees whose framlag shares óskýrt', () => {
+      const s = run(mixedCompany())
+
+      expect(s.oskyrtLogAfterMinimumSet).toBeLessThanOrEqual(s.thresholdLog)
+      expect(s.minimumSetSize).toBeLessThanOrEqual(s.gapCarrierCount)
+
+      const members = s.employees.filter((e) => e.inMinimumSet)
+      expect(members.length).toBeGreaterThan(0)
+
+      // The membership rule, asserted as itself rather than through the two
+      // quadrants it expands to: a member CARRIES the gap. Which side of the
+      // line they sit on is a separate fact, reported by `payStatus`.
+      assertNumber(s.oskyrtLog)
+      for (const member of members) {
+        expect(member.widensGap).toBe(true)
+        expect(member.contributionLog * s.oskyrtLog).toBeGreaterThan(0)
+      }
+    })
+
+    it('counts overpaid employees on the advantaged side as gap carriers', () => {
+      const s = run(mixedCompany())
+      const overpaid = s.employees.filter(
+        (e) => e.payStatus === PayStatusEnum.OVERPAID,
+      )
+
+      expect(overpaid).not.toHaveLength(0)
+
+      // `widensGap` is a statement about carrying the gap, not about being
+      // liftable: an overpaid member of the ADVANTAGED side pulls óskýrt wider
+      // just as an underpaid member of the disadvantaged side does.
+      expect(
+        overpaid.some(
+          (e) =>
+            e.widensGap &&
+            (e.gender === GenderEnum.MALE ? 'MALE' : 'FEMALE') !==
+              s.disadvantagedGender,
+        ),
+      ).toBe(true)
+
+      // Every carrier's framlag shares the sign of óskýrt — the definition,
+      // asserted directly rather than through the two quadrants.
+      assertNumber(s.oskyrtLog)
+      for (const carrier of s.employees.filter((e) => e.widensGap)) {
+        expect(carrier.contributionLog * s.oskyrtLog).toBeGreaterThan(0)
+      }
+    })
+
+    /**
+     * The replacement for "never proposes lowering anyone", which was true of
+     * the lift-only set and is deliberately false now.
+     *
+     * Nothing here proposes lowering anyone either: being listed obliges the
+     * employer to supply a reason and an action, not to change a wage. The
+     * counterfactual is a SELECTION device — see `selectMinimumSet`.
+     */
+    it('reaches the overpaid advantaged side when that is where the gap is', () => {
+      const s = run(mixedCompany())
+      const members = s.employees.filter((e) => e.inMinimumSet)
+
+      expect(
+        members.some(
+          (e) =>
+            e.payStatus === PayStatusEnum.OVERPAID &&
+            (e.gender === GenderEnum.MALE ? 'MALE' : 'FEMALE') !==
+              s.disadvantagedGender,
+        ),
+      ).toBe(true)
+    })
+
+    /**
+     * Two-directional must never be WORSE than one-directional for a given
+     * company, which is why the narrower pool is walked as well and the better
+     * result kept.
+     *
+     * This cohort is the counterexample that makes the fallback necessary: four
+     * employees on one score (so the slope is degenerate), óskýrt +0,20. The
+     * two-directional walk picks the overpaid man first, lands at −0,10, and
+     * every remaining candidate takes it further out — it cannot close. Lifting
+     * the one underpaid woman lands exactly on zero. Without the fallback this
+     * company would be told its gap cannot be closed, having been told the
+     * opposite by the previous release.
+     */
+    it('never does worse than a one-directional walk would have', () => {
+      const s = run([
+        employee(1, GenderEnum.MALE, 300, Math.exp(1.0)),
+        employee(2, GenderEnum.MALE, 300, Math.exp(0.0)),
+        employee(3, GenderEnum.FEMALE, 300, Math.exp(0.6)),
+        employee(4, GenderEnum.FEMALE, 300, Math.exp(0.0)),
+      ])
+
+      expect(s.minimumSetClosesGap).toBe(true)
+      expect(s.minimumSetSize).toBe(1)
+
+      const member = s.employees.find((e) => e.inMinimumSet)
+      expect(member?.ordinal).toBe(4)
+      expect(member?.payStatus).toBe(PayStatusEnum.UNDERPAID)
+    })
+
+    /**
+     * The OTHER half of the hybrid rule, and the half the feature is for.
+     *
+     * The test above is tier 1: two-directional cannot close, lift-only can, so
+     * the fallback is taken. This is tier 2 — BOTH walks close, and the smaller
+     * set wins. Óskýrt is 8,08% disfavouring women, and the three carriers are,
+     * biggest first: #2 (overpaid man, 0,0661), #3 (underpaid woman, 0,0505),
+     * #4 (overpaid man, 0,0498).
+     *
+     * - two-directional takes #2 first, which does not reach the benchmark, then
+     *   #3, which does — and lands at 0,0203 having named TWO people.
+     * - lift-only sees only #3, and #3 alone lands at 0,0211. ONE person.
+     *
+     * Both close, so the tie-break is size, and #2 is dropped even though the
+     * greedy walk reached for it first and it carries more of the gap than the
+     * person who ends up listed. Remove tier 2 — let ties and near-ties fall to
+     * the two-directional walk — and this company gets a second name on its
+     * úrbótaáætlun for a marginally smaller residual. That is the unfairness the
+     * tier exists to prevent, so it is asserted rather than assumed.
+     */
+    it('prefers the smaller set when both walks close the gap', () => {
+      const s = run([
+        employee(1, GenderEnum.MALE, 350, 3762),
+        employee(2, GenderEnum.MALE, 350, 5871),
+        employee(3, GenderEnum.FEMALE, 350, 4352),
+        employee(4, GenderEnum.MALE, 350, 5591),
+        employee(5, GenderEnum.FEMALE, 200, 3466),
+      ])
+
+      expect(s.minimumSetClosesGap).toBe(true)
+      expect(s.minimumSetSize).toBe(1)
+
+      const members = s.employees.filter((e) => e.inMinimumSet)
+      expect(members.map((e) => e.ordinal)).toEqual([3])
+
+      // The discriminating part: a BIGGER carrier exists, on the overpaid
+      // advantaged side, and the two-directional walk picks it first. It is
+      // absent from the set only because the walk that included it needed two
+      // people where this one needs one.
+      const byOrdinal = (ordinal: number) => {
+        const found = s.employees.find((e) => e.ordinal === ordinal)
+        if (!found) throw new Error(`no employee with ordinal ${ordinal}`)
+        return found
+      }
+
+      const dropped = byOrdinal(2)
+      const listed = byOrdinal(3)
+
+      expect(dropped.widensGap).toBe(true)
+      expect(dropped.payStatus).toBe(PayStatusEnum.OVERPAID)
+      expect(dropped.inMinimumSet).toBe(false)
+      expect(Math.abs(dropped.contributionLog)).toBeGreaterThan(
+        Math.abs(listed.contributionLog),
+      )
+
+      // ⚠️ And the two flags disagree here, which is the whole reason there are
+      // two of them: the company IS over the benchmark right now, and the listed
+      // set WOULD bring it under. Compliance is the first question.
+      expect(s.oskyrtWithinBenchmark).toBe(false)
+    })
+
+    /**
+     * ⚠️ The case `oskyrtWithinBenchmark` exists for.
+     *
+     * An empty set used to imply compliance, because the walk always committed
+     * its first candidate. The probe guard can decline every candidate — here
+     * both carriers overshoot the window in one step — so a company OVER the
+     * benchmark can come back with nothing listed.
+     *
+     * Anything reading `minimumSetSize === 0` as "compliant" therefore reports
+     * *Undir viðmiði* on a 4,88% gap. Both consumers (the reviewer's card and
+     * the auto-review rule) read the flag instead.
+     */
+    it('can return an empty set for a company that is NOT compliant', () => {
+      // Four employees on one starfsmatsstig, so the slope is degenerate and
+      // óskýrt is the raw difference in mean log wage.
+      const s = run([
+        employee(1, GenderEnum.MALE, 300, Math.exp(1.5)),
+        employee(2, GenderEnum.MALE, 300, Math.exp(-0.45)),
+        employee(3, GenderEnum.FEMALE, 300, Math.exp(1.45)),
+        employee(4, GenderEnum.FEMALE, 300, Math.exp(-0.5)),
+      ])
+
+      expect(s.oskyrtWithinBenchmark).toBe(false)
+      expect(s.gapCarrierCount).toBeGreaterThan(0)
+      expect(s.minimumSetSize).toBe(0)
+      expect(s.minimumSetClosesGap).toBe(false)
+
+      // The trap, stated as an assertion so it cannot creep back: size and
+      // compliance disagree here, and only one of them is compliance.
+      expect(s.minimumSetSize === 0).not.toBe(s.oskyrtWithinBenchmark)
+    })
+
+    it('is empty when the company is already under the benchmark', () => {
+      // Identical pay at identical scores ⇒ óskýrt 0.
+      const s = run([
+        employee(1, GenderEnum.MALE, 300, 4000),
+        employee(2, GenderEnum.FEMALE, 300, 4000),
+        employee(3, GenderEnum.MALE, 500, 5000),
+        employee(4, GenderEnum.FEMALE, 500, 5000),
+      ])
+
+      expect(Math.abs(s.oskyrtLog ?? 1)).toBeLessThan(1e-9)
+      expect(s.minimumSetSize).toBe(0)
+
+      // ⚠️ Asserted `true` HERE and nowhere else. Every other assertion on this
+      // flag is `false`, so a regression that hard-coded it `false` — or dropped
+      // the field and left it `undefined` under a loose matcher — would pass the
+      // rest of the file. The auto-review rule gates on `=== true`, so this is
+      // the branch that decides whether a compliant company auto-approves.
+      expect(s.oskyrtWithinBenchmark).toBe(true)
+    })
+
+    // Direction-agnostic: the same machinery must work when MEN are underpaid.
+    it('handles a men-underpaid company symmetrically', () => {
+      const s = run([
+        employee(1, GenderEnum.MALE, 200, 2700),
+        employee(2, GenderEnum.MALE, 400, 3400),
+        employee(3, GenderEnum.MALE, 600, 4100),
+        employee(4, GenderEnum.FEMALE, 200, 3200),
+        employee(5, GenderEnum.FEMALE, 400, 4000),
+        employee(6, GenderEnum.FEMALE, 600, 4900),
+      ])
+
+      expect(s.disadvantagedGender).toBe('MALE')
+      expect(s.oskyrtDirection).toBe('MALE')
+      assertNumber(s.oskyrtLog)
+      expect(s.oskyrtLog).toBeLessThan(0)
+
+      // The identity must still hold with the sign intact.
+      const sum = s.employees.reduce((t, e) => t + e.contributionLog, 0)
+      expect(Math.abs(sum - s.oskyrtLog)).toBeLessThan(1e-9)
+      // ⚠️ NOT `every(gender === MALE)` any more. With men disadvantaged the
+      // carriers are the underpaid men AND the overpaid women, and the walk
+      // takes from both — the symmetry being tested is of the RULE, not of the
+      // membership. What must hold in either direction is that every member
+      // carries the gap.
+      const members = s.employees.filter((e) => e.inMinimumSet)
+      expect(members.length).toBeGreaterThan(0)
+      for (const member of members) {
+        expect(member.contributionLog * s.oskyrtLog).toBeGreaterThan(0)
+      }
+      expect(members.some((e) => e.gender === GenderEnum.MALE)).toBe(true)
+      expect(members.some((e) => e.gender === GenderEnum.FEMALE)).toBe(true)
+    })
+
+    it('threshold in log points is the inverse of the displayed conversion', () => {
+      // −log(1 − 0,039) = 0,0397809. (The plan quotes 0,039779, which is wrong
+      // in the 6th decimal — the round-trip below is the property that matters.)
+      expect(thresholdLogFor(3.9)).toBeCloseTo(0.0397809, 7)
+      expect(gapPercentFromLog(thresholdLogFor(3.9)).percent).toBeCloseTo(
+        3.9,
+        9,
+      )
+    })
+  })
+
+  describe('availability gates', () => {
+    it('blocks both tiers for a single-gender company, and says which cohort is empty', () => {
+      const s = run([
+        employee(1, GenderEnum.MALE, 300, 4000),
+        employee(2, GenderEnum.MALE, 500, 5000),
+      ])
+
+      expect(s.rawGapAvailable).toBe(false)
+      expect(s.oskyrtAvailable).toBe(false)
+      expect(s.oskyrtBlockers).toContain(WageGapBlockerEnum.EMPTY_FEMALE_COHORT)
+      expect(s.oskyrtPercent).toBeNull()
+      // ⚠️ counts stay real — they are the actionable half of the message.
+      expect(s.counts).toEqual({ male: 2, female: 0, excluded: 0 })
+    })
+
+    it('never reports óskýrt available when the raw gap is not', () => {
+      const s = run([employee(1, GenderEnum.FEMALE, 300, 4000)])
+
+      expect(!s.rawGapAvailable && s.oskyrtAvailable).toBe(false)
+    })
+
+    // No cohort minimum anywhere: a 26/4 company gets the full analysis. The
+    // alternative would auto-approve exactly the companies where one underpaid
+    // employee moves the figure most.
+    it('computes fully for a lopsided 26/4 company', () => {
+      const rows: WageGapEmployeeInput[] = []
+      for (let i = 1; i <= 26; i++) {
+        rows.push(employee(i, GenderEnum.MALE, 200 + i * 10, 4000 + i * 20))
+      }
+      for (let i = 27; i <= 30; i++) {
+        rows.push(employee(i, GenderEnum.FEMALE, 200 + i * 10, 3600 + i * 20))
+      }
+      const s = run(rows)
+
+      expect(s.oskyrtAvailable).toBe(true)
+      expect(s.oskyrtPercent).not.toBeNull()
+      expect(s.counts).toEqual({ male: 26, female: 4, excluded: 0 })
+    })
+
+    it('bundles NEUTRAL into the female cohort', () => {
+      const s = run([
+        employee(1, GenderEnum.MALE, 300, 4000),
+        employee(2, GenderEnum.NEUTRAL, 300, 3600),
+      ])
+
+      expect(s.counts).toEqual({ male: 1, female: 1, excluded: 0 })
+      expect(s.rawGapAvailable).toBe(true)
+    })
+
+    it('excludes non-positive wages softly, counting and warning', () => {
+      const s = run([
+        ...mixedCompany(),
+        employee(11, GenderEnum.FEMALE, 300, 0),
+        employee(12, GenderEnum.MALE, 300, Number.NaN),
+      ])
+
+      expect(s.counts.excluded).toBe(2)
+      expect(s.warnings).toContain(
+        WageGapWarningEnum.ROWS_EXCLUDED_NON_POSITIVE_WAGE,
+      )
+      expect(s.oskyrtAvailable).toBe(true)
+    })
+
+    // ⚠️ With no score variation the pooled fit degenerates to intercept-only,
+    // residuals become y − ȳ, and óskýrt collapses to exactly the raw gap. That
+    // is the CORRECT answer — nothing is explained because there is nothing to
+    // explain with — so it warns rather than blocking.
+    it('collapses óskýrt to the raw gap when no score varies, rather than nulling', () => {
+      const s = run([
+        employee(1, GenderEnum.MALE, 300, 4400),
+        employee(2, GenderEnum.MALE, 300, 4600),
+        employee(3, GenderEnum.FEMALE, 300, 4000),
+        employee(4, GenderEnum.FEMALE, 300, 4200),
+      ])
+
+      expect(s.oskyrtAvailable).toBe(true)
+      expect(s.warnings).toContain(WageGapWarningEnum.NO_SCORE_VARIATION)
+      expect(s.oskyrtLog).toBeCloseTo(s.rawGapLog ?? 0, 9)
+    })
+
+    it('warns when the cohorts share no score range at all', () => {
+      const s = run([
+        employee(1, GenderEnum.MALE, 700, 8000),
+        employee(2, GenderEnum.MALE, 800, 9000),
+        employee(3, GenderEnum.FEMALE, 200, 3000),
+        employee(4, GenderEnum.FEMALE, 300, 3400),
+      ])
+
+      expect(s.warnings).toContain(WageGapWarningEnum.NO_SCORE_OVERLAP)
+      // Still reported — full separation IS the finding, not a reason to hide it.
+      expect(s.oskyrtAvailable).toBe(true)
+    })
+  })
+
+  /**
+   * Men and women are treated identically by construction. This block is the
+   * proof: mirror every gender in a company and nothing about the MAGNITUDE may
+   * change — only the direction label.
+   *
+   * It matters because the statutory test is direction-agnostic (a gap over 3,9%
+   * requires an úrbótaáætlun whichever gender is underpaid), and because the two
+   * obvious ways to get this wrong both look reasonable in code: taking
+   * `abs()` of a converted percentage, and hardcoding women as the disadvantaged
+   * group the way the reference script did.
+   */
+  describe('gender symmetry', () => {
+    const mirror = (rows: WageGapEmployeeInput[]): WageGapEmployeeInput[] =>
+      rows.map((e) => ({
+        ...e,
+        gender:
+          e.gender === GenderEnum.MALE ? GenderEnum.FEMALE : GenderEnum.MALE,
+      }))
+
+    it.each([
+      ['a mixed company', mixedCompany],
+      ['a segregated company', segregatedCompany],
+    ])(
+      'reports identical magnitudes with the direction flipped (%s)',
+      (_, build) => {
+        const forward = run(build())
+        const mirrored = run(mirror(build()))
+
+        assertNumber(forward.oskyrtPercent)
+        assertNumber(mirrored.oskyrtPercent)
+        assertNumber(forward.rawGapPercent)
+        assertNumber(mirrored.rawGapPercent)
+
+        // Magnitudes: bit-for-bit equal, not merely close.
+        expect(mirrored.oskyrtPercent).toBeCloseTo(forward.oskyrtPercent, 12)
+        expect(mirrored.rawGapPercent).toBeCloseTo(forward.rawGapPercent, 12)
+        expect(mirrored.rawGapPercentGeometric).toBeCloseTo(
+          forward.rawGapPercentGeometric ?? 0,
+          12,
+        )
+
+        // Direction, and only direction, inverts.
+        expect(mirrored.oskyrtDirection).not.toBe(forward.oskyrtDirection)
+        expect(mirrored.disadvantagedGender).not.toBe(
+          forward.disadvantagedGender,
+        )
+
+        // The remedy is the same size, drawn from the other side.
+        expect(mirrored.minimumSetSize).toBe(forward.minimumSetSize)
+        expect(mirrored.gapCarrierCount).toBe(forward.gapCarrierCount)
+      },
+    )
+
+    it('mirrors the signed log gap exactly', () => {
+      const forward = run(segregatedCompany())
+      const mirrored = run(mirror(segregatedCompany()))
+
+      assertNumber(forward.oskyrtLog)
+      assertNumber(mirrored.oskyrtLog)
+
+      expect(mirrored.oskyrtLog).toBeCloseTo(-forward.oskyrtLog, 12)
+      expect(mirrored.rawGapLog).toBeCloseTo(-(forward.rawGapLog ?? 0), 12)
+    })
+
+    it('crosses the 3,9% benchmark at the same point in both directions', () => {
+      // Built so óskýrt sits just above the line; the mirror must also be above.
+      const rows = [
+        employee(1, GenderEnum.MALE, 300, 4400),
+        employee(2, GenderEnum.MALE, 500, 5400),
+        employee(3, GenderEnum.FEMALE, 300, 4180),
+        employee(4, GenderEnum.FEMALE, 500, 5130),
+      ]
+      const forward = run(rows)
+      const mirrored = run(mirror(rows))
+
+      assertNumber(forward.oskyrtPercent)
+      assertNumber(mirrored.oskyrtPercent)
+
+      expect(forward.oskyrtPercent > BENCHMARK).toBe(
+        mirrored.oskyrtPercent > BENCHMARK,
+      )
+      expect(mirrored.minimumSetSize).toBe(forward.minimumSetSize)
+    })
+
+    // The one deliberate asymmetry in gender handling, recorded so it is not
+    // mistaken for a bug: NEUTRAL is bundled into FEMALE, so the comparison is
+    // M vs F+N. That is a product decision about a third category, not
+    // differential treatment of men and women.
+    it('bundles NEUTRAL into the female side rather than treating it separately', () => {
+      const withNeutral = run([
+        employee(1, GenderEnum.MALE, 300, 4400),
+        employee(2, GenderEnum.MALE, 500, 5400),
+        employee(3, GenderEnum.NEUTRAL, 300, 4180),
+        employee(4, GenderEnum.FEMALE, 500, 5130),
+      ])
+      const asFemale = run([
+        employee(1, GenderEnum.MALE, 300, 4400),
+        employee(2, GenderEnum.MALE, 500, 5400),
+        employee(3, GenderEnum.FEMALE, 300, 4180),
+        employee(4, GenderEnum.FEMALE, 500, 5130),
+      ])
+
+      expect(withNeutral.oskyrtPercent).toBeCloseTo(
+        asFemale.oskyrtPercent ?? 0,
+        12,
+      )
+      expect(withNeutral.counts).toEqual(asFemale.counts)
+    })
+  })
+
+  describe('reference conventions', () => {
+    it('defaults to the Neumark pooled fit', () => {
+      expect(run(mixedCompany()).pooledReferenceMode).toBe(
+        PooledReferenceModeEnum.POOLED_OLS,
+      )
+    })
+
+    // Worth stating explicitly, because it is easy to read a zero here as a bug:
+    // when both cohorts have the same score distribution there is nothing for
+    // the score to explain, so the ENTIRE raw gap is unexplained.
+    it('explains nothing when the cohorts have identical score composition', () => {
+      const s = run(mixedCompany())
+
+      expect(s.twofold.explained).toBeCloseTo(0, 9)
+      expect(s.oskyrtLog).toBeCloseTo(s.rawGapLog ?? 0, 9)
+    })
+
+    // The mirror case, and the one that makes leiðréttur > óleiðréttur possible:
+    // occupational segregation means score explains part of the raw gap.
+    it('explains part of the gap when score composition differs', () => {
+      const s = run(segregatedCompany())
+
+      expect(Math.abs(s.twofold.explained ?? 0)).toBeGreaterThan(1e-6)
+      expect(s.oskyrtLog).not.toBeCloseTo(s.rawGapLog ?? 0, 6)
+    })
+  })
+
+  describe('rounding for persistence', () => {
+    it('keeps 6dp on log points so the identity survives to display precision', () => {
+      const rounded = roundWageGapDecompositionSnapshot(run(mixedCompany()))
+
+      expect(
+        Math.abs(
+          (rounded.twofold.explained ?? 0) +
+            (rounded.twofold.unexplained ?? 0) -
+            (rounded.rawGapLog ?? 0),
+        ),
+      ).toBeLessThan(1e-5)
+    })
+
+    it('preserves the availability flags and counts through rounding', () => {
+      const rounded = roundWageGapDecompositionSnapshot(
+        run([employee(1, GenderEnum.MALE, 300, 4000)]),
+      )
+
+      expect(rounded.oskyrtAvailable).toBe(false)
+      expect(rounded.counts).toEqual({ male: 1, female: 0, excluded: 0 })
+      expect(rounded.oskyrtLog).toBeNull()
+    })
+  })
+})

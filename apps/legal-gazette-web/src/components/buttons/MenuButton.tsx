@@ -34,6 +34,12 @@ export const MenuButton = () => {
       iconType: 'outline',
     },
     {
+      title: 'Flokkar og tegundir',
+      href: '/flokkar-og-tegundir',
+      icon: 'copy',
+      iconType: 'outline',
+    },
+    {
       title: 'Viðhald',
       href: '/stillingar/vidhald',
       icon: 'settings',

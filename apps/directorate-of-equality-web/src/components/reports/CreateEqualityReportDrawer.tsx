@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 
 import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
@@ -16,12 +17,13 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { GenderEnum } from '../../gen/fetch/types.gen'
+import { useAllCompanies } from '../../hooks/useAllCompanies'
 import { overviewText, reportText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { formatNationalId } from '../../lib/utils'
+import { parseInflightConflictStatus } from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const t = overviewText.createEqualityReport
 const s = sharedText
@@ -34,12 +36,51 @@ const GENDER_OPTIONS = [
 
 const EMPTY_FORM = {
   companyAdminName: '',
+  companyAdminTitle: '',
   companyAdminEmail: '',
   companyAdminGender: GenderEnum.MALE,
   contactName: '',
+  contactTitle: '',
   contactEmail: '',
   contactPhone: '',
   equalityReportContent: '',
+  averageEmployeeMaleCount: '',
+  averageEmployeeFemaleCount: '',
+  averageEmployeeNeutralCount: '',
+}
+
+/**
+ * Mirrors the API's 4MB cap on a decoded PDF.
+ *
+ * Checked here as well as server-side because the failure is much cheaper to
+ * explain before the upload than after: base64 inflates by 4/3, so an oversized
+ * file would otherwise be encoded, sent, and rejected — for a limit the admin
+ * could have been told about on selection.
+ */
+const MAX_PDF_BYTES = 4 * 1024 * 1024
+
+/** Which representation the admin is entering the content as. */
+type ContentMode = 'TEXT' | 'PDF'
+
+type SelectedPdf = { filename: string; base64: string }
+
+/**
+ * Reads a File into base64 without the data-URI prefix `readAsDataURL` adds.
+ *
+ * Chunked rather than `String.fromCharCode(...bytes)`: spreading a multi-megabyte
+ * array into an argument list overflows the call stack, and 4MB is comfortably
+ * past where that starts failing.
+ */
+const fileToBase64 = async (file: File): Promise<string> => {
+  const bytes = new Uint8Array(await file.arrayBuffer())
+  const CHUNK = 0x8000
+  let binary = ''
+
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK))
+  }
+
+  return btoa(binary)
 }
 
 export const CreateEqualityReportDrawer = () => {
@@ -48,19 +89,53 @@ export const CreateEqualityReportDrawer = () => {
 
   const [companyId, setCompanyId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
+  const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined)
+  const [contentMode, setContentMode] = useState<ContentMode>('TEXT')
+  const [pdf, setPdf] = useState<SelectedPdf | null>(null)
+  const [pdfError, setPdfError] = useState<string | null>(null)
   const editorKey = useRef(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const set = (key: keyof typeof EMPTY_FORM) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }))
 
-  const companiesQuery = useQuery(
-    trpc.company.list.queryOptions({ pageSize: 1000 }),
-  )
+  const handlePdfChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0]
+    // Clear the input so re-picking the same file after an error still fires
+    // `change` — otherwise a corrected upload of the same name does nothing.
+    event.target.value = ''
 
-  const companyOptions = (companiesQuery.data?.companies ?? []).map((c) => ({
-    label: `${c.name} (${formatNationalId(c.nationalId)})`,
-    value: c.id,
-  }))
+    if (!file) return
+
+    setPdfError(null)
+
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      setPdf(null)
+      setPdfError(t.pdfNotAPdf)
+      return
+    }
+
+    if (file.size > MAX_PDF_BYTES) {
+      setPdf(null)
+      setPdfError(t.pdfTooLarge)
+      return
+    }
+
+    try {
+      setPdf({ filename: file.name, base64: await fileToBase64(file) })
+    } catch {
+      setPdf(null)
+      setPdfError(t.pdfReadError)
+    }
+  }
+
+  const {
+    options: companyOptions,
+    isLoading: isLoadingCompanies,
+    isError: companyLoadFailed,
+  } = useAllCompanies()
 
   const submitMutation = useMutation({
     ...trpc.adminReport.submitEquality.mutationOptions(),
@@ -68,15 +143,31 @@ export const CreateEqualityReportDrawer = () => {
       toast.success(t.successToast)
       queryClient.invalidateQueries({ queryKey: trpc.reports.list.queryKey() })
       handleReset()
+      setIsOpen(false)
     },
-    onError: () => toast.error(s.form.errorToast),
+    onError: (error) => {
+      // The API blocks a new submit while a sibling report is IN_REVIEW or
+      // POSTPONED (409). Tell the admin which status is blocking instead of
+      // the generic fallback so they know to resolve the in-flight report.
+      const conflictStatus = parseInflightConflictStatus(error.message)
+      if (conflictStatus) {
+        toast.error(t.inflightConflictToast.replace('{status}', conflictStatus))
+        return
+      }
+      toast.error(s.form.errorToast)
+    },
   })
 
   const handleReset = () => {
     setForm(EMPTY_FORM)
     setCompanyId(null)
+    setContentMode('TEXT')
+    setPdf(null)
+    setPdfError(null)
     editorKey.current += 1
   }
+
+  const isPdfMode = contentMode === 'PDF'
 
   const handleSubmit = () => {
     if (!companyId) return
@@ -86,12 +177,30 @@ export const CreateEqualityReportDrawer = () => {
         providerType: 'SYSTEM',
         providerId: Math.random().toString(36).substring(2, 15), // random ID to avoid replay, see report-create.service.ts
         companyAdminName: form.companyAdminName,
+        companyAdminTitle: form.companyAdminTitle || null,
         companyAdminEmail: form.companyAdminEmail,
         companyAdminGender: form.companyAdminGender,
         contactName: form.contactName,
+        contactTitle: form.contactTitle || null,
         contactEmail: form.contactEmail,
         contactPhone: form.contactPhone,
-        equalityReportContent: form.equalityReportContent,
+        // Exactly one of the two — the API rejects both together, and sending
+        // the unused one as an empty string would count as "both supplied".
+        ...(isPdfMode
+          ? {
+              equalityReportPdf: pdf?.base64,
+              equalityReportPdfFilename: pdf?.filename,
+            }
+          : { equalityReportContent: form.equalityReportContent }),
+        averageEmployeeMaleCount: form.averageEmployeeMaleCount
+          ? Number(form.averageEmployeeMaleCount)
+          : undefined,
+        averageEmployeeFemaleCount: form.averageEmployeeFemaleCount
+          ? Number(form.averageEmployeeFemaleCount)
+          : undefined,
+        averageEmployeeNeutralCount: form.averageEmployeeNeutralCount
+          ? Number(form.averageEmployeeNeutralCount)
+          : undefined,
       },
     })
   }
@@ -103,12 +212,15 @@ export const CreateEqualityReportDrawer = () => {
     !!form.contactName &&
     !!form.contactEmail &&
     !!form.contactPhone &&
-    !!form.equalityReportContent
+    // Whichever representation is active has to actually carry content.
+    (isPdfMode ? !!pdf : !!form.equalityReportContent)
 
   return (
     <Drawer
       ariaLabel={t.drawerLabel}
       baseId="create-equality-report-drawer"
+      isVisible={isOpen}
+      onVisibilityChange={setIsOpen}
       disclosure={
         <UtilityButton icon="add" fluid>
           {t.buttonLabel}
@@ -132,11 +244,20 @@ export const CreateEqualityReportDrawer = () => {
               options={companyOptions}
               value={companyOptions.find((o) => o.value === companyId) ?? null}
               onChange={(opt) => setCompanyId(opt?.value ?? null)}
-              isLoading={companiesQuery.isLoading}
+              isLoading={isLoadingCompanies}
               size="xs"
               backgroundColor="blue"
             />
           </GridColumn>
+          {/* Without this the admin sees an empty dropdown with no spinner —
+              indistinguishable from a register that genuinely has no
+              companies. The hook deliberately does not fall back to a partial
+              list, so a failed fetch empties the field entirely. */}
+          {companyLoadFailed && (
+            <GridColumn span="12/12">
+              <AlertMessage type="error" message={s.form.companyLoadError} />
+            </GridColumn>
+          )}
         </GridRow>
 
         <GridRow rowGap={1} marginBottom={4}>
@@ -152,6 +273,16 @@ export const CreateEqualityReportDrawer = () => {
               size="xs"
               value={form.companyAdminName}
               onChange={(e) => set('companyAdminName')(e.target.value)}
+              disabled={!companyId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <TextInput
+              name="companyAdminTitle"
+              label={s.form.jobTitleLabel}
+              size="xs"
+              value={form.companyAdminTitle}
+              onChange={(e) => set('companyAdminTitle')(e.target.value)}
               disabled={!companyId}
             />
           </GridColumn>
@@ -199,6 +330,16 @@ export const CreateEqualityReportDrawer = () => {
           </GridColumn>
           <GridColumn span={['12/12', '6/12']}>
             <TextInput
+              name="contactTitle"
+              label={s.form.jobTitleLabel}
+              size="xs"
+              value={form.contactTitle}
+              onChange={(e) => set('contactTitle')(e.target.value)}
+              disabled={!companyId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <TextInput
               name="contactEmail"
               label={s.form.emailLabel}
               type="email"
@@ -220,7 +361,50 @@ export const CreateEqualityReportDrawer = () => {
             />
           </GridColumn>
         </GridRow>
-
+        <GridRow rowGap={1} marginBottom={4}>
+          <GridColumn span="12/12">
+            <Text variant="h4" marginBottom={1}>
+              {t.employeeCountHeading}
+            </Text>
+          </GridColumn>
+          <GridColumn span={['12/12', '4/12']}>
+            <TextInput
+              name="averageEmployeeMaleCount"
+              label={s.genders.maleCount}
+              type="number"
+              size="xs"
+              value={form.averageEmployeeMaleCount}
+              onChange={(e) => set('averageEmployeeMaleCount')(e.target.value)}
+              disabled={!companyId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '4/12']}>
+            <TextInput
+              name="averageEmployeeFemaleCount"
+              label={s.genders.femaleCount}
+              type="number"
+              size="xs"
+              value={form.averageEmployeeFemaleCount}
+              onChange={(e) =>
+                set('averageEmployeeFemaleCount')(e.target.value)
+              }
+              disabled={!companyId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '4/12']}>
+            <TextInput
+              name="averageEmployeeNeutralCount"
+              label={s.genders.neutral}
+              type="number"
+              size="xs"
+              value={form.averageEmployeeNeutralCount}
+              onChange={(e) =>
+                set('averageEmployeeNeutralCount')(e.target.value)
+              }
+              disabled={!companyId}
+            />
+          </GridColumn>
+        </GridRow>
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">
             <Text variant="h4" marginBottom={1}>
@@ -228,26 +412,89 @@ export const CreateEqualityReportDrawer = () => {
             </Text>
           </GridColumn>
           <GridColumn span="12/12">
-            <Box
-              border="standard"
-              position="relative"
-              zIndex={10}
-              borderRadius="large"
-            >
-              <HTMLEditor
-                key={editorKey.current}
-                disabled={!companyId}
-                defaultValue={form.equalityReportContent}
-                handleUpload={() => new Error('File upload not supported')}
-                onChange={(value) => set('equalityReportContent')(value)}
-                config={{
-                  toolbar:
-                    'bold italic underline | align numlist bullist | link',
-                }}
-              />
+            <Box marginBottom={2}>
+              <Inline space={2}>
+                <Button
+                  variant={isPdfMode ? 'ghost' : 'primary'}
+                  size="small"
+                  disabled={!companyId}
+                  onClick={() => setContentMode('TEXT')}
+                >
+                  {t.contentModeText}
+                </Button>
+                <Button
+                  variant={isPdfMode ? 'primary' : 'ghost'}
+                  size="small"
+                  disabled={!companyId}
+                  onClick={() => setContentMode('PDF')}
+                >
+                  {t.contentModePdf}
+                </Button>
+              </Inline>
             </Box>
           </GridColumn>
+          <GridColumn span="12/12">
+            {isPdfMode ? (
+              <Box
+                background={pdf ? 'mint100' : 'blue100'}
+                borderRadius="large"
+                padding={3}
+                display="flex"
+                alignItems="center"
+                columnGap={3}
+              >
+                <Box flexGrow={1}>
+                  <Text variant="small">
+                    {pdf ? pdf.filename : t.pdfPlaceholder}
+                  </Text>
+                </Box>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  style={{ display: 'none' }}
+                  onChange={handlePdfChange}
+                  disabled={!companyId}
+                />
+                <Button
+                  variant="ghost"
+                  size="small"
+                  disabled={!companyId}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {pdf ? t.switchPdf : t.choosePdf}
+                </Button>
+              </Box>
+            ) : (
+              <Box
+                border="standard"
+                position="relative"
+                zIndex={10}
+                borderRadius="large"
+              >
+                <HTMLEditor
+                  key={editorKey.current}
+                  disabled={!companyId}
+                  defaultValue={form.equalityReportContent}
+                  handleUpload={() => new Error('File upload not supported')}
+                  onChange={(value) => set('equalityReportContent')(value)}
+                  config={{
+                    toolbar:
+                      'bold italic underline | align numlist bullist | link',
+                  }}
+                />
+              </Box>
+            )}
+          </GridColumn>
+          {pdfError && isPdfMode && (
+            <GridColumn span="12/12">
+              <Box marginTop={2}>
+                <AlertMessage type="error" message={pdfError} />
+              </Box>
+            </GridColumn>
+          )}
         </GridRow>
+
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">
             <Inline justifyContent="flexEnd" space={2}>

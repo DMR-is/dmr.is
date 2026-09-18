@@ -3,12 +3,13 @@
 import { useMemo } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
+import { MultiSelectFilter } from '@dmr.is/ui/components/island-is/MultiSelectFilter'
 
 import { companiesText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { SelectFilter } from './SelectFilter'
 
 type Props = {
+  label?: string
   selected: string[]
   onChange: (codes: string[]) => void
 }
@@ -16,7 +17,7 @@ type Props = {
 // The full ÍSAT2008 list (~665 leaf codes) is reference data — loaded once and
 // searched client-side by the Select itself (the design-system Select filters
 // in-browser, so server-side search isn't available here).
-export const IsatCategoryFilter = ({ selected, onChange }: Props) => {
+export const IsatCategoryFilter = ({ label, selected, onChange }: Props) => {
   const trpc = useTRPC()
 
   const { data, isLoading } = useQuery(
@@ -35,8 +36,9 @@ export const IsatCategoryFilter = ({ selected, onChange }: Props) => {
   )
 
   return (
-    <SelectFilter
+    <MultiSelectFilter
       name="isatCategory"
+      label={label}
       options={options}
       selected={selected}
       isLoading={isLoading}

@@ -148,13 +148,16 @@ export async function getNewestRegulations(opts: {
 
   const regulations = await DB_Regulation.findAll({
     // NOTE: This is leaky - as both title and ministryId might have changed
+    // Lowercase to match the model's column names — Sequelize silently drops
+    // unrecognised attributes, so the camelCase spellings were never selected
+    // and this endpoint omitted publishedDate/effectiveDate from every result.
     attributes: [
       'id',
       'type',
       'name',
       'title',
-      'publishedDate',
-      'effectiveDate',
+      'publisheddate',
+      'effectivedate',
       'ministryid',
     ],
     order: [

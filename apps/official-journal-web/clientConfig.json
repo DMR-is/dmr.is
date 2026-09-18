@@ -22,6 +22,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -53,54 +54,7 @@
             }
           }
         },
-        "summary": ""
-      }
-    },
-    "/api/v1/pdf/case/{id}/url": {
-      "get": {
-        "operationId": "getPdfUrlByCaseId",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetPdfUrlResponse" }
-              }
-            }
-          }
-        },
-        "summary": ""
-      }
-    },
-    "/api/v1/pdf/application/{id}/url": {
-      "get": {
-        "operationId": "getPdfUrlByApplicationId",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetPdfUrlResponse" }
-              }
-            }
-          }
-        },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3086,6 +3040,7 @@
           }
         },
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       },
       "delete": {
@@ -3111,6 +3066,7 @@
           }
         ],
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3138,6 +3094,7 @@
           }
         ],
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3167,6 +3124,7 @@
           }
         },
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       },
       "delete": {
@@ -3186,6 +3144,7 @@
           }
         ],
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3201,6 +3160,7 @@
           }
         ],
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3224,6 +3184,7 @@
           }
         },
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3248,6 +3209,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3272,6 +3234,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -4111,11 +4074,6 @@
         },
         "required": ["content"]
       },
-      "GetPdfUrlResponse": {
-        "type": "object",
-        "properties": { "url": { "type": "string" } },
-        "required": ["url"]
-      },
       "CreateCaseChannelBody": {
         "type": "object",
         "properties": {
@@ -4296,7 +4254,8 @@
           "IMAGE_TIER",
           "LOWERED",
           "PERCENTAGE"
-        ]
+        ],
+        "description": "Type of fee"
       },
       "TransactionFeeCode": {
         "type": "object",
@@ -4787,6 +4746,7 @@
           "assignedTo": {
             "description": "User the case is assigned to.",
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
           },
           "communicationStatus": {
@@ -4832,6 +4792,7 @@
           "transaction": {
             "description": "Case fee transaction.",
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/CaseTransaction" }]
           },
           "publicationNumber": {
@@ -5102,7 +5063,8 @@
           "Innsend",
           "Tilbúin til útgáfu",
           "Útgefin"
-        ]
+        ],
+        "description": "Status of the advert"
       },
       "AdvertPublicationNumber": {
         "type": "object",
@@ -5150,7 +5112,8 @@
       },
       "AdvertSignatureType": {
         "type": "string",
-        "enum": ["Hefðbundin", "Nefnd"]
+        "enum": ["Hefðbundin", "Nefnd"],
+        "description": "Type of the signature"
       },
       "AdvertSignatureMember": {
         "type": "object",
@@ -5369,6 +5332,7 @@
           "publicationNumber": {
             "description": "Publication number of the advert",
             "nullable": true,
+            "type": "object",
             "allOf": [
               { "$ref": "#/components/schemas/AdvertPublicationNumber" }
             ]
@@ -5827,7 +5791,8 @@
           "INTERNAL_COMMENT",
           "EXTERNAL_COMMENT",
           "APPLICATION_COMMENT"
-        ]
+        ],
+        "description": "The action that created the comment"
       },
       "CommentCreatorDto": {
         "type": "object",
@@ -5868,6 +5833,7 @@
           "receiver": {
             "nullable": true,
             "description": "The receiver of the comment",
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/CommentReceiverDto" }]
           },
           "comment": {
@@ -5936,6 +5902,7 @@
           "additional": { "type": "string", "nullable": true },
           "chairman": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/SignatureMember" }]
           },
           "members": {
@@ -6164,6 +6131,7 @@
           "assignedTo": {
             "description": "Employee the case was assigned to.",
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/HistoryEmployee" }]
           },
           "title": { "type": "string", "description": "Title of the advert" },
@@ -6266,6 +6234,7 @@
           "assignedTo": {
             "description": "User the case is assigned to.",
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
           },
           "communicationStatus": {
@@ -6311,6 +6280,7 @@
           "transaction": {
             "description": "Case fee transaction.",
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/CaseTransaction" }]
           },
           "message": {

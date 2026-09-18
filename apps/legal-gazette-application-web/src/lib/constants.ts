@@ -28,17 +28,3 @@ export const MIN_SELECTABLE_YEAR = new Date().getFullYear() - 1
 
 export const ALLOWED_FORM_TYPES = Object.values(FormTypes)
 
-export const requirementsStatementOptions = [
-  {
-    label: 'Staðsetning skiptastjóra',
-    value: 'LIQUIDATOR_LOCATION',
-  },
-  {
-    label: 'Slá inn staðsetningu',
-    value: 'CUSTOM_LIQUIDATOR_LOCATION',
-  },
-  {
-    label: 'Tölvupóstur',
-    value: 'CUSTOM_LIQUIDATOR_EMAIL',
-  },
-]

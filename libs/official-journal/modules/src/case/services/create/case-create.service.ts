@@ -36,7 +36,7 @@ import { ICommentServiceV2 } from '../../../comment/v2'
 import { IPriceService } from '../../../price/price.service.interface'
 import { IRegulationsAdminService } from '../../../regulations-admin/regulations-admin.service.interface'
 import { ISignatureService } from '../../../signature/signature.service.interface'
-import { IUtilityService } from '../../../utility/utility.module'
+import { IUtilityService } from '../../../utility/utility.service.interface'
 import { caseChannelMigrate } from '../../migrations/case-channel.migrate'
 import {
   CaseAdditionModel,
@@ -96,7 +96,8 @@ const REGULATION_APPLICATION_TYPES = [
 
 function isRegulationApplication(application: Application): boolean {
   return REGULATION_APPLICATION_TYPES.includes(
-    application.answers.applicationType as (typeof REGULATION_APPLICATION_TYPES)[number],
+    application.answers
+      .applicationType as (typeof REGULATION_APPLICATION_TYPES)[number],
   )
 }
 

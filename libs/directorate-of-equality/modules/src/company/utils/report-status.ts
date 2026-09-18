@@ -1,0 +1,507 @@
+import { literal } from 'sequelize'
+
+import { DoeModels } from '../../constants'
+import {
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from '../../report/models/report.enums'
+import {
+  CompanyObligationStatusEnum,
+  CompanyReportStatusEnum,
+  CompanySizeEnum,
+} from '../models/company.enums'
+
+/**
+ * Alias under which Sequelize references the `company` table in the queries
+ * that build `CompanyDto` (the model name, not the table name). Correlated
+ * sub-selects below qualify the outer company row with it. Defined as a string
+ * — rather than `CompanyModel.name` — so this module stays free of a model
+ * import and can be consumed by the model's own scope without a cycle.
+ */
+export const COMPANY_QUERY_ALIAS = 'CompanyModel'
+
+/**
+ * Whether the company has a *valid* approved report of the given type, filed
+ * through this system. "Valid" = APPROVED and not past its `valid_until`.
+ */
+function activeReportExists(type: ReportTypeEnum): string {
+  return `EXISTS (
+    SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" cr
+    JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
+    WHERE cr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+    AND r.type = '${type}'
+    AND r.status = '${ReportStatusEnum.APPROVED}'
+    AND r.valid_until > NOW()
+  )`
+}
+
+/** The `legacy_report` column carrying the stated expiry for each report type. */
+const LEGACY_VALID_UNTIL_COLUMN: Record<ReportTypeEnum, string> = {
+  [ReportTypeEnum.EQUALITY]: 'equality_valid_until',
+  [ReportTypeEnum.SALARY]: 'salary_valid_until',
+}
+
+/**
+ * The sheet's own word for a certification no longer in force, held verbatim on
+ * `legacy_report.validity`. Compared as a string literal because that column is
+ * TEXT by design — the archive's contract is what the list said, not what our
+ * domain means (see `LegacyReportModel`).
+ */
+const LEGACY_VALIDITY_EXPIRED = 'Útrunnið'
+
+/**
+ * SQL predicate: this legacy row's certificate was not surrendered.
+ *
+ * Normalised on both sides rather than compared exactly. `validity` is free
+ * text the load copies from the sheet verbatim — `readString` trims and does
+ * nothing else — so a re-export spelling the word with different casing would
+ * slip past `= 'Útrunnið'`. That failure is silent and total: the load replaces
+ * `legacy_report` wholesale, so the 20 surrendered certificates would quietly
+ * become coverage again. `lower(btrim(…))` costs nothing here, the sub-select
+ * being keyed on `company_id` with no index on `validity` to defeat.
+ *
+ * `IS DISTINCT FROM` keeps a NULL `validity` covered: 914 rows never had the
+ * cell filled, and a blank must not withdraw coverage a date supports.
+ */
+const LEGACY_NOT_SURRENDERED = `lower(btrim(lr.validity)) IS DISTINCT FROM lower('${LEGACY_VALIDITY_EXPIRED}')`
+
+/**
+ * The surrender guard, applied to the salary side only. The equality plan is a
+ * separate case with its own expiry, and 120 rows hold a live one beside a
+ * lapsed salary certificate — reading `validity` there would mark all 120 as
+ * missing a plan they hold.
+ */
+function legacySurrenderGuard(type: ReportTypeEnum): string {
+  return type === ReportTypeEnum.SALARY ? `AND ${LEGACY_NOT_SURRENDERED}` : ''
+}
+
+/**
+ * Whether the company holds a certification from the Directorate's outgoing
+ * SharePoint register that has not yet expired.
+ *
+ * The register load writes no `report` rows on purpose (see
+ * `LegacyReportModel`) — a legacy certificate went through none of this
+ * system's flow, so it has no employees, criteria or result to mint an APPROVED
+ * report from. Without this branch, though, the two would collapse into the
+ * same answer for the wrong reason: at hand-over 1 507 of 1 753 loaded
+ * companies are 25+ and hold no `report` row at all, so the register read
+ * MISSING_EQUALITY_REPORT for every one of them — including the ~540 whose
+ * equality plan the Directorate itself records as in force. "Has not filed
+ * here" is not "is out of compliance", and the admin register has to show the
+ * second.
+ *
+ * ⚠️ The *equality* branch consults the date and nothing else — never
+ * `validity` or `legacyStatus`. Those two describe the *salary* certification
+ * (`Í gildi` / `Lokið` / `Útrunnið`), and the equality plan is a separate case
+ * with its own number and its own expiry: 120 rows carry a live
+ * `equality_valid_until` while the salary certification beside it has lapsed.
+ * Reading the status columns there would wrongly mark all 120 as missing a plan
+ * they hold. This is the same rule the load applies when it seeds
+ * `next_equality_report_due_at` from the same cell.
+ *
+ * ⚠️ The *salary* branch additionally rejects a surrendered certificate (see
+ * `LEGACY_NOT_SURRENDERED`), because on that side the two columns describe the
+ * same certificate and 20 rows have them disagreeing: it was given up early
+ * ("Vottun sagt upp", "Uppsögn á skírteini") while its stated expiry still runs
+ * into the future — Reykjavíkurborg's to 2027-12-15. Without the guard the date
+ * alone would read those 20 as covered, and no other signal would contradict
+ * it, because the load seeds `next_salary_report_due_at` from that same cell
+ * and so `salaryReportOverdue` is false too. They would read SATISFACTORY.
+ *
+ * What the guard fixes is the *status*, and only that. Those companies are also
+ * barred from filing until six months before the seeded date
+ * (`evaluateSalaryRenewalEligibility`), and that lockout is neither caused nor
+ * lifted here — it follows from `next_salary_report_due_at`, which the load
+ * seeds from the sheet as a decision recorded in `company-register-to-sql.ts`.
+ * Before this branch existed they read MISSING_EQUALITY_REPORT and were just as
+ * unable to act. The guard makes the register honest about them; it does not
+ * make them fixable, and whether those seeded dates should be cleared is an
+ * open question for the Directorate rather than something to settle in SQL.
+ *
+ * The guard is `IS DISTINCT FROM`, not `<>`: 914 rows have a blank `validity`
+ * — the list never recorded one — and the archive keeps that as an honest NULL,
+ * so a blank cell beside a live date stays covered. An `Útrunnið` row whose
+ * date has actually passed already fails the date test, so this only ever moves
+ * the 20.
+ *
+ * The comparison is `>= CURRENT_DATE`, not `> NOW()`, because these are
+ * DATEONLY calendar dates: a certificate stated to be valid until today is
+ * valid through today, and `> NOW()` would expire it at midnight — the same
+ * reasoning that makes the load write 23:59:59 into the timestamp columns.
+ */
+function activeLegacyCertificationExists(type: ReportTypeEnum): string {
+  return `EXISTS (
+    SELECT 1 FROM "${DoeModels.LEGACY_REPORT}" lr
+    WHERE lr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+    AND lr.${LEGACY_VALID_UNTIL_COLUMN[type]} IS NOT NULL
+    AND lr.${LEGACY_VALID_UNTIL_COLUMN[type]} >= CURRENT_DATE
+    ${legacySurrenderGuard(type)}
+  )`
+}
+
+/**
+ * Whether the company's *legacy* coverage runs out within `interval` — the
+ * legacy half of the company list's "expires within" filter.
+ *
+ * It lives here, beside `activeLegacyCertificationExists`, because it has to
+ * mirror that function's judgements or the expiry queue contradicts the status
+ * column. Three gates, each matching the status `CASE`:
+ *
+ *   1. **The obligation.** The sheet carries a `Gildistími` for companies of
+ *      every size (see the load script), so `legacy_report` holds live dates
+ *      for companies below 25 that owe nothing. Without `equalityRequiredSql` /
+ *      `salaryRequiredSql` the filter would put them in a renewal queue the status
+ *      column simultaneously calls SATISFACTORY.
+ *   2. **The report supersedes the certificate.** Coverage is the *union* of an
+ *      APPROVED report and a live legacy certificate, so it ends at the later
+ *      of the two — "one of them expires" is not "coverage expires". Once a
+ *      company has filed and holds an in-force report of that type, its frozen
+ *      legacy date says nothing, and reading it would flag a company covered
+ *      for years to come.
+ *   3. **The surrender guard**, on the salary side, exactly as in the coverage
+ *      test: a certificate that was given up is not expiring soon, it is
+ *      already gone, and dating it would be inventing a deadline.
+ *
+ * Each type is tested separately and the two OR'd, because equality and salary
+ * are separate obligations with separate expiries: an equality plan lapsing in
+ * ten days needs attention whatever the salary certificate says.
+ *
+ * ⚠️ The `report` half of the filter (in `buildCompanyExpiryWhere`) is
+ * deliberately left as it was — untyped and ungated. It is self-limiting in a
+ * way this half is not: a `report` row exists only because the company filed,
+ * whereas a `legacy_report` row was seeded for all 1 759 of them. The one case
+ * it still reads loosely is a report expiring inside the window while a legacy
+ * certificate outlasts it, which needs a legacy date later than an approval's
+ * `validUntil` — the reverse of how the two are dated in practice.
+ *
+ * `interval` is a SQL interval literal chosen by the caller from a fixed set
+ * (`INTERVAL '30 days'`), never user input.
+ */
+export function legacyCertificationExpiringSql(interval: string): string {
+  const expiring = (type: ReportTypeEnum, required: string): string => `(
+    ${required}
+    AND NOT ${activeReportExists(type)}
+    AND EXISTS (
+      SELECT 1 FROM "${DoeModels.LEGACY_REPORT}" lr
+      WHERE lr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+      AND lr.${LEGACY_VALID_UNTIL_COLUMN[type]}
+          BETWEEN CURRENT_DATE AND CURRENT_DATE + ${interval}
+      ${legacySurrenderGuard(type)}
+    )
+  )`
+
+  return `(${expiring(
+    ReportTypeEnum.EQUALITY,
+    equalityRequiredSql,
+  )} OR ${expiring(ReportTypeEnum.SALARY, salaryRequiredSql)})`
+}
+
+/**
+ * The shared definition of "is covered" for a report type — filed here, or
+ * certified under the old regime and not yet expired. Kept identical for the
+ * displayed `reportStatus` column and the list status filter so the two can
+ * never disagree.
+ *
+ * ⚠️ This used to be *wider* than the application portal's own gate, which
+ * demanded a real `report` row because a salary report references its equality
+ * report by id and a legacy certificate has none to give. A legacy-certified
+ * company therefore read SATISFACTORY here while the portal answered
+ * MISSING_EQUALITY_REPORT and let it file nothing — a divergence that was
+ * documented as intended right up until someone tried to use the portal from
+ * one of those ~540 companies. The portal now answers from
+ * `resolveEqualityCoverage`, which applies the same two rules this does, and a
+ * salary report filed on legacy coverage records that in `equality_source`
+ * instead of an id.
+ *
+ * The two still differ in expression — SQL here, because this decorates a list
+ * query; a pair of model reads there — so a change to what counts as coverage
+ * has to be made in both. `equality_valid_until >= CURRENT_DATE` and
+ * `legacyValidUntilToDate` are the two halves of that one rule.
+ */
+function reportCovered(type: ReportTypeEnum): string {
+  return `(${activeReportExists(type)} OR ${activeLegacyCertificationExists(
+    type,
+  )})`
+}
+
+/**
+ * Whether the company has a salary report still in POSTPONED — i.e. with
+ * pay-gap outliers whose explanations are deferred. This is the signal for an
+ * outstanding úrbótaáætlun.
+ */
+function postponedSalaryExists(): string {
+  return `EXISTS (
+    SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" cr
+    JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
+    WHERE cr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+    AND r.type = '${ReportTypeEnum.SALARY}'
+    AND r.status = '${ReportStatusEnum.POSTPONED}'
+  )`
+}
+
+/**
+ * SQL boolean: the company owes a salary report — the size-driven flag (LARGE,
+ * set by the `company_sync_salary_report_required` trigger) or an admin
+ * override.
+ *
+ * Exported because four separate things have to agree on who owes what: the
+ * status expressions below, the per-obligation columns, the list filter, and
+ * `ReportDeadlineReminderTask`. Restating the rule in any of them is how the
+ * register and the mailer come to disagree.
+ *
+ * ⚠️ Qualified with `COMPANY_QUERY_ALIAS` — the Sequelize model name, which is
+ * also the alias a plain `CompanyModel.findAll()` emits (`FROM "company" AS
+ * "CompanyModel"`), so this is usable outside the `withReportStatus` scope.
+ */
+export const salaryRequiredSql = `("${COMPANY_QUERY_ALIAS}"."salary_report_required" = true OR "${COMPANY_QUERY_ALIAS}"."salary_report_required_override" = true)`
+
+/**
+ * SQL boolean: the company owes an equality plan — 25+ employees (MEDIUM|LARGE),
+ * or a salary obligation, which presupposes the plan.
+ *
+ * UNKNOWN and SMALL owe nothing. See `CompanySizeEnum`: UNKNOWN imposes no
+ * obligation until an admin classifies the company, rather than asserting the
+ * company is small.
+ */
+export const equalityRequiredSql = `("${COMPANY_QUERY_ALIAS}"."employee_count_category" IN ('${CompanySizeEnum.MEDIUM}', '${CompanySizeEnum.LARGE}') OR ${salaryRequiredSql})`
+
+/**
+ * SQL boolean: the company owes no report of any kind — "ekki lagaskylt".
+ *
+ * ⚠️ SMALL specifically, not `NOT equalityRequiredSql`, even though the two
+ * differ only on UNKNOWN. UNKNOWN means the size was never established (an
+ * auto-provisioned company nobody has classified yet), and this predicate
+ * exists to hide companies from the default admin list. Hiding the
+ * unclassified would remove exactly the queue an admin has to work through,
+ * and nothing else surfaces it — so an open question must not be filed away as
+ * a settled "owes nothing". Same distinction the register load draws when it
+ * refuses to clear a due date on UNKNOWN.
+ *
+ * ⚠️ Reads the salary obligation, so a 0–24 company carrying
+ * `salary_report_required_override` is NOT swept up. That override is the
+ * Directorate's record of a special case, and it is the whole reason this
+ * cannot be `employee_count_category = 'SMALL'` on its own.
+ */
+export const notLegallyObligedSql = `("${COMPANY_QUERY_ALIAS}"."employee_count_category" = '${CompanySizeEnum.SMALL}' AND NOT ${salaryRequiredSql})`
+
+/**
+ * SQL boolean: the company owes an equality plan and nothing covers it.
+ */
+export function equalityReportMissingSql(): string {
+  return `(${equalityRequiredSql} AND NOT ${reportCovered(
+    ReportTypeEnum.EQUALITY,
+  )})`
+}
+
+/**
+ * SQL boolean: an úrbótaáætlun is outstanding — a salary report sits in
+ * POSTPONED with its outlier explanations deferred.
+ *
+ * ⚠️ This is a state OF the launagreining, not a separate obligation. The
+ * company has filed; the report is parked. Hence `salaryReportMissingSql`
+ * excludes it rather than both being true at once.
+ */
+export function actionPlanMissingSql(): string {
+  return `(${postponedSalaryExists()})`
+}
+
+/**
+ * SQL boolean: the company owes a salary report, nothing covers it, and none is
+ * postponed.
+ *
+ * ⚠️ The postponed exclusion is what makes this and `actionPlanMissingSql`
+ * mutually exclusive. Without it both are true for a postponed report — it is
+ * not APPROVED, so it is not covered — and the company reads as missing a
+ * launagreining it has actually filed.
+ */
+export function salaryReportMissingSql(): string {
+  return `(${salaryRequiredSql} AND NOT ${reportCovered(
+    ReportTypeEnum.SALARY,
+  )} AND NOT ${actionPlanMissingSql()})`
+}
+
+/**
+ * The roll-up compliance status, as a SQL `CASE` yielding
+ * `CompanyReportStatusEnum` values in priority order (most critical first).
+ * Populates the `reportStatus` column via the model's `withReportStatus` scope;
+ * drives the detail header and list sorting.
+ *
+ * ⚠️ Built from the same three predicates as the per-obligation expressions
+ * below, so the roll-up and the columns cannot disagree. Change a rule in one
+ * of the predicates, never here.
+ *
+ * ⚠️ The action-plan branch precedes the salary branch. See the ordering note
+ * on `CompanyReportStatusEnum`; the declaration order of the enum members is
+ * NOT the evaluation order.
+ */
+export function companyReportStatusCaseSql(): string {
+  return `(CASE
+    WHEN ${equalityReportMissingSql()} THEN '${
+    CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
+  }'
+    WHEN ${actionPlanMissingSql()} THEN '${
+    CompanyReportStatusEnum.MISSING_ACTION_PLAN
+  }'
+    WHEN ${salaryReportMissingSql()} THEN '${
+    CompanyReportStatusEnum.MISSING_SALARY_REPORT
+  }'
+    ELSE '${CompanyReportStatusEnum.SATISFACTORY}'
+  END)`
+}
+
+export function companyReportStatusLiteral() {
+  return literal(companyReportStatusCaseSql())
+}
+
+/**
+ * The equality obligation's own state, as a SQL `CASE` yielding
+ * `CompanyObligationStatusEnum`. Drives the list's `Jafnréttisáætlun` column.
+ *
+ * ⚠️ Never yields ACTION_PLAN_MISSING: an equality report has no outlier groups
+ * and cannot be postponed.
+ */
+export function equalityObligationStatusCaseSql(): string {
+  return `(CASE
+    WHEN NOT ${equalityRequiredSql} THEN '${
+    CompanyObligationStatusEnum.NOT_REQUIRED
+  }'
+    WHEN ${equalityReportMissingSql()} THEN '${
+    CompanyObligationStatusEnum.MISSING
+  }'
+    ELSE '${CompanyObligationStatusEnum.COVERED}'
+  END)`
+}
+
+/**
+ * The salary obligation's own state, as a SQL `CASE` yielding
+ * `CompanyObligationStatusEnum`. Drives the list's `Launagreining` column.
+ *
+ * ⚠️ ACTION_PLAN_MISSING is tested FIRST — before the obligation itself, and
+ * before MISSING.
+ *
+ * Before the obligation, because a postponed report is evidence the company
+ * filed, and that outstanding úrbótaáætlun outlives the obligation that
+ * prompted it. `salary_report_required` is trigger-derived from the size bucket
+ * (BEFORE INSERT OR UPDATE), so reclassifying a company down from LARGE flips it
+ * to false while the postponed report stays exactly where it was. Testing
+ * NOT_REQUIRED first reported "Á ekki við" for a company with unexplained pay
+ * outliers on file — while the roll-up `reportStatus` beside it still said
+ * MISSING_ACTION_PLAN. Two columns, same data, opposite answers.
+ *
+ * Before MISSING, because a postponed report is not APPROVED and so is also not
+ * covered; both predicates would otherwise describe it.
+ *
+ * This mirrors `actionPlanMissingSql` carrying no obligation gate of its own —
+ * gating it here defeated the same guarantee one level up.
+ */
+export function salaryObligationStatusCaseSql(): string {
+  return `(CASE
+    WHEN ${actionPlanMissingSql()} THEN '${
+    CompanyObligationStatusEnum.ACTION_PLAN_MISSING
+  }'
+    WHEN NOT ${salaryRequiredSql} THEN '${
+    CompanyObligationStatusEnum.NOT_REQUIRED
+  }'
+    WHEN ${salaryReportMissingSql()} THEN '${
+    CompanyObligationStatusEnum.MISSING
+  }'
+    ELSE '${CompanyObligationStatusEnum.COVERED}'
+  END)`
+}
+
+/**
+ * SQL boolean: the company may be hidden from the default register view.
+ *
+ * `notLegallyObligedSql` alone is not a safe hide. An outstanding úrbótaáætlun
+ * survives a reclassification — the report stays POSTPONED while
+ * `salary_report_required` flips false with the size bucket — so a company can
+ * owe nothing *and* still have unexplained pay outliers waiting on it. Hiding
+ * that company removes the only place an admin would see the work.
+ *
+ * Deliberately expressed here rather than folded into `notLegallyObligedSql`:
+ * that predicate answers "is this company legally obliged", which such a company
+ * genuinely is not. This one answers "is it safe to hide", which is a different
+ * question with a different answer.
+ */
+export function hiddenFromDefaultRegisterSql(): string {
+  return `(${notLegallyObligedSql} AND NOT ${actionPlanMissingSql()})`
+}
+
+export function equalityObligationStatusLiteral() {
+  return literal(equalityObligationStatusCaseSql())
+}
+
+export function salaryObligationStatusLiteral() {
+  return literal(salaryObligationStatusCaseSql())
+}
+
+/**
+ * SQL boolean: the company owes an equality plan and its next due date has
+ * passed. Surfaced on `CompanyDto.equalityReportOverdue` so admins can spot
+ * companies that need attention (and possibly the daily-fines process).
+ *
+ * ⚠️ Gated on the obligation, not on the date alone. The register load seeds
+ * `next_equality_report_due_at` from the old sheet's `Gildistíma
+ * jafnréttisáætlunar` for companies of EVERY size — unlike the salary column,
+ * which it size-gates on insert and actively clears on upsert — so most
+ * companies below 25 carry a past date against a plan they do not owe. Without
+ * this gate they read as overdue, which is what put "Skiladagur liðinn" beside
+ * "Fullnægjandi" in the admin list.
+ */
+export function equalityReportOverdueSql(): string {
+  return `(${equalityRequiredSql} AND "${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" < NOW())`
+}
+
+/**
+ * SQL boolean: the company owes a salary report and its next due date has
+ * passed. Gated on the obligation for the same reason as the equality side —
+ * the seeded dates outlive a reclassification, and an admin clearing
+ * `salary_report_required_override` must not leave a live overdue flag behind.
+ */
+export function salaryReportOverdueSql(): string {
+  return `(${salaryRequiredSql} AND "${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" < NOW())`
+}
+
+export function equalityReportOverdueLiteral() {
+  return literal(equalityReportOverdueSql())
+}
+
+export function salaryReportOverdueLiteral() {
+  return literal(salaryReportOverdueSql())
+}
+
+/**
+ * SQL boolean: the company has at least one row in the retired SharePoint
+ * archive. Surfaced on `CompanyDto.hasLegacyReports` so the detail view can
+ * leave out the "Eldri gögn" tab entirely rather than offer a tab that opens
+ * on nothing.
+ *
+ * It lives here, beside the other `withReportStatus` literals, because that
+ * scope is the one read path that builds a `CompanyDto` and this is another
+ * column it has to derive — not because the flag has anything to do with
+ * compliance status. It deliberately does not.
+ *
+ * Unconditional, unlike `activeLegacyCertificationExists`: that asks whether
+ * legacy coverage is still in force, this asks only whether the old list said
+ * anything at all. A lapsed or surrendered certificate is exactly the history
+ * an admin opens the tab to read.
+ *
+ * Every company the register load created holds a row (1 753 companies, 1 759
+ * rows — six resolved from two sheet rows each), so in practice the flag is
+ * false only for companies created in this system since hand-over, which is
+ * the whole point of asking.
+ *
+ * `EXISTS` rather than a count: the tab fetches the rows itself, so the number
+ * is not wanted here, and `EXISTS` stops at the first hit on
+ * `legacy_report_company_id_idx`.
+ */
+export function companyHasLegacyReportsSql(): string {
+  return `EXISTS (
+    SELECT 1 FROM "${DoeModels.LEGACY_REPORT}" lr
+    WHERE lr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+  )`
+}
+
+export function companyHasLegacyReportsLiteral() {
+  return literal(companyHasLegacyReportsSql())
+}

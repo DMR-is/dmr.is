@@ -1,10 +1,12 @@
 /* eslint-disable local-rules/disallow-kennitalas */
 import { ForbiddenException } from '@nestjs/common'
 
+import {
+  ReportRoleEnum,
+  ReportStatusEnum,
+} from '@dmr.is/doe-modules/report'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
-import { ReportStatusEnum } from '../../../modules/report/models/report.model'
-import { ReportRoleEnum } from '../../../modules/report/types/report-resource-context'
 import { ReportResourceGuard } from './report-resource.guard'
 
 const createUser = (nationalId: string): DMRUser =>

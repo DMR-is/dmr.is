@@ -1,19 +1,19 @@
 'use client'
 
+import { useState } from 'react'
+
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
-import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
-import {
-  REPORT_STATUS_LABEL,
-  REPORT_STATUS_TAG_VARIANT,
-} from '../../components/companies/companyStatus'
+import { SendCompanyEmailModal } from '../../components/companies/SendCompanyEmailModal'
+import { CompanyConfirmationModal } from '../../components/company/CompanyConfirmationModal'
+import { CompanyObligationTags } from '../../components/company/CompanyObligationTags'
 import { CompanyDto } from '../../gen/fetch'
 import { NAV_PATHS } from '../../lib/constants'
 import { companiesText, headerText } from '../../lib/text'
@@ -28,9 +28,20 @@ type CompanyFormContainerProps = {
   company: CompanyDto
 }
 
+type CompanyConfirmationModalType = 'fines' | 'quarantine'
+
+const confirmationModalText = {
+  fines: companiesText.dailyFinesModal,
+  quarantine: companiesText.quarantineModal,
+}
+
 export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const [confirmationType, setConfirmationType] =
+    useState<CompanyConfirmationModalType>()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEmailOpen, setIsEmailOpen] = useState(false)
 
   const invalidateCompany = () => {
     queryClient.invalidateQueries({
@@ -90,13 +101,7 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
           >
             <Text variant="h3">{company.name}</Text>
             <Box>
-              <Tag
-                variant={REPORT_STATUS_TAG_VARIANT[company.reportStatus]}
-                disabled
-                outlined
-              >
-                {REPORT_STATUS_LABEL[company.reportStatus]}
-              </Tag>
+              <CompanyObligationTags company={company} />
             </Box>
           </Box>
           {company.quarantined && (
@@ -142,6 +147,17 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
               </Box>
             </Box>
           )}
+          <Box marginBottom={4} display="flex" columnGap={2}>
+            <Button
+              size="small"
+              variant="text"
+              icon="mail"
+              iconType="outline"
+              onClick={() => setIsEmailOpen(true)}
+            >
+              {companiesText.sendEmail.detailButton}
+            </Button>
+          </Box>
           {(!company.finesStarted || !company.quarantined) && (
             <Box marginBottom={4} display="flex" columnGap={2}>
               {!company.finesStarted && (
@@ -152,9 +168,10 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
                   icon="gavel"
                   iconType="outline"
                   loading={updateFines.isPending}
-                  onClick={() =>
-                    updateFines.mutate({ id: company.id, finesStarted: true })
-                  }
+                  onClick={() => {
+                    setConfirmationType('fines')
+                    setIsModalOpen(true)
+                  }}
                 >
                   {t.finesButton}
                 </Button>
@@ -167,12 +184,10 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
                   icon="lockClosed"
                   iconType="outline"
                   loading={updateQuarantine.isPending}
-                  onClick={() =>
-                    updateQuarantine.mutate({
-                      id: company.id,
-                      quarantined: true,
-                    })
-                  }
+                  onClick={() => {
+                    setConfirmationType('quarantine')
+                    setIsModalOpen(true)
+                  }}
                 >
                   {t.quarantineButton}
                 </Button>
@@ -182,6 +197,58 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
         </Stack>
       </Stack>
       <CompanyTabsContainer company={company} />
+      <CompanyConfirmationModal
+        text={
+          confirmationType && {
+            title: confirmationModalText[confirmationType].title,
+            description: confirmationModalText[confirmationType].description(
+              <Text key="company-name" as="span" fontWeight="semiBold">
+                {company.name}
+              </Text>,
+            ),
+            confirmButton:
+              confirmationModalText[confirmationType].confirmButton,
+          }
+        }
+        visible={isModalOpen}
+        isLoading={updateQuarantine.isPending || updateFines.isPending}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={() => {
+          if (!confirmationType) return
+          // Close once the request settles so the confirm button can show its
+          // pending state instead of the modal vanishing on click.
+          const closeOnSettled = { onSettled: () => setIsModalOpen(false) }
+          if (confirmationType === 'fines') {
+            updateFines.mutate(
+              { id: company.id, finesStarted: true },
+              closeOnSettled,
+            )
+          } else {
+            updateQuarantine.mutate(
+              { id: company.id, quarantined: true },
+              closeOnSettled,
+            )
+          }
+        }}
+      />
+      {/*
+        Always mounted and toggled through `isOpen` — see the note at the
+        company list's mount site. A dialog that mounts already-visible is
+        hidden again by the click that opened it.
+      */}
+
+      <SendCompanyEmailModal
+        isOpen={isEmailOpen}
+        onClose={() => setIsEmailOpen(false)}
+        target={{
+          mode: 'company',
+          companyId: company.id,
+          // The company's stored contact email, prefilled and editable. Null
+          // when none is on file, which leaves the field empty and blocks
+          // "Halda áfram" until one is typed.
+          defaultEmail: company.email ?? null,
+        }}
+      />
     </Box>
   )
 }

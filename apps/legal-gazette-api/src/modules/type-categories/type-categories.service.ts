@@ -10,7 +10,10 @@ import {
   TypeWithCategoriesQueryDto,
   TypeWithCategoriesResponseDto,
 } from './dto/type-categories.dto'
-import { ITypeCategoriesService } from './type-categories.service.interface'
+import {
+  FindByTypeIdOptions,
+  ITypeCategoriesService,
+} from './type-categories.service.interface'
 
 @Injectable()
 export class TypeCategoriesService implements ITypeCategoriesService {
@@ -55,15 +58,27 @@ export class TypeCategoriesService implements ITypeCategoriesService {
     }
   }
 
-  async findByTypeId(typeId: string): Promise<TypeWithCategoriesResponseDto> {
+  async findByTypeId(
+    typeId: string,
+    options?: FindByTypeIdOptions,
+  ): Promise<TypeWithCategoriesResponseDto> {
     const type = await this.typeModel.unscoped().findOneOrThrow({
       attributes: ['id', 'title', 'slug'],
       where: { id: { [Op.eq]: typeId } },
       include: [
         {
           model: CategoryModel,
+          where: options?.excludeUnassignable ? { active: true } : undefined,
+          required: false,
         },
       ],
+      // CategoryModel's default scope orders by title, but an order inside a
+      // non-separate include is not emitted by Sequelize, so it has to be
+      // declared at the top level. Without it the category order - and therefore
+      // anything derived from categories[0] - is whatever Postgres returns.
+      // Ordered via the association name: passing the model itself throws
+      // "Unable to find a valid association" for this belongsToMany.
+      order: [['categories', 'title', 'ASC']],
     })
 
     return { type: type.fromModelWithCategories() }

@@ -12,6 +12,7 @@ import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 import {
   ApiDateTimeArray,
   ApiOptionalBoolean,
+  ApiOptionalDate,
   ApiOptionalDateTime,
   ApiOptionalDto,
   ApiOptionalDtoArray,
@@ -27,9 +28,9 @@ import { Paging } from '@dmr.is/shared-dto'
 import {
   AdvertDetailedDto,
   AdvertDto,
-  AdvertTemplateType,
   ExternalAdvertDto,
-} from '../../../models/advert.model'
+} from '../../../models/advert.dto'
+import { AdvertTemplateType } from '../../../models/advert.model'
 import { CategoryDto } from '../../../models/category.model'
 import { StatusDto } from '../../../models/status.model'
 import { TypeDto } from '../../../models/type.model'
@@ -215,13 +216,13 @@ export class CreateAdvertInternalDto {
   @ApiOptionalUuid()
   applicationId?: string
 
-  @ApiOptionalDateTime({ description: 'Date of signature' })
+  @ApiOptionalDate({ description: 'Date of signature' })
   signatureDate?: Date
 
   @ApiOptionalUuid()
   statusId?: string
 
-  @ApiOptionalDateTime()
+  @ApiOptionalDate()
   judgementDate?: Date | null
 
   @ApiOptionalDateTime()

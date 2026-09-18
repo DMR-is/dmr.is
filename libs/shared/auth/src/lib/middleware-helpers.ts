@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { encode, JWT } from 'next-auth/jwt'
 import type { NextRequestWithAuth } from 'next-auth/middleware'
 import { withAuth } from 'next-auth/middleware'
+import { getLogger } from '@dmr.is/logging-next'
 
-import { refreshAccessToken } from './token-service'
-import { isExpired } from './token-service'
+import { refreshAccessTokenOnce } from './refresh-single-flight'
+import { isExpired, isTransientRefreshError } from './token-service'
+
+const LOGGING_CATEGORY = 'refreshAccessToken'
 
 const SESSION_SECURE =
   process.env.NODE_ENV === 'production' &&
@@ -142,7 +145,7 @@ export async function tryToUpdateCookie(
   redirectUri: string,
 ): Promise<{ response: NextResponse; newSessionToken?: string }> {
   try {
-    const newToken = await refreshAccessToken(
+    const newToken = await refreshAccessTokenOnce(
       token as JWT,
       redirectUri,
       clientId,
@@ -160,20 +163,32 @@ export async function tryToUpdateCookie(
       newSessionToken,
     }
   } catch (error) {
-    // Invalidate session token if error occurs during refresh
-    const invalidatedToken = {
-      ...token,
-      invalid: true,
-      error: 'RefreshAccessTokenError',
+    // Either way the session cookie is left exactly as it is, so the next request
+    // retries: writing `invalid: true` here would end the session permanently,
+    // since `isExpired` stops returning true once it is set and the middleware
+    // would never refresh again. `refresh-single-flight` bounds the retrying.
+    const logger = getLogger(LOGGING_CATEGORY)
+
+    if (isTransientRefreshError(error)) {
+      // Expected: IDS unreachable, timing out, or rejecting for a reason that
+      // says nothing about this refresh token.
+      logger.warn('Leaving session untouched after failed refresh', {
+        error: error as Error,
+        category: LOGGING_CATEGORY,
+      })
+    } else {
+      // Unexpected — in practice `encode` failing for want of NEXTAUTH_SECRET.
+      // Worth its own level, because the refresh itself may well have SUCCEEDED:
+      // if the client rotates, IDS has burned the old refresh token and the new
+      // one is in the value we just failed to persist, so this session cannot be
+      // refreshed again and the user will have to sign in.
+      logger.error('Could not persist a refreshed session', {
+        error: error as Error,
+        category: LOGGING_CATEGORY,
+      })
     }
-    const newSessionToken = await encode({
-      secret: process.env.NEXTAUTH_SECRET as string,
-      token: invalidatedToken,
-      maxAge: SESSION_TIMEOUT,
-    })
-    return {
-      response: updateCookie(newSessionToken, req, response),
-    }
+
+    return { response }
   }
 }
 

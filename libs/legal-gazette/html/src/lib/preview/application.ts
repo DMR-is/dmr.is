@@ -13,6 +13,7 @@ import {
 
 import { LegalGazetteHTMLTemplates } from '../constants'
 import { getAdvertHTMLMarkup } from '../templates/base'
+import { toPossessiveCourtDistrict } from '../templates/utils'
 
 const mapApplicationTypeToTemplate = (
   applicationType: string,
@@ -32,11 +33,16 @@ const mapApplicationTypeToTemplate = (
       return null
   }
 }
-// "custom" | "location" | "email"'.
+// "custom" | "location" | "email" | "url" | "other".
+// Mirrored in apps/legal-gazette-api/src/core/html/advert-html.ts - keep in sync.
 const mapStatementType = (statementType: string | null | undefined = '') => {
   switch (statementType) {
     case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL:
       return 'email'
+    case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORURL:
+      return 'url'
+    case ApplicationRequirementStatementEnum.CUSTOMOTHER:
+      return 'other'
     case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION:
       return 'custom'
     case ApplicationRequirementStatementEnum.LIQUIDATORLOCATION:
@@ -139,8 +145,9 @@ export const getApplicationPreview = (
       const html = getAdvertHTMLMarkup({
         templateType: LegalGazetteHTMLTemplates.RECALL_BANKRUPTCY,
         additionalText: answers.additionalText,
-        courtDistrict:
+        courtDistrict: toPossessiveCourtDistrict(
           answers.fields?.courtAndJudgmentFields?.courtDistrict?.title,
+        ),
         judgementDate: judgementDate,
         publishDate: publishDate,
         signature: answers.signature,

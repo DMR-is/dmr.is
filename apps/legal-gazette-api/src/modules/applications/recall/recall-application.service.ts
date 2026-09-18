@@ -14,12 +14,17 @@ import {
 } from '@dmr.is/legal-gazette-schemas'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { addBusinessDays, getNextValidPublishingDate } from '@dmr.is/utils-server/dateUtils'
+import { toCalendarDate } from '@dmr.is/utils-shared/date/calendarDate'
 
 import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
   RECALL_CATEGORY_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../../core/constants'
+import {
+  liveDivisionEndingWhere,
+  notTerminatedWhere,
+} from '../../../core/utils/estate.util'
 import {
   AdvertModel,
   AdvertTemplateType,
@@ -52,6 +57,36 @@ export class RecallApplicationService implements IRecallApplicationService {
     @InjectModel(ApplicationModel)
     private applicationModel: typeof ApplicationModel,
   ) {}
+
+  /**
+   * Nothing may be added to an estate once a Skiptalok is live, so this backs
+   * both the Skiptafundur and the Skiptalok endpoints.
+   *
+   * The check is deliberately on the adverts and not on application.status:
+   * status only says whether a Skiptalok was ever published, so on its own it
+   * would keep an estate closed after its Skiptalok had been rejected.
+   */
+  private async assertEstateOpen(applicationId: string): Promise<void> {
+    const liveDivisionEnding = await this.advertModel.findOne({
+      attributes: ['id'],
+      where: liveDivisionEndingWhere(applicationId),
+    })
+
+    if (!liveDivisionEnding) {
+      return
+    }
+
+    this.logger.warn(
+      `Cannot add adverts to an estate that already has a division ending advert`,
+      {
+        context: LOGGING_CONTEXT,
+        applicationId: applicationId,
+        advertId: liveDivisionEnding.id,
+      },
+    )
+
+    throw new BadRequestException('Estate already has a division ending advert')
+  }
 
   private cloneSettlement(
     settlement: SettlementModel,
@@ -90,6 +125,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       attributes: ['id', 'createdAt'],
       where: {
         applicationId: applicationId,
+        ...notTerminatedWhere,
       },
       include: [
         {
@@ -145,6 +181,7 @@ export class RecallApplicationService implements IRecallApplicationService {
             RECALL_DECEASED_ADVERT_TYPE_ID,
           ],
         },
+        ...notTerminatedWhere,
       },
       order: [['createdAt', 'ASC']],
       include: [
@@ -236,6 +273,8 @@ export class RecallApplicationService implements IRecallApplicationService {
       throw new BadRequestException('Settlement not set on application')
     }
 
+    await this.assertEstateOpen(applicationId)
+
     const advert = await this.advertService.createAdvert({
       applicationId: application.id,
       templateType:
@@ -275,6 +314,10 @@ export class RecallApplicationService implements IRecallApplicationService {
       applicationId: applicationId,
     })
 
+    // The Skiptalok inherits its urskurdardagur from the Innkollun, so it has to
+    // come from the Innkollun that actually ran: without an order and a status
+    // filter Postgres decided which row won, and a rejected or superseded one
+    // could hand over a date the public never saw.
     const { judgementDate, courtDistrictId } =
       await this.advertModel.findOneOrThrow({
         attributes: ['id', 'judgementDate', 'courtDistrictId'],
@@ -286,7 +329,9 @@ export class RecallApplicationService implements IRecallApplicationService {
               RECALL_DECEASED_ADVERT_TYPE_ID,
             ],
           },
+          ...notTerminatedWhere,
         },
+        order: [['createdAt', 'DESC']],
       })
 
     if (!judgementDate) {
@@ -300,10 +345,19 @@ export class RecallApplicationService implements IRecallApplicationService {
       throw new BadRequestException('Judgement date not set on recall advert')
     }
 
+    // FINISHED is accepted alongside SUBMITTED because it only records that a
+    // Skiptalok was once published; assertEstateOpen below is what decides
+    // whether one is still live. That also lets an application left FINISHED by
+    // a since-rejected Skiptalok take a replacement without a backfill.
     const application = await this.applicationModel.findOne({
       where: {
         id: applicationId,
-        status: ApplicationStatusEnum.SUBMITTED,
+        status: {
+          [Op.in]: [
+            ApplicationStatusEnum.SUBMITTED,
+            ApplicationStatusEnum.FINISHED,
+          ],
+        },
         applicationType: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,
@@ -315,13 +369,13 @@ export class RecallApplicationService implements IRecallApplicationService {
 
     if (!application) {
       this.logger.error(
-        `Cannot create division ending advert for application that is not in SUBMITTED status`,
+        `Cannot create division ending advert for application that has not been submitted`,
         {
           context: LOGGING_CONTEXT,
           applicationId: applicationId,
         },
       )
-      throw new BadRequestException('Application is not in SUBMITTED status')
+      throw new BadRequestException('Application has not been submitted')
     }
 
     if (!application.settlement) {
@@ -334,6 +388,8 @@ export class RecallApplicationService implements IRecallApplicationService {
       )
       throw new BadRequestException('Settlement not set on application')
     }
+
+    await this.assertEstateOpen(applicationId)
 
     const advert = await this.advertService.createAdvert({
       applicationId: application.id,
@@ -360,8 +416,12 @@ export class RecallApplicationService implements IRecallApplicationService {
       scheduledAt: [body.scheduledAt],
     })
 
+    // The application is deliberately not marked FINISHED here. Creating a
+    // Skiptalok is only a request to close the estate; it is closed when the
+    // advert actually publishes, which DivisionEndingPublishedListener handles.
+    // Writing it here left the estate closed even when an editor went on to
+    // reject the advert, locking the advertiser out of a replacement.
     await application.update({
-      status: ApplicationStatusEnum.FINISHED,
       settlementId: advert.settlement?.id ?? application.settlementId,
     })
   }
@@ -381,6 +441,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       where: {
         applicationId: applicationId,
         typeId: TypeIdEnum.DIVISION_MEETING,
+        ...notTerminatedWhere,
       },
       order: [['createdAt', 'ASC']],
       include: [
@@ -435,6 +496,7 @@ export class RecallApplicationService implements IRecallApplicationService {
             RECALL_DECEASED_ADVERT_TYPE_ID,
           ],
         },
+        ...notTerminatedWhere,
       },
       order: [['createdAt', 'ASC NULLS LAST']],
       include: [
@@ -559,7 +621,9 @@ export class RecallApplicationService implements IRecallApplicationService {
         data = check.data
         settlementOverrides = {
           deadline: data.fields.settlementFields.deadlineDate
-            ? new Date(data.fields.settlementFields.deadlineDate)
+            ? toCalendarDate(
+                new Date(data.fields.settlementFields.deadlineDate),
+              )
             : undefined,
         }
         break
@@ -581,7 +645,9 @@ export class RecallApplicationService implements IRecallApplicationService {
         data = check.data
         settlementOverrides = {
           dateOfDeath: check.data.fields.settlementFields.dateOfDeath
-            ? new Date(check.data.fields.settlementFields.dateOfDeath)
+            ? toCalendarDate(
+                new Date(check.data.fields.settlementFields.dateOfDeath),
+              )
             : undefined,
           settlementType: check.data.fields.settlementFields
             .type as SettlementType,
@@ -591,7 +657,9 @@ export class RecallApplicationService implements IRecallApplicationService {
             check.data.fields.settlementFields.partnerNationalId ?? undefined,
           partnerDateOfDeath: check.data.fields.settlementFields
             .partnerDateOfDeath
-            ? new Date(check.data.fields.settlementFields.partnerDateOfDeath)
+            ? toCalendarDate(
+                new Date(check.data.fields.settlementFields.partnerDateOfDeath),
+              )
             : undefined,
         }
         break
@@ -628,7 +696,9 @@ export class RecallApplicationService implements IRecallApplicationService {
       createdByNationalId: user.nationalId,
       signature: {
         ...data.signature,
-        date: data.signature?.date ? new Date(data.signature.date) : undefined,
+        date: data.signature?.date
+          ? toCalendarDate(new Date(data.signature.date))
+          : undefined,
       },
       title: title,
       additionalText: data.additionalText,
@@ -638,7 +708,9 @@ export class RecallApplicationService implements IRecallApplicationService {
       divisionMeetingLocation:
         data.fields.divisionMeetingFields?.meetingLocation,
       judgementDate: data.fields.courtAndJudgmentFields?.judgmentDate
-        ? new Date(data.fields.courtAndJudgmentFields.judgmentDate)
+        ? toCalendarDate(
+            new Date(data.fields.courtAndJudgmentFields.judgmentDate),
+          )
         : undefined,
       courtDistrictId: data.fields.courtAndJudgmentFields?.courtDistrict.id,
       communicationChannels: data.communicationChannels,

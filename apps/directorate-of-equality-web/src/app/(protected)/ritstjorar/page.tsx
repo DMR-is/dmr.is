@@ -1,6 +1,3 @@
-import { notFound } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-
 import { Suspense } from 'react'
 
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
@@ -8,16 +5,12 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/SearchDashboardLoading'
 
 import { UsersContainer } from '../../../containers/users/UsersContainer'
-import { authOptions } from '../../../lib/auth/authOptions'
+import { requireNavAccess } from '../../../lib/auth/requireNavAccess'
 import { NAV_PATHS } from '../../../lib/constants'
 import { headerText, sharedText, usersText } from '../../../lib/text'
 
 export default async function RitstjorarPage() {
-  const session = await getServerSession(authOptions)
-
-  if (session?.user?.role !== 'ADMIN') {
-    notFound()
-  }
+  await requireNavAccess(NAV_PATHS.ritstjorn)
 
   return (
     <Box height="full">

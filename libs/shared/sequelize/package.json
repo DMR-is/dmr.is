@@ -6,8 +6,8 @@
     ".": "./src/index.ts"
   },
   "peerDependencies": {
-    "@nestjs/common": "^10.4.19",
-    "@nestjs/sequelize": "^10.0.1",
+    "@nestjs/common": "^11.1.29",
+    "@nestjs/sequelize": "^11.0.0",
     "sequelize-typescript": "2.1.6"
   },
   "dependencies": {

@@ -1,0 +1,500 @@
+import { Op } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+
+import {
+  Inject,
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common'
+import { InjectConnection, InjectModel } from '@nestjs/sequelize'
+
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
+import {
+  CompanySizeEnum,
+  CompanyStatusEnum,
+} from '../company/models/company.enums'
+import { CompanyModel } from '../company/models/company.model'
+import { IsatCategoryModel } from '../company/models/isat-category.model'
+import { ICompanyEventService } from '../company-event/company-event.service.interface'
+import {
+  IImportUploadService,
+  ImportUploadBoundary,
+} from '../import-upload/import-upload.service.interface'
+import { PostcodeModel } from '../location/models/postcode.model'
+import { PARSE_GATE, ParseGate } from '../parse-gate/parse-gate.token'
+import { SemaphoreQueueFullError } from '../parse-gate/semaphore'
+import {
+  CompanyImportErrorDto,
+  CompanyImportFieldChangeDto,
+  CompanyImportOutcomeEnum,
+  CompanyImportResultDto,
+  CompanyImportRowResultDto,
+} from './dto/company-import-result.dto'
+import {
+  ParsedCompanyImport,
+  ParsedCompanyRow,
+} from './dto/parsed-company-row.dto'
+import { parseCompanyImport } from './parser/company-import.parser'
+import { ICompanyImportService } from './company-import.service.interface'
+
+const LOGGING_CONTEXT = 'CompanyImportService'
+
+/**
+ * Searchable marker for company imports shed because the parse gate was
+ * saturated. Distinct from the report importer's `EXCEL_IMPORT_BUSY` even
+ * though both come from the same gate — facet on the two separately to see
+ * which importer is spending the shared allowance.
+ */
+const COMPANY_IMPORT_BUSY = 'COMPANY_IMPORT_BUSY'
+
+/** A planned write plus its result row, produced by reconcile and consumed by apply. */
+type CreatePlan = {
+  row: ParsedCompanyRow
+  postcodeId: string | null
+  result: CompanyImportRowResultDto
+}
+type UpdatePlan = {
+  company: CompanyModel
+  updateFields: Partial<{
+    name: string
+    address: string | null
+    postcodeId: string | null
+    isatCategoryCode: string | null
+    employeeCountCategory: CompanySizeEnum
+    status: CompanyStatusEnum
+  }>
+  statusChange: { from: CompanyStatusEnum; to: CompanyStatusEnum } | null
+  result: CompanyImportRowResultDto
+}
+type MarkPlan = { company: CompanyModel; result: CompanyImportRowResultDto }
+
+type ReconcilePlan = {
+  year: number | null
+  creates: CreatePlan[]
+  updates: UpdatePlan[]
+  marked: MarkPlan[]
+  unchanged: CompanyImportRowResultDto[]
+  invalid: CompanyImportErrorDto[]
+}
+
+/** Compare two optional strings treating '' and null as equal. */
+const norm = (v: string | null | undefined): string | null =>
+  (v ?? '').trim() || null
+const differs = (a: string | null | undefined, b: string | null | undefined) =>
+  norm(a) !== norm(b)
+
+@Injectable()
+export class CompanyImportService implements ICompanyImportService {
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @InjectConnection() private readonly sequelize: Sequelize,
+    @InjectModel(CompanyModel)
+    private readonly companyModel: typeof CompanyModel,
+    @InjectModel(IsatCategoryModel)
+    private readonly isatCategoryModel: typeof IsatCategoryModel,
+    @InjectModel(PostcodeModel)
+    private readonly postcodeModel: typeof PostcodeModel,
+    @Inject(ICompanyEventService)
+    private readonly companyEventService: ICompanyEventService,
+    // The same gate `ReportExcelService` uses, not a second one. A company
+    // import costs the same heap as a report import, so both have to draw
+    // from one allowance for the budget in `import-upload/archive-budget.ts`
+    // to hold. See `ParseGateCoreModule`.
+    @Inject(PARSE_GATE) private readonly parseGate: ParseGate,
+    // Owned here rather than by the controller so the download sits inside the
+    // gated region — see `parseGated`.
+    @Inject(IImportUploadService)
+    private readonly importUpload: IImportUploadService,
+  ) {}
+
+  /**
+   * Fetch and parse under the shared gate, holding a slot across both and no
+   * longer.
+   *
+   * The fetch is inside because the buffer *is* the memory being bounded — a
+   * caller that downloaded first would hold up to the upload cap while it
+   * waited for a slot, and the queue would cost as much as the parses. See
+   * `import-upload/archive-budget.ts`.
+   *
+   * Still deliberately not wrapped around `reconcile` or `apply`: the slot is
+   * scarce (2 by default across the whole process) and `apply` follows this
+   * with a Sequelize transaction. Holding a parse slot across DB work would
+   * block report imports on lock contention that has nothing to do with
+   * memory, which is the only thing this gate exists to bound.
+   */
+  private async parseGated(key: string): Promise<ParsedCompanyImport> {
+    // Ahead of the gate: rejecting a malformed key costs nothing and allocates
+    // nothing, so it must not consume a slot or a place in the queue.
+    this.importUpload.assertKeyWithinBoundary(key, ImportUploadBoundary.ADMIN)
+
+    const release = await this.acquireParseSlot()
+    try {
+      const fileBuffer = await this.importUpload.fetchWorkbook(
+        key,
+        ImportUploadBoundary.ADMIN,
+      )
+      return await parseCompanyImport(fileBuffer)
+    } finally {
+      release()
+    }
+  }
+
+  /**
+   * Translate a saturated gate into a 503 the client can retry.
+   *
+   * Worded in English rather than Icelandic, and logged under its own marker,
+   * because this endpoint is staff-facing while the report importer is not —
+   * the same split `archive-budget.ts` makes for `ArchiveTooLargeError`. The
+   * two importers share a gate, so keeping their shed markers distinct is what
+   * makes it possible to tell which one is spending the allowance.
+   */
+  private async acquireParseSlot(): Promise<() => void> {
+    try {
+      return await this.parseGate.acquire()
+    } catch (e) {
+      if (e instanceof SemaphoreQueueFullError) {
+        this.logger.warn('Company import shed — parse gate saturated', {
+          context: LOGGING_CONTEXT,
+          errorCode: COMPANY_IMPORT_BUSY,
+          activeParses: this.parseGate.activeCount,
+          queuedParses: this.parseGate.queuedCount,
+        })
+        throw new ServiceUnavailableException(
+          'Workbook imports are busy right now. Try again shortly.',
+        )
+      }
+      throw e
+    }
+  }
+
+  async preview(key: string): Promise<CompanyImportResultDto> {
+    const plan = await this.reconcile(key)
+    return this.toResult(plan, false)
+  }
+
+  async apply(
+    key: string,
+    actorUserId: string,
+  ): Promise<CompanyImportResultDto> {
+    const plan = await this.reconcile(key)
+
+    await this.sequelize.transaction(async () => {
+      // CLS auto-propagates this transaction to the event service's writes too.
+      for (const c of plan.creates) {
+        const company = await this.companyModel.create({
+          name: c.row.name,
+          nationalId: c.row.nationalId,
+          employeeCountCategory: c.row.size,
+          address: c.row.address,
+          postcodeId: c.postcodeId,
+          isatCategoryCode: c.row.isatCategoryCode,
+          status: CompanyStatusEnum.ACTIVE,
+        })
+        await this.companyEventService.emitCreated(
+          company.id,
+          company.status,
+          actorUserId,
+        )
+      }
+
+      for (const u of plan.updates) {
+        await u.company.update(u.updateFields)
+        if (u.statusChange) {
+          await this.companyEventService.emitStatusChanged(
+            u.company.id,
+            u.statusChange.from,
+            u.statusChange.to,
+            actorUserId,
+            'Company import',
+          )
+        }
+      }
+
+      for (const m of plan.marked) {
+        const from = m.company.status
+        await m.company.update({ status: CompanyStatusEnum.INACTIVE })
+        await this.companyEventService.emitStatusChanged(
+          m.company.id,
+          from,
+          CompanyStatusEnum.INACTIVE,
+          actorUserId,
+          'Absent from company import',
+        )
+      }
+    })
+
+    const result = this.toResult(plan, true)
+    this.logger.info(
+      `Company import applied by ${actorUserId} (year ${result.year ?? 'n/a'}): ` +
+        `created=${result.created.length} updated=${result.updated.length} ` +
+        `unchanged=${result.unchanged.length} reactivated=${result.reactivated.length} ` +
+        `deactivated=${result.deactivated.length} invalid=${result.invalid.length}`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    return result
+  }
+
+  /** Pure planning: parse, validate ISAT, resolve postcodes, categorize. No writes. */
+  private async reconcile(key: string): Promise<ReconcilePlan> {
+    const parsed = await this.parseGated(key)
+    const errors: CompanyImportErrorDto[] = [...parsed.errors]
+
+    // Validate ISAT codes against the reference table; reject unknowns.
+    const isatCodes = [
+      ...new Set(parsed.rows.map((r) => r.isatCategoryCode).filter(Boolean)),
+    ] as string[]
+    const knownIsat = new Set(
+      isatCodes.length
+        ? (
+            await this.isatCategoryModel.findAll({
+              where: { code: { [Op.in]: isatCodes } },
+              attributes: ['code'],
+            })
+          ).map((m) => m.code)
+        : [],
+    )
+
+    const validRows: ParsedCompanyRow[] = []
+    for (const row of parsed.rows) {
+      if (row.isatCategoryCode && !knownIsat.has(row.isatCategoryCode)) {
+        errors.push({
+          row: row.row,
+          nationalId: row.nationalId,
+          reason: `Unknown ÍSAT code "${row.isatCategoryCode}"`,
+        })
+        continue
+      }
+      validRows.push(row)
+    }
+
+    // Resolve postcodes (soft — an unresolved code is a note, not a rejection).
+    const postcodeCodes = [
+      ...new Set(validRows.map((r) => r.postcodeCode).filter(Boolean)),
+    ] as string[]
+    const postcodeIdByCode = new Map<string, string>()
+    if (postcodeCodes.length) {
+      const found = await this.postcodeModel.findAll({
+        where: { code: { [Op.in]: postcodeCodes } },
+      })
+      for (const p of found) postcodeIdByCode.set(p.code, p.id)
+    }
+
+    // Load every company once, with its postcode (for diff display).
+    const companies = await this.companyModel.findAll({
+      include: [{ model: PostcodeModel, as: 'postcode' }],
+    })
+    const byNationalId = new Map(companies.map((c) => [c.nationalId, c]))
+
+    // Every kennitala that appeared in the file (valid or invalid) — so a
+    // company present-but-rejected is NOT also marked absent.
+    const fileNationalIds = new Set<string>([
+      ...validRows.map((r) => r.nationalId),
+      ...errors.map((e) => e.nationalId).filter((n): n is string => !!n),
+    ])
+
+    const plan: ReconcilePlan = {
+      year: parsed.year,
+      creates: [],
+      updates: [],
+      marked: [],
+      unchanged: [],
+      invalid: errors,
+    }
+
+    for (const row of validRows) {
+      const company = byNationalId.get(row.nationalId)
+      const resolvedPostcodeId = row.postcodeCode
+        ? (postcodeIdByCode.get(row.postcodeCode) ?? null)
+        : null
+      const postcodeUnresolved =
+        !!row.postcodeCode && !postcodeIdByCode.has(row.postcodeCode)
+      const note = postcodeUnresolved
+        ? `Postnúmer "${row.postcodeCode}" not found — postcode left unchanged`
+        : null
+
+      if (!company) {
+        plan.creates.push({
+          row,
+          postcodeId: resolvedPostcodeId,
+          result: {
+            nationalId: row.nationalId,
+            name: row.name,
+            outcome: CompanyImportOutcomeEnum.CREATED,
+            changedFields: [],
+            note,
+          },
+        })
+        continue
+      }
+
+      const { changes, updateFields } = this.buildChanges(
+        company,
+        row,
+        postcodeUnresolved ? undefined : resolvedPostcodeId,
+      )
+
+      const reactivating = company.status === CompanyStatusEnum.INACTIVE
+      const statusChange = reactivating
+        ? { from: company.status, to: CompanyStatusEnum.ACTIVE }
+        : null
+
+      if (statusChange) {
+        updateFields.status = CompanyStatusEnum.ACTIVE
+        changes.unshift({
+          field: 'status',
+          from: statusChange.from,
+          to: statusChange.to,
+        })
+      }
+
+      if (!changes.length) {
+        plan.unchanged.push({
+          nationalId: row.nationalId,
+          name: row.name,
+          outcome: CompanyImportOutcomeEnum.UNCHANGED,
+          changedFields: [],
+          note,
+        })
+        continue
+      }
+
+      plan.updates.push({
+        company,
+        updateFields,
+        statusChange,
+        result: {
+          nationalId: row.nationalId,
+          name: row.name,
+          outcome: statusChange
+            ? CompanyImportOutcomeEnum.REACTIVATED
+            : CompanyImportOutcomeEnum.UPDATED,
+          changedFields: changes,
+          note,
+        },
+      })
+    }
+
+    // Companies we hold that are absent from the file → deactivated.
+    for (const company of companies) {
+      if (fileNationalIds.has(company.nationalId)) continue
+      // Already-inactive companies stay as-is (nothing to change).
+      if (company.status !== CompanyStatusEnum.ACTIVE) continue
+      plan.marked.push({
+        company,
+        result: {
+          nationalId: company.nationalId,
+          name: company.name,
+          outcome: CompanyImportOutcomeEnum.DEACTIVATED,
+          changedFields: [
+            {
+              field: 'status',
+              from: CompanyStatusEnum.ACTIVE,
+              to: CompanyStatusEnum.INACTIVE,
+            },
+          ],
+          note: null,
+        },
+      })
+    }
+
+    return plan
+  }
+
+  /**
+   * Diff the authoritative fields. A null/absent file value means "not
+   * provided" and never clears an existing value (except size, which the file
+   * always asserts). `resolvedPostcodeId` is undefined when the postcode could
+   * not be resolved (skip the postcode diff entirely).
+   */
+  private buildChanges(
+    company: CompanyModel,
+    row: ParsedCompanyRow,
+    resolvedPostcodeId: string | null | undefined,
+  ): {
+    changes: CompanyImportFieldChangeDto[]
+    updateFields: UpdatePlan['updateFields']
+  } {
+    const changes: CompanyImportFieldChangeDto[] = []
+    const updateFields: UpdatePlan['updateFields'] = {}
+
+    if (differs(row.name, company.name)) {
+      changes.push({ field: 'name', from: company.name, to: row.name })
+      updateFields.name = row.name
+    }
+
+    if (row.address != null && differs(row.address, company.address)) {
+      changes.push({ field: 'address', from: company.address, to: row.address })
+      updateFields.address = row.address
+    }
+
+    if (
+      resolvedPostcodeId !== undefined &&
+      resolvedPostcodeId !== company.postcodeId
+    ) {
+      changes.push({
+        field: 'postcode',
+        from: company.postcode?.code ?? null,
+        to: row.postcodeCode,
+      })
+      updateFields.postcodeId = resolvedPostcodeId
+    }
+
+    if (
+      row.isatCategoryCode != null &&
+      differs(row.isatCategoryCode, company.isatCategoryCode)
+    ) {
+      changes.push({
+        field: 'isat',
+        from: company.isatCategoryCode,
+        to: row.isatCategoryCode,
+      })
+      updateFields.isatCategoryCode = row.isatCategoryCode
+    }
+
+    if (row.size !== company.employeeCountCategory) {
+      changes.push({
+        field: 'size',
+        from: company.employeeCountCategory,
+        to: row.size,
+      })
+      updateFields.employeeCountCategory = row.size
+    }
+
+    return { changes, updateFields }
+  }
+
+  private toResult(
+    plan: ReconcilePlan,
+    committed: boolean,
+  ): CompanyImportResultDto {
+    const updated = plan.updates
+      .filter((u) => u.result.outcome === CompanyImportOutcomeEnum.UPDATED)
+      .map((u) => u.result)
+    const reactivated = plan.updates
+      .filter((u) => u.result.outcome === CompanyImportOutcomeEnum.REACTIVATED)
+      .map((u) => u.result)
+    const created = plan.creates.map((c) => c.result)
+    const deactivated = plan.marked.map((m) => m.result)
+
+    const noticeCount = [
+      ...created,
+      ...updated,
+      ...reactivated,
+      ...plan.unchanged,
+    ].filter((r) => r.note).length
+
+    return {
+      committed,
+      year: plan.year,
+      noticeCount,
+      created,
+      updated,
+      unchanged: plan.unchanged,
+      deactivated,
+      reactivated,
+      invalid: plan.invalid,
+    }
+  }
+}

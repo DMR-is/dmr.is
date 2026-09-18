@@ -1,50 +1,41 @@
 import {
-  zGetBaseSalaryByGenderAndScoreAllPath,
-  zGetBaseSalaryByGenderAndScoreWorkPath,
-  zGetBaseSalaryGenderWageGapPath,
   zGetBenefitsBreakdownPath,
-  zGetFullSalaryByGenderAndScoreAllPath,
-  zGetFullSalaryGenderWageGapPath,
+  zGetRegularHourlyWageByScoreAllPath,
+  zGetRegularHourlyWageByScoreWorkPath,
+  zGetRegularHourlyWageGenderWageGapPath,
 } from '../../../../gen/fetch/zod.gen'
 import { protectedProcedure, router } from '../trpc'
 
+/**
+ * Four procedures, not six. The API used to expose a base/full pair for each
+ * chart — `baseSalary / workRatio` alongside the total-pay variant — and both
+ * were coherent while the divisor normalised to a full-time equivalent. Under an
+ * **hours** denominator only the total-pay numerator is: dividing base pay alone
+ * by hours that include the overtime which earned the additional and bonus pay
+ * is arithmetically incoherent. So the pair collapsed to one, and the surviving
+ * procedures dropped the meaningless "base"/"full" qualifier.
+ */
 export const reportStatisticsRouter = router({
-  baseSalaryByGenderAndScoreAll: protectedProcedure
-    .input(zGetBaseSalaryByGenderAndScoreAllPath)
+  regularHourlyWageByScoreAll: protectedProcedure
+    .input(zGetRegularHourlyWageByScoreAllPath)
     .query(({ ctx, input }) =>
-      ctx.api.getBaseSalaryByGenderAndScoreAll({
+      ctx.api.getRegularHourlyWageByScoreAll({
         path: { reportId: input.reportId },
       }),
     ),
 
-  baseSalaryByGenderAndScoreWork: protectedProcedure
-    .input(zGetBaseSalaryByGenderAndScoreWorkPath)
+  regularHourlyWageByScoreWork: protectedProcedure
+    .input(zGetRegularHourlyWageByScoreWorkPath)
     .query(({ ctx, input }) =>
-      ctx.api.getBaseSalaryByGenderAndScoreWork({
+      ctx.api.getRegularHourlyWageByScoreWork({
         path: { reportId: input.reportId },
       }),
     ),
 
-  fullSalaryByGenderAndScoreAll: protectedProcedure
-    .input(zGetFullSalaryByGenderAndScoreAllPath)
+  regularHourlyWageGenderWageGap: protectedProcedure
+    .input(zGetRegularHourlyWageGenderWageGapPath)
     .query(({ ctx, input }) =>
-      ctx.api.getFullSalaryByGenderAndScoreAll({
-        path: { reportId: input.reportId },
-      }),
-    ),
-
-  baseSalaryGenderWageGap: protectedProcedure
-    .input(zGetBaseSalaryGenderWageGapPath)
-    .query(({ ctx, input }) =>
-      ctx.api.getBaseSalaryGenderWageGap({
-        path: { reportId: input.reportId },
-      }),
-    ),
-
-  fullSalaryGenderWageGap: protectedProcedure
-    .input(zGetFullSalaryGenderWageGapPath)
-    .query(({ ctx, input }) =>
-      ctx.api.getFullSalaryGenderWageGap({
+      ctx.api.getRegularHourlyWageGenderWageGap({
         path: { reportId: input.reportId },
       }),
     ),

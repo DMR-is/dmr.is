@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Op } from 'sequelize'
+
+import { BadRequestException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
@@ -14,6 +17,7 @@ import {
   ApplicationStatusEnum,
 } from '../../../models/application.model'
 import { CategoryDefaultIdEnum } from '../../../models/category.model'
+import { StatusIdEnum } from '../../../models/status.model'
 import { TypeIdEnum } from '../../../models/type.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
 import { RecallApplicationService } from './recall-application.service'
@@ -56,6 +60,21 @@ describe('RecallApplicationService', () => {
     update: jest.fn(),
     ...overrides,
   })
+
+  const createDivisionEndingBody = () =>
+    ({
+      additionalText: 'Wrap up',
+      content: '<p>Division ending content</p>',
+      declaredClaims: 345,
+      endingDate: new Date('2026-05-01T00:00:00.000Z'),
+      scheduledAt: new Date('2026-05-05T00:00:00.000Z'),
+      signature: {
+        date: new Date('2026-05-01T00:00:00.000Z'),
+        name: 'Lawyer',
+        location: 'Akureyri',
+        onBehalfOf: null,
+      },
+    }) as any
 
   const createMockApplication = (overrides: Record<string, unknown> = {}) => ({
     id: APPLICATION_ID,
@@ -119,6 +138,34 @@ describe('RecallApplicationService', () => {
 
   afterEach(() => {
     jest.clearAllMocks()
+  })
+
+  describe('min date queries', () => {
+    // A rejected advert never reached the public, so it must not push the
+    // deadlines for later adverts around.
+    const excludesTerminatedAdverts = (call: any) =>
+      expect(call[0].where.statusId).toEqual({
+        [Op.notIn]: [StatusIdEnum.REJECTED, StatusIdEnum.WITHDRAWN],
+      })
+
+    it('should exclude rejected adverts when finding the division meeting date', async () => {
+      advertModel.findOne.mockResolvedValue(null)
+
+      await service.getMinDateForDivisionMeeting(APPLICATION_ID)
+
+      expect(advertModel.findOne.mock.calls.length).toBeGreaterThan(0)
+      advertModel.findOne.mock.calls.forEach(excludesTerminatedAdverts)
+    })
+
+    it('should exclude rejected adverts when finding the division ending date', async () => {
+      advertModel.findOne.mockResolvedValue(null)
+
+      await service.getMinDateForDivisionEnding(APPLICATION_ID)
+
+      expect(advertModel.findOne.mock.calls.length).toBeGreaterThan(0)
+      advertModel.findOne.mock.calls.forEach(excludesTerminatedAdverts)
+    })
+
   })
 
   describe('getMinDateForDivisionMeeting', () => {
@@ -431,10 +478,119 @@ describe('RecallApplicationService', () => {
       )
       expect(createAdvertCall.settlementId).toBeUndefined()
       expect(settlement.update).not.toHaveBeenCalled()
+      // The estate is closed when the advert publishes, not when it is created,
+      // so that a rejected Skiptalok leaves room for a replacement.
       expect(application.update).toHaveBeenCalledWith({
-        status: ApplicationStatusEnum.FINISHED,
         settlementId: 'settlement-789',
       })
+    })
+
+    it('should not mark the application as finished', async () => {
+      const application = createMockApplication({
+        applicationType: ApplicationTypeEnum.RECALL_DECEASED,
+        settlement: createMockSettlement({}),
+      })
+
+      applicationModel.findOne.mockResolvedValue(application as any)
+      advertModel.findOneOrThrow.mockResolvedValue({
+        judgementDate: new Date('2026-03-15T00:00:00.000Z'),
+      })
+      advertService.createAdvert.mockResolvedValue({
+        id: 'advert-789',
+        settlement: { id: 'settlement-789' },
+      })
+
+      await service.addDivisionEnding(
+        APPLICATION_ID,
+        createDivisionEndingBody(),
+        mockUser,
+      )
+
+      expect(application.update).not.toHaveBeenCalledWith(
+        expect.objectContaining({ status: ApplicationStatusEnum.FINISHED }),
+      )
+    })
+
+    it('should reject a second division ending while one is still live', async () => {
+      const application = createMockApplication({
+        applicationType: ApplicationTypeEnum.RECALL_DECEASED,
+        settlement: createMockSettlement({}),
+      })
+
+      applicationModel.findOne.mockResolvedValue(application as any)
+      advertModel.findOneOrThrow.mockResolvedValue({
+        judgementDate: new Date('2026-03-15T00:00:00.000Z'),
+      })
+      // A Skiptalok that has been submitted but not yet published
+      advertModel.findOne.mockResolvedValue({ id: 'live-division-ending' })
+
+      await expect(
+        service.addDivisionEnding(
+          APPLICATION_ID,
+          createDivisionEndingBody(),
+          mockUser,
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(advertService.createAdvert).not.toHaveBeenCalled()
+    })
+
+    it('should allow a new division ending once the previous one is rejected', async () => {
+      const application = createMockApplication({
+        applicationType: ApplicationTypeEnum.RECALL_DECEASED,
+        settlement: createMockSettlement({}),
+      })
+
+      applicationModel.findOne.mockResolvedValue(application as any)
+      advertModel.findOneOrThrow.mockResolvedValue({
+        judgementDate: new Date('2026-03-15T00:00:00.000Z'),
+      })
+      // The rejected Skiptalok is excluded by the query, so nothing is found
+      advertModel.findOne.mockResolvedValue(null)
+      advertService.createAdvert.mockResolvedValue({
+        id: 'advert-789',
+        settlement: { id: 'settlement-789' },
+      })
+
+      await service.addDivisionEnding(
+        APPLICATION_ID,
+        createDivisionEndingBody(),
+        mockUser,
+      )
+
+      expect(advertService.createAdvert).toHaveBeenCalled()
+    })
+  })
+
+  describe('addDivisionMeeting', () => {
+    it('should reject a division meeting once a division ending is live', async () => {
+      const application = createMockApplication({
+        applicationType: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+        settlement: createMockSettlement({}),
+      })
+
+      applicationModel.findOneOrThrow.mockResolvedValue(application as any)
+      advertModel.findOne.mockResolvedValue({ id: 'live-division-ending' })
+
+      await expect(
+        service.addDivisionMeeting(
+          APPLICATION_ID,
+          {
+            meetingDate: new Date('2026-05-05T00:00:00.000Z'),
+            meetingLocation: 'Reykjavik',
+            additionalText: undefined,
+            signature: {
+              date: new Date('2026-05-01T00:00:00.000Z'),
+              name: 'Lawyer',
+              location: 'Akureyri',
+              onBehalfOf: null,
+            },
+          } as any,
+          mockUser,
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(advertService.createAdvert).not.toHaveBeenCalled()
     })
   })
 })

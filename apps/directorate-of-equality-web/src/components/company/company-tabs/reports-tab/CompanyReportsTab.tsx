@@ -21,19 +21,20 @@ import {
   sharedText,
 } from '../../../../lib/text'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
+import { formatTimestampDate } from '../../../../lib/utils'
 
 const t = companiesText.detailView
 
 type Props = {
-  nationalId: string
+  companyId: string
 }
 
-export const CompanyReportsTab = ({ nationalId }: Props) => {
+export const CompanyReportsTab = ({ companyId }: Props) => {
   const router = useRouter()
   const trpc = useTRPC()
 
   const { data, isLoading, isError } = useQuery(
-    trpc.reports.list.queryOptions({ q: nationalId, pageSize: 100 }),
+    trpc.reports.listForCompany.queryOptions({ companyId, pageSize: 100 }),
   )
 
   if (isLoading) {
@@ -86,7 +87,7 @@ export const CompanyReportsTab = ({ nationalId }: Props) => {
             }
             text={
               report.createdAt
-                ? new Date(report.createdAt).toLocaleDateString('is-IS')
+                ? formatTimestampDate(report.createdAt)
                 : ''
             }
             tag={{

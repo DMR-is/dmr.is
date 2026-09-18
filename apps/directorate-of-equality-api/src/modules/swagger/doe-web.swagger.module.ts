@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common'
 
 import { AdminReportApiModule } from '../admin-report/admin-report.api.module'
+import { ApiKeyApiModule } from '../api-key/api-key.api.module'
 import { CompanyApiModule } from '../company/company.api.module'
+import { CompanyEmailApiModule } from '../company-email/company-email.api.module'
 import { CompanyImportApiModule } from '../company-import/company-import.api.module'
 import { ConfigApiModule } from '../config/config.api.module'
 import { ImportUploadApiModule } from '../import-upload/import-upload.api.module'
@@ -16,7 +18,9 @@ import { UserApiModule } from '../user/user.api.module'
 @Module({
   imports: [
     AdminReportApiModule,
+    ApiKeyApiModule,
     CompanyApiModule,
+    CompanyEmailApiModule,
     CompanyImportApiModule,
     ImportUploadApiModule,
     UserApiModule,

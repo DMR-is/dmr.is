@@ -17,9 +17,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
-import {
-  AdvertDetailedDto,
-} from '../../../models/advert.model'
+import { AdvertDetailedDto } from '../../../models/advert.dto'
 import { IAdvertService } from '../../../modules/advert/advert.service.interface'
 import { UpdateAdvertDto } from '../../../modules/advert/dto/advert.dto'
 

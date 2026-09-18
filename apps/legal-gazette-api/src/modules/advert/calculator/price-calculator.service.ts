@@ -1,5 +1,6 @@
 import { isPersonKennitala } from 'kennitala'
 import get from 'lodash/get'
+import { Op } from 'sequelize'
 
 import {
   BadRequestException,
@@ -19,16 +20,34 @@ import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../../core/constants'
+import { StatusIdEnum } from '../../../core/enums/status.enum'
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertVersionEnum } from '../../../models/advert-publication.model'
 import { FeeCodeModel } from '../../../models/fee-code.model'
 import { TBRCompanySettingsModel } from '../../../models/tbr-company-settings.model'
 import { TypeModel } from '../../../models/type.model'
 import { IApplicationService } from '../../applications/application.service.interface'
+import { GetApplicationAdvertPriceDto } from '../../applications/dto/application-extra.dto'
 import { GetPaymentDataResponseDto } from '../../tbr/dto/tbr.dto'
 import { IPriceCalculatorService } from './price-calculator.service.interface'
 
 const LOGGING_CONTEXT = 'PriceCalculatorService'
+
+/**
+ * Prices are stored in `numeric` columns, which node-postgres hands back as
+ * strings to avoid losing precision. The models declare them as `number`, so a
+ * flat fee reaches us as `'1500'` and would silently concatenate rather than
+ * add. Coerce before summing, and treat anything non-numeric as unusable.
+ */
+const toPrice = (value: number | null | undefined): number | null => {
+  if (value === null || value === undefined) {
+    return null
+  }
+
+  const price = Number(value)
+
+  return Number.isFinite(price) ? price : null
+}
 
 @Injectable()
 export class PriceCalculatorService implements IPriceCalculatorService {
@@ -79,6 +98,67 @@ export class PriceCalculatorService implements IPriceCalculatorService {
     }
 
     return feeCode.value * getHtmlTextLength(html)
+  }
+
+  /**
+   * Total price of every advert belonging to an application, as shown to the
+   * applicant after the application has been submitted.
+   *
+   * An advert is only charged once it has been published, so per advert we use
+   * the actual charged amount when a transaction exists and fall back to the
+   * estimate otherwise. Rejected and withdrawn adverts are never charged and are
+   * left out of the total.
+   */
+  async getApplicationAdvertPrice(
+    applicationId: string,
+  ): Promise<GetApplicationAdvertPriceDto> {
+    const adverts = await this.advertModel.scope('detailed').findAll({
+      where: {
+        applicationId,
+        statusId: {
+          [Op.notIn]: [StatusIdEnum.REJECTED, StatusIdEnum.WITHDRAWN],
+        },
+      },
+    })
+
+    if (adverts.length === 0) {
+      return { isEstimate: true }
+    }
+
+    let totalPrice = 0
+    let isEstimate = false
+
+    for (const advert of adverts) {
+      const chargedPrice = toPrice(advert.transaction?.totalPrice)
+
+      if (chargedPrice !== null) {
+        totalPrice += chargedPrice
+        continue
+      }
+
+      isEstimate = true
+
+      const estimatedPrice = toPrice(advert.estimatedPrice)
+
+      if (estimatedPrice === null) {
+        // A partial sum would be presented to the applicant as the price of the
+        // whole application, so omit the total instead of understating it.
+        this.logger.warn(
+          'Could not estimate the price of an advert, omitting the application total',
+          {
+            applicationId,
+            advertId: advert.id,
+            context: LOGGING_CONTEXT,
+          },
+        )
+
+        return { isEstimate: true }
+      }
+
+      totalPrice += estimatedPrice
+    }
+
+    return { totalPrice, isEstimate }
   }
 
   async getChargeCategory(nationalId: string): Promise<string> {

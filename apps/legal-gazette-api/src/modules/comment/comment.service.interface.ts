@@ -1,4 +1,4 @@
-import { CommentDto } from '../../models/comment.model'
+import { CommentDto } from '../../models/comment.dto'
 import {
   CreateAddPublicationCommentDto,
   CreateAssignCommentDto,

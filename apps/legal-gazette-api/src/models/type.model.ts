@@ -1,4 +1,4 @@
-import { BelongsToMany } from 'sequelize-typescript'
+import { BelongsToMany, Column, DataType } from 'sequelize-typescript'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared-models-base'
 
@@ -7,10 +7,8 @@ import { BaseEntityDto } from '../modules/base-entity/dto/base-entity.dto'
 import { AdvertTypeFeeCodeModel } from './advert-type-fee-code.model'
 import { CategoryModel } from './category.model'
 import { FeeCodeModel } from './fee-code.model'
-import {
-  TypeCategoriesModel,
-  TypeWithCategoriesDto,
-} from './type-categories.model'
+import type { TypeWithCategoriesDto } from './type-categories.dto'
+import { TypeCategoriesModel } from './type-categories.model'
 
 export enum TypeIdEnum {
   RECALL_BANKRUPTCY = '065C3FD9-58D1-436F-9FB8-C1F5C214FA50',
@@ -30,6 +28,11 @@ export class TypeModel extends BaseEntityModel<TypeDto> {
   // This is always a array with one element, we need to use BelongsToMany to get the join table
   @BelongsToMany(() => FeeCodeModel, { through: () => AdvertTypeFeeCodeModel })
   feeCode?: FeeCodeModel[]
+
+  // Non-selectable (legacy) types are excluded from the create-flow dropdowns
+  // but remain valid for existing adverts and search facets.
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true })
+  active!: boolean
 
   static fromModelWithCategories(model: TypeModel): TypeWithCategoriesDto {
     return {

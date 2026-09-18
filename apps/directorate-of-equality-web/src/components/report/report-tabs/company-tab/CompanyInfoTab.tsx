@@ -54,11 +54,13 @@ interface CompanyInfoTabProps {
   }
   admin?: {
     name?: string
+    jobTitle?: string
     email?: string
     gender?: string
   }
   contactPerson?: {
     name?: string
+    jobTitle?: string
     email?: string
     phone?: string
   }
@@ -113,6 +115,7 @@ export const CompanyInfoTab = ({
           <InfoItems
             items={[
               { label: f.nameLabel, children: admin?.name },
+              { label: f.jobTitleLabel, children: admin?.jobTitle },
               { label: f.emailLabel, children: admin?.email },
               { label: f.genderLabel, children: mapGender(admin?.gender) },
             ]}
@@ -122,6 +125,7 @@ export const CompanyInfoTab = ({
           <InfoItems
             items={[
               { label: f.nameLabel, children: contactPerson?.name },
+              { label: f.jobTitleLabel, children: contactPerson?.jobTitle },
               { label: f.emailLabel, children: contactPerson?.email },
               { label: f.phoneShortLabel, children: contactPerson?.phone },
             ]}

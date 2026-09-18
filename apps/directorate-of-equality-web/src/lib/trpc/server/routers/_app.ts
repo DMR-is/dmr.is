@@ -1,5 +1,7 @@
 import { router } from '../trpc'
 import { adminReportRouter } from './adminReportRouter'
+import { apiKeyRouter } from './apiKeyRouter'
+import { companyEmailRouter } from './companyEmailRouter'
 import { companyRouter } from './companyRouter'
 import { configRouter } from './configRouter'
 import { locationRouter } from './locationRouter'
@@ -11,7 +13,9 @@ import { userRouter } from './userRouter'
 
 export const appRouter = router({
   adminReport: adminReportRouter,
+  apiKey: apiKeyRouter,
   company: companyRouter,
+  companyEmail: companyEmailRouter,
   user: userRouter,
   config: configRouter,
   location: locationRouter,

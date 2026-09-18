@@ -7,13 +7,12 @@ import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 import {
   AutoReviewDecisionEnum,
   ReportEventTypeEnum,
-  ReportTimelineItemDto,
 } from '../../../../../gen/fetch'
-import { TimelineEntryKind } from './timelineHelpers'
+import { TimelineEntryKind, TimelineItem } from './timelineHelpers'
 
 type Props = {
   kind: TimelineEntryKind
-  item: ReportTimelineItemDto
+  item: TimelineItem
 }
 
 export function TimelineEntryIcon({ kind, item }: Props) {

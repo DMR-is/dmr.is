@@ -1,0 +1,65 @@
+import { ApiProperty } from '@nestjs/swagger'
+
+import {
+  ApiEnum,
+  ApiNumber,
+  ApiOptionalString,
+  ApiString,
+  ApiUUId,
+} from '@dmr.is/decorators'
+
+import { CompanyEmailRecipientStatusEnum } from '../models/company-email.enums'
+
+export class CompanyEmailRecipientPreviewDto {
+  @ApiUUId()
+  companyId!: string
+
+  @ApiString({ description: 'Company name — what the recipient list shows.' })
+  companyName!: string
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'Address the message will go to, revealed when the recipient row is expanded. Null when no address could be resolved — the company has none on file, or was skipped for quarantine and happens to have none either. `reason` says which.',
+  })
+  email!: string | null
+}
+
+export class CompanyEmailSkippedPreviewDto extends CompanyEmailRecipientPreviewDto {
+  @ApiEnum(CompanyEmailRecipientStatusEnum, {
+    enumName: 'CompanyEmailRecipientStatusEnum',
+    description:
+      'Why this company is excluded — SKIPPED_NO_EMAIL or SKIPPED_QUARANTINED.',
+  })
+  reason!: CompanyEmailRecipientStatusEnum
+}
+
+/**
+ * What the confirmation step shows before anything is sent.
+ *
+ * `recipients` and `skipped` are read together: the list's button counts every
+ * company matching the filter, and this is where an admin finds out which of
+ * them will not be written to, and why.
+ */
+export class CompanyEmailPreviewDto {
+  @ApiString({
+    description:
+      'The message body as it will be delivered — already run through the same sanitiser the send applies, so the confirmation step shows the bytes that go out rather than the raw editor state.',
+  })
+  bodyHtml!: string
+
+  @ApiProperty({ type: CompanyEmailRecipientPreviewDto, isArray: true })
+  recipients!: CompanyEmailRecipientPreviewDto[]
+
+  @ApiProperty({ type: CompanyEmailSkippedPreviewDto, isArray: true })
+  skipped!: CompanyEmailSkippedPreviewDto[]
+
+  @ApiNumber({
+    description:
+      'Messages that will be sent. One per company as a rule — but a single-company send may name several addresses, and each of those is its own message, so this counts addresses rather than companies.',
+  })
+  recipientCount!: number
+
+  @ApiNumber({ description: 'Companies excluded, for either skip reason.' })
+  skippedCount!: number
+}

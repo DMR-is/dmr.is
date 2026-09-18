@@ -1,9 +1,7 @@
 /* eslint-disable no-console */
-import S3 from 'aws-sdk/clients/s3'
 import { exec } from 'child_process'
 import fs from 'fs'
 import { mkdir, readFile, rm, unlink, writeFile } from 'fs/promises'
-import fetch from 'node-fetch'
 import os from 'os'
 import path from 'path'
 
@@ -41,6 +39,11 @@ import {
 import { formatDate as fmt } from '../utils/misc'
 import { fetchModifiedDate, getRegulation } from './Regulation'
 
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3'
 import arrayToObject from '@hugsmidjan/qj/arrayToObject'
 import { SECOND } from '@hugsmidjan/qj/time'
 
@@ -171,7 +174,21 @@ const getStatusText = (regulation: RegulationMaybeDiff): string => {
 
 console.log('Current working directory:', process.cwd())
 // ---------------------------------------------------------------------------
-const cssPath = path.join(__dirname, 'RegulationPdf.css')
+// esbuild flattens the bundle, so in production the stylesheet ends up right
+// next to this module. Loaded unbundled (tests, scripts) it is still at its
+// source location in `src/`, one directory up. Try both rather than making
+// this module impossible to import outside the bundle — but still fail loudly
+// if the stylesheet is genuinely missing, since a PDF without it is broken.
+const cssCandidates = [
+  path.join(__dirname, 'RegulationPdf.css'),
+  path.join(__dirname, '..', 'RegulationPdf.css'),
+]
+const cssPath = cssCandidates.find((candidate) => fs.existsSync(candidate))
+if (!cssPath) {
+  throw new Error(
+    'RegulationPdf.css not found. Looked in: ' + cssCandidates.join(', '),
+  )
+}
 const CSS = fs.readFileSync(cssPath, 'utf8')
 
 const pdfTmplate = (
@@ -313,6 +330,32 @@ export const cleanupPdfTempDir = async () => {
   }
 }
 
+/**
+ * Logs the versions of the PDF render toolchain once, at startup.
+ *
+ * Neither Chromium (`apk add chromium`) nor pagedjs-cli (`npm install -g`) is
+ * version-pinned in the Dockerfile, so an image rebuild can silently swap the
+ * renderer with no code change — which is exactly how PDF rendering broke in
+ * July 2026 (Chromium 149 -> 150 between two releases). Recording the versions
+ * makes that drift visible in the logs instead of invisible.
+ */
+export const logRenderToolchain = () => {
+  const version = (label: string, cmd: string) =>
+    exec(cmd, (err, stdout) => {
+      console.info(
+        `PDF renderer ${label}:`,
+        err
+          ? `UNAVAILABLE (${err.message.split('\n')[0]})`
+          : // `npm ls` prints a small tree; the package is on the last line.
+            stdout.trim().split('\n').pop()?.replace(/^\W+/, ''),
+      )
+    })
+
+  // pagedjs-cli has no --version flag, so ask npm for the installed version.
+  version('chromium', `${process.env.PUPPETEER_EXECUTABLE_PATH} --version`)
+  version('pagedjs-cli', 'npm ls -g --depth=0 pagedjs-cli')
+}
+
 const makeRegulationPdf = (
   regulation?:
     | InputRegulation
@@ -356,12 +399,28 @@ const makeRegulationPdf = (
               `  --browserArgs --no-sandbox,--font-render-hinting=none,--user-data-dir=${userDataDir}` +
               `  --timeout ${90 * SECOND}` +
               `  --output ${outFile}`,
-            (err) => {
+            // pagedjs-cli reports render progress and Chromium reports crashes
+            // on stdout/stderr. `exec` buffers both and drops them unless the
+            // callback asks for them — without this a failed render logs only
+            // the command line, which is what made the July 2026 outage
+            // undiagnosable. 1MB (the default) is not enough for a chatty
+            // render, and overflowing it would itself fail the render.
+            { maxBuffer: 10 * 1024 * 1024 },
+            (err, stdout, stderr) => {
               // Always clean up the HTML input and the Chromium profile dir,
               // regardless of success/failure.
               tryUnlink(htmlFile)
               tryRmDir(userDataDir)
               if (err) {
+                console.error('pagedjs-cli failed', {
+                  // `signal` distinguishes a Chromium/Node abort (SIGABRT) from
+                  // a kernel OOM kill (SIGKILL) from a clean non-zero exit.
+                  code: err.code,
+                  signal: err.signal,
+                  killed: err.killed,
+                  stdout,
+                  stderr,
+                })
                 // pagedjs-cli may have written a partial/complete output file
                 // before failing; clean it up so it doesn't leak to disk.
                 tryUnlink(outFile)
@@ -442,41 +501,93 @@ const cleanUpRegulationBodyInput = (
 
 // ---------------------------------------------------------------------------
 
-const fetchPdf = (fileKey: string) =>
-  fetch(
-    `https://${AWS_BUCKET_NAME}.s3.${AWS_REGION_NAME}.amazonaws.com/${fileKey}`,
-  )
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error(`Error fetching '${res.url}' (${res.status})`)
-      }
-      return res.buffer().then((contents) => ({
-        contents: contents,
-        modifiedDate:
-          toISODateTime(res.headers.get('Last-Modified')) || ('' as const),
-      }))
-    })
-    .catch(() => ({ contents: false, modifiedDate: '' }) as const)
+// Built lazily, matching getS3Client() in utils/file-upload.ts. v2 constructed
+// happily with an unset region and only failed on use; v3 throws "Region is
+// missing" from the constructor, which at module scope would take the whole
+// process down at import time rather than at the first S3 call.
+//
+// Lazy is necessary but not sufficient: AWS_REGION_NAME falls back to '' when
+// none of the three env vars is set (constants.ts, where the matching throw is
+// deliberately commented out), and `new S3Client({ region: '' })` throws
+// *synchronously*. Both callers below therefore construct inside their own
+// try/catch, so a missing region degrades to "render without the cache" the way
+// v2 did, instead of escaping past the handler and killing PDF generation.
+let s3Client: S3Client | undefined
 
-const s3 = new S3({ region: AWS_REGION_NAME })
+const getS3Client = () => {
+  if (!s3Client) {
+    s3Client = new S3Client({ region: AWS_REGION_NAME })
+  }
+  return s3Client
+}
+
 const doLog = !!MEDIA_BUCKET_FOLDER
 
-const uploadPdf = (fileKey: string, pdfContents: Buffer) =>
-  s3
-    .upload({
-      Bucket: AWS_BUCKET_NAME,
-      Key: fileKey,
-      ContentType: 'application/pdf',
-      Body: pdfContents,
-    })
-    .promise()
-    .then((data) => {
-      doLog && console.info('🆗 Uploaded', data.Key)
-    })
-    .catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : error
-      console.info('⚠️ ', message)
-    })
+/**
+ * Reads a cached PDF from S3.
+ *
+ * This used to be an unauthenticated `fetch()` against the bucket's public
+ * URL, which could never work: the bucket is private (it is a CloudFront
+ * origin), so anonymous reads get a 403 even for objects that exist. Going
+ * through the SDK signs the request with the task role, which already grants
+ * `s3:GetObject` on this bucket.
+ *
+ * A miss is normal and expected — it just means the PDF has to be rendered —
+ * so `NoSuchKey` stays quiet. Anything else means the cache is misconfigured
+ * rather than merely cold, and is worth surfacing: the previous version
+ * swallowed every error identically, which is why a completely dead cache went
+ * unnoticed.
+ */
+const fetchPdf = async (fileKey: string) => {
+  // getS3Client() is inside the try on purpose: it can throw synchronously, and
+  // a `.catch()` chained onto the send() call would never see it.
+  try {
+    const res = await getS3Client().send(
+      new GetObjectCommand({ Bucket: AWS_BUCKET_NAME, Key: fileKey }),
+    )
+    // v2 resolved `Body` to a Buffer; v3 resolves it to a stream. Typed as
+    // the plain `Buffer` the rest of this file uses -- narrowing it here to
+    // Buffer<ArrayBuffer> would just push a mismatch onto makeRegulationPdf.
+    const contents: Buffer = Buffer.from(await res.Body!.transformToByteArray())
+    return {
+      contents,
+      modifiedDate:
+        toISODateTime(res.LastModified?.toISOString()) || ('' as const),
+    } as const
+  } catch (error: unknown) {
+    // v2 reported this as `code`, v3 reports it as `name`. Reading the wrong
+    // one would turn every ordinary cache miss into an error log.
+    const code = (error as { name?: string })?.name
+    if (code !== 'NoSuchKey' && code !== 'NotFound') {
+      console.error('Unable to read cached PDF', fileKey, code ?? error)
+    }
+    return { contents: false, modifiedDate: '' } as const
+  }
+}
+
+const uploadPdf = async (fileKey: string, pdfContents: Buffer) => {
+  // Caching is best-effort: this must never reject, or a failure here would
+  // discard an already-rendered PDF. getS3Client() is inside the try for the
+  // same reason as in fetchPdf -- it can throw synchronously.
+  try {
+    await getS3Client().send(
+      new PutObjectCommand({
+        Bucket: AWS_BUCKET_NAME,
+        Key: fileKey,
+        ContentType: 'application/pdf',
+        Body: pdfContents,
+      }),
+    )
+    // v2's upload() echoed the key back; PutObjectCommand does not, and
+    // fileKey is what it was given anyway.
+    doLog && console.info('🆗 Uploaded', fileKey)
+  } catch (error: unknown) {
+    // Upload failures used to log at `console.info`, so an S3 client built
+    // with an empty region failed silently for months.
+    const message = error instanceof Error ? error.message : error
+    console.error('Unable to cache PDF', fileKey, message)
+  }
+}
 
 type RegOpts = {
   name: RegQueryName

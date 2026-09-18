@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common'
 
+import { AuthorizationCoreModule } from '@dmr.is/doe-modules/authorization'
+import { ReportPdfCoreModule } from '@dmr.is/doe-modules/report-pdf'
+
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { AuthorizationCoreModule } from '../authorization/authorization.core.module'
 import { ReportPdfController } from './report-pdf.controller'
-import { ReportPdfCoreModule } from './report-pdf.core.module'
 
 @Module({
   imports: [ReportPdfCoreModule, AuthorizationCoreModule],

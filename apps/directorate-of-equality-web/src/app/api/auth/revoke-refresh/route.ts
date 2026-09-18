@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 
 import { revokeRefreshTokenHandler } from '@dmr.is/auth/revokeRefreshToken'
 
-import { identityServerConfig } from '../../../../lib/auth/authOptions'
+import { identityServerConfig } from '../../../../lib/auth/identityServerConfig'
 
 const handler = async (request: NextRequest) => {
   return revokeRefreshTokenHandler(request, {
