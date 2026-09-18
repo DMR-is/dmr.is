@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
+import { getLogger } from '@dmr.is/logging-next'
+
 import { getBaseUrl } from '../../../../lib/api/createClient'
 import { authOptions } from '../../../../lib/auth/authOptions'
+
+const logger = getLogger('data-export')
+
+const DATASETS = new Set(['companies', 'reports'])
 
 /**
  * Proxies "Keyra út lista" to the bearer-guarded export endpoint.
@@ -15,8 +21,6 @@ import { authOptions } from '../../../../lib/auth/authOptions'
  * the API owns validating it. Rewriting it here would give the export a second
  * opinion about what the admin asked for.
  */
-const DATASETS = new Set(['companies', 'reports'])
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ dataset: string }> },
@@ -40,8 +44,25 @@ export async function GET(
   })
 
   if (!res.ok) {
+    /*
+     * The upstream reason is logged, not just the status.
+     *
+     * A failed download reaches the browser as "download interrupted" with no
+     * body shown and nothing in the page's console — the request was a
+     * navigation, not a fetch the app can inspect. Without this line the only
+     * signal anyone gets is the browser's own wording, which describes the
+     * transfer rather than the cause.
+     */
+    const detail = await res.text().catch(() => '')
+    logger.error('Upstream data export failed', {
+      dataset,
+      status: res.status,
+      statusText: res.statusText,
+      detail,
+    })
+
     return NextResponse.json(
-      { error: 'Failed to build the export' },
+      { error: 'Failed to build the export', status: res.status, detail },
       { status: res.status },
     )
   }

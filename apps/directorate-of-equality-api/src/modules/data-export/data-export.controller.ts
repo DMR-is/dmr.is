@@ -21,6 +21,7 @@ import { GetReportsQueryDto } from '@dmr.is/doe-modules/report'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
+import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { contentDisposition } from '../../core/http/content-disposition'
 
 /**
@@ -38,7 +39,11 @@ import { contentDisposition } from '../../core/http/content-disposition'
 })
 @ApiTags('Data export')
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+// DoE staff only, like every other admin surface. `DeclaredAccessGuard`
+// default-denies any route whose chain does not name both a verified token and
+// an identity guard, so this pair IS the access policy — dropping either makes
+// the route 403 for everyone rather than merely less guarded.
+@UseGuards(TokenJwtAuthGuard, AdminGuard)
 export class DataExportController {
   constructor(
     @Inject(IDataExportService)
