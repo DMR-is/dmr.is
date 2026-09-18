@@ -69,6 +69,36 @@ export const dataExportText = {
     'Ekkert er sótt fyrr en þú ýtir á „Sækja lista“ — listarnir eru stórir og síurnar eiga að þrengja þá fyrst.',
   errorHeading: 'Ekki tókst að sækja listann',
   errorDescription: 'Eitthvað fór úrskeiðis. Reyndu aftur.',
+
+  // --- Skýrslur dataset ---
+  reportSearchPlaceholder: 'Fyrirtæki, kennitala eða auðkenni',
+  cardReport: 'Skýrsla',
+  cardDates: 'Dagsetningar',
+  typeLabel: 'Tegund',
+  typePlaceholder: 'Veldu tegund',
+  statusLabel: 'Staða',
+  statusPlaceholder: 'Veldu stöðu',
+  communicationLabel: 'Samskiptastaða',
+  communicationPlaceholder: 'Veldu samskiptastöðu',
+  equalitySourceLabel: 'Grundvöllur jafnréttisáætlunar',
+  equalitySourcePlaceholder: 'Veldu grundvöll',
+  dateFrom: 'Frá',
+  dateTo: 'Til',
+  datePlaceholder: 'dd.mm.áááá',
+  createdRange: 'Innsent',
+  approvedRange: 'Samþykkt',
+  validUntilRange: 'Gildir til',
+  // Salary reports only — an equality plan has no period, so a bound here
+  // excludes them. Worth saying in the label rather than leaving an admin to
+  // work out why their jafnréttisáætlanir vanished.
+  salaryPeriodRange: 'Launatímabil (aðeins skýrslugjöf)',
+
+  columnIdentifier: 'Auðkenni',
+  columnType: 'Tegund',
+  columnStatus: 'Staða',
+  columnCompany: 'Fyrirtæki',
+  columnCreated: 'Innsent',
+  columnValidUntil: 'Gildir til',
 }
 
 export const overviewText = {
