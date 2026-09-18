@@ -287,6 +287,13 @@ describe('ReportCreateService', () => {
           id: EQUALITY_REPORT_ID,
           type: ReportTypeEnum.EQUALITY,
         }),
+        // The named equality report must cover the submitting company (F8).
+        include: [
+          expect.objectContaining({
+            where: { companyId: PARENT_COMPANY_ID },
+            required: true,
+          }),
+        ],
       }),
     )
 

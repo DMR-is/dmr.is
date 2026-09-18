@@ -159,7 +159,12 @@ export class ReportCreateService implements IReportCreateService {
         : null)
 
     if (equalityReportId) {
-      await this.finalizeService.assertEqualityReportApproved(equalityReportId)
+      // Scoped to the submitting (parent) company: a caller-named id is only
+      // accepted when that report covers the company filing this one.
+      await this.finalizeService.assertEqualityReportApproved(
+        equalityReportId,
+        submittingCompany.companyId,
+      )
     }
 
     // Null `equality_report_id` used to be unrepresentable on a salary report.

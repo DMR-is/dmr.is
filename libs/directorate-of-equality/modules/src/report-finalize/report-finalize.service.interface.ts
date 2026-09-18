@@ -4,7 +4,15 @@ import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-repo
 
 export interface IReportFinalizeService {
   resolveEqualityCoverage(companyId: string): Promise<EqualityCoverage>
-  assertEqualityReportApproved(equalityReportId: string): Promise<void>
+  /**
+   * Throws 404 unless `equalityReportId` is an APPROVED, in-force EQUALITY
+   * report that covers `companyId` — the authenticated submitter, never a value
+   * taken from the payload.
+   */
+  assertEqualityReportApproved(
+    equalityReportId: string,
+    companyId: string,
+  ): Promise<void>
   withdrawInflightSibling(
     companyId: string,
     type: ReportTypeEnum,
