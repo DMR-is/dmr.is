@@ -45,7 +45,7 @@
       "options": {
         "commands": [
           "node libs/clients/rsk-client/scripts/update-openapi-spec.mjs",
-          "prettier --write libs/clients/rsk-client/clientConfig.yaml"
+          "yarn run -T prettier --write libs/clients/rsk-client/clientConfig.yaml"
         ],
         "parallel": false
       },
