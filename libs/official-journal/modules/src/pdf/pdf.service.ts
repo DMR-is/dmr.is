@@ -489,35 +489,104 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
         await page.evaluate(async () => {
           const images = Array.from(document.querySelectorAll('img'))
-          const isIgnorableImageSibling = (node: ChildNode) => {
-            if (node.nodeType === Node.TEXT_NODE) {
-              return !node.textContent?.trim()
+
+          // Wrappers that merely decorate an image without taking it out of
+          // the text flow. An image inside one of these still belongs to the
+          // surrounding block, so the block is what decides standalone layout.
+          const INLINE_WRAPPER_TAGS = new Set([
+            'A',
+            'ABBR',
+            'B',
+            'EM',
+            'FONT',
+            'I',
+            'LABEL',
+            'S',
+            'SMALL',
+            'SPAN',
+            'STRONG',
+            'SUB',
+            'SUP',
+            'U',
+          ])
+
+          // The nearest ancestor that establishes its own block, looking past
+          // inline wrappers such as <span> and <a>.
+          const containingBlock = (img: HTMLImageElement) => {
+            let node = img.parentElement
+
+            while (
+              node &&
+              node !== document.body &&
+              getComputedStyle(node).display === 'inline'
+            ) {
+              node = node.parentElement
             }
 
-            return (
-              node.nodeType === Node.ELEMENT_NODE &&
-              (node as Element).tagName === 'BR'
-            )
+            return node && node !== document.body ? node : null
+          }
+
+          // True when `img` is the only thing the block actually renders;
+          // whitespace, <br> and inline wrappers around the image don't count.
+          const holdsOnlyImage = (block: Element, img: HTMLImageElement) => {
+            let seenImage = false
+
+            const walk = (node: Element): boolean => {
+              for (const child of Array.from(node.childNodes)) {
+                if (child === img) {
+                  seenImage = true
+                  continue
+                }
+
+                if (child.nodeType === Node.TEXT_NODE) {
+                  if (child.textContent?.trim()) {
+                    return false
+                  }
+                  continue
+                }
+
+                if (child.nodeType !== Node.ELEMENT_NODE) {
+                  continue
+                }
+
+                const element = child as Element
+                if (element.tagName === 'BR') {
+                  continue
+                }
+
+                if (
+                  !INLINE_WRAPPER_TAGS.has(element.tagName) ||
+                  !walk(element)
+                ) {
+                  return false
+                }
+              }
+
+              return true
+            }
+
+            return walk(block) && seenImage
           }
 
           images.forEach((img) => {
             img.classList.add('pdf-image')
 
-            const parent = img.parentElement
-            if (!parent) {
+            const block = containingBlock(img)
+            if (!block || !holdsOnlyImage(block, img)) {
               return
             }
 
-            const meaningfulSiblings = Array.from(parent.childNodes).filter(
-              (node) => node === img || !isIgnorableImageSibling(node),
-            )
+            // Read the authored alignment before the standalone classes land,
+            // so it can be reapplied as auto margins on the block-level image.
+            const textAlign = getComputedStyle(block).textAlign
 
-            if (
-              meaningfulSiblings.length === 1 &&
-              meaningfulSiblings[0] === img
-            ) {
-              parent.classList.add('pdf-image-block')
-              img.classList.add('pdf-standalone-image')
+            block.classList.add('pdf-image-block')
+            img.classList.add('pdf-standalone-image')
+
+            if (textAlign === 'center') {
+              img.classList.add('pdf-standalone-image--center')
+            } else if (textAlign === 'right' || textAlign === 'end') {
+              img.classList.add('pdf-standalone-image--right')
             }
           })
 

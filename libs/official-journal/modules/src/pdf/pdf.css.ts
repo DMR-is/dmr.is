@@ -2,6 +2,8 @@ const PDF_PAGE_HEIGHT = '297mm'
 const PDF_PAGE_MARGIN_TOP = '4cm'
 const PDF_PAGE_MARGIN_BOTTOM = '1.5cm'
 const PDF_PAGE_MARGIN_INLINE = 'calc(2cm - 0.33em)'
+const PDF_IMAGE_MARGIN_TOP = '0.5em'
+const PDF_IMAGE_MARGIN_BOTTOM = '1em'
 
 export const pdfCss = `
   :root {
@@ -251,21 +253,39 @@ export const pdfCss = `
   p.pdf-image-block,
   div.pdf-image-block {
     text-indent: 0 !important;
-    text-align: left !important;
+  }
+
+  /* A standalone image is the only meaningful content of its block, so any
+     retained <br> would only add an empty line that eats printable height. */
+  .pdf-image-block br {
+    display: none;
   }
 
   .pdf-standalone-image {
     display: block;
     max-width: 100%;
+    /* The image plus its own vertical margins has to fit the printable area,
+       otherwise page-break-inside: avoid pushes it onto a fresh page and
+       leaves the previous one blank. */
     max-height: calc(
-      ${PDF_PAGE_HEIGHT} - ${PDF_PAGE_MARGIN_TOP} - ${PDF_PAGE_MARGIN_BOTTOM}
+      ${PDF_PAGE_HEIGHT} - ${PDF_PAGE_MARGIN_TOP} - ${PDF_PAGE_MARGIN_BOTTOM} -
+        ${PDF_IMAGE_MARGIN_TOP} - ${PDF_IMAGE_MARGIN_BOTTOM}
     );
     width: auto;
     height: auto;
     object-fit: contain;
-    margin: 0.5em 0 1em;
+    margin: ${PDF_IMAGE_MARGIN_TOP} 0 ${PDF_IMAGE_MARGIN_BOTTOM};
     page-break-inside: avoid;
     break-inside: avoid;
+  }
+
+  /* A block-level image ignores text-align, so authored centring/right
+     alignment is reproduced with auto margins instead. */
+  .pdf-standalone-image--center {
+    margin-inline: auto;
+  }
+  .pdf-standalone-image--right {
+    margin-inline: auto 0;
   }
 
   table {
