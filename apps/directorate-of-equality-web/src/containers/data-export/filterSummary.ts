@@ -8,6 +8,18 @@ import {
   VISIBILITY_FILTER_OPTIONS,
 } from '../../components/companies/companyStatus'
 import type {
+  ReportDateKey,
+  ReportDateRanges,
+  ReportFilters,
+} from '../../components/data-export/ReportExportFilter'
+import {
+  COMMUNICATION_STATUS_OPTIONS,
+  EQUALITY_SOURCE_OPTIONS,
+  REPORT_STATUS_OPTIONS,
+  REPORT_TYPE_OPTIONS,
+  type ReportFilterOption,
+} from '../../components/data-export/reportExportOptions'
+import type {
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanyStatusEnum,
@@ -70,4 +82,88 @@ export const buildFilterSummary = (
     line('Landshluti', filters.regionCode),
     line('Póstnúmer', filters.postcode),
   ].filter((value): value is string => value !== null)
+}
+
+const DATE_RANGE_LABELS: Array<[string, ReportDateKey, ReportDateKey]> = [
+  ['Innsent', 'createdFrom', 'createdTo'],
+  ['Samþykkt', 'approvedFrom', 'approvedTo'],
+  ['Gildir til', 'validUntilFrom', 'validUntilTo'],
+  ['Launatímabil', 'salaryDataPeriodFrom', 'salaryDataPeriodTo'],
+]
+
+const formatDay = (date: Date) =>
+  `${String(date.getDate()).padStart(2, '0')}.${String(
+    date.getMonth() + 1,
+  ).padStart(2, '0')}.${date.getFullYear()}`
+
+/**
+ * A date range in the words the panel used.
+ *
+ * An open-ended range is spelled out ("frá …", "til …") rather than rendered
+ * with a dangling dash — the sheet is read months later by someone who did not
+ * run the export, and "01.01.2026 –" is ambiguous about whether the other
+ * bound was empty or lost.
+ */
+const dateLine = (
+  label: string,
+  from: Date | undefined,
+  to: Date | undefined,
+): string | null => {
+  if (from && to) return `${label}: ${formatDay(from)} – ${formatDay(to)}`
+  if (from) return `${label}: frá ${formatDay(from)}`
+  if (to) return `${label}: til ${formatDay(to)}`
+  return null
+}
+
+export const buildReportFilterSummary = (
+  filters: ReportFilters,
+  dates: ReportDateRanges,
+  query: string,
+): string[] => {
+  const labelFor = (
+    options: ReportFilterOption[],
+    values: string[],
+  ): string[] =>
+    values.map(
+      (value) => options.find((o) => o.value === value)?.label ?? value,
+    )
+
+  return [
+    query.trim() ? `Leitarorð: ${query.trim()}` : null,
+    line('Tegund', labelFor(REPORT_TYPE_OPTIONS, filters.type)),
+    line('Staða', labelFor(REPORT_STATUS_OPTIONS, filters.status)),
+    line(
+      'Samskiptastaða',
+      labelFor(COMMUNICATION_STATUS_OPTIONS, filters.communicationStatus),
+    ),
+    line(
+      'Grundvöllur jafnréttisáætlunar',
+      labelFor(EQUALITY_SOURCE_OPTIONS, filters.equalitySource),
+    ),
+    line(
+      'Starfsmannafjöldi',
+      filters.employees.map(
+        (value) => EMPLOYEE_SIZE_LABEL[value] ?? value,
+      ),
+    ),
+    line(
+      'Rekstrarform',
+      filters.sector.map((value) => SECTOR_LABEL[value as CompanySectorEnum]),
+    ),
+    line('ÍSAT-bálkur', filters.isatSection),
+    line('ÍSAT atvinnugrein', filters.isatCategoryCode),
+    line('Landshluti', filters.regionCode),
+    line('Póstnúmer', filters.postcode),
+    ...DATE_RANGE_LABELS.map(([label, fromKey, toKey]) =>
+      dateLine(label, dates[fromKey], dates[toKey]),
+    ),
+  ].filter((value): value is string => value !== null)
+}
+
+/** Same buckets the report filter offers; see `EMPLOYEE_RANGE_OPTIONS`. */
+const EMPLOYEE_SIZE_LABEL: Record<string, string> = {
+  SMALL: '0–24',
+  MEDIUM: '25–49',
+  LARGE: '50+',
+  UNKNOWN: 'Óþekkt',
 }
