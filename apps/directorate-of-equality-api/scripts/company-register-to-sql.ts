@@ -731,7 +731,12 @@ const firstEmail = (raw: string | null): string | null => {
 }
 
 type CompanyStatus = 'ACTIVE' | 'INACTIVE'
-type CompanySector = 'UNKNOWN' | 'PRIVATE' | 'PUBLIC'
+type CompanySector =
+  | 'UNKNOWN'
+  | 'FYRIRTAEKI'
+  | 'RADUNEYTI'
+  | 'RIKISADILI'
+  | 'SVEITARFELAG'
 
 /** How a `Staða` value lands on the two columns it drives. */
 type StatusReading = {
@@ -766,13 +771,21 @@ export const readStatus = (raw: string | null): StatusReading => {
 /**
  * Read `Tegund` into `company.sector`, and say whether the sheet stated it.
  *
- * "Ríkisaðilar" and "Sveitarfélag" are both PUBLIC — central government and
- * municipalities are one bucket in `CompanySectorEnum`. A blank cell reads as
- * PRIVATE on the Directorate's instruction: 92 rows are blank and all 92 carry
+ * "Ríkisaðilar" and "Sveitarfélag" are two distinct buckets in
+ * `CompanySectorEnum` — RIKISADILI and SVEITARFELAG respectively; the sheet
+ * carries the distinction, so this no longer collapses them the way an
+ * earlier version of this reader did. A blank cell reads as FYRIRTAEKI on the
+ * Directorate's instruction: 92 rows are blank and all 92 carry
  * `Skylda = Nei`.
  *
+ * `RADUNEYTI` (ministry) has no `Tegund` spelling of its own — the sheet does
+ * not distinguish a ministry from any other ríkisaðili — so this reader never
+ * produces it. Ministries are reclassified by hand afterwards via the admin
+ * UI's `updateSector`, which sets `sector_override` so a later re-run leaves
+ * them alone (see the ⚠️ note below).
+ *
  * `stated` separates the 1 667 rows that named a Tegund from the 92 that were
- * blank, so the summary can report how many companies are PRIVATE only by
+ * blank, so the summary can report how many companies are FYRIRTAEKI only by
  * default. It is reported, not persisted.
  *
  * ⚠️ In particular it does NOT set `sector_override`, and neither does anything
@@ -781,20 +794,26 @@ export const readStatus = (raw: string | null): StatusReading => {
  * from the load would both make a claim no admin made and, because the load
  * would then have to respect its own flag, freeze `sector` at whatever the first
  * run happened to produce. Leaving it false keeps the sheet authoritative on
- * every re-run while an admin's later correction still wins, which is what the
- * ON CONFLICT clause below encodes.
+ * every re-run while an admin's later correction (e.g. RADUNEYTI) still wins,
+ * which is what the ON CONFLICT clause below encodes.
  */
 export const readSector = (
   raw: string | null,
 ): { sector: CompanySector; stated: boolean } => {
   const key = raw ? headerKey(raw) : ''
-  if (!key) return { sector: 'PRIVATE', stated: false }
-  if (/^rikisadil/.test(key) || /^sveitarfelag/.test(key)) {
-    return { sector: 'PUBLIC', stated: true }
+  if (!key) return { sector: 'FYRIRTAEKI', stated: false }
+  if (/^rikisadil/.test(key)) return { sector: 'RIKISADILI', stated: true }
+  // Matches both the singular stem ("Sveitarfélag") and the plural
+  // ("Sveitarfélög"): Icelandic pluralizes this word by u-umlaut, shifting
+  // the stem vowel a→ö rather than only appending a suffix, so ö's
+  // normalized form (o) has to be accepted where a plain prefix match would
+  // expect the singular's a.
+  if (/^sveitarfel[ao]g/.test(key)) {
+    return { sector: 'SVEITARFELAG', stated: true }
   }
-  if (/^fyrirtaeki/.test(key)) return { sector: 'PRIVATE', stated: true }
+  if (/^fyrirtaeki/.test(key)) return { sector: 'FYRIRTAEKI', stated: true }
   // An unrecognized Tegund is reported rather than guessed at; UNKNOWN is a
-  // real value in the enum and never folded into PRIVATE.
+  // real value in the enum and never folded into FYRIRTAEKI.
   return { sector: 'UNKNOWN', stated: false }
 }
 
@@ -1824,7 +1843,7 @@ const main = async (): Promise<void> => {
     acc[r.sector] = (acc[r.sector] ?? 0) + 1
     return acc
   }, {})
-  // PRIVATE only because Tegund was blank — a default, not a classification.
+  // FYRIRTAEKI only because Tegund was blank — a default, not a classification.
   const sectorDefaulted = finalRows.filter((r) => !r.sectorStated).length
   const inactiveCount = finalRows.filter((r) => r.status === 'INACTIVE').length
   const quarantinedRows = finalRows.filter((r) => r.quarantined)
@@ -1885,7 +1904,7 @@ const main = async (): Promise<void> => {
     Object.entries(sectorCounts)
       .map(([k, v]) => `${k}=${v}`)
       .join(' ') || 'none'
-  }  (${sectorDefaulted} PRIVATE only because Tegund was blank)
+  }  (${sectorDefaulted} FYRIRTAEKI only because Tegund was blank)
 -- Inactive:   ${inactiveCount} (Staða = hætt)
 -- Quarantine: ${quarantinedRows.length} (Staða = undanþága)
 -- Due dates:  ${salaryDueCount} salary, ${equalityDueCount} equality
@@ -2149,7 +2168,7 @@ BEGIN;
     'status:',
     `ACTIVE=${finalRows.length - inactiveCount}  INACTIVE=${inactiveCount}`,
   )
-  line('sector PRIVATE by default:', `${sectorDefaulted} (Tegund blank)`)
+  line('sector FYRIRTAEKI by default:', `${sectorDefaulted} (Tegund blank)`)
   line('quarantined (undanþága):', quarantinedRows.length)
   line('due dates:', `${salaryDueCount} salary, ${equalityDueCount} equality`)
   if (salaryDueWithheld)
@@ -2221,7 +2240,9 @@ BEGIN;
   if (salaryDueCount || equalityDueCount) {
     console.log('')
     console.log(
-      `  ⚠ ${salaryDueCount + equalityDueCount} deadlines seeded. ReportDeadlineReminderTask selects on`,
+      `  ⚠ ${
+        salaryDueCount + equalityDueCount
+      } deadlines seeded. ReportDeadlineReminderTask selects on`,
     )
     console.log(
       `    status/quarantined/due-date alone, un-deduped, over a window of about`,

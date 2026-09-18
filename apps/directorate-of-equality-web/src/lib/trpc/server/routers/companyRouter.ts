@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import {
+  zCompanySectorEnum,
   zCreateCompanyBody,
   zCreateCompanyCommentBody,
   zCreateCompanyCommentPath,
@@ -55,7 +56,10 @@ const zGetCompaniesQuery = z.object({
   includeInactive: z.boolean().optional(),
   isatCategoryCode: z.array(z.string()).optional(),
   isatSection: z.array(z.string()).optional(),
-  sector: z.array(z.enum(['UNKNOWN', 'PRIVATE', 'PUBLIC'])).optional(),
+  // From the generated schema, not a literal list: a hand-written copy of the
+  // enum would let the next value through as a silently-rejected filter rather
+  // than a compile error.
+  sector: z.array(zCompanySectorEnum).optional(),
   regionCode: z.array(z.string()).optional(),
   postcode: z.array(z.string()).optional(),
   sortBy: z.enum(['name', 'employeeCount', 'nextReportDue']).optional(),
@@ -89,7 +93,9 @@ export const companyRouter = router({
   // Backs the premade industry filter — the 22 ÍSAT sections (bálkar) with
   // labels, so "Opinber stjórnsýsla" is one choice instead of every leaf under
   // division 84. Static reference data, no input.
-  isatSections: protectedProcedure.query(({ ctx }) => ctx.api.listIsatSections()),
+  isatSections: protectedProcedure.query(({ ctx }) =>
+    ctx.api.listIsatSections(),
+  ),
 
   rskLookup: protectedProcedure
     .input(zRskLookupCompanyPath)
@@ -169,8 +175,9 @@ export const companyRouter = router({
     ),
 
   // Manual sector classification — the admin escape hatch for companies
-  // automatic RSK classification left UNKNOWN. PRIVATE/PUBLIC pins the value
-  // (sectorOverride); UNKNOWN hands it back to automatic classification.
+  // automatic RSK classification left UNKNOWN, and the only way RADUNEYTI
+  // (ministry) ever gets set. Any classified value pins it (sectorOverride);
+  // UNKNOWN hands it back to automatic classification.
   updateSector: protectedProcedure
     .input(zUpdateCompanySectorPath.extend(zUpdateCompanySectorBody.shape))
     .mutation(({ ctx, input }) =>

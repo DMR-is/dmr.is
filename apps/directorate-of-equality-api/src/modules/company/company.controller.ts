@@ -138,8 +138,9 @@ export class CompanyController {
     return this.companyService.updateStatus(id, dto, admin.id)
   }
 
-  // Manual sector classification. PRIVATE/PUBLIC marks the value admin-owned so
-  // a backfill won't overwrite it; UNKNOWN clears that flag. See updateSector.
+  // Manual sector classification, and the only way RADUNEYTI is ever set. Any
+  // classified value marks the sector admin-owned so a backfill won't overwrite
+  // it; UNKNOWN clears that flag. See updateSector.
   @Patch(':id/sector')
   @ApiParam({ name: 'id', type: String })
   @DoeResponse({
@@ -246,9 +247,7 @@ export class CompanyController {
     type: [LegacyReportDto],
     include404: true,
   })
-  async getLegacyReports(
-    @Param('id') id: string,
-  ): Promise<LegacyReportDto[]> {
+  async getLegacyReports(@Param('id') id: string): Promise<LegacyReportDto[]> {
     return this.companyService.getLegacyReports(id)
   }
 
@@ -259,9 +258,7 @@ export class CompanyController {
     type: [CompanyCommentDto],
     include404: true,
   })
-  async getComments(
-    @Param('id') id: string,
-  ): Promise<CompanyCommentDto[]> {
+  async getComments(@Param('id') id: string): Promise<CompanyCommentDto[]> {
     return this.companyCommentService.getByCompanyId(id)
   }
 

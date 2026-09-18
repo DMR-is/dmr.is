@@ -196,9 +196,9 @@ export class CompanyModel extends MutableModel<
   })
   isatCategory?: IsatCategoryModel | null
 
-  // Ownership sector (private vs government/state), derived from the RSK legal
-  // form below — NOT from ÍSAT, which only says what the company does. Defaults
-  // to UNKNOWN and is never inferred as PRIVATE; see CompanySectorEnum.
+  // Ownership sector, derived from the RSK legal form below — NOT from ÍSAT,
+  // which only says what the company does. Defaults to UNKNOWN and is never
+  // inferred as a classified bucket; see CompanySectorEnum.
   @Column({
     type: DataType.ENUM(...Object.values(CompanySectorEnum)),
     allowNull: false,
@@ -278,9 +278,7 @@ export class CompanyModel extends MutableModel<
       nextEqualityReportDueAt: model.nextEqualityReportDueAt,
       nextSalaryReportDueAt: model.nextSalaryReportDueAt,
       isatCategoryCode: model.isatCategoryCode,
-      isatCategory: model.isatCategory
-        ? model.isatCategory.fromModel()
-        : null,
+      isatCategory: model.isatCategory ? model.isatCategory.fromModel() : null,
       sector: model.sector,
       sectorOverride: model.sectorOverride,
       legalFormId: model.legalFormId,

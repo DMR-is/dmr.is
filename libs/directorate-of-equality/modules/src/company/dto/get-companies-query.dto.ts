@@ -1,5 +1,11 @@
 import { Transform } from 'class-transformer'
-import { IsArray, IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator'
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsOptional,
+  IsString,
+} from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -183,7 +189,7 @@ export class GetCompaniesQueryDto extends PagingQuery {
     isArray: true,
     required: false,
     description:
-      'Return only companies in one of the given ownership sectors — the premade "private vs government/state" filter. UNKNOWN is filterable on its own and is never included in PRIVATE.',
+      'Return only companies in one of the given ownership sectors — the premade Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög filter (FYRIRTAEKI, RADUNEYTI, RIKISADILI, SVEITARFELAG). UNKNOWN is filterable on its own and is never included in any of the classified sectors.',
   })
   @Transform(({ value }) => {
     if (value == null) return undefined

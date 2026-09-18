@@ -876,12 +876,12 @@ export const companiesText = {
   isatSection: 'ÍSAT-bálkur',
   isatSectionPlaceholder: 'Veldu bálk',
   isatSectionNoResults: 'Engir bálkar fundust',
-  // "Eignarhald", not "rekstrarform": the values are Almennur markaður / Ríki
-  // og sveitarfélög, i.e. who owns the entity. Rekstrarform is the RSK legal
-  // form the classification is *derived* from, and is reserved for that hint on
-  // the detail view — the two must not share a word the admin can edit.
-  sector: 'Eignarhald',
-  sectorPlaceholder: 'Veldu eignarhald',
+  // Values are Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög. RSK's own
+  // rekstrarform (ehf., ohf., …) is a different vocabulary under the same word
+  // — it is the read-only legal form this classification is *derived* from, and
+  // the detail view shows it beneath this field. See `sectorLegalFormHint`.
+  sector: 'Rekstrarform',
+  sectorPlaceholder: 'Veldu rekstrarform',
   // Deliberately NOT `statusLabel`, which the compliance filter already uses in
   // the same panel. Selecting nothing means both, which is also what the list
   // shows unfiltered.
@@ -918,11 +918,11 @@ export const companiesText = {
     addressLabel: 'Heimilisfang',
     postcodeLabel: 'Póstnúmer',
     isatCategoryLabel: 'ÍSAT-flokkur',
-    sectorLabel: 'Eignarhald',
+    sectorLabel: 'Rekstrarform',
     // Shown under the sector field when RSK's rekstrarform is one we do not map
     // yet, so the admin sees it here rather than after the company exists.
     sectorUnknownHint:
-      'Ekki tókst að flokka eignarhald sjálfvirkt. Hægt er að skrá það handvirkt eftir að fyrirtækið hefur verið stofnað.',
+      'Ekki tókst að flokka rekstrarform sjálfvirkt. Hægt er að skrá það handvirkt eftir að fyrirtækið hefur verið stofnað.',
     emptyValue: '—',
     employeeCountLabel: 'Meðalfjöldi starfsmanna',
     submit: 'Skrá fyrirtæki',
@@ -1061,21 +1061,22 @@ export const companiesText = {
     registerStatusInactiveHint:
       'Fyrirtækið er ekki í gildandi fyrirtækjaskrá Jafnréttisstofu. Skýringin er skráð í sögu fyrirtækisins.',
 
-    // Only sectorLegalFormHint says "rekstrarform" — it is the RSK legal form,
-    // a read-only input to the classification. The editable field above it is
-    // eignarhald. Stacking both concepts under one word on the same screen
-    // invites an admin to "correct" one when they meant the other.
-    sectorLabel: 'Eignarhald',
+    // sectorLegalFormHint renders directly under the editable field, which now
+    // carries the same word. They are not the same thing: the field holds our
+    // four-way classification, the hint holds RSK's raw legal form (ehf., ohf.,
+    // …) that it is derived from. Its "úr fyrirtækjaskrá RSK" qualifier is the
+    // only thing telling an admin which is which — do not shorten it away.
+    sectorLabel: 'Rekstrarform',
     sectorEditButton: 'Breyta',
     sectorSaveButton: 'Vista',
     sectorCancelButton: 'Hætta',
-    sectorPlaceholder: 'Veldu eignarhald',
-    sectorSavedToast: 'Eignarhald uppfært',
-    sectorErrorToast: 'Villa við að uppfæra eignarhald',
+    sectorPlaceholder: 'Veldu rekstrarform',
+    sectorSavedToast: 'Rekstrarform uppfært',
+    sectorErrorToast: 'Villa við að uppfæra rekstrarform',
     sectorOverrideHint: 'Skráð handvirkt af umsjónarmanni',
     sectorLegalFormHint: 'Rekstrarform úr fyrirtækjaskrá RSK: ',
     sectorUnknownHint:
-      'Ekki hefur verið unnt að flokka fyrirtækið sjálfvirkt. Veldu eignarhald handvirkt.',
+      'Ekki hefur verið unnt að flokka fyrirtækið sjálfvirkt. Veldu rekstrarform handvirkt.',
 
     emailLabel: 'Netfang',
     emailPlaceholder: 'netfang@fyrirtaeki.is',

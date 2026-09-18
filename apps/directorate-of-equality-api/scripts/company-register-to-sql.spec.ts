@@ -5,6 +5,7 @@ import {
   COMPANY_ON_CONFLICT,
   normalizeIsatCode,
   readDay,
+  readSector,
 } from './company-register-to-sql'
 
 /**
@@ -193,6 +194,53 @@ describe('normalizeIsatCode', () => {
 
   it('hands back an over-long value so the caller can report it', () => {
     expect(normalizeIsatCode('123456')).toBe('123456')
+  })
+})
+
+describe('readSector', () => {
+  it('reads Ríkisaðilar and Sveitarfélög as distinct buckets, not one PUBLIC bucket', () => {
+    // The sheet already carries the distinction; folding both into one value
+    // (an earlier version of this reader did) throws it away for good.
+    expect(readSector('Ríkisaðilar')).toEqual({
+      sector: 'RIKISADILI',
+      stated: true,
+    })
+    expect(readSector('Sveitarfélög')).toEqual({
+      sector: 'SVEITARFELAG',
+      stated: true,
+    })
+  })
+
+  it('reads Fyrirtæki as FYRIRTAEKI', () => {
+    expect(readSector('Fyrirtæki')).toEqual({
+      sector: 'FYRIRTAEKI',
+      stated: true,
+    })
+  })
+
+  it('defaults a blank cell to FYRIRTAEKI, marked unstated', () => {
+    expect(readSector(null)).toEqual({ sector: 'FYRIRTAEKI', stated: false })
+    expect(readSector('')).toEqual({ sector: 'FYRIRTAEKI', stated: false })
+  })
+
+  // Asserts the exact reading rather than `not.toBe('RADUNEYTI')`, which would
+  // pass for every unmapped string and so pin no behaviour at all. Tegund has
+  // no ministry spelling, so readSector never infers RADUNEYTI — it is only
+  // ever set by hand via `PATCH /company/:id/sector`. A ministry named in
+  // Tegund therefore lands in UNKNOWN, where the run's `unrecognized Tegund`
+  // line reports it instead of it being filed silently under FYRIRTAEKI.
+  it('reads a ministry spelling as UNKNOWN — RADUNEYTI is only ever set by hand', () => {
+    expect(readSector('Ráðuneyti')).toEqual({
+      sector: 'UNKNOWN',
+      stated: false,
+    })
+  })
+
+  it('leaves an unrecognized Tegund UNKNOWN rather than guessing', () => {
+    expect(readSector('Eitthvað annað')).toEqual({
+      sector: 'UNKNOWN',
+      stated: false,
+    })
   })
 })
 

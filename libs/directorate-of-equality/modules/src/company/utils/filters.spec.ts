@@ -303,7 +303,7 @@ describe('buildCompanyListQuery', () => {
       quarantined: false,
       overdue: true,
       isatCategoryCode: ['01110'],
-      sector: [CompanySectorEnum.PRIVATE],
+      sector: [CompanySectorEnum.FYRIRTAEKI],
     })
 
     expect(conditions).toHaveLength(10)
