@@ -57,9 +57,11 @@ while read -r submodule; do
   fi
 
   # Fetch so the "commits since" listing below is current. In CI that listing is
-  # never read and actions/checkout has already fetched, so only pay for it when
-  # the pinned commit is genuinely missing. Best effort either way - a developer
-  # working offline should still get a working checkout.
+  # never read and the `submodule update` above has already fetched the pinned
+  # commit - directly, at depth 1, or via actions/checkout where a workflow still
+  # sets `submodules: true` - so this only checks that it succeeded and pays for
+  # a fetch when the pin is genuinely missing. Best effort either way - a
+  # developer working offline should still get a working checkout.
   if [ -z "${CI:-}" ] || ! git -C "${SUBMODULE_PATH}" cat-file -e "${SHA}^{commit}" 2>/dev/null; then
     git -C "${SUBMODULE_PATH}" fetch --quiet --prune ||
       echo "⚠️  ${NAME}: fetch failed, continuing with local objects" >&2
