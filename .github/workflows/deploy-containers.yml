@@ -58,12 +58,9 @@ jobs:
 
       # BASE MUST BE THE LAST SUCCESSFUL DEPLOY, NOT HEAD~1.
       #
-      # Both inputs matter. last-successful-event defaults to `push`, and this
-      # workflow only ever runs on workflow_run / workflow_dispatch, so the
-      # default finds nothing, warns, and silently falls back to HEAD~1. That
-      # makes "unaffected" mean "untouched by the newest commit" instead of
-      # "unchanged since the image that is actually deployed" -- which is what
-      # the re-tag job below assumes when it copies an image forward.
+      # "Unaffected" has to mean "unchanged since the image that is actually
+      # deployed", not "untouched by the newest commit" -- that is what the
+      # re-tag job below assumes when it copies sha-<base> forward.
       #
       # The consequence was not theoretical. A container whose build failed or
       # was cancelled kept its old image, the next merge marked it unaffected,
@@ -72,27 +69,29 @@ jobs:
       # sha-<commit>, stale code shipped to production under a version tag
       # claiming to contain the change, with every workflow run green.
       #
-      # When there is no baseline at all -- first run after a rename, or run
-      # history aged out -- the action reports noPreviousBuild instead of us
-      # guessing. That case is handled explicitly below by treating every
-      # container as affected: rebuilding all twelve is wasteful but always
-      # correct, where HEAD~1 is cheap and sometimes wrong. Fail safe, not
-      # fail closed, so a missing baseline never blocks a deploy either.
+      # This was nrwl/nx-set-shas@v5 until it silently picked a base 78 commits
+      # and 25 days stale on two separate merges (2026-09-15, 2026-09-16), each
+      # time rebuilding all eleven containers instead of one. Its
+      # `commitExists` wraps two GitHub API calls in `catch { return false }`,
+      # so a rate-limit or 5xx is indistinguishable from "commit was rebased
+      # away" and the loop walks silently backwards to an older run. It also
+      # only accepts a base within the newest 100 commits of main (one
+      # unpaginated page), and ignores the exit status of its own
+      # `git cat-file -e` check.
       #
-      # workflow-id is left at its default, which is this workflow, so the
-      # baseline is this workflow's own last successful run.
-      - name: Set NX SHAs
-        id: set-shas
-        uses: nrwl/nx-set-shas@v5
-        with:
-          last-successful-event: workflow_run
-
+      # So compute it here instead. It is one API call and two git checks, and
+      # every reason for rejecting a candidate is printed rather than swallowed.
+      # Walking back to an older successful deploy is still correct -- its
+      # images exist and the diff is merely wider -- but now it is visible.
+      #
+      # The sha must be an ANCESTOR of HEAD, not merely present: a commit from
+      # an abandoned branch can exist locally while naming an image that was
+      # never deployed from this line of history.
       - name: Determine affected containers
         id: set-affected
         env:
-          NO_PREVIOUS_BUILD: ${{ steps.set-shas.outputs.noPreviousBuild }}
-          BASE_SHA: ${{ steps.set-shas.outputs.base }}
           REBUILD_ALL: ${{ inputs.rebuild-all }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # directorate-of-equality-partner-api is deliberately NOT in this list
           # yet. Its ECS service does not exist in the DMR-Jafnrettisstofa
@@ -132,16 +131,59 @@ jobs:
           #   claimed unchanged
           # - rebuild-all: asked for by hand, e.g. after a base image update
           #   that no source diff can see, or to re-establish trust in the tags
+          # Deliberately NOT "the first entry the API returns". The base is the
+          # CLOSEST valid ancestor, chosen by counting commits, so the result
+          # does not depend on the order or completeness of the response. A
+          # wrong-but-older base is not a crash, it is eleven silent rebuilds,
+          # and ordering is the one thing here we cannot verify from inside the
+          # job. 20 is slack for a run of cancelled or failed deploys.
+          #
+          # Every rejected candidate says why, so the next bad base is
+          # diagnosable from the log instead of being inferred weeks later.
+          BASE_SHA=""
+          BASE_DISTANCE=""
+          for sha in $(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/deploy-containers.yml/runs?branch=main&event=workflow_run&status=success&per_page=20" \
+            -q '.workflow_runs[].head_sha' 2>/dev/null); do
+            if [ "$sha" = "${GITHUB_SHA}" ]; then
+              continue
+            fi
+            if ! git cat-file -e "${sha}^{commit}" 2>/dev/null; then
+              echo "Skipping ${sha}: commit not in this checkout"
+              continue
+            fi
+            if ! git merge-base --is-ancestor "$sha" "${GITHUB_SHA}"; then
+              echo "Skipping ${sha}: not an ancestor of HEAD (rebased, or a newer run)"
+              continue
+            fi
+            distance=$(git rev-list --count "${sha}..${GITHUB_SHA}")
+            if [ -z "$BASE_DISTANCE" ] || [ "$distance" -lt "$BASE_DISTANCE" ]; then
+              BASE_SHA="$sha"
+              BASE_DISTANCE="$distance"
+            fi
+          done
+
           if [ "${REBUILD_ALL:-}" = "true" ]; then
             echo "::notice::rebuild-all requested. Building every container regardless of affected-detection."
             AFFECTED_PROJECTS=$(echo "$ALL_CONTAINERS" | jq -r '.[].name')
-          elif [ "${NO_PREVIOUS_BUILD:-}" = "true" ]; then
-            echo "::warning::No previous successful deploy found. Rebuilding every container, because there is no baseline that would let 'unaffected' mean anything."
+          elif [ -z "$BASE_SHA" ]; then
+            echo "::warning::No usable previous successful deploy found. Rebuilding every container, because there is no baseline that would let 'unaffected' mean anything."
             AFFECTED_PROJECTS=$(echo "$ALL_CONTAINERS" | jq -r '.[].name')
           else
-            echo "Base: ${BASE_SHA}"
+            echo "::notice::Base ${BASE_SHA} (${BASE_DISTANCE} commit(s) behind HEAD)"
+            # A healthy dev deploy is a commit or two behind. Anything wider is
+            # either a genuine burst of merges or a bad base -- say so, because
+            # the only symptom otherwise is a suspiciously large build matrix.
+            if [ "${BASE_DISTANCE}" -gt 10 ]; then
+              echo "::warning::Base is ${BASE_DISTANCE} commits behind HEAD. Expect a wide affected set; if this is not a merge burst, the baseline is wrong."
+            fi
             echo "Determining affected projects with nx"
-            AFFECTED_PROJECTS=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
+            # --json, because the bare output is JSON in some environments and
+            # newline-separated in others. The grep below wants lines, and if it
+            # ever saw a JSON array it would match nothing, mark every container
+            # unaffected, and re-tag stale images -- failing in the one direction
+            # this job must never fail in.
+            AFFECTED_PROJECTS=$(npx nx show projects --affected --base="${BASE_SHA}" --head="${GITHUB_SHA}" --type=app --json 2>/dev/null | jq -r '.[]' || echo "")
           fi
 
           echo "Affected projects:"
@@ -163,9 +205,8 @@ jobs:
           echo "unaffected=$UNAFFECTED_CONTAINERS" >> $GITHUB_OUTPUT
 
           # Published so the re-tag job can copy the image built for this exact
-          # commit, rather than whatever `latest` happens to point at. Taken from
-          # the action's output rather than the NX_BASE env var it also exports,
-          # so the dependency is explicit.
+          # commit, rather than whatever `latest` happens to point at. Empty when
+          # everything was rebuilt, which is fine: the re-tag job does not run.
           echo "base_sha=${BASE_SHA}" >> $GITHUB_OUTPUT
 
           HAS_AFFECTED=$([ "$(echo $AFFECTED_CONTAINERS | jq length)" -gt 0 ] && echo "true" || echo "false")
