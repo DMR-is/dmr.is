@@ -115,6 +115,54 @@ runs:
     # cache folder would be modified, and the download cache above restores
     # through restore-keys, so a PR that changes yarn.lock legitimately has to add
     # archives to it. That flag would fail exactly the dependency-bump PRs.
+    # Yarn enables hardened mode automatically when it detects a pull request
+    # against a *public* repository (`enableHardenedMode` defaults to
+    # `isPR && isPublicRepository`), and says so in the log. It forces
+    # --check-resolutions --refresh-lockfile, which queries the remote registries
+    # to validate the lockfile, and cost ~18s of Resolution on every PR job
+    # against 0.4s on a push to main.
+    #
+    # That check is the only thing standing between a hand-edited lockfile and
+    # an install: checksumBehavior verifies a package against the checksum
+    # *recorded in yarn.lock*, so a diff that rewrites a resolution and its
+    # checksum together passes it. Hardened mode is therefore kept exactly where
+    # a lockfile can have changed - a PR from a fork, or any PR whose diff
+    # against its base touches yarn.lock or .yarnrc.yml - and dropped for the
+    # PRs that cannot have changed one. Same-repo PRs that leave the lockfile
+    # alone are the overwhelming majority, and they no longer pay for it.
+    #
+    # Anything that stops the diff from being computed (no base SHA, shallow
+    # history) falls back to hardened, never to off. Outside pull_request events
+    # yarn's own default is already off, so 0 there changes nothing.
+    - name: ⚙️ Decide yarn hardened mode
+      id: yarn-hardened
+      shell: bash
+      working-directory: ${{ inputs.cwd }}
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        THIS_REPO: ${{ github.repository }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      run: |
+        set -euo pipefail
+        enabled=0
+        reason="not a pull_request event"
+        if [ "${EVENT_NAME}" = "pull_request" ]; then
+          if [ -z "${HEAD_REPO}" ] || [ "${HEAD_REPO}" != "${THIS_REPO}" ]; then
+            enabled=1; reason="pull request from a fork (${HEAD_REPO:-unknown})"
+          elif [ -z "${BASE_SHA}" ]; then
+            enabled=1; reason="no base SHA in the event payload"
+          elif ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            enabled=1; reason="base ${BASE_SHA} not in the checkout (shallow?)"
+          elif ! git diff --quiet "${BASE_SHA}" HEAD -- yarn.lock .yarnrc.yml; then
+            enabled=1; reason="yarn.lock or .yarnrc.yml differs from base ${BASE_SHA}"
+          else
+            reason="same-repo PR, lockfile unchanged from base ${BASE_SHA}"
+          fi
+        fi
+        echo "YARN_ENABLE_HARDENED_MODE=${enabled} (${reason})"
+        echo "enabled=${enabled}" >> "$GITHUB_OUTPUT"
+
     - name: 📥 Install dependencies
       shell: bash
       working-directory: ${{ inputs.cwd }}
@@ -128,16 +176,4 @@ runs:
         YARN_HTTP_TIMEOUT: '10000'
         YARN_INSTALL_STATE_PATH: '.yarn/ci-cache/install-state.gz'
         HUSKY: '0'
-        # Yarn enables hardened mode automatically when it detects a pull request
-        # against a *public* repository (`enableHardenedMode` defaults to
-        # `isPR && isPublicRepository`), and says so in the log. It forces
-        # --check-resolutions --refresh-lockfile, which queries the remote
-        # registries to validate the lockfile, and cost ~18s of Resolution on
-        # every PR job against 0.4s on a push to main.
-        #
-        # dmr.is is public because it is a government project, not because it
-        # takes outside contributions: every PR is opened from a branch in this
-        # repo, so its author already has write access and gains nothing by
-        # manipulating the lockfile. Keep the guard for the case it is actually
-        # for - a PR opened from a fork - and drop it otherwise.
-        YARN_ENABLE_HARDENED_MODE: "${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && '1' || '0' }}"
+        YARN_ENABLE_HARDENED_MODE: ${{ steps.yarn-hardened.outputs.enabled }}
