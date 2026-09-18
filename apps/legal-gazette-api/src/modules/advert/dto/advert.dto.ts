@@ -28,9 +28,9 @@ import { Paging } from '@dmr.is/shared-dto'
 import {
   AdvertDetailedDto,
   AdvertDto,
-  AdvertTemplateType,
   ExternalAdvertDto,
-} from '../../../models/advert.model'
+} from '../../../models/advert.dto'
+import { AdvertTemplateType } from '../../../models/advert.model'
 import { CategoryDto } from '../../../models/category.model'
 import { StatusDto } from '../../../models/status.model'
 import { TypeDto } from '../../../models/type.model'

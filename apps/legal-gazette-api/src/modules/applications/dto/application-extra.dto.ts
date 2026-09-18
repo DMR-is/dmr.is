@@ -28,7 +28,7 @@ import { Paging } from '@dmr.is/shared-dto'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
-} from '../../../models/application.model'
+} from '../../../models/application.dto'
 import { CreateSignatureDto } from '../../advert/signature/dto/signature.dto'
 
 export class GetApplicationsDto {

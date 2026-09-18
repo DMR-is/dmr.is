@@ -1,4 +1,4 @@
-import { ForeclosureDto } from '../../../models/foreclosure.model'
+import { ForeclosureDto } from '../../../models/foreclosure.dto'
 import {
   ForeclosurePropertyDto,
 } from '../../../models/foreclosure-property.model'

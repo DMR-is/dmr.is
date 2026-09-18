@@ -7,11 +7,8 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { SYSTEM_ACTOR } from '../../core/constants'
 import { AdvertModel } from '../../models/advert.model'
-import {
-  CommentDto,
-  CommentModel,
-  CommentTypeEnum,
-} from '../../models/comment.model'
+import { CommentDto } from '../../models/comment.dto'
+import { CommentModel, CommentTypeEnum } from '../../models/comment.model'
 import { StatusIdEnum, StatusModel } from '../../models/status.model'
 import { UserModel } from '../../models/users.model'
 import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
