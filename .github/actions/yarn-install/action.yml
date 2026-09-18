@@ -97,24 +97,6 @@ runs:
         path: ${{ inputs.cwd }}/.yarn/ci-cache
         key: yarn-install-state-cache-${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.yarn-config.outputs.CURRENT_NODE_VERSION }}-${{ hashFiles(format('{0}/yarn.lock', inputs.cwd), format('{0}/.yarnrc.yml', inputs.cwd)) }}
 
-    # No --check-cache. Yarn's own description of it: it "will always refetch the
-    # packages", and it "is recommended as part of your CI workflow if you're both
-    # following the Zero-Installs model and accepting PRs from third-parties, as
-    # they'd otherwise have the ability to alter the checked-in packages before
-    # submitting them". We do not follow Zero-Installs - .yarn/cache is gitignored
-    # and no archive is tracked - so the thing it protects does not exist here,
-    # while the refetch was paid by every job of every run. It is why the Fetch
-    # step measured ~18-20s whether every cache hit or every cache missed.
-    # Measured locally, same lockfile and warm cache, back to back: Fetch 30.2s
-    # with it, 1.1s without.
-    #
-    # This does not weaken checksum validation. checksumBehavior already defaults
-    # to `throw`, so every install verifies package checksums against the lockfile.
-    #
-    # --immutable-cache is deliberately NOT used in its place. It aborts if the
-    # cache folder would be modified, and the download cache above restores
-    # through restore-keys, so a PR that changes yarn.lock legitimately has to add
-    # archives to it. That flag would fail exactly the dependency-bump PRs.
     # Yarn enables hardened mode automatically when it detects a pull request
     # against a *public* repository (`enableHardenedMode` defaults to
     # `isPR && isPublicRepository`), and says so in the log. It forces
@@ -163,6 +145,24 @@ runs:
         echo "YARN_ENABLE_HARDENED_MODE=${enabled} (${reason})"
         echo "enabled=${enabled}" >> "$GITHUB_OUTPUT"
 
+    # No --check-cache. Yarn's own description of it: it "will always refetch the
+    # packages", and it "is recommended as part of your CI workflow if you're both
+    # following the Zero-Installs model and accepting PRs from third-parties, as
+    # they'd otherwise have the ability to alter the checked-in packages before
+    # submitting them". We do not follow Zero-Installs - .yarn/cache is gitignored
+    # and no archive is tracked - so the thing it protects does not exist here,
+    # while the refetch was paid by every job of every run. It is why the Fetch
+    # step measured ~18-20s whether every cache hit or every cache missed.
+    # Measured locally, same lockfile and warm cache, back to back: Fetch 30.2s
+    # with it, 1.1s without.
+    #
+    # This does not weaken checksum validation. checksumBehavior already defaults
+    # to `throw`, so every install verifies package checksums against the lockfile.
+    #
+    # --immutable-cache is deliberately NOT used in its place. It aborts if the
+    # cache folder would be modified, and the download cache above restores
+    # through restore-keys, so a PR that changes yarn.lock legitimately has to add
+    # archives to it. That flag would fail exactly the dependency-bump PRs.
     - name: 📥 Install dependencies
       shell: bash
       working-directory: ${{ inputs.cwd }}
