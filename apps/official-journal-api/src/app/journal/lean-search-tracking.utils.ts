@@ -2,6 +2,7 @@ import { createHash } from 'crypto'
 
 import { GetAdvertsQueryParams } from '@dmr.is/shared-dto'
 
+import { extractPhrase } from '../../util/phrase'
 import {
   LeanSearchQueryKind,
   LeanSearchTrackingEventDto,
@@ -61,7 +62,15 @@ export const classifyLeanSearchQuery = (
   let normalizedQuery = normalized
   let queryKind: LeanSearchQueryKind = LeanSearchQueryKind.FreeText
 
-  if (INTERNAL_CASE_NUMBER_PATTERN.test(normalized)) {
+  const phrase = extractPhrase(normalized)
+
+  if (phrase) {
+    // Record the phrase without its quotes so a quoted search and the same
+    // words unquoted share a query hash and can be compared directly. The
+    // query kind is what tells the two apart.
+    queryKind = LeanSearchQueryKind.Phrase
+    normalizedQuery = phrase
+  } else if (INTERNAL_CASE_NUMBER_PATTERN.test(normalized)) {
     queryKind = LeanSearchQueryKind.InternalCaseNumber
   } else {
     const publicationNumberMatch = normalized.match(PUBLICATION_NUMBER_PATTERN)

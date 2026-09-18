@@ -240,12 +240,16 @@ export class ReindexRunnerService implements IReindexRunnerService {
 
   private async run(jobId: number, maxDocs: number) {
     const alias = INDEX_ALIAS
+    // Declared out here so `finally` can stop it on every exit. Left running,
+    // it rewrites a failure message with 'stalled before index creation' two
+    // minutes later, discarding the real reason the run stopped.
+    let watchdog: ReturnType<typeof setInterval> | undefined
     try {
       this.logger.info('reindexing: starting...', {
         context: LOGGING_CONTEXT,
       })
       const startedAt = Date.now()
-      const watchdog = setInterval(() => {
+      watchdog = setInterval(() => {
         const stalled =
           Date.now() - (this.status.startedAt ?? startedAt) > 120_000 &&
           this.status.progress < 10
@@ -346,6 +350,9 @@ export class ReindexRunnerService implements IReindexRunnerService {
         ...this.status,
       })
     } finally {
+      if (watchdog) {
+        clearInterval(watchdog)
+      }
       this.lock = false
     }
   }

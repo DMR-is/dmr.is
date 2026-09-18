@@ -3,6 +3,8 @@ import startOfDay from 'date-fns/startOfDay'
 
 import { GetAdvertsQueryParams, Paging } from '@dmr.is/shared-dto'
 
+import { extractPhrase } from './phrase'
+
 function normalizeToArray(value: string | string[]): string[] {
   if (Array.isArray(value)) return value
 
@@ -59,12 +61,37 @@ export const getOsPaging = (
   return paging
 }
 
+// The share of query terms that must match within a single field. Without
+// this, `operator: 'or'` means one term out of four is enough to match, and
+// `most_fields` then sums those weak hits across nine fields.
+//
+// Percentages round down, so 75% floors to 1 at two terms and only starts
+// biting at three. That floor is what keeps a cross-field query such as
+// "<institution> <subject>" working - not the per-field application, which is
+// the hazard here: the threshold is evaluated against one field at a time,
+// never across the document.
+//
+// The denominator also differs per field, and not in the direction the raw
+// integers suggest. `title` and `bodyText` declare no analyzer, so they use
+// `standard` and keep stopwords; the `.stemmed` and `.compound` variants run
+// chains carrying `is_stop` and drop them.
+//
+// Work a five-word query with two stopwords through it: `bodyText` needs three
+// of five, but two of those are stopwords that any body text supplies for
+// free, so it clears on ONE content word - while `bodyText.stemmed` needs two
+// of its three. Since `most_fields` matches on any field, the raw fields are
+// the permissive ones and govern recall; the stemmed fields mostly shift
+// ranking. `publicationNumber.full` and `caseNumber` are `keyword`, so they
+// analyze to a single term and the threshold never applies to them.
+const MIN_TERMS_MATCHED = '75%'
+
 function buildTextQuery(search: string) {
   return {
     multi_match: {
       query: search,
       type: 'most_fields',
       operator: 'or',
+      minimum_should_match: MIN_TERMS_MATCHED,
       fields: [
         'title^5',
         'involvedParty.title.stemmed^5',
@@ -76,6 +103,63 @@ function buildTextQuery(search: string) {
         'publicationNumber.full',
         'caseNumber',
       ],
+    },
+  }
+}
+
+// How much an adjacent-words match is worth on top of the normal bag-of-words
+// score. Tuning knob - raise it if phrase hits should dominate more strongly.
+const PHRASE_RANK_BOOST = 3
+
+// Fields that phrase matching can safely target. `.compound` is deliberately
+// excluded: the dictionary_decompounder emits subwords at the same position as
+// their parent token, so adjacency on that field is not meaningful.
+const PHRASE_FIELDS = [
+  'title^5',
+  'involvedParty.title.stemmed^5',
+  'title.stemmed^3',
+  'bodyText.stemmed^0.9',
+]
+
+function buildPhraseQuery(phrase: string, boost?: number) {
+  return {
+    multi_match: {
+      query: phrase,
+      type: 'phrase',
+      fields: PHRASE_FIELDS,
+      // Boosted (ranking) use is allowed a little slack so near-adjacent
+      // matches still benefit. Quoted search stays strict.
+      slop: boost === undefined ? 0 : 1,
+      ...(boost === undefined ? {} : { boost }),
+    },
+  }
+}
+
+// Prefix matching runs the user's fragment through the field's own analyzer,
+// which makes the unstemmed fields the reliable ones: a partial word has no
+// predictable stem, and `is_stop` can delete the fragment outright. The
+// stemmed fields are kept alongside for the cases where they do resolve.
+const PREFIX_FIELDS = [
+  { field: 'title', boost: 8, slop: 2 },
+  { field: 'title.stemmed', boost: 8, slop: 2 },
+  { field: 'involvedParty.title', boost: 5, slop: 1 },
+  { field: 'involvedParty.title.stemmed', boost: 5, slop: 1 },
+]
+
+function buildPrefixQuery(prefixValue: string) {
+  return {
+    bool: {
+      should: PREFIX_FIELDS.map(({ field, boost, slop }) => ({
+        match_phrase_prefix: {
+          [field]: {
+            query: prefixValue,
+            slop,
+            max_expansions: 50,
+            boost,
+          },
+        },
+      })),
+      minimum_should_match: 1,
     },
   }
 }
@@ -144,6 +228,7 @@ export const getOsBody = (
 ): { body: any; alias: string; page: number; size: number } => {
   const INDEX_ALIAS = process.env.ADVERTS_SEARCH_ALIAS ?? 'ojoi_search'
   const q = qp?.search?.trim() ?? ''
+  const phrase = extractPhrase(q)
 
   const pageSize = Math.min(Math.max(1, qp?.pageSize ?? 20), 100)
   // OpenSearch rejects from + size > index.max_result_window (default 10000).
@@ -224,41 +309,27 @@ export const getOsBody = (
   const wildcardMatch = q.match(/^(\S+)\*$/)
 
   if (q) {
-    if (wildcardMatch && !q.includes(' ')) {
+    if (phrase) {
+      // PHRASE MODE
+      // The whole query was quoted, so the user asked for adjacency rather
+      // than a bag of words. Require the phrase instead of OR-ing tokens.
+      must.push(buildPhraseQuery(phrase))
+    } else if (wildcardMatch && !q.includes(' ')) {
       const prefixValue = wildcardMatch[1]
 
-      must.push({
-        bool: {
-          should: [
-            {
-              match_phrase_prefix: {
-                'title.stemmed': {
-                  query: prefixValue,
-                  slop: 2,
-                  max_expansions: 50,
-                  boost: 8,
-                },
-              },
-            },
-            {
-              match_phrase_prefix: {
-                'involvedParty.title.stemmed': {
-                  query: prefixValue,
-                  slop: 1,
-                  max_expansions: 50,
-                  boost: 5,
-                },
-              },
-            },
-          ],
-          minimum_should_match: 1,
-        },
-      })
+      must.push(buildPrefixQuery(prefixValue))
 
       should.push(buildTextQuery(prefixValue))
     } else {
       // NORMAL MODE
       must.push(buildTextQuery(q))
+
+      // Rank documents where the words actually appear next to each other
+      // above those that merely contain them somewhere. Recall is unchanged;
+      // this only contributes score.
+      if (q.includes(' ')) {
+        should.push(buildPhraseQuery(q, PHRASE_RANK_BOOST))
+      }
     }
   } else {
     must.push({ match_all: {} })
