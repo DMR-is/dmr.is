@@ -13,6 +13,11 @@ export const NAV_PATHS = {
   frontpage: { title: 'Forsíða', href: '/', adminOnly: false },
   heildarlisti: { title: 'Vinnslusvæði', href: '/yfirlit', adminOnly: false },
   fyrirtaeki: { title: 'Fyrirtæki', href: '/fyrirtaeki', adminOnly: false },
+  gagnautdrattur: {
+    title: 'Keyra út lista',
+    href: '/gagnautdrattur',
+    adminOnly: false,
+  },
   ritstjorn: { title: 'Ritstjórar', href: '/ritstjorar', adminOnly: true },
   kerfisstillingar: {
     title: 'Kerfisstillingar',
