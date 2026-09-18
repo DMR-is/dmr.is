@@ -183,7 +183,17 @@ jobs:
             # ever saw a JSON array it would match nothing, mark every container
             # unaffected, and re-tag stale images -- failing in the one direction
             # this job must never fail in.
-            AFFECTED_PROJECTS=$(npx nx show projects --affected --base="${BASE_SHA}" --head="${GITHUB_SHA}" --type=app --json 2>/dev/null | jq -r '.[]' || echo "")
+            #
+            # nx runs on its own line so its exit status is checked, not jq's:
+            # jq exits 0 on empty input, so a failed nx piped into it would look
+            # exactly like "nothing is affected". stderr stays visible so the
+            # failure is diagnosable from the log.
+            if NX_OUTPUT=$(npx nx show projects --affected --base="${BASE_SHA}" --head="${GITHUB_SHA}" --type=app --json); then
+              AFFECTED_PROJECTS=$(echo "$NX_OUTPUT" | jq -r '.[]')
+            else
+              echo "::warning::nx affected-detection failed (exit $?). Rebuilding every container, because an empty affected list would re-tag stale images as current."
+              AFFECTED_PROJECTS=$(echo "$ALL_CONTAINERS" | jq -r '.[].name')
+            fi
           fi
 
           echo "Affected projects:"
@@ -205,8 +215,9 @@ jobs:
           echo "unaffected=$UNAFFECTED_CONTAINERS" >> $GITHUB_OUTPUT
 
           # Published so the re-tag job can copy the image built for this exact
-          # commit, rather than whatever `latest` happens to point at. Empty when
-          # everything was rebuilt, which is fine: the re-tag job does not run.
+          # commit, rather than whatever `latest` happens to point at. It is set
+          # whenever a base was found, even on a rebuild-all run; that is fine,
+          # because the re-tag job only runs when something was left unaffected.
           echo "base_sha=${BASE_SHA}" >> $GITHUB_OUTPUT
 
           HAS_AFFECTED=$([ "$(echo $AFFECTED_CONTAINERS | jq length)" -gt 0 ] && echo "true" || echo "false")
