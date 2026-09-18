@@ -243,6 +243,10 @@ const baseOptions: sanitizeHtml.IOptions = {
     'td',
   ],
   disallowedTagsMode: 'discard',
+  // Defaults, plus <title>: disallowed tags are discarded but their text is
+  // kept, so a full Word-exported document would otherwise leak its <title>
+  // text in as the first line of content.
+  nonTextTags: ['script', 'style', 'textarea', 'option', 'title'],
   allowedAttributes: {
     a: ['href', 'name', 'target', 'rel'],
     img: ['src', 'alt', 'width', 'height', 'id', 'class', 'title'],
