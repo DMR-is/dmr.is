@@ -19,6 +19,7 @@ export enum ScoringModelStatusEnum {
  * right part of their own UI rather than parsing the message.
  */
 export enum ScoringValidationScopeEnum {
+  MODEL = 'MODEL',
   CRITERIA = 'CRITERIA',
   SUB_CRITERIA = 'SUB_CRITERIA',
   STEPS = 'STEPS',
@@ -32,6 +33,7 @@ export class ScoringValidationReasonDto {
     description: [
       'Which part of the model the reason is about, so it can be shown against the right thing rather than parsed out of the message.',
       '',
+      '- `MODEL` — the model as a whole, rather than any one part of it. The only reason carrying this scope today is the notice that the list itself was truncated.',
       '- `CRITERIA` — the criteria themselves: a mandatory job-based type with no criterion, more than one personal criterion, two criteria sharing a title, or more criteria than a model may hold.',
       '- `SUB_CRITERIA` — the sub-criteria as a set: none at all, weights that do not total 100 across the whole model, two sharing a title under the same criterion, or more than a criterion — or the model — may hold.',
       '- `STEPS` — one sub-criterion’s scale: no þrep, a length outside the permitted range, or orders that are not contiguous from 1.',

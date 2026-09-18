@@ -478,4 +478,63 @@ describe('validateScoringModel', () => {
 
     expect(validateScoringModel(model).reasons.length).toBeLessThanOrEqual(200)
   })
+
+  // The cap existed but nothing pinned what happens at it. A truncated list that
+  // did not say so is worse than a long one: a caller fixes all 200, re-reads,
+  // and is refused again with no indication that more was ever hidden.
+  describe('when there are more reasons than the response may carry', () => {
+    // 60 jobs with no assignments at all: four job-based sub-criteria each, so
+    // 240 reasons — comfortably past the 200 cap, and under MAX_ROLES (100) so
+    // no "too many jobs" reason joins them and changes the count.
+    const floodedModel = () => {
+      const model = validModel()
+
+      model.roles = Array.from({ length: 60 }, (_, i) => ({
+        id: `role-${i}`,
+        title: `Starf ${i}`,
+        stepAssignments: [],
+      }))
+
+      return model
+    }
+
+    it('caps the list rather than returning all of them', () => {
+      // 240 faults exist; the response carries far fewer. The exact figure is
+      // set by the filing gate's own cap, which fills first — what matters is
+      // that it is bounded and that the last slot says so.
+      const reasons = validateScoringModel(floodedModel()).reasons
+
+      expect(reasons.length).toBeLessThan(240)
+      expect(reasons.length).toBeLessThanOrEqual(200)
+    })
+
+    // The regression this pair was written for: the gate reports its own
+    // truncation in an issue scoped REPORT, which the model-level scope filter
+    // drops. The fact has to cross that filter even though the sentence does not.
+    it('still says so when it was the filing gate that filled up', () => {
+      const messages = validateScoringModel(floodedModel()).reasons.map(
+        (r) => r.message,
+      )
+
+      expect(messages.filter((m) => /listinn er styttur/i.test(m))).toHaveLength(
+        1,
+      )
+    })
+
+    it('spends the last slot saying the list was cut short', () => {
+      const reasons = validateScoringModel(floodedModel()).reasons
+      const last = reasons[reasons.length - 1]
+
+      expect(last.message).toMatch(/listinn er styttur/i)
+      // MODEL, not CRITERIA: the notice is about the response, not about any
+      // region of the model, and CRITERIA's documented meanings are exhaustive.
+      expect(last.scope).toBe(ScoringValidationScopeEnum.MODEL)
+    })
+
+    it('leaves the notice off a list that fits', () => {
+      const messages = messagesOf(validModel())
+
+      expect(messages.some((m) => /listinn er styttur/i.test(m))).toBe(false)
+    })
+  })
 })
