@@ -12,7 +12,7 @@ import { getLegalGazetteClient } from '../api/createClient'
 
 // This session timeout will be used to set the maxAge of the session cookie
 // When refreshing the token, we will not update the maxAge, so the session will expire
-const SESSION_TIMEOUT = (60 * 60 * 8) + 30 // 8 hours and 30 seconds
+const SESSION_TIMEOUT = 60 * 60 * 8 + 30 // 8 hours and 30 seconds
 const LOGGING_CATEGORY = 'next-auth'
 
 type ErrorWithPotentialReqRes = Error & {
@@ -95,9 +95,8 @@ export const authOptions: AuthOptions = {
         } as JWT
       }
 
-
-     return token
-     // Refresh token is handled in middleware
+      return token
+      // Refresh token is handled in middleware
     },
 
     session: async ({ session, token }) => {

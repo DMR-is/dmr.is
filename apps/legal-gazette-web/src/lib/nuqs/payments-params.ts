@@ -5,10 +5,7 @@ import {
   parseAsStringEnum,
 } from 'nuqs/server'
 
-import {
-  TBRTransactionStatus,
-  TBRTransactionType,
-} from '../../gen/fetch'
+import { TBRTransactionStatus, TBRTransactionType } from '../../gen/fetch'
 
 export const paymentsParams = {
   page: parseAsInteger.withDefault(1),

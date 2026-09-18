@@ -174,7 +174,9 @@ export class ImportUploadService implements IImportUploadService {
   ): Promise<PresignUploadResponseDto> {
     // Defaults to xlsx so every existing caller — and the import path's whole
     // key contract — is unchanged by this parameter existing.
-    const extension = (opts.extension ?? 'xlsx').toLowerCase().replace(/^\./, '')
+    const extension = (opts.extension ?? 'xlsx')
+      .toLowerCase()
+      .replace(/^\./, '')
 
     if (!isAllowedExtension(boundary, extension)) {
       throw new BadRequestException(`Unsupported file type: .${extension}`)

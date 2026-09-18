@@ -4,7 +4,7 @@ services:
       context: ../..
       dockerfile: apps/legal-gazette-application-web/Dockerfile
     ports:
-      - "${LG_APPLICATION_WEB_PORT:-4300}:3000"
+      - '${LG_APPLICATION_WEB_PORT:-4300}:3000'
     environment:
       # Run this file through the varlock wrapper, not `docker compose` directly:
       #   scripts/varlock-run.sh legal-gazette-application-web docker compose -f apps/legal-gazette-application-web/docker-compose.yml up
@@ -17,7 +17,7 @@ services:
       ISLAND_IS_DMR_WEB_CLIENT_SECRET: ${ISLAND_IS_DMR_WEB_CLIENT_SECRET}
       IDENTITY_SERVER_DOMAIN: ${IDENTITY_SERVER_DOMAIN}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      NEXTAUTH_COOKIE_SECURE: "false"
+      NEXTAUTH_COOKIE_SECURE: 'false'
 
       # Production build in a local container, so the schema's "deployed" default
       # would apply. Written literally -- an exported empty string is a failure.

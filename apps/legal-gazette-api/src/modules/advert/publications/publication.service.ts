@@ -184,9 +184,7 @@ export class PublicationService implements IPublicationService {
       })
 
     const publicationsHtml = await Promise.all(
-      publications.map(async (pub) =>
-        await pub.getPublishedHtml(),
-      ),
+      publications.map(async (pub) => await pub.getPublishedHtml()),
     )
 
     return { publicationsHtml }
@@ -339,7 +337,7 @@ export class PublicationService implements IPublicationService {
         {
           context: LOGGING_CONTEXT,
           advertId: publication.advertId,
-          publicationId: publication.id
+          publicationId: publication.id,
         },
       )
       await this.advertModel.update(

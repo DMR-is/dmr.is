@@ -44,7 +44,7 @@ export class EditOutlierGroupDto {
   @ApiArray({
     type: [Number],
     description:
-      "Ordinals of the outlier employees in this group (1-indexed, matches the `report_employee.ordinal` snapshot). Resolved against the canonical detected set from `report_result.outlier_analysis_snapshot`.",
+      'Ordinals of the outlier employees in this group (1-indexed, matches the `report_employee.ordinal` snapshot). Resolved against the canonical detected set from `report_result.outlier_analysis_snapshot`.',
   })
   @ArrayMinSize(1)
   @IsInt({ each: true })

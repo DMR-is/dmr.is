@@ -1,6 +1,9 @@
 import { DynamicModule, Module } from '@nestjs/common'
 
-import { type DMRSequelizeConfig, IDMRSequelizeConfig } from './sequelize.config'
+import {
+  type DMRSequelizeConfig,
+  IDMRSequelizeConfig,
+} from './sequelize.config'
 import { DMRSequelizeConfigService } from './sequelizeConfig.service'
 
 @Module({})

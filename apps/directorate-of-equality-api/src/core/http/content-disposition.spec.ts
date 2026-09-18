@@ -21,9 +21,7 @@ describe('contentDisposition', () => {
   it('emits an ASCII-only header for a non-ASCII name', () => {
     // A non-ASCII byte in a header value is not transmissible; if this ever
     // fails the response dies at the framework rather than in a save dialog.
-    expect(contentDisposition('inline', 'ÁÉÍÓÚ.pdf')).toMatch(
-      /^[\x20-\x7e]*$/,
-    )
+    expect(contentDisposition('inline', 'ÁÉÍÓÚ.pdf')).toMatch(/^[\x20-\x7e]*$/)
   })
 
   it('neutralises a CRLF in the filename', () => {
@@ -49,8 +47,6 @@ describe('contentDisposition', () => {
   })
 
   it('drops the extended parameter rather than emitting an empty one', () => {
-    expect(contentDisposition('inline', '')).toBe(
-      'inline; filename="document"',
-    )
+    expect(contentDisposition('inline', '')).toBe('inline; filename="document"')
   })
 })

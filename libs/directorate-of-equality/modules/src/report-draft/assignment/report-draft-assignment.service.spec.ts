@@ -29,13 +29,13 @@ const REPORT_ID = 'report-id-1'
 const ROLE_ID = 'role-id-1'
 const PROVIDER_ID = 'island-is-application-uuid-draft'
 
-const COMPANY = ({
+const COMPANY = {
   id: 'company-1',
   nationalId: '5500000000',
   employeeCountCategory: CompanySizeEnum.LARGE,
   status: CompanyStatusEnum.ACTIVE,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
-} as unknown) as CompanyDto
+} as unknown as CompanyDto
 
 // Appliers take an already-resolved draft (no findOwnedDraft).
 const report = { id: REPORT_ID } as ReportModel

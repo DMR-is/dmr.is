@@ -8,9 +8,7 @@
     "experimentalDecorators": true,
     "removeComments": true,
     "sourceMap": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "declaration": false
   }
 }

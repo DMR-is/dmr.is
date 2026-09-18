@@ -75,6 +75,7 @@ brew install direnv 1password-cli
    started it, and alternating between them tears that session down and re-prompts. That is why
    `scripts/varlock-run.sh` resolves through a global `varlock` when there is one and only falls
    back to the workspace copy otherwise. `VARLOCK_BIN=<path>` overrides the choice for one command.
+
 2. Enable the 1Password CLI integration: **Settings → Developer → Integrate with 1Password CLI**.
    That is enough on its own, but desktop-app auth authorises **per run**, so you get a prompt on
    every launch.
@@ -108,6 +109,7 @@ brew install direnv 1password-cli
    Skipping this step is survivable, and is what a non-macOS developer does: `allowAppAuth=true`
    means anyone without the Keychain item falls back to 1Password desktop auth, which works but
    prompts per run.
+
 4. `direnv allow`
 
 Check resolution by asking for a single value:

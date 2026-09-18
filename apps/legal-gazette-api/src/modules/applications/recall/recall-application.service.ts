@@ -13,7 +13,10 @@ import {
   SettlementType,
 } from '@dmr.is/legal-gazette-schemas'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { addBusinessDays, getNextValidPublishingDate } from '@dmr.is/utils-server/dateUtils'
+import {
+  addBusinessDays,
+  getNextValidPublishingDate,
+} from '@dmr.is/utils-server/dateUtils'
 import { toCalendarDate } from '@dmr.is/utils-shared/date/calendarDate'
 
 import {
@@ -25,10 +28,7 @@ import {
   liveDivisionEndingWhere,
   notTerminatedWhere,
 } from '../../../core/utils/estate.util'
-import {
-  AdvertModel,
-  AdvertTemplateType,
-} from '../../../models/advert.model'
+import { AdvertModel, AdvertTemplateType } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import {
   ApplicationModel,
@@ -714,8 +714,8 @@ export class RecallApplicationService implements IRecallApplicationService {
         : undefined,
       courtDistrictId: data.fields.courtAndJudgmentFields?.courtDistrict.id,
       communicationChannels: data.communicationChannels,
-      scheduledAt: data.publishingDates.map((publishingDate) =>
-        new Date(publishingDate),
+      scheduledAt: data.publishingDates.map(
+        (publishingDate) => new Date(publishingDate),
       ),
       settlement: {
         liquidatorName: data.fields.settlementFields.liquidatorName,

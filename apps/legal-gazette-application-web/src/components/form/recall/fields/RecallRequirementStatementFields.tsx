@@ -9,7 +9,7 @@ import {
   RecallApplicationWebSchema,
   requirementsStatementOptions,
 } from '@dmr.is/legal-gazette-schemas'
-import { GridColumn} from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'

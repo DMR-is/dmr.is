@@ -26,8 +26,9 @@ export type OrThrowMessage =
   | string
   | { message: string; translatedMessage?: string }
 
-export interface AbstractDmrModelStatic<T extends AbstractDmrModel = AbstractDmrModel>
-  extends ModelStatic<T> {
+export interface AbstractDmrModelStatic<
+  T extends AbstractDmrModel = AbstractDmrModel,
+> extends ModelStatic<T> {
   findByPkOrThrow(
     this: ModelStatic<T>,
     id: string,

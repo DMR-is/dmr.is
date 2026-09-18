@@ -31,9 +31,7 @@ import {
 import { EqualityReportSummaryDto } from '@dmr.is/doe-modules/report'
 import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
 import { GetReportOutliersResponseDto } from '@dmr.is/doe-modules/report-employee'
-import {
-  SalaryAnalysisResponseDto,
-} from '@dmr.is/doe-modules/report-statistics'
+import { SalaryAnalysisResponseDto } from '@dmr.is/doe-modules/report-statistics'
 import { PartnerSalaryPayloadFields } from '@dmr.is/doe-modules/scoring-model'
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 import { PagingQuery } from '@dmr.is/shared-dto'

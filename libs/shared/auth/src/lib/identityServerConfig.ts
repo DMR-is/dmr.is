@@ -1,4 +1,4 @@
-import { identityServerId } from "./identityProvider";
+import { identityServerId } from './identityProvider'
 
 export const identityServerConfig = {
   id: identityServerId,

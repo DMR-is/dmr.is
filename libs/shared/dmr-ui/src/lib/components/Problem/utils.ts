@@ -18,9 +18,11 @@ export const mapProblemTypeToAlertMessageType = (
   }
 }
 
-export const mapStatusToProblemStatus = (statusCode?: number, variant?: ProblemType): number => {
-
-  if(statusCode) return statusCode
+export const mapStatusToProblemStatus = (
+  statusCode?: number,
+  variant?: ProblemType,
+): number => {
+  if (statusCode) return statusCode
 
   switch (variant) {
     case 'no-data':
@@ -34,5 +36,4 @@ export const mapStatusToProblemStatus = (statusCode?: number, variant?: ProblemT
     default:
       return 500
   }
-
 }

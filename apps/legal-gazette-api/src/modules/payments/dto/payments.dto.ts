@@ -84,12 +84,21 @@ export class GetPaymentsDto {
 }
 
 export class SyncPaymentsResponseDto {
-  @ApiProperty({ type: Number, description: 'Number of transactions processed' })
+  @ApiProperty({
+    type: Number,
+    description: 'Number of transactions processed',
+  })
   processed!: number
 
-  @ApiProperty({ type: Number, description: 'Number of transactions updated to paid' })
+  @ApiProperty({
+    type: Number,
+    description: 'Number of transactions updated to paid',
+  })
   updated!: number
 
-  @ApiProperty({ type: Number, description: 'Number of transactions that failed to sync' })
+  @ApiProperty({
+    type: Number,
+    description: 'Number of transactions that failed to sync',
+  })
   failed!: number
 }

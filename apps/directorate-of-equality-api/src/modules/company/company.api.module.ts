@@ -8,7 +8,11 @@ import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { CompanyController } from './company.controller'
 
 @Module({
-  imports: [CompanyCoreModule, AuthorizationCoreModule, CompanyCommentCoreModule],
+  imports: [
+    CompanyCoreModule,
+    AuthorizationCoreModule,
+    CompanyCommentCoreModule,
+  ],
   controllers: [CompanyController],
   providers: [AdminGuard],
 })

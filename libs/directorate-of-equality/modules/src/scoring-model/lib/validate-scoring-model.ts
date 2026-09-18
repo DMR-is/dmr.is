@@ -104,9 +104,7 @@ const MODEL_LEVEL_SCOPES: ReadonlySet<PayloadIssueScope> = new Set([
  * jobs overflow under `CRITERIA` puts it in the wrong panel, which is the only
  * thing that field exists to prevent.
  */
-const scopeForMessage = (
-  message: string,
-): ScoringValidationScopeEnum => {
+const scopeForMessage = (message: string): ScoringValidationScopeEnum => {
   if (/\bstörf\b|\bStarfið\b/.test(message)) {
     return /vísar í úthlutun/.test(message)
       ? ScoringValidationScopeEnum.ROLE_ASSIGNMENTS
@@ -329,9 +327,10 @@ export const validateScoringModel = (
 
   const all = reasons.all()
   return {
-    status: all.length === 0
-      ? ScoringModelStatusEnum.VALID
-      : ScoringModelStatusEnum.INVALID,
+    status:
+      all.length === 0
+        ? ScoringModelStatusEnum.VALID
+        : ScoringModelStatusEnum.INVALID,
     reasons: all,
   }
 }

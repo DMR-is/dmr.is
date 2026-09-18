@@ -7,7 +7,7 @@ export enum LegalGazetteEvents {
   USER_ASSIGNED = 'advert.user.assigned',
   SUBSCRIBER_CREATED = 'subscriber.created',
   DELETE_PUBLICATION = 'advert.publication.delete',
-  CREATE_PUBLICATION = 'advert.publication.create'
+  CREATE_PUBLICATION = 'advert.publication.create',
 }
 
 export enum LegalGazetteModels {

@@ -260,8 +260,14 @@ export const CompanyImportModal = ({ isOpen, onClose }: Props) => {
 
 const ImportSummary = ({ result }: { result: CompanyImportResultDto }) => (
   <Inline space={2}>
-    <Summary label={companiesText.importModal.sections.created} n={result.created.length} />
-    <Summary label={companiesText.importModal.sections.updated} n={result.updated.length} />
+    <Summary
+      label={companiesText.importModal.sections.created}
+      n={result.created.length}
+    />
+    <Summary
+      label={companiesText.importModal.sections.updated}
+      n={result.updated.length}
+    />
     <Summary
       label={companiesText.importModal.sections.reactivated}
       n={result.reactivated.length}
@@ -274,7 +280,10 @@ const ImportSummary = ({ result }: { result: CompanyImportResultDto }) => (
       label={companiesText.importModal.sections.unchanged}
       n={result.unchanged.length}
     />
-    <Summary label={companiesText.importModal.sections.invalid} n={result.invalid.length} />
+    <Summary
+      label={companiesText.importModal.sections.invalid}
+      n={result.invalid.length}
+    />
   </Inline>
 )
 

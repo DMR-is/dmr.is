@@ -131,11 +131,14 @@ export class PaymentTaskService implements IPaymentTaskService {
 
       try {
         const promises = chunk.map((transaction, i) =>
-          this.tbrService.getPaymentStatus({
-            chargeBase: transaction.chargeBase,
-            chargeCategory: transaction.chargeCategory,
-            debtorNationalId: transaction.debtorNationalId,
-          }, i),
+          this.tbrService.getPaymentStatus(
+            {
+              chargeBase: transaction.chargeBase,
+              chargeCategory: transaction.chargeCategory,
+              debtorNationalId: transaction.debtorNationalId,
+            },
+            i,
+          ),
         )
         const results = await Promise.allSettled(promises)
 

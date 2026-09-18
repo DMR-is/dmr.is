@@ -12,9 +12,7 @@ const LOGGING_CATEGORY = 'RegulationPublishService'
 
 @Injectable()
 export class RegulationPublishService implements IRegulationPublishService {
-  constructor(
-    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-  ) {
+  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using RegulationPublishService')
   }
 
@@ -139,7 +137,7 @@ export class RegulationPublishService implements IRegulationPublishService {
       })
     }
 
-    const body = await res.json() as { hasPendingTasks: boolean }
+    const body = (await res.json()) as { hasPendingTasks: boolean }
     return ResultWrapper.ok(body.hasPendingTasks)
   }
 }

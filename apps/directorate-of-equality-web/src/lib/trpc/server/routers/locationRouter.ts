@@ -13,7 +13,5 @@ export const locationRouter = router({
   // filter shrink the postcode options once a region is picked.
   postcodes: protectedProcedure
     .input(zGetPostcodesQuery.optional())
-    .query(({ ctx, input }) =>
-      ctx.api.getPostcodes({ query: input as never }),
-    ),
+    .query(({ ctx, input }) => ctx.api.getPostcodes({ query: input as never })),
 })

@@ -46,7 +46,7 @@ describe('ApplicationSystemService', () => {
     fetchMock = jest.fn()
     fetchMock.mockResolvedValueOnce(tokenResponse())
     fetchMock.mockResolvedValue({ ok: true, status: 200 })
-    global.fetch = (fetchMock as unknown) as typeof fetch
+    global.fetch = fetchMock as unknown as typeof fetch
 
     service = new ApplicationSystemService(logger as never)
   })

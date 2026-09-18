@@ -30,10 +30,10 @@ export const CasesOverviewList = ({ variant = 'default', data }: Props) => {
             {variant === 'default'
               ? formatMessage(messages.empty.editorial)
               : variant === 'readyForPublishing'
-              ? formatMessage(messages.empty.published)
-              : variant === 'assigned'
-              ? formatMessage(messages.empty.assigned)
-              : formatMessage(messages.empty.inactive)}
+                ? formatMessage(messages.empty.published)
+                : variant === 'assigned'
+                  ? formatMessage(messages.empty.assigned)
+                  : formatMessage(messages.empty.inactive)}
           </Text>
         </div>
         <Box component="img" src="/assets/empty-image.svg" />

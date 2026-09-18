@@ -14,9 +14,7 @@ export const getSignatureMarkup = ({
   }
 
   const [formattedDate] = parseAndFormatDate(date)
-  const dateAndLocation = [location, formattedDate]
-    .filter(Boolean)
-    .join(', ')
+  const dateAndLocation = [location, formattedDate].filter(Boolean).join(', ')
 
   const locationMarkup = !isEmpty(dateAndLocation)
     ? getElement({ text: dateAndLocation })

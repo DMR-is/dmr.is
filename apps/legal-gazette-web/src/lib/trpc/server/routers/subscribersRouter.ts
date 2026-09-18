@@ -1,6 +1,9 @@
 import * as z from 'zod'
 
-import { createSubscriberInput, updateSubscriberEndDateInput } from '../../../inputs'
+import {
+  createSubscriberInput,
+  updateSubscriberEndDateInput,
+} from '../../../inputs'
 import { protectedProcedure, router } from '../trpc'
 
 export const pagingInput = z.object({
@@ -50,7 +53,5 @@ export const subscribersRouter = router({
 
   activateSubscriber: protectedProcedure
     .input(z.object({ subscriberId: z.string() }))
-    .mutation(async ({ ctx, input }) =>
-      ctx.api.activateSubscriberAdmin(input),
-    ),
+    .mutation(async ({ ctx, input }) => ctx.api.activateSubscriberAdmin(input)),
 })

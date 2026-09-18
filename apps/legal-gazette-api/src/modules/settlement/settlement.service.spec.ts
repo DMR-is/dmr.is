@@ -5,9 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertModel } from '../../models/advert.model'
-import {
-  SettlementModel,
-} from '../../models/settlement.model'
+import { SettlementModel } from '../../models/settlement.model'
 import { StatusIdEnum } from '../../models/status.model'
 import { UpdateSettlementDto } from './dto/settlement.dto'
 import { SettlementService } from './settlement.service'

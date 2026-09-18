@@ -79,10 +79,7 @@ import {
   buildImprovementPlanWhere,
   dateRangeFilter,
 } from './utils/filters'
-import {
-  EqualityContentPdf,
-  IReportService,
-} from './report.service.interface'
+import { EqualityContentPdf, IReportService } from './report.service.interface'
 
 const LOGGING_CONTEXT = 'ReportService'
 

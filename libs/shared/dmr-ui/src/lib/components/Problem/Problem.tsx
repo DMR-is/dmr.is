@@ -4,9 +4,7 @@ import { NoData } from './alerts/NoData'
 import { NotFound } from './alerts/NotFound'
 import { ServerError } from './alerts/ServerError'
 import * as styles from './Problem.css'
-import {
-  mapStatusToProblemStatus
-} from './utils'
+import { mapStatusToProblemStatus } from './utils'
 
 export type ProblemType =
   | 'no-data'
@@ -51,10 +49,20 @@ export const Problem = ({
   const statusToUse = mapStatusToProblemStatus(statusCode)
   return (
     <div className={styles.problemBase({ variant, type })}>
-      <Text marginBottom={[1,2]} variant="eyebrow" color='purple400' textAlign="center">
+      <Text
+        marginBottom={[1, 2]}
+        variant="eyebrow"
+        color="purple400"
+        textAlign="center"
+      >
         {statusToUse}
       </Text>
-      <Text marginBottom={[1,2]} variant={titleSize} as="h1" textAlign="center">
+      <Text
+        marginBottom={[1, 2]}
+        variant={titleSize}
+        as="h1"
+        textAlign="center"
+      >
         {title}
       </Text>
       <Text>{message}</Text>

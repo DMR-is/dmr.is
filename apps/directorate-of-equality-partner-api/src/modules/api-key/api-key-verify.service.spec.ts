@@ -28,10 +28,7 @@ describe('ApiKeyVerifyService', () => {
   let update: jest.Mock
 
   /** A persisted row for `key`, with whatever lifecycle state the test needs. */
-  const rowFor = (
-    secret: string,
-    overrides: Record<string, unknown> = {},
-  ) => {
+  const rowFor = (secret: string, overrides: Record<string, unknown> = {}) => {
     update = jest.fn().mockResolvedValue(undefined)
     return {
       id: 'row-1',
@@ -188,7 +185,7 @@ describe('ApiKeyVerifyService', () => {
       expect(messages[0]).toBe('Invalid API key')
     })
 
-    it('does not answer 401 when the HMAC secret is missing — that is our fault, not the caller\'s', async () => {
+    it("does not answer 401 when the HMAC secret is missing — that is our fault, not the caller's", async () => {
       delete process.env.DOE_API_KEY_HMAC_SECRET
       const generated = generateApiKey('dev')
       findOne.mockResolvedValue(rowFor(generated.secret))

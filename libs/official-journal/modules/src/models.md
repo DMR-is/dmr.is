@@ -49,11 +49,11 @@ says nothing reads `design:type`, because every `@Column` there declares
 rely on inferred `design:type`, and the two compilers do not emit it
 identically:
 
-| annotated as | tsc | swc |
-|---|---|---|
-| `Date` | `Date` | `typeof Date === "undefined" ? Object : Date` |
-| aliased model | `Function` | `Object` |
-| string enum | `String` | the enum object itself |
+| annotated as  | tsc        | swc                                           |
+| ------------- | ---------- | --------------------------------------------- |
+| `Date`        | `Date`     | `typeof Date === "undefined" ? Object : Date` |
+| aliased model | `Function` | `Object`                                      |
+| string enum   | `String`   | the enum object itself                        |
 
 So it was checked instead. The library was emitted under both compilers (213
 files each, 366 `design:type` sites each) and the Sequelize registry booted

@@ -27,8 +27,8 @@ export default function NotFound() {
               Síða fannst ekki
             </Text>
             <Text variant="intro" as="div">
-              Ekkert fannst á þessari slóð. Mögulega hefur síðan verið
-              fjarlægð eða færð til.
+              Ekkert fannst á þessari slóð. Mögulega hefur síðan verið fjarlægð
+              eða færð til.
             </Text>
           </Box>
         </GridColumn>

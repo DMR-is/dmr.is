@@ -16,7 +16,10 @@ export interface FeeCodeAttributes {
 @DefaultScope(() => ({
   attributes: ['id', 'feeCode', 'description', 'value', 'isMultiplied'],
 }))
-export class FeeCodeModel extends ParanoidModel<FeeCodeAttributes, FeeCodeModel> {
+export class FeeCodeModel extends ParanoidModel<
+  FeeCodeAttributes,
+  FeeCodeModel
+> {
   @Column({ type: DataType.TEXT })
   @ApiProperty({ type: String })
   feeCode!: string

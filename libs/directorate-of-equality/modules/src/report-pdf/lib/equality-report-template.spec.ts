@@ -9,7 +9,7 @@ import { buildEqualityReportHtml } from './equality-report-template'
  * sanitising that keeps a submitted plan from becoming code.
  */
 function makeReport(content: string | null): ReportDetailDto {
-  return ({
+  return {
     id: 'r1',
     company: { name: 'Test ehf.', nationalId: '111111-1111' },
     equalityReport: {
@@ -19,7 +19,7 @@ function makeReport(content: string | null): ReportDetailDto {
       validUntil: null,
       correctionDeadline: null,
     },
-  } as unknown) as ReportDetailDto
+  } as unknown as ReportDetailDto
 }
 
 describe('buildEqualityReportHtml', () => {
@@ -87,13 +87,13 @@ describe('buildEqualityReportHtml', () => {
 
   it('escapes the company name, which is not markup', () => {
     const report = makeReport('<p>Áætlun</p>')
-    const html = buildEqualityReportHtml(({
+    const html = buildEqualityReportHtml({
       ...report,
       company: {
         ...report.company,
         name: 'Test <script>alert(1)</script> ehf.',
       },
-    } as unknown) as ReportDetailDto)
+    } as unknown as ReportDetailDto)
 
     expect(html).not.toContain('<script')
     expect(html).toContain('&lt;script&gt;')

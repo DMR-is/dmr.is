@@ -29,20 +29,42 @@ type UseFiltersParams = {
 /**
  * Components using this hook must be dynamically imported!!
  */
-export const useFilters = ({ initialPageSize, initialPage, initialStatus, initialType, initialCategory, initialPublication, initialSortBy, initialDirection, initialDepartment }: UseFiltersParams = {}) => {
+export const useFilters = ({
+  initialPageSize,
+  initialPage,
+  initialStatus,
+  initialType,
+  initialCategory,
+  initialPublication,
+  initialSortBy,
+  initialDirection,
+  initialDepartment,
+}: UseFiltersParams = {}) => {
   const [filters, setFilters] = useQueryStates({
     [QueryParams.SEARCH]: parseAsString.withDefault(''),
-    [QueryParams.STATUS]: parseAsArrayOf(parseAsString).withDefault(initialStatus ?? []),
-    [QueryParams.TYPE]: parseAsArrayOf(parseAsString).withDefault(initialType ?? []),
-    [QueryParams.CATEGORY]: parseAsArrayOf(parseAsString).withDefault(initialCategory ?? []),
-    [QueryParams.PUBLICATION]: parseAsArrayOf(parseAsString).withDefault(initialPublication ?? []),
+    [QueryParams.STATUS]: parseAsArrayOf(parseAsString).withDefault(
+      initialStatus ?? [],
+    ),
+    [QueryParams.TYPE]: parseAsArrayOf(parseAsString).withDefault(
+      initialType ?? [],
+    ),
+    [QueryParams.CATEGORY]: parseAsArrayOf(parseAsString).withDefault(
+      initialCategory ?? [],
+    ),
+    [QueryParams.PUBLICATION]: parseAsArrayOf(parseAsString).withDefault(
+      initialPublication ?? [],
+    ),
     [QueryParams.PAGE]: parseAsInteger.withDefault(initialPage ?? DEFAULT_PAGE),
-    [QueryParams.PAGE_SIZE]: parseAsInteger.withDefault(initialPageSize ?? DEFAULT_PAGE_SIZE),
+    [QueryParams.PAGE_SIZE]: parseAsInteger.withDefault(
+      initialPageSize ?? DEFAULT_PAGE_SIZE,
+    ),
     [QueryParams.SORT_BY]: parseAsString.withDefault(initialSortBy ?? ''),
     [QueryParams.DIRECTION]: parseAsStringEnum<SortDirection>(
       Object.values(SortDirection),
     ).withDefault(initialDirection ?? DEFAULT_SORT_DIRECTION),
-    [QueryParams.DEPARTMENT]: parseAsArrayOf(parseAsString).withDefault(initialDepartment ?? []),
+    [QueryParams.DEPARTMENT]: parseAsArrayOf(parseAsString).withDefault(
+      initialDepartment ?? [],
+    ),
   })
 
   const setParams = (...params: Parameters<typeof setFilters>) => {

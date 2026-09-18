@@ -97,9 +97,7 @@ describe('report-pdf format helpers', () => {
 
   describe('escapeHtml', () => {
     it('escapes HTML-significant characters', () => {
-      expect(escapeHtml('<script>"&\'')).toBe(
-        '&lt;script&gt;&quot;&amp;&#39;',
-      )
+      expect(escapeHtml('<script>"&\'')).toBe('&lt;script&gt;&quot;&amp;&#39;')
     })
   })
 

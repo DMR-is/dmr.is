@@ -10,7 +10,10 @@ import {
 } from '@dmr.is/decorators'
 import { SettlementType } from '@dmr.is/legal-gazette-schemas'
 
-import { SettlementCompanyDto, SettlementDto } from '../../../models/settlement.model'
+import {
+  SettlementCompanyDto,
+  SettlementDto,
+} from '../../../models/settlement.model'
 
 export class CreateSettlementDto {
   @ApiOptionalEnum(SettlementType)

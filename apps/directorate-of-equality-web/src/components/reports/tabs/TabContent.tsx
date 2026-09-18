@@ -16,38 +16,40 @@ const ExpandedRow = ({ row }: { row: Case }) => {
   const { isTablet } = useIsTablet()
 
   return (
-  <Box background="blue100" padding={2}>
-    <div className={styles.expandedRowGrid}>
-      {DETAIL_FIELDS.map(({ label, key }, index) => (
-        <Box
-          key={key}
-          background={
-            (isTablet ? index % 2 : Math.floor(index / 2) % 2) === 0
-              ? 'white'
-              : 'blue100'
-          }
-          paddingX={1}
-          paddingY={1}
-          className={styles.expandedRowItem}
-        >
-          <Box display="flex">
-            <div className={styles.expandedRowLabel}>
-              <Text variant="small" fontWeight="semiBold">
-                {label}
+    <Box background="blue100" padding={2}>
+      <div className={styles.expandedRowGrid}>
+        {DETAIL_FIELDS.map(({ label, key }, index) => (
+          <Box
+            key={key}
+            background={
+              (isTablet ? index % 2 : Math.floor(index / 2) % 2) === 0
+                ? 'white'
+                : 'blue100'
+            }
+            paddingX={1}
+            paddingY={1}
+            className={styles.expandedRowItem}
+          >
+            <Box display="flex">
+              <div className={styles.expandedRowLabel}>
+                <Text variant="small" fontWeight="semiBold">
+                  {label}
+                </Text>
+              </div>
+              <Text variant="small">
+                {key === 'companyAdminGender'
+                  ? mapGender(row[key])
+                  : key === 'employeeCount'
+                    ? (COMPANY_SIZE_LABEL[
+                        row[key] as keyof typeof COMPANY_SIZE_LABEL
+                      ] ?? row[key])
+                    : String(row[key])}
               </Text>
-            </div>
-            <Text variant="small">
-              {key === 'companyAdminGender'
-                ? mapGender(row[key])
-                : key === 'employeeCount'
-                  ? (COMPANY_SIZE_LABEL[row[key] as keyof typeof COMPANY_SIZE_LABEL] ?? row[key])
-                  : String(row[key])}
-            </Text>
+            </Box>
           </Box>
-        </Box>
-      ))}
-    </div>
-  </Box>
+        ))}
+      </div>
+    </Box>
   )
 }
 

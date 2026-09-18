@@ -47,10 +47,7 @@ export const maskPiiInObject = <T>(obj: T, seen = new WeakSet<object>()): T => {
   const piiFieldNames = ['nationalId', 'kennitala', 'ssn', 'national_id']
 
   // Handle both string and symbol keys
-  const allKeys = [
-    ...Object.keys(obj),
-    ...Object.getOwnPropertySymbols(obj),
-  ]
+  const allKeys = [...Object.keys(obj), ...Object.getOwnPropertySymbols(obj)]
 
   for (const key of allKeys) {
     const value = (obj as Record<string | symbol, unknown>)[key]

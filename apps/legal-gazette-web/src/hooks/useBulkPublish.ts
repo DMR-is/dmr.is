@@ -39,9 +39,7 @@ export const useBulkPublish = (options?: BulkPublishOptions) => {
 
         // Invalidate all related queries (parameterless form)
         queryClient.invalidateQueries(trpc.getAdvertsCount.queryFilter())
-        queryClient.invalidateQueries(
-          trpc.getInPublishingAdverts.queryFilter(),
-        )
+        queryClient.invalidateQueries(trpc.getInPublishingAdverts.queryFilter())
         queryClient.invalidateQueries(
           trpc.getReadyForPublicationAdverts.queryFilter(),
         )

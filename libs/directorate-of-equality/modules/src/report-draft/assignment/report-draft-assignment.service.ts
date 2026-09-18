@@ -29,7 +29,8 @@ const LOGGING_CONTEXT = 'ReportDraftAssignmentService'
 
 @Injectable()
 export class ReportDraftAssignmentService
-  implements IReportDraftAssignmentService {
+  implements IReportDraftAssignmentService
+{
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IReportDraftService)

@@ -13,7 +13,6 @@ import { models as advertModels } from './models'
 
 const MOCK_DATA = process.env.API_MOCK === 'true'
 
-
 @Module({
   imports: [
     createRedisCacheOptions('ojoi-journal'),

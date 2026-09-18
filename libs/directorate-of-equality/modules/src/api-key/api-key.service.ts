@@ -222,10 +222,7 @@ export class ApiKeyService implements IApiKeyService {
       where: {
         companyId,
         revokedAt: null,
-        [Op.or]: [
-          { expiresAt: null },
-          { expiresAt: { [Op.gt]: new Date() } },
-        ],
+        [Op.or]: [{ expiresAt: null }, { expiresAt: { [Op.gt]: new Date() } }],
       },
     })
 

@@ -45,11 +45,11 @@ export default function ReopenApplicationPage() {
             offset={['0', '0', '0', '1/12']}
           >
             <Text marginBottom={4}>
-              Enduropna umsókn sem sat föst í innsendri stöðu án þess að mál hafi
-              verið stofnað (t.d. vegna villu við innsendingu) svo umsækjandi geti
-              opnað hana aftur og sent inn að nýju. Aðeins er hægt að enduropna
-              umsóknir sem eru í stöðunni innsend. Þetta input tekur við auðkenni
-              (UUID) umsóknar.
+              Enduropna umsókn sem sat föst í innsendri stöðu án þess að mál
+              hafi verið stofnað (t.d. vegna villu við innsendingu) svo
+              umsækjandi geti opnað hana aftur og sent inn að nýju. Aðeins er
+              hægt að enduropna umsóknir sem eru í stöðunni innsend. Þetta input
+              tekur við auðkenni (UUID) umsóknar.
             </Text>
             <Stack space={2}>
               <Input

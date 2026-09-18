@@ -6,7 +6,10 @@ import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
+import {
+  generatePaging,
+  getLimitAndOffset,
+} from '@dmr.is/utils-server/serverUtils'
 
 import {
   TBRTransactionModel,
@@ -88,11 +91,14 @@ export class PaymentsService implements IPaymentsService {
     let failed = 0
 
     const promises = pendingTransactions.map((transaction, i) =>
-      this.tbrService.getPaymentStatus({
-        chargeBase: transaction.chargeBase,
-        chargeCategory: transaction.chargeCategory,
-        debtorNationalId: transaction.debtorNationalId,
-      }, i),
+      this.tbrService.getPaymentStatus(
+        {
+          chargeBase: transaction.chargeBase,
+          chargeCategory: transaction.chargeCategory,
+          debtorNationalId: transaction.debtorNationalId,
+        },
+        i,
+      ),
     )
 
     const results = await Promise.allSettled(promises)

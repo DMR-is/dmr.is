@@ -1343,7 +1343,6 @@ describe('ReportService.resolveEqualityCoverage', () => {
 
     expect(await service.resolveEqualityCoverage(COMPANY_ID)).toBeNull()
   })
-
 })
 
 describe('ReportService.getOutlierGroups', () => {

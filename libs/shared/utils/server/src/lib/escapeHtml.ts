@@ -28,7 +28,7 @@ export function escapeHtml(
   if (unsafe === undefined) return undefined
 
   return unsafe
-    .replace(/&/g, '&amp;')   // Must be first to avoid double-escaping
+    .replace(/&/g, '&amp;') // Must be first to avoid double-escaping
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')

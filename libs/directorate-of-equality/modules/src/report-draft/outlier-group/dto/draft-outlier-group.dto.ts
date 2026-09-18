@@ -37,6 +37,9 @@ export class DraftOutlierGroupDto {
   })
   remedyDate!: string | null
 
-  @ApiArray({ type: [String], description: 'Ids of the employees in this group.' })
+  @ApiArray({
+    type: [String],
+    description: 'Ids of the employees in this group.',
+  })
   memberEmployeeIds!: string[]
 }

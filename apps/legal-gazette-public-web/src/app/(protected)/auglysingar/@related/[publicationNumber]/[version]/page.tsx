@@ -16,7 +16,6 @@ export default async function RelatedPublications({
 }: {
   params: Promise<{ publicationNumber: string; version: string }>
 }) {
-
   const awaitedParams = await params
   // Handle redirects for UUIDs and lowercase versions
   const { publicationNumber, version } = await handlePublicationRedirects(

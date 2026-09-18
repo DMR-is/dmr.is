@@ -165,7 +165,6 @@ describe('RecallApplicationService', () => {
       expect(advertModel.findOne.mock.calls.length).toBeGreaterThan(0)
       advertModel.findOne.mock.calls.forEach(excludesTerminatedAdverts)
     })
-
   })
 
   describe('getMinDateForDivisionMeeting', () => {

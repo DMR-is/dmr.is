@@ -175,8 +175,20 @@ describe('ScoringModelService', () => {
               title: 'Ábyrgð',
               description: 'd',
               subCriteria: [
-                { id: 'a', title: 'a', description: 'd', weight: 30, steps: [] },
-                { id: 'b', title: 'b', description: 'd', weight: 12.5, steps: [] },
+                {
+                  id: 'a',
+                  title: 'a',
+                  description: 'd',
+                  weight: 30,
+                  steps: [],
+                },
+                {
+                  id: 'b',
+                  title: 'b',
+                  description: 'd',
+                  weight: 12.5,
+                  steps: [],
+                },
               ],
             },
           ],
@@ -459,9 +471,7 @@ describe('ScoringModelService', () => {
     it('refuses a step belonging to a different sub-criterion', async () => {
       await expect(
         service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
-          assignments: [
-            { subCriterionId: JOB_SUB, stepId: PERSONAL_STEP },
-          ],
+          assignments: [{ subCriterionId: JOB_SUB, stepId: PERSONAL_STEP }],
         }),
       ).rejects.toThrow(BadRequestException)
 

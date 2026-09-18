@@ -33,7 +33,6 @@ import type { FastifyInstance } from 'fastify'
  */
 jest.setTimeout(30000)
 
-
 const API_KEYS = {
   FILE_UPLOAD_KEY_DRAFT: 'test-draft-key',
   FILE_UPLOAD_KEY_PUBLISH: 'test-publish-key',

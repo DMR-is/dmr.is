@@ -60,9 +60,7 @@ export class ReportExcelController {
     operationId: 'importSalaryReportWorkbook',
     type: ParsedReportDto,
   })
-  async importWorkbook(
-    @Body() body: ImportKeyDto,
-  ): Promise<ParsedReportDto> {
+  async importWorkbook(@Body() body: ImportKeyDto): Promise<ParsedReportDto> {
     // Not a `finally`. The download happens inside `importWorkbook` now, so a
     // transient S3 failure reaches this scope — and deleting the staged object
     // there destroys the only copy of an upload the caller can still retry.

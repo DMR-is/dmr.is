@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-} from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -135,12 +131,16 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
     // Retire any still-SUBMITTED sibling of the same type before this one takes
     // its place (409s if a sibling is IN_REVIEW/POSTPONED). The draft has no
     // company_report yet, so it is not seen as its own sibling.
-    const withdrawnReportIds = await this.finalizeService.withdrawInflightSibling(
-      company.id,
-      report.type,
-    )
+    const withdrawnReportIds =
+      await this.finalizeService.withdrawInflightSibling(
+        company.id,
+        report.type,
+      )
 
-    await this.finalizeService.createCompanyReportSnapshots(report.id, companies)
+    await this.finalizeService.createCompanyReportSnapshots(
+      report.id,
+      companies,
+    )
 
     let status = ReportStatusEnum.SUBMITTED
     if (isSalary) {
@@ -175,7 +175,10 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
 
     await this.finalizeService.emitSubmittedEvent(report.id, status, company.id)
     await this.finalizeService.recordAutoReview(report.id, status, company.id)
-    await this.finalizeService.emitWithdrawnEvents(withdrawnReportIds, report.id)
+    await this.finalizeService.emitWithdrawnEvents(
+      withdrawnReportIds,
+      report.id,
+    )
 
     this.logger.info(`Submitted draft report "${report.id}" as ${status}`, {
       context: LOGGING_CONTEXT,

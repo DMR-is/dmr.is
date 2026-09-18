@@ -85,11 +85,7 @@ export const CompanyReportsTab = ({ companyId }: Props) => {
                   : sharedText.typeLabels.SALARY
                 : sharedText.typeLabels.EQUALITY
             }
-            text={
-              report.createdAt
-                ? formatTimestampDate(report.createdAt)
-                : ''
-            }
+            text={report.createdAt ? formatTimestampDate(report.createdAt) : ''}
             tag={{
               label: ReportStatusTranslatedEnum[report.status],
               variant: 'blue',

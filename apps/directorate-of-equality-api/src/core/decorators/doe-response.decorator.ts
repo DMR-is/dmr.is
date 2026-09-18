@@ -59,7 +59,11 @@ export function DoeResponse({
       },
     })
   } else if (type || successDescription) {
-    successDecorator = ApiResponse({ status, type, description: successDescription })
+    successDecorator = ApiResponse({
+      status,
+      type,
+      description: successDescription,
+    })
   } else {
     successDecorator = ApiNoContentResponse()
   }

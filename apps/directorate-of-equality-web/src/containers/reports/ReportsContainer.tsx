@@ -112,9 +112,7 @@ function mapReportToCase(report: ReportListItemDto): Case {
   const reviewer = report.reviewer ? reviewerFullName(report.reviewer) : unknown
   return {
     id: report.id,
-    date: report.createdAt
-      ? formatTimestampDate(report.createdAt)
-      : '',
+    date: report.createdAt ? formatTimestampDate(report.createdAt) : '',
     type: report.includesImprovementPlan
       ? 'Úrbótaáætlun'
       : (sharedText.typeLabels[

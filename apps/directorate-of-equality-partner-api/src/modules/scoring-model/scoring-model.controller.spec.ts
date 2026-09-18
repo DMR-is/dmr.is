@@ -68,7 +68,9 @@ describe('ScoringModelController', () => {
   })
 
   it('passes a 404 from the ownership gate straight through', async () => {
-    svc.getModel.mockRejectedValue(new NotFoundException('Starfsmat fannst ekki'))
+    svc.getModel.mockRejectedValue(
+      new NotFoundException('Starfsmat fannst ekki'),
+    )
 
     await expect(controller.getModel(COMPANY, MODEL_ID)).rejects.toThrow(
       NotFoundException,

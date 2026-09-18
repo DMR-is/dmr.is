@@ -205,7 +205,9 @@ export const RegulationMetadataFields = ({
                 <Inline space={1} flexWrap="wrap">
                   {draft.lawChapters.map((chapter) => (
                     <Tag key={chapter.slug} variant="blue" outlined>
-                      {lawChapterNameBySlug[chapter.slug] ?? chapter.name ?? chapter.slug}
+                      {lawChapterNameBySlug[chapter.slug] ??
+                        chapter.name ??
+                        chapter.slug}
                       {canEdit && (
                         <Box
                           component="button"

@@ -19,13 +19,16 @@ export const useAdvertSelection = (totalCount: number | undefined) => {
     [totalCount],
   )
 
-  const handleAdvertSelect = useCallback((advertId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedAdvertIds((prev) => [...prev, advertId])
-    } else {
-      setSelectedAdvertIds((prev) => prev.filter((id) => id !== advertId))
-    }
-  }, [])
+  const handleAdvertSelect = useCallback(
+    (advertId: string, checked: boolean) => {
+      if (checked) {
+        setSelectedAdvertIds((prev) => [...prev, advertId])
+      } else {
+        setSelectedAdvertIds((prev) => prev.filter((id) => id !== advertId))
+      }
+    },
+    [],
+  )
 
   const clearSelection = useCallback(() => {
     setSelectedAdvertIds([])

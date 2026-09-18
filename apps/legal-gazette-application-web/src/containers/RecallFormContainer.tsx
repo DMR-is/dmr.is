@@ -66,10 +66,11 @@ export const RecallFormContainer = ({ application }: Props) => {
     caseId: application.caseId,
     type: mappedType,
     isBankruptcy: isBankruptcy,
-    courtOptions: baseEntities?.courtDistricts.map((court) => ({
-      label: court.title,
-      value: court.id,
-    })) || [],
+    courtOptions:
+      baseEntities?.courtDistricts.map((court) => ({
+        label: court.title,
+        value: court.id,
+      })) || [],
   }
 
   const methods = useForm<RecallApplicationWebSchema>(

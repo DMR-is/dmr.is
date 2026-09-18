@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer'
-import { validateSync,ValidationError } from 'class-validator'
+import { validateSync, ValidationError } from 'class-validator'
 
 import {
   SetScoringRoleStepAssignmentsDto,
@@ -57,13 +57,19 @@ describe('sub-criterion weight bounds', () => {
   // rule that checks only the total passed while the negative weight inverted
   // its own sub-criterion's scale.
   it('refuses a negative weight', () => {
-    expect(errorsFor(CreateScoringSubCriterionDto, { ...valid, weight: -20 })
-      .join(' ')).toMatch(/must not be less than 0/)
+    expect(
+      errorsFor(CreateScoringSubCriterionDto, { ...valid, weight: -20 }).join(
+        ' ',
+      ),
+    ).toMatch(/must not be less than 0/)
   })
 
   it('refuses a weight over 100', () => {
-    expect(errorsFor(CreateScoringSubCriterionDto, { ...valid, weight: 140 })
-      .join(' ')).toMatch(/must not be greater than 100/)
+    expect(
+      errorsFor(CreateScoringSubCriterionDto, { ...valid, weight: 140 }).join(
+        ' ',
+      ),
+    ).toMatch(/must not be greater than 100/)
   })
 
   it('applies the same bounds on the PATCH', () => {
@@ -89,15 +95,15 @@ describe('scale length', () => {
   })
 
   it.each([0, 1])('refuses a scale of %i þrep', (n) => {
-    expect(errorsFor(SetScoringStepsDto, { steps: steps(n) }).join(' ')).toMatch(
-      /at least 2 elements/,
-    )
+    expect(
+      errorsFor(SetScoringStepsDto, { steps: steps(n) }).join(' '),
+    ).toMatch(/at least 2 elements/)
   })
 
   it('refuses a scale longer than the filing allows', () => {
-    expect(errorsFor(SetScoringStepsDto, { steps: steps(9) }).join(' ')).toMatch(
-      /no more than 8 elements/,
-    )
+    expect(
+      errorsFor(SetScoringStepsDto, { steps: steps(9) }).join(' '),
+    ).toMatch(/no more than 8 elements/)
   })
 })
 

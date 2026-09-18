@@ -576,9 +576,7 @@ describe('CategoryTypeAdminService', () => {
       await service.revert('audit-1', ACTOR)
 
       expect(advertModel.update).not.toHaveBeenCalled()
-      expect(
-        changeLogModel.create,
-      ).toHaveBeenCalledWith(
+      expect(changeLogModel.create).toHaveBeenCalledWith(
         expect.objectContaining({ affectedAdvertCount: 0 }),
         { transaction: TRANSACTION },
       )

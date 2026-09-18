@@ -20,9 +20,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
-import {
-  UserDto,
-} from '../../models/users.model'
+import { UserDto } from '../../models/users.model'
 import {
   CreateUserDto,
   GetUsersResponse,
