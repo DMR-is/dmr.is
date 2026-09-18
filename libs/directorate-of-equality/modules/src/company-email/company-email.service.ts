@@ -376,8 +376,10 @@ export class CompanyEmailService implements ICompanyEmailService {
   /**
    * Resolve "who should get this" into a classified list.
    *
-   * Excluded companies are kept in the result, so the preview can say why the
-   * recipient count is smaller than the count of matched companies.
+   * Matched companies that cannot receive mail are kept in the result, so the
+   * preview can explain the difference between matched and recipient counts.
+   * Filter targets use the register's default hides: quarantined companies only
+   * appear as skipped when explicitly included by the filter or company IDs.
    */
   private async resolveRecipients(
     dto: SendCompanyEmailDto,

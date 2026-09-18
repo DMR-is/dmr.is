@@ -61,10 +61,8 @@ const responseInstruction = (report: ReportModel): string => {
  *
  * Dative, because all three call sites read "á <noun>".
  *
- * Wording deliberately identical to `reportLabel` in
- * `report-deadline-reminder.template.ts` — the two mails go to the same
- * employer about the same two things, and naming them differently is how a
- * reader ends up thinking they are three obligations rather than two.
+ * The reminder template names the same report kinds in the genitive after
+ * "skilafrestur" and "Skiladagur"; its inflected labels cannot be reused here.
  */
 const reportNoun = (report: ReportModel): string =>
   report.type === 'SALARY' ? 'jafnlaunaskýrslu' : 'jafnréttisáætlun'

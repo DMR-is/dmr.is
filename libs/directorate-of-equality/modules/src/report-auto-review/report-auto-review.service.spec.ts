@@ -180,6 +180,7 @@ describe('ReportAutoReviewService', () => {
 
     expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
     expect(verdict.signals.reportType).toBe(ReportTypeEnum.EQUALITY)
+    expect(verdict.reason).toMatch(/jafnréttisáætlanir/i)
     expect(employeeCount).not.toHaveBeenCalled()
     expect(outlierCount).not.toHaveBeenCalled()
   })

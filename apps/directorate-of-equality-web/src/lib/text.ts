@@ -800,7 +800,7 @@ export const reportText = {
     companyDeactivatedNoActor: 'Fyrirtæki {company} gert óvirkt í skrá',
     companyQuarantined: 'hefur sett fyrirtækið í var',
     companyUnquarantined: 'hefur tekið fyrirtækið úr vari',
-    reminderSentEquality: 'Áminning send um skil jafnréttisáætlun',
+    reminderSentEquality: 'Áminning send um skil jafnréttisáætlunar',
     reminderSentSalary: 'Áminning send um skil jafnlaunaskýrslu',
     reminderNoEmailEquality:
       'Reyndi að senda áminningu um jafnréttisáætlun en ekkert netfang fannst',
@@ -895,6 +895,8 @@ export const companiesText = {
   showNotObliged: 'Sýna óskyldug',
   showInactive: 'Sýna óvirk',
   showQuarantined: 'Sýna í vari',
+  onlyQuarantined: 'Aðeins fyrirtæki í vari',
+  excludeQuarantined: 'Fyrirtæki utan vars',
   // The four "never filed" filters, as two pairs. Each pair has to say which
   // question it is asking in the option itself: nearly every company in the
   // register was loaded from the old SharePoint sheet with no report row of its

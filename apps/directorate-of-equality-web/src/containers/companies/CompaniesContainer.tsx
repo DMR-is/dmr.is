@@ -170,6 +170,8 @@ export const CompaniesContainer = () => {
         includeNotObliged: val.includes('notObliged') ? true : null,
         includeInactive: val.includes('inactive') ? true : null,
         includeQuarantined: val.includes('quarantined') ? true : null,
+        // An old bookmark's narrowing must not override the reveal control.
+        quarantined: null,
         page: 1,
       })
     } else if (key === 'flags') {
@@ -300,11 +302,15 @@ export const CompaniesContainer = () => {
           )}
           <CompanyActiveFilters
             query={filter.q ?? ''}
+            quarantined={filter.quarantined}
             filters={filters}
             regionOptions={regionOptions}
             postcodeOptions={postcodeOptions}
             onFiltersChange={handleFiltersChange}
             onQueryClear={() => setFilter({ q: null, page: 1 })}
+            onQuarantinedClear={() =>
+              setFilter({ quarantined: null, page: 1 })
+            }
             onReset={handleReset}
           />
           {data?.paging && (

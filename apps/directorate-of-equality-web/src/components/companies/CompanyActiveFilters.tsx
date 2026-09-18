@@ -24,23 +24,24 @@ import {
 } from './companyStatus'
 
 /**
- * One removable chip. `key` is the filter it belongs to, or `'q'` for the free
- * text search, which lives outside `CompanyFilters` but is just as active and
- * just as easy to forget about.
+ * One removable chip. Search and the legacy quarantine constraint live
+ * outside `CompanyFilters`, but still affect the results and must be visible.
  */
 type Chip = {
-  key: keyof CompanyFilters | 'q'
+  key: keyof CompanyFilters | 'q' | 'quarantined'
   value: string
   label: string
 }
 
 type Props = {
   query: string
+  quarantined: boolean | null
   filters: CompanyFilters
   regionOptions: FilterOption[]
   postcodeOptions: FilterOption[]
   onFiltersChange: (key: keyof CompanyFilters, val: string[]) => void
   onQueryClear: () => void
+  onQuarantinedClear: () => void
   onReset: () => void
 }
 
@@ -65,11 +66,13 @@ const labelFor = (options: FilterOption[], value: string) =>
  */
 export const CompanyActiveFilters = ({
   query,
+  quarantined,
   filters,
   regionOptions,
   postcodeOptions,
   onFiltersChange,
   onQueryClear,
+  onQuarantinedClear,
   onReset,
 }: Props) => {
   const trpc = useTRPC()
@@ -117,6 +120,18 @@ export const CompanyActiveFilters = ({
             key: 'q' as const,
             value: query,
             label: `${companiesText.activeFilterQuery}: ${query}`,
+          },
+        ]
+      : []),
+    // Preserve old bookmarks' narrower result set until explicitly cleared.
+    ...(quarantined !== null
+      ? [
+          {
+            key: 'quarantined' as const,
+            value: String(quarantined),
+            label: quarantined
+              ? companiesText.onlyQuarantined
+              : companiesText.excludeQuarantined,
           },
         ]
       : []),
@@ -182,6 +197,10 @@ export const CompanyActiveFilters = ({
   const remove = ({ key, value }: Chip) => {
     if (key === 'q') {
       onQueryClear()
+      return
+    }
+    if (key === 'quarantined') {
+      onQuarantinedClear()
       return
     }
     // Routed through the same handler the panel uses rather than setting the
