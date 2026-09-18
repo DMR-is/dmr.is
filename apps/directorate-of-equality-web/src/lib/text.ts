@@ -45,6 +45,32 @@ export const frontPageText = {
   },
 }
 
+export const dataExportText = {
+  heading: 'Keyra út lista',
+  heroDescription:
+    'Veldu síur, sæktu listann og keyrðu hann út í Excel. Útdrátturinn nær til allra færslna sem síurnar skila — ekki bara þeirra sem sjást á skjánum.',
+  imageAlt: 'Keyra út lista',
+  datasetLabel: 'Gagnasett',
+  datasetCompanies: 'Fyrirtæki',
+  datasetReports: 'Skýrslur',
+  submit: 'Sækja lista',
+  export: 'Sækja Excel',
+  // The count sits beside the export button so nobody downloads 1.500 rows
+  // expecting 60.
+  resultCount: (count: number) =>
+    count === 1 ? '1 færsla fannst' : `${count} færslur fundust`,
+  // Announced, not just rendered: the results appear because a button was
+  // pressed, so a screen reader has to be told the page changed.
+  searching: 'Sæki lista…',
+  emptyHeading: 'Engar færslur',
+  emptyDescription: 'Engin færsla passar við síurnar. Prófaðu að víkka þær.',
+  initialHeading: 'Veldu síur og sæktu listann',
+  initialDescription:
+    'Ekkert er sótt fyrr en þú ýtir á „Sækja lista“ — listarnir eru stórir og síurnar eiga að þrengja þá fyrst.',
+  errorHeading: 'Ekki tókst að sækja listann',
+  errorDescription: 'Eitthvað fór úrskeiðis. Reyndu aftur.',
+}
+
 export const overviewText = {
   heroTitle: 'Vinnslusvæði',
   heroDescription:
