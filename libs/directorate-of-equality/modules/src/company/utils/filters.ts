@@ -272,8 +272,10 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
     })
   }
 
-  if (query.employeeCountCategory !== undefined) {
-    conditions.push({ employeeCountCategory: query.employeeCountCategory })
+  if (query.employeeCountCategory?.length) {
+    conditions.push({
+      employeeCountCategory: { [Op.in]: query.employeeCountCategory },
+    })
   }
 
   if (query.companyStatus?.length) {
@@ -331,7 +333,7 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   //
   // Ordered after the explicit filters purely for readability; `conditions`
   // is AND-ed, so position carries no meaning.
-  if (!query.includeNotObliged && query.employeeCountCategory === undefined) {
+  if (!query.includeNotObliged && !query.employeeCountCategory?.length) {
     conditions.push(literal(`NOT ${hiddenFromDefaultRegisterSql()}`))
   }
 

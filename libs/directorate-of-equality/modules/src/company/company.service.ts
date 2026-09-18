@@ -211,6 +211,22 @@ export class CompanyService implements ICompanyService {
     return rows.map(toMailRecipient)
   }
 
+  async findAllByFilter(filter: GetCompaniesQueryDto): Promise<CompanyDto[]> {
+    const { where, includes } = buildCompanyListQuery(filter)
+
+    // Deliberately the same read as `findMailRecipientsByFilter`, minus the
+    // projection down to recipients: no `limit`/`offset`, and the
+    // `withReportStatus` scope's own `attributes` left alone so the derived
+    // status columns the export carries resolve against the alias it sets up.
+    const rows = await this.companyWithReportStatus.findAll({
+      where,
+      order: [['name', 'ASC']],
+      ...(includes.length ? { include: includes } : {}),
+    })
+
+    return rows.map((row) => row.fromModel())
+  }
+
   async findMailRecipientsByIds(
     ids: string[],
   ): Promise<CompanyMailRecipient[]> {
