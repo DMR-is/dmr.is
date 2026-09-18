@@ -237,12 +237,41 @@ describe('buildCompanyListQuery', () => {
       // Filtering by size means the admin has already answered the question the
       // default was guessing at.
       expect(
-        conditionsOf({ employeeCountCategory: CompanySizeEnum.LARGE }),
+        conditionsOf({ employeeCountCategory: [CompanySizeEnum.LARGE] }),
       ).toEqual([
-        { employeeCountCategory: CompanySizeEnum.LARGE },
+        { employeeCountCategory: { [Op.in]: [CompanySizeEnum.LARGE] } },
         { status: CompanyStatusEnum.ACTIVE },
         { quarantined: false },
       ])
+    })
+
+    it('lifts the obligation hide for either obliged bucket, not just one', () => {
+      // The register's own default view is "everyone the law reaches", which
+      // is both buckets at once — unaskable while this param took one value.
+      expect(
+        conditionsOf({
+          employeeCountCategory: [
+            CompanySizeEnum.MEDIUM,
+            CompanySizeEnum.LARGE,
+          ],
+        }),
+      ).toEqual([
+        {
+          employeeCountCategory: {
+            [Op.in]: [CompanySizeEnum.MEDIUM, CompanySizeEnum.LARGE],
+          },
+        },
+        { status: CompanyStatusEnum.ACTIVE },
+      ])
+    })
+
+    it('keeps the hide when the size filter is present but empty', () => {
+      // An empty list is not an answer on the size axis, so the default still
+      // applies — otherwise a cleared filter would silently widen the register.
+      const conditions = conditionsOf({ employeeCountCategory: [] })
+
+      expect(conditions).toHaveLength(2)
+      expect((conditions[0] as { val: string }).val).toMatch(/^NOT /)
     })
 
     it('lifts the status hide when the admin asks for it explicitly', () => {
@@ -391,7 +420,7 @@ describe('buildCompanyListQuery', () => {
     const conditions = conditionsOf({
       ...unhidden,
       q: 'a',
-      employeeCountCategory: CompanySizeEnum.LARGE,
+      employeeCountCategory: [CompanySizeEnum.LARGE],
       companyStatus: [CompanyReportStatusEnum.SATISFACTORY],
       status: [CompanyStatusEnum.ACTIVE],
       expiresWithin: [CompanyExpiryFilterEnum.MONTHS_3],

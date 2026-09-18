@@ -6,6 +6,7 @@ import { CompanyApiModule } from '../company/company.api.module'
 import { CompanyEmailApiModule } from '../company-email/company-email.api.module'
 import { CompanyImportApiModule } from '../company-import/company-import.api.module'
 import { ConfigApiModule } from '../config/config.api.module'
+import { DataExportApiModule } from '../data-export/data-export.api.module'
 import { ImportUploadApiModule } from '../import-upload/import-upload.api.module'
 import { LocationApiModule } from '../location/location.api.module'
 import { ReportApiModule } from '../report/report.api.module'
@@ -22,6 +23,7 @@ import { UserApiModule } from '../user/user.api.module'
     CompanyApiModule,
     CompanyEmailApiModule,
     CompanyImportApiModule,
+    DataExportApiModule,
     ImportUploadApiModule,
     UserApiModule,
     ConfigApiModule,

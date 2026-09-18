@@ -46,13 +46,24 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsString()
   q?: string
 
-  @ApiOptionalEnum(CompanySizeEnum, {
+  @ApiProperty({
+    enum: CompanySizeEnum,
     enumName: 'CompanySizeEnum',
-    description: 'Return only companies whose employee-count bucket matches.',
+    isArray: true,
+    required: false,
+    description:
+      'Return only companies whose employee-count bucket is one of the given values. The two obliged buckets are MEDIUM (25–49) and LARGE (50+); asking for both is the ordinary "everyone the law reaches" view, which is why this is a list rather than a single value.',
+  })
+  // Accepts a bare value as well as a list: this was a single-value param, and
+  // every caller that still sends `?employeeCountCategory=LARGE` keeps working.
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
   })
   @IsOptional()
-  @IsEnum(CompanySizeEnum)
-  employeeCountCategory?: CompanySizeEnum
+  @IsArray()
+  @IsEnum(CompanySizeEnum, { each: true })
+  employeeCountCategory?: CompanySizeEnum[]
 
   @ApiProperty({
     enum: CompanyReportStatusEnum,

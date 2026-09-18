@@ -1,16 +1,33 @@
 import { Transform } from 'class-transformer'
-import { IsArray, IsBoolean, IsEnum, IsOptional, IsUUID } from 'class-validator'
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
 import {
+  ApiOptionalArray,
   ApiOptionalDateTime,
   ApiOptionalEnum,
   ApiOptionalString,
 } from '@dmr.is/decorators'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
-import { ReportStatusEnum, ReportTypeEnum } from '../models/report.model'
+import {
+  CompanySectorEnum,
+  CompanySizeEnum,
+} from '../../company/models/company.enums'
+import {
+  CommunicationStatusEnum,
+  EqualityCoverageSourceEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from '../models/report.enums'
 
 export enum ReportSortByEnum {
   CREATED_AT = 'createdAt',
@@ -135,6 +152,149 @@ export class GetReportsQueryDto extends PagingQuery {
 
   @ApiOptionalDateTime()
   correctionDeadlineTo?: Date
+
+  @ApiOptionalDateTime({
+    description:
+      'Return only reports whose salary data period (`salaryDataPeriod`, the month the pay figures describe) starts on or after this date. Salary reports only — an equality report has no period, so any bound here excludes them.',
+  })
+  salaryDataPeriodFrom?: Date
+
+  @ApiOptionalDateTime({
+    description:
+      'Upper bound on the salary data period. See `salaryDataPeriodFrom`.',
+  })
+  salaryDataPeriodTo?: Date
+
+  @ApiProperty({
+    enum: CommunicationStatusEnum,
+    enumName: 'CommunicationStatusEnum',
+    isArray: true,
+    required: false,
+    description:
+      'Return only reports in one of the given communication states (samskiptastaða).',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(CommunicationStatusEnum, { each: true })
+  communicationStatus?: CommunicationStatusEnum[]
+
+  @ApiProperty({
+    enum: EqualityCoverageSourceEnum,
+    enumName: 'EqualityCoverageSourceEnum',
+    isArray: true,
+    required: false,
+    description:
+      'Return only reports whose equality coverage came from the given source — REPORT (filed in this system) or LEGACY (an unexpired certification carried over from the retired register).',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(EqualityCoverageSourceEnum, { each: true })
+  equalitySource?: EqualityCoverageSourceEnum[]
+
+  // ---------------------------------------------------------------------
+  // Company dimensions
+  //
+  // A report carries no company columns of its own — it reaches the company
+  // through `company_report`. These are resolved with one correlated EXISTS
+  // against the PARENT snapshot (see `buildReportCompanyWhere`), so they
+  // narrow the same set of reports the list already shows and cannot
+  // multiply a group filing into one row per subsidiary.
+  // ---------------------------------------------------------------------
+
+  @ApiProperty({
+    enum: CompanySizeEnum,
+    enumName: 'CompanySizeEnum',
+    isArray: true,
+    required: false,
+    description:
+      "Return only reports filed by a company in one of the given employee-count buckets. Reads the company's CURRENT bucket, not the one snapshotted on the report.",
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(CompanySizeEnum, { each: true })
+  employeeCountCategory?: CompanySizeEnum[]
+
+  @ApiProperty({
+    enum: CompanySectorEnum,
+    enumName: 'CompanySectorEnum',
+    isArray: true,
+    required: false,
+    description:
+      'Return only reports filed by a company in one of the given ownership sectors (FYRIRTAEKI, RADUNEYTI, RIKISADILI, SVEITARFELAG). UNKNOWN is filterable on its own and is never folded into a classified sector.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(CompanySectorEnum, { each: true })
+  sector?: CompanySectorEnum[]
+
+  @ApiOptionalArray({
+    type: String,
+    isArray: true,
+    description:
+      'Return only reports filed by a company in one of the given ÍSAT2008 leaf categories, by code (e.g. "01110"). Reads the admin-owned `company.isatCategoryCode`, not the free-text snapshot on `company_report`.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsString({ each: true })
+  isatCategoryCode?: string[]
+
+  @ApiOptionalArray({
+    type: String,
+    isArray: true,
+    description:
+      'Return only reports filed by a company in one of the given ÍSAT2008 sections (bálkur), by letter (e.g. "A"). Upper-cased server-side.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    const values = Array.isArray(value) ? value : [value]
+    return values.map((v) => (typeof v === 'string' ? v.toUpperCase() : v))
+  })
+  @IsString({ each: true })
+  isatSection?: string[]
+
+  @ApiOptionalArray({
+    type: String,
+    isArray: true,
+    description:
+      'Return only reports filed by a company located in one of the given regions (landshluti), by region code. Resolved via the company postcode.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsString({ each: true })
+  regionCode?: string[]
+
+  @ApiOptionalArray({
+    type: String,
+    isArray: true,
+    description:
+      'Return only reports filed by a company with one of the given postcodes (póstnúmer, e.g. "101").',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsString({ each: true })
+  postcode?: string[]
 
   @ApiOptionalString({
     description:
