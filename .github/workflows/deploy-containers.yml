@@ -28,9 +28,9 @@ permissions:
 #
 # Cancelling is only safe because affected-detection below is based on the last
 # SUCCESSFUL deploy: a cancelled run does not advance that base, so the next run
-# still sees the same containers as affected and rebuilds them. Do not remove the
-# last-successful-event input while this is enabled -- together they would drop
-# changes silently.
+# still sees the same containers as affected and rebuilds them. Do not change
+# the base selection below to anything other than the last successful run while
+# this is enabled -- together they would drop changes silently.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
@@ -139,12 +139,20 @@ jobs:
           # job. 20 is slack for a run of cancelled or failed deploys.
           #
           # Every rejected candidate says why, so the next bad base is
-          # diagnosable from the log instead of being inferred weeks later.
+          # diagnosable from the log instead of being inferred weeks later. That
+          # includes the API call itself: its stderr is not discarded, so a
+          # rate limit or 5xx reads as what it is rather than as "no runs".
+          #
+          # No event filter. A run is only `success` when build, re-tag and
+          # deploy all passed or were skipped, so every successful run on main
+          # leaves a complete set of sha-<HEAD> tags -- a hand-triggered one,
+          # rebuild-all included, as much as one chained off the quality
+          # pipeline. Excluding dispatches only made the next base older.
           BASE_SHA=""
           BASE_DISTANCE=""
           for sha in $(gh api \
-            "repos/${GITHUB_REPOSITORY}/actions/workflows/deploy-containers.yml/runs?branch=main&event=workflow_run&status=success&per_page=20" \
-            -q '.workflow_runs[].head_sha' 2>/dev/null); do
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/deploy-containers.yml/runs?branch=main&status=success&per_page=20" \
+            -q '.workflow_runs[].head_sha'); do
             if [ "$sha" = "${GITHUB_SHA}" ]; then
               continue
             fi
@@ -188,10 +196,20 @@ jobs:
             # jq exits 0 on empty input, so a failed nx piped into it would look
             # exactly like "nothing is affected". stderr stays visible so the
             # failure is diagnosable from the log.
-            if NX_OUTPUT=$(npx nx show projects --affected --base="${BASE_SHA}" --head="${GITHUB_SHA}" --type=app --json); then
-              AFFECTED_PROJECTS=$(echo "$NX_OUTPUT" | jq -r '.[]')
-            else
-              echo "::warning::nx affected-detection failed (exit $?). Rebuilding every container, because an empty affected list would re-tag stale images as current."
+            #
+            # The parse is checked too: nx exiting 0 with a banner ahead of the
+            # JSON, or a changed output format, must also land in rebuild-all.
+            # An EMPTY array is not a failure -- it is the normal result of a
+            # docs-only merge, and the whole reason the re-tag job exists. Only
+            # the exit status separates "nothing changed" from "could not tell".
+            NX_STATUS=0
+            NX_OUTPUT=$(npx nx show projects --affected --base="${BASE_SHA}" --head="${GITHUB_SHA}" --type=app --json) || NX_STATUS=$?
+            if [ "$NX_STATUS" -ne 0 ]; then
+              echo "::warning::nx affected-detection failed (exit ${NX_STATUS}). Rebuilding every container, because an empty affected list would re-tag stale images as current."
+              AFFECTED_PROJECTS=$(echo "$ALL_CONTAINERS" | jq -r '.[].name')
+            elif ! AFFECTED_PROJECTS=$(printf '%s\n' "$NX_OUTPUT" | jq -r 'if type == "array" then .[] else error("expected a JSON array, got " + type) end'); then
+              echo "::warning::nx output was not a JSON array of project names. Rebuilding every container rather than treating unparseable output as 'nothing affected'."
+              printf '%s\n' "$NX_OUTPUT"
               AFFECTED_PROJECTS=$(echo "$ALL_CONTAINERS" | jq -r '.[].name')
             fi
           fi
