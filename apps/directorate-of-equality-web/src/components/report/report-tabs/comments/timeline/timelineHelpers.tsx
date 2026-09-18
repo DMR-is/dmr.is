@@ -7,6 +7,7 @@ import {
   ReportRoleEnum,
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
+  ReportTypeEnum,
 } from '../../../../../gen/fetch'
 import {
   formatDateIS,
@@ -155,9 +156,24 @@ export function timelineEntryKind(item: TimelineItem): TimelineEntryKind {
   return 'outgoing'
 }
 
+/**
+ * Picks the wording for the report type in scope.
+ *
+ * Falls back to SALARY, which is the wording these labels carried before they
+ * were split per type — so an entry rendered without a type (the company
+ * timeline, which reuses this renderer for company-scope events) reads exactly
+ * as it always did rather than showing `undefined`.
+ */
+const forReportType = (
+  labels: Record<'EQUALITY' | 'SALARY', string>,
+  reportType?: ReportTypeEnum | null,
+): string =>
+  reportType === ReportTypeEnum.EQUALITY ? labels.EQUALITY : labels.SALARY
+
 export function timelineEntryText(
   item: TimelineItem,
   companyName?: string | null,
+  reportType?: ReportTypeEnum | null,
 ): React.ReactNode {
   if (item.kind === ReportTimelineItemKindEnum.COMMENT) {
     const comment = item.comment
@@ -231,10 +247,12 @@ export function timelineEntryText(
   if (eventType === ReportEventTypeEnum.SYSTEM_AUTO_REVIEW) {
     // Soft auto-review verdict — system actor, no name. The `reason` renders as
     // the entry body; this is just the headline. Status is never changed yet.
-    const headline =
+    const headline = forReportType(
       systemDecision === AutoReviewDecisionEnum.AUTO_APPROVE
         ? reportText.timeline.systemAutoReviewApprove
-        : reportText.timeline.systemAutoReviewNeedsReview
+        : reportText.timeline.systemAutoReviewNeedsReview,
+      reportType,
+    )
     // Bold the system actor name ("Kerfið") that opens the headline and the
     // trailing status word (e.g. "yfirferð").
     const words = headline.split(' ')
@@ -251,10 +269,11 @@ export function timelineEntryText(
   if (eventType === ReportEventTypeEnum.SUBMITTED) {
     return companyName ? (
       <>
-        <Bold>{companyName}</Bold> {reportText.timeline.submitsReport}
+        <Bold>{companyName}</Bold>{' '}
+        {forReportType(reportText.timeline.submitsReport, reportType)}
       </>
     ) : (
-      <>{reportText.timeline.reportSubmitted}</>
+      <>{forReportType(reportText.timeline.reportSubmitted, reportType)}</>
     )
   }
 
@@ -315,7 +334,7 @@ export function timelineEntryText(
     return (
       <>
         {actorName && <Bold>{actorName} </Bold>}
-        {reportText.timeline.edited}
+        {forReportType(reportText.timeline.edited, reportType)}
       </>
     )
   }

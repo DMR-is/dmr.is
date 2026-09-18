@@ -13,7 +13,7 @@ export type ReportDeadlineReminderInput = {
 
 /** Icelandic name for each report kind, in the accusative used in the copy. */
 const reportLabel = (type: ReportTypeEnum): string =>
-  type === ReportTypeEnum.SALARY ? 'jafnlaunaskýrslu' : 'jafnréttisskýrslu'
+  type === ReportTypeEnum.SALARY ? 'jafnlaunaskýrslu' : 'jafnréttisáætlun'
 
 /**
  * Lead sentence per tier. The phrasing tracks the tier's band (e.g. the
@@ -21,7 +21,8 @@ const reportLabel = (type: ReportTypeEnum): string =>
  * so it stays accurate without hard-coding a single offset.
  */
 const TIER_LEAD: Record<CompanyReminderTierEnum, string> = {
-  [CompanyReminderTierEnum.SIX_MONTHS]: 'Skilafrestur nálgast — innan sex mánaða.',
+  [CompanyReminderTierEnum.SIX_MONTHS]:
+    'Skilafrestur nálgast — innan sex mánaða.',
   [CompanyReminderTierEnum.TWO_MONTHS]:
     'Skilafrestur nálgast — innan tveggja mánaða.',
   [CompanyReminderTierEnum.TWO_WEEKS]: 'Skilafrestur er innan tveggja vikna.',

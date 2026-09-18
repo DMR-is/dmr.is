@@ -144,6 +144,51 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsBoolean()
   includeInactive?: boolean
 
+  @ApiOptionalBoolean({
+    description:
+      'When true, also return companies under an admin quarantine (quarantined = true). HIDDEN BY DEFAULT — a quarantine halts all outbound activity, so those companies are not work an admin can act on and they crowd out the ones that are. Ignored when `quarantined` is set explicitly, which is a more specific request about the same axis.',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  includeQuarantined?: boolean
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, return only companies that have never filed an equality plan THROUGH THIS SYSTEM (no report row beyond a draft). Says nothing about whether the company is obliged to file one, and nothing about the retired SharePoint register — most companies carry a legacy certification and no report row, so this matches very widely on its own. Use `neverFiledEqualityIncludingLegacy` for "never appeared in the register at all".',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  neverFiledEquality?: boolean
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, return only companies that have never filed a salary report THROUGH THIS SYSTEM (no report row beyond a draft). The salary counterpart of `neverFiledEquality`; the same caveats apply.',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  neverFiledSalary?: boolean
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, return only companies that have never filed an equality plan here AND hold no equality certification in the retired SharePoint register either — i.e. the Directorate has no record of one, ever. An expired or surrendered legacy certification still counts as having filed.',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  neverFiledEqualityIncludingLegacy?: boolean
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, return only companies that have never filed a salary report here AND hold no salary certification in the retired SharePoint register either. The salary counterpart of `neverFiledEqualityIncludingLegacy`.',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  neverFiledSalaryIncludingLegacy?: boolean
+
   @ApiOptionalArray({
     type: String,
     isArray: true,

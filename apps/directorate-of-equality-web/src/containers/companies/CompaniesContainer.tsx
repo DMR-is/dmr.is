@@ -10,6 +10,7 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
+import { CompanyActiveFilters } from '../../components/companies/CompanyActiveFilters'
 import {
   CompanyFilter,
   type CompanyFilters,
@@ -61,7 +62,14 @@ export const CompaniesContainer = () => {
     flags: [
       ...(filter.finesStarted ? ['fines'] : []),
       ...(filter.overdue ? ['overdue'] : []),
-      ...(filter.quarantined ? ['quarantined'] : []),
+      ...(filter.neverFiledEquality ? ['neverFiledEquality'] : []),
+      ...(filter.neverFiledEqualityIncludingLegacy
+        ? ['neverFiledEqualityIncludingLegacy']
+        : []),
+      ...(filter.neverFiledSalary ? ['neverFiledSalary'] : []),
+      ...(filter.neverFiledSalaryIncludingLegacy
+        ? ['neverFiledSalaryIncludingLegacy']
+        : []),
     ],
     regionCode: filter.regionCode ?? [],
     postcode: filter.postcode ?? [],
@@ -71,6 +79,7 @@ export const CompaniesContainer = () => {
     visibility: [
       ...(filter.includeNotObliged ? ['notObliged'] : []),
       ...(filter.includeInactive ? ['inactive'] : []),
+      ...(filter.includeQuarantined ? ['quarantined'] : []),
     ],
   })
 
@@ -160,14 +169,29 @@ export const CompaniesContainer = () => {
       setFilter({
         includeNotObliged: val.includes('notObliged') ? true : null,
         includeInactive: val.includes('inactive') ? true : null,
+        includeQuarantined: val.includes('quarantined') ? true : null,
         page: 1,
       })
     } else if (key === 'flags') {
       // Combined multi-select; each value maps to its own boolean server param.
+      // ⚠️ `quarantined` is NOT among them any more — it moved to `visibility`
+      // above, where it is a reveal rather than a narrowing. Setting it from
+      // both places let the two controls contradict each other.
       setFilter({
         finesStarted: val.includes('fines') ? true : null,
         overdue: val.includes('overdue') ? true : null,
-        quarantined: val.includes('quarantined') ? true : null,
+        neverFiledEquality: val.includes('neverFiledEquality') ? true : null,
+        neverFiledEqualityIncludingLegacy: val.includes(
+          'neverFiledEqualityIncludingLegacy',
+        )
+          ? true
+          : null,
+        neverFiledSalary: val.includes('neverFiledSalary') ? true : null,
+        neverFiledSalaryIncludingLegacy: val.includes(
+          'neverFiledSalaryIncludingLegacy',
+        )
+          ? true
+          : null,
         page: 1,
       })
     } else if (key === 'postcode') {
@@ -274,6 +298,15 @@ export const CompaniesContainer = () => {
               />
             </Box>
           )}
+          <CompanyActiveFilters
+            query={filter.q ?? ''}
+            filters={filters}
+            regionOptions={regionOptions}
+            postcodeOptions={postcodeOptions}
+            onFiltersChange={handleFiltersChange}
+            onQueryClear={() => setFilter({ q: null, page: 1 })}
+            onReset={handleReset}
+          />
           {data?.paging && (
             <CompanyTable
               rows={rows}

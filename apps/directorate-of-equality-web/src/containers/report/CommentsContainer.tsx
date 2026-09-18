@@ -121,6 +121,7 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
       timeline={report?.timeline ?? []}
       companyName={report?.company?.name}
       currentUserId={me?.id}
+      reportType={report?.type}
       readonly={isDraft}
       canSendExternal={canSendExternal}
       body={body}

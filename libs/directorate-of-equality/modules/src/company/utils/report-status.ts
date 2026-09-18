@@ -505,3 +505,59 @@ export function companyHasLegacyReportsSql(): string {
 export function companyHasLegacyReportsLiteral() {
   return literal(companyHasLegacyReportsSql())
 }
+
+/**
+ * SQL boolean: the company has never filed a report of this type *in this
+ * system* — no `report` row of that type beyond an unsubmitted draft.
+ *
+ * ⚠️ Carries NO obligation gate, unlike every predicate above it. That is the
+ * point of the filter it backs: it answers "has this company ever sent us
+ * anything", which is a question about history and not about what the company
+ * owes. A 0–24 company that never filed is a true match here, and the register's
+ * default hide — not this predicate — is what keeps it off an unfiltered page.
+ *
+ * ⚠️ DRAFT is excluded, WITHDRAWN is not. A draft is a form the company opened
+ * and never sent, so counting it as filing would let a company clear this filter
+ * without the Directorate ever having received anything; a withdrawn report was
+ * genuinely submitted and then taken back, which is history, not absence.
+ */
+export function neverFiledReportSql(type: ReportTypeEnum): string {
+  return `NOT EXISTS (
+    SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" cr
+    JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
+    WHERE cr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+    AND r.type = '${type}'
+    AND r.status <> '${ReportStatusEnum.DRAFT}'
+  )`
+}
+
+/**
+ * SQL boolean: the company has never filed a report of this type here AND the
+ * retired SharePoint register holds no certification of that type for it
+ * either — "has never appeared in the register at all".
+ *
+ * The companion to `neverFiledReportSql`, and the reason both exist rather than
+ * one: at hand-over 1 507 of 1 753 companies hold no `report` row whatsoever,
+ * so the in-system question alone returns very nearly the whole list and tells
+ * an admin almost nothing. This one returns the companies the Directorate has
+ * genuinely never heard from. Which of the two is wanted depends on the
+ * question being asked, so the list offers both rather than picking.
+ *
+ * ⚠️ Presence of a date, not validity of one. A certification that has since
+ * expired — or was surrendered, which `activeLegacyCertificationExists` rejects
+ * through `LEGACY_NOT_SURRENDERED` — was still filed, and this asks whether the
+ * company ever filed. Applying the surrender guard here would count those 20
+ * companies as never having certified, which is the opposite of what the sheet
+ * records about them.
+ *
+ * The type-specific column is what carries the claim: nearly every company has
+ * a `legacy_report` row, but only ~540 of them have an
+ * `equality_valid_until`, so `EXISTS(row)` would be no filter at all.
+ */
+export function neverFiledAnywhereSql(type: ReportTypeEnum): string {
+  return `(${neverFiledReportSql(type)} AND NOT EXISTS (
+    SELECT 1 FROM "${DoeModels.LEGACY_REPORT}" lr
+    WHERE lr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+    AND lr.${LEGACY_VALID_UNTIL_COLUMN[type]} IS NOT NULL
+  ))`
+}

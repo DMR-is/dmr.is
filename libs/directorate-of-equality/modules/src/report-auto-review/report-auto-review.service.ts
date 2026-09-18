@@ -57,7 +57,7 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
     if (report.type !== ReportTypeEnum.SALARY) {
       return this.abstain(
         report.type,
-        'Jafnlaunaskýrslur eru ekki metnar sjálfvirkt — krefst handvirkrar yfirferðar.',
+        'Jafnréttisáætlanir eru ekki metnar sjálfvirkt — krefst handvirkrar yfirferðar.',
       )
     }
 

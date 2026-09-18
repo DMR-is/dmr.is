@@ -49,8 +49,28 @@ const responseInstruction = (report: ReportModel): string => {
   return 'Til að svara athugasemdinni þarf að hafa samband við Jafnréttisstofu.'
 }
 
+/**
+ * What to call the thing the comment is attached to.
+ *
+ * ⚠️ Both mails used to say "jafnréttisskýrsla" whatever the report was, which
+ * is wrong in both directions: a salary filing is not a jafnréttisskýrsla, and
+ * an equality submission is not a skýrsla at all — it is the company's
+ * jafnréttisáætlun, the same word `typeLabels.EQUALITY` and the auto-review
+ * reason use. An employer reading "athugasemd á jafnréttisskýrslu" about their
+ * launagreining has to guess which of their two open cases it means.
+ *
+ * Dative, because all three call sites read "á <noun>".
+ *
+ * Wording deliberately identical to `reportLabel` in
+ * `report-deadline-reminder.template.ts` — the two mails go to the same
+ * employer about the same two things, and naming them differently is how a
+ * reader ends up thinking they are three obligations rather than two.
+ */
+const reportNoun = (report: ReportModel): string =>
+  report.type === 'SALARY' ? 'jafnlaunaskýrslu' : 'jafnréttisáætlun'
+
 export const buildExternalCommentSubject = (report: ReportModel): string =>
-  `Ný athugasemd á jafnréttisskýrslu ${report.id}`
+  `Ný athugasemd á ${reportNoun(report)} ${report.id}`
 
 export const buildExternalCommentHtml = (
   report: ReportModel,
@@ -61,7 +81,7 @@ export const buildExternalCommentHtml = (
 
   return [
     '<h2>Ný athugasemd hefur borist frá Jafnréttisstofu</h2>',
-    `<p>Athugasemd hefur verið skráð á jafnréttisskýrslu fyrirtækisins.</p>`,
+    `<p>Athugasemd hefur verið skráð á ${reportNoun(report)} fyrirtækisins.</p>`,
     '<blockquote style="border-left:3px solid #ccc;padding-left:12px;margin:16px 0;">',
     safeBody,
     '</blockquote>',
@@ -79,7 +99,9 @@ export const buildExternalCommentText = (
   const applicationUrl = buildIslandIsApplicationUrl(report)
 
   return [
-    'Ný athugasemd hefur borist frá Jafnréttisstofu á jafnréttisskýrslu fyrirtækisins.',
+    `Ný athugasemd hefur borist frá Jafnréttisstofu á ${reportNoun(
+      report,
+    )} fyrirtækisins.`,
     '',
     comment.body,
     '',
