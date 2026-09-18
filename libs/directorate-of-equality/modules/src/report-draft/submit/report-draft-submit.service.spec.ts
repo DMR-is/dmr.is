@@ -377,8 +377,10 @@ describe('ReportDraftSubmitService', () => {
 
     await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
 
+    // Scoped to the authenticated company, never to anything in the body.
     expect(assertEqualityReportApproved).toHaveBeenCalledWith(
       EQUALITY_REPORT_ID,
+      COMPANY.id,
     )
     expect(persistScores).toHaveBeenCalledWith(REPORT_ID)
     expect(createForReport).toHaveBeenCalledWith(REPORT_ID)

@@ -4,7 +4,21 @@ import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-repo
 
 export interface IReportFinalizeService {
   resolveEqualityCoverage(companyId: string): Promise<EqualityCoverage>
-  assertEqualityReportApproved(equalityReportId: string): Promise<void>
+  /**
+   * Throws 404 unless `equalityReportId` is an APPROVED, in-force EQUALITY
+   * report that covers `companyId`.
+   *
+   * `companyId` is the company the caller has already established as the
+   * submitter — the owner of the draft in `ReportDraftSubmitService`, the
+   * parent entry of the snapshot set in `ReportCreateService`. This method
+   * cannot tell the two apart, so its guarantee is only as good as the
+   * caller's: every path into `ReportCreateService` must build `companies[]`
+   * server-side and never accept it from a request body.
+   */
+  assertEqualityReportApproved(
+    equalityReportId: string,
+    companyId: string,
+  ): Promise<void>
   withdrawInflightSibling(
     companyId: string,
     type: ReportTypeEnum,

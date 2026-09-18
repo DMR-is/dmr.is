@@ -111,7 +111,12 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       : null
 
     if (equalityReportId) {
-      await this.finalizeService.assertEqualityReportApproved(equalityReportId)
+      // `company` is the authenticated submitter, resolved by `findOwnedDraft`,
+      // so an applicant cannot cite another company's equality plan.
+      await this.finalizeService.assertEqualityReportApproved(
+        equalityReportId,
+        company.id,
+      )
     }
 
     // Read off the coverage rather than inferred from `!equalityReportId`, so

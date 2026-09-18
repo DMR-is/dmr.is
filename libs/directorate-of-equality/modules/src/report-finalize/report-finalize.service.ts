@@ -98,10 +98,31 @@ export class ReportFinalizeService implements IReportFinalizeService {
 
   /**
    * Schema invariant: a SALARY row's `equality_report_id` must point to an
-   * EQUALITY row that was APPROVED at the moment of insert and is still
-   * within its three-year validity window.
+   * EQUALITY row that was APPROVED at the moment of insert, is still within
+   * its three-year validity window — and covers the submitting company.
+   *
+   * The last clause is authorization, not schema. The id is the applicant's,
+   * and without the join a company with no equality plan of its own could file
+   * a salary report against any other company's approved plan: the borrowed
+   * identifier, `approvedAt` and `validUntil` then read back on
+   * `GET /application/reports/:providerId`, and approving the salary report
+   * moved the company's next due date out three years. Reachable from the
+   * partner API as well as island.is (Claude Security F8).
+   *
+   * Joins on `companyId` alone, NOT `parentCompanyId: null`, so that this
+   * selects exactly what `findActiveEqualityForCompany` selects for the
+   * eligibility and active-report routes and for `resolveEqualityCoverage`. A
+   * subsidiary covered by a group equality report is handed that report's id
+   * by those routes and must be allowed to name it back here; filtering to the
+   * parent row is the regression `resolveEqualityCoverage` documents above.
+   *
+   * 404 rather than 403, with the same sentence as for an unknown id: the
+   * caller learns nothing about whether the id exists for someone else.
    */
-  async assertEqualityReportApproved(equalityReportId: string): Promise<void> {
+  async assertEqualityReportApproved(
+    equalityReportId: string,
+    companyId: string,
+  ): Promise<void> {
     const equalityReport = await this.reportModel.findOne({
       where: {
         id: equalityReportId,
@@ -109,6 +130,15 @@ export class ReportFinalizeService implements IReportFinalizeService {
         status: ReportStatusEnum.APPROVED,
         validUntil: { [Op.gt]: new Date() },
       },
+      include: [
+        {
+          model: CompanyReportModel,
+          as: 'companyReport',
+          where: { companyId },
+          required: true,
+          attributes: [],
+        },
+      ],
     })
 
     if (!equalityReport) {
@@ -155,6 +185,14 @@ export class ReportFinalizeService implements IReportFinalizeService {
       ReportStatusEnum.POSTPONED,
     ]
 
+    // Pinned to `parentCompanyId: null` — reports this company filed itself.
+    // A subsidiary also has a snapshot row on its parent's group report, and
+    // without the pin that row would resolve to the PARENT's report: a
+    // subsidiary's own submission would then withdraw a SUBMITTED parent
+    // report, or 409 against an IN_REVIEW one and leak its providerId. This
+    // is the opposite choice from `assertEqualityReportApproved`, which joins
+    // on `companyId` alone on purpose: coverage flows down a group, ownership
+    // of an in-flight filing does not.
     const parentSnapshots = await this.companyReportModel.findAll({
       where: { companyId, parentCompanyId: null },
       attributes: ['reportId'],

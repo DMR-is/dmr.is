@@ -35,6 +35,7 @@ const mockLogger = {
 describe('ReportFinalizeService', () => {
   let service: ReportFinalizeService
   let reportFindAll: jest.Mock
+  let reportFindOne: jest.Mock
   let reportUpdate: jest.Mock
   let reportEventCreate: jest.Mock
   let companyFindAll: jest.Mock
@@ -46,6 +47,7 @@ describe('ReportFinalizeService', () => {
 
   beforeEach(async () => {
     reportFindAll = jest.fn().mockResolvedValue([])
+    reportFindOne = jest.fn().mockResolvedValue(null)
     reportUpdate = jest.fn().mockResolvedValue([0])
     reportEventCreate = jest.fn().mockResolvedValue({ id: 'event-1' })
     companyFindAll = jest
@@ -70,7 +72,11 @@ describe('ReportFinalizeService', () => {
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
           provide: getModelToken(ReportModel),
-          useValue: { findAll: reportFindAll, update: reportUpdate },
+          useValue: {
+            findAll: reportFindAll,
+            findOne: reportFindOne,
+            update: reportUpdate,
+          },
         },
         {
           provide: getModelToken(CompanyModel),
@@ -101,6 +107,83 @@ describe('ReportFinalizeService', () => {
     service = module.get(ReportFinalizeService)
   })
 
+  describe('assertEqualityReportApproved', () => {
+    const EQUALITY_REPORT_ID = '00000000-0000-0000-0000-00000000eee1'
+
+    it('resolves when an approved, in-force equality report covers the company', async () => {
+      reportFindOne.mockResolvedValueOnce({ id: EQUALITY_REPORT_ID })
+
+      await expect(
+        service.assertEqualityReportApproved(EQUALITY_REPORT_ID, COMPANY_ID),
+      ).resolves.toBeUndefined()
+
+      expect(reportFindOne).toHaveBeenCalledTimes(1)
+      const [query] = reportFindOne.mock.calls[0]
+      expect(query.where).toEqual(
+        expect.objectContaining({
+          id: EQUALITY_REPORT_ID,
+          type: ReportTypeEnum.EQUALITY,
+          status: ReportStatusEnum.APPROVED,
+        }),
+      )
+    })
+
+    // F8: the id is applicant-supplied. Without this join a company with no
+    // equality plan could file a salary report against any other company's
+    // approved plan. The join is an inner join on the submitter's company — a
+    // `required: false` or a missing `where` would both let the row through.
+    it('requires an inner join on company_report for the submitting company', async () => {
+      reportFindOne.mockResolvedValueOnce({ id: EQUALITY_REPORT_ID })
+
+      await service.assertEqualityReportApproved(EQUALITY_REPORT_ID, COMPANY_ID)
+
+      const [query] = reportFindOne.mock.calls[0]
+      expect(query.include).toEqual([
+        expect.objectContaining({
+          model: CompanyReportModel,
+          as: 'companyReport',
+          where: { companyId: COMPANY_ID },
+          required: true,
+        }),
+      ])
+    })
+
+    // The join must select what `findActiveEqualityForCompany` selects for the
+    // eligibility and active-report routes: `companyId` alone. A subsidiary is
+    // handed its group's equality report id by those routes and must be able
+    // to name it back here. `parentCompanyId: null` would refuse exactly that
+    // company — the regression `resolveEqualityCoverage` already documents.
+    it('joins on companyId alone, so a subsidiary can cite its group report', async () => {
+      reportFindOne.mockResolvedValueOnce({ id: EQUALITY_REPORT_ID })
+
+      await service.assertEqualityReportApproved(
+        EQUALITY_REPORT_ID,
+        'subsidiary-company',
+      )
+
+      const [query] = reportFindOne.mock.calls[0]
+      expect(query.include[0].where).toEqual({
+        companyId: 'subsidiary-company',
+      })
+      expect(query.include[0].where).not.toHaveProperty('parentCompanyId')
+    })
+
+    // 404, not 403, and the same sentence as for an id that does not exist:
+    // the caller cannot tell "not yours" from "not there".
+    it('404s when the report does not cover the caller, indistinguishably from a missing id', async () => {
+      reportFindOne.mockResolvedValueOnce(null)
+
+      await expect(
+        service.assertEqualityReportApproved(EQUALITY_REPORT_ID, COMPANY_ID),
+      ).rejects.toThrow(NotFoundException)
+      await expect(
+        service.assertEqualityReportApproved(EQUALITY_REPORT_ID, COMPANY_ID),
+      ).rejects.toThrow(
+        `No approved EQUALITY report found at id "${EQUALITY_REPORT_ID}"`,
+      )
+    })
+  })
+
   describe('withdrawInflightSibling', () => {
     it('returns [] when there are no parent snapshots', async () => {
       const result = await service.withdrawInflightSibling(
@@ -110,6 +193,19 @@ describe('ReportFinalizeService', () => {
 
       expect(result).toEqual([])
       expect(reportUpdate).not.toHaveBeenCalled()
+    })
+
+    it('searches only reports the company filed as the parent', async () => {
+      await service.withdrawInflightSibling(COMPANY_ID, ReportTypeEnum.SALARY)
+
+      // A subsidiary's snapshot on its parent's group report must not resolve
+      // to the parent's report — that pin is what stops a subsidiary from
+      // withdrawing a parent's SUBMITTED filing.
+      expect(companyReportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { companyId: COMPANY_ID, parentCompanyId: null },
+        }),
+      )
     })
 
     it('throws 409 when an IN_REVIEW sibling exists', async () => {
