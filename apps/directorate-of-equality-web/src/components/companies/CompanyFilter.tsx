@@ -46,9 +46,9 @@ export type CompanyFilters = {
   isatSection: string[]
   sector: string[]
   /**
-   * Opt-in reveals for the two groups the list hides by default — companies
-   * with no reporting obligation, and companies off the register. Empty means
-   * both hidden, which is the default state rather than "no filter applied".
+   * Opt-in reveals for the three groups the list hides by default — companies
+   * with no reporting obligation, companies off the register, and quarantined
+   * companies. Empty means all three remain hidden.
    */
   visibility: string[]
 }

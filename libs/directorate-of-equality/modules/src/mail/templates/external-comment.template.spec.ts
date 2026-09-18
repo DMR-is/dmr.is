@@ -5,6 +5,7 @@ import {
 import { ReportCommentModel } from '../../report-comment/models/report-comment.model'
 import {
   buildExternalCommentHtml,
+  buildExternalCommentSubject,
   buildExternalCommentText,
 } from './external-comment.template'
 
@@ -130,5 +131,35 @@ describe('external comment template', () => {
     )
 
     expect(rendered).toContain('Fyrsta lína')
+  })
+
+  /**
+   * Both mails used to say "jafnréttisskýrslu" for every report, which named
+   * the wrong thing on both sides: an equality submission is the company's
+   * jafnréttisáætlun, and a salary filing is not a jafnréttis-anything.
+   */
+  describe('naming the report the comment is attached to', () => {
+    const equality = reportOf(ReportProviderEnum.ISLAND_IS, 'a', 'EQUALITY')
+    const salary = reportOf(ReportProviderEnum.ISLAND_IS, 'a', 'SALARY')
+
+    it('calls an equality submission a jafnréttisáætlun', () => {
+      for (const rendered of [
+        ...bothRenderings(equality),
+        buildExternalCommentSubject(equality),
+      ]) {
+        expect(rendered).toContain('jafnréttisáætlun')
+        expect(rendered).not.toContain('jafnréttisskýrslu')
+      }
+    })
+
+    it('calls a salary filing a skýrsla, never a jafnréttisskýrsla', () => {
+      for (const rendered of [
+        ...bothRenderings(salary),
+        buildExternalCommentSubject(salary),
+      ]) {
+        expect(rendered).toContain('skýrslu')
+        expect(rendered).not.toContain('jafnréttisskýrslu')
+      }
+    })
   })
 })

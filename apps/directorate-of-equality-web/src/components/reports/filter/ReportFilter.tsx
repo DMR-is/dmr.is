@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
@@ -68,6 +70,29 @@ export const ReportFilter = ({
   const { isMobile } = useIsMobile()
   const { isTablet } = useIsTablet()
 
+  /**
+   * Which filter groups arrived with something already selected.
+   *
+   * The front page links into this page pre-filtered — "Jafnréttisáætlanir"
+   * lands here with `type=EQUALITY`, "Úrbótaáætlanir" with
+   * `hasImprovementPlan=true` — and the only sign of it was the group's heading
+   * turning blue inside a collapsed accordion. That is easy to miss, and an
+   * admin who misses it reads a filtered page as the whole list. Opening the
+   * group that carries the filter puts the selected checkbox on screen, where
+   * it also doubles as the way to clear it.
+   *
+   * ⚠️ Captured once with a state initialiser rather than computed each render.
+   * `AccordionItem` reads `startExpanded` in a mount-only effect, so a live
+   * value would be silently ignored after the first render — and worse, honoured
+   * if anything above remounted the panel, snapping a group the admin had
+   * deliberately collapsed back open.
+   */
+  const [initiallyFiltered] = useState(() => ({
+    type: !!type?.length || !!hasImprovementPlan,
+    status: !!status?.length,
+    reviewer: !!reviewerUserId?.length,
+  }))
+
   const handleReset = () => {
     onDateFromChange(undefined)
     onDateToChange(undefined)
@@ -88,6 +113,7 @@ export const ReportFilter = ({
             label: sharedText.statusLabel,
             selected: status ?? [],
             filters: statusOptions,
+            startExpanded: initiallyFiltered.status,
           },
         ]
       : []),
@@ -98,6 +124,7 @@ export const ReportFilter = ({
             label: overviewText.filter.reviewerLabel,
             selected: reviewerUserId ?? [],
             filters: reviewers,
+            startExpanded: initiallyFiltered.reviewer,
           },
         ]
       : []),
@@ -160,6 +187,7 @@ export const ReportFilter = ({
             {
               id: 'type',
               label: overviewText.filter.categoryLabel,
+              startExpanded: initiallyFiltered.type,
               selected: [
                 ...(type ?? []),
                 ...(hasImprovementPlan ? [IMPROVEMENT_PLAN_VALUE] : []),

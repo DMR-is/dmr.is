@@ -7,6 +7,7 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 
 import { Divider } from '@island.is/island-ui/core'
 
+import { ReportTypeEnum } from '../../../../../gen/fetch'
 import { reportText } from '../../../../../lib/text'
 import { TimelineEntry } from './TimelineEntry'
 import { TimelineItem } from './timelineHelpers'
@@ -19,6 +20,7 @@ type Props = {
   timeline: TimelineItem[]
   companyName?: string | null
   currentUserId?: string | null
+  reportType?: ReportTypeEnum | null
   onDelete: (commentId: string) => void
 }
 
@@ -30,6 +32,7 @@ export function TimelineFeed({
   timeline,
   companyName,
   currentUserId,
+  reportType,
   onDelete,
 }: Props) {
   const [showAll, setShowAll] = useState(false)
@@ -49,6 +52,7 @@ export function TimelineFeed({
       item={item}
       companyName={companyName}
       currentUserId={currentUserId}
+      reportType={reportType}
       onDelete={onDelete}
     />
   )
