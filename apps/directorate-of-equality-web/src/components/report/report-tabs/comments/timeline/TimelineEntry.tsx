@@ -9,6 +9,7 @@ import {
   CommentVisibilityEnum,
   ReportEventTypeEnum,
   ReportTimelineItemKindEnum,
+  ReportTypeEnum,
 } from '../../../../../gen/fetch'
 import { reportText, sharedText } from '../../../../../lib/text'
 import { CompanyEmailDetail } from '../../../../company/company-timeline/CompanyEmailDetail'
@@ -25,6 +26,12 @@ type Props = {
   item: TimelineItem
   companyName?: string | null
   currentUserId?: string | null
+  /**
+   * The type of the report this timeline belongs to, which decides whether an
+   * entry calls the submission a "skjal" or a "skýrsla". Absent on the company
+   * timeline, which has no single report — see `forReportType`.
+   */
+  reportType?: ReportTypeEnum | null
   onDelete: (commentId: string) => void
 }
 
@@ -32,10 +39,11 @@ export function TimelineEntry({
   item,
   companyName,
   currentUserId,
+  reportType,
   onDelete,
 }: Props) {
   const kind = timelineEntryKind(item)
-  const text = timelineEntryText(item, companyName)
+  const text = timelineEntryText(item, companyName, reportType)
   const date = formatRelativeDate(
     item.comment?.createdAt ?? item.event?.createdAt ?? '',
   )

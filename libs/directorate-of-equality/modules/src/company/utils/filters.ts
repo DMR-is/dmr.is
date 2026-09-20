@@ -3,6 +3,7 @@ import { Includeable, literal, Op, WhereOptions } from 'sequelize'
 import { DoeModels } from '../../constants'
 import { PostcodeModel } from '../../location/models/postcode.model'
 import { RegionModel } from '../../location/models/region.model'
+import { ReportTypeEnum } from '../../report/models/report.enums'
 // `import type`, deliberately: `get-companies-query.dto.ts` imports
 // `CompanyExpiryFilterEnum` from this file at runtime, so a value import back
 // would close a require cycle.
@@ -20,6 +21,8 @@ import {
   equalityReportOverdueSql,
   hiddenFromDefaultRegisterSql,
   legacyCertificationExpiringSql,
+  neverFiledAnywhereSql,
+  neverFiledReportSql,
   salaryReportMissingSql,
   salaryReportOverdueSql,
 } from './report-status'
@@ -245,7 +248,7 @@ export function buildCompanyExpiryWhere(
  * Exists so the list and the "send to everyone matching this filter" recipient
  * resolution cannot drift apart: a second copy of these conditions would
  * eventually answer the same question differently, in the direction of mailing
- * companies nobody selected. That includes the two default-on hides below —
+ * companies nobody selected. That includes the three default-on hides below —
  * they belong here rather than at the list's call site precisely because a
  * recipient set that ignores them mails companies the admin was never shown.
  *
@@ -299,14 +302,34 @@ export function buildCompanyListQuery(
     conditions.push(buildCompanyOverdueWhere())
   }
 
-  // ⚠️ Two DEFAULT-ON hides, both suppressed by an explicit request on the
+  // The four "aldrei skilað" filters, AND-ed like the other flags beside them
+  // in the same control: selecting both types asks for companies that have
+  // filed NEITHER, which is the reading that makes a combination useful. Each
+  // is unconstrained by obligation on purpose — see `neverFiledReportSql`.
+  if (query.neverFiledEquality) {
+    conditions.push(literal(neverFiledReportSql(ReportTypeEnum.EQUALITY)))
+  }
+
+  if (query.neverFiledSalary) {
+    conditions.push(literal(neverFiledReportSql(ReportTypeEnum.SALARY)))
+  }
+
+  if (query.neverFiledEqualityIncludingLegacy) {
+    conditions.push(literal(neverFiledAnywhereSql(ReportTypeEnum.EQUALITY)))
+  }
+
+  if (query.neverFiledSalaryIncludingLegacy) {
+    conditions.push(literal(neverFiledAnywhereSql(ReportTypeEnum.SALARY)))
+  }
+
+  // ⚠️ Three DEFAULT-ON hides, each suppressed by an explicit request on the
   // same axis. The admin register is a working list of who owes what, and
-  // roughly 250 companies that owe nothing plus every deregistered company
-  // crowd it out — but a default that cannot be escaped is worse than no
-  // default. `employeeCountCategory` and `status` are the controls for these
-  // two axes, so setting either means the admin has already answered the
-  // question the default was guessing at: filtering to Óvirkt has to return
-  // óvirk companies, not an empty page.
+  // roughly 250 companies that owe nothing, every deregistered company and
+  // every company under an admin halt crowd it out — but a default that cannot
+  // be escaped is worse than no default. `employeeCountCategory`, `status` and
+  // `quarantined` are the controls for these three axes, so setting any of them
+  // means the admin has already answered the question the default was guessing
+  // at: filtering to Óvirkt has to return óvirk companies, not an empty page.
   //
   // Ordered after the explicit filters purely for readability; `conditions`
   // is AND-ed, so position carries no meaning.
@@ -316,6 +339,16 @@ export function buildCompanyListQuery(
 
   if (!query.includeInactive && !query.status?.length) {
     conditions.push({ status: CompanyStatusEnum.ACTIVE })
+  }
+
+  // ⚠️ `quarantined` is an admin halt on all outbound activity, not a
+  // compliance state, so a company under one is noise on a working list and is
+  // hidden by default like the other two. The escape is `includeQuarantined`
+  // (the reveal the list offers) or an explicit `quarantined`, which is still
+  // accepted by the API and is the more specific answer on the same axis:
+  // asking for quarantined companies has to return them, not an empty page.
+  if (!query.includeQuarantined && query.quarantined === undefined) {
+    conditions.push({ quarantined: false })
   }
 
   if (query.isatCategoryCode?.length) {

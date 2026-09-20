@@ -54,6 +54,14 @@ const zGetCompaniesQuery = z.object({
   // anywhere. Absent means "hidden", which is the server's default.
   includeNotObliged: z.boolean().optional(),
   includeInactive: z.boolean().optional(),
+  includeQuarantined: z.boolean().optional(),
+  // The four "aldrei skilað" reveals. Each is its own boolean and they AND
+  // together, so selecting both types asks for companies that have filed
+  // neither — see `buildCompanyListQuery`.
+  neverFiledEquality: z.boolean().optional(),
+  neverFiledSalary: z.boolean().optional(),
+  neverFiledEqualityIncludingLegacy: z.boolean().optional(),
+  neverFiledSalaryIncludingLegacy: z.boolean().optional(),
   isatCategoryCode: z.array(z.string()).optional(),
   isatSection: z.array(z.string()).optional(),
   // From the generated schema, not a literal list: a hand-written copy of the

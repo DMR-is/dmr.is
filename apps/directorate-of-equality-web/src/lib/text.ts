@@ -708,19 +708,45 @@ export const reportText = {
     // person sending something; the system is remarking on the record.
     system: 'Kerfið',
     makesComment: 'gerir athugasemd',
-    reportSubmitted: 'Skýrsla innsend',
+    /**
+     * ⚠️ Four entries keyed by report type, because the two types are not the
+     * same kind of thing and one noun cannot cover both.
+     *
+     * A jafnréttisáætlun is a document the company writes and uploads — it is
+     * narrative, there is nothing to compute from it, and calling it a
+     * "skýrsla" in the timeline contradicts every other label around it
+     * (`typeLabels.EQUALITY` is "Jafnréttisáætlun", the auto-review reason says
+     * "Jafnréttisáætlanir eru ekki metnar sjálfvirkt"). A skýrslugjöf is a
+     * dataset the company files and the system scores.
+     *
+     * Indexed through `forReportType` in `timelineHelpers`, which falls back to
+     * SALARY — the wording all four of these carried before they were split, so
+     * an entry with no type in scope reads exactly as it did.
+     */
+    reportSubmitted: {
+      EQUALITY: 'Skjal innsent',
+      SALARY: 'Skýrsla innsend',
+    },
     assigned: 'Úthlutað',
     unassigned: 'tekur sig af málinu',
     superseded: 'Útrunnið',
     registersMessage: 'skráir skilaboð',
-    submitsReport: 'sendir inn skýrslu',
+    submitsReport: {
+      EQUALITY: 'sendir inn skjal',
+      SALARY: 'sendir inn skýrslu',
+    },
     claimsCase: 'merkir sér málið',
     assignedOther: 'merkti',
     assignedOtherSuffix: 'á málið',
     unassignedOther: 'tók',
     unassignedOtherSuffix: 'af málinu',
     movesToStatus: 'færir mál í stöðuna:',
-    edited: 'gerði breytingar á skýrslu',
+    // Keeps the verb: the renderer prints the actor's name first, so this has to
+    // continue that sentence ("Anna gerði breytingar á skjali"), not stand alone.
+    edited: {
+      EQUALITY: 'gerði breytingar á skjali',
+      SALARY: 'gerði breytingar á skýrslu',
+    },
     // Retired event types — nothing emits these any more, but rows logged
     // before communication status became silent still render in the timeline.
     communicationOpened: 'opnaði á samskipti við innsendanda',
@@ -774,10 +800,10 @@ export const reportText = {
     companyDeactivatedNoActor: 'Fyrirtæki {company} gert óvirkt í skrá',
     companyQuarantined: 'hefur sett fyrirtækið í var',
     companyUnquarantined: 'hefur tekið fyrirtækið úr vari',
-    reminderSentEquality: 'Áminning send um skil jafnréttisskýrslu',
+    reminderSentEquality: 'Áminning send um skil jafnréttisáætlunar',
     reminderSentSalary: 'Áminning send um skil jafnlaunaskýrslu',
     reminderNoEmailEquality:
-      'Reyndi að senda áminningu um jafnréttisskýrslu en ekkert netfang fannst',
+      'Reyndi að senda áminningu um jafnréttisáætlun en ekkert netfang fannst',
     reminderNoEmailSalary:
       'Reyndi að senda áminningu um jafnlaunaskýrslu en ekkert netfang fannst',
     // Admin-authored mail. All three outcomes are recorded, and the two
@@ -803,8 +829,22 @@ export const reportText = {
     reminderTierTwoWeeks: 'Tveggja vikna áminning',
     reminderTierDue: 'Áminning á skiladegi',
     reminderDueDatePrefix: 'skiladagur',
-    systemAutoReviewApprove: 'Kerfið myndi samþykkja skýrsluna sjálfvirkt',
-    systemAutoReviewNeedsReview: 'Kerfið myndi senda skýrsluna í yfirferð',
+    // ⚠️ The renderer bolds the FIRST and LAST word of these two headlines
+    // (see `timelineEntryText`), so the actor has to open the sentence and the
+    // status word has to close it. Keep that shape when rewording.
+    //
+    // The EQUALITY variant of `systemAutoReviewApprove` is unreachable today —
+    // `ReportAutoReviewService.evaluate` abstains on everything that is not
+    // SALARY, so an equality report only ever produces the needs-review verdict.
+    // Spelled out anyway so the pair stays exhaustive rather than half-typed.
+    systemAutoReviewApprove: {
+      EQUALITY: 'Kerfið myndi samþykkja skjalið sjálfvirkt',
+      SALARY: 'Kerfið myndi samþykkja skýrsluna sjálfvirkt',
+    },
+    systemAutoReviewNeedsReview: {
+      EQUALITY: 'Kerfið myndi senda skjalið í yfirferð',
+      SALARY: 'Kerfið myndi senda skýrsluna í yfirferð',
+    },
   },
   salaryStatsLoadError: 'Villa við að hlaða tölfræðigögn fyrir skýrslu',
   salaryStatsLoadErrorMessage:
@@ -854,6 +894,23 @@ export const companiesText = {
   visibilityPlaceholder: 'Fela',
   showNotObliged: 'Sýna óskyldug',
   showInactive: 'Sýna óvirk',
+  showQuarantined: 'Sýna í vari',
+  onlyQuarantined: 'Aðeins fyrirtæki í vari',
+  excludeQuarantined: 'Fyrirtæki utan vars',
+  // The four "never filed" filters, as two pairs. Each pair has to say which
+  // question it is asking in the option itself: nearly every company in the
+  // register was loaded from the old SharePoint sheet with no report row of its
+  // own, so "aldrei skilað" without the qualifier matches almost the whole list
+  // and an admin has no way to tell which of the two they picked.
+  neverFiledEquality: 'Aldrei skilað jafnréttisáætlun (í kerfinu)',
+  neverFiledEqualityIncludingLegacy:
+    'Aldrei skilað jafnréttisáætlun (né eldri gögn)',
+  neverFiledSalary: 'Aldrei skilað skýrslu (í kerfinu)',
+  neverFiledSalaryIncludingLegacy: 'Aldrei skilað skýrslu (né eldri gögn)',
+  // The active-filter summary above the table.
+  activeFilters: 'Virkar síur',
+  activeFilterQuery: 'Leit',
+  clearAllFilters: 'Hreinsa allt',
   // Detail-header wording. The list can say a bare "Vantar" because the column
   // header names the obligation; the header has no such context, so each tag
   // has to name its own subject.

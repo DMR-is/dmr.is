@@ -202,9 +202,13 @@ describe('buildCompanyListQuery', () => {
     return and ?? [where]
   }
 
-  // Both hides lifted, so a test can assert on one filter without the two
+  // All three hides lifted, so a test can assert on one filter without the
   // default conditions padding every result.
-  const unhidden = { includeNotObliged: true, includeInactive: true }
+  const unhidden = {
+    includeNotObliged: true,
+    includeInactive: true,
+    includeQuarantined: true,
+  }
 
   /**
    * The hides belong to the builder rather than to the list's call site: the
@@ -213,17 +217,19 @@ describe('buildCompanyListQuery', () => {
    * the list the admin approved.
    */
   describe('the default-on register hides', () => {
-    it('hides not-obliged and deregistered companies by default', () => {
+    it('hides not-obliged, deregistered and quarantined companies by default', () => {
       const conditions = conditionsOf()
 
-      expect(conditions).toHaveLength(2)
+      expect(conditions).toHaveLength(3)
       expect((conditions[0] as { val: string }).val).toMatch(/^NOT /)
       expect(conditions[1]).toEqual({ status: CompanyStatusEnum.ACTIVE })
+      expect(conditions[2]).toEqual({ quarantined: false })
     })
 
     it('lifts the obligation hide when the admin asks for it explicitly', () => {
       expect(conditionsOf({ includeNotObliged: true })).toEqual([
         { status: CompanyStatusEnum.ACTIVE },
+        { quarantined: false },
       ])
     })
 
@@ -235,27 +241,117 @@ describe('buildCompanyListQuery', () => {
       ).toEqual([
         { employeeCountCategory: CompanySizeEnum.LARGE },
         { status: CompanyStatusEnum.ACTIVE },
+        { quarantined: false },
       ])
     })
 
     it('lifts the status hide when the admin asks for it explicitly', () => {
       const conditions = conditionsOf({ includeInactive: true })
 
-      expect(conditions).toHaveLength(1)
+      expect(conditions).toHaveLength(2)
       expect((conditions[0] as { val: string }).val).toMatch(/^NOT /)
+      expect(conditions[1]).toEqual({ quarantined: false })
     })
 
     it('lifts the status hide when filtering to a lifecycle status', () => {
       // Filtering to Óvirkt has to return óvirk companies, not an empty page.
       const conditions = conditionsOf({ status: [CompanyStatusEnum.INACTIVE] })
 
-      // The lifecycle filter survives and the ACTIVE hide is gone; only the
-      // unrelated obligation hide is left alongside it.
-      expect(conditions).toHaveLength(2)
+      // The lifecycle filter survives and the ACTIVE hide is gone; the two
+      // unrelated hides are left alongside it.
+      expect(conditions).toHaveLength(3)
       expect(conditions[0]).toEqual(
         buildCompanyLifecycleStatusWhere([CompanyStatusEnum.INACTIVE]),
       )
       expect((conditions[1] as { val: string }).val).toMatch(/^NOT /)
+      expect(conditions[2]).toEqual({ quarantined: false })
+    })
+
+    it('lifts the quarantine hide when the admin asks for it explicitly', () => {
+      const conditions = conditionsOf({ includeQuarantined: true })
+
+      expect(conditions).toHaveLength(2)
+      expect((conditions[0] as { val: string }).val).toMatch(/^NOT /)
+      expect(conditions[1]).toEqual({ status: CompanyStatusEnum.ACTIVE })
+    })
+
+    it('lifts the quarantine hide when filtering on the same axis', () => {
+      // The API still accepts `quarantined` directly, and it is the more
+      // specific answer on the same axis: asking for quarantined companies has
+      // to return them, not an empty page.
+      const conditions = conditionsOf({ quarantined: true })
+
+      expect(conditions).toHaveLength(3)
+      expect(conditions[0]).toEqual({ quarantined: true })
+      expect((conditions[1] as { val: string }).val).toMatch(/^NOT /)
+      expect(conditions[2]).toEqual({ status: CompanyStatusEnum.ACTIVE })
+    })
+  })
+
+  /**
+   * The four "aldrei skilað" filters. They carry no obligation gate, so the
+   * only thing keeping a 0–24 company off an unfiltered page is the register's
+   * own default hide — which these deliberately do NOT lift.
+   */
+  describe('the never-filed filters', () => {
+    const sqlOf = (overrides: Partial<ListQuery>) => {
+      const conditions = conditionsOf({ ...unhidden, ...overrides })
+      return conditions.map((c) => (c as { val?: string }).val ?? '').join('\n')
+    }
+
+    it('asks only about this system when the legacy variant is not selected', () => {
+      const sql = sqlOf({ neverFiledEquality: true })
+
+      expect(sql).toContain('NOT EXISTS')
+      expect(sql).toContain("r.type = 'EQUALITY'")
+      expect(sql).toContain("r.status <> 'DRAFT'")
+      // The whole point of the two variants: this one must not consult the
+      // archive, or it would answer the other question.
+      expect(sql).not.toContain('legacy_report')
+    })
+
+    it('adds the archive for the legacy variant', () => {
+      const sql = sqlOf({ neverFiledEqualityIncludingLegacy: true })
+
+      expect(sql).toContain('FROM "legacy_report" lr')
+      expect(sql).toContain('lr.equality_valid_until IS NOT NULL')
+      // Presence of a date, not validity of one — a surrendered or expired
+      // certificate was still filed.
+      expect(sql).not.toContain('IS DISTINCT FROM')
+      expect(sql).not.toContain('CURRENT_DATE')
+    })
+
+    it('reads the salary columns for the salary variants', () => {
+      expect(sqlOf({ neverFiledSalary: true })).toContain("r.type = 'SALARY'")
+      expect(sqlOf({ neverFiledSalaryIncludingLegacy: true })).toContain(
+        'lr.salary_valid_until IS NOT NULL',
+      )
+    })
+
+    it('AND-s the two types rather than OR-ing them', () => {
+      // Selecting both asks for companies that have filed NEITHER, matching how
+      // the other flags in the same control combine.
+      const conditions = conditionsOf({
+        ...unhidden,
+        neverFiledEquality: true,
+        neverFiledSalary: true,
+      })
+
+      expect(conditions).toHaveLength(2)
+    })
+
+    it('does not lift the default hides', () => {
+      // The filter ignores obligation, but an unfiltered register still hides
+      // companies that owe nothing; revealing them is a separate, explicit act.
+      const conditions = conditionsOf({ neverFiledEquality: true })
+
+      expect(conditions).toHaveLength(4)
+    })
+
+    it('treats `false` as no constraint', () => {
+      expect(build({ ...unhidden, neverFiledEquality: false }).where).toEqual(
+        {},
+      )
     })
   })
 

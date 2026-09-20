@@ -11,9 +11,12 @@ export type ReportDeadlineReminderInput = {
   dueDate: Date
 }
 
-/** Icelandic name for each report kind, in the accusative used in the copy. */
+/** Genitive after "skilafrestur" and "Skiladagur". */
 const reportLabel = (type: ReportTypeEnum): string =>
-  type === ReportTypeEnum.SALARY ? 'jafnlaunaskýrslu' : 'jafnréttisskýrslu'
+  type === ReportTypeEnum.SALARY ? 'jafnlaunaskýrslu' : 'jafnréttisáætlunar'
+
+const submissionInstruction = (type: ReportTypeEnum): string =>
+  `Vinsamlegast tryggðu að ${type === ReportTypeEnum.SALARY ? 'skýrslunni' : 'áætluninni'} verði skilað tímanlega.`
 
 /**
  * Lead sentence per tier. The phrasing tracks the tier's band (e.g. the
@@ -21,7 +24,8 @@ const reportLabel = (type: ReportTypeEnum): string =>
  * so it stays accurate without hard-coding a single offset.
  */
 const TIER_LEAD: Record<CompanyReminderTierEnum, string> = {
-  [CompanyReminderTierEnum.SIX_MONTHS]: 'Skilafrestur nálgast — innan sex mánaða.',
+  [CompanyReminderTierEnum.SIX_MONTHS]:
+    'Skilafrestur nálgast — innan sex mánaða.',
   [CompanyReminderTierEnum.TWO_MONTHS]:
     'Skilafrestur nálgast — innan tveggja mánaða.',
   [CompanyReminderTierEnum.TWO_WEEKS]: 'Skilafrestur er innan tveggja vikna.',
@@ -47,7 +51,7 @@ export const buildReportDeadlineReminderHtml = (
     '<h2>Áminning frá Jafnréttisstofu</h2>',
     `<p>${escapeHtml(TIER_LEAD[input.tier])}</p>`,
     `<p>Skiladagur ${label} fyrir <strong>${company}</strong> er <strong>${due}</strong>.</p>`,
-    '<p>Vinsamlegast tryggðu að skýrslunni verði skilað tímanlega.</p>',
+    `<p>${submissionInstruction(input.reportType)}</p>`,
   ].join('')
 }
 
@@ -63,6 +67,6 @@ export const buildReportDeadlineReminderText = (
     TIER_LEAD[input.tier],
     `Skiladagur ${label} fyrir ${input.companyName} er ${due}.`,
     '',
-    'Vinsamlegast tryggðu að skýrslunni verði skilað tímanlega.',
+    submissionInstruction(input.reportType),
   ].join('\n')
 }
