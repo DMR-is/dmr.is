@@ -6,7 +6,7 @@ export interface IdsToken {
 }
 
 export interface IAuthService {
-  getAccessToken(): Promise<IdsToken | null>
+  getAccessToken(signal?: AbortSignal): Promise<IdsToken | null>
 
   xroadFetch(
     url: string,

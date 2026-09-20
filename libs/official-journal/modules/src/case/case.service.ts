@@ -2313,10 +2313,8 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  @Transactional()
   async getCasePaymentStatus(
     params: GetPaymentQuery,
-    transaction?: Transaction,
   ): Promise<ResultWrapper<GetPaymentResponse>> {
     return await this.priceService.getExternalPaymentStatus(params)
   }

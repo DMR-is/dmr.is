@@ -26,7 +26,6 @@ export interface IPriceService {
   ): Promise<ResultWrapper<TransactionFeeCodesResponse>>
   getExternalPaymentStatus(
     params: GetPaymentQuery,
-    transaction?: Transaction,
   ): Promise<ResultWrapper<GetPaymentResponse>>
   postExternalPaymentByCaseId(
     caseId: string,

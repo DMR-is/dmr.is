@@ -20,19 +20,20 @@ export class AuthService implements IAuthService {
     this.logger.info('Using AuthService')
   }
 
-  async getAccessToken() {
+  async getAccessToken(signal?: AbortSignal) {
+    signal?.throwIfAborted()
     if (!this.idsToken) {
       this.logger.debug('Access token is missing, fetching a new one', {
         category: LOGGING_CATEGORY,
       })
-      await this.refresh()
+      await this.refresh(signal)
     }
 
     if (this.isTokenExpired()) {
       this.logger.debug('Access token is expired, refreshing', {
         category: LOGGING_CATEGORY,
       })
-      await this.refresh()
+      await this.refresh(signal)
     }
 
     if (!this.idsToken) {
@@ -49,7 +50,7 @@ export class AuthService implements IAuthService {
     return this.tokenExpiresAt && this.tokenExpiresAt < Date.now()
   }
 
-  private async refresh() {
+  private async refresh(signal?: AbortSignal) {
     const idsUrl = process.env.ISLAND_IS_TOKEN_URL
     const clientSecret = process.env.ISLAND_IS_DMR_CLIENT_SECRET
     const clientId = process.env.ISLAND_IS_DMR_CLIENT_ID
@@ -78,6 +79,7 @@ export class AuthService implements IAuthService {
       })
       const tokenResponse = await fetch(idsUrl, {
         method: 'POST',
+        signal,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -97,6 +99,7 @@ export class AuthService implements IAuthService {
         })
       }
     } catch (error) {
+      signal?.throwIfAborted()
       this.logger.error('Internal server error', {
         category: LOGGING_CATEGORY,
       })
@@ -105,7 +108,7 @@ export class AuthService implements IAuthService {
 
   @LogMethod()
   async xroadFetch(url: string, options: RequestInit): Promise<Response> {
-    const idsToken = await this.getAccessToken()
+    const idsToken = await this.getAccessToken(options.signal ?? undefined)
 
     if (!idsToken) {
       this.logger.error(

@@ -562,10 +562,8 @@ export class PriceService implements IPriceService {
   }
 
   @LogAndHandle()
-  @Transactional()
   async getExternalPaymentStatus(
     parameters: GetPaymentQuery,
-    transaction?: Transaction,
   ): Promise<ResultWrapper<GetPaymentResponse>> {
     if (!process.env.FEE_SERVICE_CRED) {
       return ResultWrapper.err({
@@ -583,7 +581,6 @@ export class PriceService implements IPriceService {
           attributes: ['id', 'nationalId'],
         },
       ],
-      transaction,
     })
 
     if (!caseLookup) {
@@ -601,6 +598,8 @@ export class PriceService implements IPriceService {
       `${process.env.XROAD_FJS_PATH}/claim/${debtorNationalId}?office=${process.env.FEE_SERVICE_OFFICE_ID}&chargeCategory=${process.env.FEE_SERVICE_CHARGE_CATEGORY}&chargeBase=${caseLookup.caseNumber}`,
       {
         method: 'GET',
+        // Covers token acquisition, response headers, and reading the body.
+        signal: AbortSignal.timeout(10_000),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Basic ${credentials}`,

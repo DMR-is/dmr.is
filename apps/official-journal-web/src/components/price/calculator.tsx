@@ -40,9 +40,16 @@ export const PriceCalculator = () => {
   const { md } = useBreakpoint()
   const { data: session } = useSession()
 
-  const { data: paymentData } = useQuery(
-    trpc.getPaymentStatus.queryOptions({ id: currentCase.id }),
-  )
+  const {
+    data: paymentData,
+    isPending: isPaymentPending,
+    isError: isPaymentError,
+    isFetching: isPaymentFetching,
+    refetch: refetchPayment,
+  } = useQuery({
+    ...trpc.getPaymentStatus.queryOptions({ id: currentCase.id }),
+    retry: false,
+  })
 
   const invalidatePayment = () => {
     queryClient.invalidateQueries(
@@ -313,7 +320,7 @@ export const PriceCalculator = () => {
             onBlur={updateAllPrices}
           />
         </Box>
-        {isPublishedOrRejected ? (
+        {isPublishedOrRejected && paymentData && !isPaymentError ? (
           <Inline alignY="center" space={1}>
             <PriceCalculatorStatusBox
               text={
@@ -325,7 +332,23 @@ export const PriceCalculator = () => {
         ) : undefined}
       </Inline>
       <Box marginTop={2}>
-        {isPublishedOrRejected ? (
+        {isPaymentPending ? (
+          <Text>Sæki greiðslustöðu…</Text>
+        ) : isPaymentError || !paymentData ? (
+          <Inline alignY="center" space={2}>
+            <Text>Ekki tókst að sækja greiðslustöðu.</Text>
+            <Button
+              variant="ghost"
+              size="small"
+              loading={isPaymentFetching}
+              disabled={isPaymentFetching}
+              type="button"
+              onClick={() => void refetchPayment()}
+            >
+              Reyna aftur
+            </Button>
+          </Inline>
+        ) : isPublishedOrRejected ? (
           <Box>
             {paymentData?.created ? (
               <PriceCalculatorStatusBox
