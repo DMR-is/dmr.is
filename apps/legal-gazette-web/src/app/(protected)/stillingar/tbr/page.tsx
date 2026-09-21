@@ -6,6 +6,6 @@ import { TBRSettingsContainer } from '../../../../containers/TBRSettingsContaine
 // dehydrated either. Reviving it means aligning the input, adding
 // `HydrateClient`, awaiting, and pinning the timezone of the dates
 // `TBRSettingInfo` renders.
-export default async function TBRSettingsPage() {
+export default function TBRSettingsPage() {
   return <TBRSettingsContainer />
 }

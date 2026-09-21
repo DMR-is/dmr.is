@@ -31,11 +31,14 @@ type Props = {
 
 const formatDate = (dateString: string | null): string => {
   if (!dateString) return '-'
-  if (isNaN(new Date(dateString).getTime())) return '-'
+
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return '-'
+
   // Pinned to Iceland: this table is server-rendered, and `toLocaleDateString`
   // resolves in the runtime's zone, so a viewer off GMT would hydrate a
   // different date than the server sent.
-  return formatDateInIceland(dateString, 'dd.MM.yyyy')
+  return formatDateInIceland(date, 'dd.MM.yyyy')
 }
 
 export const SubscribersTable = ({
