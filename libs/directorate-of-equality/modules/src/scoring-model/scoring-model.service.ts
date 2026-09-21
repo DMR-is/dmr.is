@@ -1,3 +1,5 @@
+import { Transaction } from 'sequelize'
+
 import {
   BadRequestException,
   Injectable,
@@ -181,6 +183,13 @@ export class ScoringModelService implements IScoringModelService {
   ): Promise<ScoringSubCriterionModel> {
     const sub = await this.subCriterionModel.findOne({
       where: { id: subCriterionId, scoringCriterionId: criterionId },
+      // `FOR UPDATE`, unconditionally. `Sequelize.useCLS` is on and
+      // `CLSMiddleware` opens one transaction per request, so this query
+      // auto-enlists in it and the lock is held until the request commits or
+      // rolls back — without naming a transaction here and without taking a
+      // second connection. Making it opt-in would leave the guarantee
+      // depending on which caller remembered to ask.
+      lock: Transaction.LOCK.UPDATE,
     })
 
     if (!sub) {
@@ -402,12 +411,29 @@ export class ScoringModelService implements IScoringModelService {
   ): Promise<ScoringModelDto> {
     await this.findOwnedModel(company, modelId)
     await this.findOwnedCriterion(modelId, criterionId)
+
+    // No `sequelize.transaction()` wrapper here, deliberately. It reads like it
+    // would add atomicity and it removes it: with no parent in its options it
+    // does not nest under CLS, so it opens a top-level transaction on a second
+    // pooled connection. The destroy and bulkCreate would then commit
+    // immediately and survive the rollback `CLSMiddleware` performs on any
+    // non-2xx — leaving the scale replaced, and every assignment onto the old
+    // þrep cascade-deleted, behind a response that reported failure. Measured,
+    // not inferred: the inner transaction's `parent` is undefined, its backend
+    // pid differs from the ambient one, and its write outlives the ambient
+    // ROLLBACK.
+    //
+    // The ambient request transaction already makes these two statements atomic
+    // together. The `FOR UPDATE` taken in `findOwnedSubCriterion` is what was
+    // genuinely missing, and it holds for the rest of the request — so two
+    // callers replacing the same scale serialise rather than colliding on
+    // UNIQUE (scoring_sub_criterion_id, step_order).
     await this.findOwnedSubCriterion(criterionId, subCriterionId)
 
-    // Replace rather than reconcile. Any role assignment onto the old steps
-    // goes with them through the FK cascade, and the model then reports that
-    // job as missing an assignment — dropped where the caller can see it,
-    // rather than re-homed onto a step they did not choose.
+    // Replace rather than reconcile. Any role assignment onto the old þrep goes
+    // with them through the FK cascade, and the model then reports that job as
+    // missing an assignment — dropped where the caller can see it, rather than
+    // re-homed onto a þrep they did not choose.
     await this.stepModel.destroy({
       where: { scoringSubCriterionId: subCriterionId },
     })
@@ -436,6 +462,8 @@ export class ScoringModelService implements IScoringModelService {
   ): Promise<ScoringRoleModel> {
     const role = await this.roleModel.findOne({
       where: { id: roleId, scoringModelId: modelId },
+      // See `findOwnedSubCriterion` — same reasoning, same unconditional lock.
+      lock: Transaction.LOCK.UPDATE,
     })
 
     if (!role) {
@@ -510,6 +538,15 @@ export class ScoringModelService implements IScoringModelService {
     input: SetScoringRoleStepAssignmentsDto,
   ): Promise<ScoringModelDto> {
     const model = await this.findOwnedModel(company, modelId)
+
+    // Before the payload is looked at, not after. A job that does not exist is a
+    // 404 whatever the body says, and validating first made that depend on the
+    // body: an unknown `roleId` sent with an assignment that also fails
+    // validation came back 400, while the same `roleId` with a clean body came
+    // back 404. Resolving the path first makes the status a fact about the URL.
+    //
+    // It also takes the `FOR UPDATE` before the work rather than after it, which
+    // is the order a lock is useful in.
     await this.findOwnedRole(modelId, roleId)
 
     // An incomplete set is reported by the validator, not refused here. An
@@ -562,6 +599,28 @@ export class ScoringModelService implements IScoringModelService {
       seen.add(assignment.subCriterionId)
     }
 
+    // Same reasoning as `setSteps`: no `sequelize.transaction()` wrapper, because
+    // it would take these two statements out of the request transaction rather
+    // than into one, and they would then survive a rollback.
+    //
+    // The lock in `findOwnedRole` serialises two callers replacing the *same
+    // job's* assignments. It does not serialise this against a concurrent
+    // `setSteps` on a sub-criterion these assignments name — that takes a
+    // different row's lock.
+    //
+    // That race is **pre-existing and unchanged by this PR**, which is worth
+    // saying because the composite FK looks like a plausible cause and is not.
+    // Raced against Postgres with and without m-20260915 applied; the outcome is
+    // identical either way and only the constraint's name differs:
+    //
+    //   scale replaced before the assignment inserts  →  23503, FK violation
+    //   the two flows cross each other's row locks    →  40P01, deadlock
+    //
+    // The first surfaces as a raw 500. The second Postgres detects and breaks
+    // itself after `deadlock_timeout`, killing this flow and letting `setSteps`
+    // commit. Closing it means ordering the two locks, which is a larger change
+    // than the race deserves; recorded here rather than implied by a comment
+    // that claims more than the lock delivers.
     await this.roleStepModel.destroy({ where: { scoringRoleId: roleId } })
 
     if (input.assignments.length > 0) {
