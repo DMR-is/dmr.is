@@ -102,7 +102,13 @@ export function UsersPageClient({ isAdmin, roleOptions }: Props) {
                         setSelectedTab(id)
                         setPage(1)
                       }}
-                      label=""
+                      // A real label, not "": island-ui's Tabs feeds this to an
+                      // internal react-select as its `name`/`instanceId`, and an
+                      // empty one falls through to a module counter that differs
+                      // between the server and client renders. Now that this
+                      // page is awaited it genuinely server-renders, so that
+                      // would be a live attribute mismatch.
+                      label="Notendur og stofnanir"
                     />
                   ) : (
                     <UserTable isAdmin={isAdmin} roleOptions={roleOptions} />
