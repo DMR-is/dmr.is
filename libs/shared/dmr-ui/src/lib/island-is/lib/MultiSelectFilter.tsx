@@ -15,7 +15,11 @@ import ReactSelect, {
 import { theme } from '@dmr.is/island-ui-theme'
 
 import { Icon } from './Icon'
-import { islandSelectStyles } from './selectStyles'
+import {
+  islandSelectStyles,
+  selectPlaceholderStyle,
+  selectValueWeight,
+} from './selectStyles'
 import { Text } from './Text'
 
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -298,16 +302,20 @@ const customStyles: StylesConfig<MultiSelectOption, true> = {
   }),
   placeholder: (base) => ({
     ...base,
-    color: theme.color.dark400,
+    ...selectPlaceholderStyle,
     margin: 0,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   }),
+  // `font: inherit` on react-select's input would otherwise pull the page font
+  // back in and undo the control's own sizing as soon as it is typed into.
   input: (base) => ({
     ...base,
     margin: 0,
     padding: 0,
+    font: 'inherit',
+    fontWeight: selectValueWeight,
     color: theme.color.dark400,
   }),
   // Inset the indicators from the right edge to match the island-ui Select,
