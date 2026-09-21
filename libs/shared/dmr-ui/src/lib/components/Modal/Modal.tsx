@@ -1,6 +1,8 @@
 'use client'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useId } from 'react'
+
 import {
   Box,
   Button,
@@ -41,7 +43,7 @@ type Props = {
 }
 
 export const Modal = ({
-  baseId = '',
+  baseId,
   isVisible = false,
   title,
   onVisibilityChange,
@@ -52,6 +54,13 @@ export const Modal = ({
   width = 'large',
   allowOverflow = false,
 }: Props) => {
+  // Not `baseId = ''`: reakit does `initialBaseId || generateId()`, and an empty
+  // string is falsy, so a default of '' falls through to the generator and the
+  // modal gets a random id that differs between server and client. useId is
+  // stable across both, so a modal is deterministic wherever it is mounted.
+  const fallbackBaseId = useId()
+  const resolvedBaseId = baseId || fallbackBaseId
+
   const hasPinnedChrome = !!footer
   const columnSpan: SpanType =
     width === 'small'
@@ -76,7 +85,7 @@ export const Modal = ({
 
   return (
     <ModalBase
-      baseId={baseId}
+      baseId={resolvedBaseId}
       isVisible={isVisible}
       onVisibilityChange={handleVisibilityChange}
       disclosure={disclosure}
