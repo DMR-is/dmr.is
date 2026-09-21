@@ -39,16 +39,27 @@ export const ParallelModal = ({
   const dialogRef = useRef<ComponentRef<'dialog'>>(null)
 
   // The portal below cannot render during SSR or on the first client render,
-  // so nothing may touch `document` or `dialogRef` until after mount.
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-
-  // Keyed on `mounted`: dialogRef is null until the portal exists.
+  // so nothing may touch `document` or `dialogRef` until after mount. Before
+  // then this is null, which is the SSR guard.
+  //
+  // Resolved once and held in state rather than recomputed each render: if the
+  // target changed identity, React would remount the portal subtree and attach
+  // `dialogRef` to a fresh <dialog> that the effect below never opens.
+  //
+  // Falling back to `document.body` keeps a layout that forgot #modal-root
+  // rendering a working modal — the backdrop is fixed-position, so it is
+  // correct wherever it is portalled — instead of silently showing nothing.
+  const [container, setContainer] = useState<HTMLElement | null>(null)
   useEffect(() => {
-    if (mounted && !dialogRef.current?.open) {
+    setContainer(document.getElementById('modal-root') ?? document.body)
+  }, [])
+
+  // Keyed on `container`: dialogRef is null until the portal exists.
+  useEffect(() => {
+    if (container && !dialogRef.current?.open) {
       dialogRef.current?.showModal()
     }
-  }, [mounted])
+  }, [container])
   function onDismiss() {
     router.back()
   }
@@ -60,14 +71,6 @@ export const ParallelModal = ({
     width === 'small'
       ? ['1/12', '1/12', '1/12', '3/12']
       : ['0', '0', '0', '1/12', '2/12']
-  // Before mount there is no `document`, so the portal cannot render at all —
-  // that is the SSR guard. After mount, fall back to `document.body` if
-  // #modal-root is missing: the backdrop is fixed-position, so the modal still
-  // renders correctly, and a layout that forgot the mount point degrades to a
-  // working modal rather than a route change that silently shows nothing.
-  const container = mounted
-    ? (document.getElementById('modal-root') ?? document.body)
-    : null
   if (!container) return null
 
   return createPortal(
