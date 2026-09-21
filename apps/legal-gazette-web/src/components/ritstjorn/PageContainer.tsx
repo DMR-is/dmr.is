@@ -123,9 +123,17 @@ export const PageContainer = () => {
               </Inline>
               <Tabs
                 // A real label, not "": island-ui's Tabs feeds this straight to
-                // an internal react-select as its `name`/`instanceId`, and an
-                // empty one falls through to a module counter that differs
-                // between the server and client renders.
+                // an internal react-select as its `name`, which becomes `id`
+                // and `instanceId`. An empty one falls through to
+                // `instanceId || ++counter`, and that counter differs between
+                // the server and client renders.
+                //
+                // This buys determinism, not correct wiring. Two things it does
+                // not fix, both needing an island-ui change: the label renders
+                // as *visible* copy above the Select the tab strip collapses
+                // into below the desktop breakpoint, and the id is the raw
+                // label, so it contains a space - invalid for an HTML id, and
+                // `aria-labelledby` parses it as two ids that do not exist.
                 label="Staða auglýsinga"
                 selected={tab ?? 'innsendar'}
                 onChange={handleTabChange}
