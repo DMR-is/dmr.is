@@ -308,9 +308,7 @@ export const CompaniesContainer = () => {
             postcodeOptions={postcodeOptions}
             onFiltersChange={handleFiltersChange}
             onQueryClear={() => setFilter({ q: null, page: 1 })}
-            onQuarantinedClear={() =>
-              setFilter({ quarantined: null, page: 1 })
-            }
+            onQuarantinedClear={() => setFilter({ quarantined: null, page: 1 })}
             onReset={handleReset}
           />
           {data?.paging && (

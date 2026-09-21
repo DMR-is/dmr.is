@@ -24,7 +24,6 @@ const MODEL_ID = 'model-1'
 const CRITERION_ID = 'criterion-1'
 const SUB_ID = 'sub-1'
 
-
 const COMPANY = {
   id: 'company-1',
   nationalId: '5500000000',
@@ -362,13 +361,11 @@ describe('ScoringModelService', () => {
         ],
       })
 
-      expect(stepBulkCreate).toHaveBeenCalledWith(
-        [
-          { scoringSubCriterionId: SUB_ID, stepOrder: 1, description: 'lægst' },
-          { scoringSubCriterionId: SUB_ID, stepOrder: 2, description: 'mið' },
-          { scoringSubCriterionId: SUB_ID, stepOrder: 3, description: 'hæst' },
-        ],
-      )
+      expect(stepBulkCreate).toHaveBeenCalledWith([
+        { scoringSubCriterionId: SUB_ID, stepOrder: 1, description: 'lægst' },
+        { scoringSubCriterionId: SUB_ID, stepOrder: 2, description: 'mið' },
+        { scoringSubCriterionId: SUB_ID, stepOrder: 3, description: 'hæst' },
+      ])
     })
 
     it('clears the old scale before writing the new one', async () => {
@@ -471,15 +468,13 @@ describe('ScoringModelService', () => {
       expect(roleStepDestroy).toHaveBeenCalledWith({
         where: { scoringRoleId: ROLE_ID },
       })
-      expect(roleStepBulkCreate).toHaveBeenCalledWith(
-        [
-          {
-            scoringRoleId: ROLE_ID,
-            scoringSubCriterionId: JOB_SUB,
-            scoringSubCriterionStepId: JOB_STEP,
-          },
-        ],
-      )
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        {
+          scoringRoleId: ROLE_ID,
+          scoringSubCriterionId: JOB_SUB,
+          scoringSubCriterionStepId: JOB_STEP,
+        },
+      ])
     })
 
     // The equivalent of the setSteps lock test. Without it the role path could
@@ -569,7 +564,9 @@ describe('ScoringModelService', () => {
 
       await expect(
         service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
-          assignments: [{ subCriterionId: 'not-in-this-model', stepId: 'nope' }],
+          assignments: [
+            { subCriterionId: 'not-in-this-model', stepId: 'nope' },
+          ],
         }),
       ).rejects.toThrow(NotFoundException)
     })
@@ -579,7 +576,9 @@ describe('ScoringModelService', () => {
     it('still reports a bad body as 400 when the job does exist', async () => {
       await expect(
         service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
-          assignments: [{ subCriterionId: 'not-in-this-model', stepId: 'nope' }],
+          assignments: [
+            { subCriterionId: 'not-in-this-model', stepId: 'nope' },
+          ],
         }),
       ).rejects.toThrow(BadRequestException)
     })

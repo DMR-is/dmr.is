@@ -832,12 +832,12 @@ Which þrep a job sits at for one sub-criterion. Row existence is the assignment
 nothing to mutate and **no `updated_at`** — re-assigning deletes and re-inserts, the same
 shape `report_employee_role_criterion_step` uses.
 
-| Column                          | Type                                        |
-| ------------------------------- | ------------------------------------------- |
-| `id`                            | `uuid` PK                                   |
-| `scoring_role_id`               | `fk → scoring_role` (cascade)               |
-| `scoring_sub_criterion_id`      | `fk → scoring_sub_criterion` (cascade)      |
-| `scoring_sub_criterion_step_id` | part of the composite fk below              |
+| Column                          | Type                                   |
+| ------------------------------- | -------------------------------------- |
+| `id`                            | `uuid` PK                              |
+| `scoring_role_id`               | `fk → scoring_role` (cascade)          |
+| `scoring_sub_criterion_id`      | `fk → scoring_sub_criterion` (cascade) |
+| `scoring_sub_criterion_step_id` | part of the composite fk below         |
 
 `UNIQUE (scoring_role_id, scoring_sub_criterion_id)` — at most one assignment per job per
 sub-criterion. `scoring_sub_criterion_id` is denormalised from the step's own parent so that
