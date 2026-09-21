@@ -104,7 +104,6 @@ export function buildEqualityReportHtml(
         ${field('Auðkenni', orDash(equality?.identifier))}
         ${field('Samþykkt', formatDate(equality?.approvedAt))}
         ${field('Gildir til', formatDate(equality?.validUntil))}
-        ${field('Frestur til úrbóta', formatDate(equality?.correctionDeadline))}
       </div>
     </div>
 ${bodySection}

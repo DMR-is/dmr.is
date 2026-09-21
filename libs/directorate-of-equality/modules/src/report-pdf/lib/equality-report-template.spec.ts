@@ -85,6 +85,26 @@ describe('buildEqualityReportHtml', () => {
     expect(html).toContain('Ekkert efni skráð fyrir jafnréttisáætlun.')
   })
 
+  /*
+   * `correctionDeadline` belongs to the Directorate's improvement-plan process,
+   * not to an equality plan, so the Yfirlit must not offer it here even when a
+   * value happens to be stored on the row.
+   */
+  it('leaves the correction deadline out of the Yfirlit', () => {
+    const report = makeReport('<p>Áætlun</p>')
+    const html = buildEqualityReportHtml({
+      ...report,
+      equalityReport: {
+        ...report.equalityReport,
+        correctionDeadline: '2026-09-18T00:00:00.000Z',
+      },
+    } as unknown as ReportDetailDto)
+
+    expect(html).not.toContain('Frestur til úrbóta')
+    expect(html).not.toContain('18.09.2026')
+    expect(html).toContain('Gildir til')
+  })
+
   it('escapes the company name, which is not markup', () => {
     const report = makeReport('<p>Áætlun</p>')
     const html = buildEqualityReportHtml({
