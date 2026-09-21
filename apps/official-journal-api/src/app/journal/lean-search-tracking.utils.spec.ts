@@ -97,6 +97,34 @@ describe('lean-search-tracking utils', () => {
       expect(result.normalizedQuery).toBe(normalizeForTest(search))
     })
 
+    it('classifies a publication number that is still being typed', () => {
+      const result = classifyLeanSearchQuery('1009/20')
+
+      expect(result).toEqual({
+        normalizedQuery: '1009',
+        queryKind: LeanSearchQueryKind.PublicationNumberPrefix,
+        queryHash: expect.any(String),
+        queryLength: 4,
+        queryTokenCount: 1,
+      })
+    })
+
+    it('hashes every state of a partial publication number alike', () => {
+      // One search intent typed through several states. Counting them apart
+      // would understate how often the partial-number path is taken.
+      const hashes = ['1009', '1009/', '1009/2', '1009/201'].map(
+        (q) => classifyLeanSearchQuery(q).queryHash,
+      )
+
+      expect(new Set(hashes).size).toBe(1)
+    })
+
+    it('keeps an internal case number out of the partial-number kind', () => {
+      expect(classifyLeanSearchQuery('12345678901').queryKind).toBe(
+        LeanSearchQueryKind.InternalCaseNumber,
+      )
+    })
+
     it('classifies single-token wildcard queries', () => {
       const result = classifyLeanSearchQuery('search*')
 

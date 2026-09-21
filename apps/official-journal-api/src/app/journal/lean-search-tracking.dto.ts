@@ -16,6 +16,7 @@ export enum LeanSearchQueryKind {
   Phrase = 'phrase',
   PrefixWildcard = 'prefix_wildcard',
   PublicationNumber = 'publication_number',
+  PublicationNumberPrefix = 'publication_number_prefix',
   InternalCaseNumber = 'internal_case_number',
 }
 

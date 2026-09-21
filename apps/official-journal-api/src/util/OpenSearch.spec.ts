@@ -117,6 +117,60 @@ describe('getOsBody', () => {
     })
   })
 
+  describe('partial publication numbers', () => {
+    const serialClause = (clauses: any[]) =>
+      clauses.find((c: any) => c?.term?.['publicationNumber.number'])
+
+    it('admits the advert carrying the serial, not just ranks it', () => {
+      // The whole point of the branch. A `should` boost would reorder the
+      // adverts that cite 1009/2010 in their title and still never surface
+      // 1009/2010 itself, because `should` cannot add to the result set.
+      const [alternatives] = mustOf('1009')
+
+      expect(alternatives.bool.minimum_should_match).toBe(1)
+      expect(serialClause(alternatives.bool.should).term).toEqual({
+        'publicationNumber.number': { value: '1009', boost: 45 },
+      })
+    })
+
+    it('keeps free-text recall alongside the serial', () => {
+      const [alternatives] = mustOf('1009')
+
+      expect(bagOfWordsClauses(alternatives.bool.should)).toHaveLength(1)
+    })
+
+    it('treats every state the number is typed through the same way', () => {
+      // Search runs on each keystroke, so these are four of the five states
+      // between an empty box and `1009/2010`.
+      for (const q of ['1009', '1009/', '1009/2', '1009/201']) {
+        expect(serialClause(mustOf(q)[0].bool.should).term).toEqual({
+          'publicationNumber.number': { value: '1009', boost: 45 },
+        })
+      }
+    })
+
+    it('drops leading zeros so the serial matches how it is indexed', () => {
+      expect(serialClause(mustOf('01009')[0].bool.should).term).toEqual({
+        'publicationNumber.number': { value: '1009', boost: 45 },
+      })
+    })
+
+    it('leaves a complete publication number on the existing path', () => {
+      const [bag] = mustOf('1009/2010')
+
+      expect(bag.multi_match.type).toBe('most_fields')
+    })
+
+    it('never builds a serial clause from an internal case number', () => {
+      // `publicationNumber.number` is mapped `integer`; an 11-digit value is
+      // outside int32 and OpenSearch answers a term query on it with a
+      // number_format_exception rather than zero hits.
+      expect(
+        JSON.stringify(getOsBody({ search: '12345678901' }).body),
+      ).not.toContain('publicationNumber.number')
+    })
+  })
+
   describe('existing behaviour is unchanged', () => {
     it('still boosts publication numbers', () => {
       const should = shouldOf('123/2024')

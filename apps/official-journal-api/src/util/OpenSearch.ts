@@ -4,6 +4,10 @@ import startOfDay from 'date-fns/startOfDay'
 import { GetAdvertsQueryParams, Paging } from '@dmr.is/shared-dto'
 
 import { extractPhrase } from './phrase'
+import {
+  matchPublicationNumber,
+  matchPublicationNumberPrefix,
+} from './query-shape'
 
 function normalizeToArray(value: string | string[]): string[] {
   if (Array.isArray(value)) return value
@@ -110,6 +114,16 @@ function buildTextQuery(search: string) {
 // How much an adjacent-words match is worth on top of the normal bag-of-words
 // score. Tuning knob - raise it if phrase hits should dominate more strongly.
 const PHRASE_RANK_BOOST = 3
+
+// Publication-number hits sit far above the text-field weights on purpose:
+// someone who types a publication number is not asking for the adverts that
+// cite it, they are asking for the one that carries it. The serial boost is
+// shared by the complete `number/year` and the still-being-typed prefix, so
+// both rank the same advert the same way.
+const PUBLICATION_NUMBER_FULL_BOOST = 400
+const PUBLICATION_NUMBER_SERIAL_BOOST = 45
+const PUBLICATION_NUMBER_YEAR_BOOST = 30
+const PUBLICATION_NUMBER_BODY_BOOST = 50
 
 // Fields that phrase matching can safely target. `.compound` is deliberately
 // excluded: the dictionary_decompounder emits subwords at the same position as
@@ -269,27 +283,45 @@ export const getOsBody = (
   }
 
   // Detect "number/year"
-  const m = q.match(/^\s*(\d+)\s*\/\s*(\d{4})\s*$/)
+  const publicationNumber = matchPublicationNumber(q)
   const should: any[] = []
-  if (m) {
-    const number = String(parseInt(m[1], 10))
-    const year = m[2]
-    const full = `${number}/${year}`
+  if (publicationNumber) {
+    const { number, year, full } = publicationNumber
 
     // Strong boosts on exact fields
     should.push({
-      term: { 'publicationNumber.full': { value: full, boost: 400 } },
+      term: {
+        'publicationNumber.full': {
+          value: full,
+          boost: PUBLICATION_NUMBER_FULL_BOOST,
+        },
+      },
     })
     should.push({
-      term: { 'publicationNumber.number': { value: number, boost: 45 } },
+      term: {
+        'publicationNumber.number': {
+          value: number,
+          boost: PUBLICATION_NUMBER_SERIAL_BOOST,
+        },
+      },
     })
     should.push({
-      term: { 'publicationNumber.year': { value: year, boost: 30 } },
+      term: {
+        'publicationNumber.year': {
+          value: year,
+          boost: PUBLICATION_NUMBER_YEAR_BOOST,
+        },
+      },
     })
 
     // Weaker boosts if the pair appears in bodyText as adjacent tokens
     should.push({
-      match_phrase: { bodyText: { query: `${number} ${year}`, boost: 50 } },
+      match_phrase: {
+        bodyText: {
+          query: `${number} ${year}`,
+          boost: PUBLICATION_NUMBER_BODY_BOOST,
+        },
+      },
     })
   }
 
@@ -307,6 +339,7 @@ export const getOsBody = (
   const must: any[] = []
 
   const wildcardMatch = q.match(/^(\S+)\*$/)
+  const publicationNumberPrefix = matchPublicationNumberPrefix(q)
 
   if (q) {
     if (phrase) {
@@ -314,6 +347,35 @@ export const getOsBody = (
       // The whole query was quoted, so the user asked for adjacency rather
       // than a bag of words. Require the phrase instead of OR-ing tokens.
       must.push(buildPhraseQuery(phrase))
+    } else if (publicationNumberPrefix) {
+      // PARTIAL PUBLICATION NUMBER MODE
+      // The serial number is unreachable from buildTextQuery: `.full` is a
+      // keyword field that only matches a complete `number/year`, and the
+      // integer `.number` is not among its fields at all. So the advert that
+      // *carries* the number cannot match on it, while every advert whose
+      // title merely cites it matches at title^5 - which is why searching
+      // `1009` returned the adverts amending 1009/2010 and not 1009/2010.
+      //
+      // A `should` boost does not fix that. `should` only reorders what `must`
+      // has already admitted, and the advert was never admitted. The serial
+      // has to be an alternative arm of `must` to affect recall, and it
+      // carries its boost there rather than being repeated below.
+      must.push({
+        bool: {
+          should: [
+            buildTextQuery(q),
+            {
+              term: {
+                'publicationNumber.number': {
+                  value: publicationNumberPrefix,
+                  boost: PUBLICATION_NUMBER_SERIAL_BOOST,
+                },
+              },
+            },
+          ],
+          minimum_should_match: 1,
+        },
+      })
     } else if (wildcardMatch && !q.includes(' ')) {
       const prefixValue = wildcardMatch[1]
 
