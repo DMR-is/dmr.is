@@ -55,10 +55,12 @@ export const dataExportText = {
   datasetReports: 'Skýrslur',
   submit: 'Sækja lista',
   export: 'Sækja Excel',
-  // The count sits beside the export button so nobody downloads 1.500 rows
-  // expecting 60.
+  // Announced only — the table prints its own visible count. Worded as
+  // "fyrirtæki" to match it, since a screen-reader user hears this one and
+  // reads that one, and two different nouns for the same number would read as
+  // two different numbers.
   resultCount: (count: number) =>
-    count === 1 ? '1 færsla fannst' : `${count} færslur fundust`,
+    count === 1 ? '1 fyrirtæki fannst' : `${count} fyrirtæki fundust`,
   // Announced, not just rendered: the results appear because a button was
   // pressed, so a screen reader has to be told the page changed.
   searching: 'Sæki lista…',

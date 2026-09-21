@@ -1,5 +1,7 @@
 'use client'
 
+import type { ReactElement } from 'react'
+
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { MultiSelectFilter } from '@dmr.is/ui/components/island-is/MultiSelectFilter'
@@ -18,6 +20,15 @@ import {
 
 /**
  * Report criteria, as accordion cards slotted into `CompanyFilter`.
+ *
+ * ⚠️ A FUNCTION returning an array, not a component — and it has to stay one.
+ * `Accordion` renders its children through `Stack`, which gives each child its
+ * own slot with the spacing and divider that make a card look like a card.
+ * `Stack` flattens arrays and fragments it is handed directly, but a component
+ * element is opaque to it: `<ReportCriteriaCards />` counts as ONE child, so
+ * all three cards land in a single slot and render visibly unlike the three
+ * above them. Returning an array makes them siblings of the company cards,
+ * which is what they are.
  *
  * ⚠️ These narrow the COMPANY list — they do not change what a row is. A
  * company comes back when at least one of its APPROVED filings satisfies all
@@ -80,14 +91,14 @@ type Props = {
   onGapChange: (key: ReportGapKey, value: string | undefined) => void
 }
 
-export const ReportCriteriaCards = ({
+export const reportCriteriaCards = ({
   criteria,
   onCriteriaChange,
   dates,
   onDateChange,
   gaps,
   onGapChange,
-}: Props) => {
+}: Props): ReactElement[] => {
   const labelColor = (...selections: Array<string[] | boolean>) =>
     selections.some((s) => (Array.isArray(s) ? s.length > 0 : s))
       ? 'blue400'
@@ -172,122 +183,123 @@ export const ReportCriteriaCards = ({
     )
   }
 
-  return (
-    <>
-      <AccordionItem
-        id="reportCriteria"
-        label={dataExportText.cardReport}
-        labelUse="h5"
-        labelVariant="h5"
-        labelColor={labelColor(
-          criteria.type,
-          criteria.companyAdminGender,
-          criteria.equalitySource,
-          criteria.improvementPlan,
-        )}
-        iconVariant="small"
-      >
-        <Stack space={2}>
-          <MultiSelectFilter
-            name="reportType"
-            label={dataExportText.typeLabel}
-            placeholder={dataExportText.typePlaceholder}
-            noOptionsMessage={companiesText.filterNoResults}
-            isSearchable={false}
-            options={REPORT_TYPE_OPTIONS}
-            selected={criteria.type}
-            onChange={(val) => onCriteriaChange('type', val)}
-          />
-          <MultiSelectFilter
-            name="reportCompanyAdminGender"
-            label={dataExportText.adminGenderLabel}
-            placeholder={dataExportText.adminGenderPlaceholder}
-            noOptionsMessage={companiesText.filterNoResults}
-            isSearchable={false}
-            options={ADMIN_GENDER_OPTIONS}
-            selected={criteria.companyAdminGender}
-            onChange={(val) => onCriteriaChange('companyAdminGender', val)}
-          />
-          <MultiSelectFilter
-            name="reportEqualitySource"
-            label={dataExportText.equalitySourceLabel}
-            placeholder={dataExportText.equalitySourcePlaceholder}
-            noOptionsMessage={companiesText.filterNoResults}
-            isSearchable={false}
-            options={EQUALITY_SOURCE_OPTIONS}
-            selected={criteria.equalitySource}
-            onChange={(val) => onCriteriaChange('equalitySource', val)}
-          />
-          <MultiSelectFilter
-            name="reportImprovementPlan"
-            label={dataExportText.improvementPlanLabel}
-            placeholder={dataExportText.improvementPlanPlaceholder}
-            noOptionsMessage={companiesText.filterNoResults}
-            isSearchable={false}
-            options={IMPROVEMENT_PLAN_OPTIONS}
-            selected={criteria.improvementPlan}
-            onChange={(val) => onCriteriaChange('improvementPlan', val)}
-          />
-        </Stack>
-      </AccordionItem>
+  return [
+    <AccordionItem
+      key="reportCriteria"
+      id="reportCriteria"
+      label={dataExportText.cardReport}
+      labelUse="h5"
+      labelVariant="h5"
+      labelColor={labelColor(
+        criteria.type,
+        criteria.companyAdminGender,
+        criteria.equalitySource,
+        criteria.improvementPlan,
+      )}
+      iconVariant="small"
+    >
+      <Stack space={2}>
+        <MultiSelectFilter
+          name="reportType"
+          label={dataExportText.typeLabel}
+          placeholder={dataExportText.typePlaceholder}
+          noOptionsMessage={companiesText.filterNoResults}
+          isSearchable={false}
+          options={REPORT_TYPE_OPTIONS}
+          selected={criteria.type}
+          onChange={(val) => onCriteriaChange('type', val)}
+        />
+        <MultiSelectFilter
+          name="reportCompanyAdminGender"
+          label={dataExportText.adminGenderLabel}
+          placeholder={dataExportText.adminGenderPlaceholder}
+          noOptionsMessage={companiesText.filterNoResults}
+          isSearchable={false}
+          options={ADMIN_GENDER_OPTIONS}
+          selected={criteria.companyAdminGender}
+          onChange={(val) => onCriteriaChange('companyAdminGender', val)}
+        />
+        <MultiSelectFilter
+          name="reportEqualitySource"
+          label={dataExportText.equalitySourceLabel}
+          placeholder={dataExportText.equalitySourcePlaceholder}
+          noOptionsMessage={companiesText.filterNoResults}
+          isSearchable={false}
+          options={EQUALITY_SOURCE_OPTIONS}
+          selected={criteria.equalitySource}
+          onChange={(val) => onCriteriaChange('equalitySource', val)}
+        />
+        <MultiSelectFilter
+          name="reportImprovementPlan"
+          label={dataExportText.improvementPlanLabel}
+          placeholder={dataExportText.improvementPlanPlaceholder}
+          noOptionsMessage={companiesText.filterNoResults}
+          isSearchable={false}
+          options={IMPROVEMENT_PLAN_OPTIONS}
+          selected={criteria.improvementPlan}
+          onChange={(val) => onCriteriaChange('improvementPlan', val)}
+        />
+      </Stack>
+    </AccordionItem>,
 
-      <AccordionItem
-        id="reportGap"
-        label={dataExportText.cardGap}
-        labelUse="h5"
-        labelVariant="h5"
-        labelColor={labelColor(
-          Object.values(gaps).some((value) => value !== undefined),
+    <AccordionItem
+      key="reportGap"
+      id="reportGap"
+      label={dataExportText.cardGap}
+      labelUse="h5"
+      labelVariant="h5"
+      labelColor={labelColor(
+        Object.values(gaps).some((value) => value !== undefined),
+      )}
+      iconVariant="small"
+    >
+      <Stack space={3}>
+        {gapRange(
+          dataExportText.rawGapRange,
+          'reportRawGapPercentFrom',
+          'reportRawGapPercentTo',
         )}
-        iconVariant="small"
-      >
-        <Stack space={3}>
-          {gapRange(
-            dataExportText.rawGapRange,
-            'reportRawGapPercentFrom',
-            'reportRawGapPercentTo',
-          )}
-          {gapRange(
-            dataExportText.oskyrtGapRange,
-            'reportOskyrtPercentFrom',
-            'reportOskyrtPercentTo',
-          )}
-        </Stack>
-      </AccordionItem>
+        {gapRange(
+          dataExportText.oskyrtGapRange,
+          'reportOskyrtPercentFrom',
+          'reportOskyrtPercentTo',
+        )}
+      </Stack>
+    </AccordionItem>,
 
-      <AccordionItem
-        id="reportDates"
-        label={dataExportText.cardDates}
-        labelUse="h5"
-        labelVariant="h5"
-        labelColor={labelColor(
-          Object.values(dates).some((value) => value !== undefined),
+    <AccordionItem
+      key="reportDates"
+      id="reportDates"
+      label={dataExportText.cardDates}
+      labelUse="h5"
+      labelVariant="h5"
+      labelColor={labelColor(
+        Object.values(dates).some((value) => value !== undefined),
+      )}
+      iconVariant="small"
+    >
+      <Stack space={3}>
+        {range(
+          dataExportText.createdRange,
+          'reportSubmittedFrom',
+          'reportSubmittedTo',
         )}
-        iconVariant="small"
-      >
-        <Stack space={3}>
-          {range(
-            dataExportText.createdRange,
-            'reportSubmittedFrom',
-            'reportSubmittedTo',
-          )}
-          {range(
-            dataExportText.approvedRange,
-            'reportApprovedFrom',
-            'reportApprovedTo',
-          )}
-          {range(
-            dataExportText.validUntilRange,
-            'reportValidUntilFrom',
-            'reportValidUntilTo',
-          )}
-          {range(
-            dataExportText.salaryPeriodRange,
-            'reportSalaryDataPeriodFrom',
-            'reportSalaryDataPeriodTo',
-          )}
-        </Stack>
-      </AccordionItem>
-    </>
-  )
+        {range(
+          dataExportText.approvedRange,
+          'reportApprovedFrom',
+          'reportApprovedTo',
+        )}
+        {range(
+          dataExportText.validUntilRange,
+          'reportValidUntilFrom',
+          'reportValidUntilTo',
+        )}
+        {range(
+          dataExportText.salaryPeriodRange,
+          'reportSalaryDataPeriodFrom',
+          'reportSalaryDataPeriodTo',
+        )}
+      </Stack>
+    </AccordionItem>,
+  ]
 }
