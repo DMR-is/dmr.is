@@ -24,7 +24,7 @@ does; the work is promoting it to a direct dependency, not introducing it.
 **The outlier round trip is a human one.** A vendor must ask the employer why
 two equally-scored people are paid differently — days, not seconds. Every
 design that assumed it could happen inside one request was wrong, which is why
-detection moves *into* the submit rather than sitting in front of it.
+detection moves _into_ the submit rather than sitting in front of it.
 
 **The six-month renewal window is dead code on this channel.**
 `application.service.ts:189` wraps the whole gate in
@@ -47,16 +47,16 @@ strands whoever takes it.
 
 Low risk, no schema change. Ships independently of everything below.
 
-| # | Change | Files |
-|---|---|---|
-| 1.1 | ✅ `providerId` accepts any non-empty string ≤256 instead of a UUID | `application/dto/submit-salary-report.dto.ts`, `submit-equality-report.dto.ts`, `dto/provider-id.spec.ts`, `docs/partner-api-guide.md` |
-| 1.2 | Remove `GET /partner/reports/equality/active` | `partner/partner.controller.ts`, guide §A2/§B2 |
-| 1.3 | Reject `salaryDataPeriod` when `salaryDataBasis` is `AVERAGE` (currently ignored silently) | `application/dto/submit-salary-report.dto.ts` |
-| 1.4 | Move `GET /partner/sub-criteria/catalog` to the scoring-model group | `partner/partner.controller.ts` → `scoring-model/scoring-model.controller.ts`, guide §C |
-| 1.5 | Equality gets its own DTO via `OmitType`, dropping `equalityReportPdf` / `equalityReportPdfFilename` | new `application/dto/submit-partner-equality-report.dto.ts` |
-| 1.6 | Fix stale guide text: §A4 tells callers to carry an `equalityReportId` the contract removed in #1483; the catalog's description still says a submission carries a criteria tree | `docs/partner-api-guide.md`, catalog `@PartnerResponse` description |
-| 1.7 | Declare `API_ENV` in the partner API's `.env.schema`, so the renewal-window gate fires | `apps/directorate-of-equality-partner-api/.env.schema` |
-| 1.8 | Drop `company.nationalId` from the submission body | `application/dto/submit-report-company.dto.ts`, `application.service.ts` (the equality check at :915 goes with it), guide §A3/§B7 |
+| #   | Change                                                                                                                                                                                                                                                               | Files                                                                                                                                  |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1 | ✅ `providerId` accepts any non-empty string ≤256 instead of a UUID                                                                                                                                                                                                  | `application/dto/submit-salary-report.dto.ts`, `submit-equality-report.dto.ts`, `dto/provider-id.spec.ts`, `docs/partner-api-guide.md` |
+| 1.2 | Remove `GET /partner/reports/equality/active`                                                                                                                                                                                                                        | `partner/partner.controller.ts`, guide §A2/§B2                                                                                         |
+| 1.3 | Reject `salaryDataPeriod` when `salaryDataBasis` is `AVERAGE` (currently ignored silently)                                                                                                                                                                           | `application/dto/submit-salary-report.dto.ts`                                                                                          |
+| 1.4 | ⏸ **Deferred.** Group the catalog with the scoring-model routes — documentation only for now; moving the _route_ needs the catalog data moved out of `ApplicationService` first, because `ScoringModelApiModule` deliberately does not boot `ApplicationCoreModule` | `sub-criterion-catalog/`, then `scoring-model.controller.ts`                                                                           |
+| 1.5 | Equality gets its own DTO via `OmitType`, dropping `equalityReportPdf` / `equalityReportPdfFilename`                                                                                                                                                                 | new `application/dto/submit-partner-equality-report.dto.ts`                                                                            |
+| 1.6 | Fix stale guide text: §A4 tells callers to carry an `equalityReportId` the contract removed in #1483; the catalog's description still says a submission carries a criteria tree                                                                                      | `docs/partner-api-guide.md`, catalog `@PartnerResponse` description                                                                    |
+| 1.7 | Declare `API_ENV` in the partner API's `.env.schema`, so the renewal-window gate fires                                                                                                                                                                               | `apps/directorate-of-equality-partner-api/.env.schema`                                                                                 |
+| 1.8 | Drop `company.nationalId` from the submission body                                                                                                                                                                                                                   | `application/dto/submit-report-company.dto.ts`, `application.service.ts` (the equality check at :915 goes with it), guide §A3/§B7      |
 
 **Decided 21 Sept:** `company.nationalId` goes. It is validated to equal the
 authenticated company, so it can only ever hold one value. Note this gives up a
@@ -145,7 +145,7 @@ this state.
 submission, unchanged from today and unchanged on island.is.
 
 The consequence, so nobody is surprised by it in support: a vendor who submits,
-lands `POSTPONED`, and *then* finds a payroll error cannot re-submit corrected
+lands `POSTPONED`, and _then_ finds a payroll error cannot re-submit corrected
 data. Their only route out is `PUT …/outliers` — explaining outliers in a payload
 they already know is wrong — after which the report is `SUBMITTED` and a
 corrected filing silently withdraws and replaces it.
@@ -191,7 +191,7 @@ codebase. Same rules, not rules that agree today.
   is simply part of what you are shown.
 - Worth its own throttle, since it is now optional and repeatable.
 
-Whether the *path* changes (`/reports/salary-analysis` → `/playground/…`) is
+Whether the _path_ changes (`/reports/salary-analysis` → `/playground/…`) is
 cosmetic and can follow the guide's section layout.
 
 ## Security considerations
@@ -219,10 +219,10 @@ cosmetic and can follow the guide's section layout.
 - [ ] DTO bound specs via `plainToInstance` + `validateSync`, following
       `scoring-dto-bounds.spec.ts`. ✅ done for `providerId`
       (`provider-id.spec.ts`)
-- [ ] `salaryDataPeriod` rejected on `AVERAGE`, accepted and normalised on `MONTH`
-- [ ] `company.nationalId` in the body → rejected by the strict whitelist
-- [ ] `equalityReportContent` on the partner equality route → rejected; still
-      accepted on island.is
+- [x] `salaryDataPeriod` rejected on `AVERAGE`, accepted and normalised on `MONTH`
+- [x] `company.nationalId` in the body → rejected by the strict whitelist
+- [x] `equalityReportContent` **required** on the partner equality route; the
+      PDF fields refused there, still accepted on island.is
 - [ ] Multipart submit: valid `.docx`, `.pdf` refused, `.doc` refused, oversized
       refused, missing part refused, malformed zip refused
 - [ ] Conversion output asserted on a real plan fixture, not a synthetic one
@@ -251,20 +251,34 @@ cosmetic and can follow the guide's section layout.
 
 ## Status Tracking
 
-| Phase | Item | PR | Status |
-|---|---|---|---|
-| 1 | `providerId` format | — | **Done**, `d1956e86f` |
-| 1 | Remove `equality/active` | — | Pending |
-| 1 | Reject `salaryDataPeriod` on `AVERAGE` | — | Pending |
-| 1 | Move the catalog route | — | Pending |
-| 1 | Partner equality DTO via `OmitType` | — | Pending |
-| 1 | Stale guide text | — | Pending |
-| 1 | Declare `API_ENV` on the partner API | — | Pending |
-| 1 | Drop `company.nationalId` | — | Pending |
-| 2 | Multipart + mammoth, document-only | — | Pending |
-| 3 | Detection at submit → `POSTPONED` | — | Pending |
-| 3 | `PUT …/outliers` | — | Pending |
-| 4 | Dry run: scope, input shape, shared validation | — | Pending |
+| Phase | Item                                           | PR  | Status                                  |
+| ----- | ---------------------------------------------- | --- | --------------------------------------- |
+| 1     | `providerId` format                            | —   | **Done**, `d1956e86f`                   |
+| 1     | Remove `equality/active`                       | —   | **Done**, `2a66fb537`                   |
+| 1     | Reject `salaryDataPeriod` on `AVERAGE`         | —   | **Done**, `2a66fb537`                   |
+| 1     | Move the catalog route                         | —   | **Deferred** — module boundary, see 1.4 |
+| 1     | Partner equality DTO via `OmitType`            | —   | **Done**, `2a66fb537`                   |
+| 1     | Stale guide text                               | —   | **Done**, `2a66fb537`                   |
+| 1     | Declare `API_ENV` on the partner API           | —   | **Done**, `2a66fb537`                   |
+| 1     | Drop `company.nationalId`                      | —   | **Done**, `2a66fb537`                   |
+| 2     | Multipart + mammoth, document-only             | —   | Pending                                 |
+| 3     | Detection at submit → `POSTPONED`              | —   | Pending                                 |
+| 3     | `PUT …/outliers`                               | —   | Pending                                 |
+| 4     | Dry run: scope, input shape, shared validation | —   | Pending                                 |
+
+## Phase 1 outcome
+
+Shipped in `2a66fb537`, with `d1956e86f` ahead of it. Typecheck, lint and tests
+clean across `doe-modules` (78 suites / 1539), the partner API (10 / 82) and
+`directorate-of-equality-api` (15 / 179).
+
+Two things the work turned up that the plan had not anticipated:
+
+- **`report-draft-submit.service.ts` carried the same dead parent-kennitala
+  check** as `application.service.ts`. The type checker found it; the plan had
+  listed only the one call site.
+- **1.4 is not a route move.** See above — it needs the catalog data relocated
+  first, and `ScoringModelApiModule`'s comment says why that boundary exists.
 
 ## Deploy consequence
 
@@ -281,7 +295,7 @@ once deployed — add it to the pre-launch env checklist.
   rather than less. The precedent says yes — island.is has filed `POSTPONED`
   reports this way all along — but it is worth confirming rather than inferring.
 - Does one firm reusing one starfsmat across its whole book create a compliance
-  problem? Same harm the *no personal-criterion defaults* judgement guards
+  problem? Same harm the _no personal-criterion defaults_ judgement guards
   against.
 
 ## Related
