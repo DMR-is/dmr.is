@@ -33,13 +33,18 @@ const IslandSelectTyped = IslandSelect as unknown as ComponentType<SelectProps>
  * the accessibility wiring aimed at elements that do not exist.
  *
  * `useId` is stable across both renders by construction. A caller that already
- * passes `id` or `name` keeps exactly the id it had.
+ * passes a non-empty `id` or `name` keeps exactly the id it had.
+ *
+ * Note the truthiness check rather than `??`: react-select resolves its prefix
+ * as `instanceId || ++counter`, so an empty string falls through to the counter
+ * just as `undefined` does. island-ui's own `Tabs` hits exactly that, rendering
+ * an internal `<Select name={label} />` that gets `name=""`.
  */
 export const Select = ({ id, name, ...props }: SelectProps) => {
   const fallbackId = useId()
 
   return (
-    <IslandSelectTyped id={id ?? name ?? fallbackId} name={name} {...props} />
+    <IslandSelectTyped id={id || name || fallbackId} name={name} {...props} />
   )
 }
 
