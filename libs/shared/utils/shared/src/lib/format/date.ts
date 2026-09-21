@@ -68,16 +68,13 @@ export const formatDateInIceland = (
     return formatDate(noonOnIcelandicDay, dateFormat, locale)
   }
 
-  // e.g. "dd. MMMM yyyy 'kl.' HH:mm" -> "dd. MMMM yyyy 'kl.' " + "13:45"
+  // e.g. "dd. MMMM yyyy 'kl.' HH:mm" -> "dd. MMMM yyyy 'kl.' " + "13:45".
+  // Slicing the suffix off leaves a string that is not itself a member of
+  // `dateFormats`, so this goes straight to date-fns rather than through
+  // `formatDate` - which would need a cast that claims something untrue.
   const datePart = dateFormat.slice(0, -TIME_SUFFIX.length)
 
-  return (
-    formatDate(
-      noonOnIcelandicDay,
-      datePart as (typeof dateFormats)[number],
-      locale,
-    ) + time
-  )
+  return format(noonOnIcelandicDay, datePart, { locale }) + time
 }
 
 export const formatDate = (

@@ -122,7 +122,11 @@ export const PageContainer = () => {
                 <DynamicCreateAdvertMenu />
               </Inline>
               <Tabs
-                label=""
+                // A real label, not "": island-ui's Tabs feeds this straight to
+                // an internal react-select as its `name`/`instanceId`, and an
+                // empty one falls through to a module counter that differs
+                // between the server and client renders.
+                label="Staða auglýsinga"
                 selected={tab ?? 'innsendar'}
                 onChange={handleTabChange}
                 onlyRenderSelectedTab={true}

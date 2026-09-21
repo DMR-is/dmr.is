@@ -37,8 +37,14 @@ const IslandSelectTyped = IslandSelect as unknown as ComponentType<SelectProps>
  *
  * Note the truthiness check rather than `??`: react-select resolves its prefix
  * as `instanceId || ++counter`, so an empty string falls through to the counter
- * just as `undefined` does. island-ui's own `Tabs` hits exactly that, rendering
- * an internal `<Select name={label} />` that gets `name=""`.
+ * just as `undefined` does. No caller passes an empty `id` or `name` today, so
+ * that arm is defensive rather than load-bearing - but `??` would silently stop
+ * guarding the moment one did.
+ *
+ * This only covers Selects rendered *through this wrapper*. island-ui's `Tabs`
+ * renders its own internal `<Select name={label} />` imported straight from
+ * `island-ui/core` (`Tabs/Tabs.tsx`), so a `Tabs` given `label=""` still gets
+ * counter-derived ids and this file cannot help it. Give those a real `label`.
  */
 export const Select = ({ id, name, ...props }: SelectProps) => {
   const fallbackId = useId()
