@@ -11,8 +11,10 @@ import type {
   ReportDateKey,
   ReportDateRanges,
   ReportFilters,
+  ReportGapBounds,
 } from '../../components/data-export/ReportExportFilter'
 import {
+  ADMIN_GENDER_OPTIONS,
   COMMUNICATION_STATUS_OPTIONS,
   EQUALITY_SOURCE_OPTIONS,
   REPORT_STATUS_OPTIONS,
@@ -115,9 +117,31 @@ const dateLine = (
   return null
 }
 
+/**
+ * A pay-gap range in words.
+ *
+ * Names the figure in full — "Óleiðréttur" / "Óskýrður" — because the sheet is
+ * read by someone who did not run the export, and the two differ by roughly a
+ * factor of three on the same company.
+ */
+const gapLine = (
+  label: string,
+  from: string | undefined,
+  to: string | undefined,
+): string | null => {
+  if (!from && !to) return null
+
+  const pct = (value: string) => `${value.replace('.', ',')}%`
+
+  if (from && to) return `${label}: ${pct(from)} – ${pct(to)}`
+  if (from) return `${label}: ${pct(from)} og yfir`
+  return `${label}: að ${pct(to as string)}`
+}
+
 export const buildReportFilterSummary = (
   filters: ReportFilters,
   dates: ReportDateRanges,
+  gaps: ReportGapBounds,
   query: string,
 ): string[] => {
   const labelFor = (
@@ -141,6 +165,10 @@ export const buildReportFilterSummary = (
       labelFor(EQUALITY_SOURCE_OPTIONS, filters.equalitySource),
     ),
     line(
+      'Kyn æðsta stjórnanda',
+      labelFor(ADMIN_GENDER_OPTIONS, filters.companyAdminGender),
+    ),
+    line(
       'Starfsmannafjöldi',
       filters.employees.map(
         (value) => EMPLOYEE_SIZE_LABEL[value] ?? value,
@@ -154,6 +182,16 @@ export const buildReportFilterSummary = (
     line('ÍSAT atvinnugrein', filters.isatCategoryCode),
     line('Landshluti', filters.regionCode),
     line('Póstnúmer', filters.postcode),
+    gapLine(
+      'Óleiðréttur launamunur',
+      gaps.rawGapPercentFrom,
+      gaps.rawGapPercentTo,
+    ),
+    gapLine(
+      'Óskýrður launamunur',
+      gaps.oskyrtPercentFrom,
+      gaps.oskyrtPercentTo,
+    ),
     ...DATE_RANGE_LABELS.map(([label, fromKey, toKey]) =>
       dateLine(label, dates[fromKey], dates[toKey]),
     ),

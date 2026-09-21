@@ -10,6 +10,7 @@ import {
   buildCompanyExpiryWhere,
   buildCompanyLifecycleStatusWhere,
   buildCompanyListQuery,
+  buildCompanyNeverSubmittedWhere,
   buildCompanyStatusWhere,
   CompanyExpiryFilterEnum,
 } from './filters'
@@ -262,6 +263,7 @@ describe('buildCompanyListQuery', () => {
           },
         },
         { status: CompanyStatusEnum.ACTIVE },
+        { quarantined: false },
       ])
     })
 
@@ -270,7 +272,7 @@ describe('buildCompanyListQuery', () => {
       // applies — otherwise a cleared filter would silently widen the register.
       const conditions = conditionsOf({ employeeCountCategory: [] })
 
-      expect(conditions).toHaveLength(2)
+      expect(conditions).toHaveLength(3)
       expect((conditions[0] as { val: string }).val).toMatch(/^NOT /)
     })
 
@@ -467,5 +469,39 @@ describe('buildCompanyListQuery', () => {
     })
 
     expect(where).toEqual({})
+  })
+})
+
+describe('buildCompanyNeverSubmittedWhere', () => {
+  const sql = () => {
+    const where = buildCompanyNeverSubmittedWhere()
+    const clauses = (where as Record<symbol, { val: string }[]>)[Op.and]
+    expect(clauses).toHaveLength(1)
+    return clauses[0].val
+  }
+
+  it('excludes companies with a report in this system', () => {
+    expect(sql()).toContain('NOT EXISTS')
+    expect(sql()).toContain('"cr"."company_id" = "CompanyModel"."id"')
+  })
+
+  it('also excludes companies carried over from the retired register', () => {
+    // A SharePoint-era certification IS a submission. Without this half the
+    // list would caption ~600 certified companies "never submitted" — false,
+    // and the opposite of actionable, since those are the compliant ones.
+    expect(sql()).toContain('legacy_report')
+    expect(sql()).toContain('"lr"."company_id" = "CompanyModel"."id"')
+  })
+
+  it('counts a denied filing as having been filed', () => {
+    // Rejected is not the same as never sent.
+    expect(sql()).toContain("'DENIED'")
+  })
+
+  it('does not count a draft or a withdrawn filing', () => {
+    // A draft was never sent, and a withdrawn one was taken back — both leave
+    // the obligation outstanding, which is what this filter looks for.
+    expect(sql()).not.toContain("'DRAFT'")
+    expect(sql()).not.toContain("'WITHDRAWN'")
   })
 })

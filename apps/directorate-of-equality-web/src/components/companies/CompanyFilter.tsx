@@ -135,7 +135,9 @@ export const CompanyFilter = ({
                   noOptionsMessage={companiesText.filterNoResults}
                   options={EMPLOYEE_RANGES}
                   selected={filters.employees}
-                  isMulti={false}
+                  // Multi since the API took a list: the register's own
+                  // default question is "everyone the law reaches", which is
+                  // 25–49 AND 50+ and was unaskable as a single value.
                   onChange={(val) => onFiltersChange('employees', val)}
                 />
                 <MultiSelectFilter
