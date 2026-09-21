@@ -150,6 +150,16 @@ type Props = {
   onPageChange: (page: number) => void
   sorting?: SortingState
   onSortingChange?: (sorting: SortingState) => void
+  /**
+   * Print "N fyrirtæki fundust" above the table. On by default, because the
+   * register has nowhere else that says it.
+   *
+   * Turned off where the surrounding screen already shows the count — the
+   * data export puts it beside the download button, which is where it matters
+   * (nobody should download 1.500 rows expecting 60). Two counts saying the
+   * same number invite the reader to look for the difference.
+   */
+  showResultCount?: boolean
 }
 
 export const CompanyTable = ({
@@ -158,6 +168,7 @@ export const CompanyTable = ({
   onPageChange,
   sorting,
   onSortingChange,
+  showResultCount = true,
 }: Props) => {
   const columns = useMemo<ColumnDef<CompanyDto>[]>(
     () => [
@@ -217,12 +228,14 @@ export const CompanyTable = ({
   return (
     <Box marginLeft={[0, 0, 0, 2]}>
       <Stack space={2}>
-        <Inline space={1} alignY="center">
-          <Text fontWeight="semiBold" marginTop={[2, 2, 0]}>
-            {paging.totalItems}
-          </Text>
-          <Text marginTop={[2, 2, 0]}>{companiesText.resultsText}</Text>
-        </Inline>
+        {showResultCount && (
+          <Inline space={1} alignY="center">
+            <Text fontWeight="semiBold" marginTop={[2, 2, 0]}>
+              {paging.totalItems}
+            </Text>
+            <Text marginTop={[2, 2, 0]}>{companiesText.resultsText}</Text>
+          </Inline>
+        )}
 
         <Table
           columns={columns}

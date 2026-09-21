@@ -22,7 +22,7 @@ import {
   EMPTY_GAP_BOUNDS,
   EMPTY_REPORT_CRITERIA,
   type ReportCriteria,
-  ReportCriteriaCards,
+  reportCriteriaCards,
   type ReportDateKey,
   type ReportDateRanges,
   type ReportGapBounds,
@@ -37,6 +37,7 @@ import {
 } from '../../gen/fetch'
 import { dataExportText, serverErrorText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import * as styles from './DataExportContainer.css'
 import { buildFilterSummary } from './filterSummary'
 
 const PAGE_SIZE = 25
@@ -310,26 +311,41 @@ export const DataExportContainer = () => {
   return (
     <GridContainer>
       <GridRow>
+        {/*
+          No `Stack` around these two. A sticky element can only travel inside
+          its PARENT's box, and a Stack item wrapper is exactly as tall as the
+          button — so wrapped, it had nowhere to move and never stuck. As a
+          direct child of the GridColumn, which stretches to the row height, it
+          has the whole column to travel. Spacing comes from `submitBar`'s own
+          padding instead.
+        */}
         <GridColumn span={['12/12', '12/12', '12/12', '3/12']}>
-          <Stack space={2}>
-            <CompanyFilter
-              query={query}
-              onQueryChange={setQuery}
-              filters={draft}
-              onFiltersChange={handleFiltersChange}
-              onReset={handleReset}
-              regionOptions={regionOptions}
-              postcodeOptions={postcodeOptions}
-            >
-              <ReportCriteriaCards
-                criteria={criteria}
-                onCriteriaChange={handleCriteriaChange}
-                dates={dates}
-                onDateChange={handleDateChange}
-                gaps={gaps}
-                onGapChange={handleGapChange}
-              />
-            </CompanyFilter>
+          <CompanyFilter
+            query={query}
+            onQueryChange={setQuery}
+            filters={draft}
+            onFiltersChange={handleFiltersChange}
+            onReset={handleReset}
+            regionOptions={regionOptions}
+            postcodeOptions={postcodeOptions}
+          >
+            {/*
+              Called, not rendered as `<ReportCriteriaCards />`. The cards have
+              to reach `Accordion` as an ARRAY so its `Stack` gives each one its
+              own slot — a component element is one child, and all three would
+              share a single slot without the divider and spacing the company
+              cards above get.
+            */}
+            {reportCriteriaCards({
+              criteria,
+              onCriteriaChange: handleCriteriaChange,
+              dates,
+              onDateChange: handleDateChange,
+              gaps,
+              onGapChange: handleGapChange,
+            })}
+          </CompanyFilter>
+          <Box className={styles.submitBar}>
             <Button
               icon="search"
               iconType="outline"
@@ -340,7 +356,7 @@ export const DataExportContainer = () => {
             >
               {dataExportText.submit}
             </Button>
-          </Stack>
+          </Box>
         </GridColumn>
 
         <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
@@ -365,6 +381,14 @@ export const DataExportContainer = () => {
                 </Stack>
               ) : (
                 <Inline space={2} alignY="center" justifyContent="spaceBetween">
+                  {/*
+                    The only count on the screen — `CompanyTable`'s own is
+                    suppressed below. It lives here rather than there because
+                    it sits beside the download button, which is the moment it
+                    matters: nobody should download 1.500 rows expecting 60.
+                    This is also the `aria-live` region, so the same text is
+                    what a screen reader is told when a search completes.
+                  */}
                   <Text variant="h4">
                     {isFetching
                       ? dataExportText.searching
@@ -409,6 +433,7 @@ export const DataExportContainer = () => {
                 rows={rows}
                 paging={data.paging}
                 onPageChange={setPage}
+                showResultCount={false}
               />
             )}
           </Stack>
