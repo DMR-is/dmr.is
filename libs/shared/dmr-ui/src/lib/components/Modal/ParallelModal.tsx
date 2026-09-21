@@ -60,9 +60,14 @@ export const ParallelModal = ({
     width === 'small'
       ? ['1/12', '1/12', '1/12', '3/12']
       : ['0', '0', '0', '1/12', '2/12']
-  // Rendering nothing until mounted also avoids the non-null assertion below
-  // throwing when #modal-root is absent.
-  const container = mounted ? document.getElementById('modal-root') : null
+  // Before mount there is no `document`, so the portal cannot render at all —
+  // that is the SSR guard. After mount, fall back to `document.body` if
+  // #modal-root is missing: the backdrop is fixed-position, so the modal still
+  // renders correctly, and a layout that forgot the mount point degrades to a
+  // working modal rather than a route change that silently shows nothing.
+  const container = mounted
+    ? (document.getElementById('modal-root') ?? document.body)
+    : null
   if (!container) return null
 
   return createPortal(
