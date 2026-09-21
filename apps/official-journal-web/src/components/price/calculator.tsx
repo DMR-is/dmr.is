@@ -40,15 +40,42 @@ export const PriceCalculator = () => {
   const { md } = useBreakpoint()
   const { data: session } = useSession()
 
-  const { data: paymentData } = useQuery(
-    trpc.getPaymentStatus.queryOptions({ id: currentCase.id }),
-  )
+  const {
+    data: paymentData,
+    isPending: isPaymentPending,
+    isError: isPaymentError,
+    isFetching: isPaymentFetching,
+    refetch: refetchPayment,
+  } = useQuery({
+    ...trpc.getPaymentStatus.queryOptions({ id: currentCase.id }),
+    retry: false,
+  })
 
   const invalidatePayment = () => {
     queryClient.invalidateQueries(
       trpc.getPaymentStatus.queryFilter({ id: currentCase.id }),
     )
   }
+
+  // No response yet, and nothing cached from an earlier one.
+  const isPaymentUnknown = !paymentData
+  // We have a status, but the last attempt to refresh it failed.
+  const isPaymentStale = isPaymentError && !isPaymentUnknown
+  // A claim must not be created twice, so only offer it on a confirmed status.
+  const canSendToTbr = canEdit && !isPaymentError
+
+  const retryPaymentButton = (
+    <Button
+      variant="ghost"
+      size="small"
+      loading={isPaymentFetching}
+      disabled={isPaymentFetching}
+      type="button"
+      onClick={() => void refetchPayment()}
+    >
+      Reyna aftur
+    </Button>
+  )
 
   const { state, dispatch } = usePriceCalculatorState(currentCase)
   const [prevPrice, setPrevPrice] = useState(currentCase.transaction?.price)
@@ -313,7 +340,7 @@ export const PriceCalculator = () => {
             onBlur={updateAllPrices}
           />
         </Box>
-        {isPublishedOrRejected ? (
+        {isPublishedOrRejected && paymentData ? (
           <Inline alignY="center" space={1}>
             <PriceCalculatorStatusBox
               text={
@@ -325,7 +352,16 @@ export const PriceCalculator = () => {
         ) : undefined}
       </Inline>
       <Box marginTop={2}>
-        {isPublishedOrRejected ? (
+        {isPublishedOrRejected && isPaymentUnknown ? (
+          isPaymentPending ? (
+            <Text>Sæki greiðslustöðu…</Text>
+          ) : (
+            <Inline alignY="center" space={2}>
+              <Text>Ekki tókst að sækja greiðslustöðu.</Text>
+              {retryPaymentButton}
+            </Inline>
+          )
+        ) : isPublishedOrRejected ? (
           <Box>
             {paymentData?.created ? (
               <PriceCalculatorStatusBox
@@ -343,7 +379,7 @@ export const PriceCalculator = () => {
                     variant="ghost"
                     size="small"
                     icon="arrowForward"
-                    disabled={!canEdit}
+                    disabled={!canSendToTbr}
                     loading={isLocalPaymentLoading}
                     type="button"
                     onClick={async () => {
@@ -376,6 +412,17 @@ export const PriceCalculator = () => {
                 </Inline>
               </>
             )}
+            {isPaymentStale ? (
+              <Box marginTop={1}>
+                <Inline alignY="center" space={2}>
+                  <Text variant="small">
+                    Ekki tókst að uppfæra greiðslustöðu, staðan gæti verið
+                    úrelt.
+                  </Text>
+                  {retryPaymentButton}
+                </Inline>
+              </Box>
+            ) : undefined}
           </Box>
         ) : paymentData?.created ? (
           <PriceCalculatorStatusBox

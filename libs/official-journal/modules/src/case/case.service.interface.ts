@@ -249,7 +249,6 @@ export interface ICaseService {
 
   getCasePaymentStatus(
     params: GetPaymentQuery,
-    transaction?: Transaction,
   ): Promise<ResultWrapper<GetPaymentResponse>>
 
   generatePdfByCase(

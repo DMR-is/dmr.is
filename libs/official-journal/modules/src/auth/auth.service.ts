@@ -11,6 +11,18 @@ import { IAuthService, IdsToken } from './auth.service.interface'
 const LOGGING_CONTEXT = 'AuthService'
 const LOGGING_CATEGORY = 'auth-service'
 
+/**
+ * Backstop deadline for anything going over X-Road, covering token acquisition,
+ * response headers and reading the body. An unresponsive upstream used to tie a
+ * request up for as long as the socket stayed open, which is how a fee service
+ * outage turned into minute-long page loads across the admin UI.
+ *
+ * Deliberately generous: it exists so nothing can hang indefinitely, not to
+ * bound any particular call. Callers that need a tighter deadline — or that
+ * want the request cancelled for some other reason — pass their own signal.
+ */
+const DEFAULT_XROAD_TIMEOUT_MS = 30_000
+
 @Injectable()
 export class AuthService implements IAuthService {
   private idsToken: IdsToken | null = null
@@ -20,19 +32,20 @@ export class AuthService implements IAuthService {
     this.logger.info('Using AuthService')
   }
 
-  async getAccessToken() {
+  async getAccessToken(signal?: AbortSignal) {
+    signal?.throwIfAborted()
     if (!this.idsToken) {
       this.logger.debug('Access token is missing, fetching a new one', {
         category: LOGGING_CATEGORY,
       })
-      await this.refresh()
+      await this.refresh(signal)
     }
 
     if (this.isTokenExpired()) {
       this.logger.debug('Access token is expired, refreshing', {
         category: LOGGING_CATEGORY,
       })
-      await this.refresh()
+      await this.refresh(signal)
     }
 
     if (!this.idsToken) {
@@ -49,7 +62,7 @@ export class AuthService implements IAuthService {
     return this.tokenExpiresAt && this.tokenExpiresAt < Date.now()
   }
 
-  private async refresh() {
+  private async refresh(signal?: AbortSignal) {
     const idsUrl = process.env.ISLAND_IS_TOKEN_URL
     const clientSecret = process.env.ISLAND_IS_DMR_CLIENT_SECRET
     const clientId = process.env.ISLAND_IS_DMR_CLIENT_ID
@@ -78,6 +91,7 @@ export class AuthService implements IAuthService {
       })
       const tokenResponse = await fetch(idsUrl, {
         method: 'POST',
+        signal,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -97,15 +111,21 @@ export class AuthService implements IAuthService {
         })
       }
     } catch (error) {
+      signal?.throwIfAborted()
       this.logger.error('Internal server error', {
         category: LOGGING_CATEGORY,
       })
     }
   }
 
-  @LogMethod()
+  // Arguments are not logged: `options.headers` carries the caller's
+  // Authorization header, and nothing in the logging stack redacts it. The
+  // method and url are logged explicitly below instead.
+  @LogMethod(false)
   async xroadFetch(url: string, options: RequestInit): Promise<Response> {
-    const idsToken = await this.getAccessToken()
+    const signal =
+      options.signal ?? AbortSignal.timeout(DEFAULT_XROAD_TIMEOUT_MS)
+    const idsToken = await this.getAccessToken(signal)
 
     if (!idsToken) {
       this.logger.error(
@@ -132,6 +152,7 @@ export class AuthService implements IAuthService {
 
     const requestOption = {
       ...options,
+      signal,
       headers: {
         ...options.headers,
         'X-Road-Client': process.env.XROAD_DMR_CLIENT,
