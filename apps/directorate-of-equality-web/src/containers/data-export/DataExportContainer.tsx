@@ -1,6 +1,5 @@
 'use client'
 
-import { parseAsStringLiteral, useQueryState } from 'nuqs'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
@@ -12,7 +11,6 @@ import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
-import { Tabs } from '@dmr.is/ui/components/island-is/Tabs'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import {
@@ -22,15 +20,14 @@ import {
 import { CompanyTable } from '../../components/companies/CompanyTable'
 import {
   EMPTY_GAP_BOUNDS,
-  EMPTY_REPORT_FILTERS,
+  EMPTY_REPORT_CRITERIA,
+  type ReportCriteria,
+  ReportCriteriaCards,
   type ReportDateKey,
   type ReportDateRanges,
-  ReportExportFilter,
-  type ReportFilters,
   type ReportGapBounds,
   type ReportGapKey,
-} from '../../components/data-export/ReportExportFilter'
-import { ReportExportTable } from '../../components/data-export/ReportExportTable'
+} from '../../components/data-export/ReportCriteriaCards'
 import {
   CompanyExpiryFilterEnum,
   CompanyReportStatusEnum,
@@ -38,13 +35,9 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../gen/fetch'
-import { useIsTablet } from '../../hooks/useIsTablet'
 import { dataExportText, serverErrorText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { buildFilterSummary, buildReportFilterSummary } from './filterSummary'
-
-const DATASETS = ['companies', 'reports'] as const
-type Dataset = (typeof DATASETS)[number]
+import { buildFilterSummary } from './filterSummary'
 
 const PAGE_SIZE = 25
 
@@ -65,39 +58,38 @@ const EMPTY_FILTERS: CompanyFilters = {
 /**
  * "Keyra út lista" — filter first, then fetch, then export.
  *
+ * ONE dataset: companies. The report criteria in the panel NARROW that list
+ * rather than switching it — a company comes back when at least one of its
+ * approved filings matches — so every row is a company and the file carries
+ * the company columns. A second list of filings was one more thing to
+ * reconcile against this one.
+ *
  * Unlike the register and the vinnslusvæði, this screen does NOT query as you
- * type. Nothing is fetched until "Sækja lista" is pressed, because the whole
- * point of the page is to narrow a large list before asking for it, and a
- * result table that reshuffles under every keystroke invites exporting the
- * wrong thing.
+ * type. Nothing is fetched until "Sækja lista" is pressed, because the point of
+ * the page is to narrow a large list before asking for it, and a table that
+ * reshuffles under every keystroke invites exporting the wrong thing.
  *
  * The consequence to keep in mind when editing: what the table shows and what
  * the export contains are BOTH the submitted filter, never the one currently
  * typed into the panel. `submitted` is that snapshot.
  */
 export const DataExportContainer = () => {
-  const { isTablet } = useIsTablet()
   const trpc = useTRPC()
 
-  const [dataset, setDataset] = useQueryState(
-    'gagnasett',
-    parseAsStringLiteral(DATASETS).withDefault('companies'),
-  )
-
   const [draft, setDraft] = useState<CompanyFilters>(EMPTY_FILTERS)
-  const [reportDraft, setReportDraft] =
-    useState<ReportFilters>(EMPTY_REPORT_FILTERS)
-  const [reportDates, setReportDates] = useState<ReportDateRanges>({})
-  const [reportGaps, setReportGaps] =
-    useState<ReportGapBounds>(EMPTY_GAP_BOUNDS)
+  const [criteria, setCriteria] = useState<ReportCriteria>(
+    EMPTY_REPORT_CRITERIA,
+  )
+  const [dates, setDates] = useState<ReportDateRanges>({})
+  const [gaps, setGaps] = useState<ReportGapBounds>(EMPTY_GAP_BOUNDS)
   const [query, setQuery] = useState('')
 
   /**
    * The filter the results and the export are both built from — null until the
    * admin has asked for something.
    *
-   * Deliberately a snapshot rather than a read of `draft`: it is what makes the
-   * export match the table. Editing the panel after fetching changes neither
+   * Deliberately a snapshot rather than a read of the drafts: it is what makes
+   * the export match the table. Editing the panel afterwards changes neither
    * until "Sækja lista" is pressed again.
    */
   const [submitted, setSubmitted] = useState<Record<string, unknown> | null>(
@@ -135,7 +127,13 @@ export const DataExportContainer = () => {
   )
 
   const toServerQuery = useCallback(
-    (filters: CompanyFilters, q: string): Record<string, unknown> => ({
+    (
+      filters: CompanyFilters,
+      reportCriteria: ReportCriteria,
+      reportDates: ReportDateRanges,
+      reportGaps: ReportGapBounds,
+      q: string,
+    ): Record<string, unknown> => ({
       ...(q.trim() ? { q: q.trim() } : {}),
       ...(filters.employees.length
         ? { employeeCountCategory: filters.employees as CompanySizeEnum[] }
@@ -172,44 +170,28 @@ export const DataExportContainer = () => {
         : {}),
       ...(filters.regionCode.length ? { regionCode: filters.regionCode } : {}),
       ...(filters.postcode.length ? { postcode: filters.postcode } : {}),
-    }),
-    [],
-  )
 
-  const toReportQuery = useCallback(
-    (
-      filters: ReportFilters,
-      dates: ReportDateRanges,
-      gaps: ReportGapBounds,
-      q: string,
-    ): Record<string, unknown> => ({
-      ...(q.trim() ? { q: q.trim() } : {}),
-      ...(filters.type.length ? { type: filters.type } : {}),
-      ...(filters.status.length ? { status: filters.status } : {}),
-      ...(filters.communicationStatus.length
-        ? { communicationStatus: filters.communicationStatus }
+      // --- Report criteria: narrow the companies, never change the row. ---
+      ...(reportCriteria.type.length
+        ? { reportType: reportCriteria.type }
         : {}),
-      ...(filters.equalitySource.length
-        ? { equalitySource: filters.equalitySource }
+      ...(reportCriteria.companyAdminGender.length
+        ? { reportCompanyAdminGender: reportCriteria.companyAdminGender }
         : {}),
-      ...(filters.companyAdminGender.length
-        ? { companyAdminGender: filters.companyAdminGender }
+      ...(reportCriteria.equalitySource.length
+        ? { reportEqualitySource: reportCriteria.equalitySource }
         : {}),
-      ...(filters.employees.length
-        ? { employeeCountCategory: filters.employees }
+      // Both selected means both states, which is the same as no constraint —
+      // so it is sent as none rather than as a contradiction.
+      ...(reportCriteria.improvementPlan.length === 1
+        ? {
+            reportHasImprovementPlan:
+              reportCriteria.improvementPlan[0] === 'yes',
+          }
         : {}),
-      ...(filters.sector.length ? { sector: filters.sector } : {}),
-      ...(filters.isatSection.length
-        ? { isatSection: filters.isatSection }
-        : {}),
-      ...(filters.isatCategoryCode.length
-        ? { isatCategoryCode: filters.isatCategoryCode }
-        : {}),
-      ...(filters.regionCode.length ? { regionCode: filters.regionCode } : {}),
-      ...(filters.postcode.length ? { postcode: filters.postcode } : {}),
       // The API takes ISO datetimes; the pickers give local Dates.
       ...Object.fromEntries(
-        Object.entries(dates)
+        Object.entries(reportDates)
           .filter(([, value]) => value instanceof Date)
           .map(([key, value]) => [key, (value as Date).toISOString()]),
       ),
@@ -217,7 +199,7 @@ export const DataExportContainer = () => {
       // a real lower bound of zero, so an empty value is dropped rather than
       // converted.
       ...Object.fromEntries(
-        Object.entries(gaps)
+        Object.entries(reportGaps)
           .filter(([, value]) => value !== undefined && value !== '')
           .map(([key, value]) => [key, Number(value)]),
       ),
@@ -225,28 +207,12 @@ export const DataExportContainer = () => {
     [],
   )
 
-  const isCompanies = dataset === 'companies'
-
   const { data, isFetching, isError } = useQuery(
     trpc.company.list.queryOptions(
       { ...(submitted ?? {}), page, pageSize: PAGE_SIZE },
       {
         // Nothing is fetched until the admin asks for it.
-        enabled: submitted !== null && isCompanies,
-        placeholderData: (prev) => prev,
-      },
-    ),
-  )
-
-  const {
-    data: reportData,
-    isFetching: isFetchingReports,
-    isError: isReportError,
-  } = useQuery(
-    trpc.reports.list.queryOptions(
-      { ...(submitted ?? {}), page, pageSize: PAGE_SIZE },
-      {
-        enabled: submitted !== null && !isCompanies,
+        enabled: submitted !== null,
         placeholderData: (prev) => prev,
       },
     ),
@@ -262,30 +228,27 @@ export const DataExportContainer = () => {
     setDraft((prev) => ({ ...prev, [key]: val }))
   }
 
-  const handleReportFiltersChange = (
-    key: keyof ReportFilters,
-    val: string[],
-  ) => {
-    if (key === 'regionCode') {
-      setReportDraft((prev) => ({ ...prev, regionCode: val, postcode: [] }))
-      return
-    }
-    setReportDraft((prev) => ({ ...prev, [key]: val }))
+  const handleCriteriaChange = (key: keyof ReportCriteria, val: string[]) => {
+    setCriteria((prev) => ({ ...prev, [key]: val }))
   }
 
   const handleDateChange = (key: ReportDateKey, value: Date | undefined) => {
-    setReportDates((prev) => ({ ...prev, [key]: value }))
+    setDates((prev) => ({ ...prev, [key]: value }))
   }
 
   const handleGapChange = (key: ReportGapKey, value: string | undefined) => {
-    setReportGaps((prev) => {
+    setGaps((prev) => {
       const next = { ...prev, [key]: value }
 
       // Clearing a lower bound clears its upper one too: "up to 4%" with no
       // floor is a different question from the range that was being built, and
       // silently keeping half of it would answer it without being asked.
-      if (key === 'rawGapPercentFrom' && !value) next.rawGapPercentTo = undefined
-      if (key === 'oskyrtPercentFrom' && !value) next.oskyrtPercentTo = undefined
+      if (key === 'reportRawGapPercentFrom' && !value) {
+        next.reportRawGapPercentTo = undefined
+      }
+      if (key === 'reportOskyrtPercentFrom' && !value) {
+        next.reportOskyrtPercentTo = undefined
+      }
 
       return next
     })
@@ -293,11 +256,7 @@ export const DataExportContainer = () => {
 
   const handleSubmit = () => {
     setPage(1)
-    setSubmitted(
-      isCompanies
-        ? toServerQuery(draft, query)
-        : toReportQuery(reportDraft, reportDates, reportGaps, query),
-    )
+    setSubmitted(toServerQuery(draft, criteria, dates, gaps, query))
     // Deferred to the paint after the results render, otherwise focus moves to
     // a heading that still says "choose your filters".
     requestAnimationFrame(() => resultsRef.current?.focus())
@@ -305,20 +264,16 @@ export const DataExportContainer = () => {
 
   const handleReset = () => {
     setDraft(EMPTY_FILTERS)
-    setReportDraft(EMPTY_REPORT_FILTERS)
-    setReportDates({})
-    setReportGaps(EMPTY_GAP_BOUNDS)
+    setCriteria(EMPTY_REPORT_CRITERIA)
+    setDates({})
+    setGaps(EMPTY_GAP_BOUNDS)
     setQuery('')
     setSubmitted(null)
     setPage(1)
   }
 
   const rows = data?.companies ?? []
-  const reportRows = reportData?.reports ?? []
-  const paging = isCompanies ? data?.paging : reportData?.paging
-  const total = paging?.totalItems ?? 0
-  const fetching = isCompanies ? isFetching : isFetchingReports
-  const errored = isCompanies ? isError : isReportError
+  const total = data?.paging?.totalItems ?? 0
 
   /**
    * The export link carries the SUBMITTED filter and no paging — the file is
@@ -339,177 +294,126 @@ export const DataExportContainer = () => {
 
     // Reaches the workbook's "Um útdráttinn" sheet, so the file records the
     // filter in the same words the admin saw on screen.
-    const summary = isCompanies
-      ? buildFilterSummary(draft, query)
-      : buildReportFilterSummary(reportDraft, reportDates, reportGaps, query)
-    for (const line of summary) {
+    for (const line of buildFilterSummary(
+      draft,
+      criteria,
+      dates,
+      gaps,
+      query,
+    )) {
       params.append('filterSummary', line)
     }
 
-    return `/api/export/${dataset}?${params.toString()}`
-  }, [
-    submitted,
-    dataset,
-    isCompanies,
-    draft,
-    reportDraft,
-    reportDates,
-    reportGaps,
-    query,
-  ])
+    return `/api/export/companies?${params.toString()}`
+  }, [submitted, draft, criteria, dates, gaps, query])
 
   return (
     <GridContainer>
-      <Stack space={3}>
-        <Tabs
-          label={dataExportText.datasetLabel}
-          selected={dataset}
-          onChange={(id) => {
-            setDataset(id as Dataset)
-            // A filter built for one dataset does not mean the same thing in
-            // the other, and stale results under a new heading would read as
-            // though they belonged to it.
-            setSubmitted(null)
-            setPage(1)
-          }}
-          tabs={[
-            {
-              id: 'companies',
-              label: dataExportText.datasetCompanies,
-              content: null,
-            },
-            {
-              id: 'reports',
-              label: dataExportText.datasetReports,
-              content: null,
-            },
-          ]}
-          contentBackground="blue100"
-        />
+      <GridRow>
+        <GridColumn span={['12/12', '12/12', '12/12', '3/12']}>
+          <Stack space={2}>
+            <CompanyFilter
+              query={query}
+              onQueryChange={setQuery}
+              filters={draft}
+              onFiltersChange={handleFiltersChange}
+              onReset={handleReset}
+              regionOptions={regionOptions}
+              postcodeOptions={postcodeOptions}
+            >
+              <ReportCriteriaCards
+                criteria={criteria}
+                onCriteriaChange={handleCriteriaChange}
+                dates={dates}
+                onDateChange={handleDateChange}
+                gaps={gaps}
+                onGapChange={handleGapChange}
+              />
+            </CompanyFilter>
+            <Button
+              icon="search"
+              iconType="outline"
+              onClick={handleSubmit}
+              loading={isFetching}
+              size="small"
+              fluid
+            >
+              {dataExportText.submit}
+            </Button>
+          </Stack>
+        </GridColumn>
 
-        <GridRow>
-          <GridColumn span={['12/12', '12/12', '12/12', '3/12']}>
-            <Stack space={2}>
-              {isCompanies ? (
-                <CompanyFilter
-                  query={query}
-                  onQueryChange={setQuery}
-                  filters={draft}
-                  onFiltersChange={handleFiltersChange}
-                  onReset={handleReset}
-                  regionOptions={regionOptions}
-                  postcodeOptions={postcodeOptions}
-                />
+        <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
+          <Stack space={2}>
+            {/*
+              `tabIndex={-1}` so the post-fetch focus move has somewhere to
+              land; `aria-live` so the count is announced rather than only
+              drawn. Both halves are needed — a sighted keyboard user gets the
+              focus, a screen-reader user gets the message.
+            */}
+            <Box
+              ref={resultsRef}
+              tabIndex={-1}
+              aria-live="polite"
+              aria-busy={isFetching}
+              outline="none"
+            >
+              {submitted === null ? (
+                <Stack space={1}>
+                  <Text variant="h4">{dataExportText.initialHeading}</Text>
+                  <Text>{dataExportText.initialDescription}</Text>
+                </Stack>
               ) : (
-                <ReportExportFilter
-                  query={query}
-                  onQueryChange={setQuery}
-                  filters={reportDraft}
-                  onFiltersChange={handleReportFiltersChange}
-                  dates={reportDates}
-                  onDateChange={handleDateChange}
-                  gaps={reportGaps}
-                  onGapChange={handleGapChange}
-                  onReset={handleReset}
-                  regionOptions={regionOptions}
-                  postcodeOptions={postcodeOptions}
-                />
+                <Inline space={2} alignY="center" justifyContent="spaceBetween">
+                  <Text variant="h4">
+                    {isFetching
+                      ? dataExportText.searching
+                      : dataExportText.resultCount(total)}
+                  </Text>
+                  {exportHref && total > 0 && (
+                    <a href={exportHref} download>
+                      <Button
+                        icon="download"
+                        iconType="outline"
+                        size="small"
+                        variant="utility"
+                        colorScheme="white"
+                        as="span"
+                      >
+                        {dataExportText.export}
+                      </Button>
+                    </a>
+                  )}
+                </Inline>
               )}
-              <Button
-                icon="search"
-                iconType="outline"
-                onClick={handleSubmit}
-                loading={fetching}
-                size="small"
-                fluid
-              >
-                {dataExportText.submit}
-              </Button>
-            </Stack>
-          </GridColumn>
+            </Box>
 
-          <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
-            <Stack space={2}>
-              {/*
-                `tabIndex={-1}` so the post-fetch focus move has somewhere to
-                land; `aria-live` so the count is announced rather than only
-                drawn. Both halves are needed — a sighted keyboard user gets
-                the focus, a screen-reader user gets the message.
-              */}
-              <Box
-                ref={resultsRef}
-                tabIndex={-1}
-                aria-live="polite"
-                aria-busy={fetching}
-                outline="none"
-              >
-                {submitted === null ? (
-                  <Stack space={1}>
-                    <Text variant="h4">{dataExportText.initialHeading}</Text>
-                    <Text>{dataExportText.initialDescription}</Text>
-                  </Stack>
-                ) : (
-                  <Inline space={2} alignY="center" justifyContent="spaceBetween">
-                    <Text variant="h4">
-                      {fetching
-                        ? dataExportText.searching
-                        : dataExportText.resultCount(total)}
-                    </Text>
-                    {exportHref && total > 0 && (
-                      <a href={exportHref} download>
-                        <Button
-                          icon="download"
-                          iconType="outline"
-                          size="small"
-                          variant="utility"
-                          colorScheme="white"
-                          as="span"
-                        >
-                          {dataExportText.export}
-                        </Button>
-                      </a>
-                    )}
-                  </Inline>
-                )}
-              </Box>
+            {isError && (
+              <AlertMessage
+                type="error"
+                title={serverErrorText.title}
+                message={serverErrorText.message}
+              />
+            )}
 
-              {errored && (
-                <AlertMessage
-                  type="error"
-                  title={serverErrorText.title}
-                  message={serverErrorText.message}
-                />
-              )}
+            {submitted !== null && total === 0 && !isFetching && !isError && (
+              <AlertMessage
+                type="info"
+                title={dataExportText.emptyHeading}
+                message={dataExportText.emptyDescription}
+              />
+            )}
 
-              {submitted !== null && total === 0 && !fetching && !errored && (
-                <AlertMessage
-                  type="info"
-                  title={dataExportText.emptyHeading}
-                  message={dataExportText.emptyDescription}
-                />
-              )}
-
-              {submitted !== null &&
-                paging &&
-                total > 0 &&
-                (isCompanies ? (
-                  <CompanyTable
-                    rows={rows}
-                    paging={paging}
-                    onPageChange={setPage}
-                  />
-                ) : (
-                  <ReportExportTable
-                    rows={reportRows}
-                    paging={paging}
-                    onPageChange={setPage}
-                  />
-                ))}
-            </Stack>
-            {isTablet && <Box paddingTop={2} />}
-          </GridColumn>
-        </GridRow>
-      </Stack>
+            {submitted !== null && data?.paging && total > 0 && (
+              <CompanyTable
+                rows={rows}
+                paging={data.paging}
+                onPageChange={setPage}
+              />
+            )}
+          </Stack>
+        </GridColumn>
+      </GridRow>
     </GridContainer>
   )
 }

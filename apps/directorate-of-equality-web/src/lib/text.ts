@@ -48,7 +48,7 @@ export const frontPageText = {
 export const dataExportText = {
   heading: 'Keyra út lista',
   heroDescription:
-    'Veldu síur, sæktu listann og keyrðu hann út í Excel. Útdrátturinn nær til allra færslna sem síurnar skila — ekki bara þeirra sem sjást á skjánum.',
+    'Veldu síur, sæktu listann og keyrðu hann út í Excel. Hægt er að sía bæði eftir fyrirtækjunum sjálfum og eftir því sem þau hafa skilað inn — listinn skilar alltaf fyrirtækjum. Útdrátturinn nær til allra sem síurnar skila, ekki bara þeirra sem sjást á skjánum.',
   imageAlt: 'Keyra út lista',
   datasetLabel: 'Gagnasett',
   datasetCompanies: 'Fyrirtæki',
@@ -72,7 +72,7 @@ export const dataExportText = {
 
   // --- Skýrslur dataset ---
   reportSearchPlaceholder: 'Fyrirtæki, kennitala eða auðkenni',
-  cardReport: 'Skýrsla',
+  cardReport: 'Skýrslur fyrirtækisins',
   cardDates: 'Dagsetningar',
   typeLabel: 'Tegund',
   typePlaceholder: 'Veldu tegund',
@@ -96,6 +96,8 @@ export const dataExportText = {
   adminGenderLabel: 'Kyn æðsta stjórnanda',
   adminGenderPlaceholder: 'Veldu kyn',
   cardGap: 'Launamunur',
+  improvementPlanLabel: 'Úrbótaáætlun',
+  improvementPlanPlaceholder: 'Veldu',
   // Named in full on BOTH controls. "Launamunur" alone would let an admin pick
   // whichever one they landed on first, and the two answer different questions:
   // the regulated figure sits under ~4%, the headline one routinely at 5–15%.
