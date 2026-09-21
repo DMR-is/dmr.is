@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 
-import { type ComponentRef, useEffect, useRef } from 'react'
+import { type ComponentRef, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { Box } from '../../island-is/lib/Box'
@@ -38,11 +38,28 @@ export const ParallelModal = ({
 
   const dialogRef = useRef<ComponentRef<'dialog'>>(null)
 
+  // The portal below cannot render during SSR or on the first client render,
+  // so nothing may touch `document` or `dialogRef` until after mount. Before
+  // then this is null, which is the SSR guard.
+  //
+  // Resolved once and held in state rather than recomputed each render: if the
+  // target changed identity, React would remount the portal subtree and attach
+  // `dialogRef` to a fresh <dialog> that the effect below never opens.
+  //
+  // Falling back to `document.body` keeps a layout that forgot #modal-root
+  // rendering a working modal — the backdrop is fixed-position, so it is
+  // correct wherever it is portalled — instead of silently showing nothing.
+  const [container, setContainer] = useState<HTMLElement | null>(null)
   useEffect(() => {
-    if (!dialogRef.current?.open) {
+    setContainer(document.getElementById('modal-root') ?? document.body)
+  }, [])
+
+  // Keyed on `container`: dialogRef is null until the portal exists.
+  useEffect(() => {
+    if (container && !dialogRef.current?.open) {
       dialogRef.current?.showModal()
     }
-  }, [])
+  }, [container])
   function onDismiss() {
     router.back()
   }
@@ -54,6 +71,8 @@ export const ParallelModal = ({
     width === 'small'
       ? ['1/12', '1/12', '1/12', '3/12']
       : ['0', '0', '0', '1/12', '2/12']
+  if (!container) return null
+
   return createPortal(
     <div className={styles.backdrop({ color: 'default' })}>
       <dialog
@@ -99,7 +118,6 @@ export const ParallelModal = ({
         </Box>
       </dialog>
     </div>,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    document.getElementById('modal-root')!,
+    container,
   )
 }
