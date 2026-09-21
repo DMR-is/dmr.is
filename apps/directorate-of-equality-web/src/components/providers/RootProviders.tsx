@@ -5,6 +5,7 @@ import { SessionProvider } from 'next-auth/react'
 
 import { NuqsAdapter } from 'nuqs/adapters/next'
 
+import { ReakitIdProvider } from '@dmr.is/ui/components/client-components/ReakitIdProvider'
 import { ToastContainer } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { TRPCReactProvider } from '../../lib/trpc/client/Provider'
@@ -19,19 +20,21 @@ export const RootProviders = ({
   children: React.ReactNode
 }) => {
   return (
-    <TRPCReactProvider>
-      <NuqsAdapter>
-        <SessionProvider
-          session={session}
-          refetchInterval={1 * 60}
-          refetchOnWindowFocus={true}
-          basePath="/api/auth"
-        >
-          {children}
-        </SessionProvider>
-      </NuqsAdapter>
-      <ToastContainer closeButton={true} timeout={2000} />
-      <ReactQueryDevtools />
-    </TRPCReactProvider>
+    <ReakitIdProvider>
+      <TRPCReactProvider>
+        <NuqsAdapter>
+          <SessionProvider
+            session={session}
+            refetchInterval={1 * 60}
+            refetchOnWindowFocus={true}
+            basePath="/api/auth"
+          >
+            {children}
+          </SessionProvider>
+        </NuqsAdapter>
+        <ToastContainer closeButton={true} timeout={2000} />
+        <ReactQueryDevtools />
+      </TRPCReactProvider>
+    </ReakitIdProvider>
   )
 }
