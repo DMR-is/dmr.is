@@ -121,8 +121,10 @@ Both return `429` when exceeded.
 Both submissions require a `providerId`: **your own** identifier for the
 submission. Rules that matter:
 
-- It **must be a UUID.** The field is UUID-validated; an id like
-  `2026-Q1-042` is rejected with `400`.
+- **It is yours to shape.** Any non-empty string up to 256 characters — a
+  UUID, `2026-Q1-042`, whatever your system already mints. The format carries
+  no meaning to us; we only ever compare it for equality, so you do not need a
+  mapping table to file through this API.
 - It is **required**, not optional, and it is the only handle you get for
   reading a report back — `GET /partner/reports/:providerId`. The `reportId`
   returned on submit is a DoE-internal id and is not a lookup key on this
@@ -130,7 +132,7 @@ submission. Rules that matter:
 - It is **your idempotency key.** Re-sending the same `providerId` for the same
   company returns the original `reportId` instead of filing a second report, so
   a network-level retry is safe. Persist it with the submission and reuse it for
-  every retry of _that_ submission — do not mint a fresh UUID per HTTP attempt.
+  every retry of _that_ submission — do not mint a fresh id per HTTP attempt.
 - **One `providerId` per submission, and a correction is a new submission.**
   This is the distinction that costs data if you get it wrong, so it has its own
   section below.
@@ -234,7 +236,7 @@ Body (`SubmitEqualityReportDto`):
 
 | Field                                                                                        | Notes                                                                                                                                                                                                                  |
 | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `providerId`                                                                                 | your UUID for this submission — see above                                                                                                                                                                              |
+| `providerId`                                                                                 | your own id for this submission, any non-empty string up to 256 chars — see above                                                                                                                                      |
 | `equalityReportContent`                                                                      | the plan itself, as **plain HTML**. Persisted as-is and rendered into the approved PDF. (A base64 body is still decoded, for the island.is client's benefit, but it is no longer part of this contract — send markup.) |
 | `companyAdminName` / `companyAdminTitle?` / `companyAdminEmail` / `companyAdminGender`       | the company executive who stands behind the plan. `companyAdminGender` is a `GenderEnum` value                                                                                                                         |
 | `contactName` / `contactTitle?` / `contactEmail` / `contactPhone`                            | the day-to-day contact (tengiliður) Jafnréttisstofa writes to                                                                                                                                                          |
@@ -468,7 +470,7 @@ the strict validation above:
 
 | Field                                                             | Notes                                                                                                                                                                                    |
 | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `providerId`                                                      | your UUID — see the section above                                                                                                                                                        |
+| `providerId`                                                      | your own id for this submission, any non-empty string up to 256 chars — see the section above                                                                                            |
 | `salaryDataBasis`                                                 | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one                                                                                |
 | `salaryDataPeriod`                                                | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that has already happened and no earlier than 36 months ago. Ignored for `AVERAGE` |
 | `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required                                                                                                                                                                                 |
@@ -564,7 +566,12 @@ response, reads included, carries:
 {
   "validation": {
     "status": "INVALID",
-    "reasons": [{ "scope": "SUB_CRITERIA", "message": "Vægi undirviðmiða leggst saman í 110%, á að vera 100%" }]
+    "reasons": [
+      {
+        "scope": "SUB_CRITERIA",
+        "message": "Vægi undirviðmiða leggst saman í 110%, á að vera 100%"
+      }
+    ]
   }
 }
 ```
@@ -637,7 +644,7 @@ Scoring model (section C):
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId` |
 | `201` | on a submission: filed                                                                                                                                     |
-| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, non-UUID `providerId`                                                      |
+| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`                                            |
 | `401` | missing or invalid key                                                                                                                                     |
 | `403` | key lacks the scope the route declares                                                                                                                     |
 | `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                         |
