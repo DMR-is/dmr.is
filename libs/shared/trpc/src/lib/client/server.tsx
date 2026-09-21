@@ -22,6 +22,15 @@ export function HydrateClient(props: { children: React.ReactNode }) {
     </HydrationBoundary>
   )
 }
+/**
+ * Primes the server query cache for a client component to hydrate from.
+ *
+ * Leaving the returned promise unawaited streams the page out before the data
+ * lands, which only works when the consumer renders through `useSuspenseQuery`.
+ * A consumer branching on `useQuery`'s `isPending` must await this, or the
+ * server renders the pending branch while the client hydrates the resolved one
+ * and React throws away the whole tree on a hydration mismatch.
+ */
 export function prefetch<
   TQueryFnData = unknown,
   TError = DefaultError,
@@ -30,7 +39,7 @@ export function prefetch<
 >(queryOptions: FetchQueryOptions<TQueryFnData, TError, TData, TQueryKey>) {
   const queryClient = getQueryClient()
 
-  void queryClient.prefetchQuery(queryOptions)
+  return queryClient.prefetchQuery(queryOptions)
 }
 
 export function fetchQuery<
