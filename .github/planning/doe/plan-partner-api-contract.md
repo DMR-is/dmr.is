@@ -46,9 +46,14 @@ Low risk, no schema change. Ships independently of everything below.
 | 1.5 | Equality gets its own DTO via `OmitType`, dropping `equalityReportPdf` / `equalityReportPdfFilename` | new `application/dto/submit-partner-equality-report.dto.ts` |
 | 1.6 | Fix stale guide text: §A4 tells callers to carry an `equalityReportId` the contract removed in #1483; the catalog's description still says a submission carries a criteria tree | `docs/partner-api-guide.md`, catalog `@PartnerResponse` description |
 
-**Blocked on a decision:** whether `company.nationalId` stays. It is validated to
-equal the authenticated company (`application.service.ts:915`), so it can only
-ever hold one value.
+| 1.7 | Drop `company.nationalId` from the submission body | `application/dto/submit-report-company.dto.ts`, `application.service.ts` (the equality check at :915 goes with it), guide §A3/§B7 |
+
+**Decided 21 Sept:** `company.nationalId` goes. It is validated to equal the
+authenticated company, so it can only ever hold one value. Note this gives up a
+cross-check that would have had some value once vendor clients land — a firm
+pairing the wrong snapshot with the right `X-Company-National-Id` header would
+no longer be caught here. If that turns out to matter, the check belongs in the
+delegation guard, not in a field the caller supplies.
 
 ## Phase 2 — Equality plan as a document
 
@@ -70,63 +75,78 @@ limit is multer's, set per route.
 **Calibration before merge:** push five or six real equality plans through
 mammoth. Conversion quality is Jafnréttisstofa's workload, not the vendor's.
 
-**Blocked on a decision:** is the document the *only* way to send the plan, or
-does `equalityReportContent` survive for island.is only? Leaving both is how two
-ways to send one thing come back.
+**Decided 21 Sept:** the document is the only way in **on this channel**.
+`equalityReportContent` comes off the partner DTO entirely; island.is keeps it,
+because its editor already produces HTML and wrapping that in a `.docx` to send
+it back would be absurd. Each channel takes the form its users actually hold, and
+neither has two ways to send one thing.
 
 ## Phase 3 — Outliers detected at submit
 
-The core change, and the only one needing a migration.
+The core change. **No migration** — decided 21 Sept that a submission with
+unexplained outliers goes straight to `POSTPONED`, so no new status is needed.
 
 ```
 POST /partner/reports/salary            ← payload ONCE
   ├─ no outliers                 → 201  SUBMITTED
   ├─ outliers + groups supplied  → 201  SUBMITTED  (partition validated as today)
-  └─ outliers, no groups         → 201  <pending>  + the outlier list in the body
+  └─ outliers, no groups         → 201  POSTPONED  + the outlier list in the body
 
-then exactly one of
-  PUT  /partner/reports/:providerId/outliers   → SUBMITTED
-  POST /partner/reports/:providerId/postpone   → POSTPONED   (deliberate act)
+then, to complete it
+  PUT /partner/reports/:providerId/outliers   → SUBMITTED
 ```
 
-- `POST /partner/reports/salary-analysis` stops being the pre-flight step (see
-  phase 4).
-- `outliersPostponed` comes off the submit body. Postponing is an act, not a
-  field — which also disposes of its current awkwardness (all-or-none, and a
-  `400` when no outliers were detected).
-- `PUT …/outliers` is the partner twin of the island.is route, which closes the
-  `POSTPONED` dead end.
+This makes the partner channel behave like island.is, which already files
+`POSTPONED` with one default empty group over every detected outlier. Matching it
+is the one-pipeline principle rather than a convenience.
+
+- `POST /partner/reports/salary-analysis` stops being the pre-flight step (phase 4).
+- `outliersPostponed` comes off the submit body. Omitting groups when outliers
+  exist **is** the postpone, so a flag saying so is redundant — and it disposes of
+  its current awkwardness (all-or-none, and a `400` when no outliers were
+  detected).
+- `PUT …/outliers` is the partner twin of
+  `PUT /application/reports/:providerId/outliers`, which is what closes the
+  `POSTPONED` dead end. Without it this channel publishes a state nothing can
+  leave.
 - `GET …/:providerId/outliers` gains a real purpose: recovering the list after
-  the submit response is gone.
+  the submit response is gone. Before outliers were detected at submit, nothing
+  needed it.
+- The payload crosses the wire **once**, and the "any edit between the analysis
+  and the submit reshuffles the detected set" hazard disappears — the outliers
+  are computed from the payload the server is already holding.
 
-**Why not auto-postpone.** A postponed report is the employer's deliberate
-choice, and one that landed there by default would let a company believe it had
-complied when it had not.
+### An earlier design, rejected
 
-**Why a new status rather than reusing `DRAFT`.** The abandoned-draft reaper acts
-on `DRAFT` and would delete a partner submission the vendor was about to resolve.
-Avoiding that needs a `provider_type` special case — the one-status-two-meanings
-divergence this codebase keeps getting caught by.
-
-The pending state is **a state, not a draft**: one way in, two ways out, nothing
-editable. It must not grow a CRUD surface.
+A distinct pending state (`AWAITING_EXPLANATION`) plus an explicit
+`POST …/postpone` route, so nothing landed postponed by accident. Dropped: it
+needed an enum migration, a reviewer-queue exclusion, compliance changes and its
+own reaper, and it diverged from island.is for no gain. `POSTPONED` already means
+"filed with unexplained outliers, a reviewer cannot pick it up", which is exactly
+this state.
 
 ### Database changes
 
-- New value on `report_status_enum`. Postgres `ADD VALUE` cannot run inside a
-  transaction block with other DDL in older versions — check the pattern used by
-  existing enum migrations before writing it.
-- The reviewer queue must exclude the new value exactly as it excludes
-  `POSTPONED`.
-- Compliance/reminder logic must treat a pending report as **not filed**.
+**None.**
 
-**Blocked on decisions:**
-1. The status name — `AWAITING_EXPLANATION`, `OUTLIERS_PENDING`, other.
-2. Does a pending report block the company's next submission, or is it
-   replaceable? Recommendation: **replaceable**, silently withdrawn by a new
-   submission the way `SUBMITTED` is — nobody has looked at it, and a vendor may
-   prefer to re-submit a corrected payload.
-3. What reaps an abandoned pending report. **Not** the draft reaper.
+### The `409` stays, and it has a cost worth knowing
+
+**Decided 21 Sept:** a prior `POSTPONED` report continues to give `409` on a new
+submission, unchanged from today and unchanged on island.is.
+
+The consequence, so nobody is surprised by it in support: a vendor who submits,
+lands `POSTPONED`, and *then* finds a payroll error cannot re-submit corrected
+data. Their only route out is `PUT …/outliers` — explaining outliers in a payload
+they already know is wrong — after which the report is `SUBMITTED` and a
+corrected filing silently withdraws and replaces it.
+
+Rejected alternatives: making `POSTPONED` replaceable, which changes behaviour on
+the channel employers already use and is a coordinated change rather than a
+drive-by; and making it replaceable only for `provider_type = OTHER`, which is
+the one-policy-two-meanings divergence this codebase keeps getting caught by.
+
+If the support load proves real, the right fix is a `DELETE` or withdraw route on
+a `POSTPONED` report this channel filed — not a branch in the sibling policy.
 
 ## Phase 4 — The playground
 
@@ -153,10 +173,11 @@ beyond a valid credential.
 
 ## Security considerations
 
-- **Phase 3 widens what a `salary:submit` credential can do**: it can now leave a
-  report in a pending state and resolve or postpone it later. `PUT …/outliers`
-  and `POST …/postpone` must both go through `PartnerCompanyGuard`, so a vendor
-  cannot resolve another company's report. Tenant-isolation specs on both.
+- **Phase 3 widens what a `salary:submit` credential can do**: it can now
+  complete a `POSTPONED` report after the fact. `PUT …/outliers` must go through
+  `PartnerCompanyGuard`, so a vendor cannot resolve another company's report, and
+  it must refuse a report that is not `POSTPONED` — a `SUBMITTED` or `IN_REVIEW`
+  report is not theirs to rewrite. Tenant-isolation specs on both conditions.
 - **Phase 2 accepts an uploaded file on a public, internet-facing surface.** Cap
   the multer file size per route, check the magic bytes rather than trusting the
   filename or content type, and make `.pdf` and `.doc` explicit refusals rather
@@ -176,22 +197,24 @@ beyond a valid credential.
       `scoring-dto-bounds.spec.ts`. ✅ done for `providerId`
       (`provider-id.spec.ts`)
 - [ ] `salaryDataPeriod` rejected on `AVERAGE`, accepted and normalised on `MONTH`
+- [ ] `company.nationalId` in the body → rejected by the strict whitelist
+- [ ] `equalityReportContent` on the partner equality route → rejected; still
+      accepted on island.is
 - [ ] Multipart submit: valid `.docx`, `.pdf` refused, `.doc` refused, oversized
       refused, missing part refused, malformed zip refused
 - [ ] Conversion output asserted on a real plan fixture, not a synthetic one
 - [ ] Submit with no outliers → `SUBMITTED`
-- [ ] Submit with outliers and no groups → pending, outlier list in the body
+- [ ] Submit with outliers and no groups → `POSTPONED`, outlier list in the body
 - [ ] Submit with outliers and a correct partition → `SUBMITTED` in one call
 - [ ] Every partition failure: non-outlier ordinal, missing outlier, duplicate
       ordinal, empty groups
-- [ ] `PUT …/outliers` on a pending report → `SUBMITTED`
+- [ ] `PUT …/outliers` on a `POSTPONED` report → `SUBMITTED`
 - [ ] `PUT …/outliers` on a `SUBMITTED` or `IN_REVIEW` report → refused
-- [ ] `POST …/postpone` on a pending report → `POSTPONED`; on a report with no
-      outliers → refused
-- [ ] Tenant isolation on both new routes — another company's `providerId` is
+- [ ] A second submission while a `POSTPONED` report stands → `409`, and the
+      message says which conflict it is
+- [ ] Tenant isolation on `PUT …/outliers` — another company's `providerId` is
       indistinguishable from a missing one
-- [ ] A pending report is absent from the reviewer queue and does not count as
-      filed for compliance
+- [ ] `outliersPostponed` in the body → rejected by the strict whitelist
 - [ ] Replay semantics unchanged: same `providerId` → `200` with
       `replayed: true`, nothing filed
 - [ ] Playground stores nothing and is reachable without submit scopes (per the
@@ -208,17 +231,18 @@ beyond a valid credential.
 | 1 | Move the catalog route | — | Pending |
 | 1 | Partner equality DTO via `OmitType` | — | Pending |
 | 1 | Stale guide text | — | Pending |
-| 1 | `company.nationalId` | — | Blocked — decision |
-| 2 | Multipart + mammoth | — | Blocked — document-only or HTML too |
-| 3 | Status migration | — | Blocked — name, sibling policy, reaper |
-| 3 | Detection at submit | — | Pending on the above |
-| 3 | `PUT …/outliers`, `POST …/postpone` | — | Pending on the above |
+| 1 | Drop `company.nationalId` | — | Pending |
+| 2 | Multipart + mammoth, document-only | — | Pending |
+| 3 | Detection at submit → `POSTPONED` | — | Pending |
+| 3 | `PUT …/outliers` | — | Pending |
 | 4 | Playground | — | Blocked — scope decision |
 
 ## Needs Jafnréttisstofa
 
-- Does a `POSTPONED` report satisfy the filing deadline? It no longer affects the
-  default path, only the explicit postpone route.
+- Does a `POSTPONED` report satisfy the filing deadline? Now that it is the
+  landing state for any submission with unexplained outliers, this matters more
+  rather than less. The precedent says yes — island.is has filed `POSTPONED`
+  reports this way all along — but it is worth confirming rather than inferring.
 - Does one firm reusing one starfsmat across its whole book create a compliance
   problem? Same harm the *no personal-criterion defaults* judgement guards
   against.
