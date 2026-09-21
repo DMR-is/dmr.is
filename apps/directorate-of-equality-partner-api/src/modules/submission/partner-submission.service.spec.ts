@@ -1,7 +1,8 @@
-import { NotFoundException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 
 import { IApplicationService } from '@dmr.is/doe-modules/application'
 import { CompanyDto } from '@dmr.is/doe-modules/company'
+import { SalaryDataBasisEnum } from '@dmr.is/doe-modules/report'
 import { IScoringModelService } from '@dmr.is/doe-modules/scoring-model'
 
 import { PartnerSubmissionService } from './partner-submission.service'
@@ -81,6 +82,59 @@ describe('PartnerSubmissionService', () => {
       await expect(service.submitSalary(input, COMPANY)).resolves.toEqual({
         reportId: 'r1',
         replayed: false,
+      })
+    })
+
+    /**
+     * `AVERAGE` covers twelve months, so there is no single month to name. The
+     * shared `resolveSalaryDataBasis` clears a month sent alongside it rather
+     * than refusing — correct where it lives, because the draft PATCH shares it
+     * and a portal user switching a draft from MONTH to AVERAGE legitimately
+     * sends the stale month and expects it dropped. A partner submission is not
+     * an edit, so here it can only be a program misreading the field.
+     *
+     * Refused *before* the expansion, so a rejected submission does not first
+     * pay for a payroll extract to be expanded.
+     */
+    describe('salaryDataPeriod against salaryDataBasis', () => {
+      const withBasis = (
+        salaryDataBasis: SalaryDataBasisEnum,
+        salaryDataPeriod?: string | null,
+      ) =>
+        ({ ...(input as object), salaryDataBasis, salaryDataPeriod }) as never
+
+      it('refuses a month sent with AVERAGE, before expanding anything', async () => {
+        await expect(
+          service.submitSalary(
+            withBasis(SalaryDataBasisEnum.AVERAGE, '2026-08-01'),
+            COMPANY,
+          ),
+        ).rejects.toThrow(BadRequestException)
+
+        expect(expandToParsedPayload).not.toHaveBeenCalled()
+        expect(submitSalary).not.toHaveBeenCalled()
+      })
+
+      it.each([
+        ['omitted', undefined],
+        ['null', null],
+        ['blank', '   '],
+      ])('accepts AVERAGE with the month %s', async (_case, period) => {
+        await service.submitSalary(
+          withBasis(SalaryDataBasisEnum.AVERAGE, period),
+          COMPANY,
+        )
+
+        expect(submitSalary).toHaveBeenCalled()
+      })
+
+      it('leaves MONTH with a month alone', async () => {
+        await service.submitSalary(
+          withBasis(SalaryDataBasisEnum.MONTH, '2026-08-01'),
+          COMPANY,
+        )
+
+        expect(submitSalary).toHaveBeenCalled()
       })
     })
 

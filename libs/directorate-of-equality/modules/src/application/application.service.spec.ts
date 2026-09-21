@@ -600,15 +600,25 @@ describe('ApplicationService', () => {
       )
     })
 
-    it('rejects when the submitted parent is not the authenticated company', async () => {
+    // Replaces a test that asserted a `400` when the payload's parent kennitala
+    // disagreed with the authenticated company. The payload no longer carries
+    // one, so the disagreement is unreachable rather than rejected — and this
+    // is the guarantee that replaced it.
+    it('snapshots the authenticated company’s kennitala, which the payload cannot influence', async () => {
       const input = makeSubmitSalaryInput()
-      input.company.nationalId = '0000000000'
 
-      await expect(service.submitSalary(input, COMPANY)).rejects.toThrow(
-        /does not match the authenticated company/,
+      await service.submitSalary(input, COMPANY)
+
+      expect(createSalary).toHaveBeenCalledWith(
+        expect.objectContaining({
+          companies: expect.arrayContaining([
+            expect.objectContaining({
+              parentCompanyId: null,
+              nationalId: COMPANY.nationalId,
+            }),
+          ]),
+        }),
       )
-      expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
-      expect(createSalary).not.toHaveBeenCalled()
     })
 
     it('rejects when a subsidiary is the authenticated parent company', async () => {
@@ -834,15 +844,23 @@ describe('ApplicationService', () => {
       )
     })
 
-    it('rejects when the submitted parent is not the authenticated company', async () => {
+    // See the salary counterpart: the payload cannot name a parent kennitala at
+    // all any more, so this pins where the snapshot's one comes from instead.
+    it('snapshots the authenticated company’s kennitala, which the payload cannot influence', async () => {
       const input = makeSubmitEqualityInput()
-      input.company.nationalId = '0000000000'
 
-      await expect(service.submitEquality(input, COMPANY)).rejects.toThrow(
-        /does not match the authenticated company/,
+      await service.submitEquality(input, COMPANY)
+
+      expect(createEquality).toHaveBeenCalledWith(
+        expect.objectContaining({
+          companies: expect.arrayContaining([
+            expect.objectContaining({
+              parentCompanyId: null,
+              nationalId: COMPANY.nationalId,
+            }),
+          ]),
+        }),
       )
-      expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
-      expect(createEquality).not.toHaveBeenCalled()
     })
 
     it('rejects when a subsidiary is the authenticated parent company', async () => {
@@ -2096,7 +2114,6 @@ function makeSubmitSalaryInput(): SubmitSalaryReportDto {
     parsed: makeRequest().parsed,
     company: {
       name: 'Acme ehf.',
-      nationalId: COMPANY.nationalId,
       address: 'Laugavegur 1',
       city: 'Reykjavík',
       postcode: '101',
@@ -2119,7 +2136,6 @@ function makeSubmitEqualityInput(): SubmitEqualityReportDto {
     equalityReportContent: 'A narrative gender-equality plan.',
     company: {
       name: 'Acme ehf.',
-      nationalId: COMPANY.nationalId,
       address: 'Laugavegur 1',
       city: 'Reykjavík',
       postcode: '101',

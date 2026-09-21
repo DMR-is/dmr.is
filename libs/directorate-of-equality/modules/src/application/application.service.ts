@@ -910,13 +910,12 @@ export class ApplicationService implements IApplicationService {
     },
     company: CompanyDto,
   ): Promise<CreateReportCompanySnapshotDto[]> {
-    const parentNationalId = input.company.nationalId.trim()
-
-    if (parentNationalId !== company.nationalId) {
-      throw new BadRequestException(
-        'Submitted parent company does not match the authenticated company',
-      )
-    }
+    // Taken from the authenticated company rather than the payload. The
+    // submission used to carry it and refuse any value that did not match this
+    // one, which meant the only accepted value was the one we already held —
+    // so the field could only ever be wrong. Reading it here instead makes the
+    // snapshot and the authenticated tenant structurally unable to disagree.
+    const parentNationalId = company.nationalId
 
     const subsidiaries = (input.subsidiaries ?? []).map((subsidiary) => ({
       name: subsidiary.name,

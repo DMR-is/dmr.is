@@ -1,10 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
 import {
   IApplicationService,
   SubmitPartnerSalaryReportDto,
 } from '@dmr.is/doe-modules/application'
 import { CompanyDto } from '@dmr.is/doe-modules/company'
+import { SalaryDataBasisEnum } from '@dmr.is/doe-modules/report'
 import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
 import { SalaryAnalysisResponseDto } from '@dmr.is/doe-modules/report-statistics'
 import {
@@ -40,6 +41,8 @@ export class PartnerSubmissionService {
     input: SubmitPartnerSalaryReportDto,
     company: CompanyDto,
   ): Promise<CreateReportResponseDto> {
+    this.assertSalaryDataPeriodMatchesBasis(input)
+
     const { scoringModelId, employees, ...rest } = input
 
     const parsed = await this.scoringModelService.expandToParsedPayload(
@@ -49,6 +52,37 @@ export class PartnerSubmissionService {
     )
 
     return this.applicationService.submitSalary({ ...rest, parsed }, company)
+  }
+
+  /**
+   * `AVERAGE` means no month applies, so a month sent alongside it is refused
+   * rather than dropped.
+   *
+   * `resolveSalaryDataBasis` clears it silently instead, and that is correct
+   * where it lives: the same function serves the draft PATCH, where a caller
+   * switching a draft from `MONTH` to `AVERAGE` legitimately sends the stale
+   * month along with the new basis and expects it cleared. Rejecting there
+   * would refuse an ordinary edit in the portal.
+   *
+   * A partner submission is not an edit. It is one shot, built by a program,
+   * and a month arriving with `AVERAGE` means that program has misread the
+   * field — so it is worth saying so, once, on the channel where it can only
+   * be a mistake. Hence the check sits here rather than in the shared
+   * resolver, and the two do not contradict each other: nothing this rejects
+   * would have been stored.
+   */
+  private assertSalaryDataPeriodMatchesBasis(
+    input: SubmitPartnerSalaryReportDto,
+  ): void {
+    if (
+      input.salaryDataBasis === SalaryDataBasisEnum.AVERAGE &&
+      input.salaryDataPeriod != null &&
+      input.salaryDataPeriod.trim().length > 0
+    ) {
+      throw new BadRequestException(
+        'salaryDataPeriod must be omitted when salaryDataBasis is AVERAGE — an average covers twelve months, so there is no single month to name',
+      )
+    }
   }
 
   /**

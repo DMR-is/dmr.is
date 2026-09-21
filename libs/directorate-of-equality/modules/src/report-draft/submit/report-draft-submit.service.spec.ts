@@ -67,7 +67,6 @@ const salaryBody = (
 ): SubmitDraftDto => ({
   company: {
     name: 'Acme',
-    nationalId: COMPANY_NATIONAL_ID,
     address: 'Laugavegur 1',
     city: 'Reykjavík',
     postcode: '101',
@@ -270,20 +269,6 @@ describe('ReportDraftSubmitService', () => {
     ).rejects.toThrow(NotFoundException)
 
     expect(reportUpdate).not.toHaveBeenCalled()
-  })
-
-  it('400s when the payload parent company does not match the authenticated company', async () => {
-    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
-
-    await expect(
-      service.submitDraft(
-        PROVIDER_ID,
-        COMPANY,
-        salaryBody({
-          company: { ...salaryBody().company, nationalId: '9999999999' },
-        }),
-      ),
-    ).rejects.toThrow(BadRequestException)
   })
 
   it('400s a salary submit when the salary-data basis was never declared', async () => {
