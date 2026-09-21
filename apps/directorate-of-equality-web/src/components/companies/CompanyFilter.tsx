@@ -56,6 +56,15 @@ export type CompanyFilters = {
 type Props = {
   query: string
   onQueryChange: (val: string) => void
+  /**
+   * Extra accordion cards, rendered after the three the register always shows.
+   *
+   * A slot rather than more props: the data-export screen adds a whole group of
+   * report criteria that the register has no use for, and threading each of
+   * them through here would make this component's signature the union of every
+   * screen that uses it.
+   */
+  children?: React.ReactNode
   filters: CompanyFilters
   onFiltersChange: (key: keyof CompanyFilters, val: string[]) => void
   onReset: () => void
@@ -66,6 +75,7 @@ type Props = {
 export const CompanyFilter = ({
   query,
   onQueryChange,
+  children,
   filters,
   onFiltersChange,
   onReset,
@@ -260,6 +270,7 @@ export const CompanyFilter = ({
                 />
               </Stack>
             </AccordionItem>
+            {children}
           </Accordion>
         </Box>
       </Filter>

@@ -725,6 +725,161 @@
             "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
+            "name": "reportType",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies with an approved filing of one of the given kinds — EQUALITY (jafnréttisáætlun) or SALARY (skýrslugjöf).",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ReportTypeEnum" }
+            }
+          },
+          {
+            "name": "reportCompanyAdminGender",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose approved filing names an executive (æðsti stjórnandi) of one of the given genders, as stated on that filing.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/GenderEnum" }
+            }
+          },
+          {
+            "name": "reportEqualitySource",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here) or LEGACY (carried over from the retired register).",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/EqualityCoverageSourceEnum"
+              }
+            }
+          },
+          {
+            "name": "reportSubmittedFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing submitted on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSubmittedTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing submitted on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportApprovedFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing approved on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportApprovedTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing approved on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportValidUntilFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing valid until on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportValidUntilTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing valid until on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSalaryDataPeriodFrom",
+            "required": false,
+            "in": "query",
+            "description": "Salary data period (the month the pay figures describe) on or after this date. Skýrslugjöf only — a jafnréttisáætlun has no period.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSalaryDataPeriodTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound on the salary data period.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportRawGapPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓLEIÐRÉTTUR pay gap of an approved filing — the headline figure, routinely 5–15%. Not interchangeable with the óskýrður bound below.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportRawGapPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óleiðréttur pay gap.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportOskyrtPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓSKÝRÐUR (leiðréttur) pay gap of an approved filing — the regulated figure, tested against the benchmark and usually well under 5%.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportOskyrtPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óskýrður pay gap.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportHasImprovementPlan",
+            "required": false,
+            "in": "query",
+            "description": "When true, only companies whose approved filing carries an úrbótaáætlun (has at least one pay-gap outlier). When false, only those whose filing has none.",
+            "schema": { "type": "boolean" }
+          },
+          {
             "name": "sortBy",
             "required": false,
             "in": "query",
@@ -2544,6 +2699,161 @@
             "in": "query",
             "description": "Return only companies with one of the given postcodes (póstnúmer, e.g. \"101\").",
             "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "reportType",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies with an approved filing of one of the given kinds — EQUALITY (jafnréttisáætlun) or SALARY (skýrslugjöf).",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ReportTypeEnum" }
+            }
+          },
+          {
+            "name": "reportCompanyAdminGender",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose approved filing names an executive (æðsti stjórnandi) of one of the given genders, as stated on that filing.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/GenderEnum" }
+            }
+          },
+          {
+            "name": "reportEqualitySource",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here) or LEGACY (carried over from the retired register).",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/EqualityCoverageSourceEnum"
+              }
+            }
+          },
+          {
+            "name": "reportSubmittedFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing submitted on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSubmittedTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing submitted on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportApprovedFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing approved on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportApprovedTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing approved on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportValidUntilFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing valid until on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportValidUntilTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing valid until on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSalaryDataPeriodFrom",
+            "required": false,
+            "in": "query",
+            "description": "Salary data period (the month the pay figures describe) on or after this date. Skýrslugjöf only — a jafnréttisáætlun has no period.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSalaryDataPeriodTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound on the salary data period.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportRawGapPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓLEIÐRÉTTUR pay gap of an approved filing — the headline figure, routinely 5–15%. Not interchangeable with the óskýrður bound below.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportRawGapPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óleiðréttur pay gap.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportOskyrtPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓSKÝRÐUR (leiðréttur) pay gap of an approved filing — the regulated figure, tested against the benchmark and usually well under 5%.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportOskyrtPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óskýrður pay gap.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportHasImprovementPlan",
+            "required": false,
+            "in": "query",
+            "description": "When true, only companies whose approved filing carries an úrbótaáætlun (has at least one pay-gap outlier). When false, only those whose filing has none.",
+            "schema": { "type": "boolean" }
           },
           {
             "name": "sortBy",
@@ -6400,6 +6710,12 @@
           "SVEITARFELAG"
         ]
       },
+      "ReportTypeEnum": { "type": "string", "enum": ["SALARY", "EQUALITY"] },
+      "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+      "EqualityCoverageSourceEnum": {
+        "type": "string",
+        "enum": ["REPORT", "LEGACY"]
+      },
       "CompanySortByEnum": {
         "type": "string",
         "enum": ["name", "employeeCount", "nextReportDue"]
@@ -7191,6 +7507,91 @@
             "type": "array",
             "items": { "type": "string" }
           },
+          "reportType": {
+            "type": "array",
+            "description": "Return only companies with an approved filing of one of the given kinds — EQUALITY (jafnréttisáætlun) or SALARY (skýrslugjöf).",
+            "items": { "$ref": "#/components/schemas/ReportTypeEnum" }
+          },
+          "reportCompanyAdminGender": {
+            "type": "array",
+            "description": "Return only companies whose approved filing names an executive (æðsti stjórnandi) of one of the given genders, as stated on that filing.",
+            "items": { "$ref": "#/components/schemas/GenderEnum" }
+          },
+          "reportEqualitySource": {
+            "type": "array",
+            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here) or LEGACY (carried over from the retired register).",
+            "items": {
+              "$ref": "#/components/schemas/EqualityCoverageSourceEnum"
+            }
+          },
+          "reportSubmittedFrom": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing submitted on or after this date."
+          },
+          "reportSubmittedTo": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing submitted on or before this date."
+          },
+          "reportApprovedFrom": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing approved on or after this date."
+          },
+          "reportApprovedTo": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing approved on or before this date."
+          },
+          "reportValidUntilFrom": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing valid until on or after this date."
+          },
+          "reportValidUntilTo": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing valid until on or before this date."
+          },
+          "reportSalaryDataPeriodFrom": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Salary data period (the month the pay figures describe) on or after this date. Skýrslugjöf only — a jafnréttisáætlun has no period."
+          },
+          "reportSalaryDataPeriodTo": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Upper bound on the salary data period."
+          },
+          "reportRawGapPercentFrom": {
+            "type": "number",
+            "description": "Lower bound (inclusive, %) on the ÓLEIÐRÉTTUR pay gap of an approved filing — the headline figure, routinely 5–15%. Not interchangeable with the óskýrður bound below."
+          },
+          "reportRawGapPercentTo": {
+            "type": "number",
+            "description": "Upper bound (inclusive, %) on the óleiðréttur pay gap."
+          },
+          "reportOskyrtPercentFrom": {
+            "type": "number",
+            "description": "Lower bound (inclusive, %) on the ÓSKÝRÐUR (leiðréttur) pay gap of an approved filing — the regulated figure, tested against the benchmark and usually well under 5%."
+          },
+          "reportOskyrtPercentTo": {
+            "type": "number",
+            "description": "Upper bound (inclusive, %) on the óskýrður pay gap."
+          },
+          "reportHasImprovementPlan": {
+            "type": "boolean",
+            "description": "When true, only companies whose approved filing carries an úrbótaáætlun (has at least one pay-gap outlier). When false, only those whose filing has none."
+          },
           "sortBy": {
             "allOf": [{ "$ref": "#/components/schemas/CompanySortByEnum" }]
           },
@@ -7576,7 +7977,6 @@
           "invalid"
         ]
       },
-      "ReportTypeEnum": { "type": "string", "enum": ["SALARY", "EQUALITY"] },
       "ReportStatusEnum": {
         "type": "string",
         "enum": [
@@ -7599,11 +7999,6 @@
           "CLOSED"
         ]
       },
-      "EqualityCoverageSourceEnum": {
-        "type": "string",
-        "enum": ["REPORT", "LEGACY"]
-      },
-      "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
       "ReportSortByEnum": {
         "type": "string",
         "enum": [

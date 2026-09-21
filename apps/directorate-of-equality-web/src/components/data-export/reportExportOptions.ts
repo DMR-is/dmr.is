@@ -1,7 +1,3 @@
-import {
-  CommunicationStatusTranslatedEnum,
-  ReportStatusTranslatedEnum,
-} from '../../lib/constants'
 import { sharedText } from '../../lib/text'
 
 export type ReportFilterOption = { value: string; label: string }
@@ -17,40 +13,6 @@ export type ReportFilterOption = { value: string; label: string }
 export const REPORT_TYPE_OPTIONS: ReportFilterOption[] = [
   { value: 'EQUALITY', label: sharedText.typeLabels.EQUALITY },
   { value: 'SALARY', label: sharedText.typeLabels.SALARY },
-]
-
-/**
- * Report statuses, in workflow order.
- *
- * DRAFT is absent on purpose and cannot be added: a draft belongs to the
- * applicant and the server filters it out of the requested set even when a
- * status filter names it. Offering it would be a control that silently does
- * nothing. WITHDRAWN is offered — it is hidden by default but can be asked for.
- */
-export const REPORT_STATUS_OPTIONS: ReportFilterOption[] = [
-  { value: 'SUBMITTED', label: ReportStatusTranslatedEnum.SUBMITTED },
-  { value: 'IN_REVIEW', label: ReportStatusTranslatedEnum.IN_REVIEW },
-  { value: 'POSTPONED', label: ReportStatusTranslatedEnum.POSTPONED },
-  { value: 'APPROVED', label: ReportStatusTranslatedEnum.APPROVED },
-  { value: 'DENIED', label: ReportStatusTranslatedEnum.DENIED },
-  { value: 'SUPERSEDED', label: ReportStatusTranslatedEnum.SUPERSEDED },
-  { value: 'WITHDRAWN', label: ReportStatusTranslatedEnum.WITHDRAWN },
-]
-
-export const COMMUNICATION_STATUS_OPTIONS: ReportFilterOption[] = [
-  {
-    value: 'NOT_STARTED',
-    label: CommunicationStatusTranslatedEnum.NOT_STARTED,
-  },
-  {
-    value: 'AWAITING_RESPONSE',
-    label: CommunicationStatusTranslatedEnum.AWAITING_RESPONSE,
-  },
-  {
-    value: 'RESPONSE_RECEIVED',
-    label: CommunicationStatusTranslatedEnum.RESPONSE_RECEIVED,
-  },
-  { value: 'CLOSED', label: CommunicationStatusTranslatedEnum.CLOSED },
 ]
 
 /**
@@ -96,4 +58,17 @@ export const GAP_BOUND_OPTIONS: ReportFilterOption[] = [
       label: `${String(value).replace('.', ',')}%`,
     }
   }),
+]
+
+/**
+ * Whether the filing carries an úrbótaáætlun.
+ *
+ * A two-option multi-select rather than a checkbox: picking neither means no
+ * constraint, and picking both means the same thing. A checkbox would make
+ * "unchecked" ambiguous between "don't care" and "only those without one",
+ * which are different queries against the same data.
+ */
+export const IMPROVEMENT_PLAN_OPTIONS: ReportFilterOption[] = [
+  { value: 'yes', label: 'Með úrbótaáætlun' },
+  { value: 'no', label: 'Án úrbótaáætlunar' },
 ]

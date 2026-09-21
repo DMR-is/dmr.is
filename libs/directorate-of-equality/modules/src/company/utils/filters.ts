@@ -14,6 +14,7 @@ import {
   CompanyStatusEnum,
 } from '../models/company.enums'
 import { IsatCategoryModel } from '../models/isat-category.model'
+import { buildCompanyReportCriteriaWhere } from './report-criteria'
 import {
   actionPlanMissingSql,
   COMPANY_QUERY_ALIAS,
@@ -379,6 +380,9 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   if (query.neverSubmitted) {
     conditions.push(buildCompanyNeverSubmittedWhere())
   }
+
+  const reportCriteria = buildCompanyReportCriteriaWhere(query)
+  if (reportCriteria) conditions.push(reportCriteria)
 
   // ⚠️ Three DEFAULT-ON hides, each suppressed by an explicit request on the
   // same axis. The admin register is a working list of who owes what, and
