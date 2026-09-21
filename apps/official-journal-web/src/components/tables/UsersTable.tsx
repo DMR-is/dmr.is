@@ -10,11 +10,11 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
+import { formatDateInIceland } from '@dmr.is/utils-shared/format/date'
 
 import { UserRoleDto } from '../../gen/fetch'
 import { useToggle } from '../../hooks/useToggle'
 import { useUserContext } from '../../hooks/useUserContext'
-import { formatDate } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import { CreateUser } from '../users/CreateUser'
@@ -208,8 +208,11 @@ export const UsersTable = ({
                       {user.role.title}
                     </Tag>
                   ),
-                  createdAt: formatDate(user.createdAt),
-                  updatedAt: formatDate(user.updatedAt),
+                  // Pinned to Iceland: this table is server-rendered, and
+                  // `formatDate` resolves in the runtime's zone, so a viewer
+                  // off GMT would hydrate a different date than the server sent.
+                  createdAt: formatDateInIceland(user.createdAt),
+                  updatedAt: formatDateInIceland(user.updatedAt),
                 }
               })}
               paging={{

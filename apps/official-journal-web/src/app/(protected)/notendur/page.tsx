@@ -24,8 +24,20 @@ export default async function UsersPage() {
       value: role,
     })) ?? []
 
-  prefetch(trpc.getUsers.queryOptions({ page: 1, pageSize: 10 }))
-  prefetch(trpc.getInvolvedPartiesByUser.queryOptions())
+  // Awaited: the consumers read these through `useQuery` and render
+  // `data ?? []`, so streaming the page out first would server-render empty
+  // tables and selects and hydrate populated ones. `retry: false` stops a dead
+  // API holding the whole page back.
+  await Promise.all([
+    prefetch({
+      ...trpc.getUsers.queryOptions({ page: 1, pageSize: 10 }),
+      retry: false,
+    }),
+    prefetch({
+      ...trpc.getInvolvedPartiesByUser.queryOptions(),
+      retry: false,
+    }),
+  ])
 
   return (
     <HydrateClient>
