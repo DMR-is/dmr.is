@@ -7,32 +7,45 @@ export function getAdvertSettingsTemplate() {
     OS_PKG_HYPHEN,
   } = process.env
 
+  // Fail loudly and by name. Interpolating an unset var yields
+  // `analyzers/undefined`, which only surfaces much later as an opaque index
+  // creation error. Mirrors the guard in regulations-api's template.
+  const need = (id: string | undefined, envVar: string) => {
+    if (!id) {
+      throw new Error(
+        `getAdvertSettingsTemplate: missing env var ${envVar} (analyzer package id)`,
+      )
+    }
+
+    return `analyzers/${id}`
+  }
+
   return {
     settings: {
       analysis: {
         filter: {
           is_stem: {
             type: 'stemmer_override',
-            rules_path: `analyzers/${OS_PKG_STEMMER}`,
+            rules_path: need(OS_PKG_STEMMER, 'OS_PKG_STEMMER'),
           },
           is_stop: {
             type: 'stop',
-            stopwords_path: `analyzers/${OS_PKG_STOPWORDS}`,
+            stopwords_path: need(OS_PKG_STOPWORDS, 'OS_PKG_STOPWORDS'),
             ignore_case: true,
           },
           is_kw: {
             type: 'keyword_marker',
             ignore_case: true,
-            keywords_path: `analyzers/${OS_PKG_KEYWORDS}`,
+            keywords_path: need(OS_PKG_KEYWORDS, 'OS_PKG_KEYWORDS'),
           },
           is_syn: {
             type: 'synonym',
             lenient: true,
-            synonyms_path: `analyzers/${OS_PKG_SYNONYMS}`,
+            synonyms_path: need(OS_PKG_SYNONYMS, 'OS_PKG_SYNONYMS'),
           },
           is_decomp: {
             type: 'dictionary_decompounder',
-            word_list_path: `analyzers/${OS_PKG_HYPHEN}`,
+            word_list_path: need(OS_PKG_HYPHEN, 'OS_PKG_HYPHEN'),
             max_subword_size: 18,
             min_subword_size: 4,
           },

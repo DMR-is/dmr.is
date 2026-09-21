@@ -2,6 +2,11 @@ import { createHash } from 'crypto'
 
 import { GetAdvertsQueryParams } from '@dmr.is/shared-dto'
 
+import { extractPhrase } from '../../util/phrase'
+import {
+  matchPublicationNumber,
+  matchPublicationNumberPrefix,
+} from '../../util/query-shape'
 import {
   LeanSearchQueryKind,
   LeanSearchTrackingEventDto,
@@ -10,7 +15,6 @@ import {
 } from './lean-search-tracking.dto'
 
 const INTERNAL_CASE_NUMBER_PATTERN = /^\d{11}$/
-const PUBLICATION_NUMBER_PATTERN = /^(\d+)\s*\/\s*(\d{4})$/
 const PREFIX_WILDCARD_PATTERN = /^(\S+)\*$/
 
 const normalizeQuery = (query?: string): string => {
@@ -61,14 +65,30 @@ export const classifyLeanSearchQuery = (
   let normalizedQuery = normalized
   let queryKind: LeanSearchQueryKind = LeanSearchQueryKind.FreeText
 
-  if (INTERNAL_CASE_NUMBER_PATTERN.test(normalized)) {
+  const phrase = extractPhrase(normalized)
+
+  if (phrase) {
+    // Record the phrase without its quotes so a quoted search and the same
+    // words unquoted share a query hash and can be compared directly. The
+    // query kind is what tells the two apart.
+    queryKind = LeanSearchQueryKind.Phrase
+    normalizedQuery = phrase
+  } else if (INTERNAL_CASE_NUMBER_PATTERN.test(normalized)) {
     queryKind = LeanSearchQueryKind.InternalCaseNumber
   } else {
-    const publicationNumberMatch = normalized.match(PUBLICATION_NUMBER_PATTERN)
+    const publicationNumber = matchPublicationNumber(normalized)
+    // Recorded as the serial alone, so the states a publication number is
+    // typed through - `1009`, `1009/`, `1009/20` - share one query hash. They
+    // are one search intent, and counting them separately would hide how often
+    // this path is actually taken.
+    const publicationNumberPrefix = matchPublicationNumberPrefix(normalized)
 
-    if (publicationNumberMatch) {
+    if (publicationNumber) {
       queryKind = LeanSearchQueryKind.PublicationNumber
-      normalizedQuery = `${parseInt(publicationNumberMatch[1], 10)}/${publicationNumberMatch[2]}`
+      normalizedQuery = publicationNumber.full
+    } else if (publicationNumberPrefix) {
+      queryKind = LeanSearchQueryKind.PublicationNumberPrefix
+      normalizedQuery = publicationNumberPrefix
     } else {
       const wildcardMatch = normalized.match(PREFIX_WILDCARD_PATTERN)
 
