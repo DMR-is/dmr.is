@@ -57,6 +57,26 @@ export const PriceCalculator = () => {
     )
   }
 
+  // No response yet, and nothing cached from an earlier one.
+  const isPaymentUnknown = !paymentData
+  // We have a status, but the last attempt to refresh it failed.
+  const isPaymentStale = isPaymentError && !isPaymentUnknown
+  // A claim must not be created twice, so only offer it on a confirmed status.
+  const canSendToTbr = canEdit && !isPaymentError
+
+  const retryPaymentButton = (
+    <Button
+      variant="ghost"
+      size="small"
+      loading={isPaymentFetching}
+      disabled={isPaymentFetching}
+      type="button"
+      onClick={() => void refetchPayment()}
+    >
+      Reyna aftur
+    </Button>
+  )
+
   const { state, dispatch } = usePriceCalculatorState(currentCase)
   const [prevPrice, setPrevPrice] = useState(currentCase.transaction?.price)
   const [isLocalPaymentLoading, setLocalPaymentLoading] = useState(false)
@@ -320,7 +340,7 @@ export const PriceCalculator = () => {
             onBlur={updateAllPrices}
           />
         </Box>
-        {isPublishedOrRejected && paymentData && !isPaymentError ? (
+        {isPublishedOrRejected && paymentData ? (
           <Inline alignY="center" space={1}>
             <PriceCalculatorStatusBox
               text={
@@ -332,22 +352,15 @@ export const PriceCalculator = () => {
         ) : undefined}
       </Inline>
       <Box marginTop={2}>
-        {isPaymentPending ? (
-          <Text>Sæki greiðslustöðu…</Text>
-        ) : isPaymentError || !paymentData ? (
-          <Inline alignY="center" space={2}>
-            <Text>Ekki tókst að sækja greiðslustöðu.</Text>
-            <Button
-              variant="ghost"
-              size="small"
-              loading={isPaymentFetching}
-              disabled={isPaymentFetching}
-              type="button"
-              onClick={() => void refetchPayment()}
-            >
-              Reyna aftur
-            </Button>
-          </Inline>
+        {isPublishedOrRejected && isPaymentUnknown ? (
+          isPaymentPending ? (
+            <Text>Sæki greiðslustöðu…</Text>
+          ) : (
+            <Inline alignY="center" space={2}>
+              <Text>Ekki tókst að sækja greiðslustöðu.</Text>
+              {retryPaymentButton}
+            </Inline>
+          )
         ) : isPublishedOrRejected ? (
           <Box>
             {paymentData?.created ? (
@@ -366,7 +379,7 @@ export const PriceCalculator = () => {
                     variant="ghost"
                     size="small"
                     icon="arrowForward"
-                    disabled={!canEdit}
+                    disabled={!canSendToTbr}
                     loading={isLocalPaymentLoading}
                     type="button"
                     onClick={async () => {
@@ -399,6 +412,17 @@ export const PriceCalculator = () => {
                 </Inline>
               </>
             )}
+            {isPaymentStale ? (
+              <Box marginTop={1}>
+                <Inline alignY="center" space={2}>
+                  <Text variant="small">
+                    Ekki tókst að uppfæra greiðslustöðu, staðan gæti verið
+                    úrelt.
+                  </Text>
+                  {retryPaymentButton}
+                </Inline>
+              </Box>
+            ) : undefined}
           </Box>
         ) : paymentData?.created ? (
           <PriceCalculatorStatusBox

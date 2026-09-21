@@ -75,4 +75,50 @@ describe('payment request cancellation through AuthService', () => {
       )
     },
   )
+
+  describe('default deadline', () => {
+    const okResponse = (body: unknown) =>
+      ({ status: 200, json: () => Promise.resolve(body) }) as Response
+
+    const callXroadFetch = async (options: RequestInit) => {
+      const fetchMock = jest
+        .spyOn(globalThis, 'fetch')
+        .mockImplementation(async (url) =>
+          url === process.env.ISLAND_IS_TOKEN_URL
+            ? okResponse({ access_token: 'token', expires_in: 3600 })
+            : okResponse({}),
+        )
+      await new AuthService(logger).xroadFetch(
+        'https://payment.example/claim',
+        options,
+      )
+      return fetchMock
+    }
+
+    it('bounds a caller that passes no signal of its own', async () => {
+      const timeout = jest.spyOn(AbortSignal, 'timeout')
+
+      const fetchMock = await callXroadFetch({ method: 'GET' })
+
+      expect(timeout).toHaveBeenCalledWith(30_000)
+      for (const [, init] of fetchMock.mock.calls) {
+        expect(init?.signal).toBeInstanceOf(AbortSignal)
+      }
+    })
+
+    it("leaves a caller's own deadline alone", async () => {
+      const callerSignal = AbortSignal.timeout(10_000)
+      const timeout = jest.spyOn(AbortSignal, 'timeout')
+
+      const fetchMock = await callXroadFetch({
+        method: 'GET',
+        signal: callerSignal,
+      })
+
+      expect(timeout).not.toHaveBeenCalled()
+      for (const [, init] of fetchMock.mock.calls) {
+        expect(init?.signal).toBe(callerSignal)
+      }
+    })
+  })
 })

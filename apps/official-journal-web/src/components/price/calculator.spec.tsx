@@ -18,17 +18,18 @@ jest.mock('../../lib/trpc/client/trpc', () => ({
     updatePrice: { mutationOptions: () => ({}) },
   }),
 }))
+const mockCaseContext = {
+  currentCase: {
+    id: 'case-id',
+    advertDepartment: { slug: 'c-deild' },
+    transaction: { price: 100 },
+  },
+  canEdit: true,
+  feeCodeOptions: [],
+  isPublishedOrRejected: true,
+}
 jest.mock('../../hooks/useCaseContext', () => ({
-  useCaseContext: () => ({
-    currentCase: {
-      id: 'case-id',
-      advertDepartment: { slug: 'c-deild' },
-      transaction: { price: 100 },
-    },
-    canEdit: true,
-    feeCodeOptions: [],
-    isPublishedOrRejected: true,
-  }),
+  useCaseContext: () => mockCaseContext,
 }))
 jest.mock('./calculatorContext', () => ({
   usePriceCalculatorState: () => ({ state: {}, dispatch: jest.fn() }),
@@ -77,6 +78,7 @@ describe('payment status display', () => {
     Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
     container = document.createElement('div')
     root = createRoot(container)
+    mockCaseContext.isPublishedOrRejected = true
   })
   afterEach(() => {
     act(() => root.unmount())
@@ -107,23 +109,46 @@ describe('payment status display', () => {
     expect(button('Senda til TBR')).toBeUndefined()
   })
 
-  it.each([undefined, { paid: false, created: false }])(
-    'shows an error and manual retry even with cached data %s',
-    (data) => {
+  it('shows an error and manual retry when nothing is cached', () => {
+    setQuery({ isError: true })
+    render()
+    expect(container.textContent).toContain(
+      'Ekki tókst að sækja greiðslustöðu.',
+    )
+    expect(container.textContent).not.toContain('Ekki búið að greiða')
+    expect(button('Senda til TBR')).toBeUndefined()
+    act(() => button('Reyna aftur')?.click())
+    expect(refetch).toHaveBeenCalledTimes(1)
+    expect(useQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ retry: false }),
+    )
+  })
+
+  it.each([
+    [{ paid: false, created: false }, 'Ekki búið að greiða'],
+    [{ paid: true, created: true }, 'Búið er að greiða'],
+  ])(
+    'keeps showing cached status %s behind a staleness warning when a refetch fails',
+    (data, status) => {
       setQuery({ isError: true, data })
       render()
+      expect(container.textContent).toContain(status)
       expect(container.textContent).toContain(
+        'Ekki tókst að uppfæra greiðslustöðu, staðan gæti verið úrelt.',
+      )
+      expect(container.textContent).not.toContain(
         'Ekki tókst að sækja greiðslustöðu.',
       )
-      expect(container.textContent).not.toContain('Ekki búið að greiða')
-      expect(button('Senda til TBR')).toBeUndefined()
       act(() => button('Reyna aftur')?.click())
       expect(refetch).toHaveBeenCalledTimes(1)
-      expect(useQuery).toHaveBeenCalledWith(
-        expect.objectContaining({ retry: false }),
-      )
     },
   )
+
+  it('does not offer sending to TBR while the cached status is stale', () => {
+    setQuery({ isError: true, data: { paid: false, created: false } })
+    render()
+    expect(button('Senda til TBR')?.disabled).toBe(true)
+  })
 
   it('restores the confirmed status after a successful retry', () => {
     setQuery({ isError: true })
@@ -134,12 +159,40 @@ describe('payment status display', () => {
     expect(container.textContent).not.toContain(
       'Ekki tókst að sækja greiðslustöðu.',
     )
+    expect(container.textContent).not.toContain(
+      'Ekki tókst að uppfæra greiðslustöðu',
+    )
   })
 
   it('offers sending to TBR only after a successful missing-payment response', () => {
     setQuery({ data: { paid: false, created: false } })
     render()
     expect(container.textContent).toContain('Ekki búið að greiða')
-    expect(button('Senda til TBR')).toBeDefined()
+    expect(button('Senda til TBR')?.disabled).toBe(false)
+  })
+
+  describe('before the case is published or rejected', () => {
+    beforeEach(() => {
+      mockCaseContext.isPublishedOrRejected = false
+    })
+
+    it.each([
+      ['loading', { isPending: true, isFetching: true }],
+      ['failing', { isError: true }],
+    ])(
+      'keeps the informational line while the payment lookup is %s',
+      (_, query) => {
+        setQuery(query)
+        render()
+        expect(container.textContent).toContain(
+          'Auglýsing verður send til TBR við staðfestingu á útgáfu.',
+        )
+        expect(container.textContent).not.toContain('Sæki greiðslustöðu…')
+        expect(container.textContent).not.toContain(
+          'Ekki tókst að sækja greiðslustöðu.',
+        )
+        expect(button('Reyna aftur')).toBeUndefined()
+      },
+    )
   })
 })

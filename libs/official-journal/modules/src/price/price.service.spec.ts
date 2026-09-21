@@ -100,3 +100,73 @@ describe('case payment status isolation', () => {
     expect(() => result.unwrap()).toThrow()
   })
 })
+
+describe('external payment creation isolation', () => {
+  const originalEnv = process.env
+  const logger = { warn: jest.fn(), error: jest.fn() }
+  const caseModel = {
+    findByPk: jest.fn().mockResolvedValue({
+      id: 'case-id',
+      caseNumber: '2026-1',
+      html: '<p>advert</p>',
+      fastTrack: false,
+      additions: [],
+      department: { slug: 'a-deild' },
+      involvedParty: { nationalId: '1234567890' },
+      transaction: {
+        id: 'transaction-id',
+        customAdditionalCharacterCount: 100,
+        customAdditionalDocCount: 0,
+        customBaseCount: 0,
+        imageTier: null,
+        subject: null,
+      },
+    }),
+  }
+  const sequelize = { transaction: jest.fn() }
+  const authService = { xroadFetch: jest.fn() }
+  let service: PriceService
+
+  beforeEach(() => {
+    process.env = { ...originalEnv, FEE_SERVICE_CRED: 'test:credentials' }
+    authService.xroadFetch.mockResolvedValue(
+      new Response('{}', { status: 200 }),
+    )
+    service = Object.assign(Object.create(PriceService.prototype), {
+      logger,
+      caseModel,
+      sequelize,
+      authService,
+      getPriceByDepartmentSlug: jest
+        .fn()
+        .mockResolvedValue({ unwrap: () => ({ expenses: [] }) }),
+    }) as PriceService
+  })
+
+  afterEach(() => {
+    process.env = originalEnv
+  })
+
+  it('bounds the external call without opening a database transaction', async () => {
+    const timeout = jest.spyOn(AbortSignal, 'timeout')
+
+    const result = await service.postExternalPaymentByCaseId('case-id')
+
+    expect(() => result.unwrap()).not.toThrow()
+    expect(sequelize.transaction).not.toHaveBeenCalled()
+    expect(caseModel.findByPk.mock.calls[0][1].transaction).toBeUndefined()
+    expect(timeout).toHaveBeenCalledWith(10_000)
+    expect(authService.xroadFetch.mock.calls[0][1].signal).toBeInstanceOf(
+      AbortSignal,
+    )
+  })
+
+  it("joins the caller's transaction when the publishing flow supplies one", async () => {
+    const transaction = { publishing: true } as never
+
+    await service.postExternalPaymentByCaseId('case-id', transaction)
+
+    expect(sequelize.transaction).not.toHaveBeenCalled()
+    expect(caseModel.findByPk.mock.calls[0][1].transaction).toBe(transaction)
+  })
+})

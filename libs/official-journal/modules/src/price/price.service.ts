@@ -42,6 +42,13 @@ import {
 import { IPriceService } from './price.service.interface'
 
 const LOGGING_CATEGORY = 'price-service'
+
+/**
+ * Deadline for a single call to the external fee service, covering token
+ * acquisition, response headers and reading the body.
+ */
+const FEE_SERVICE_TIMEOUT_MS = 10_000
+
 type PriceByDepartmentResponse = Partial<Omit<CaseTransaction, 'id'>> & {
   expenses: PaymentExpenses[]
 }
@@ -128,8 +135,13 @@ export class PriceService implements IPriceService {
     return ResultWrapper.ok({ price })
   }
 
+  /**
+   * Deliberately not `@Transactional()`: everything this does against the
+   * database is a read, and opening a transaction here would hold a connection
+   * for the duration of the external fee service call. Callers that are already
+   * inside a transaction (the publishing flow) still pass theirs in.
+   */
   @LogAndHandle()
-  @Transactional()
   async postExternalPaymentByCaseId(
     caseId: string,
     transaction?: Transaction,
@@ -202,24 +214,20 @@ export class PriceService implements IPriceService {
 
     const feeCalculation = caseFeeCalculation.unwrap()
 
-    return await this.postExternalPayment(
-      caseId,
-      {
-        id: caseLookup.transaction.id,
-        chargeBase: caseLookup.caseNumber,
-        Expenses: feeCalculation.expenses,
-        debtorNationalId: caseLookup.involvedParty.nationalId,
-        extra: caseLookup.transaction.subject
-          ? [
-              {
-                name: 'tilvisun', // 'tilvisun' is needed as name for correct display in TBR.
-                value: caseLookup.transaction.subject,
-              },
-            ]
-          : undefined,
-      },
-      transaction,
-    )
+    return await this.postExternalPayment(caseId, {
+      id: caseLookup.transaction.id,
+      chargeBase: caseLookup.caseNumber,
+      Expenses: feeCalculation.expenses,
+      debtorNationalId: caseLookup.involvedParty.nationalId,
+      extra: caseLookup.transaction.subject
+        ? [
+            {
+              name: 'tilvisun', // 'tilvisun' is needed as name for correct display in TBR.
+              value: caseLookup.transaction.subject,
+            },
+          ]
+        : undefined,
+    })
   }
 
   @LogAndHandle()
@@ -502,11 +510,9 @@ export class PriceService implements IPriceService {
   // Payment section:
 
   @LogAndHandle()
-  @Transactional()
   private async postExternalPayment(
     caseId: string,
     body: UpdateCasePaymentBody,
-    transaction?: Transaction,
   ): Promise<ResultWrapper> {
     if (!process.env.FEE_SERVICE_CRED) {
       return ResultWrapper.err({
@@ -521,6 +527,7 @@ export class PriceService implements IPriceService {
       `${process.env.XROAD_FJS_PATH}/claim`,
       {
         method: 'POST',
+        signal: AbortSignal.timeout(FEE_SERVICE_TIMEOUT_MS),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Basic ${credentials}`,
@@ -598,8 +605,7 @@ export class PriceService implements IPriceService {
       `${process.env.XROAD_FJS_PATH}/claim/${debtorNationalId}?office=${process.env.FEE_SERVICE_OFFICE_ID}&chargeCategory=${process.env.FEE_SERVICE_CHARGE_CATEGORY}&chargeBase=${caseLookup.caseNumber}`,
       {
         method: 'GET',
-        // Covers token acquisition, response headers, and reading the body.
-        signal: AbortSignal.timeout(10_000),
+        signal: AbortSignal.timeout(FEE_SERVICE_TIMEOUT_MS),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Basic ${credentials}`,

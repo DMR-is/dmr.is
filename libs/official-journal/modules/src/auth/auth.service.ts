@@ -11,6 +11,18 @@ import { IAuthService, IdsToken } from './auth.service.interface'
 const LOGGING_CONTEXT = 'AuthService'
 const LOGGING_CATEGORY = 'auth-service'
 
+/**
+ * Backstop deadline for anything going over X-Road, covering token acquisition,
+ * response headers and reading the body. An unresponsive upstream used to tie a
+ * request up for as long as the socket stayed open, which is how a fee service
+ * outage turned into minute-long page loads across the admin UI.
+ *
+ * Deliberately generous: it exists so nothing can hang indefinitely, not to
+ * bound any particular call. Callers that need a tighter deadline — or that
+ * want the request cancelled for some other reason — pass their own signal.
+ */
+const DEFAULT_XROAD_TIMEOUT_MS = 30_000
+
 @Injectable()
 export class AuthService implements IAuthService {
   private idsToken: IdsToken | null = null
@@ -106,9 +118,14 @@ export class AuthService implements IAuthService {
     }
   }
 
-  @LogMethod()
+  // Arguments are not logged: `options.headers` carries the caller's
+  // Authorization header, and nothing in the logging stack redacts it. The
+  // method and url are logged explicitly below instead.
+  @LogMethod(false)
   async xroadFetch(url: string, options: RequestInit): Promise<Response> {
-    const idsToken = await this.getAccessToken(options.signal ?? undefined)
+    const signal =
+      options.signal ?? AbortSignal.timeout(DEFAULT_XROAD_TIMEOUT_MS)
+    const idsToken = await this.getAccessToken(signal)
 
     if (!idsToken) {
       this.logger.error(
@@ -135,6 +152,7 @@ export class AuthService implements IAuthService {
 
     const requestOption = {
       ...options,
+      signal,
       headers: {
         ...options.headers,
         'X-Road-Client': process.env.XROAD_DMR_CLIENT,
