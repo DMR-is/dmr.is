@@ -102,7 +102,21 @@ export function UsersPageClient({ isAdmin, roleOptions }: Props) {
                         setSelectedTab(id)
                         setPage(1)
                       }}
-                      label=""
+                      // A real label, not "": island-ui's Tabs feeds this to an
+                      // internal react-select as its `name`, which becomes `id`
+                      // and `instanceId`. An empty one falls through to
+                      // `instanceId || ++counter`, and that counter differs
+                      // between the server and client renders - a live
+                      // mismatch now that this page genuinely server-renders.
+                      //
+                      // This buys determinism, not correct wiring. The label
+                      // renders as *visible* copy above the Select the tab
+                      // strip collapses into below the desktop breakpoint, and
+                      // the id is the raw label, so it contains spaces -
+                      // invalid for an HTML id, and `aria-labelledby` parses it
+                      // as ids that do not exist. Both need island-ui to derive
+                      // that id from a slug or `useId` instead of the label.
+                      label="Notendur og stofnanir"
                     />
                   ) : (
                     <UserTable isAdmin={isAdmin} roleOptions={roleOptions} />
