@@ -30,6 +30,11 @@ export function HydrateClient(props: { children: React.ReactNode }) {
  * A consumer branching on `useQuery`'s `isPending` must await this, or the
  * server renders the pending branch while the client hydrates the resolved one
  * and React throws away the whole tree on a hydration mismatch.
+ *
+ * When you do await it, give the route a `loading.tsx` - the render now blocks,
+ * so a client-side navigation shows nothing until the query answers. Note also
+ * that `retry: false` bounds the number of attempts, not the wall-clock wait: a
+ * slow-but-alive API still stalls the render.
  */
 export function prefetch<
   TQueryFnData = unknown,
