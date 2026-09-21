@@ -22,7 +22,15 @@ export default async function ApplicationPage({
 
   const mappedType = mapFormTypeToApplicationType(type)
 
-  void prefetch(trpc.getBaseEntities.queryOptions())
+  // Started here but awaited at the end, so it runs alongside the fetches
+  // below. It has to be awaited at all because the form containers read it
+  // through `useQuery` and build their select options from
+  // `baseEntities?.x ?? []` - streaming the page out first would server-render
+  // empty selects and hydrate populated ones.
+  const baseEntitiesPrefetch = prefetch({
+    ...trpc.getBaseEntities.queryOptions(),
+    retry: false,
+  })
   const application = await fetchQueryWithHandler(
     trpc.getApplicationById.queryOptions({
       id,
@@ -30,12 +38,17 @@ export default async function ApplicationPage({
   )
 
   // Only the submitted view shows the price, mirroring the branch in
-  // ApplicationFormContainer
+  // ApplicationFormContainer. Awaited because the submitted header renders a
+  // SkeletonLoader off this query's pending flag, and its subtree already
+  // server-renders - `getApplicationById` above is awaited.
   if (application?.status !== ApplicationStatusEnum.DRAFT) {
-    void prefetch(
-      trpc.getApplicationAdvertPrice.queryOptions({ applicationId: id }),
-    )
+    await prefetch({
+      ...trpc.getApplicationAdvertPrice.queryOptions({ applicationId: id }),
+      retry: false,
+    })
   }
+
+  await baseEntitiesPrefetch
 
   return (
     <HydrateClient>

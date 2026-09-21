@@ -13,7 +13,7 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
-import { formatDate } from '@dmr.is/utils-shared/format/date'
+import { formatDateInIceland } from '@dmr.is/utils-shared/format/date'
 
 import {
   TBRGetPaymentResponseDto,
@@ -117,7 +117,10 @@ const PaymentDetails = ({ payment }: PaymentDetailsProps) => {
         <GridColumn span={['12/12', '6/12', '3/12']}>
           <Text variant="eyebrow">Búið til</Text>
           <Text>
-            {formatDate(new Date(payment.createdAt), "d.MM.yy 'kl.' HH:mm")}
+            {formatDateInIceland(
+              new Date(payment.createdAt),
+              "d.MM.yy 'kl.' HH:mm",
+            )}
           </Text>
         </GridColumn>
         <GridColumn span={['12/12', '6/12', '3/12']}>
@@ -195,7 +198,7 @@ export const PaymentsTable = ({
       type: mapTransactionType(payment.type),
       totalPrice: payment.totalPrice.toLocaleString('is-IS') + ' kr.',
       paidAt: payment.paidAt ? (
-        formatDate(new Date(payment.paidAt), "d.MM.yy 'kl.' HH:mm")
+        formatDateInIceland(new Date(payment.paidAt), "d.MM.yy 'kl.' HH:mm")
       ) : (
         <Tag disabled variant="red">
           Ógreitt

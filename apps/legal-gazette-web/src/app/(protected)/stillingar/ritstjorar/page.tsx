@@ -11,7 +11,14 @@ type Props = {
 export default async function UserSettingsPage({ searchParams }: Props) {
   const { page, pageSize } = pagingParamsCache.parse(await searchParams)
 
-  prefetch(trpc.getUsers.queryOptions({ page, pageSize }))
+  // Awaited: the container reads this through `useQuery` and renders a
+  // DataTable skeleton while it is pending, so streaming the page out first
+  // would leave the server on the skeleton and the client on the loaded table.
+  // `retry: false` stops a dead API holding the whole page back.
+  await prefetch({
+    ...trpc.getUsers.queryOptions({ page, pageSize }),
+    retry: false,
+  })
 
   return (
     <HydrateClient>

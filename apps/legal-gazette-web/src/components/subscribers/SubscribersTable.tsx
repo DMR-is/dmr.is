@@ -5,6 +5,7 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
+import { formatDateInIceland } from '@dmr.is/utils-shared/format/date'
 
 import { Paging } from '../../gen/fetch'
 
@@ -30,8 +31,11 @@ type Props = {
 
 const formatDate = (dateString: string | null): string => {
   if (!dateString) return '-'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('is-IS')
+  if (isNaN(new Date(dateString).getTime())) return '-'
+  // Pinned to Iceland: this table is server-rendered, and `toLocaleDateString`
+  // resolves in the runtime's zone, so a viewer off GMT would hydrate a
+  // different date than the server sent.
+  return formatDateInIceland(dateString, 'dd.MM.yyyy')
 }
 
 export const SubscribersTable = ({
