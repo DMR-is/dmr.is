@@ -20,8 +20,13 @@ export const FormStep = ({ items, loading }: Props) => {
               {item.intro && item.intro}
             </Stack>
             {loading ? (
-            <SkeletonLoader height={126} space={[2, 3]} borderRadius="large" />)
-            : (<>{item.content}</>
+              <SkeletonLoader
+                height={126}
+                space={[2, 3]}
+                borderRadius="large"
+              />
+            ) : (
+              <>{item.content}</>
             )}
           </Stack>
         </div>

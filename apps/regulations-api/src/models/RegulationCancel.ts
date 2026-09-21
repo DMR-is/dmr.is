@@ -1,13 +1,13 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, Model, Table } from 'sequelize-typescript'
 
-import type { ISODate } from '../routes/types';
+import type { ISODate } from '../routes/types'
 
 type RegulationCancelAttributes = {
-  id: number;
-  regulationId: number;
-  changingId: number;
-  date: ISODate;
-};
+  id: number
+  regulationId: number
+  changingId: number
+  date: ISODate
+}
 
 @Table({ tableName: 'RegulationCancel', timestamps: false })
 export class DB_RegulationCancel
@@ -15,23 +15,23 @@ export class DB_RegulationCancel
   implements RegulationCancelAttributes
 {
   @Column({ primaryKey: true, autoIncrement: true, type: DataType.INTEGER })
-  id!: number;
+  id!: number
 
   @Column({
     type: DataType.INTEGER,
     comment: 'Id of the target regulation being cancelled',
   })
-  regulationId!: number;
+  regulationId!: number
 
   @Column({
     type: DataType.INTEGER,
     comment: 'Id of the source regulation prescribing the cancellation',
   })
-  changingId!: number;
+  changingId!: number
 
   @Column({
     type: DataType.DATEONLY,
     comment: 'the date when the cancellation comes into effect',
   })
-  date!: ISODate;
+  date!: ISODate
 }

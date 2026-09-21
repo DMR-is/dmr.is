@@ -24,7 +24,7 @@ export default function IssuesContainer() {
         ]}
       />
       <GridContainer>
-        <GridRow marginBottom={[2,3]}>
+        <GridRow marginBottom={[2, 3]}>
           <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
             <CreateIssue />
           </GridColumn>

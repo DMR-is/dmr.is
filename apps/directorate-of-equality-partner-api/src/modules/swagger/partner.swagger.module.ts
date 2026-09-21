@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 
 import { PartnerApiModule } from '../partner/partner.api.module'
+import { ScoringModelApiModule } from '../scoring-model/scoring-model.api.module'
 
 /**
  * The public third-party surface — the aggregate backing the `swagger/partner`
@@ -19,6 +20,6 @@ import { PartnerApiModule } from '../partner/partner.api.module'
  * the document.
  */
 @Module({
-  imports: [PartnerApiModule],
+  imports: [PartnerApiModule, ScoringModelApiModule],
 })
 export class PartnerSwaggerModule {}

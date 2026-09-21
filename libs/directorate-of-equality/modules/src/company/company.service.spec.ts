@@ -307,7 +307,7 @@ describe('CompanyService', () => {
 
       expect(create).toHaveBeenCalledWith(
         expect.objectContaining({
-          sector: CompanySectorEnum.PUBLIC,
+          sector: CompanySectorEnum.RIKISADILI,
           legalFormId: 'ohf',
           legalFormName: 'Opinbert hlutafélag',
         }),
@@ -341,7 +341,7 @@ describe('CompanyService', () => {
       await service.getOrCreateByNationalId('9901234567')
 
       const createArg = create.mock.calls[0][0]
-      expect(createArg.sector).toBe(CompanySectorEnum.PRIVATE)
+      expect(createArg.sector).toBe(CompanySectorEnum.FYRIRTAEKI)
       expect(createArg).not.toHaveProperty('status')
       expect(createArg).not.toHaveProperty('address')
     })
@@ -513,14 +513,14 @@ describe('CompanyService', () => {
         postcodeId: 'postcode-105',
         isatCategoryCode: '62010',
         // RSK carried no legalForm, so the sector stays UNKNOWN — never guessed
-        // as PRIVATE.
+        // as FYRIRTAEKI.
         sector: CompanySectorEnum.UNKNOWN,
         legalFormId: null,
         legalFormName: null,
       })
     })
 
-    it('classifies a private legal form as PRIVATE and persists the raw RSK form', async () => {
+    it('classifies a private legal form as FYRIRTAEKI and persists the raw RSK form', async () => {
       findOne.mockResolvedValue(null)
       getLegalEntityByNationalId.mockResolvedValue({
         nationalId: '5501234567',
@@ -542,14 +542,14 @@ describe('CompanyService', () => {
 
       expect(create).toHaveBeenCalledWith(
         expect.objectContaining({
-          sector: CompanySectorEnum.PRIVATE,
+          sector: CompanySectorEnum.FYRIRTAEKI,
           legalFormId: 'ehf',
           legalFormName: 'Einkahlutafélag',
         }),
       )
     })
 
-    it('classifies ohf (state-owned hlutafélag) as PUBLIC, not PRIVATE', async () => {
+    it('classifies ohf (state-owned hlutafélag) as RIKISADILI, not FYRIRTAEKI', async () => {
       findOne.mockResolvedValue(null)
       getLegalEntityByNationalId.mockResolvedValue({
         nationalId: '5501234567',
@@ -570,7 +570,7 @@ describe('CompanyService', () => {
       })
 
       expect(create).toHaveBeenCalledWith(
-        expect.objectContaining({ sector: CompanySectorEnum.PUBLIC }),
+        expect.objectContaining({ sector: CompanySectorEnum.RIKISADILI }),
       )
     })
 
@@ -670,7 +670,7 @@ describe('CompanyService', () => {
 
       const preview = await service.getRskCompanyPreview('5501234567')
 
-      expect(preview.sector).toBe(CompanySectorEnum.PUBLIC)
+      expect(preview.sector).toBe(CompanySectorEnum.RIKISADILI)
       expect(preview.legalFormName).toBe('Opinbert hlutafélag')
       expect(getLegalEntityByNationalId).toHaveBeenCalledTimes(1)
       expect(create).not.toHaveBeenCalled()
@@ -813,11 +813,7 @@ describe('CompanyService', () => {
       const company = makeFinesCompany(true)
       findOneOrThrow.mockResolvedValue(company)
 
-      await service.updateFines(
-        'company-1',
-        { finesStarted: false },
-        'admin-1',
-      )
+      await service.updateFines('company-1', { finesStarted: false }, 'admin-1')
 
       expect(company._update).toHaveBeenCalledWith({ finesStarted: false })
       expect(emitFinesStopped).toHaveBeenCalledWith(
@@ -954,7 +950,7 @@ describe('CompanyService', () => {
       return update
     }
 
-    it('sets PUBLIC and marks the classification admin-owned', async () => {
+    it('sets RIKISADILI and marks the classification admin-owned', async () => {
       const update = stubCompany({
         sector: CompanySectorEnum.UNKNOWN,
         sectorOverride: false,
@@ -962,19 +958,19 @@ describe('CompanyService', () => {
 
       await service.updateSector(
         'company-20',
-        { sector: CompanySectorEnum.PUBLIC },
+        { sector: CompanySectorEnum.RIKISADILI },
         'admin-1',
       )
 
       expect(update).toHaveBeenCalledWith({
-        sector: CompanySectorEnum.PUBLIC,
+        sector: CompanySectorEnum.RIKISADILI,
         sectorOverride: true,
       })
     })
 
     it('clears the override when set back to UNKNOWN, handing it to automatic classification', async () => {
       const update = stubCompany({
-        sector: CompanySectorEnum.PRIVATE,
+        sector: CompanySectorEnum.FYRIRTAEKI,
         sectorOverride: true,
       })
 
@@ -992,13 +988,13 @@ describe('CompanyService', () => {
 
     it('is a no-op when the sector and override are both unchanged', async () => {
       const update = stubCompany({
-        sector: CompanySectorEnum.PRIVATE,
+        sector: CompanySectorEnum.FYRIRTAEKI,
         sectorOverride: true,
       })
 
       await service.updateSector(
         'company-20',
-        { sector: CompanySectorEnum.PRIVATE },
+        { sector: CompanySectorEnum.FYRIRTAEKI },
         'admin-1',
       )
 
@@ -1006,21 +1002,21 @@ describe('CompanyService', () => {
     })
 
     it('still writes when the sector matches but the override flag does not', async () => {
-      // An automatically-derived PRIVATE that an admin confirms by hand must
+      // An automatically-derived FYRIRTAEKI that an admin confirms by hand must
       // become admin-owned, or the next backfill could silently change it.
       const update = stubCompany({
-        sector: CompanySectorEnum.PRIVATE,
+        sector: CompanySectorEnum.FYRIRTAEKI,
         sectorOverride: false,
       })
 
       await service.updateSector(
         'company-20',
-        { sector: CompanySectorEnum.PRIVATE },
+        { sector: CompanySectorEnum.FYRIRTAEKI },
         'admin-1',
       )
 
       expect(update).toHaveBeenCalledWith({
-        sector: CompanySectorEnum.PRIVATE,
+        sector: CompanySectorEnum.FYRIRTAEKI,
         sectorOverride: true,
       })
     })
@@ -1035,7 +1031,7 @@ describe('CompanyService', () => {
 
       await service.updateSector(
         'company-20',
-        { sector: CompanySectorEnum.PUBLIC },
+        { sector: CompanySectorEnum.RIKISADILI },
         'admin-1',
       )
 
@@ -1272,7 +1268,8 @@ describe('CompanyService', () => {
     /** Raw SQL from every `literal()` condition, joined. */
     const rawSql = (): string => {
       const where = findAndCountAll.mock.calls[0][0].where
-      const clauses = (where as Record<symbol, { val?: string }[]>)[Op.and] ?? []
+      const clauses =
+        (where as Record<symbol, { val?: string }[]>)[Op.and] ?? []
       return clauses.map((c) => c?.val ?? '').join(' ')
     }
 
@@ -1360,7 +1357,6 @@ describe('CompanyService', () => {
       expect(rawSql()).not.toContain('UNKNOWN')
     })
   })
-
 })
 
 function makeLegacyReportModel(

@@ -1,6 +1,7 @@
 import { CompanyEventDto } from '../company/dto/company-event.dto'
 import { CompanyStatusEnum } from '../company/models/company.enums'
 import {
+  CompanyCustomEmailEventType,
   CompanyDeadlineReminderEventType,
   CompanyReminderTierEnum,
 } from '../company/models/company-event.model'
@@ -80,6 +81,24 @@ export interface ICompanyEventService {
     keyId: string,
     actorUserId?: string | null,
     reason?: string | null,
+  ): Promise<void>
+
+  /**
+   * Records one company's outcome within a custom-email batch — delivered,
+   * failed, or skipped before it was ever attempted.
+   *
+   * `subject` goes into `reason`, the way reminder events carry their due date.
+   * `companyEmailId` is what lets the timeline fetch the message body. `detail`
+   * is appended after an em dash on the two non-delivery outcomes only.
+   */
+  emitCustomEmailOutcome(
+    companyId: string,
+    status: CompanyStatusEnum,
+    eventType: CompanyCustomEmailEventType,
+    companyEmailId: string,
+    subject: string,
+    actorUserId?: string | null,
+    detail?: string | null,
   ): Promise<void>
 
   /** All events for a company, oldest first — used to build the timeline. */

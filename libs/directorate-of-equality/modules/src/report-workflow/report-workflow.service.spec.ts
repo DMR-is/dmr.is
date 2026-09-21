@@ -822,7 +822,9 @@ describe('ReportWorkflowService', () => {
 
       await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
 
-      expect(reportPdfService.generateReportPdf).toHaveBeenCalledWith('report-1')
+      expect(reportPdfService.generateReportPdf).toHaveBeenCalledWith(
+        'report-1',
+      )
       expect(mailService.sendReportApproved).toHaveBeenCalledWith(report, [
         {
           filename: 'jafnrettisaaetlun-report-1.pdf',
@@ -904,9 +906,9 @@ describe('ReportWorkflowService', () => {
         service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
           denialReason: 'reason',
         }),
-      // Names the status the CAS was pinned to. "no longer awaiting a decision"
-      // would be wrong for a report that moved IN_REVIEW <-> POSTPONED
-      // mid-request, which is still perfectly deniable on a retry.
+        // Names the status the CAS was pinned to. "no longer awaiting a decision"
+        // would be wrong for a report that moved IN_REVIEW <-> POSTPONED
+        // mid-request, which is still perfectly deniable on a retry.
       ).rejects.toThrow(/no longer IN_REVIEW/)
 
       expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
@@ -1211,9 +1213,7 @@ describe('ReportWorkflowService', () => {
 
       await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
 
-      expect(
-        reportPdfService.generateImprovementPlanPdf,
-      ).not.toHaveBeenCalled()
+      expect(reportPdfService.generateImprovementPlanPdf).not.toHaveBeenCalled()
     })
 
     /*
@@ -1277,6 +1277,36 @@ describe('ReportWorkflowService', () => {
 
       expect(companyModel.update).toHaveBeenCalledWith(
         { nextSalaryReportDueAt: expect.any(Date) },
+        { where: { id: 'company-1' } },
+      )
+    })
+
+    it('sets validUntil to the end of the day three years out, not the approval time of day', async () => {
+      // APPROVED_AT is 10:00. `overdue` is `due_at < NOW()` and the salary
+      // renewal window is measured off the same column, so a mid-day timestamp
+      // would drop the company out of compliance at 10:00 on a day it is still
+      // covered through.
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        type: ReportTypeEnum.SALARY,
+        status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      const endOfDayThreeYearsOut = new Date('2029-08-31T23:59:59.999Z')
+
+      expect(reportModel.update).toHaveBeenCalledWith(
+        expect.objectContaining({ validUntil: endOfDayThreeYearsOut }),
+        expect.anything(),
+      )
+      expect(companyModel.update).toHaveBeenCalledWith(
+        { nextSalaryReportDueAt: endOfDayThreeYearsOut },
         { where: { id: 'company-1' } },
       )
     })
@@ -1467,7 +1497,9 @@ describe('ReportWorkflowService', () => {
     const makeFakeTransaction = () => {
       const hooks: (() => Promise<void>)[] = []
       return {
-        transaction: { afterCommit: (fn: () => Promise<void>) => hooks.push(fn) },
+        transaction: {
+          afterCommit: (fn: () => Promise<void>) => hooks.push(fn),
+        },
         /** What `Transaction.commit` does once the COMMIT has landed. */
         commit: async () => {
           for (const hook of hooks) await hook()

@@ -28,6 +28,7 @@ type DoeResponseParams = {
   produces?: string
   errors?: number[]
   include404?: boolean
+  include409?: boolean
 }
 
 function buildSuccessContentSchema(produces: string) {
@@ -45,6 +46,7 @@ export function DoeResponse({
   produces,
   errors = DEFAULT_ERRORS,
   include404 = false,
+  include409 = false,
 }: DoeResponseParams) {
   let successDecorator: ReturnType<typeof ApiResponse>
 
@@ -57,12 +59,20 @@ export function DoeResponse({
       },
     })
   } else if (type || successDescription) {
-    successDecorator = ApiResponse({ status, type, description: successDescription })
+    successDecorator = ApiResponse({
+      status,
+      type,
+      description: successDescription,
+    })
   } else {
     successDecorator = ApiNoContentResponse()
   }
 
-  const effectiveErrors = include404 ? [...errors, 404] : errors
+  const effectiveErrors = [
+    ...errors,
+    ...(include404 ? [404] : []),
+    ...(include409 ? [409] : []),
+  ].sort((a, b) => a - b)
 
   return applyDecorators(
     ApiOperation({ operationId, description }),

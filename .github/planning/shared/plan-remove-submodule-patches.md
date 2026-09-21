@@ -31,29 +31,29 @@ Reverting all 5 "unused" patches causes failures in:
 
 Simple type fixes for React 19 incompatibilities. Not reakit-related.
 
-| # | File | Patch | Error Without Patch |
-|---|------|-------|---------------------|
-| 1 | `LinkContext/LinkContext.tsx` | `JSX.Element` → `React.JSX.Element` | `Cannot find namespace 'JSX'` |
-| 2 | `SubSectionsV2/SubSectionsV2.tsx` | `ReactNodeArray` → `ReactNode[]` | `no exported member 'ReactNodeArray'` + implicit any |
-| 3 | `ProfileCard/ProfileCard.tsx` | `JSX.Element` → `React.JSX.Element` | `Cannot find namespace 'JSX'` |
-| 4 | `ToggleSwitch/_ToggleSwitch.utils.tsx` | `JSX.IntrinsicElements` → `React.JSX.IntrinsicElements` | `Cannot find namespace 'JSX'` |
-| 5 | `PhoneInput/PhoneInput.tsx` | `@ts-expect-error` on CountryCodeSelect | Missing properties from `PropsFromSelectProps` |
+| #   | File                                   | Patch                                                   | Error Without Patch                                  |
+| --- | -------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------- |
+| 1   | `LinkContext/LinkContext.tsx`          | `JSX.Element` → `React.JSX.Element`                     | `Cannot find namespace 'JSX'`                        |
+| 2   | `SubSectionsV2/SubSectionsV2.tsx`      | `ReactNodeArray` → `ReactNode[]`                        | `no exported member 'ReactNodeArray'` + implicit any |
+| 3   | `ProfileCard/ProfileCard.tsx`          | `JSX.Element` → `React.JSX.Element`                     | `Cannot find namespace 'JSX'`                        |
+| 4   | `ToggleSwitch/_ToggleSwitch.utils.tsx` | `JSX.IntrinsicElements` → `React.JSX.IntrinsicElements` | `Cannot find namespace 'JSX'`                        |
+| 5   | `PhoneInput/PhoneInput.tsx`            | `@ts-expect-error` on CountryCodeSelect                 | Missing properties from `PropsFromSelectProps`       |
 
 ### Category B: Reakit type incompatibilities (3 files)
 
 Reakit spread types and children overloads break under React 19's stricter `ReactElement<unknown>`.
 
-| # | File | Patch | Error Without Patch |
-|---|------|-------|---------------------|
-| 6 | `Tooltip/Tooltip.tsx` | `@ts-expect-error` on TooltipReference | Spread types / overload mismatch |
-| 7 | `ModalBase/ModalBase.tsx` | `@ts-expect-error` on 2 DialogDisclosure lines | Spread types / children overload |
-| 8 | `DropdownMenu/DropdownMenu.tsx` | `@ts-expect-error` on MenuButton | Spread types / overload mismatch |
+| #   | File                            | Patch                                          | Error Without Patch              |
+| --- | ------------------------------- | ---------------------------------------------- | -------------------------------- |
+| 6   | `Tooltip/Tooltip.tsx`           | `@ts-expect-error` on TooltipReference         | Spread types / overload mismatch |
+| 7   | `ModalBase/ModalBase.tsx`       | `@ts-expect-error` on 2 DialogDisclosure lines | Spread types / children overload |
+| 8   | `DropdownMenu/DropdownMenu.tsx` | `@ts-expect-error` on MenuButton               | Spread types / overload mismatch |
 
 ### Category C: Implicit any (1 file)
 
-| # | File | Patch | Error Without Patch |
-|---|------|-------|---------------------|
-| 9 | `Select/Select.tsx` | Added explicit type annotations to 2 arrow params | `noImplicitAny` violations |
+| #   | File                | Patch                                             | Error Without Patch        |
+| --- | ------------------- | ------------------------------------------------- | -------------------------- |
+| 9   | `Select/Select.tsx` | Added explicit type annotations to 2 arrow params | `noImplicitAny` violations |
 
 ## Strategy Per Category
 

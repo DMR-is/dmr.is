@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
-
 import {
-  CaseDto,
-  CaseModel,
-} from '../../models/case.model'
+  generatePaging,
+  getLimitAndOffset,
+} from '@dmr.is/utils-server/serverUtils'
+
+import { CaseDto, CaseModel } from '../../models/case.model'
 import { CaseQueryDto, CreateCaseDto, GetCasesDto } from './dto/case.dto'
 import { ICaseService } from './case.service.interface'
 

@@ -69,9 +69,7 @@ export class IsatCategoryModel extends Model<IsatCategoryAttributes> {
       descriptionEn: model.descriptionEn,
       section: model.section,
       division: model.division,
-      isatSection: model.isatSection
-        ? model.isatSection.fromModel()
-        : null,
+      isatSection: model.isatSection ? model.isatSection.fromModel() : null,
     }
   }
 

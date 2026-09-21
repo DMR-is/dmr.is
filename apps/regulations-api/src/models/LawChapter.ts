@@ -1,13 +1,13 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, Model, Table } from 'sequelize-typescript'
 
-import type { LawChapterSlug } from '../routes/types';
+import type { LawChapterSlug } from '../routes/types'
 
 type LawChapterAttributes = {
-  id: number;
-  slug: LawChapterSlug;
-  title: string;
-  parentId?: number;
-};
+  id: number
+  slug: LawChapterSlug
+  title: string
+  parentId?: number
+}
 
 @Table({ tableName: 'LawChapter', timestamps: false })
 export class DB_LawChapter
@@ -15,14 +15,14 @@ export class DB_LawChapter
   implements LawChapterAttributes
 {
   @Column({ primaryKey: true, autoIncrement: true, type: DataType.INTEGER })
-  id!: number;
+  id!: number
 
   @Column({ type: DataType.STRING(8) })
-  slug!: LawChapterSlug;
+  slug!: LawChapterSlug
 
   @Column({ type: DataType.STRING(256) })
-  title!: string;
+  title!: string
 
   @Column({ allowNull: true, type: DataType.INTEGER })
-  parentId?: number;
+  parentId?: number
 }

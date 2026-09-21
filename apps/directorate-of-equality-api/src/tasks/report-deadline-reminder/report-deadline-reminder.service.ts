@@ -100,11 +100,17 @@ type Tier = {
 const TIERS: Tier[] = [
   {
     tier: CompanyReminderTierEnum.SIX_MONTHS,
-    dueRange: (now) => ({ [Op.gt]: addMonths(now, 2), [Op.lte]: addMonths(now, 6) }),
+    dueRange: (now) => ({
+      [Op.gt]: addMonths(now, 2),
+      [Op.lte]: addMonths(now, 6),
+    }),
   },
   {
     tier: CompanyReminderTierEnum.TWO_MONTHS,
-    dueRange: (now) => ({ [Op.gt]: addDays(now, 14), [Op.lte]: addMonths(now, 2) }),
+    dueRange: (now) => ({
+      [Op.gt]: addDays(now, 14),
+      [Op.lte]: addMonths(now, 2),
+    }),
   },
   {
     tier: CompanyReminderTierEnum.TWO_WEEKS,
@@ -182,7 +188,11 @@ export class ReportDeadlineReminderService
     if (companies.length > 0) {
       this.logger.info(
         `Found ${companies.length} companies in ${tier.tier} band for ${kind.reportType}`,
-        { context: LOGGING_CONTEXT, reportType: kind.reportType, tier: tier.tier },
+        {
+          context: LOGGING_CONTEXT,
+          reportType: kind.reportType,
+          tier: tier.tier,
+        },
       )
     }
 
@@ -266,13 +276,12 @@ export class ReportDeadlineReminderService
 
     const dueDateIso = dueDate.toISOString()
 
-    const alreadySent =
-      await this.companyEventService.hasDeadlineReminderEvent(
-        company.id,
-        kind.sentEventType,
-        tier,
-        dueDateIso,
-      )
+    const alreadySent = await this.companyEventService.hasDeadlineReminderEvent(
+      company.id,
+      kind.sentEventType,
+      tier,
+      dueDateIso,
+    )
     if (alreadySent) return
 
     /*

@@ -20,15 +20,15 @@ assumed:
 
 Clause 1 covers the identity server, national registry and X-Road groups:
 
-| | dev | prod |
-|---|---|---|
-| `IDENTITY_SERVER_DOMAIN` | `identity-server.dev01.devland.is` | `innskra.island.is` |
-| `NATIONAL_REGISTRY_CLIENT_USER` | `hugsmidjandev` | `dmrclient` |
-| `NATIONAL_REGISTRY_CLIENT_PASSWORD` | one credential | one credential |
-| `NATIONAL_REGISTRY_API_LOGIN_PATH` | `…/staging/v1/Innskraning` | `…/api/v1/Innskraning` |
-| `NATIONAL_REGISTRY_API_LOOKUP_PATH` | identical | identical |
-| `XROAD_DMR_CLIENT` | `IS-DEV/GOV/10014/DMR-Client` | `IS/GOV/5804170510/DMR-Client` |
-| `XROAD_ISLAND_IS_PATH` | identical | **differs per tenant** — see below |
+|                                     | dev                                | prod                               |
+| ----------------------------------- | ---------------------------------- | ---------------------------------- |
+| `IDENTITY_SERVER_DOMAIN`            | `identity-server.dev01.devland.is` | `innskra.island.is`                |
+| `NATIONAL_REGISTRY_CLIENT_USER`     | `hugsmidjandev`                    | `dmrclient`                        |
+| `NATIONAL_REGISTRY_CLIENT_PASSWORD` | one credential                     | one credential                     |
+| `NATIONAL_REGISTRY_API_LOGIN_PATH`  | `…/staging/v1/Innskraning`         | `…/api/v1/Innskraning`             |
+| `NATIONAL_REGISTRY_API_LOOKUP_PATH` | identical                          | identical                          |
+| `XROAD_DMR_CLIENT`                  | `IS-DEV/GOV/10014/DMR-Client`      | `IS/GOV/5804170510/DMR-Client`     |
+| `XROAD_ISLAND_IS_PATH`              | identical                          | **differs per tenant** — see below |
 
 **Everything else lives in the app's own environment**, named exactly as its ECS task definition
 names it.
@@ -41,7 +41,7 @@ development mirrors the container rather than inventing its own shape. Do not "h
 ### The rule for deciding where a key goes
 
 Identical across every deployed service means shared. Absent from every deployment and identical on
-every laptop also means shared. Anything else — including anything that merely *happens* to match
+every laptop also means shared. Anything else — including anything that merely _happens_ to match
 today — goes in the app environment. The arbiter is the ECS task definition, not what local
 development tolerates.
 
@@ -151,7 +151,7 @@ OP_TOKEN=exec(`security find-generic-password -s varlock -a dmr.is:local:OP_TOKE
 ```
 
 Left empty, authentication falls back to the 1Password desktop app. That still works, but it
-authorises per *run* rather than per session, and it connects as **you**, with your full access
+authorises per _run_ rather than per session, and it connects as **you**, with your full access
 rather than a scoped service account — fine for dev secrets, not for anything else. The `2>/dev/null
 || true` guard exists so that fallback is what a non-macOS developer gets, instead of a hard failure
 where `security` does not exist.
@@ -160,20 +160,20 @@ where `security` does not exist.
 
 Both alternatives were tried and measured. Neither can be made silent on macOS:
 
-| Approach | Result |
-|---|---|
-| `keychain()` | prompts on **every run** |
+| Approach                            | Result                        |
+| ----------------------------------- | ----------------------------- |
+| `keychain()`                        | prompts on **every run**      |
 | `varlock()` device-local encryption | prompts **once per terminal** |
-| `exec(security …)` + Always Allow | **silent** |
+| `exec(security …)` + Always Allow   | **silent**                    |
 
 The reason is that varlock's own resolvers route every read through its native helper
 (`VarlockEnclave`), which on macOS is gated by Secure Enclave user presence. Its dialog offers
 **no "Always Allow" button** — only a password field — so it can never be granted persistently. The
-varlock docs are explicit: *"Secure Enclave keys never leave the enclave, and every decrypt requires
-user presence (Touch ID or password), so there is no unattended decrypt on macOS."*
+varlock docs are explicit: _"Secure Enclave keys never leave the enclave, and every decrypt requires
+user presence (Touch ID or password), so there is no unattended decrypt on macOS."_
 
 Reading the item with `/usr/bin/security` bypasses the helper, so the ordinary Keychain ACL applies —
-and that dialog *does* offer **Always Allow**, which is a persistent grant. Clicking it is the whole
+and that dialog _does_ offer **Always Allow**, which is a persistent grant. Clicking it is the whole
 setup.
 
 Four dead ends, recorded so nobody repeats an afternoon on them:
@@ -185,12 +185,12 @@ Four dead ends, recorded so nobody repeats an afternoon on them:
   `security set-generic-password-partition-list` changed nothing.
 - **Nor is "Allow all applications"** on the item. `keychain()` still prompted every run.
 - **The file-based fallback cannot be selected.** `VARLOCK_FORCE_FILE_ENCRYPTION_FALLBACK` exists in
-  the binary but is inert here; the fallback engages only when native capabilities are *unavailable*,
+  the binary but is inert here; the fallback engages only when native capabilities are _unavailable_,
   which on a laptop with a working Secure Enclave they are not. `~/.varlock/` is never created.
 
 A related red herring: a prompt straight after `varlock lock` proves nothing, because `lock` exists
 to force re-authentication. Verify with repeated resolves instead — or, now, by confirming a resolve
-is silent *immediately after* a `lock`, which is only possible because `exec()` never touches the
+is silent _immediately after_ a `lock`, which is only possible because `exec()` never touches the
 enclave.
 
 Environment ids are committed on purpose. An id is an identifier, not a credential, and is useless

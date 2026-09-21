@@ -3,6 +3,10 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import {
+  fromCalendarDateIso,
+  toCalendarDateIso,
+} from '@dmr.is/utils-shared/date/calendarDate'
 
 import {
   CreateDivisionEndingDto,
@@ -79,14 +83,16 @@ export const DivisionSignatureFields = ({
           size="sm"
           placeholderText=""
           selected={
-            formState.signature.date ? new Date(formState.signature.date) : null
+            formState.signature.date
+              ? fromCalendarDateIso(formState.signature.date)
+              : null
           }
           handleChange={(date) => {
             setFormState({
               ...formState,
               signature: {
                 ...formState.signature,
-                date: date.toISOString(),
+                date: toCalendarDateIso(date),
               },
             })
           }}

@@ -70,9 +70,7 @@ export default function AdvertPublishRegulationPage() {
                   iconType="outline"
                   type="button"
                   loading={publishMutation.isPending}
-                  onClick={() =>
-                    publishMutation.mutate({ id: advertId })
-                  }
+                  onClick={() => publishMutation.mutate({ id: advertId })}
                 >
                   Senda reglugerð
                 </Button>

@@ -26,8 +26,40 @@ export {
   SubsidiaryReportSnapshotSourceDto,
 }
 
+/**
+ * The minimum a company contributes to an outbound mailing: who it is, where to
+ * write, and whether it may be written to at all.
+ *
+ * `quarantined` is carried rather than filtered out here, so the caller can say
+ * a company was excluded and why — a list that silently shrinks cannot be
+ * checked against the count the admin saw.
+ */
+export type CompanyMailRecipient = {
+  id: string
+  name: string
+  email: string | null
+  quarantined: boolean
+}
+
 export interface ICompanyService {
   getAll(query: GetCompaniesQueryDto): Promise<GetCompaniesResponseDto>
+
+  /**
+   * Every company matching `filter`, unpaged, as mail recipients.
+   *
+   * Runs the identical `where`/`include` the company list runs, so a filter
+   * resolves to exactly the rows the list would have shown.
+   */
+  findMailRecipientsByFilter(
+    filter: GetCompaniesQueryDto,
+  ): Promise<CompanyMailRecipient[]>
+
+  /**
+   * The named companies as mail recipients. Ids that match nothing are simply
+   * absent from the result — the caller compares counts and decides whether a
+   * missing company is an error.
+   */
+  findMailRecipientsByIds(ids: string[]): Promise<CompanyMailRecipient[]>
   getById(id: string): Promise<CompanyDto>
   getByNationalId(nationalId: string): Promise<CompanyDto>
   getOrCreateByNationalId(

@@ -3,7 +3,10 @@ import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
 import { applyDecorators } from '@nestjs/common'
 import { ApiProperty, ApiPropertyOptions } from '@nestjs/swagger'
 
-type ApiOptionalStringOptions = Omit<ApiPropertyOptions, 'required' | 'type'> & {
+type ApiOptionalStringOptions = Omit<
+  ApiPropertyOptions,
+  'required' | 'type'
+> & {
   minLength?: number
   maxLength?: number
 }

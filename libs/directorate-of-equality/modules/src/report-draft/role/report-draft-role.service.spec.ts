@@ -103,14 +103,17 @@ describe('ReportDraftRoleService', () => {
   })
 
   describe('listRolesWithSteps', () => {
-    it('inlines each role\'s assigned step ids in one step query', async () => {
+    it("inlines each role's assigned step ids in one step query", async () => {
       roleFindAll.mockResolvedValueOnce([
         { id: ROLE_ID, title: 'Sérfræðingur', reportId: REPORT_ID },
         { id: 'role-id-2', title: 'Stjórnandi', reportId: REPORT_ID },
       ])
       roleStepFindAll.mockResolvedValueOnce([
         { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-1' },
-        { reportEmployeeRoleId: 'role-id-2', reportSubCriterionStepId: 'step-2' },
+        {
+          reportEmployeeRoleId: 'role-id-2',
+          reportSubCriterionStepId: 'step-2',
+        },
         { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-3' },
       ])
 

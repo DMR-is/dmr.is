@@ -1,4 +1,7 @@
-import { Box, type UseBoxStylesProps } from '@dmr.is/ui/components/island-is/Box'
+import {
+  Box,
+  type UseBoxStylesProps,
+} from '@dmr.is/ui/components/island-is/Box'
 import { Table as T } from '@dmr.is/ui/components/island-is/Table'
 
 import * as styles from './CaseTable.css'

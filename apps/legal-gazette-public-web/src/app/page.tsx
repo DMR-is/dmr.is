@@ -12,7 +12,6 @@ import '../styles/global.css'
 export default async function RootPage() {
   const session = await getServerSession(authOptions)
 
-
   const isSessionValid = session?.user.isActive && !session?.invalid
 
   return (

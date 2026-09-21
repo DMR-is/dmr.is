@@ -93,3 +93,25 @@ export enum ReportProviderEnum {
   ISLAND_IS = 'ISLAND_IS',
   OTHER = 'OTHER',
 }
+
+/**
+ * What met a company's equality obligation — the discriminator on
+ * `report.equality_source`, and on `EqualityReportSummaryDto.source` one route
+ * earlier.
+ *
+ *   REPORT  an APPROVED, in-force EQUALITY report filed in this system. The
+ *           salary row links it via `equality_report_id`.
+ *   LEGACY  an unexpired certificate from the Directorate's retired SharePoint
+ *           register (`legacy_report.equality_valid_until`). The register load
+ *           mints no `report` rows from those, so there is no id to link — the
+ *           salary row carries the certificate's stated expiry in
+ *           `equality_legacy_valid_until` instead.
+ *
+ * ⚠️ LEGACY is a fact about the company's coverage at the moment of filing, not
+ * a status the report can move between. Nothing rewrites it afterwards, for the
+ * same reason `equality_report_id` is never rewired once set.
+ */
+export enum EqualityCoverageSourceEnum {
+  REPORT = 'REPORT',
+  LEGACY = 'LEGACY',
+}

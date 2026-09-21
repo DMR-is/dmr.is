@@ -7,10 +7,7 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
-import {
-  CompanyDto,
-  ICompanyService,
-} from '@dmr.is/doe-modules/company'
+import { CompanyDto, ICompanyService } from '@dmr.is/doe-modules/company'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -55,10 +52,11 @@ export class CompanyResourceGuard implements CanActivate {
           ? bodyName.trim()
           : undefined
 
-      request.companyContext = await this.companyService.getOrCreateByNationalId(
-        user.nationalId,
-        fallbackName,
-      )
+      request.companyContext =
+        await this.companyService.getOrCreateByNationalId(
+          user.nationalId,
+          fallbackName,
+        )
     } else {
       request.companyContext = await this.companyService.getByNationalId(
         user.nationalId,

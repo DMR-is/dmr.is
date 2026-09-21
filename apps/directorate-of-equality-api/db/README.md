@@ -17,12 +17,17 @@ Scope of this schema: the ≥50-employee flow only. Smaller-company flows and ed
 
 Columns on `report` that are specific to one type (demographic counts, `equality_report_content`) are nullable and should be populated based on `type`.
 
-**Gating rule — equality precedes salary.** Every company must submit an `EQUALITY` report. Only companies flagged by `salary_report_required` must additionally submit a `SALARY` report, and a `SALARY` row cannot be submitted until a matching `EQUALITY` row exists with `status = 'APPROVED'` and `valid_until > now()`. The dependency is captured on the salary row via `equality_report_id` — a self-FK back to `report` that points to the approved equality the salary was audited against. Snapshot, not tracking: once set it's never rewired, so later supersedes of the equality don't rewrite the salary's audit trail.
+**Gating rule — equality precedes salary.** Every company must submit an `EQUALITY` report. Only companies flagged by `salary_report_required` must additionally submit a `SALARY` report, and a `SALARY` row cannot be submitted until the company's equality obligation is met. The dependency is captured on the salary row via `equality_report_id` — a self-FK back to `report` that points to the approved equality the salary was audited against. Snapshot, not tracking: once set it's never rewired, so later supersedes of the equality don't rewrite the salary's audit trail.
 
 Invariants the FK implies (enforce via CHECK + trigger, not by plain FK alone):
 
 - `equality_report_id IS NOT NULL` ⇒ `type = 'SALARY'`.
 - Referenced row must have `type = 'EQUALITY'` and must have been `APPROVED` (not just `SUBMITTED`) at the moment the salary row was inserted.
+
+**The one way the obligation is met without an `EQUALITY` row.** At hand-over 1 507 of the 1 753 loaded companies at 25+ held no `report` row, and the Directorate records the equality plan of ~540 of them as in force — on `legacy_report.equality_valid_until`, because the register load mints no `report` rows (see `LegacyReportModel`). An unexpired date there meets the obligation, for the admin register's status column and for the application portal alike. Such a salary report has no report to link, so `equality_source = 'LEGACY'`, `equality_report_id` is null, and `equality_legacy_valid_until` snapshots the certificate's stated expiry as it read at filing — a copy rather than an FK, because the register load replaces `legacy_report` wholesale and this audit trail has to outlive the next re-export. See m-20260916.
+
+- `equality_source = 'LEGACY'` ⇒ `type = 'SALARY'` AND `equality_report_id IS NULL` AND `equality_legacy_valid_until IS NOT NULL`.
+- `equality_source = 'REPORT'` ⇒ `equality_legacy_valid_until IS NULL`. This is the default and covers every row written before the legacy basis was accepted.
 
 ## Actors
 
@@ -55,15 +60,15 @@ How we handle it:
 
 > **Subject to change.** This is an interim design while the feature is in development. The long-term intent is to source classification directly from the RSK API once we have access; until then, the annual admin-uploaded file is the source of truth. The stored format (normalized leaf code) and admin ownership may change when that integration lands.
 
-## Sector (private vs government/state)
+## Sector (Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög)
 
-ÍSAT says what an entity **does**, not who owns it — a state-owned hospital and a private clinic both sit in `86xxx`, so section `O` (public administration) cannot answer "private vs government/state" on its own. `company.sector` is that separate axis, an enum of `UNKNOWN | PRIVATE | PUBLIC` derived from RSK's registered legal form (rekstrarform).
+ÍSAT says what an entity **does**, not who owns it — a state-owned hospital and a private clinic both sit in `86xxx`, so section `O` (public administration) cannot answer who owns the entity on its own. `company.sector` is that separate axis, an enum of `UNKNOWN | FYRIRTAEKI | RADUNEYTI | RIKISADILI | SVEITARFELAG`, primarily derived from RSK's registered legal form (rekstrarform) — see `RADUNEYTI` below for the one value that isn't.
 
 - **The raw legal form is stored too.** `company.legal_form_id` and `legal_form_name` keep RSK's own values alongside the derived `sector`. The id→sector mapping is currently **inferred, not confirmed against live payloads**; keeping the raw id means a corrected mapping can be re-derived with one local `UPDATE` instead of re-sweeping RSK, which matters because the registry has **no bulk endpoint** — only `GET /{nationalId}`, one call per company.
-- **`UNKNOWN` is first-class and never collapsed into `PRIVATE`.** An admin filtering for private companies must not be silently shown companies we merely failed to classify. Unmapped legal-form ids stay `UNKNOWN` and are logged so the real vocabulary surfaces from production traffic.
+- **`RADUNEYTI` (ministry) is never inferred, only set by hand.** A ministry's rekstrarform and ÍSAT code look exactly like any other central-government office's, so no automatic path can tell the two apart. It is set via `PATCH /company/:id/sector`, which sets `sector_override` like any other manual classification.
+- **`UNKNOWN` is first-class and never collapsed into `FYRIRTAEKI`.** An admin filtering for private companies must not be silently shown companies we merely failed to classify. Unmapped legal-form ids stay `UNKNOWN` and are logged so the real vocabulary surfaces from production traffic.
 - **`sector_override` protects manual corrections**, exactly like `salary_report_required_override`: when an admin sets a sector by hand, any backfill must skip that row rather than reset it to `UNKNOWN`.
-- **Not owned by the annual import.** Unlike the other authoritative company fields, the annual `.xlsx` carries no legal form, so the company import must leave `sector`, `sector_override`, and both `legal_form_*` columns untouched — this one column set is RSK- and admin-owned, not file-owned.
-- **`MUNICIPAL`** (municipalities as distinct from central government) is a plausible future value; add it with `ALTER TYPE company_sector_enum ADD VALUE`.
+- **Not owned by the annual import.** Unlike the other authoritative company fields, the annual `.xlsx` carries no legal form, so the company import must leave `sector`, `sector_override`, and both `legal_form_*` columns untouched — this one column set is RSK- and admin-owned, not file-owned. (The separate, one-off production load in `scripts/company-register-to-sql.ts` is the exception: its sheet carries a `Tegund` column and classifies `sector` from it — see that script's `readSector`.)
 
 **How rows actually get classified.** The three creation paths differ, and the difference matters when reading `sector` data:
 
@@ -353,6 +358,38 @@ Each new island.is submission gets its own `provider_id` — the type identifies
 
 **Uniqueness.** A partial unique index on `(provider_type, provider_id) WHERE provider_id IS NOT NULL` enforces one-row-per-tuple at the DB level. The application layer in `report-create.service.ts` also short-circuits on replay: if a non-null `(provider_type, provider_id)` already exists _and the submitting company matches the existing row's parent_, the create returns the existing `reportId` instead of inserting. That makes upstream network retries transparent — same payload + same key = same response. Cross-company collisions on the same tuple (an unlikely but theoretically possible "a new provider channel emits an id that an existing channel already used" scenario) are rejected with a 409.
 
+## Scoring model (starfsmat)
+
+A company's criteria tree, the þrep on each sub-criterion, the weights, and which þrep every
+job sits at. Stored once against the company in the `scoring_*` tables and **named by a
+filing** rather than sent with it.
+
+It exists because the partner API asks a payroll vendor for the payload, and the criteria
+tree is not theirs: it is the employer's, it does not change between filings, and
+re-transmitting roughly a hundred step descriptions and a job-assignment matrix every year
+served nobody. A partner filing sends `scoringModelId` and a flat payroll extract; the
+server expands the two into the same `ParsedReportDto` every other channel submits, so
+nothing downstream knows a scoring model exists.
+
+**A filing takes a frozen copy.** Submitting materialises the report's own
+`report_criterion`, `report_sub_criterion`, `report_sub_criterion_step` and
+`report_employee_role` rows from the model, and there is no FK back. That is what lets a
+company rework its starfsmat without moving the figures on a report already filed — and why
+the model needs no version column.
+
+Two values are **derived, never stored**:
+
+- a criterion's weight is the sum of its own sub-criteria's (`computeStepScore` reads only
+  the sub-criterion weight, so a stored one could only disagree with what scores);
+- a þrep's score is `(step_order / numSteps) × weight × SCORE_FACTOR`, which normalises
+  scales of different lengths so the top þrep is worth the sub-criterion's full weight
+  whether the scale has two steps or eight.
+
+A model may be **incomplete**: it is authored over many calls and its weights cannot total
+100 until the last sub-criterion lands, so the API accepts partial states and reports
+validity on every read and write. The filing is what refuses. island.is has no equivalent —
+its drafts still build a tree per report.
+
 ## API keys (third-party integration)
 
 Employers reach us through the island.is application system, authenticated by an IdS user
@@ -501,7 +538,7 @@ So admins know **when** to consider starting the fines process, the company list
 The `application` module is the company-admin API surface. It reuses reviewer-side domain services where possible, but applies company-specific ownership and visibility rules at the boundary:
 
 - `GET /api/v1/application/company` resolves the JWT national ID to a live `company` row.
-- `GET /api/v1/application/reports/equality/active` returns the company's active equality report: `type = EQUALITY`, `status = APPROVED`, `valid_until > now()`, joined through `company_report.company_id`. If multiple active rows exist, the service orders by `approved_at DESC` and returns the most recently approved row. The response carries `provider_id` alongside `id` and `identifier`, because it is the only one of the three the applicant can read the report back with — `GET /application/reports/:providerId`. `id` resolves only against the admin-only `GET /reports/:id`, and `identifier` is a human-facing display code. `provider_id` is null when the report did not originate on island.is (admin- or Excel-created), in which case there is no applicant-facing content route for it.
+- `GET /api/v1/application/reports/equality/active` returns whatever currently meets the company's equality obligation, and **`source` says which of the two it is** — read it before anything else on the response. `REPORT` is a report filed here: `type = EQUALITY`, `status = APPROVED`, `valid_until > now()`, joined through `company_report.company_id`. If multiple active rows exist, the service orders by `approved_at DESC` and returns the most recently approved row. The response carries `provider_id` alongside `id` and `identifier`, because it is the only one of the three the applicant can read the report back with — `GET /application/reports/:providerId`. `id` resolves only against the admin-only `GET /reports/:id`, and `identifier` is a human-facing display code. `provider_id` is null when the report did not originate on island.is (admin- or Excel-created), in which case there is no applicant-facing content route for it. `LEGACY` is an unexpired `legacy_report.equality_valid_until` — the register load mints no `report` row for those (see "Gating rule"), so there is nothing to quote: `id`, `identifier`, `provider_id` and `approved_at` are **all** null and only `valid_until` is populated, as the end of the stated calendar day. Branch on `source`, not on a null `id`. A 404 means neither kind of coverage is in force.
 - `GET /api/v1/application/reports/salary/eligibility` returns whether the company may submit a salary report right now (the renewal-window check — see "Salary renewal window"). Always 200; `eligible = false` with `reason = RENEWAL_WINDOW_NOT_OPEN` when the due date is more than 6 months out.
 - `POST /api/v1/application/reports/equality` and `POST /api/v1/application/reports/salary` accept application-facing bodies with one explicit `company` object for the authenticated parent and an optional `subsidiaries[]` array containing subsidiary names/national IDs. Missing or empty `subsidiaries` means no subsidiaries. The application service maps that to the internal `companies[]` snapshot shape before delegating to report-create.
 - `GET /api/v1/application/reports/:providerId` is company-facing detail, not the reviewer detail DTO. Lookup is by the upstream `(provider_type, provider_id)` tuple rather than internal `report.id` (the applicant never sees the DoE-side id). The optional `providerType` query parameter defaults to `ISLAND_IS` for the island.is application portal. The resolved company must own the parent `company_report` row (`parent_company_id IS NULL`). The response includes all participating company snapshots, external comments only, salary result/outlier data for salary reports, the linked equality summary for salary reports, equality narrative content for equality reports, and the latest denial reason when the report is `DENIED`. It does not expose the reviewer event timeline or internal comments.
@@ -608,7 +645,7 @@ Bucket placement is informational only, and always was. Compliance is decided by
 | `CompanySizeEnum`         | `UNKNOWN`, `SMALL`, `MEDIUM`, `LARGE`                                                                                                                                                                                                                                                                          |
 | `CompanyEventTypeEnum`    | `CREATED`, `STATUS_CHANGED`, `FINES_STARTED`, `FINES_STOPPED`, `QUARANTINED`, `UNQUARANTINED`, `EQUALITY_REPORT_DEADLINE_REMINDER_SENT`, `SALARY_REPORT_DEADLINE_REMINDER_SENT`, `EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `API_KEY_ISSUED`, `API_KEY_REVOKED` |
 | `ApiKeyOriginEnum`        | `ISLAND_IS`, `ADMIN`                                                                                                                                                                                                                                                                                           |
-| `ApiKeyScopeEnum`         | `salary:submit`, `equality:submit`, `report:read`                                                                                                                                                                                                                                                              |
+| `ApiKeyScopeEnum`         | `salary:submit`, `equality:submit`, `report:read`, `scoring:write`                                                                                                                                                                                                                                             |
 | `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                                                                                                                                                                                                                                 |
 | `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                                                                                                                                                                                                                                         |
 | `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                                                                                                                                                                                                                                          |
@@ -637,7 +674,7 @@ No `deleted_at`. Report lifecycle handled via `report.status` enum — children 
 
 Exceptions:
 
-- **Join tables** (`company_report`, `report_employee_role_criterion_step`, `report_employee_personal_criterion_step`): only `created_at`. Join rows don't mutate — existence is the state.
+- **Join tables** (`company_report`, `report_employee_role_criterion_step`, `report_employee_personal_criterion_step`, `scoring_role_step`): only `created_at`. Join rows don't mutate — existence is the state, and re-assigning deletes and re-inserts.
 - **`public_report`**: insert-only, `created_at` only. No `updated_at`. Retraction flow deferred (see Notes).
 - **`report_event`**: insert-only, `created_at` only. Immutable audit row — never edited, never deleted.
 - **`report_comment`**: `created_at` + `updated_at` + `deleted_at`. Comments are immutable after insert in application logic (no edit endpoint) — `updated_at` is present only to fit the `ParanoidModel` base shape. Soft-delete hides the row from the rendered thread (no tombstone).
@@ -664,24 +701,24 @@ Machine credential for the third-party integration API. See **API keys** above f
 exists and what is stored. Prefixed `doe_` for the same reason `doe_user` is — it is not a
 domain entity of the equality register but a service-level concern.
 
-| Column                   | Type                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------------ |
-| `id`                     | `uuid` PK                                                                            |
-| `company_id`             | `fk → company`                                                                       |
-| `company_national_id`    | `text` (denormalised from `company.national_id` — see below)                         |
-| `key_id`                 | `text` (unique — public half of the credential, the lookup key)                      |
-| `secret_hash`            | `text` (HMAC-SHA256 of the secret under a server-side pepper)                        |
-| `label`                  | `text` (nullable — free text set by the issuer)                                      |
-| `scopes`                 | `text[]` (`ApiKeyScopeEnum` values; never empty)                                     |
-| `created_via`            | `doe_api_key_origin_enum` (`ApiKeyOriginEnum`)                                       |
-| `created_by_user_id`     | `fk → doe_user` (nullable — set on the `ADMIN` path)                                 |
-| `created_by_national_id` | `text` (nullable — set on the `ISLAND_IS` path)                                      |
-| `expires_at`             | `timestamptz` (nullable — null means no expiry)                                      |
-| `last_used_at`           | `timestamptz` (nullable — activity indicator, written at most once a minute per key) |
-| `revoked_at`             | `timestamptz` (nullable)                                                             |
-| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                           |
-| `revoked_by_national_id` | `text` (nullable)                                                                    |
-| `revoked_reason`         | `text` (nullable)                                                                    |
+| Column                   | Type                                                                                                                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                     | `uuid` PK                                                                                                                                                                                        |
+| `company_id`             | `fk → company`                                                                                                                                                                                   |
+| `company_national_id`    | `text` (denormalised from `company.national_id` — see below)                                                                                                                                     |
+| `key_id`                 | `text` (unique — public half of the credential, the lookup key)                                                                                                                                  |
+| `secret_hash`            | `text` (HMAC-SHA256 of the secret under a server-side pepper)                                                                                                                                    |
+| `label`                  | `text` (nullable — free text set by the issuer)                                                                                                                                                  |
+| `scopes`                 | `text[]` (`ApiKeyScopeEnum`: `report:read`, `salary:submit`, `equality:submit`, `scoring:write`; never empty. The first three are the default set — `scoring:write` is never granted implicitly) |
+| `created_via`            | `doe_api_key_origin_enum` (`ApiKeyOriginEnum`)                                                                                                                                                   |
+| `created_by_user_id`     | `fk → doe_user` (nullable — set on the `ADMIN` path)                                                                                                                                             |
+| `created_by_national_id` | `text` (nullable — set on the `ISLAND_IS` path)                                                                                                                                                  |
+| `expires_at`             | `timestamptz` (nullable — null means no expiry)                                                                                                                                                  |
+| `last_used_at`           | `timestamptz` (nullable — activity indicator, written at most once a minute per key)                                                                                                             |
+| `revoked_at`             | `timestamptz` (nullable)                                                                                                                                                                         |
+| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                                                                                                                                       |
+| `revoked_by_national_id` | `text` (nullable)                                                                                                                                                                                |
+| `revoked_reason`         | `text` (nullable)                                                                                                                                                                                |
 
 Invariants (enforced via CHECK):
 
@@ -698,6 +735,134 @@ an FK constraint does not require an association. `company_national_id` is denor
 the same reason: it lets the partner API resolve the tenant from one indexed read on this
 table. Safe to copy because a kennitala _is_ the company's identity and does not change, so
 the two columns cannot drift.
+
+### `scoring_model`
+
+A company's **starfsmat**: the criteria a salary report is scored against, stored once and
+named by a filing rather than re-transmitted with it. Written only by the partner API — see
+**API keys** above for the surface, and the _Scoring model_ section for why the criteria
+tree stopped being part of a submission.
+
+It has **no FK from `report`**, deliberately. Submitting materialises the report's own
+`report_criterion` / `report_sub_criterion` / `report_employee_role` rows from the model,
+so a company can rework its starfsmat without moving the figures on a report already filed.
+That frozen copy is also why this table carries no version column.
+
+| Column       | Type           |
+| ------------ | -------------- |
+| `id`         | `uuid` PK      |
+| `company_id` | `fk → company` |
+| `name`       | `text`         |
+
+### `scoring_criterion`
+
+One criterion (viðmið) in a model. **No `weight` column**: a criterion's weight is the sum
+of its own sub-criteria's and is derived on read. `computeStepScore` reads only the
+sub-criterion weight, so a stored criterion weight would reach no score and could only
+disagree with the figures that do.
+
+`type` reuses `report_criterion_type_enum` — the same five values with the same meaning as
+on a filed report.
+
+| Column             | Type                           |
+| ------------------ | ------------------------------ |
+| `id`               | `uuid` PK                      |
+| `scoring_model_id` | `fk → scoring_model` (cascade) |
+| `type`             | `report_criterion_type_enum`   |
+| `title`            | `text`                         |
+| `description`      | `text`                         |
+
+A valid model holds at least one criterion of each of the four job-based **types** and at
+most one `PERSONAL`. Two criteria of the same type are allowed.
+
+### `scoring_sub_criterion`
+
+One sub-criterion (undirviðmið), and the only place a weight is stored. Every
+sub-criterion weight **across the whole model** sums to 100 — not per criterion. This is
+the one weight that reaches a score.
+
+| Column                 | Type                                       |
+| ---------------------- | ------------------------------------------ |
+| `id`                   | `uuid` PK                                  |
+| `scoring_criterion_id` | `fk → scoring_criterion` (cascade)         |
+| `title`                | `text`                                     |
+| `description`          | `text`                                     |
+| `weight`               | `numeric(7,4)` (0–100, bounded on the DTO) |
+
+No two sub-criteria may share both their own title and their parent's: the submission
+pipeline keys on `(criterionTitle, subTitle)` and would collapse them onto one row.
+
+### `scoring_sub_criterion_step`
+
+One þrep on a sub-criterion's scale. **No `score` column** — a step's score is
+`(step_order / numSteps) × weight × SCORE_FACTOR`, derived at expansion, so a report filed
+through the partner API sits on the same stig scale as one filed through any other.
+
+| Column                     | Type                                   |
+| -------------------------- | -------------------------------------- |
+| `id`                       | `uuid` PK                              |
+| `scoring_sub_criterion_id` | `fk → scoring_sub_criterion` (cascade) |
+| `step_order`               | `integer`                              |
+| `description`              | `text`                                 |
+
+`UNIQUE (scoring_sub_criterion_id, step_order)`. Orders run 1..n with no gaps — a gap would
+put the top step above the scale's own maximum — and a scale holds between `MIN_STEPS` (2)
+and `MAX_STEPS` (8) þrep, the same bounds the filing enforces.
+
+Also `UNIQUE (id, scoring_sub_criterion_id)`. Redundant as a uniqueness claim, since `id` is
+already the primary key; it exists because Postgres will only let a foreign key reference a
+column list that carries a unique index, and `scoring_role_step` references exactly that pair
+— see below.
+
+### `scoring_role`
+
+A job (starf) in the model. A role owns the job-based criteria: every employee holding it
+scores from the role's assignments, and carries þrep of their own only for the personal
+criterion.
+
+| Column             | Type                           |
+| ------------------ | ------------------------------ |
+| `id`               | `uuid` PK                      |
+| `scoring_model_id` | `fk → scoring_model` (cascade) |
+| `title`            | `text`                         |
+
+### `scoring_role_step`
+
+Which þrep a job sits at for one sub-criterion. Row existence is the assignment, so there is
+nothing to mutate and **no `updated_at`** — re-assigning deletes and re-inserts, the same
+shape `report_employee_role_criterion_step` uses.
+
+| Column                          | Type                                   |
+| ------------------------------- | -------------------------------------- |
+| `id`                            | `uuid` PK                              |
+| `scoring_role_id`               | `fk → scoring_role` (cascade)          |
+| `scoring_sub_criterion_id`      | `fk → scoring_sub_criterion` (cascade) |
+| `scoring_sub_criterion_step_id` | part of the composite fk below         |
+
+`UNIQUE (scoring_role_id, scoring_sub_criterion_id)` — at most one assignment per job per
+sub-criterion. `scoring_sub_criterion_id` is denormalised from the step's own parent so that
+uniqueness can be a table constraint.
+
+The two step columns are **one composite foreign key**, not two single-column ones:
+
+```sql
+FOREIGN KEY (scoring_sub_criterion_step_id, scoring_sub_criterion_id)
+  REFERENCES scoring_sub_criterion_step (id, scoring_sub_criterion_id) ON DELETE CASCADE
+```
+
+A pair of single-column FKs would each resolve on its own, so a row naming þrep X — which
+belongs to sub-criterion A — alongside sub-criterion B satisfied both, and the expansion
+would emit B at X's order: a silently wrong score. Referencing the pair makes that
+unrepresentable rather than merely caught. The service and the expander both refuse it too,
+but neither is the table's own guarantee.
+
+Both cascading columns are indexed — `scoring_role_step_step_id_idx` and
+`scoring_role_step_sub_id_idx`. The second is not covered by the UNIQUE above, where
+`scoring_sub_criterion_id` is the trailing column and so unusable as a btree prefix, and
+deleting a sub-criterion cascades through exactly it.
+
+Completeness — every job assigned on every job-based sub-criterion — is a validation
+concern, not one the table can hold.
 
 ### `company`
 
@@ -794,35 +959,37 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 
 ### `report`
 
-| Column                           | Type                                                                                                                           |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                             | `uuid` PK                                                                                                                      |
-| `type`                           | `ReportTypeEnum`                                                                                                               |
-| `company_admin_name`             | `text`                                                                                                                         |
-| `company_admin_title`            | `text` (nullable; job title of the company executive)                                                                          |
-| `company_admin_email`            | `text`                                                                                                                         |
-| `company_admin_gender`           | `GenderEnum`                                                                                                                   |
-| `contact_name`                   | `text`                                                                                                                         |
-| `contact_title`                  | `text` (nullable; job title of the company contact)                                                                            |
-| `company_national_id`            | `text` (nullable; cached submitter/company national ID when supplied)                                                          |
-| `contact_email`                  | `text`                                                                                                                         |
-| `contact_phone`                  | `text`                                                                                                                         |
-| `average_employee_male_count`    | `decimal(10, 2)`                                                                                                               |
-| `average_employee_female_count`  | `decimal(10, 2)`                                                                                                               |
-| `average_employee_neutral_count` | `decimal(10, 2)`                                                                                                               |
-| `salary_data_basis`              | `SalaryDataBasisEnum` (nullable — see "Salary-data basis")                                                                     |
-| `salary_data_period`             | `date` (nullable — the payroll month, always the 1st; set only when `salary_data_basis = MONTH`)                               |
-| `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                           |
-| `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)             |
-| `imported_from_excel`            | `boolean` (server-set — see "Excel import transport" → "Recording how the data was entered")                                   |
-| `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                  |
-| `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")         |
-| `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
-| `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                     |
-| `approved_at`                    | `timestamp` (nullable)                                                                                                         |
-| `valid_until`                    | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede)                                                        |
-| `correction_deadline`            | `timestamp` (nullable — provisional name; never written today. See "Outlier deadlines")                                        |
-| `equality_report_content`        | `text` (nullable — narrative body for `type = EQUALITY`)                                                                       |
+| Column                           | Type                                                                                                                                                                 |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                             | `uuid` PK                                                                                                                                                            |
+| `type`                           | `ReportTypeEnum`                                                                                                                                                     |
+| `company_admin_name`             | `text`                                                                                                                                                               |
+| `company_admin_title`            | `text` (nullable; job title of the company executive)                                                                                                                |
+| `company_admin_email`            | `text`                                                                                                                                                               |
+| `company_admin_gender`           | `GenderEnum`                                                                                                                                                         |
+| `contact_name`                   | `text`                                                                                                                                                               |
+| `contact_title`                  | `text` (nullable; job title of the company contact)                                                                                                                  |
+| `company_national_id`            | `text` (nullable; cached submitter/company national ID when supplied)                                                                                                |
+| `contact_email`                  | `text`                                                                                                                                                               |
+| `contact_phone`                  | `text`                                                                                                                                                               |
+| `average_employee_male_count`    | `decimal(10, 2)`                                                                                                                                                     |
+| `average_employee_female_count`  | `decimal(10, 2)`                                                                                                                                                     |
+| `average_employee_neutral_count` | `decimal(10, 2)`                                                                                                                                                     |
+| `salary_data_basis`              | `SalaryDataBasisEnum` (nullable — see "Salary-data basis")                                                                                                           |
+| `salary_data_period`             | `date` (nullable — the payroll month, always the 1st; set only when `salary_data_basis = MONTH`)                                                                     |
+| `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                                                                 |
+| `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)                                                   |
+| `imported_from_excel`            | `boolean` (server-set — see "Excel import transport" → "Recording how the data was entered")                                                                         |
+| `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                                                        |
+| `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")                                               |
+| `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against; null when `equality_source = LEGACY`) |
+| `equality_source`                | `'REPORT' \| 'LEGACY'` (not null, default `REPORT` — what met the equality obligation; see "Gating rule")                                                            |
+| `equality_legacy_valid_until`    | `date` (nullable — the legacy certificate's stated expiry, snapshotted at filing; non-null exactly when `equality_source = LEGACY`)                                  |
+| `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                                                           |
+| `approved_at`                    | `timestamp` (nullable)                                                                                                                                               |
+| `valid_until`                    | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede)                                                                                              |
+| `correction_deadline`            | `timestamp` (nullable — provisional name; never written today. See "Outlier deadlines")                                                                              |
+| `equality_report_content`        | `text` (nullable — narrative body for `type = EQUALITY`)                                                                                                             |
 
 ### `report_criterion`
 
@@ -886,9 +1053,9 @@ The six pay children split into two bands, matching Launagögn columns J–O in
 Excel template 2.0. The two parent salary concepts are **derived, not stored** —
 each is the sum of its band, with a `NULL` child treated as `0`:
 
-- **viðbótarlaun** (`additionalSalary`) — *fastar greiðslur aðrar en grunnlaun*
+- **viðbótarlaun** (`additionalSalary`) — _fastar greiðslur aðrar en grunnlaun_
   = `additional_fixed_overtime` + `additional_fixed_car_allowance` + `additional_fixed_other`
-- **aukagreiðslur** (`bonusSalary`) — *tilfallandi greiðslur*
+- **aukagreiðslur** (`bonusSalary`) — _tilfallandi greiðslur_
   = `bonus_occasional_overtime` + `bonus_occasional_car_allowance` + `bonus_other`
 
 `ReportEmployeeModel` exposes both as computed getters and the API returns them
@@ -896,8 +1063,7 @@ alongside the raw children. A `NULL` child means "not entered", distinct from an
 entered `0` — only stored children carry that distinction; the derived parents
 never do.
 
-⚠️ **Only viðbótarlaun feeds regluleg laun.** `regluleg laun = base_salary +
-additionalSalary`; aukagreiðslur are reported on their own and excluded from
+⚠️ **Only viðbótarlaun feeds regluleg laun.** `regluleg laun = base_salary + additionalSalary`; aukagreiðslur are reported on their own and excluded from
 every tímakaup figure. `paid_hours` is scoped to match — fixed overtime hours
 included, incidental hours excluded — so numerator and denominator cover the
 same ground. See [`docs/launagreining.md`](../docs/launagreining.md).
@@ -906,7 +1072,7 @@ Two columns changed with template 2.0 (migration
 `m-20260908-report-employee-fixed-other`): `additional_fixed_other` was added
 for the reassigned column L, and `bonus_payments` was **merged into
 `bonus_other` and dropped** — `Bónusgreiðslur` no longer exists as a field, and
-bonuses now belong in *Aðrar tilfallandi greiðslur / hlunnindi*. The merge left
+bonuses now belong in _Aðrar tilfallandi greiðslur / hlunnindi_. The merge left
 every historic aukagreiðslur total unchanged (both columns summed into it with
 equal weight); only the per-component split of pre-2.0 rows was lost, and it is
 not recoverable from the migration's `down`.
@@ -980,14 +1146,14 @@ Join: which sub-criteria steps apply to a given employee personally.
 
 Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 
-| Column                                | Type                                                                                                                                                                                                                                                                                                                           |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                                  | `uuid` PK                                                                                                                                                                                                                                                                                                                      |
-| `report_id`                           | `fk → report` (unique)                                                                                                                                                                                                                                                                                                         |
-| `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation                                                                                                                                                                                                                                                  |
+| Column                                | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                                  | `uuid` PK                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `report_id`                           | `fk → report` (unique)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `calculation_version`                 | `text` (column default `v1`, but every row written by `ReportResultService` is stamped `v4` explicitly — the default only applies to a hand-written insert. `v4` dropped aukagreiðslur from regluleg laun (template 2.0); the snapshot SHAPE is identical to `v3`, so a v3 row deserialises perfectly and is simply not comparable — anyone with incidental pay reads lower under v4. `v3` had a two-directional lágmarksmengi; `v2` had a lift-only one plus `isCorrectable`/`correctableCount`; `v1` evaluated FTE-adjusted monthly pay. None are comparable with each other) |
-| `salary_snapshot`                     | `jsonb` reglulegt tímakaup aggregate snapshot                                                                                                                                                                                                                                                                                  |
-| `wage_gap_decomposition_snapshot`     | `jsonb` Oaxaca-Blinder decomposition, NOT NULL                                                                                                                                                                                                                                                                                 |
+| `salary_snapshot`                     | `jsonb` reglulegt tímakaup aggregate snapshot                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `wage_gap_decomposition_snapshot`     | `jsonb` Oaxaca-Blinder decomposition, NOT NULL                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 `salary_snapshot` holds:
 
@@ -1141,7 +1307,7 @@ No FKs, no relationships. Standalone bookkeeping table.
 - `report_employee` ⟷ `report_sub_criterion_step` via `report_employee_personal_criterion_step`.
 - `report` 1:1 `report_result`.
 - `report` 1:N `public_report` (one public snapshot per approval; new approvals insert new rows).
-- `report` → `report` self-ref via `equality_report_id` (salary row points to the approved equality row it was audited against).
+- `report` → `report` self-ref via `equality_report_id` (salary row points to the approved equality row it was audited against; absent when `equality_source = LEGACY`, where there is no row to point at).
 - `report` N:1 `doe_user` via `reviewer_user_id` (DoE reviewer who accepted/denied).
 - `report` 1:N `report_event`; `doe_user` 1:N `report_event` via `actor_user_id` (nullable) and `assigned_user_id` (nullable, set on `ASSIGNED`); `company` 1:N `report_event` via `company_id` (nullable, set on `SUBMITTED`).
 - `report` 1:N `report_comment`; `doe_user` 1:N `report_comment` via `author_user_id` (nullable, set when `author_kind = REVIEWER`).

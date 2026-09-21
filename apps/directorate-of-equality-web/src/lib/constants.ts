@@ -51,6 +51,28 @@ export const formatDateIS = (dateStr: string) => {
 }
 
 /**
+ * Calendar-day date as "31. mars 2028", parsed off the string rather than
+ * through `new Date()`.
+ *
+ * For values that name a DAY rather than an instant — `equalityLegacyValidUntil`
+ * is `legacy_report.equality_valid_until`, a DATEONLY the API widens to
+ * 23:59:59Z so the last stated day still counts as covered. Read through
+ * `formatDateIS`, that timestamp renders as the NEXT day anywhere east of
+ * Greenwich, because `getDate()` is local. Harmless in Iceland, which is UTC
+ * year round, and wrong for a reviewer working from anywhere else.
+ *
+ * Same reasoning, and the same fix, as `formatMonthYearIS` below. Deliberately
+ * a sibling rather than a change to `formatDateIS`, whose other call sites pass
+ * real instants and want local rendering.
+ */
+export const formatCalendarDateIS = (dateStr: string) => {
+  const [year, month, day] = dateStr.slice(0, 10).split('-')
+  const name = IS_MONTHS[Number(month) - 1]
+
+  return name ? `${day}. ${name} ${year}` : dateStr
+}
+
+/**
  * Month-precision date as "mars 2026". Used for values that only ever mean a
  * month (the salary-data period the API returns as `YYYY-MM-01`), so the day is
  * deliberately dropped rather than rendered as a misleading "01.".

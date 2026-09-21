@@ -1,15 +1,20 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared-dto'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
-
 import {
-  SubscriberDto,
-  SubscriberModel,
-} from '../../models/subscriber.model'
+  generatePaging,
+  getLimitAndOffset,
+} from '@dmr.is/utils-server/serverUtils'
+
+import { SubscriberDto, SubscriberModel } from '../../models/subscriber.model'
 import { LGNationalRegistryService } from '../national-registry/national-registry.service'
 import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
 import {
@@ -31,7 +36,9 @@ export class SubscriberAdminService implements ISubscriberAdminService {
     private readonly nationalRegistryService: LGNationalRegistryService,
   ) {}
 
-  private async findSubscriberOrThrow(subscriberId: string): Promise<SubscriberModel> {
+  private async findSubscriberOrThrow(
+    subscriberId: string,
+  ): Promise<SubscriberModel> {
     const subscriber = await this.subscriberModel.findByPk(subscriberId)
     if (!subscriber) {
       throw new NotFoundException('Subscriber not found')
@@ -91,7 +98,9 @@ export class SubscriberAdminService implements ISubscriberAdminService {
 
     const subscribedTo = new Date(body.subscribedTo)
     if (subscribedTo < new Date()) {
-      throw new BadRequestException('Subscription end date cannot be in the past')
+      throw new BadRequestException(
+        'Subscription end date cannot be in the past',
+      )
     }
 
     const { entity } = await this.nationalRegistryService.getEntityByNationalId(
@@ -134,7 +143,9 @@ export class SubscriberAdminService implements ISubscriberAdminService {
 
     const subscribedTo = new Date(body.subscribedTo)
     if (subscriber.subscribedFrom && subscribedTo < subscriber.subscribedFrom) {
-      throw new BadRequestException('Subscription end date cannot be before start date')
+      throw new BadRequestException(
+        'Subscription end date cannot be before start date',
+      )
     }
 
     await subscriber.update({
@@ -151,7 +162,10 @@ export class SubscriberAdminService implements ISubscriberAdminService {
     return subscriber.fromModel()
   }
 
-  async deactivateSubscriber(subscriberId: string, user: DMRUser): Promise<void> {
+  async deactivateSubscriber(
+    subscriberId: string,
+    user: DMRUser,
+  ): Promise<void> {
     const subscriber = await this.findSubscriberOrThrow(subscriberId)
 
     await subscriber.update({

@@ -7,6 +7,8 @@ export class RegionDto {
   @ApiString({ description: 'Stable machine key for the region, e.g. CAPITAL' })
   code!: string
 
-  @ApiString({ description: 'Display name (Icelandic), e.g. Höfuðborgarsvæðið' })
+  @ApiString({
+    description: 'Display name (Icelandic), e.g. Höfuðborgarsvæðið',
+  })
   name!: string
 }

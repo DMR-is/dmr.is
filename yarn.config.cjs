@@ -29,9 +29,7 @@ function enforceConsistentVersions({ Yarn }) {
  * like @dmr.is/regulations-tools).
  */
 function enforceWorkspaceStar({ Yarn }) {
-  const workspaceIdents = new Set(
-    Yarn.workspaces().map((ws) => ws.ident),
-  )
+  const workspaceIdents = new Set(Yarn.workspaces().map((ws) => ws.ident))
 
   for (const dependency of Yarn.dependencies()) {
     if (

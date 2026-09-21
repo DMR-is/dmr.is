@@ -10,6 +10,7 @@ import { Reflector } from '@nestjs/core'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { PUBLIC_ROUTE_METADATA } from '../../decorators/public-route.decorator'
+import { RequireActiveCompanyGuard } from '../active-company/require-active-company.guard'
 import { ApiKeyGuard } from '../api-key/api-key.guard'
 import { RequireApiScopeGuard } from '../api-key-scope/require-api-scope.guard'
 import { PartnerCompanyGuard } from '../partner-company/partner-company.guard'
@@ -60,6 +61,23 @@ export const IDENTITY_GUARDS: ReadonlyArray<unknown> = [PartnerCompanyGuard]
  */
 export const SCOPE_ENFORCEMENT_GUARD: unknown = RequireApiScopeGuard
 
+/**
+ * The guard that enforces `@RequireActiveCompany`.
+ *
+ * Here for the same reason `SCOPE_ENFORCEMENT_GUARD` is, and it was the same
+ * oversight: the decorator was declared on the controller and its own spec
+ * mocked `reflector.getAllAndOverride` for every case, so nothing observed the
+ * real chain. `RequireActiveCompanyGuard` could be deleted from `@UseGuards`
+ * and every test stayed green while a company off the register regained the
+ * whole surface.
+ *
+ * Refusing a company that has fallen off Jafnréttisstofa's register is part of
+ * stating who may call a route, not an extra on top of it — so a chain that
+ * omits the enforcement does not declare access.
+ */
+export const ACTIVE_COMPANY_ENFORCEMENT_GUARD: unknown =
+  RequireActiveCompanyGuard
+
 /** `@UseGuards` accepts classes and instances; compare on the class either way. */
 const guardType = (guard: unknown): unknown =>
   typeof guard === 'function' ? guard : guard?.constructor
@@ -78,7 +96,8 @@ export const declaresAccess = (guards: ReadonlyArray<unknown>): boolean => {
   return (
     types.includes(AUTHENTICATION_GUARD) &&
     types.some((type) => IDENTITY_GUARDS.includes(type)) &&
-    types.includes(SCOPE_ENFORCEMENT_GUARD)
+    types.includes(SCOPE_ENFORCEMENT_GUARD) &&
+    types.includes(ACTIVE_COMPANY_ENFORCEMENT_GUARD)
   )
 }
 

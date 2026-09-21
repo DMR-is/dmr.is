@@ -943,40 +943,51 @@ describe('pay-dispersion (ábendingar)', () => {
       [40, 40],
       [60, PAY_DISPERSION_LIST_CEILING],
       [200, PAY_DISPERSION_LIST_CEILING],
-    ])('holds a tie of %i per direction to the ceiling', (size, expectedRows) => {
-      const result = computePayDispersion(
-        cohort([
-          ...spread(size, -0.5),
-          ...spread(size, 0.5),
-          ...spread(Math.max(900, 8 * size), 0),
-        ]),
-      )
-
-      // The guard: if the cohort stopped qualifying, this fails rather than
-      // letting the length checks below pass on an empty list.
-      expect(result.countBelowExpected).toBe(size)
-      expect(result.countAboveExpected).toBe(size)
-
-      for (const sign of [-1, 1]) {
-        const rows = result.employees.filter(
-          (r) => Math.sign(r.studentizedResidual) === sign,
+    ])(
+      'holds a tie of %i per direction to the ceiling',
+      (size, expectedRows) => {
+        const result = computePayDispersion(
+          cohort([
+            ...spread(size, -0.5),
+            ...spread(size, 0.5),
+            ...spread(Math.max(900, 8 * size), 0),
+          ]),
         )
-        expect(rows).toHaveLength(expectedRows)
-        expect(rows.length).toBeLessThanOrEqual(PAY_DISPERSION_LIST_CEILING)
-      }
-    })
+
+        // The guard: if the cohort stopped qualifying, this fails rather than
+        // letting the length checks below pass on an empty list.
+        expect(result.countBelowExpected).toBe(size)
+        expect(result.countAboveExpected).toBe(size)
+
+        for (const sign of [-1, 1]) {
+          const rows = result.employees.filter(
+            (r) => Math.sign(r.studentizedResidual) === sign,
+          )
+          expect(rows).toHaveLength(expectedRows)
+          expect(rows.length).toBeLessThanOrEqual(PAY_DISPERSION_LIST_CEILING)
+        }
+      },
+    )
 
     it('puts every row in exactly one direction', () => {
       const result = computePayDispersion(
-        cohort([...ramp(15, -0.5, -0.01), ...ramp(15, 0.5, 0.01), ...spread(170, 0)]),
+        cohort([
+          ...ramp(15, -0.5, -0.01),
+          ...ramp(15, 0.5, 0.01),
+          ...spread(170, 0),
+        ]),
       )
 
       const ordinals = result.employees.map((r) => r.employeeOrdinal)
       expect(new Set(ordinals).size).toBe(ordinals.length)
       // Below-expected block first, then above — the order both surfaces render.
-      const signs = result.employees.map((r) => Math.sign(r.studentizedResidual))
+      const signs = result.employees.map((r) =>
+        Math.sign(r.studentizedResidual),
+      )
       expect(signs).toEqual([...signs].sort((a, b) => a - b))
-      expect(result.employees.every((r) => r.studentizedResidual !== 0)).toBe(true)
+      expect(result.employees.every((r) => r.studentizedResidual !== 0)).toBe(
+        true,
+      )
     })
 
     it('is deterministic for one snapshot', () => {
@@ -990,7 +1001,6 @@ describe('pay-dispersion (ábendingar)', () => {
         JSON.stringify(computePayDispersion(snapshot)),
       )
     })
-
   })
 
   /**
@@ -1029,7 +1039,11 @@ describe('pay-dispersion (ábendingar)', () => {
 
     it('is null when no list could be produced', () => {
       const result = computePayDispersion(
-        makeSnapshot({ oskyrtAvailable: false, pooledFit: null, employees: [] }),
+        makeSnapshot({
+          oskyrtAvailable: false,
+          pooledFit: null,
+          employees: [],
+        }),
       )
 
       expect(result.available).toBe(false)

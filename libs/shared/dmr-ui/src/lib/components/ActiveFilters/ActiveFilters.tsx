@@ -1,8 +1,8 @@
-import { Box } from "../../island-is/lib/Box"
-import { Button } from "../../island-is/lib/Button"
-import { Icon } from "../../island-is/lib/Icon"
-import { Inline } from "../../island-is/lib/Inline"
-import { Tag } from "../../island-is/lib/Tag"
+import { Box } from '../../island-is/lib/Box'
+import { Button } from '../../island-is/lib/Button'
+import { Icon } from '../../island-is/lib/Icon'
+import { Inline } from '../../island-is/lib/Inline'
+import { Tag } from '../../island-is/lib/Tag'
 
 type ActiveFilterItem = {
   label: string

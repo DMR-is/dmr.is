@@ -53,6 +53,13 @@ export class CompanyEventDto {
   })
   reminderTier!: CompanyReminderTierEnum | null
 
+  @ApiOptionalUuid({
+    nullable: true,
+    description:
+      'The custom-email batch this event belongs to, on CUSTOM_EMAIL_* events only; null otherwise. The timeline uses it to fetch the message that was actually sent.',
+  })
+  companyEmailId!: string | null
+
   @ApiDateTime()
   createdAt!: Date
 }

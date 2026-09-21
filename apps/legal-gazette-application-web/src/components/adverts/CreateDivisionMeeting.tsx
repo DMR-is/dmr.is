@@ -21,6 +21,10 @@ import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
 } from '@dmr.is/utils-client/dateUtils'
+import {
+  toCalendarDateIso,
+  toReykjavikDateTimeIso,
+} from '@dmr.is/utils-shared/date/calendarDate'
 import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { ApplicationTypeEnum } from '../../gen/fetch'
@@ -190,7 +194,7 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
             hasError={!!errors?.properties?.meetingDate?.errors.length}
             errorMessage={errors?.properties?.meetingDate?.errors[0]}
             onChange={(date) => {
-              handleSetState('meetingDate', date.toISOString())
+              handleSetState('meetingDate', toReykjavikDateTimeIso(date))
               clearFieldError('meetingDate')
             }}
           />
@@ -243,7 +247,7 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
             onChange={(date) => {
               handleSetState('signature', {
                 ...state.signature,
-                date: date.toISOString(),
+                date: toCalendarDateIso(date),
               })
               clearFieldError('signature')
             }}

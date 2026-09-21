@@ -31,6 +31,11 @@ type Props = {
  * not place — either RSK was never consulted for it, or it returned a legal form
  * the server does not map. Both cases show as `UNKNOWN`.
  *
+ * It is also the only way to set `RADUNEYTI`, which no automatic path ever
+ * produces: a ministry's rekstrarform is indistinguishable from any other
+ * central-government office's, so ministries arrive here already classified
+ * `RIKISADILI` and have to be moved by hand (see `legal-form-sector.ts`).
+ *
  * The two hints below the value exist so the admin can tell those cases apart
  * without reading logs: `legalFormName` shows what RSK actually said (so an
  * unmapped form is visible), and the override hint shows when the current value

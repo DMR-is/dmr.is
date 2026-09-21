@@ -76,7 +76,9 @@ describe('_generateFileKey — the createPresigned guard contract', () => {
     const generate = load()
 
     // Guard is `!name`, not "has a basename" — '.gitignore' passes.
-    expect(generate('.gitignore', 'root', 'foo')).toBe('root/files/foo/.gitignore')
+    expect(generate('.gitignore', 'root', 'foo')).toBe(
+      'root/files/foo/.gitignore',
+    )
   })
 })
 
@@ -111,9 +113,7 @@ describe('_generateFileKey — folder token handling', () => {
   it('emits a literal "undefined" folder segment for a missing folderToken', () => {
     const generate = load()
 
-    expect(generate('barchart.png', '')).toBe(
-      'files/undefined/barchart.png',
-    )
+    expect(generate('barchart.png', '')).toBe('files/undefined/barchart.png')
   })
 
   it('emits a literal "undefined" folder segment for an unsafe folderToken', () => {

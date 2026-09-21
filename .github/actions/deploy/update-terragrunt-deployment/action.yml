@@ -19,7 +19,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: Homebrew/actions/setup-homebrew@master
+    - uses: Homebrew/actions/setup-homebrew@1e34f2e2acaa766b7efacb8c26352e6abbb023f9 # 2026.09.13.1
       name: ☕️Set up Homebrew
       id: set-up-homebrew
 
@@ -80,7 +80,6 @@ runs:
           --service legal_gazette_public_web:legal_gazette_public_web_version_tag
 
         echo "✅ All services deployed successfully!"
-
 
     - name: 💾 Commit
       uses: stefanzweifel/git-auto-commit-action@v5

@@ -332,9 +332,7 @@ export const deleteUndefined = <T,>(
   return obj as T
 }
 
-export const getParamsWithoutNullOrEmpty = <
-  T extends Record<string, unknown>,
->(
+export const getParamsWithoutNullOrEmpty = <T extends Record<string, unknown>>(
   params: T,
 ): T => {
   return Object.keys(params).reduce<Record<string, unknown>>((acc, key) => {

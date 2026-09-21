@@ -44,7 +44,8 @@ export class CompanyDto {
 
   @ApiOptionalString({
     nullable: true,
-    description: 'Contact email for the company. Used by the deadline-reminder task.',
+    description:
+      'Contact email for the company. Used by the deadline-reminder task.',
   })
   email!: string | null
 
@@ -145,7 +146,7 @@ export class CompanyDto {
 
   @ApiBoolean({
     description:
-      "Derived: the company owes an equality plan AND its next due date has passed. Gated on the obligation — the register load seeded due dates for companies of every size, so an ungated read marks companies below 25 as overdue against a plan they do not owe.",
+      'Derived: the company owes an equality plan AND its next due date has passed. Gated on the obligation — the register load seeded due dates for companies of every size, so an ungated read marks companies below 25 as overdue against a plan they do not owe.',
   })
   equalityReportOverdue!: boolean
 

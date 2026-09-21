@@ -1,3 +1,5 @@
+import { startOfUtcDay } from '../../report/lib/day-boundaries'
+
 /**
  * Salary-report renewal window.
  *
@@ -32,8 +34,10 @@ export interface SalaryRenewalEligibility {
   reason: SalaryReportEligibilityReasonEnum | null
   dueAt: Date | null
   /**
-   * The earliest moment the company may submit (`dueAt` minus the window).
-   * Null only when there is no due date to anchor on.
+   * The earliest moment the company may submit (`dueAt` minus the window),
+   * normalised to the START of that day so the whole of the date shown to the
+   * applicant can be filed on. Null only when there is no due date to anchor
+   * on.
    */
   earliestSubmissionDate: Date | null
 }
@@ -55,10 +59,15 @@ export function evaluateSalaryRenewalEligibility(
     }
   }
 
-  const earliestSubmissionDate = new Date(dueAt)
-  earliestSubmissionDate.setMonth(
-    earliestSubmissionDate.getMonth() - SALARY_RENEWAL_WINDOW_MONTHS,
-  )
+  const windowOpens = new Date(dueAt)
+  windowOpens.setMonth(windowOpens.getMonth() - SALARY_RENEWAL_WINDOW_MONTHS)
+
+  // Floored to the start of the day. `dueAt` is an end-of-day deadline
+  // (23:59:59 from the register load, from `endOfUtcDay` on approval), and
+  // subtracting six months from it carries that time of day over — which would
+  // name a date to the applicant and then refuse every submission on it but
+  // the last second.
+  const earliestSubmissionDate = startOfUtcDay(windowOpens)
 
   // Window is open once we've reached the earliest date (inclusive). An overdue
   // due date (in the past) trivially satisfies this and stays eligible.

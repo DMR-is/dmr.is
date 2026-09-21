@@ -13,7 +13,9 @@ import { SWAGGER_CONFIG } from '../../swagger.config'
  * Controllers allowed to answer without a credential. Anything here is served to
  * the open internet.
  */
-const PUBLIC_ROUTE_ALLOWLIST: ReadonlySet<string> = new Set(['HealthController'])
+const PUBLIC_ROUTE_ALLOWLIST: ReadonlySet<string> = new Set([
+  'HealthController',
+])
 
 const GUARDS_METADATA = '__guards__'
 
@@ -31,7 +33,12 @@ const guardsForHandler = (controller: Function, method: string): unknown[] => [
 const routedHandlers = (app: INestApplication): Array<[Function, string]> => {
   const modules = (
     app as unknown as {
-      container: { getModules: () => Map<unknown, { controllers: Map<unknown, { metatype: Function }> }> }
+      container: {
+        getModules: () => Map<
+          unknown,
+          { controllers: Map<unknown, { metatype: Function }> }
+        >
+      }
     }
   ).container.getModules()
 
@@ -47,7 +54,8 @@ const routedHandlers = (app: INestApplication): Array<[Function, string]> => {
         const handler = (controller.prototype as Record<string, unknown>)[name]
         if (typeof handler !== 'function') continue
         // A routed handler carries a path; anything else is a helper.
-        if (Reflect.getMetadata('path', handler as object) === undefined) continue
+        if (Reflect.getMetadata('path', handler as object) === undefined)
+          continue
         out.push([controller, name])
       }
     }
@@ -152,7 +160,12 @@ describe('partner surface coverage', () => {
 
   it('guards a substantial surface', () => {
     // Anti-vacuity floor: every assertion above is "no offenders", so an empty
-    // handler list would satisfy all of them.
-    expect(routedHandlers(app).length).toBeGreaterThan(10)
+    // handler list would satisfy all of them. Below the real count rather than
+    // tracking it — this catches a broken reflection walk, not a route added or
+    // retired, and a floor set at the census has to be edited by every change
+    // that touches the surface. Close enough beneath it to still fail if the
+    // walk returns a fraction of the surface, which a floor of 5 against a
+    // census of 10 would not.
+    expect(routedHandlers(app).length).toBeGreaterThan(8)
   })
 })

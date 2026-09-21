@@ -8,6 +8,5 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-
-  return <ProblemFromError variant='bordered' titleSize='h1' error={error} />
+  return <ProblemFromError variant="bordered" titleSize="h1" error={error} />
 }

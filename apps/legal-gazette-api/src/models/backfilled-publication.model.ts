@@ -1,15 +1,12 @@
-import {
-  BelongsTo,
-  Column,
-  DataType,
-  ForeignKey,
-} from 'sequelize-typescript'
+// Association annotations use a type-only alias - see `models.md`.
+import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { ApiProperty } from '@nestjs/swagger'
 
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
+import type { AdvertPublicationModel as AdvertPublicationModelRef } from './advert-publication.model'
 import { AdvertPublicationModel } from './advert-publication.model'
 
 export type BackfilledPublicationAttributes = {
@@ -31,5 +28,5 @@ export class BackfilledPublicationModel extends ParanoidModel<
   publicationId!: string
 
   @BelongsTo(() => AdvertPublicationModel)
-  publication!: AdvertPublicationModel
+  publication!: AdvertPublicationModelRef
 }

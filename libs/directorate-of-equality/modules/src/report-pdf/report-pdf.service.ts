@@ -288,10 +288,13 @@ export class ReportPdfService implements IReportPdfService {
         if (url.startsWith('data:') || url.startsWith('about:')) {
           request.continue()
         } else {
-          this.logger.warn('Blocked an outbound request from the PDF renderer', {
-            context: LOGGING_CONTEXT,
-            url,
-          })
+          this.logger.warn(
+            'Blocked an outbound request from the PDF renderer',
+            {
+              context: LOGGING_CONTEXT,
+              url,
+            },
+          )
           request.abort()
         }
       })

@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import { Op } from 'sequelize'
 import {
   BeforeCreate,
@@ -9,17 +10,14 @@ import {
   HasOne,
 } from 'sequelize-typescript'
 
-import {
-  ApiOptionalEnum,
-  ApiString,
-  ApiUUId,
-} from '@dmr.is/decorators'
+import { ApiOptionalEnum, ApiString, ApiUUId } from '@dmr.is/decorators'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../modules/shared/dto/detailed.dto'
 import { AdvertCreateAttributes, AdvertModel } from './advert.model'
+import type { ApplicationModel as ApplicationModelRef } from './application.model'
 import {
   ApplicationCreateAttributes,
   ApplicationModel,
@@ -53,7 +51,10 @@ type CaseCreateAttributes = {
   ],
   order: [['createdAt', 'DESC']],
 }))
-export class CaseModel extends ParanoidModel<CaseAttributes, CaseCreateAttributes> {
+export class CaseModel extends ParanoidModel<
+  CaseAttributes,
+  CaseCreateAttributes
+> {
   @Column({
     type: DataType.TEXT,
     allowNull: false,
@@ -73,7 +74,7 @@ export class CaseModel extends ParanoidModel<CaseAttributes, CaseCreateAttribute
   adverts!: AdvertModel[]
 
   @HasOne(() => ApplicationModel)
-  application?: ApplicationModel
+  application?: ApplicationModelRef
 
   @BeforeDestroy
   static async markAdvertsAsWithdrawn(instance: CaseModel) {

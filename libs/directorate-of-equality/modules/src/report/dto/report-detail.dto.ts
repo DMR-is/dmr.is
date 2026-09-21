@@ -24,11 +24,15 @@ import { ReportTimelineItemDto } from './report-timeline-item.dto'
  *   (`parentCompanyId` set to the parent's `companyId`). Empty array when
  *   the submission covered only the parent.
  *
- * - `equalityReport`: **always** populated. For equality-type reports the
- *   block mirrors the requested report itself; for salary-type reports it's
- *   the linked equality (via `equalityReportId`). The invariant "no salary
- *   without equality" is enforced server-side — if a salary report has no
- *   equality link, the service throws rather than returning null.
+ * - `equalityReport`: the equality content block. For equality-type reports it
+ *   mirrors the requested report itself; for salary-type reports it's the
+ *   linked equality (via `equalityReportId`). **Null in exactly one case:** a
+ *   salary report filed against a legacy certificate (`equalitySource` =
+ *   `LEGACY`), which has no report row behind it to project — read
+ *   `equalityLegacyValidUntil` for what covered it instead. The invariant "no
+ *   salary without equality" still holds and is still enforced server-side; a
+ *   salary report that claims a link and has none is a data-integrity error and
+ *   the service throws rather than returning null.
  *
  * - `timeline`: merged, `createdAt`-sorted list of `report_event` and
  *   `report_comment` rows. Each item carries a `kind` discriminator
@@ -54,8 +58,8 @@ export class ReportDetailDto extends ReportDto {
   @ApiDtoArray(CompanyReportDto)
   subsidiaries!: CompanyReportDto[]
 
-  @ApiDto(EqualityReportDto)
-  equalityReport!: EqualityReportDto
+  @ApiOptionalDto(EqualityReportDto, { nullable: true })
+  equalityReport!: EqualityReportDto | null
 
   @ApiDtoArray(ReportTimelineItemDto)
   timeline!: ReportTimelineItemDto[]

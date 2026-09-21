@@ -101,8 +101,6 @@ export class AuthorizationGuard implements CanActivate {
       return true
     }
 
-
-
     // Case 2: @Scopes() only - check scope without user lookup
     if (!requiresAdmin && requiredScopes?.length) {
       return this.checkScopes(user, requiredScopes)
@@ -119,7 +117,6 @@ export class AuthorizationGuard implements CanActivate {
           nationalId: user?.nationalId,
           matchedScopes: this.getMatchingScopes(user, requiredScopes),
         })
-
 
         // populating the actor context
         this.userContext.user = user

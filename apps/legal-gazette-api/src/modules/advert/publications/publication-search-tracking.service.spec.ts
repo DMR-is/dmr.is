@@ -111,16 +111,13 @@ describe('PublicationSearchTrackingService', () => {
     )
 
     await expect(
-      service.track(
-        buildQuery({ search: 'failure' }),
-        {
-          page: 1,
-          pageSize: 20,
-          pageResultCount: 0,
-          totalResultCount: 0,
-          durationMs: 8,
-        },
-      ),
+      service.track(buildQuery({ search: 'failure' }), {
+        page: 1,
+        pageSize: 20,
+        pageResultCount: 0,
+        totalResultCount: 0,
+        durationMs: 8,
+      }),
     ).resolves.toBeUndefined()
 
     expect(loggerMock.warn).toHaveBeenCalledWith(

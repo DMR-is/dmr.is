@@ -60,7 +60,7 @@ import { AdditionalPartiesService } from '../additional-parties'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
-import { ICaseService } from '../case/case.module'
+import { ICaseService } from '../case/case.service.interface'
 import { ICommentServiceV2 } from '../comment/v2'
 import {
   AdvertCategoryModel,

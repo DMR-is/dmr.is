@@ -25,10 +25,11 @@ import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../constants'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import { resolveEqualityContent } from '../report/lib/equality-content'
+import { toLegacyEqualitySummary } from '../report/lib/legacy-equality-coverage'
 import {
   CommunicationStatusEnum,
   EqualityContentTypeEnum,
-  ReportProviderEnum,
+  EqualityCoverageSourceEnum,
   ReportStatusEnum,
   ReportTypeEnum,
 } from '../report/models/report.enums'
@@ -74,11 +75,11 @@ import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
 import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
+import { SubmitSalaryReportInput } from './dto/submit-partner-salary-report.dto'
 import type {
   SubmitReportCompanyDto,
   SubmitReportSubsidiaryDto,
 } from './dto/submit-report-company.dto'
-import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import { EQUALITY_REPORT_TEMPLATE_BASE64 } from './equality-template/template-data'
 import { buildEqualityReportTemplateHtml } from './equality-template/template-html'
 import {
@@ -168,7 +169,7 @@ export class ApplicationService implements IApplicationService {
   }
 
   async submitSalary(
-    input: SubmitSalaryReportDto,
+    input: SubmitSalaryReportInput,
     company: CompanyDto,
   ): Promise<CreateReportResponseDto> {
     this.logger.info('Submitting salary report from application portal', {
@@ -210,22 +211,26 @@ export class ApplicationService implements IApplicationService {
         new Date(),
       )
 
-    // A salary report must reference an approved, in-force equality report.
-    // This blocks the flow regardless of the renewal window, so it takes
-    // priority — but we still surface the (informational) due dates from the
-    // renewal decision so the portal can render them either way.
+    // The company's equality obligation must be met before a salary report can
+    // be filed against it. This blocks the flow regardless of the renewal
+    // window, so it takes priority — but we still surface the (informational)
+    // due dates from the renewal decision so the portal can render them either
+    // way.
     //
-    // ⚠️ Deliberately narrower than the admin register's notion of coverage.
-    // `companyReportStatusCaseSql` also counts an unexpired legacy certification
-    // (see `legacy_report`), so a company certified under the old regime reads
-    // SATISFACTORY there while this gate still answers MISSING_EQUALITY_REPORT.
-    // That is intended and cannot be relaxed here: the reference below is by
-    // report id, and a legacy certificate has none to give. The register answers
-    // "is this company in compliance"; this answers "can this submission be
-    // built", and the second needs a row the first does not.
-    const activeEquality =
-      await this.reportService.findActiveEqualityForCompany(company.id)
-    if (!activeEquality) {
+    // ⚠️ Deliberately the SAME notion of coverage as the admin register's
+    // `companyReportStatusCaseSql` — an APPROVED report here, or an unexpired
+    // certificate on the retired register. It used to be narrower, on the
+    // reasoning that a salary report references its equality report by id and a
+    // legacy certificate has none to give. The id was the wrong thing to hang
+    // it on: the ~540 companies whose equality plan exists only on the old
+    // register read SATISFACTORY in the back office while this gate told them
+    // they had no plan, and no route let them file anything. A salary report
+    // filed on legacy coverage now records that in `equality_source` instead of
+    // borrowing an id that does not exist.
+    const coverage = await this.reportService.resolveEqualityCoverage(
+      company.id,
+    )
+    if (!coverage) {
       return {
         eligible: false,
         reason: SalaryReportEligibilityReasonEnum.MISSING_EQUALITY_REPORT,
@@ -251,24 +256,37 @@ export class ApplicationService implements IApplicationService {
     return this.reportCreateService.createEquality(createInput)
   }
 
+  /**
+   * What currently meets the company's equality obligation, or a 404.
+   *
+   * ⚠️ Answers from `resolveEqualityCoverage`, so an unexpired certificate on
+   * the Directorate's retired register counts — with `source: LEGACY` and no
+   * id, because the register load mints no `report` row behind it. Reading only
+   * `report` here is what made a legacy-certified company open the portal and
+   * be told it had no equality plan, when the Directorate's own records say it
+   * holds one and the admin register displays it as covered.
+   */
   async getActiveEqualityReport(
     company: CompanyDto,
   ): Promise<EqualityReportSummaryDto> {
-    const equality = await this.reportService.findActiveEqualityForCompany(
+    const coverage = await this.reportService.resolveEqualityCoverage(
       company.id,
     )
 
-    if (!equality) {
+    if (!coverage) {
       // No company identifier in the message: this is a public error on the
       // partner channel, the id is ours rather than the caller's, and that the
-      // authenticated company has no approved equality report is the whole
-      // fact.
+      // authenticated company has no equality plan in force is the whole fact.
       throw new NotFoundException('No approved equality report is in force')
     }
 
+    if (coverage.source === EqualityCoverageSourceEnum.LEGACY) {
+      return toLegacyEqualitySummary(coverage.legacyValidUntil)
+    }
+
     return ReportModel.toEqualitySummary(
-      equality,
-      this.channel.toClientProviderId(equality),
+      coverage.report,
+      this.channel.toClientProviderId(coverage.report),
     )
   }
 
@@ -808,14 +826,25 @@ export class ApplicationService implements IApplicationService {
   }
 
   private async createSalaryReportInput(
-    input: SubmitSalaryReportDto,
+    input: SubmitSalaryReportInput,
     company: CompanyDto,
   ): Promise<CreateReportDto> {
     const companies = await this.createReportCompanySnapshots(input, company)
 
     return {
-      equalityReportId: input.equalityReportId,
-      importedFromExcel: input.importedFromExcel,
+      // Passed through as sent, absent and all. `createSalary` resolves it when
+      // a caller does not name one — and it must, because that has to happen
+      // after its idempotent replay check. Resolving here made a retry of an
+      // already-filed report 404 once its equality report lapsed.
+      // `?? undefined` because the wire contract accepts null — a client
+      // forwarding the null `id` of LEGACY coverage — while the creation DTO
+      // expresses "not named" as absence. Both mean the same thing to
+      // `createSalary`: resolve it.
+      equalityReportId: input.equalityReportId ?? undefined,
+      // The workbook is an island.is concept. A partner submission arrives as
+      // JSON built from payroll data, so there is nothing for this to be true
+      // of and the field is not part of that contract.
+      importedFromExcel: input.importedFromExcel ?? false,
       providerType: this.channel.providerType,
       providerId: this.channel.buildProviderId(
         input.providerId,
@@ -1001,11 +1030,14 @@ export class ApplicationService implements IApplicationService {
     providerId: string,
     company: CompanyDto,
   ): Promise<EqualityContentPdf> {
-    this.logger.debug('Fetching uploaded equality plan from application portal', {
-      context: LOGGING_CONTEXT,
-      companyId: company.id,
-      providerId,
-    })
+    this.logger.debug(
+      'Fetching uploaded equality plan from application portal',
+      {
+        context: LOGGING_CONTEXT,
+        companyId: company.id,
+        providerId,
+      },
+    )
 
     // Ownership first: resolving the tuple is what makes this the company's own
     // report rather than any report whose id was guessed.
@@ -1111,10 +1143,30 @@ export class ApplicationService implements IApplicationService {
     }
   }
 
+  /**
+   * The equality coverage a salary report was filed against, as the applicant
+   * sees it.
+   *
+   * Two shapes, discriminated by `source`, and the LEGACY one is answered from
+   * the salary row's own columns rather than a lookup: the certificate lived on
+   * `legacy_report`, which the next register load replaces wholesale, so the
+   * snapshot taken at filing is the only stable record of what covered this
+   * submission.
+   */
   private async loadLinkedEqualityReport(
     report: ReportModel,
   ): Promise<EqualityReportSummaryDto | null> {
-    if (report.type !== ReportTypeEnum.SALARY || !report.equalityReportId) {
+    if (report.type !== ReportTypeEnum.SALARY) {
+      return null
+    }
+
+    if (report.equalitySource === EqualityCoverageSourceEnum.LEGACY) {
+      return report.equalityLegacyValidUntil
+        ? toLegacyEqualitySummary(report.equalityLegacyValidUntil)
+        : null
+    }
+
+    if (!report.equalityReportId) {
       return null
     }
 

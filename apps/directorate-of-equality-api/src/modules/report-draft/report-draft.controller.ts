@@ -204,7 +204,7 @@ export class ReportDraftController {
     include404: true,
     type: CreateReportResponseDto,
     description:
-      "Finalises a DRAFT (DRAFT → SUBMITTED, or POSTPONED when a salary report's outliers are acknowledged but not yet explained). Freezes derived scores + the result snapshot, creates the company_report snapshot from the payload (parent + subsidiaries), and makes the report visible to reviewers. For salary reports, equalityReportId is required and must reference an APPROVED equality report.",
+      "Finalises a DRAFT (DRAFT → SUBMITTED, or POSTPONED when a salary report's outliers are acknowledged but not yet explained). Freezes derived scores + the result snapshot, creates the company_report snapshot from the payload (parent + subsidiaries), and makes the report visible to reviewers. For salary reports, `equalityReportId` must reference an APPROVED equality report if it is sent at all; omit it and the server resolves the company's current coverage — which is the only option when that coverage is a legacy certificate, since it has no report row to name. A 404 means nothing covers the company.",
   })
   async submitDraft(
     @Param('providerId') providerId: string,

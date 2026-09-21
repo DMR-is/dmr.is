@@ -16,7 +16,7 @@ import { Button } from '../Button'
 import { Hidden } from '../Hidden'
 import { Inline } from '../Inline'
 import { Logo } from '../Logo'
-import {Text} from '../Text'
+import { Text } from '../Text'
 import * as styles from './SimpleSlider.css'
 
 type BreakpointOption = Partial<

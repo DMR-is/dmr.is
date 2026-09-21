@@ -7,7 +7,11 @@ type Props = {
   isLoading?: boolean
 }
 
-export const SubmitButton = ({ onClick, buttonText = 'Staðfesta', isLoading = false }: Props) => {
+export const SubmitButton = ({
+  onClick,
+  buttonText = 'Staðfesta',
+  isLoading = false,
+}: Props) => {
   return (
     <Inline align="right">
       <Button icon="arrowForward" onClick={onClick} loading={isLoading}>

@@ -166,10 +166,7 @@ describe('HtmlAdminService', () => {
       expect(status.failed).toBe(0)
 
       expect(backfilledModel.bulkCreate).toHaveBeenCalledWith(
-        [
-          { publicationId: 'pub-1' },
-          { publicationId: 'pub-2' },
-        ],
+        [{ publicationId: 'pub-1' }, { publicationId: 'pub-2' }],
         expect.objectContaining({ transaction: null }),
       )
     })

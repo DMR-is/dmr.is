@@ -11,5 +11,11 @@ export const NoData = ({
   title = problemMessages.alerts.noData.title,
   message = problemMessages.alerts.noData.message,
 }: NoDataProps) => {
-  return <AlertMessage type={mapProblemTypeToAlertMessageType('no-data')} title={title} message={message} />
+  return (
+    <AlertMessage
+      type={mapProblemTypeToAlertMessageType('no-data')}
+      title={title}
+      message={message}
+    />
+  )
 }

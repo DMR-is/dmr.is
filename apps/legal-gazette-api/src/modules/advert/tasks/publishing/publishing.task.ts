@@ -117,7 +117,7 @@ export class PublishingTaskService implements IPublishingTaskService {
           as: 'advert',
           where: {
             statusId: StatusIdEnum.READY_FOR_PUBLICATION,
-          }
+          },
         },
       ],
     })

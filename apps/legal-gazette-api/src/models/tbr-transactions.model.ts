@@ -1,14 +1,11 @@
-import {
-  BelongsTo,
-  Column,
-  DataType,
-  ForeignKey,
-} from 'sequelize-typescript'
+// Association annotations use a type-only alias - see `models.md`.
+import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { PaymentDto } from '../modules/payments/dto/payments.dto'
+import type { FeeCodeModel as FeeCodeModelRef } from './fee-code.model'
 import { FeeCodeModel } from './fee-code.model'
 
 /**
@@ -122,7 +119,7 @@ export class TBRTransactionModel extends ParanoidModel<
   tbrError!: string | null
 
   @BelongsTo(() => FeeCodeModel)
-  feeCode!: FeeCodeModel
+  feeCode!: FeeCodeModelRef
 
   static fromModelToPaymentDto(model: TBRTransactionModel): PaymentDto {
     return {

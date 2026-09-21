@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { getLogger } from '@dmr.is/logging-next'
 import type { HTMLText } from '@dmr.is/regulations-tools/types'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -22,6 +23,8 @@ import { OJOIInput } from '../select/OJOIInput'
 import * as styles from './EditChangeModal.css'
 
 import { useMutation } from '@tanstack/react-query'
+
+const logger = getLogger('EditChangeModal')
 
 const DynamicHTMLDump = dynamic(
   () => import('@dmr.is/regulations-tools/html').then((m) => m.HTMLDump),
@@ -112,13 +115,13 @@ export const EditChangeModal = ({
       setDiffHtml(null)
       return
     }
-    const [{ default: dirtyClean }, { getDiff }] = await Promise.all([
-      import('@dmr.is/regulations-tools/dirtyClean-browser'),
+    const [{ getDiff }, { simpleSanitize }] = await Promise.all([
       import('@dmr.is/regulations-tools/html'),
+      import('@dmr.is/utils-server/cleanLegacyHtml'),
     ])
     const result = getDiff(
-      dirtyClean(originalText as HTMLText),
-      dirtyClean(editorText as HTMLText),
+      simpleSanitize(originalText) as HTMLText,
+      simpleSanitize(editorText) as HTMLText,
     )
     setDiffHtml(result.diff)
   }, [])
@@ -166,15 +169,25 @@ export const EditChangeModal = ({
     let diff: string | undefined
     const originalText = originalRegulationRef.current?.text
     if (originalText && text) {
-      const [{ default: dirtyClean }, { getDiff }] = await Promise.all([
-        import('@dmr.is/regulations-tools/dirtyClean-browser'),
-        import('@dmr.is/regulations-tools/html'),
-      ])
-      const result = getDiff(
-        dirtyClean(originalText as HTMLText),
-        dirtyClean(text as HTMLText),
-      )
-      diff = result.diff as string
+      try {
+        const [{ getDiff }, { simpleSanitize }] = await Promise.all([
+          import('@dmr.is/regulations-tools/html'),
+          import('@dmr.is/utils-server/cleanLegacyHtml'),
+        ])
+        const result = getDiff(
+          simpleSanitize(originalText) as HTMLText,
+          simpleSanitize(text) as HTMLText,
+        )
+        diff = result.diff as string
+      } catch (e) {
+        // Never persist a change with a diff we could not compute.
+        logger.error('Failed to compute regulation diff before saving', {
+          caseId,
+          error: e instanceof Error ? e.message : String(e),
+        })
+        toast.error('Ekki tókst að reikna breytingar, reyndu aftur')
+        return
+      }
     } else {
       diff = diffHtml as string | undefined
     }
@@ -286,7 +299,12 @@ export const EditChangeModal = ({
                       currentTextRef.current = val as string
                     }}
                     onBlur={() => {
-                      recomputeDiff(currentTextRef.current)
+                      recomputeDiff(currentTextRef.current).catch((e) => {
+                        logger.error('Failed to recompute regulation diff', {
+                          caseId,
+                          error: e instanceof Error ? e.message : String(e),
+                        })
+                      })
                     }}
                     handleUpload={fileUploader()}
                   />

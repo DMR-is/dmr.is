@@ -23,7 +23,7 @@ export const EqualityReportInputs = ({
           size="sm"
           name="planApprovalDate"
           label={reportText.equalityTab.approvedDateLabel}
-          readOnly
+          disabled
           selected={approvalDate}
         />
         <DatePicker
@@ -32,7 +32,7 @@ export const EqualityReportInputs = ({
           size="sm"
           name="validityPeriod"
           label={reportText.equalityTab.expiryLabel}
-          readOnly
+          disabled
           selected={validityPeriod}
         />
       </Box>

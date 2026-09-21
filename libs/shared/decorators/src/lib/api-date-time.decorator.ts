@@ -4,7 +4,6 @@ import { IsDate } from 'class-validator'
 import { applyDecorators } from '@nestjs/common'
 import { ApiProperty, ApiPropertyOptions } from '@nestjs/swagger'
 
-
 /**
  * Parses the incoming iso string to a Date object
  */

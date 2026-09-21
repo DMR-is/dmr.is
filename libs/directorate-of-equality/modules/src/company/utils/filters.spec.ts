@@ -2,11 +2,14 @@ import { Op } from 'sequelize'
 
 import {
   CompanyReportStatusEnum,
+  CompanySectorEnum,
+  CompanySizeEnum,
   CompanyStatusEnum,
 } from '../models/company.enums'
 import {
   buildCompanyExpiryWhere,
   buildCompanyLifecycleStatusWhere,
+  buildCompanyListQuery,
   buildCompanyStatusWhere,
   CompanyExpiryFilterEnum,
 } from './filters'
@@ -173,5 +176,267 @@ describe('buildCompanyStatusWhere', () => {
     expect(all).toContain(' OR ')
     expect(all.startsWith('(')).toBe(true)
     expect(all.endsWith(')')).toBe(true)
+  })
+})
+
+/**
+ * The composed builder behind both the company list and the recipient
+ * resolution for a bulk email.
+ *
+ * These tests pin that every filter the list DTO carries reaches the query, so a
+ * new filter cannot be added to the list and quietly skipped here — which would
+ * put the count an admin approves and the set actually mailed out of step.
+ */
+describe('buildCompanyListQuery', () => {
+  type ListQuery = Parameters<typeof buildCompanyListQuery>[0]
+
+  // `page`/`pageSize` are required on the DTO but defaulted at runtime, and no
+  // case here is about paging. Supplying them once keeps each test to the
+  // filter it is actually exercising.
+  const build = (overrides: Partial<ListQuery> = {}) =>
+    buildCompanyListQuery({ page: 1, pageSize: 10, ...overrides })
+
+  const conditionsOf = (overrides: Partial<ListQuery> = {}) => {
+    const { where } = build(overrides)
+    const and = (where as Record<symbol, unknown[]>)[Op.and]
+    return and ?? [where]
+  }
+
+  // All three hides lifted, so a test can assert on one filter without the
+  // default conditions padding every result.
+  const unhidden = {
+    includeNotObliged: true,
+    includeInactive: true,
+    includeQuarantined: true,
+  }
+
+  /**
+   * The hides belong to the builder rather than to the list's call site: the
+   * recipient resolution runs the same function, and a send that skipped them
+   * would mail deregistered and not-obliged companies that never appeared in
+   * the list the admin approved.
+   */
+  describe('the default-on register hides', () => {
+    it('hides not-obliged, deregistered and quarantined companies by default', () => {
+      const conditions = conditionsOf()
+
+      expect(conditions).toHaveLength(3)
+      expect((conditions[0] as { val: string }).val).toMatch(/^NOT /)
+      expect(conditions[1]).toEqual({ status: CompanyStatusEnum.ACTIVE })
+      expect(conditions[2]).toEqual({ quarantined: false })
+    })
+
+    it('lifts the obligation hide when the admin asks for it explicitly', () => {
+      expect(conditionsOf({ includeNotObliged: true })).toEqual([
+        { status: CompanyStatusEnum.ACTIVE },
+        { quarantined: false },
+      ])
+    })
+
+    it('lifts the obligation hide when filtering on the same axis', () => {
+      // Filtering by size means the admin has already answered the question the
+      // default was guessing at.
+      expect(
+        conditionsOf({ employeeCountCategory: CompanySizeEnum.LARGE }),
+      ).toEqual([
+        { employeeCountCategory: CompanySizeEnum.LARGE },
+        { status: CompanyStatusEnum.ACTIVE },
+        { quarantined: false },
+      ])
+    })
+
+    it('lifts the status hide when the admin asks for it explicitly', () => {
+      const conditions = conditionsOf({ includeInactive: true })
+
+      expect(conditions).toHaveLength(2)
+      expect((conditions[0] as { val: string }).val).toMatch(/^NOT /)
+      expect(conditions[1]).toEqual({ quarantined: false })
+    })
+
+    it('lifts the status hide when filtering to a lifecycle status', () => {
+      // Filtering to Óvirkt has to return óvirk companies, not an empty page.
+      const conditions = conditionsOf({ status: [CompanyStatusEnum.INACTIVE] })
+
+      // The lifecycle filter survives and the ACTIVE hide is gone; the two
+      // unrelated hides are left alongside it.
+      expect(conditions).toHaveLength(3)
+      expect(conditions[0]).toEqual(
+        buildCompanyLifecycleStatusWhere([CompanyStatusEnum.INACTIVE]),
+      )
+      expect((conditions[1] as { val: string }).val).toMatch(/^NOT /)
+      expect(conditions[2]).toEqual({ quarantined: false })
+    })
+
+    it('lifts the quarantine hide when the admin asks for it explicitly', () => {
+      const conditions = conditionsOf({ includeQuarantined: true })
+
+      expect(conditions).toHaveLength(2)
+      expect((conditions[0] as { val: string }).val).toMatch(/^NOT /)
+      expect(conditions[1]).toEqual({ status: CompanyStatusEnum.ACTIVE })
+    })
+
+    it('lifts the quarantine hide when filtering on the same axis', () => {
+      // The API still accepts `quarantined` directly, and it is the more
+      // specific answer on the same axis: asking for quarantined companies has
+      // to return them, not an empty page.
+      const conditions = conditionsOf({ quarantined: true })
+
+      expect(conditions).toHaveLength(3)
+      expect(conditions[0]).toEqual({ quarantined: true })
+      expect((conditions[1] as { val: string }).val).toMatch(/^NOT /)
+      expect(conditions[2]).toEqual({ status: CompanyStatusEnum.ACTIVE })
+    })
+  })
+
+  /**
+   * The four "aldrei skilað" filters. They carry no obligation gate, so the
+   * only thing keeping a 0–24 company off an unfiltered page is the register's
+   * own default hide — which these deliberately do NOT lift.
+   */
+  describe('the never-filed filters', () => {
+    const sqlOf = (overrides: Partial<ListQuery>) => {
+      const conditions = conditionsOf({ ...unhidden, ...overrides })
+      return conditions.map((c) => (c as { val?: string }).val ?? '').join('\n')
+    }
+
+    it('asks only about this system when the legacy variant is not selected', () => {
+      const sql = sqlOf({ neverFiledEquality: true })
+
+      expect(sql).toContain('NOT EXISTS')
+      expect(sql).toContain("r.type = 'EQUALITY'")
+      expect(sql).toContain("r.status <> 'DRAFT'")
+      // The whole point of the two variants: this one must not consult the
+      // archive, or it would answer the other question.
+      expect(sql).not.toContain('legacy_report')
+    })
+
+    it('adds the archive for the legacy variant', () => {
+      const sql = sqlOf({ neverFiledEqualityIncludingLegacy: true })
+
+      expect(sql).toContain('FROM "legacy_report" lr')
+      expect(sql).toContain('lr.equality_valid_until IS NOT NULL')
+      // Presence of a date, not validity of one — a surrendered or expired
+      // certificate was still filed.
+      expect(sql).not.toContain('IS DISTINCT FROM')
+      expect(sql).not.toContain('CURRENT_DATE')
+    })
+
+    it('reads the salary columns for the salary variants', () => {
+      expect(sqlOf({ neverFiledSalary: true })).toContain("r.type = 'SALARY'")
+      expect(sqlOf({ neverFiledSalaryIncludingLegacy: true })).toContain(
+        'lr.salary_valid_until IS NOT NULL',
+      )
+    })
+
+    it('AND-s the two types rather than OR-ing them', () => {
+      // Selecting both asks for companies that have filed NEITHER, matching how
+      // the other flags in the same control combine.
+      const conditions = conditionsOf({
+        ...unhidden,
+        neverFiledEquality: true,
+        neverFiledSalary: true,
+      })
+
+      expect(conditions).toHaveLength(2)
+    })
+
+    it('does not lift the default hides', () => {
+      // The filter ignores obligation, but an unfiltered register still hides
+      // companies that owe nothing; revealing them is a separate, explicit act.
+      const conditions = conditionsOf({ neverFiledEquality: true })
+
+      expect(conditions).toHaveLength(4)
+    })
+
+    it('treats `false` as no constraint', () => {
+      expect(build({ ...unhidden, neverFiledEquality: false }).where).toEqual(
+        {},
+      )
+    })
+  })
+
+  it('returns the single condition unwrapped rather than in an Op.and', () => {
+    const { where } = build({ ...unhidden, finesStarted: true })
+
+    expect(where).toEqual({ finesStarted: true })
+  })
+
+  it('searches name and national id together', () => {
+    const { where } = build({ ...unhidden, q: '  Fyrirtæki  ' })
+    const or = (where as Record<symbol, Record<string, unknown>[]>)[Op.or]
+
+    // Trimmed, then wrapped — an untrimmed pattern silently matches nothing.
+    expect(or).toEqual([
+      { name: { [Op.iLike]: '%Fyrirtæki%' } },
+      { nationalId: { [Op.iLike]: '%Fyrirtæki%' } },
+    ])
+  })
+
+  it('distinguishes an explicit `false` boolean from an absent one', () => {
+    // `quarantined: false` is a real filter — "only companies not halted" — and
+    // treating it as unset would widen the recipient set on a bulk send.
+    expect(conditionsOf({ ...unhidden, quarantined: false })).toContainEqual({
+      quarantined: false,
+    })
+    expect(build(unhidden).where).toEqual({})
+  })
+
+  it('treats `overdue: false` as no constraint', () => {
+    // Asymmetric with the booleans above, and deliberately so: `overdue` is a
+    // derived expression with no negative form to filter on.
+    expect(build({ ...unhidden, overdue: false }).where).toEqual({})
+  })
+
+  it('combines every filter it is given', () => {
+    const conditions = conditionsOf({
+      ...unhidden,
+      q: 'a',
+      employeeCountCategory: CompanySizeEnum.LARGE,
+      companyStatus: [CompanyReportStatusEnum.SATISFACTORY],
+      status: [CompanyStatusEnum.ACTIVE],
+      expiresWithin: [CompanyExpiryFilterEnum.MONTHS_3],
+      finesStarted: true,
+      quarantined: false,
+      overdue: true,
+      isatCategoryCode: ['01110'],
+      sector: [CompanySectorEnum.FYRIRTAEKI],
+    })
+
+    expect(conditions).toHaveLength(10)
+  })
+
+  it('always joins ÍSAT, so the resolved code reaches the DTO', () => {
+    // Unconditional and not `required`, otherwise every unclassified company
+    // would drop out of the plain list.
+    const { includes } = build({})
+
+    expect(includes).toEqual([
+      expect.objectContaining({ as: 'isatCategory', required: false }),
+    ])
+  })
+
+  it('adds an include for each join-backed filter', () => {
+    const { includes } = build({
+      postcode: ['101'],
+      isatSection: ['O'],
+    })
+
+    // Location and ÍSAT section are resolved through joins rather than columns;
+    // dropping either would silently return companies the filter excluded.
+    expect(includes).toHaveLength(2)
+    expect(includes[1]).toMatchObject({ as: 'isatCategory', required: true })
+  })
+
+  it('ignores paging, which belongs to the caller', () => {
+    // The recipient resolution passes the list's own query object through, paging
+    // params included. If they reached the query, a bulk send would mail page one
+    // and report it as everyone matching the filter.
+    const { where } = build({
+      ...unhidden,
+      page: 3,
+      pageSize: 10,
+    })
+
+    expect(where).toEqual({})
   })
 })

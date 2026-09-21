@@ -16,6 +16,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
 import {
+  CompanyObligationStatusEnum,
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
@@ -24,8 +25,13 @@ import {
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import {
+  padToSemanticValidity,
+  personalCriterion,
+} from '../report/lib/parsed-payload.testing'
+import {
   CommunicationStatusEnum,
   EqualityContentTypeEnum,
+  EqualityCoverageSourceEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -53,6 +59,7 @@ import { IReportEventService } from '../report-event/report-event.service.interf
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
+import { SubmitSalaryReportInput } from './dto/submit-partner-salary-report.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import {
   SUB_CRITERION_CATALOG,
@@ -94,6 +101,8 @@ const COMPANY: CompanyDto = {
   legalFormId: null,
   legalFormName: null,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
+  equalityObligationStatus: CompanyObligationStatusEnum.COVERED,
+  salaryObligationStatus: CompanyObligationStatusEnum.COVERED,
   equalityReportOverdue: false,
   salaryReportOverdue: false,
   hasLegacyReports: false,
@@ -107,7 +116,7 @@ describe('ApplicationService', () => {
   ) => Promise<ApplicationService>
   let configGetByKey: jest.Mock
   let getOrCreateSubsidiaryReportSnapshotSource: jest.Mock
-  let findActiveEqualityForCompany: jest.Mock
+  let resolveEqualityCoverage: jest.Mock
   let createSalary: jest.Mock
   let createEquality: jest.Mock
   let reportFindOne: jest.Mock
@@ -135,9 +144,15 @@ describe('ApplicationService', () => {
     getOrCreateSubsidiaryReportSnapshotSource = jest
       .fn()
       .mockResolvedValue(makeCompanySnapshotSource())
-    findActiveEqualityForCompany = jest.fn()
-    createSalary = jest.fn().mockResolvedValue({ reportId: 'report-1' })
-    createEquality = jest.fn().mockResolvedValue({ reportId: 'report-1' })
+    resolveEqualityCoverage = jest.fn()
+    // `replayed` comes from the creation service, and this service passes the
+    // response through untouched — the assertions below check that it does.
+    createSalary = jest
+      .fn()
+      .mockResolvedValue({ reportId: 'report-1', replayed: false })
+    createEquality = jest
+      .fn()
+      .mockResolvedValue({ reportId: 'report-1', replayed: false })
     reportFindOne = jest.fn()
     reportUpdate = jest.fn().mockResolvedValue([1])
     companyReportFindAll = jest.fn().mockResolvedValue([])
@@ -187,7 +202,7 @@ describe('ApplicationService', () => {
           },
           {
             provide: IReportService,
-            useValue: { findActiveEqualityForCompany },
+            useValue: { resolveEqualityCoverage },
           },
           {
             provide: IReportCreateService,
@@ -364,13 +379,28 @@ describe('ApplicationService', () => {
         ...overrides,
       }) as unknown as ReportModel
 
+    const reportCoverage = (
+      overrides: Parameters<typeof makeActiveEquality>[0] = {},
+    ) => ({
+      source: EqualityCoverageSourceEnum.REPORT,
+      report: makeActiveEquality(overrides),
+      legacyValidUntil: null,
+    })
+
+    const legacyCoverage = (legacyValidUntil = '2028-03-31') => ({
+      source: EqualityCoverageSourceEnum.LEGACY,
+      report: null,
+      legacyValidUntil,
+    })
+
     it('returns the summary when one is found', async () => {
-      findActiveEqualityForCompany.mockResolvedValue(makeActiveEquality())
+      resolveEqualityCoverage.mockResolvedValue(reportCoverage())
 
       const result = await service.getActiveEqualityReport(COMPANY)
 
-      expect(findActiveEqualityForCompany).toHaveBeenCalledWith(COMPANY.id)
+      expect(resolveEqualityCoverage).toHaveBeenCalledWith(COMPANY.id)
       expect(result).toEqual({
+        source: EqualityCoverageSourceEnum.REPORT,
         id: 'eq-1',
         identifier: 'EQ-2025-001',
         providerId: 'island-is-application-eq-1',
@@ -379,8 +409,41 @@ describe('ApplicationService', () => {
       })
     })
 
-    it('throws NotFoundException when no active equality exists', async () => {
-      findActiveEqualityForCompany.mockResolvedValue(null)
+    // The bug this route had: it read `report` and nothing else, so the ~540
+    // companies whose equality plan lives only on the retired register opened
+    // the portal and were told they had none — while the admin register beside
+    // it showed them as covered off the very same certificate.
+    it('answers with the legacy certificate when the company filed nothing here', async () => {
+      resolveEqualityCoverage.mockResolvedValue(legacyCoverage())
+
+      const result = await service.getActiveEqualityReport(COMPANY)
+
+      expect(result).toEqual({
+        source: EqualityCoverageSourceEnum.LEGACY,
+        id: null,
+        identifier: null,
+        providerId: null,
+        approvedAt: null,
+        // End of the stated day, not midnight — see `legacyValidUntilToDate`.
+        validUntil: new Date('2028-03-31T23:59:59.000Z'),
+      })
+    })
+
+    it('withholds every handle on legacy coverage, on the partner channel too', async () => {
+      // There is nothing to correlate: no report row was ever created, so
+      // neither channel has a route that would resolve a handle.
+      const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
+      resolveEqualityCoverage.mockResolvedValue(legacyCoverage())
+
+      const result = await partnerService.getActiveEqualityReport(COMPANY)
+
+      expect(result.id).toBeNull()
+      expect(result.providerId).toBeNull()
+      expect(result.identifier).toBeNull()
+    })
+
+    it('throws NotFoundException when nothing covers the company', async () => {
+      resolveEqualityCoverage.mockResolvedValue(null)
 
       await expect(service.getActiveEqualityReport(COMPANY)).rejects.toThrow(
         NotFoundException,
@@ -388,7 +451,7 @@ describe('ApplicationService', () => {
     })
 
     it('names no company in the not-found message', async () => {
-      findActiveEqualityForCompany.mockResolvedValue(null)
+      resolveEqualityCoverage.mockResolvedValue(null)
 
       // The internal company id used to be quoted here, on a PUBLIC error.
       await expect(service.getActiveEqualityReport(COMPANY)).rejects.toThrow(
@@ -405,8 +468,8 @@ describe('ApplicationService', () => {
       // back with `providerId: null` and a vendor could not correlate the active
       // equality report with its own submission.
       const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
-      findActiveEqualityForCompany.mockResolvedValue(
-        makeActiveEquality({
+      resolveEqualityCoverage.mockResolvedValue(
+        reportCoverage({
           providerType: ReportProviderEnum.OTHER,
           providerId: `${COMPANY.nationalId}:vendor-submission-7`,
         }),
@@ -421,7 +484,7 @@ describe('ApplicationService', () => {
       // Filed on island.is by the company itself: not addressable through the
       // partner API, so a handle would only ever 404.
       const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
-      findActiveEqualityForCompany.mockResolvedValue(makeActiveEquality())
+      resolveEqualityCoverage.mockResolvedValue(reportCoverage())
 
       const result = await partnerService.getActiveEqualityReport(COMPANY)
 
@@ -462,7 +525,45 @@ describe('ApplicationService', () => {
         outliersPostponed: undefined,
         outlierGroups: undefined,
       })
-      expect(result).toEqual({ reportId: 'report-1' })
+      expect(result).toEqual({ reportId: 'report-1', replayed: false })
+    })
+
+    describe('the equality report the salary was audited against', () => {
+      it('passes the field through as sent, resolving nothing itself', async () => {
+        const input = makeSubmitSalaryInput()
+
+        await service.submitSalary(input, COMPANY)
+
+        // Resolution moved to `createSalary`, which has to do it after its
+        // idempotent replay check — doing it here made a retry of an
+        // already-filed report answer 404 once its equality report lapsed.
+        expect(resolveEqualityCoverage).not.toHaveBeenCalled()
+        expect(createSalary).toHaveBeenCalledWith(
+          expect.objectContaining({
+            equalityReportId: input.equalityReportId,
+            importedFromExcel: true,
+          }),
+        )
+      })
+
+      it('leaves the field absent when the caller omits it', async () => {
+        const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
+        const input: SubmitSalaryReportInput = {
+          ...makeSubmitSalaryInput(),
+          equalityReportId: undefined,
+          importedFromExcel: undefined,
+        }
+
+        await partnerService.submitSalary(input, COMPANY)
+
+        expect(resolveEqualityCoverage).not.toHaveBeenCalled()
+        expect(createSalary).toHaveBeenCalledWith(
+          expect.objectContaining({
+            equalityReportId: undefined,
+            importedFromExcel: false,
+          }),
+        )
+      })
     })
 
     it('resolves subsidiary snapshot details through the company service', async () => {
@@ -607,10 +708,14 @@ describe('ApplicationService', () => {
 
   describe('getSalaryReportEligibility', () => {
     // Only its existence is read here, so the shape is deliberately minimal.
-    const activeEquality = { id: 'eq-1' } as unknown as ReportModel
+    const activeEquality = {
+      source: EqualityCoverageSourceEnum.REPORT,
+      report: { id: 'eq-1' } as unknown as ReportModel,
+      legacyValidUntil: null,
+    }
 
     it('is eligible when there is no due date and an equality report exists', async () => {
-      findActiveEqualityForCompany.mockResolvedValue(activeEquality)
+      resolveEqualityCoverage.mockResolvedValue(activeEquality)
 
       const result = await service.getSalaryReportEligibility(COMPANY)
 
@@ -620,7 +725,7 @@ describe('ApplicationService', () => {
     })
 
     it('is ineligible with a reason when the due date is more than 6 months out', async () => {
-      findActiveEqualityForCompany.mockResolvedValue(activeEquality)
+      resolveEqualityCoverage.mockResolvedValue(activeEquality)
       const farFuture = new Date()
       farFuture.setFullYear(farFuture.getFullYear() + 2)
       const company = { ...COMPANY, nextSalaryReportDueAt: farFuture }
@@ -633,8 +738,8 @@ describe('ApplicationService', () => {
       expect(result.earliestSubmissionDate).toBeInstanceOf(Date)
     })
 
-    it('is ineligible with MISSING_EQUALITY_REPORT when no active equality report exists, taking priority over the renewal window', async () => {
-      findActiveEqualityForCompany.mockResolvedValue(null)
+    it('is ineligible with MISSING_EQUALITY_REPORT when nothing covers the company, taking priority over the renewal window', async () => {
+      resolveEqualityCoverage.mockResolvedValue(null)
       // Due date within the window would otherwise be eligible; the missing
       // equality report must still block and win the reason.
       const soon = new Date()
@@ -675,7 +780,7 @@ describe('ApplicationService', () => {
         averageEmployeeNeutralCount: undefined,
         companies: [makeCompanySnapshot()],
       })
-      expect(result).toEqual({ reportId: 'report-1' })
+      expect(result).toEqual({ reportId: 'report-1', replayed: false })
     })
 
     it('forwards average employee counts when the applicant provides them', async () => {
@@ -898,6 +1003,7 @@ describe('ApplicationService', () => {
       // `providerId` is carried through so the portal can fetch the linked
       // equality report's own detail via `GET /application/reports/:providerId`.
       expect(result.equalityReport).toEqual({
+        source: EqualityCoverageSourceEnum.REPORT,
         id: EQUALITY_REPORT_ID,
         identifier: 'EQ-2025-001',
         providerId: EQUALITY_PROVIDER_ID,
@@ -918,6 +1024,42 @@ describe('ApplicationService', () => {
           },
         }),
       )
+    })
+
+    // A salary report filed on legacy coverage. There is no linked report to
+    // load — and crucially no second `reportFindOne`: the certificate lived on
+    // `legacy_report`, which the next register load replaces wholesale, so the
+    // snapshot taken at filing is the only stable record of what covered this
+    // submission.
+    it('reports legacy coverage from the salary row itself, without a second lookup', async () => {
+      const salaryReport = makeReportRow({
+        id: REPORT_ID,
+        providerId: PROVIDER_ID,
+        type: ReportTypeEnum.SALARY,
+        status: ReportStatusEnum.SUBMITTED,
+        identifier: 'SAL-2026-002',
+        equalityReportId: null,
+        equalitySource: EqualityCoverageSourceEnum.LEGACY,
+        equalityLegacyValidUntil: '2028-03-31',
+        outliersPostponed: false,
+      })
+
+      reportFindOne.mockResolvedValueOnce(salaryReport)
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      const result = await service.getReport(PROVIDER_ID, COMPANY)
+
+      expect(result.equalityReport).toEqual({
+        source: EqualityCoverageSourceEnum.LEGACY,
+        id: null,
+        identifier: null,
+        providerId: null,
+        approvedAt: null,
+        validUntil: new Date('2028-03-31T23:59:59.000Z'),
+      })
+      expect(reportFindOne).toHaveBeenCalledTimes(1)
     })
 
     it('returns equality report detail with narrative content and no salary-only data', async () => {
@@ -1754,7 +1896,7 @@ describe('ApplicationService', () => {
 
 function makeRequest(): SalaryAnalysisRequestDto {
   return {
-    parsed: {
+    parsed: padToSemanticValidity({
       criteria: [
         {
           type: ReportCriterionTypeEnum.RESPONSIBILITY,
@@ -1774,15 +1916,28 @@ function makeRequest(): SalaryAnalysisRequestDto {
                 { order: 5, description: 'score 500', score: 500 },
                 { order: 6, description: 'score 600', score: 600 },
                 { order: 7, description: 'score 700', score: 700 },
+                // The role's step. Scores 0, because in this fixture the score
+                // spread is per-employee and a role step applies to all of
+                // them equally — see PERSONAL_STEPS below.
+                { order: 8, description: 'none', score: 0 },
               ],
             },
           ],
         },
+        personalCriterion(PERSONAL_STEPS),
       ],
       roles: [
         {
           title: 'Framkvaemdastjori',
-          stepAssignments: [],
+          // A role owns the job-based criteria and must be scored on every one
+          // of their sub-criteria.
+          stepAssignments: [
+            {
+              criterionTitle: 'Abyrgd',
+              subTitle: 'Abyrgd a fólki',
+              stepOrder: 8,
+            },
+          ],
         },
       ],
       employees: [
@@ -1829,7 +1984,7 @@ function makeRequest(): SalaryAnalysisRequestDto {
           stepOrder: 7,
         }),
       ],
-    },
+    }),
   }
 }
 
@@ -1862,15 +2017,29 @@ function makeEmployee({
     bonusOccasionalOvertime: null,
     bonusOccasionalCarAllowance: null,
     bonusOther: null,
+    // An employee owns only the personal criteria: two people in one role
+    // differ exactly and only in their einstaklingsbundið scoring, which is
+    // what varies the score across this cohort.
     personalStepAssignments: [
       {
-        criterionTitle: 'Abyrgd',
-        subTitle: 'Abyrgd a fólki',
+        criterionTitle: 'Einstaklingsbundid',
+        subTitle: 'Frammistada',
         stepOrder,
       },
     ],
   }
 }
+
+/** The same 100–700 scale the score spread has always used. */
+const PERSONAL_STEPS = [
+  { order: 1, description: 'score 100', score: 100 },
+  { order: 2, description: 'score 200', score: 200 },
+  { order: 3, description: 'score 300', score: 300 },
+  { order: 4, description: 'score 400', score: 400 },
+  { order: 5, description: 'score 500', score: 500 },
+  { order: 6, description: 'score 600', score: 600 },
+  { order: 7, description: 'score 700', score: 700 },
+]
 
 function makeCompanySnapshot(
   overrides: Partial<CreateReportCompanySnapshotDto> = {},
@@ -1970,6 +2139,8 @@ function makeReportRow(
     communicationStatus: CommunicationStatusEnum.NOT_STARTED,
     identifier: 'REPORT-001',
     equalityReportId: null,
+    equalitySource: EqualityCoverageSourceEnum.REPORT,
+    equalityLegacyValidUntil: null,
     equalityReportContent: null,
     approvedAt: null,
     validUntil: null,

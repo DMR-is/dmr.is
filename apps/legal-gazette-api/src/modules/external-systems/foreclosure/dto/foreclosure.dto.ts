@@ -5,7 +5,7 @@ import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { ApiDateTime, ApiString } from '@dmr.is/decorators'
 
-import { ForeclosureDto } from '../../../../models/foreclosure.model'
+import { ForeclosureDto } from '../../../../models/foreclosure.dto'
 import { ObjectIssuer } from '../../dto/external-systems.dto'
 
 export class CreateForeclosurePropertyDto {

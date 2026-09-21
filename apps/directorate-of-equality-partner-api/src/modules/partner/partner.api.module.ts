@@ -5,10 +5,10 @@ import {
   EXTERNAL_PROVIDER_CHANNEL,
 } from '@dmr.is/doe-modules/application'
 import { CompanyCoreModule } from '@dmr.is/doe-modules/company'
-import { ImportUploadCoreModule } from '@dmr.is/doe-modules/import-upload'
-import { ReportExcelCoreModule } from '@dmr.is/doe-modules/report-excel'
+import { ScoringModelCoreModule } from '@dmr.is/doe-modules/scoring-model'
 
 import { ApiKeyCoreModule } from '../api-key/api-key.core.module'
+import { PartnerSubmissionService } from '../submission/partner-submission.service'
 import { PartnerController } from './partner.controller'
 
 /**
@@ -20,11 +20,11 @@ import { PartnerController } from './partner.controller'
 @Module({
   imports: [
     ApplicationCoreModule.forChannel(EXTERNAL_PROVIDER_CHANNEL),
-    ReportExcelCoreModule,
     CompanyCoreModule,
-    ImportUploadCoreModule,
     ApiKeyCoreModule,
+    ScoringModelCoreModule,
   ],
   controllers: [PartnerController],
+  providers: [PartnerSubmissionService],
 })
 export class PartnerApiModule {}

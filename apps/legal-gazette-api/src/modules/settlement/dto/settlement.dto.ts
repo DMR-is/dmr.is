@@ -1,7 +1,7 @@
 import { OmitType, PartialType } from '@nestjs/swagger'
 
 import {
-  ApiOptionalDateTime,
+  ApiOptionalDate,
   ApiOptionalDtoArray,
   ApiOptionalEnum,
   ApiOptionalNumber,
@@ -10,7 +10,10 @@ import {
 } from '@dmr.is/decorators'
 import { SettlementType } from '@dmr.is/legal-gazette-schemas'
 
-import { SettlementCompanyDto, SettlementDto } from '../../../models/settlement.model'
+import {
+  SettlementCompanyDto,
+  SettlementDto,
+} from '../../../models/settlement.model'
 
 export class CreateSettlementDto {
   @ApiOptionalEnum(SettlementType)
@@ -40,13 +43,13 @@ export class CreateSettlementDto {
   @ApiOptionalNumber()
   declaredClaims?: number
 
-  @ApiOptionalDateTime()
+  @ApiOptionalDate()
   deadline?: Date
 
-  @ApiOptionalDateTime()
+  @ApiOptionalDate()
   dateOfDeath?: Date
 
-  @ApiOptionalDateTime()
+  @ApiOptionalDate()
   endingDate?: Date
 
   @ApiOptionalString({ maxLength: 10 })
@@ -55,7 +58,7 @@ export class CreateSettlementDto {
   @ApiOptionalString({ maxLength: 255 })
   partnerName?: string
 
-  @ApiOptionalDateTime()
+  @ApiOptionalDate()
   partnerDateOfDeath?: Date
 
   @ApiOptionalDtoArray(SettlementCompanyDto)

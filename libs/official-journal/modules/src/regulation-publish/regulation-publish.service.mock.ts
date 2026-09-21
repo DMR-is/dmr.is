@@ -8,9 +8,7 @@ import { IRegulationPublishService } from './regulation-publish.service.interfac
 
 @Injectable()
 export class RegulationPublishServiceMock implements IRegulationPublishService {
-  constructor(
-    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-  ) {
+  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using RegulationPublishServiceMock')
   }
 

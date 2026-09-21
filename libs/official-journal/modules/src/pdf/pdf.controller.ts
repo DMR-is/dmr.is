@@ -51,9 +51,7 @@ import { IPdfService } from './pdf.service.interface'
 })
 @ApiBearerAuth()
 export class PdfController {
-  constructor(
-    @Inject(IPdfService) private readonly pdfService: IPdfService,
-  ) {}
+  constructor(@Inject(IPdfService) private readonly pdfService: IPdfService) {}
 
   @Get('case/:id')
   @UseGuards(TokenJwtAuthGuard, RoleGuard)

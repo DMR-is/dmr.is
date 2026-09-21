@@ -3,6 +3,11 @@ import { Includeable, literal, Op, WhereOptions } from 'sequelize'
 import { DoeModels } from '../../constants'
 import { PostcodeModel } from '../../location/models/postcode.model'
 import { RegionModel } from '../../location/models/region.model'
+import { ReportTypeEnum } from '../../report/models/report.enums'
+// `import type`, deliberately: `get-companies-query.dto.ts` imports
+// `CompanyExpiryFilterEnum` from this file at runtime, so a value import back
+// would close a require cycle.
+import type { GetCompaniesQueryDto } from '../dto/get-companies-query.dto'
 import {
   CompanyReportStatusEnum,
   CompanySectorEnum,
@@ -14,7 +19,10 @@ import {
   COMPANY_QUERY_ALIAS,
   equalityReportMissingSql,
   equalityReportOverdueSql,
+  hiddenFromDefaultRegisterSql,
   legacyCertificationExpiringSql,
+  neverFiledAnywhereSql,
+  neverFiledReportSql,
   salaryReportMissingSql,
   salaryReportOverdueSql,
 } from './report-status'
@@ -85,7 +93,9 @@ export function buildCompanyLifecycleStatusWhere(
  * / `salaryReportOverdue` columns shown on each company.
  */
 export function buildCompanyOverdueWhere(): WhereOptions {
-  return literal(`(${equalityReportOverdueSql()} OR ${salaryReportOverdueSql()})`)
+  return literal(
+    `(${equalityReportOverdueSql()} OR ${salaryReportOverdueSql()})`,
+  )
 }
 
 /**
@@ -130,11 +140,13 @@ export function buildCompanyIsatCategoryInclude(
 }
 
 /**
- * Filter by ownership sector (private vs government/state). A direct column on
- * the company, derived from the RSK legal form.
+ * Filter by ownership sector (Fyrirtæki / Ráðuneyti / Ríkisaðilar /
+ * Sveitarfélög). A direct column on the company, derived from the RSK legal
+ * form — except RADUNEYTI, which is only ever set by hand.
  *
- * Note UNKNOWN is filterable in its own right and is never merged into PRIVATE —
- * asking for PRIVATE returns only companies we actually classified as private.
+ * Note UNKNOWN is filterable in its own right and is never merged into a
+ * classified bucket — asking for FYRIRTAEKI returns only companies we actually
+ * classified as such, not everything we failed to classify.
  */
 export function buildCompanySectorWhere(
   sectors: CompanySectorEnum[],
@@ -189,8 +201,10 @@ export enum CompanyExpiryFilterEnum {
 }
 
 function maxExpiryInterval(values: CompanyExpiryFilterEnum[]): string {
-  if (values.includes(CompanyExpiryFilterEnum.SOON)) return "INTERVAL '6 months'"
-  if (values.includes(CompanyExpiryFilterEnum.MONTHS_3)) return "INTERVAL '3 months'"
+  if (values.includes(CompanyExpiryFilterEnum.SOON))
+    return "INTERVAL '6 months'"
+  if (values.includes(CompanyExpiryFilterEnum.MONTHS_3))
+    return "INTERVAL '3 months'"
   return "INTERVAL '30 days'"
 }
 
@@ -225,4 +239,144 @@ export function buildCompanyExpiryWhere(
       ) OR ${legacyCertificationExpiringSql(interval)})`),
     ],
   }
+}
+
+/**
+ * Every filter on the company list, composed into one `where` plus the joins it
+ * needs. Paging and sorting are the caller's — the two callers disagree.
+ *
+ * Exists so the list and the "send to everyone matching this filter" recipient
+ * resolution cannot drift apart: a second copy of these conditions would
+ * eventually answer the same question differently, in the direction of mailing
+ * companies nobody selected. That includes the three default-on hides below —
+ * they belong here rather than at the list's call site precisely because a
+ * recipient set that ignores them mails companies the admin was never shown.
+ *
+ * The result must be run through the `withReportStatus` scope — `companyStatus`,
+ * `overdue` and `expiresWithin` return `literal()` SQL bound to
+ * `COMPANY_QUERY_ALIAS`, which does not resolve off the bare model.
+ */
+export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
+  where: WhereOptions
+  includes: Includeable[]
+} {
+  const conditions: WhereOptions[] = []
+
+  if (query.q) {
+    const pattern = `%${query.q.trim()}%`
+    conditions.push({
+      [Op.or]: [
+        { name: { [Op.iLike]: pattern } },
+        { nationalId: { [Op.iLike]: pattern } },
+      ],
+    })
+  }
+
+  if (query.employeeCountCategory !== undefined) {
+    conditions.push({ employeeCountCategory: query.employeeCountCategory })
+  }
+
+  if (query.companyStatus?.length) {
+    conditions.push(buildCompanyStatusWhere(query.companyStatus))
+  }
+
+  if (query.status?.length) {
+    conditions.push(buildCompanyLifecycleStatusWhere(query.status))
+  }
+
+  if (query.expiresWithin?.length) {
+    conditions.push(buildCompanyExpiryWhere(query.expiresWithin))
+  }
+
+  if (query.finesStarted !== undefined) {
+    conditions.push({ finesStarted: query.finesStarted })
+  }
+
+  if (query.quarantined !== undefined) {
+    conditions.push({ quarantined: query.quarantined })
+  }
+
+  if (query.overdue) {
+    conditions.push(buildCompanyOverdueWhere())
+  }
+
+  // The four "aldrei skilað" filters, AND-ed like the other flags beside them
+  // in the same control: selecting both types asks for companies that have
+  // filed NEITHER, which is the reading that makes a combination useful. Each
+  // is unconstrained by obligation on purpose — see `neverFiledReportSql`.
+  if (query.neverFiledEquality) {
+    conditions.push(literal(neverFiledReportSql(ReportTypeEnum.EQUALITY)))
+  }
+
+  if (query.neverFiledSalary) {
+    conditions.push(literal(neverFiledReportSql(ReportTypeEnum.SALARY)))
+  }
+
+  if (query.neverFiledEqualityIncludingLegacy) {
+    conditions.push(literal(neverFiledAnywhereSql(ReportTypeEnum.EQUALITY)))
+  }
+
+  if (query.neverFiledSalaryIncludingLegacy) {
+    conditions.push(literal(neverFiledAnywhereSql(ReportTypeEnum.SALARY)))
+  }
+
+  // ⚠️ Three DEFAULT-ON hides, each suppressed by an explicit request on the
+  // same axis. The admin register is a working list of who owes what, and
+  // roughly 250 companies that owe nothing, every deregistered company and
+  // every company under an admin halt crowd it out — but a default that cannot
+  // be escaped is worse than no default. `employeeCountCategory`, `status` and
+  // `quarantined` are the controls for these three axes, so setting any of them
+  // means the admin has already answered the question the default was guessing
+  // at: filtering to Óvirkt has to return óvirk companies, not an empty page.
+  //
+  // Ordered after the explicit filters purely for readability; `conditions`
+  // is AND-ed, so position carries no meaning.
+  if (!query.includeNotObliged && query.employeeCountCategory === undefined) {
+    conditions.push(literal(`NOT ${hiddenFromDefaultRegisterSql()}`))
+  }
+
+  if (!query.includeInactive && !query.status?.length) {
+    conditions.push({ status: CompanyStatusEnum.ACTIVE })
+  }
+
+  // ⚠️ `quarantined` is an admin halt on all outbound activity, not a
+  // compliance state, so a company under one is noise on a working list and is
+  // hidden by default like the other two. The escape is `includeQuarantined`
+  // (the reveal the list offers) or an explicit `quarantined`, which is still
+  // accepted by the API and is the more specific answer on the same axis:
+  // asking for quarantined companies has to return them, not an empty page.
+  if (!query.includeQuarantined && query.quarantined === undefined) {
+    conditions.push({ quarantined: false })
+  }
+
+  if (query.isatCategoryCode?.length) {
+    conditions.push(buildCompanyIsatWhere(query.isatCategoryCode))
+  }
+
+  if (query.sector?.length) {
+    conditions.push(buildCompanySectorWhere(query.sector))
+  }
+
+  const locationInclude = buildCompanyLocationInclude({
+    postcodes: query.postcode,
+    regionCodes: query.regionCode,
+  })
+
+  // Always joined — it carries the resolved ÍSAT code and description onto the
+  // DTO — and additionally narrows the rows when the section filter is
+  // active. See `buildCompanyIsatCategoryInclude`.
+  const isatCategoryInclude = buildCompanyIsatCategoryInclude(query.isatSection)
+
+  const includes = [locationInclude, isatCategoryInclude].filter(
+    (include): include is Includeable => include !== null,
+  )
+
+  const where: WhereOptions =
+    conditions.length === 0
+      ? {}
+      : conditions.length === 1
+        ? conditions[0]
+        : { [Op.and]: conditions }
+
+  return { where, includes }
 }

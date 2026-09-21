@@ -19,7 +19,7 @@ export function withDefault<T>(
   context?: string,
 ): Promise<T> {
   return promise.catch(async (error) => {
-      const err = await error.json().catch(() => null) // Try to parse error body, but ignore if it fails
+    const err = await error.json().catch(() => null) // Try to parse error body, but ignore if it fails
     if (logger && context) {
       logger.warn(`Failed to ${context}`, { error: err || error })
     }

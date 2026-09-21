@@ -73,7 +73,7 @@
       "options": {
         "commands": [
           "curl http://localhost:5100/swagger/internal/json > clientConfig.json",
-          "prettier --write clientConfig.json"
+          "yarn run -T prettier --write clientConfig.json"
         ],
         "parallel": true,
         "cwd": "apps/directorate-of-equality-web"

@@ -2,7 +2,6 @@ import { InternalServerErrorException } from '@nestjs/common'
 
 import { ICompanyService } from '../company/company.service.interface'
 import { IConfigService } from '../config/config.service.interface'
-import { IReportService } from '../report/report.service.interface'
 import { IReportCreateService } from '../report-create/report-create.service.interface'
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
 import * as salaryAnalysisLib from '../report-statistics/lib/salary-analysis'
@@ -24,7 +23,6 @@ describe('AdminReportService.analyzeSalary', () => {
 
   const service = new AdminReportService(
     {} as ICompanyService,
-    {} as IReportService,
     {} as IReportCreateService,
     { getByKey } as unknown as IConfigService,
   )

@@ -28,7 +28,13 @@ export const categoryTypeAdminRouter = router({
       return ctx.api.createCategory({ createCategoryBody: input })
     }),
   updateCategory: protectedProcedure
-    .input(z.object({ id: z.uuid(), title: z.string().optional(), slug: z.string().optional() }))
+    .input(
+      z.object({
+        id: z.uuid(),
+        title: z.string().optional(),
+        slug: z.string().optional(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       const { id, ...updateCategoryBody } = input
       return ctx.api.updateCategory({ id, updateCategoryBody })
@@ -59,7 +65,13 @@ export const categoryTypeAdminRouter = router({
       return ctx.api.createType({ createTypeBody: input })
     }),
   updateType: protectedProcedure
-    .input(z.object({ id: z.uuid(), title: z.string().optional(), slug: z.string().optional() }))
+    .input(
+      z.object({
+        id: z.uuid(),
+        title: z.string().optional(),
+        slug: z.string().optional(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       const { id, ...updateTypeBody } = input
       return ctx.api.updateType({ id, updateTypeBody })

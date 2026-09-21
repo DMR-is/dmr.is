@@ -15,7 +15,7 @@ import { IConfigService } from '../config/config.service.interface'
 import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../constants'
 import {
-  assertParsedPayloadIntegrity,
+  assertParsedPayloadValid,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
 import { resolveEqualityContent } from '../report/lib/equality-content'
@@ -23,6 +23,7 @@ import { rethrowReportWriteError } from '../report/lib/report-identifier'
 import { resolveSalaryDataBasis } from '../report/lib/salary-data-basis'
 import { computeWageGapDecomposition } from '../report/lib/wage-gap-decomposition'
 import {
+  EqualityCoverageSourceEnum,
   ReportModel,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -125,7 +126,7 @@ export class ReportCreateService implements IReportCreateService {
     // a salary report. MONTH must name its month; AVERAGE never carries one.
     const salaryDataBasis = resolveSalaryDataBasis(input)
 
-    const stepScoreByKey = assertParsedPayloadIntegrity(input.parsed)
+    const stepScoreByKey = assertParsedPayloadValid(input.parsed)
     const employeeScores = computeEmployeeScores(input.parsed, stepScoreByKey)
     const detectedOrdinals = await this.computeDetectedOutlierOrdinals(
       input,
@@ -133,9 +134,63 @@ export class ReportCreateService implements IReportCreateService {
     )
     this.assertOutlierGroupsMatchDetected(input, detectedOrdinals)
 
-    await this.finalizeService.assertEqualityReportApproved(
-      input.equalityReportId,
-    )
+    // Absent on the partner channel, whose contract omits it, and on any
+    // submission from a company whose coverage has no id to name — resolved
+    // here and NOT in `ApplicationService`, because everything in this method
+    // must run after the replay check above. Resolving while the creation input
+    // was being built made a retry of an already-filed report answer 404 once
+    // its equality report stopped being active.
+    //
+    // Skipped entirely when the caller named a report: that id is the caller's
+    // statement about what this submission was audited against, and
+    // `assertEqualityReportApproved` below is what validates it. Resolving
+    // anyway would only cost a query and risk answering with a different
+    // report than the one being filed against.
+    const coverage = input.equalityReportId
+      ? null
+      : await this.finalizeService.resolveEqualityCoverage(
+          submittingCompany.companyId,
+        )
+
+    const equalityReportId =
+      input.equalityReportId ??
+      (coverage?.source === EqualityCoverageSourceEnum.REPORT
+        ? coverage.report.id
+        : null)
+
+    if (equalityReportId) {
+      // Scoped to the parent entry of `input.companies`: a caller-named id is
+      // only accepted when that report covers the company filing this one.
+      // `getSubmittingCompany` does not check that entry against any
+      // authenticated principal — the live callers (`ApplicationService`,
+      // `AdminReportService`) build `companies[]` server-side, and this guard
+      // is only as strong as that convention.
+      await this.finalizeService.assertEqualityReportApproved(
+        equalityReportId,
+        submittingCompany.companyId,
+      )
+    }
+
+    // Null `equality_report_id` used to be unrepresentable on a salary report.
+    // It now means exactly one thing, and the row says which rather than
+    // leaving it to be inferred: the company was covered by an unexpired
+    // certificate on the retired register, which mints no `report` row to link
+    // (see `LegacyReportModel`). The certificate's stated expiry is copied onto
+    // the row because `legacy_report` is replaced wholesale by the next
+    // register load, and this audit trail has to outlive it.
+    // Read off the coverage, NOT inferred from `!equalityReportId`. The two
+    // cannot disagree today — `resolveEqualityCoverage` throws rather than
+    // answering null, so a null id means LEGACY and nothing else — but that is
+    // an invariant held one call away, and inferring the basis from a null FK
+    // is the exact reading `EqualityCoverage` documents as the thing not to do.
+    // Null coverage means the caller named a report, which is REPORT by
+    // definition.
+    const equalitySource = coverage?.source ?? EqualityCoverageSourceEnum.REPORT
+
+    const equalityLegacyValidUntil =
+      coverage?.source === EqualityCoverageSourceEnum.LEGACY
+        ? coverage.legacyValidUntil
+        : null
 
     const withdrawnReportIds =
       await this.finalizeService.withdrawInflightSibling(
@@ -157,7 +212,9 @@ export class ReportCreateService implements IReportCreateService {
     const report = await this.createReportRow({
       type: ReportTypeEnum.SALARY,
       status: initialStatus,
-      equalityReportId: input.equalityReportId,
+      equalityReportId,
+      equalitySource,
+      equalityLegacyValidUntil,
       identifier: await this.reportIdentifierService.allocate(),
       importedFromExcel: input.importedFromExcel,
       providerType: input.providerType,
@@ -281,7 +338,7 @@ export class ReportCreateService implements IReportCreateService {
       report.id,
     )
 
-    return { reportId: report.id }
+    return { reportId: report.id, replayed: false }
   }
 
   /**
@@ -359,7 +416,7 @@ export class ReportCreateService implements IReportCreateService {
       report.id,
     )
 
-    return { reportId: report.id }
+    return { reportId: report.id, replayed: false }
   }
 
   /**
@@ -428,7 +485,7 @@ export class ReportCreateService implements IReportCreateService {
       providerId,
     })
 
-    return { reportId: existing.id }
+    return { reportId: existing.id, replayed: true }
   }
 
   private getSubmittingCompany(
@@ -542,14 +599,18 @@ export class ReportCreateService implements IReportCreateService {
     const extras = [...submittedOrdinals].filter((o) => !detectedSet.has(o))
     if (extras.length > 0) {
       throw new BadRequestException(
-        `Outlier group(s) reference non-outlier employee ordinal(s): ${extras.join(', ')}`,
+        `Outlier group(s) reference non-outlier employee ordinal(s): ${extras.join(
+          ', ',
+        )}`,
       )
     }
 
     const missing = [...detectedSet].filter((o) => !submittedOrdinals.has(o))
     if (missing.length > 0) {
       throw new BadRequestException(
-        `Detected outlier(s) missing from the outlier groups for employee ordinal(s): ${missing.join(', ')}`,
+        `Detected outlier(s) missing from the outlier groups for employee ordinal(s): ${missing.join(
+          ', ',
+        )}`,
       )
     }
   }

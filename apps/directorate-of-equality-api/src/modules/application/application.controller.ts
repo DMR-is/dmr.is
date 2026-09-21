@@ -188,7 +188,7 @@ export class ApplicationController {
     operationId: 'getApplicationActiveEqualityReport',
     include404: true,
     description:
-      "Returns the resolved company's currently-APPROVED equality report (if any). The application portal references the returned `id` as `equalityReportId` when submitting a salary report, and passes the returned `providerId` to `GET /application/reports/:providerId` to read the report itself. Neither `id` nor `identifier` is a lookup handle here: `id` only resolves against the admin-only `GET /reports/:id`, and `identifier` is a human-facing display code.",
+      "Returns whatever currently meets the resolved company's equality obligation, and **`source` says which of the two it is**. `REPORT` is an APPROVED, in-force equality report filed here: the portal references the returned `id` as `equalityReportId` when submitting a salary report, and passes `providerId` to `GET /application/reports/:providerId` to read the report itself. `LEGACY` is an unexpired certificate from the Directorate's retired register — it has no report row behind it, so `id`, `identifier`, `providerId` and `approvedAt` are all null and only `validUntil` is populated; the portal omits `equalityReportId` on submission and the server records the legacy basis on the report. Branch on `source`, not on a null `id`. Neither `id` nor `identifier` is a lookup handle here: `id` only resolves against the admin-only `GET /reports/:id`, and `identifier` is a human-facing display code. A **404** means neither kind of coverage is in force.",
     type: EqualityReportSummaryDto,
   })
   async getActiveEqualityReport(
@@ -201,7 +201,7 @@ export class ApplicationController {
   @DoeResponse({
     operationId: 'getApplicationSalaryReportEligibility',
     description:
-      'Pre-flight check of whether the resolved company may submit a salary report right now, with a machine-readable `reason` when blocked so the application portal can gate entry into the flow. Two preconditions are checked: (1) the company must have an APPROVED, in-force equality report (`MISSING_EQUALITY_REPORT`, checked first — a salary report must reference one); and (2) the 3-year renewal window must be open, i.e. the current report is due in 6 months or less (`RENEWAL_WINDOW_NOT_OPEN`). The renewal rule is also enforced as a 409 on `POST reports/salary`, and the equality precondition as a 404.',
+      'Pre-flight check of whether the resolved company may submit a salary report right now, with a machine-readable `reason` when blocked so the application portal can gate entry into the flow. Two preconditions are checked: (1) the company’s equality obligation must be met (`MISSING_EQUALITY_REPORT`, checked first) — by an APPROVED, in-force equality report filed here **or** by an unexpired certificate from the Directorate’s retired register, the same two the admin register counts and the same answer `GET reports/equality/active` gives; and (2) the 3-year renewal window must be open, i.e. the current report is due in 6 months or less (`RENEWAL_WINDOW_NOT_OPEN`). The renewal rule is also enforced as a 409 on `POST reports/salary` (in the production environment only), and the equality precondition as a 404.',
     type: SalaryReportEligibilityDto,
   })
   async getSalaryReportEligibility(
@@ -216,6 +216,9 @@ export class ApplicationController {
     operationId: 'submitApplicationSalaryReport',
     status: 201,
     include404: true,
+    include409: true,
+    description:
+      'Files a salary report for the resolved company.\n\n404 when the company has no equality coverage to file against — neither an APPROVED, in-force equality report nor an unexpired certificate on the retired register (`GET reports/salary/eligibility` reports the same as `MISSING_EQUALITY_REPORT`).\n\n409 on three distinct refusals: (1) the 3-year renewal window is not open yet, i.e. the current report is due more than 6 months out — the same rule `GET reports/salary/eligibility` reports as `RENEWAL_WINDOW_NOT_OPEN`, and enforced here in the production environment only; (2) the company already has a SALARY report in IN_REVIEW or POSTPONED, which a reviewer is mid-workflow on (a merely SUBMITTED predecessor is withdrawn silently instead, and does not 409); (3) the `(providerType, providerId)` tuple is already registered to a different company, or to a report of the other type. The three are not distinguished in the response body today; the reason is in `message`.',
     type: CreateReportResponseDto,
   })
   async submitSalary(
@@ -314,10 +317,8 @@ export class ApplicationController {
     @Param('providerId') providerId: string,
     @CurrentCompany() company: CompanyDto,
   ): Promise<StreamableFile> {
-    const { pdf, fileName } = await this.applicationService.getEqualityContentPdf(
-      providerId,
-      company,
-    )
+    const { pdf, fileName } =
+      await this.applicationService.getEqualityContentPdf(providerId, company)
 
     return new StreamableFile(pdf, {
       type: 'application/pdf',

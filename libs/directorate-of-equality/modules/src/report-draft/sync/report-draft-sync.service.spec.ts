@@ -383,9 +383,10 @@ describe('ReportDraftSyncService', () => {
       // The snapshot has to precede every write: removeStep destroys the join
       // rows, and a folded stepIds would clear them even earlier.
       expect(order).toEqual(['snapshot', 'updateStep', 'removeStep', 'clamp'])
-      expect(
-        assignment.snapshotAssignmentsForSteps,
-      ).toHaveBeenCalledWith(REPORT, ['step-5'])
+      expect(assignment.snapshotAssignmentsForSteps).toHaveBeenCalledWith(
+        REPORT,
+        ['step-5'],
+      )
       expect(assignment.clampOrphanedAssignments).toHaveBeenCalledWith(REPORT, [
         roleSnapshot,
       ])

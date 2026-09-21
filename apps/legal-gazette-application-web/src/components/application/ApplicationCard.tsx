@@ -12,10 +12,7 @@ import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { formatDate } from '@dmr.is/utils-shared/format/date'
 
-import {
-  ApplicationStatusEnum,
-  ApplicationTypeEnum,
-} from '../../gen/fetch'
+import { ApplicationStatusEnum, ApplicationTypeEnum } from '../../gen/fetch'
 import { PageRoutes } from '../../lib/constants'
 import { ApplicationListItem } from '../../lib/trpc/types'
 import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'

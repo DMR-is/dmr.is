@@ -13,7 +13,8 @@ const buildIslandIsApplicationUrl = (report: ReportModel): string | null => {
     return null
   }
 
-  const reportTypeUrl = report.type === 'SALARY' ? 'skyrslugjof' : 'jafnrettisaaetlun'
+  const reportTypeUrl =
+    report.type === 'SALARY' ? 'skyrslugjof' : 'jafnrettisaaetlun'
 
   return `https://island.is/umsoknir/jafnrettisstofa-${reportTypeUrl}/${encodeURIComponent(
     report.providerId,
@@ -49,8 +50,26 @@ const responseInstruction = (report: ReportModel): string => {
   return 'Til að svara athugasemdinni þarf að hafa samband við Jafnréttisstofu.'
 }
 
+/**
+ * What to call the thing the comment is attached to.
+ *
+ * ⚠️ Both mails used to say "jafnréttisskýrsla" whatever the report was, which
+ * is wrong in both directions: a salary filing is not a jafnréttisskýrsla, and
+ * an equality submission is not a skýrsla at all — it is the company's
+ * jafnréttisáætlun, the same word `typeLabels.EQUALITY` and the auto-review
+ * reason use. An employer reading "athugasemd á jafnréttisskýrslu" about their
+ * launagreining has to guess which of their two open cases it means.
+ *
+ * Dative, because all three call sites read "á <noun>".
+ *
+ * The reminder template names the same report kinds in the genitive after
+ * "skilafrestur" and "Skiladagur"; its inflected labels cannot be reused here.
+ */
+const reportNoun = (report: ReportModel): string =>
+  report.type === 'SALARY' ? 'jafnlaunaskýrslu' : 'jafnréttisáætlun'
+
 export const buildExternalCommentSubject = (report: ReportModel): string =>
-  `Ný athugasemd á jafnréttisskýrslu ${report.id}`
+  `Ný athugasemd á ${reportNoun(report)} ${report.id}`
 
 export const buildExternalCommentHtml = (
   report: ReportModel,
@@ -61,7 +80,7 @@ export const buildExternalCommentHtml = (
 
   return [
     '<h2>Ný athugasemd hefur borist frá Jafnréttisstofu</h2>',
-    `<p>Athugasemd hefur verið skráð á jafnréttisskýrslu fyrirtækisins.</p>`,
+    `<p>Athugasemd hefur verið skráð á ${reportNoun(report)} fyrirtækisins.</p>`,
     '<blockquote style="border-left:3px solid #ccc;padding-left:12px;margin:16px 0;">',
     safeBody,
     '</blockquote>',
@@ -79,7 +98,9 @@ export const buildExternalCommentText = (
   const applicationUrl = buildIslandIsApplicationUrl(report)
 
   return [
-    'Ný athugasemd hefur borist frá Jafnréttisstofu á jafnréttisskýrslu fyrirtækisins.',
+    `Ný athugasemd hefur borist frá Jafnréttisstofu á ${reportNoun(
+      report,
+    )} fyrirtækisins.`,
     '',
     comment.body,
     '',

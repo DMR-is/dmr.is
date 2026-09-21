@@ -107,15 +107,21 @@ describe('report-employee salary derivation', () => {
 
     it('leaves reglulegt tímakaup unmoved by aukagreiðslur', () => {
       const paidHours = 173.33
+      // Hoisted rather than inlined, as in the sibling assertion above: the
+      // incidental keys are deliberately NOT members of RegularWageComponents,
+      // and that they are surplus to it is the whole point here. A fresh
+      // object literal would be rejected by excess-property checking for
+      // saying exactly what the test means to say.
+      const withIncidentalPay = {
+        ...fixed,
+        paidHours,
+        bonusOccasionalOvertime: 300000,
+        bonusOccasionalCarAllowance: 40000,
+        bonusOther: 90000,
+      }
 
       expect(parsedRegularHourlyWage({ ...fixed, paidHours })).toBe(
-        parsedRegularHourlyWage({
-          ...fixed,
-          paidHours,
-          bonusOccasionalOvertime: 300000,
-          bonusOccasionalCarAllowance: 40000,
-          bonusOther: 90000,
-        }),
+        parsedRegularHourlyWage(withIncidentalPay),
       )
     })
   })

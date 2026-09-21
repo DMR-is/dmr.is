@@ -1,36 +1,36 @@
-import { Op, QueryTypes } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize'
 
-import { DB_LawChapter } from '../models';
-import { LawChapter, LawChapterSlug, LawChapterTree } from '../routes/types';
-import { db } from '../utils/sequelize';
+import { DB_LawChapter } from '../models'
+import { LawChapter, LawChapterSlug, LawChapterTree } from '../routes/types'
+import { db } from '../utils/sequelize'
 
 export async function getLawChapterTree(): Promise<LawChapterTree> {
-  const chapters = await DB_LawChapter.findAll({ order: [['slug', 'ASC']] });
+  const chapters = await DB_LawChapter.findAll({ order: [['slug', 'ASC']] })
 
   const parents: {
     [key: string]: LawChapter & {
-      subChapters: Array<LawChapter>;
-    };
-  } = {};
+      subChapters: Array<LawChapter>
+    }
+  } = {}
 
   chapters.forEach((chapter) => {
-    const { parentId, title, slug } = chapter;
-    const parentChapter = parentId && parents[parentId];
+    const { parentId, title, slug } = chapter
+    const parentChapter = parentId && parents[parentId]
     if (parentChapter) {
       parentChapter.subChapters.push({
         name: title,
         slug,
-      });
+      })
     } else {
       parents[chapter.id] = {
         name: title,
         slug,
         subChapters: [],
-      };
+      }
     }
-  });
+  })
 
-  return Object.values(parents);
+  return Object.values(parents)
 }
 
 export async function getLawChapterList(
@@ -43,19 +43,19 @@ export async function getLawChapterList(
         }
       : undefined,
     order: [['slug', 'ASC']],
-  });
+  })
 
-  let lastParent = '';
+  let lastParent = ''
   return rawLawChapters.map(({ title, slug, parentId }): LawChapter => {
     if (!parentId) {
-      lastParent = title;
+      lastParent = title
     }
 
     return {
       name: !parentId ? title : lastParent + ' - ' + title,
       slug,
-    };
-  });
+    }
+  })
 }
 
 export async function getRegulationLawChapters(
@@ -63,7 +63,7 @@ export async function getRegulationLawChapters(
 ): Promise<Array<LawChapter>> {
   const rawLawChapters = await db.query<
     Pick<DB_LawChapter, 'title' | 'slug'> & {
-      parentTitle: DB_LawChapter['title'];
+      parentTitle: DB_LawChapter['title']
     }
   >(
     `
@@ -77,12 +77,12 @@ export async function getRegulationLawChapters(
       replacements: { regulationId },
       type: QueryTypes.SELECT,
     },
-  );
+  )
 
   return rawLawChapters.map(
     ({ title, slug, parentTitle }): LawChapter => ({
       name: parentTitle ? parentTitle + ' — ' + title : title,
       slug,
     }),
-  );
+  )
 }

@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `src/models.md`.
 import {
   BelongsTo,
   Column,
@@ -8,7 +9,9 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import type { AdvertCategoryModel as AdvertCategoryModelRef } from '../../journal/models/advert-category.model'
 import { AdvertCategoryModel } from '../../journal/models/advert-category.model'
+import type { CaseModel as CaseModelRef } from './case.model'
 import { CaseModel } from './case.model'
 
 @Table({ tableName: 'case_categories', timestamps: false })
@@ -32,8 +35,8 @@ export class CaseCategoriesModel extends Model {
   categoryId!: string
 
   @BelongsTo(() => CaseModel)
-  case?: CaseModel
+  case?: CaseModelRef
 
   @BelongsTo(() => AdvertCategoryModel)
-  category?: AdvertCategoryModel
+  category?: AdvertCategoryModelRef
 }

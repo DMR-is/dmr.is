@@ -7,9 +7,8 @@ export function getForeclosureTemplate({
   foreclosure,
   publicationNumber,
 }: ForeclosureTemplateProps): string {
-  const [formattedForeclosureDate, _eeee, formattedForeclosureTime] = parseAndFormatDate(
-    foreclosure?.foreclosureDate,
-  )
+  const [formattedForeclosureDate, _eeee, formattedForeclosureTime] =
+    parseAndFormatDate(foreclosure?.foreclosureDate)
 
   const intro = getElement({
     text: `Eftirtalin beiðni um nauðungarsölu til fullnustu kröfu um peningagreiðslu verður tekin fyrir á skrifstofu embættisins ${foreclosure?.foreclosureAddress},

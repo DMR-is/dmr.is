@@ -7,7 +7,6 @@ import {
 import { ReportResourceContext } from '@dmr.is/doe-modules/report'
 import { getLogger } from '@dmr.is/logging'
 
-
 export const CurrentReportResourceContext = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): ReportResourceContext => {
     const request = ctx.switchToHttp().getRequest()

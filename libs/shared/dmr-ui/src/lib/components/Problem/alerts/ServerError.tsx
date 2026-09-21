@@ -11,5 +11,11 @@ export const ServerError = ({
   title = problemMessages.alerts.serverError.title,
   message = problemMessages.alerts.serverError.message,
 }: ServerErrorProps) => {
-  return <AlertMessage type={mapProblemTypeToAlertMessageType('no-data')} title={title} message={message} />
+  return (
+    <AlertMessage
+      type={mapProblemTypeToAlertMessageType('no-data')}
+      title={title}
+      message={message}
+    />
+  )
 }

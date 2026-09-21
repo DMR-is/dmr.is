@@ -202,14 +202,21 @@ export function legacyCertificationExpiringSql(interval: string): string {
  * displayed `reportStatus` column and the list status filter so the two can
  * never disagree.
  *
- * ⚠️ This is deliberately *wider* than the application portal's own gate.
- * `getSalaryReportEligibility` still demands a real `report` row, because a
- * salary report references its equality report by id (`equalityReportId`) and a
- * legacy certificate has no id to give. So a legacy-certified company reads
- * SATISFACTORY here while the portal still answers MISSING_EQUALITY_REPORT if
- * it tries to file a salary report. That divergence is intended: this column
- * answers "is this company in compliance", the portal answers "can this
- * submission be built" — and the second needs a row the first does not.
+ * ⚠️ This used to be *wider* than the application portal's own gate, which
+ * demanded a real `report` row because a salary report references its equality
+ * report by id and a legacy certificate has none to give. A legacy-certified
+ * company therefore read SATISFACTORY here while the portal answered
+ * MISSING_EQUALITY_REPORT and let it file nothing — a divergence that was
+ * documented as intended right up until someone tried to use the portal from
+ * one of those ~540 companies. The portal now answers from
+ * `resolveEqualityCoverage`, which applies the same two rules this does, and a
+ * salary report filed on legacy coverage records that in `equality_source`
+ * instead of an id.
+ *
+ * The two still differ in expression — SQL here, because this decorates a list
+ * query; a pair of model reads there — so a change to what counts as coverage
+ * has to be made in both. `equality_valid_until >= CURRENT_DATE` and
+ * `legacyValidUntilToDate` are the two halves of that one rule.
  */
 function reportCovered(type: ReportTypeEnum): string {
   return `(${activeReportExists(type)} OR ${activeLegacyCertificationExists(
@@ -330,14 +337,14 @@ export function salaryReportMissingSql(): string {
 export function companyReportStatusCaseSql(): string {
   return `(CASE
     WHEN ${equalityReportMissingSql()} THEN '${
-    CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
-  }'
+      CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
+    }'
     WHEN ${actionPlanMissingSql()} THEN '${
-    CompanyReportStatusEnum.MISSING_ACTION_PLAN
-  }'
+      CompanyReportStatusEnum.MISSING_ACTION_PLAN
+    }'
     WHEN ${salaryReportMissingSql()} THEN '${
-    CompanyReportStatusEnum.MISSING_SALARY_REPORT
-  }'
+      CompanyReportStatusEnum.MISSING_SALARY_REPORT
+    }'
     ELSE '${CompanyReportStatusEnum.SATISFACTORY}'
   END)`
 }
@@ -356,11 +363,11 @@ export function companyReportStatusLiteral() {
 export function equalityObligationStatusCaseSql(): string {
   return `(CASE
     WHEN NOT ${equalityRequiredSql} THEN '${
-    CompanyObligationStatusEnum.NOT_REQUIRED
-  }'
+      CompanyObligationStatusEnum.NOT_REQUIRED
+    }'
     WHEN ${equalityReportMissingSql()} THEN '${
-    CompanyObligationStatusEnum.MISSING
-  }'
+      CompanyObligationStatusEnum.MISSING
+    }'
     ELSE '${CompanyObligationStatusEnum.COVERED}'
   END)`
 }
@@ -390,14 +397,14 @@ export function equalityObligationStatusCaseSql(): string {
 export function salaryObligationStatusCaseSql(): string {
   return `(CASE
     WHEN ${actionPlanMissingSql()} THEN '${
-    CompanyObligationStatusEnum.ACTION_PLAN_MISSING
-  }'
+      CompanyObligationStatusEnum.ACTION_PLAN_MISSING
+    }'
     WHEN NOT ${salaryRequiredSql} THEN '${
-    CompanyObligationStatusEnum.NOT_REQUIRED
-  }'
+      CompanyObligationStatusEnum.NOT_REQUIRED
+    }'
     WHEN ${salaryReportMissingSql()} THEN '${
-    CompanyObligationStatusEnum.MISSING
-  }'
+      CompanyObligationStatusEnum.MISSING
+    }'
     ELSE '${CompanyObligationStatusEnum.COVERED}'
   END)`
 }
@@ -497,4 +504,60 @@ export function companyHasLegacyReportsSql(): string {
 
 export function companyHasLegacyReportsLiteral() {
   return literal(companyHasLegacyReportsSql())
+}
+
+/**
+ * SQL boolean: the company has never filed a report of this type *in this
+ * system* — no `report` row of that type beyond an unsubmitted draft.
+ *
+ * ⚠️ Carries NO obligation gate, unlike every predicate above it. That is the
+ * point of the filter it backs: it answers "has this company ever sent us
+ * anything", which is a question about history and not about what the company
+ * owes. A 0–24 company that never filed is a true match here, and the register's
+ * default hide — not this predicate — is what keeps it off an unfiltered page.
+ *
+ * ⚠️ DRAFT is excluded, WITHDRAWN is not. A draft is a form the company opened
+ * and never sent, so counting it as filing would let a company clear this filter
+ * without the Directorate ever having received anything; a withdrawn report was
+ * genuinely submitted and then taken back, which is history, not absence.
+ */
+export function neverFiledReportSql(type: ReportTypeEnum): string {
+  return `NOT EXISTS (
+    SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" cr
+    JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
+    WHERE cr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+    AND r.type = '${type}'
+    AND r.status <> '${ReportStatusEnum.DRAFT}'
+  )`
+}
+
+/**
+ * SQL boolean: the company has never filed a report of this type here AND the
+ * retired SharePoint register holds no certification of that type for it
+ * either — "has never appeared in the register at all".
+ *
+ * The companion to `neverFiledReportSql`, and the reason both exist rather than
+ * one: at hand-over 1 507 of 1 753 companies hold no `report` row whatsoever,
+ * so the in-system question alone returns very nearly the whole list and tells
+ * an admin almost nothing. This one returns the companies the Directorate has
+ * genuinely never heard from. Which of the two is wanted depends on the
+ * question being asked, so the list offers both rather than picking.
+ *
+ * ⚠️ Presence of a date, not validity of one. A certification that has since
+ * expired — or was surrendered, which `activeLegacyCertificationExists` rejects
+ * through `LEGACY_NOT_SURRENDERED` — was still filed, and this asks whether the
+ * company ever filed. Applying the surrender guard here would count those 20
+ * companies as never having certified, which is the opposite of what the sheet
+ * records about them.
+ *
+ * The type-specific column is what carries the claim: nearly every company has
+ * a `legacy_report` row, but only ~540 of them have an
+ * `equality_valid_until`, so `EXISTS(row)` would be no filter at all.
+ */
+export function neverFiledAnywhereSql(type: ReportTypeEnum): string {
+  return `(${neverFiledReportSql(type)} AND NOT EXISTS (
+    SELECT 1 FROM "${DoeModels.LEGACY_REPORT}" lr
+    WHERE lr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+    AND lr.${LEGACY_VALID_UNTIL_COLUMN[type]} IS NOT NULL
+  ))`
 }

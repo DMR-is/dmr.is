@@ -1,3 +1,4 @@
+import { padToSemanticValidity } from '../../report/lib/parsed-payload.testing'
 import {
   computeWageGapDecomposition,
   PayStatusEnum,
@@ -68,8 +69,13 @@ describe('analyzeSalaryPayload', () => {
         ...row,
         paidHours: Number(row.paidHours.toFixed(2)),
         baseSalary: Number(row.baseSalary.toFixed(2)),
+        // `== null`, not `=== null`: the field is optional on
+        // `ParsedEmployeeDto` (`@ApiOptionalNumber`), so a client that omits
+        // the key sends `undefined` — which Postgres stores and returns as
+        // NULL, exactly what this mapping is simulating. `nullableToStored`
+        // makes the same distinction on the production path.
         additionalFixedOvertime:
-          row.additionalFixedOvertime === null
+          row.additionalFixedOvertime == null
             ? null
             : Number(row.additionalFixedOvertime.toFixed(2)),
       }))
@@ -261,7 +267,10 @@ function expectedHourlyWageFor(
  * MAX_PERSONAL_CRITERIA cap.
  */
 function makeMixedPayload(): ParsedReportDto {
-  return {
+  // Padded to semantic validity, score-neutrally. The scoring here is already
+  // role-owned, which is the shape the domain asks for; what the fixture
+  // lacked was the other three mandatory criteria and the weight totals.
+  return padToSemanticValidity({
     criteria: [
       {
         type: ReportCriterionTypeEnum.RESPONSIBILITY,
@@ -313,7 +322,7 @@ function makeMixedPayload(): ParsedReportDto {
       makeEmployee(7, GenderEnum.FEMALE, 'Clerk', 600_000),
       makeEmployee(8, GenderEnum.FEMALE, 'Clerk', 592_000),
     ],
-  }
+  })
 }
 
 function makeEmployee(

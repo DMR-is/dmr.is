@@ -9,8 +9,10 @@ import {
   CommentVisibilityEnum,
   ReportEventTypeEnum,
   ReportTimelineItemKindEnum,
+  ReportTypeEnum,
 } from '../../../../../gen/fetch'
 import { reportText, sharedText } from '../../../../../lib/text'
+import { CompanyEmailDetail } from '../../../../company/company-timeline/CompanyEmailDetail'
 import { TimelineEntryIcon } from './TimelineEntryIcon'
 import {
   formatRelativeDate,
@@ -24,6 +26,12 @@ type Props = {
   item: TimelineItem
   companyName?: string | null
   currentUserId?: string | null
+  /**
+   * The type of the report this timeline belongs to, which decides whether an
+   * entry calls the submission a "skjal" or a "skýrsla". Absent on the company
+   * timeline, which has no single report — see `forReportType`.
+   */
+  reportType?: ReportTypeEnum | null
   onDelete: (commentId: string) => void
 }
 
@@ -31,10 +39,11 @@ export function TimelineEntry({
   item,
   companyName,
   currentUserId,
+  reportType,
   onDelete,
 }: Props) {
   const kind = timelineEntryKind(item)
-  const text = timelineEntryText(item, companyName)
+  const text = timelineEntryText(item, companyName, reportType)
   const date = formatRelativeDate(
     item.comment?.createdAt ?? item.event?.createdAt ?? '',
   )
@@ -87,6 +96,14 @@ export function TimelineEntry({
           <Box paddingRight={6}>
             <Text marginTop={1}>{bodyContent}</Text>
           </Box>
+        )}
+
+        {/*
+          Only CUSTOM_EMAIL_* company events carry this. The body above shows
+          the subject; this is how a reader gets to what was actually sent.
+        */}
+        {item.event?.companyEmailId && (
+          <CompanyEmailDetail companyEmailId={item.event.companyEmailId} />
         )}
 
         {isExternal && (

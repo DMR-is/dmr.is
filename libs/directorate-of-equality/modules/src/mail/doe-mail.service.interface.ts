@@ -63,6 +63,30 @@ export interface IDoeMailService {
     to: string,
     input: ReportDeadlineReminderInput,
   ): Promise<void>
+
+  /**
+   * Sends one admin-authored message to one address.
+   *
+   * Routed through `IDoeMailService` rather than SES directly so a custom mail
+   * arrives from the same `Jafnréttisstofa <…>` sender as the approval notice.
+   *
+   * `bodyHtml` must already be sanitised — the caller stores the body it
+   * previews and sends, and sanitising in both places is how the stored and
+   * delivered copies start to differ.
+   *
+   * Returns the outcome and never throws for a send failure, unlike the report
+   * notices: this failure has somewhere to go — one recipient row, which records
+   * the error and lets the rest of the batch continue.
+   */
+  sendCustomEmail(
+    to: string,
+    subject: string,
+    bodyHtml: string,
+    attachments?: ReportMailAttachment[],
+  ): Promise<CustomEmailSendResult>
 }
+
+/** Outcome of one custom-email send. `error` is for the recipient row, not the reader. */
+export type CustomEmailSendResult = { ok: true } | { ok: false; error: string }
 
 export const IDoeMailService = Symbol('IDoeMailService')

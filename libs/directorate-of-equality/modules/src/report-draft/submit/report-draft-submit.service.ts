@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-} from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -12,7 +8,11 @@ import { CompanyDto } from '../../company/dto/company.dto'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../../constants'
 import { rethrowReportWriteError } from '../../report/lib/report-identifier'
 import { resolveSalaryDataBasis } from '../../report/lib/salary-data-basis'
-import { ReportStatusEnum, ReportTypeEnum } from '../../report/models/report.model'
+import {
+  EqualityCoverageSourceEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from '../../report/models/report.model'
 import { CreateReportCompanySnapshotDto } from '../../report-create/dto/create-report.dto'
 import { CreateReportResponseDto } from '../../report-create/dto/create-report-response.dto'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
@@ -63,11 +63,20 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
     )
     const isSalary = report.type === ReportTypeEnum.SALARY
 
-    if (isSalary && !input.equalityReportId) {
-      throw new BadRequestException(
-        'equalityReportId is required to submit a salary report',
-      )
-    }
+    /*
+     * Omitting `equalityReportId` on a salary draft used to be a 400. It is now
+     * an instruction to resolve the coverage server-side, exactly as the two
+     * other submit paths do — and it has to be, because a company covered by an
+     * unexpired certificate from the retired register has no id to send. Those
+     * ~540 companies could not submit through this route at all: the field they
+     * were told was required names a `report` row the register load never
+     * created for them. `resolveEqualityCoverage` 404s when nothing covers the
+     * company, which is the honest refusal the 400 was standing in for.
+     */
+    const coverage =
+      isSalary && !input.equalityReportId
+        ? await this.finalizeService.resolveEqualityCoverage(company.id)
+        : null
 
     // Outliers are a salary-only concept, so the flag has no meaning on an
     // equality report. Rejecting rather than ignoring: a portal that sends it
@@ -90,21 +99,48 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
     // authenticated company and resolve subsidiaries.
     const companies = await this.buildCompanySnapshots(input, company)
 
-    if (isSalary && input.equalityReportId) {
+    const equalityReportId = isSalary
+      ? (input.equalityReportId ??
+        (coverage?.source === EqualityCoverageSourceEnum.REPORT
+          ? coverage.report.id
+          : null))
+      : null
+
+    if (equalityReportId) {
+      // `company` is the authenticated submitter, resolved by `findOwnedDraft`,
+      // so an applicant cannot cite another company's equality plan.
       await this.finalizeService.assertEqualityReportApproved(
-        input.equalityReportId,
+        equalityReportId,
+        company.id,
       )
     }
+
+    // Read off the coverage rather than inferred from `!equalityReportId`, so
+    // the basis and the date below come from one fact — see the CHECK in
+    // m-20260916, which constrains the three columns together and would reject
+    // any row where the two derivations drifted. Coverage is only resolved for
+    // a salary report that named none, so an equality draft and a caller-named
+    // report both fall to REPORT, which is what each of them is.
+    const equalitySource = coverage?.source ?? EqualityCoverageSourceEnum.REPORT
+
+    const equalityLegacyValidUntil =
+      coverage?.source === EqualityCoverageSourceEnum.LEGACY
+        ? coverage.legacyValidUntil
+        : null
 
     // Retire any still-SUBMITTED sibling of the same type before this one takes
     // its place (409s if a sibling is IN_REVIEW/POSTPONED). The draft has no
     // company_report yet, so it is not seen as its own sibling.
-    const withdrawnReportIds = await this.finalizeService.withdrawInflightSibling(
-      company.id,
-      report.type,
-    )
+    const withdrawnReportIds =
+      await this.finalizeService.withdrawInflightSibling(
+        company.id,
+        report.type,
+      )
 
-    await this.finalizeService.createCompanyReportSnapshots(report.id, companies)
+    await this.finalizeService.createCompanyReportSnapshots(
+      report.id,
+      companies,
+    )
 
     let status = ReportStatusEnum.SUBMITTED
     if (isSalary) {
@@ -126,7 +162,9 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
         // DRAFT is invisible to reviewers until this point. Drafts are also
         // reaped, so codes handed out earlier would be spent on nothing.
         identifier: await this.reportIdentifierService.allocate(),
-        equalityReportId: input.equalityReportId ?? null,
+        equalityReportId,
+        equalitySource,
+        equalityLegacyValidUntil,
         ...(salaryDataBasis ?? {}),
       })
     } catch (error) {
@@ -137,14 +175,17 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
 
     await this.finalizeService.emitSubmittedEvent(report.id, status, company.id)
     await this.finalizeService.recordAutoReview(report.id, status, company.id)
-    await this.finalizeService.emitWithdrawnEvents(withdrawnReportIds, report.id)
+    await this.finalizeService.emitWithdrawnEvents(
+      withdrawnReportIds,
+      report.id,
+    )
 
     this.logger.info(`Submitted draft report "${report.id}" as ${status}`, {
       context: LOGGING_CONTEXT,
       reportId: report.id,
     })
 
-    return { reportId: report.id }
+    return { reportId: report.id, replayed: false }
   }
 
   /**

@@ -34,7 +34,10 @@ export type UserCreateAttributes = {
     ['lastName', 'ASC'],
   ],
 }))
-export class UserModel extends ParanoidModel<UserAttributes, UserCreateAttributes> {
+export class UserModel extends ParanoidModel<
+  UserAttributes,
+  UserCreateAttributes
+> {
   @Column({
     type: DataType.TEXT,
     field: 'national_id',

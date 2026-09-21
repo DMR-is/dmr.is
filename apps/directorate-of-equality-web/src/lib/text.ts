@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react'
+
 export const frontPageText = {
   heroTitle: 'Ritstjórn Jafnréttisstofu',
   heroImageAlt: 'Ritstjórn Jafnréttisstofu',
   heroDescription:
-    'Hér má finna jafnréttisáætlanir og skýrslur um kynjabundinn launamun, ásamt úrbótaáætlunum.',
+    'Hér má finna jafnréttisáætlanir og skýrslur um kynbundinn launamun, ásamt úrbótaáætlunum.',
   heildarlisti: {
     description:
       'Yfirlit yfir innsendingar sem eru óúthlutaðar og ekki í vinnslu',
@@ -46,7 +48,7 @@ export const frontPageText = {
 export const overviewText = {
   heroTitle: 'Vinnslusvæði',
   heroDescription:
-    'Hér má finna yfirlit yfir allar innsendar jafnréttisáætlanir og skýrslur um kynjabundinn launamun, ásamt úrbótaáætlunum.',
+    'Hér má finna yfirlit yfir allar innsendar jafnréttisáætlanir og skýrslur um kynbundinn launamun, ásamt úrbótaáætlunum.',
   imageAlt: 'Innsendingar',
   breadcrumbOverview: 'Yfirlit',
   tabInnsendingar: 'Innsendingar',
@@ -98,11 +100,11 @@ export const overviewText = {
     pdfReadError: 'Ekki tókst að lesa skrána. Prófaðu aftur.',
   },
   createSalaryReport: {
-    drawerLabel: 'Skrá launagreiningu',
+    drawerLabel: 'Skrá skýrslugjöf',
     buttonLabel: 'Skýrslugjöf',
-    heading: 'Ný launagreining',
+    heading: 'Ný skýrslugjöf',
     excelHeading: 'Excel innflutningur',
-    excelPlaceholder: 'Veldu Excel skrá til að flytja inn launagreiningargögn',
+    excelPlaceholder: 'Veldu Excel skrá til að flytja inn gögnin',
     switchFile: 'Skipta um skrá',
     chooseFile: 'Velja skrá',
     downloadTemplate: 'Sækja sniðmát',
@@ -205,11 +207,11 @@ export const overviewText = {
     },
     missingEqualityTitle: 'Samþykkta jafnréttisáætlun vantar',
     missingEqualityMessage:
-      'Ekki er hægt að senda inn launagreiningu fyrir þetta fyrirtæki fyrr en það er með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun fyrst.',
+      'Ekki er hægt að senda inn skýrslugjöf fyrir þetta fyrirtæki fyrr en það er með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun fyrst.',
     missingEqualityToast:
-      'Fyrirtækið er ekki með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun áður en launagreining er send inn.',
+      'Fyrirtækið er ekki með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun áður en skýrslugjöf er send inn.',
     inflightConflictToast:
-      'Fyrirtækið er nú þegar með launagreiningu í stöðunni „{status}“. Ljúktu afgreiðslu hennar áður en ný launagreining er send inn.',
+      'Fyrirtækið er nú þegar með skýrslugjöf í stöðunni „{status}“. Ljúktu afgreiðslu hennar áður en ný skýrslugjöf er send inn.',
   },
 }
 
@@ -313,6 +315,15 @@ export const reportText = {
     emptyTitle: 'Engin jafnréttisáætlun',
     emptyMessage:
       'Engin jafnréttisáætlun fannst fyrir þessa skýrslu. Vinsamlegast hafðu samband við fyrirtækið til að fá frekari upplýsingar.',
+    // A salary report filed against a certificate from the retired register.
+    // There is no plan to render here and there never was — the company was
+    // certified before this system took over — so the tab has to say that
+    // rather than fall through to "engin jafnréttisáætlun", which claims the
+    // opposite of what the register records.
+    legacyTitle: 'Jafnréttisáætlun úr eldra kerfi',
+    legacyMessage:
+      'Þessari launagreiningu var skilað á grundvelli jafnréttisáætlunar sem var í gildi í eldra skráningarkerfi Jafnréttisstofu. Áætlunin sjálf var aldrei skráð í þetta kerfi og er því ekki aðgengileg hér — sjá flipann „Eldri gögn“ á fyrirtækinu.',
+    legacyValidUntilLabel: 'Gildir til',
     approvedDateLabel: 'Dagsetning samþykktar',
     expiryLabel: 'Gildistími',
     responsibleLabel: 'Ábyrgðaraðili',
@@ -697,19 +708,45 @@ export const reportText = {
     // person sending something; the system is remarking on the record.
     system: 'Kerfið',
     makesComment: 'gerir athugasemd',
-    reportSubmitted: 'Skýrsla innsend',
+    /**
+     * ⚠️ Four entries keyed by report type, because the two types are not the
+     * same kind of thing and one noun cannot cover both.
+     *
+     * A jafnréttisáætlun is a document the company writes and uploads — it is
+     * narrative, there is nothing to compute from it, and calling it a
+     * "skýrsla" in the timeline contradicts every other label around it
+     * (`typeLabels.EQUALITY` is "Jafnréttisáætlun", the auto-review reason says
+     * "Jafnréttisáætlanir eru ekki metnar sjálfvirkt"). A skýrslugjöf is a
+     * dataset the company files and the system scores.
+     *
+     * Indexed through `forReportType` in `timelineHelpers`, which falls back to
+     * SALARY — the wording all four of these carried before they were split, so
+     * an entry with no type in scope reads exactly as it did.
+     */
+    reportSubmitted: {
+      EQUALITY: 'Skjal innsent',
+      SALARY: 'Skýrsla innsend',
+    },
     assigned: 'Úthlutað',
     unassigned: 'tekur sig af málinu',
     superseded: 'Útrunnið',
     registersMessage: 'skráir skilaboð',
-    submitsReport: 'sendir inn skýrslu',
+    submitsReport: {
+      EQUALITY: 'sendir inn skjal',
+      SALARY: 'sendir inn skýrslu',
+    },
     claimsCase: 'merkir sér málið',
     assignedOther: 'merkti',
     assignedOtherSuffix: 'á málið',
     unassignedOther: 'tók',
     unassignedOtherSuffix: 'af málinu',
     movesToStatus: 'færir mál í stöðuna:',
-    edited: 'gerði breytingar á skýrslu',
+    // Keeps the verb: the renderer prints the actor's name first, so this has to
+    // continue that sentence ("Anna gerði breytingar á skjali"), not stand alone.
+    edited: {
+      EQUALITY: 'gerði breytingar á skjali',
+      SALARY: 'gerði breytingar á skýrslu',
+    },
     // Retired event types — nothing emits these any more, but rows logged
     // before communication status became silent still render in the timeline.
     communicationOpened: 'opnaði á samskipti við innsendanda',
@@ -763,19 +800,51 @@ export const reportText = {
     companyDeactivatedNoActor: 'Fyrirtæki {company} gert óvirkt í skrá',
     companyQuarantined: 'hefur sett fyrirtækið í var',
     companyUnquarantined: 'hefur tekið fyrirtækið úr vari',
-    reminderSentEquality: 'Áminning send um skil jafnréttisskýrslu',
+    reminderSentEquality: 'Áminning send um skil jafnréttisáætlunar',
     reminderSentSalary: 'Áminning send um skil jafnlaunaskýrslu',
     reminderNoEmailEquality:
-      'Reyndi að senda áminningu um jafnréttisskýrslu en ekkert netfang fannst',
+      'Reyndi að senda áminningu um jafnréttisáætlun en ekkert netfang fannst',
     reminderNoEmailSalary:
       'Reyndi að senda áminningu um jafnlaunaskýrslu en ekkert netfang fannst',
+    // Admin-authored mail. All three outcomes are recorded, and the two
+    // non-deliveries are worded as such: an entry that read "sendi tölvupóst"
+    // for a message that never arrived is worse than no entry at all.
+    customEmailSent: 'sendi tölvupóst',
+    customEmailSentNoActor: 'Tölvupóstur sendur á fyrirtæki {company}',
+    customEmailFailed: 'sendi tölvupóst sem komst ekki til skila',
+    customEmailFailedNoActor:
+      'Tölvupóstur til fyrirtækis {company} komst ekki til skila',
+    customEmailSkipped: 'sendi tölvupóst sem var ekki sendur',
+    customEmailSkippedNoActor:
+      'Tölvupóstur til fyrirtækis {company} var ekki sendur',
+    customEmailSubject: 'Efni',
+    customEmailShow: 'Sjá tölvupóst',
+    customEmailHide: 'Fela tölvupóst',
+    customEmailLoading: 'Sæki tölvupóst…',
+    customEmailError: 'Ekki tókst að sækja tölvupóstinn',
+    customEmailAttachments: 'Viðhengi',
+    customEmailCopyTo: 'Afrit sent á',
     reminderTierSixMonths: 'Sex mánaða áminning',
     reminderTierTwoMonths: 'Tveggja mánaða áminning',
     reminderTierTwoWeeks: 'Tveggja vikna áminning',
     reminderTierDue: 'Áminning á skiladegi',
     reminderDueDatePrefix: 'skiladagur',
-    systemAutoReviewApprove: 'Kerfið myndi samþykkja skýrsluna sjálfvirkt',
-    systemAutoReviewNeedsReview: 'Kerfið myndi senda skýrsluna í yfirferð',
+    // ⚠️ The renderer bolds the FIRST and LAST word of these two headlines
+    // (see `timelineEntryText`), so the actor has to open the sentence and the
+    // status word has to close it. Keep that shape when rewording.
+    //
+    // The EQUALITY variant of `systemAutoReviewApprove` is unreachable today —
+    // `ReportAutoReviewService.evaluate` abstains on everything that is not
+    // SALARY, so an equality report only ever produces the needs-review verdict.
+    // Spelled out anyway so the pair stays exhaustive rather than half-typed.
+    systemAutoReviewApprove: {
+      EQUALITY: 'Kerfið myndi samþykkja skjalið sjálfvirkt',
+      SALARY: 'Kerfið myndi samþykkja skýrsluna sjálfvirkt',
+    },
+    systemAutoReviewNeedsReview: {
+      EQUALITY: 'Kerfið myndi senda skjalið í yfirferð',
+      SALARY: 'Kerfið myndi senda skýrsluna í yfirferð',
+    },
   },
   salaryStatsLoadError: 'Villa við að hlaða tölfræðigögn fyrir skýrslu',
   salaryStatsLoadErrorMessage:
@@ -825,6 +894,23 @@ export const companiesText = {
   visibilityPlaceholder: 'Fela',
   showNotObliged: 'Sýna óskyldug',
   showInactive: 'Sýna óvirk',
+  showQuarantined: 'Sýna í vari',
+  onlyQuarantined: 'Aðeins fyrirtæki í vari',
+  excludeQuarantined: 'Fyrirtæki utan vars',
+  // The four "never filed" filters, as two pairs. Each pair has to say which
+  // question it is asking in the option itself: nearly every company in the
+  // register was loaded from the old SharePoint sheet with no report row of its
+  // own, so "aldrei skilað" without the qualifier matches almost the whole list
+  // and an admin has no way to tell which of the two they picked.
+  neverFiledEquality: 'Aldrei skilað jafnréttisáætlun (í kerfinu)',
+  neverFiledEqualityIncludingLegacy:
+    'Aldrei skilað jafnréttisáætlun (né eldri gögn)',
+  neverFiledSalary: 'Aldrei skilað skýrslu (í kerfinu)',
+  neverFiledSalaryIncludingLegacy: 'Aldrei skilað skýrslu (né eldri gögn)',
+  // The active-filter summary above the table.
+  activeFilters: 'Virkar síur',
+  activeFilterQuery: 'Leit',
+  clearAllFilters: 'Hreinsa allt',
   // Detail-header wording. The list can say a bare "Vantar" because the column
   // header names the obligation; the header has no such context, so each tag
   // has to name its own subject.
@@ -847,12 +933,12 @@ export const companiesText = {
   isatSection: 'ÍSAT-bálkur',
   isatSectionPlaceholder: 'Veldu bálk',
   isatSectionNoResults: 'Engir bálkar fundust',
-  // "Eignarhald", not "rekstrarform": the values are Almennur markaður / Ríki
-  // og sveitarfélög, i.e. who owns the entity. Rekstrarform is the RSK legal
-  // form the classification is *derived* from, and is reserved for that hint on
-  // the detail view — the two must not share a word the admin can edit.
-  sector: 'Eignarhald',
-  sectorPlaceholder: 'Veldu eignarhald',
+  // Values are Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög. RSK's own
+  // rekstrarform (ehf., ohf., …) is a different vocabulary under the same word
+  // — it is the read-only legal form this classification is *derived* from, and
+  // the detail view shows it beneath this field. See `sectorLegalFormHint`.
+  sector: 'Rekstrarform',
+  sectorPlaceholder: 'Veldu rekstrarform',
   // Deliberately NOT `statusLabel`, which the compliance filter already uses in
   // the same panel. Selecting nothing means both, which is also what the list
   // shows unfiltered.
@@ -889,11 +975,11 @@ export const companiesText = {
     addressLabel: 'Heimilisfang',
     postcodeLabel: 'Póstnúmer',
     isatCategoryLabel: 'ÍSAT-flokkur',
-    sectorLabel: 'Eignarhald',
+    sectorLabel: 'Rekstrarform',
     // Shown under the sector field when RSK's rekstrarform is one we do not map
     // yet, so the admin sees it here rather than after the company exists.
     sectorUnknownHint:
-      'Ekki tókst að flokka eignarhald sjálfvirkt. Hægt er að skrá það handvirkt eftir að fyrirtækið hefur verið stofnað.',
+      'Ekki tókst að flokka rekstrarform sjálfvirkt. Hægt er að skrá það handvirkt eftir að fyrirtækið hefur verið stofnað.',
     emptyValue: '—',
     employeeCountLabel: 'Meðalfjöldi starfsmanna',
     submit: 'Skrá fyrirtæki',
@@ -927,10 +1013,69 @@ export const companiesText = {
     },
     rowPrefix: 'Lína',
   },
+  sendEmail: {
+    // Both entry points, list and detail, open the same modal.
+    listButton: 'Senda tölvupóst',
+    detailButton: 'Senda tölvupóst',
+    title: 'Senda tölvupóst',
+
+    // Step 1 — compose
+    stepComposeHeading: 'Efni',
+    subjectLabel: 'Efni',
+    bodyLabel: 'Skilaboð',
+    recipientEmailsLabel: 'Netföng viðtakenda',
+    recipientEmailsHint:
+      'Netfang fyrirtækisins er forskráð. Ýttu á bil eða Enter til að bæta við fleiri netföngum — hvert þeirra fær sinn eigin póst og sér ekki hin.',
+    recipientEmailsFull: 'Hámarksfjölda netfanga er náð',
+    recipientEmailInvalid: 'Sláðu inn gilt netfang',
+    removeRecipient: 'Fjarlægja netfangið',
+    copyToLabel: 'Falið afrit (BCC)',
+    copyToHint:
+      'Eitt afrit af póstinum er sent á þetta netfang, óháð fjölda viðtakenda. Viðtakendur sjá það ekki.',
+    copyToInvalid: 'Sláðu inn gilt netfang eða skildu reitinn eftir auðan',
+    attachmentsLabel: 'Viðhengi',
+    addAttachment: 'Bæta við viðhengi',
+    removeAttachment: 'Fjarlægja',
+    attachmentUploading: 'Hleð upp…',
+    attachmentLimits: 'Að hámarki 5 viðhengi, samtals 5 MB.',
+    attachmentTooManyError: 'Að hámarki er hægt að hengja við 5 skrár',
+    attachmentTooLargeError: 'Viðhengi mega samtals ekki vera stærri en 5 MB',
+    attachmentTypeError: 'Þessi skráargerð er ekki leyfð sem viðhengi',
+    attachmentUploadError: 'Ekki tókst að hlaða upp viðhengi',
+    continue: 'Halda áfram',
+
+    // Step 2 — confirm
+    stepPreviewHeading: 'Yfirlit',
+    recipientsHeading: 'Viðtakendur',
+    showRecipients: 'Sýna netföng',
+    hideRecipients: 'Fela netföng',
+    // The gap between the button count and this one is deliberate and explained
+    // by the skipped list below it.
+    skippedHeading: 'Ekki sent',
+    skippedNoEmail: 'Ekkert netfang skráð',
+    skippedQuarantined: 'Fyrirtæki í vari',
+    noEmailPlaceholder: '—',
+    previewHeading: 'Forskoðun',
+    previewSubjectLabel: 'Efni',
+    previewCopyToLabel: 'Afrit sent á',
+    previewLoading: 'Sæki viðtakendur…',
+    previewError: 'Ekki tókst að sækja viðtakendur',
+    previewMessage:
+      'Vinsamlegast farðu vel yfir tölvupóstinn og viðtakendur áður en þú sendir.',
+    noRecipients: 'Engin fyrirtæki með skráð netfang fundust',
+    back: 'Til baka',
+    send: 'Senda',
+    cancel: 'Hætta við',
+
+    // "Sett í sendingu", not "Sent": the API returns before anything is
+    // delivered, and per-recipient outcomes land on the company timelines.
+    successToast: 'Tölvupóstur settur í sendingu',
+    errorToast: 'Villa við að senda tölvupóst',
+  },
   detailView: {
     heading: 'Upplýsingar um fyrirtæki',
     tabInfo: 'Upplýsingar',
-    tabReports: 'Skýrslur',
+    tabReports: 'Innsendingar',
     tabApiKeys: 'Aðgangslyklar',
     tabLegacy: 'Eldri gögn',
     tabsLabel: 'Fyrirtækjaflippar',
@@ -973,21 +1118,22 @@ export const companiesText = {
     registerStatusInactiveHint:
       'Fyrirtækið er ekki í gildandi fyrirtækjaskrá Jafnréttisstofu. Skýringin er skráð í sögu fyrirtækisins.',
 
-    // Only sectorLegalFormHint says "rekstrarform" — it is the RSK legal form,
-    // a read-only input to the classification. The editable field above it is
-    // eignarhald. Stacking both concepts under one word on the same screen
-    // invites an admin to "correct" one when they meant the other.
-    sectorLabel: 'Eignarhald',
+    // sectorLegalFormHint renders directly under the editable field, which now
+    // carries the same word. They are not the same thing: the field holds our
+    // four-way classification, the hint holds RSK's raw legal form (ehf., ohf.,
+    // …) that it is derived from. Its "úr fyrirtækjaskrá RSK" qualifier is the
+    // only thing telling an admin which is which — do not shorten it away.
+    sectorLabel: 'Rekstrarform',
     sectorEditButton: 'Breyta',
     sectorSaveButton: 'Vista',
     sectorCancelButton: 'Hætta',
-    sectorPlaceholder: 'Veldu eignarhald',
-    sectorSavedToast: 'Eignarhald uppfært',
-    sectorErrorToast: 'Villa við að uppfæra eignarhald',
+    sectorPlaceholder: 'Veldu rekstrarform',
+    sectorSavedToast: 'Rekstrarform uppfært',
+    sectorErrorToast: 'Villa við að uppfæra rekstrarform',
     sectorOverrideHint: 'Skráð handvirkt af umsjónarmanni',
     sectorLegalFormHint: 'Rekstrarform úr fyrirtækjaskrá RSK: ',
     sectorUnknownHint:
-      'Ekki hefur verið unnt að flokka fyrirtækið sjálfvirkt. Veldu eignarhald handvirkt.',
+      'Ekki hefur verið unnt að flokka fyrirtækið sjálfvirkt. Veldu rekstrarform handvirkt.',
 
     emailLabel: 'Netfang',
     emailPlaceholder: 'netfang@fyrirtaeki.is',
@@ -1097,6 +1243,11 @@ export const companiesText = {
         expires1Year: '1 ár',
         expires2Years: '2 ár',
         expiresNever: 'Ótímabundinn',
+        scopingLabel: 'Heimildir',
+        scopingHint:
+          'Sjálfgefið fær lykillinn að lesa og skila skýrslum, sem er allt sem launakerfi þarf. Starfsmatsheimildin er til viðbótar og felur í sér að eyða starfsmati fyrirtækisins.',
+        scopeFilingOnly: 'Lesa og skila skýrslum',
+        scopeFilingAndScoring: 'Lesa, skila skýrslum og breyta starfsmati',
         createButton: 'Búa til lykil',
         cancelButton: 'Hætta við',
         createErrorToast: 'Villa við að búa til aðgangslykil',
@@ -1118,6 +1269,25 @@ export const companiesText = {
       placeholder: 'Bættu við athugasemd',
       submit: 'Vista athugasemd',
     },
+  },
+  quarantineModal: {
+    title: 'Setja í var',
+    // The company name stays its own node so the caller can emphasise it.
+    description: (companyName: ReactNode): ReactNode[] => [
+      'Ertu viss um að þú viljir setja ',
+      companyName,
+      ' í var?',
+    ],
+    confirmButton: 'Staðfesta',
+  },
+  dailyFinesModal: {
+    title: 'Hefja dagsektarferli',
+    description: (companyName: ReactNode): ReactNode[] => [
+      'Ertu viss um að þú viljir hefja dagsektarferli fyrir ',
+      companyName,
+      '?',
+    ],
+    confirmButton: 'Staðfesta',
   },
 }
 
@@ -1314,6 +1484,8 @@ export const sharedText = {
     cancel: 'Hætta við',
     save: 'Vista',
     errorToast: 'Villa við innsendingu',
+    companyLoadError:
+      'Ekki tókst að sækja lista yfir fyrirtæki. Reyndu að endurhlaða síðuna.',
   },
   empty: {
     title: 'Ekkert fannst',

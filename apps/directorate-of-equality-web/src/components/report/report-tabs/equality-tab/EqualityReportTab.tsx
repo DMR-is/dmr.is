@@ -8,14 +8,27 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 
 import { Button, GridRow, Text } from '@island.is/island-ui/core'
 
-import { EqualityContentTypeEnum, EqualityReportDto } from '../../../../gen/fetch'
+import {
+  EqualityContentTypeEnum,
+  EqualityCoverageSourceEnum,
+  EqualityReportDto,
+} from '../../../../gen/fetch'
+import { formatCalendarDateIS } from '../../../../lib/constants'
 import { reportText } from '../../../../lib/text'
 import { Empty } from '../../../Empty'
 import { EqualityReportInputs } from './EqualityReportInputs'
 
 type EqualityReportTabProps = {
-  report?: EqualityReportDto
+  report?: EqualityReportDto | null
   supervisor?: string
+  /**
+   * What met the equality obligation this report was filed under. `LEGACY`
+   * means there is no plan to show and none is missing either — see the
+   * legacy branch below.
+   */
+  source?: EqualityCoverageSourceEnum
+  /** The legacy certificate's stated expiry. Set only when `source` is LEGACY. */
+  legacyValidUntil?: string | null
 }
 
 /**
@@ -29,10 +42,35 @@ const PDF_FRAME_HEIGHT = 800
 export const EqualityReportTab = ({
   report,
   supervisor,
+  source,
+  legacyValidUntil,
 }: EqualityReportTabProps) => {
   const editorKey = useRef(0)
 
   const isPdf = report?.contentType === EqualityContentTypeEnum.PDF
+
+  /*
+   * Tested BEFORE the empty state, because the two are opposite claims about
+   * the same missing content. A salary report filed against a certificate from
+   * the Directorate's retired register has no equality report to load — the
+   * register load mints none — so falling through here told a reviewer the
+   * company had no jafnréttisáætlun when the Directorate's own records say it
+   * holds one.
+   */
+  if (source === EqualityCoverageSourceEnum.LEGACY) {
+    return (
+      <Empty
+        title={reportText.equalityTab.legacyTitle}
+        message={
+          legacyValidUntil
+            ? `${reportText.equalityTab.legacyMessage} ${
+                reportText.equalityTab.legacyValidUntilLabel
+              }: ${formatCalendarDateIS(legacyValidUntil)}.`
+            : reportText.equalityTab.legacyMessage
+        }
+      />
+    )
+  }
 
   /*
    * A PDF-backed report has `content: null` by design — the bytes are served

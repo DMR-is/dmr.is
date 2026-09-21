@@ -2,6 +2,15 @@
 
 Entity-relationship diagram of the DoE salary equality reporting schema. Entities show only PK + FK columns + a few key fields for readability. Full column lists live in [`README.md`](./README.md) under the Tables section.
 
+The `scoring_*` tables are the company-scoped starfsmat the partner API files
+against, and they sit **apart from the report graph on purpose**: a filing
+materialises its own `report_criterion` / `report_sub_criterion` /
+`report_employee_role` rows from a scoring model, and there is no FK from a
+report back to the model it came from. That is what lets a company rework its
+starfsmat without disturbing a report already filed under the old one — the
+report owns a frozen copy, which is also why the scoring model carries no
+version.
+
 Relationship labels are the FK column name. Cardinality notation:
 
 - `|o` = zero-or-one (nullable FK)
@@ -180,6 +189,42 @@ erDiagram
         text container_id "nullable"
     }
 
+    scoring_model {
+        uuid id PK
+        uuid company_id FK
+        text name
+    }
+    scoring_criterion {
+        uuid id PK
+        uuid scoring_model_id FK
+        report_criterion_type_enum type
+        text title
+        text description
+    }
+    scoring_sub_criterion {
+        uuid id PK
+        uuid scoring_criterion_id FK
+        text title
+        numeric weight
+    }
+    scoring_sub_criterion_step {
+        uuid id PK
+        uuid scoring_sub_criterion_id FK
+        integer step_order
+        text description
+    }
+    scoring_role {
+        uuid id PK
+        uuid scoring_model_id FK
+        text title
+    }
+    scoring_role_step {
+        uuid id PK
+        uuid scoring_role_id FK
+        uuid scoring_sub_criterion_id FK
+        uuid scoring_sub_criterion_step_id FK
+    }
+
     company ||--o{ company_report : "company_id"
     report ||--o{ company_report : "report_id"
     company |o--o{ company_report : "parent_company_id"
@@ -224,4 +269,13 @@ erDiagram
     doe_user |o--o{ company_event : "actor_user_id"
     company ||--o{ company_comment : "company_id"
     doe_user |o--o{ company_comment : "author_user_id"
+
+    company ||--o{ scoring_model : "company_id"
+    scoring_model ||--o{ scoring_criterion : "scoring_model_id"
+    scoring_criterion ||--o{ scoring_sub_criterion : "scoring_criterion_id"
+    scoring_sub_criterion ||--o{ scoring_sub_criterion_step : "scoring_sub_criterion_id"
+    scoring_model ||--o{ scoring_role : "scoring_model_id"
+    scoring_role ||--o{ scoring_role_step : "scoring_role_id"
+    scoring_sub_criterion ||--o{ scoring_role_step : "scoring_sub_criterion_id"
+    scoring_sub_criterion_step ||--o{ scoring_role_step : "(scoring_sub_criterion_step_id, scoring_sub_criterion_id)"
 ```

@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import {
   BelongsTo,
   Column,
@@ -11,14 +12,15 @@ import {
 import { ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
+import type { FeeCodeModel as FeeCodeModelRef } from './fee-code.model'
 import { FeeCodeModel } from './fee-code.model'
+import type { TypeModel as TypeModelRef } from './type.model'
 import { TypeModel } from './type.model'
-import { type TypeModel as TypeModelType } from './type.model'
 
 type AdvertTypeFeeCodeAttributes = {
   advertTypeId: number
   feeCodeId: number
-  type: TypeModelType
+  type: TypeModelRef
   feeCode: FeeCodeModel
 }
 
@@ -52,8 +54,8 @@ export class AdvertTypeFeeCodeModel extends Model<
   feeCodeId!: number
 
   @BelongsTo(() => TypeModel)
-  type!: TypeModel
+  type!: TypeModelRef
 
   @BelongsTo(() => FeeCodeModel)
-  feeCode!: FeeCodeModel
+  feeCode!: FeeCodeModelRef
 }

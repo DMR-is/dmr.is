@@ -19,9 +19,6 @@ export const AdvertPublicationModalContainer = ({ advertId }: Props) => {
   if (!publications || publications.length === 0) return null
 
   return (
-    <AdvertPublicationModal
-      advertId={advertId}
-      publications={publications}
-    />
+    <AdvertPublicationModal advertId={advertId} publications={publications} />
   )
 }

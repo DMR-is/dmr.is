@@ -34,14 +34,12 @@ export function getDivisionMeetingBankruptcyTemplate({
     ? getTableCell({ text: nameArr.join(',<br />') })
     : ''
 
-  const [formattedMeetingDate, _eeee, formattedMeetingTime] = parseAndFormatDate(meetingDate)
+  const [formattedMeetingDate, _eeee, formattedMeetingTime] =
+    parseAndFormatDate(meetingDate)
 
   const meetingCell = formattedMeetingDate
     ? getTableCell({
-        text: [
-          formattedMeetingDate,
-          formattedMeetingTime,
-        ].join('<br />'),
+        text: [formattedMeetingDate, formattedMeetingTime].join('<br />'),
       })
     : ''
 
@@ -55,7 +53,6 @@ export function getDivisionMeetingBankruptcyTemplate({
     </table>
   `
     : ''
-
 
   const markupArr = [intro, content, table].filter(isNotEmpty)
 

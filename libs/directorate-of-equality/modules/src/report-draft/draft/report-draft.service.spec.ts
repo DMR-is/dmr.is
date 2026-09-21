@@ -10,6 +10,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
 import {
+  CompanyObligationStatusEnum,
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
@@ -67,8 +68,11 @@ const COMPANY: CompanyDto = {
   legalFormId: null,
   legalFormName: null,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
+  equalityObligationStatus: CompanyObligationStatusEnum.COVERED,
+  salaryObligationStatus: CompanyObligationStatusEnum.COVERED,
   equalityReportOverdue: false,
   salaryReportOverdue: false,
+  hasLegacyReports: false,
 }
 
 const mockLogger = {
@@ -184,7 +188,7 @@ describe('ReportDraftService', () => {
 
       const result = await service.createDraft(draftInput())
 
-      expect(result).toEqual({ reportId: REPORT_ID })
+      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
       expect(reportCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           type: ReportTypeEnum.SALARY,
@@ -205,7 +209,10 @@ describe('ReportDraftService', () => {
 
       const result = await service.createDraft(draftInput())
 
-      expect(result).toEqual({ reportId: EXISTING_DRAFT_ID })
+      expect(result).toEqual({
+        reportId: EXISTING_DRAFT_ID,
+        replayed: true,
+      })
       expect(reportCreate).not.toHaveBeenCalled()
     })
 
@@ -262,7 +269,10 @@ describe('ReportDraftService', () => {
 
       const result = await service.createDraft(draftInput())
 
-      expect(result).toEqual({ reportId: EXISTING_DRAFT_ID })
+      expect(result).toEqual({
+        reportId: EXISTING_DRAFT_ID,
+        replayed: true,
+      })
     })
   })
 

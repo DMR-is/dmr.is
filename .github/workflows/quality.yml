@@ -56,8 +56,10 @@ jobs:
           cache-install-state: true
           cache-node-modules: true
 
+      # format:write writes and always exits 0, so this job could never fail and
+      # unformatted code landed on main unchecked. format:check reports instead.
       - name: Check formatting
-        run: yarn nx format:write --all
+        run: yarn nx format:check --all
 
   generated-files:
     # The DoE salary-report workbook feeds two committed TS files that no build
@@ -129,7 +131,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: true
+          # No `submodules: true`. actions/checkout clones island.is in full,
+          # which was 24-27s of this job's 31s checkout while every other job
+          # checks out in 3-4s - and tsc is the critical path. The step below
+          # fetches only the pinned commit instead. fetch-depth: 0 stays: it is
+          # 3.4s and nrwl/nx-set-shas needs the main repo's history.
 
       - name: 🌱 Apply submodule sparse-checkout
         run: ./.gitscripts/checkout-submodules.sh

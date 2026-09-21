@@ -1,6 +1,4 @@
-import {
-  TBRCompanySettingsItemDto,
-} from '../../../models/tbr-company-settings.model'
+import { TBRCompanySettingsItemDto } from '../../../models/tbr-company-settings.model'
 import {
   CreateTBRCompanySettingsDto,
   GetTBRCompanySettingsQueryDto,

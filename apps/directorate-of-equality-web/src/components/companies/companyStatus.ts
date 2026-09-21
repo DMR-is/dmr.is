@@ -132,21 +132,28 @@ export const SALARY_OBLIGATION_TAG_VARIANT: typeof OBLIGATION_STATUS_TAG_VARIANT
   }
 
 /**
- * The two default-on hides, as opt-in reveals.
+ * The three default-on hides, as opt-in reveals.
  *
  * The admin register is a working list of who owes what, so companies that owe
- * nothing ("ekki lagaskylt") and companies off the register are hidden unless
- * asked for. Each value maps to its own boolean server param — the same shape
- * as FLAG_FILTER_OPTIONS below.
+ * nothing ("ekki lagaskylt"), companies off the register, and companies under
+ * an admin halt ("í vari") are hidden unless asked for. Each value maps to its
+ * own boolean server param — the same shape as FLAG_FILTER_OPTIONS below.
  *
  * ⚠️ "Ekki lagaskylt" is NOT "0–24". Some companies under 25 employees are
  * required to report by arrangement, recorded on the company as
  * `salaryReportRequiredOverride`, and they stay visible. The server owns that
  * rule (`notLegallyObligedSql`); do not restate it here.
+ *
+ * ⚠️ "Í vari" belongs HERE and not in FLAG_FILTER_OPTIONS, where it used to
+ * sit. The two groups ask opposite questions — this one reveals a hidden group,
+ * that one narrows to a flagged one — and offering the same axis in both let an
+ * admin set "sýna í vari" and "er í vari" at once, two controls contradicting
+ * each other over the same rows.
  */
 export const VISIBILITY_FILTER_OPTIONS = [
   { value: 'notObliged', label: companiesText.showNotObliged },
   { value: 'inactive', label: companiesText.showInactive },
+  { value: 'quarantined', label: companiesText.showQuarantined },
 ]
 
 export const EXPIRES_FILTER_OPTIONS = [
@@ -155,29 +162,62 @@ export const EXPIRES_FILTER_OPTIONS = [
   { value: 'soon', label: 'Rennur út innan 6 mánaða' },
 ]
 
-// Combined boolean flags — each selected value maps to its own boolean server
-// param (see CompaniesContainer). Grouped into a single multi-select so the
-// filter panel stays compact.
+/**
+ * Combined boolean flags — each selected value maps to its own boolean server
+ * param (see CompaniesContainer). Grouped into a single multi-select so the
+ * filter panel stays compact.
+ *
+ * ⚠️ Selections here AND together, unlike the compliance status filter above:
+ * picking two narrows, it does not widen. That is what makes the two
+ * "aldrei skilað" pairs combinable into "has sent us nothing at all".
+ *
+ * ⚠️ The four never-filed options carry NO obligation gate — they ask what the
+ * company has ever sent, not what it owes — so they combine with any status
+ * selection rather than being a status of their own. They do not lift the
+ * register's default hides either: a 0–24 company that never filed still needs
+ * "Sýna óskyldug" to appear, same as everywhere else in this panel.
+ *
+ * ⚠️ The in-system / legacy distinction in each pair is load-bearing, not
+ * pedantry. 1 507 of 1 753 companies were loaded from the retired SharePoint
+ * register with no report row here at all, so the "(í kerfinu)" options match
+ * nearly the whole list while the "(né eldri gögn)" ones return the companies
+ * the Directorate has genuinely never heard from.
+ */
 export const FLAG_FILTER_OPTIONS = [
   { value: 'fines', label: 'Dagsektir í gangi' },
   { value: 'overdue', label: 'Skiladagur liðinn' },
-  { value: 'quarantined', label: 'Fyrirtæki er í var' },
+  { value: 'neverFiledEquality', label: companiesText.neverFiledEquality },
+  {
+    value: 'neverFiledEqualityIncludingLegacy',
+    label: companiesText.neverFiledEqualityIncludingLegacy,
+  },
+  { value: 'neverFiledSalary', label: companiesText.neverFiledSalary },
+  {
+    value: 'neverFiledSalaryIncludingLegacy',
+    label: companiesText.neverFiledSalaryIncludingLegacy,
+  },
 ]
 
-// Ownership sector (private vs government/state), derived server-side from the
-// RSK legal form. UNKNOWN is offered as its own choice on purpose: it is not a
-// synonym for private, so an admin has to be able to see — and count — the
-// companies we have not classified yet rather than have them hidden inside
-// another bucket.
+// Ownership sector, derived server-side mostly from the RSK legal form
+// (Ráðuneyti is the exception — it is always set by hand, since no legal
+// form or ÍSAT code distinguishes a ministry from any other central
+// government office). UNKNOWN is offered as its own choice on purpose: it is
+// not a synonym for Fyrirtæki, so an admin has to be able to see — and
+// count — the companies we have not classified yet rather than have them
+// hidden inside another bucket.
 export const SECTOR_LABEL: Record<CompanySectorEnum, string> = {
-  [CompanySectorEnum.PRIVATE]: 'Almennur markaður',
-  [CompanySectorEnum.PUBLIC]: 'Ríki og sveitarfélög',
+  [CompanySectorEnum.FYRIRTAEKI]: 'Fyrirtæki',
+  [CompanySectorEnum.RADUNEYTI]: 'Ráðuneyti',
+  [CompanySectorEnum.RIKISADILI]: 'Ríkisaðilar',
+  [CompanySectorEnum.SVEITARFELAG]: 'Sveitarfélög',
   [CompanySectorEnum.UNKNOWN]: 'Óflokkað',
 }
 
 export const SECTOR_FILTER_OPTIONS = [
-  CompanySectorEnum.PRIVATE,
-  CompanySectorEnum.PUBLIC,
+  CompanySectorEnum.FYRIRTAEKI,
+  CompanySectorEnum.RADUNEYTI,
+  CompanySectorEnum.RIKISADILI,
+  CompanySectorEnum.SVEITARFELAG,
   CompanySectorEnum.UNKNOWN,
 ].map((value) => ({ value, label: SECTOR_LABEL[value] }))
 

@@ -7,7 +7,7 @@
     "tsc": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["tsc -p tsconfig.json --noEmit"],
+        "commands": ["tsc -p tsconfig.spec.json --noEmit"],
         "cwd": "apps/official-journal-api-export-e2e",
         "forwardAllArgs": false
       }

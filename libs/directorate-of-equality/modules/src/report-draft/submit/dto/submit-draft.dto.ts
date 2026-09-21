@@ -31,7 +31,7 @@ export class SubmitDraftDto {
   @ApiOptionalUUID({
     nullable: true,
     description:
-      'Required for SALARY reports: the APPROVED equality report this salary submission is audited against.',
+      'SALARY only: the APPROVED equality report this salary submission is audited against. Omit it to have the server resolve the company’s current coverage — the same answer `GET reports/equality/active` gives, and the only option for a company covered by a legacy certificate, which has no id to send. A 404 on submit means nothing covers the company.',
   })
   equalityReportId?: string | null
 

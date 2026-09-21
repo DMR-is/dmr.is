@@ -326,9 +326,11 @@ describe('ReportDeadlineReminderService', () => {
      * ⚠️ A `MailSendError`, which is what the real service throws, NOT a bare
      * Error: containment keys on the type. See the DB-error test below for why.
      */
-    it('keeps going when one company\'s email send fails', async () => {
+    it("keeps going when one company's email send fails", async () => {
       returnCompanyAtCall(CALL.equalitySixMonths, makeCompany())
-      sendReportDeadlineReminder.mockRejectedValue(new MailSendError('SES down'))
+      sendReportDeadlineReminder.mockRejectedValue(
+        new MailSendError('SES down'),
+      )
 
       await expect(service.run()).resolves.toBeUndefined()
 

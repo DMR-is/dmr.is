@@ -63,7 +63,9 @@ const awsError = (code: number, message: string) =>
 const bufferOfSize = (length: number) => ({ length }) as unknown as Buffer
 
 describe('ImportUploadService', () => {
-  let aws: jest.Mocked<Pick<IAWSService, 'getPresignedUrl' | 'getObjectBuffer' | 'deleteObject'>>
+  let aws: jest.Mocked<
+    Pick<IAWSService, 'getPresignedUrl' | 'getObjectBuffer' | 'deleteObject'>
+  >
   let service: ImportUploadService
 
   beforeAll(() => {
@@ -109,6 +111,56 @@ describe('ImportUploadService', () => {
       const res = await service.createUpload(ImportUploadBoundary.APPLICATION)
 
       expect(res.key.startsWith('doe-imports/application/')).toBe(true)
+    })
+
+    it('defaults to xlsx, so the import path is unaffected by the extension option', async () => {
+      aws.getPresignedUrl.mockResolvedValue(
+        ResultWrapper.ok({ url: 'https://s3/presigned' }),
+      )
+
+      const res = await service.createUpload(ImportUploadBoundary.ADMIN, {})
+
+      expect(res.key.endsWith('.xlsx')).toBe(true)
+    })
+
+    it('stages a mail attachment under its own boundary and extension', async () => {
+      aws.getPresignedUrl.mockResolvedValue(
+        ResultWrapper.ok({ url: 'https://s3/presigned' }),
+      )
+
+      const res = await service.createUpload(
+        ImportUploadBoundary.MAIL_ATTACHMENT,
+        { extension: 'PDF' },
+      )
+
+      // Case-insensitive, and a leading dot is tolerated — the caller passes
+      // whatever it split off a file name.
+      expect(res.key).toMatch(
+        /^doe-imports\/mail-attachment\/[0-9a-f-]{36}\.pdf$/,
+      )
+    })
+
+    it.each([['html'], ['svg'], ['exe'], ['']])(
+      'refuses to stage a .%s mail attachment',
+      async (extension) => {
+        // These objects are handed to recipients outside the Directorate. An
+        // attachment the receiving mail client will run is not something an
+        // admin should be able to introduce by naming a file.
+        await expect(
+          service.createUpload(ImportUploadBoundary.MAIL_ATTACHMENT, {
+            extension,
+          }),
+        ).rejects.toBeInstanceOf(BadRequestException)
+      },
+    )
+
+    it('does not let the mail-attachment extensions leak into the import boundaries', async () => {
+      // The allow-list is per boundary for this reason: widening it
+      // globally would have retired the import path's own extension check,
+      // which is what proves an admin import key was minted by this service.
+      await expect(
+        service.createUpload(ImportUploadBoundary.ADMIN, { extension: 'pdf' }),
+      ).rejects.toBeInstanceOf(BadRequestException)
     })
 
     it('presigns against the DOE imports bucket with the generated key', async () => {
@@ -173,15 +225,24 @@ describe('ImportUploadService', () => {
       ['wrong prefix', 'other/admin/11111111-2222-3333-4444-555555555555.xlsx'],
       ['path traversal', 'doe-imports/admin/../../etc/passwd'],
       ['not a uuid', 'doe-imports/admin/not-a-uuid.xlsx'],
-      ['wrong extension', 'doe-imports/admin/11111111-2222-3333-4444-555555555555.csv'],
-      ['trailing segment', 'doe-imports/admin/11111111-2222-3333-4444-555555555555.xlsx/x'],
-    ])('rejects a malformed key (%s) without touching S3', async (_label, key) => {
-      await expect(
-        service.fetchWorkbook(key, ImportUploadBoundary.ADMIN),
-      ).rejects.toBeInstanceOf(BadRequestException)
+      [
+        'wrong extension',
+        'doe-imports/admin/11111111-2222-3333-4444-555555555555.csv',
+      ],
+      [
+        'trailing segment',
+        'doe-imports/admin/11111111-2222-3333-4444-555555555555.xlsx/x',
+      ],
+    ])(
+      'rejects a malformed key (%s) without touching S3',
+      async (_label, key) => {
+        await expect(
+          service.fetchWorkbook(key, ImportUploadBoundary.ADMIN),
+        ).rejects.toBeInstanceOf(BadRequestException)
 
-      expect(aws.getObjectBuffer).not.toHaveBeenCalled()
-    })
+        expect(aws.getObjectBuffer).not.toHaveBeenCalled()
+      },
+    )
 
     it('rejects a workbook over the 20MB cap', async () => {
       aws.getObjectBuffer.mockResolvedValue(
@@ -450,7 +511,10 @@ describe('ImportUploadService', () => {
       const data = Buffer.from('workbook-bytes')
 
       await service.storeLocalUpload(key, data)
-      const fetched = await service.fetchWorkbook(key, ImportUploadBoundary.ADMIN)
+      const fetched = await service.fetchWorkbook(
+        key,
+        ImportUploadBoundary.ADMIN,
+      )
 
       expect(fetched.equals(data)).toBe(true)
       expect(aws.getObjectBuffer).not.toHaveBeenCalled()

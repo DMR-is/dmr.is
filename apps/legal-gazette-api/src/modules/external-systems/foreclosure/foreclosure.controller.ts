@@ -15,7 +15,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { MachineClientGuard } from '../../../core/guards/machine-client.guard'
-import { ForeclosureDto } from '../../../models/foreclosure.model'
+import { ForeclosureDto } from '../../../models/foreclosure.dto'
 import { ForeclosurePropertyDto } from '../../../models/foreclosure-property.model'
 import { CreateForeclosureSaleDto } from './dto/foreclosure.dto'
 import { IForeclosureService } from './foreclosure.service.interface'

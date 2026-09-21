@@ -16,6 +16,7 @@ import { UserDto } from '../../user/dto/user.dto'
 import {
   CommunicationStatusEnum,
   EqualityContentTypeEnum,
+  EqualityCoverageSourceEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -115,8 +116,26 @@ export class ReportDto {
   })
   outliersPostponed!: boolean | null
 
-  @ApiOptionalUuid({ nullable: true })
+  @ApiOptionalUuid({
+    nullable: true,
+    description:
+      'Salary-only. FK to the approved EQUALITY report this salary was audited against. Null on equality reports, and on a salary report filed against a legacy certificate — read `equalitySource` rather than inferring from this field.',
+  })
   equalityReportId!: string | null
+
+  @ApiEnum(EqualityCoverageSourceEnum, {
+    enumName: 'EqualityCoverageSourceEnum',
+    description:
+      'What met the equality obligation this report was filed under: `REPORT` (linked via `equalityReportId`) or `LEGACY` (an unexpired certificate from the retired register, which has no report row to link). Always `REPORT` on equality reports and on everything filed before the legacy basis was accepted.',
+  })
+  equalitySource!: EqualityCoverageSourceEnum
+
+  @ApiOptionalDateTime({
+    nullable: true,
+    description:
+      'Salary-only, and non-null exactly when `equalitySource` is `LEGACY`: the legacy certificate’s stated expiry as it read at filing, returned as the end of that calendar day.',
+  })
+  equalityLegacyValidUntil!: Date | null
 
   @ApiOptionalUuid({ nullable: true })
   reviewerUserId!: string | null

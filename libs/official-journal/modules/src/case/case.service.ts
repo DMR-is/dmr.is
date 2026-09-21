@@ -1505,7 +1505,10 @@ export class CaseService implements ICaseService {
       const advert = advertCreateResult.result.value.advert
 
       try {
-        if (appType === 'base_regulation' || appType === 'amending_regulation') {
+        if (
+          appType === 'base_regulation' ||
+          appType === 'amending_regulation'
+        ) {
           await this.publishRegulationByType(caseToPublish, advert, now)
         } else {
           // 'ad' type (legacy/cutover) - existing Eplica flow
@@ -1564,8 +1567,15 @@ export class CaseService implements ICaseService {
     })
 
     const appType = caseRecord?.applicationType
-    if (caseRecord && (appType === 'base_regulation' || appType === 'amending_regulation')) {
-      await this.publishRegulationByType(caseRecord, publishedAdvert, new Date())
+    if (
+      caseRecord &&
+      (appType === 'base_regulation' || appType === 'amending_regulation')
+    ) {
+      await this.publishRegulationByType(
+        caseRecord,
+        publishedAdvert,
+        new Date(),
+      )
     } else {
       await this.externalService.publishRegulation(publishedAdvert)
     }
@@ -1580,7 +1590,9 @@ export class CaseService implements ICaseService {
   ): Promise<void> {
     // 1. Fetch draft from regulations-admin
     if (!caseToPublish.regulationDraftId) {
-      throw new Error('Case is missing regulationDraftId for regulation publishing')
+      throw new Error(
+        'Case is missing regulationDraftId for regulation publishing',
+      )
     }
 
     const draftResult = await this.regulationsAdminService.getDraft(
@@ -1617,7 +1629,8 @@ export class CaseService implements ICaseService {
     const baseRegNames = [...new Set(draft.impacts.map((i) => i.regulation))]
 
     for (const regName of baseRegNames) {
-      const result = await this.regulationPublishService.hasPendingTasks(regName)
+      const result =
+        await this.regulationPublishService.hasPendingTasks(regName)
       if (result.result.ok && result.result.value === true) {
         return true
       }

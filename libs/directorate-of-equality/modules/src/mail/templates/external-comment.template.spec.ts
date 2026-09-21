@@ -5,6 +5,7 @@ import {
 import { ReportCommentModel } from '../../report-comment/models/report-comment.model'
 import {
   buildExternalCommentHtml,
+  buildExternalCommentSubject,
   buildExternalCommentText,
 } from './external-comment.template'
 
@@ -17,10 +18,16 @@ const reportOf = (
   providerId: string | null,
   reportType: 'SALARY' | 'EQUALITY' = 'EQUALITY',
 ): ReportModel =>
-  ({ id: 'report-1', providerType, providerId, type: reportType }) as unknown as ReportModel
+  ({
+    id: 'report-1',
+    providerType,
+    providerId,
+    type: reportType,
+  }) as unknown as ReportModel
 
-const comment = (body = 'Vantar skýringar á tveimur röðum.'): ReportCommentModel =>
-  ({ body }) as unknown as ReportCommentModel
+const comment = (
+  body = 'Vantar skýringar á tveimur röðum.',
+): ReportCommentModel => ({ body }) as unknown as ReportCommentModel
 
 /** Both renderings must agree; an integrator or employer may read either. */
 const bothRenderings = (report: ReportModel): string[] => [
@@ -30,7 +37,11 @@ const bothRenderings = (report: ReportModel): string[] => [
 
 describe('external comment template', () => {
   describe('an island.is salary report', () => {
-    const report = reportOf(ReportProviderEnum.ISLAND_IS, 'app-uuid-1', 'SALARY')
+    const report = reportOf(
+      ReportProviderEnum.ISLAND_IS,
+      'app-uuid-1',
+      'SALARY',
+    )
 
     it('tells the reader to log in to the application', () => {
       for (const rendered of bothRenderings(report)) {
@@ -47,8 +58,12 @@ describe('external comment template', () => {
     })
   })
 
-    describe('an island.is equality report', () => {
-    const report = reportOf(ReportProviderEnum.ISLAND_IS, 'app-uuid-1', 'EQUALITY')
+  describe('an island.is equality report', () => {
+    const report = reportOf(
+      ReportProviderEnum.ISLAND_IS,
+      'app-uuid-1',
+      'EQUALITY',
+    )
 
     it('tells the reader to log in to the application', () => {
       for (const rendered of bothRenderings(report)) {
@@ -130,5 +145,35 @@ describe('external comment template', () => {
     )
 
     expect(rendered).toContain('Fyrsta lína')
+  })
+
+  /**
+   * Both mails used to say "jafnréttisskýrslu" for every report, which named
+   * the wrong thing on both sides: an equality submission is the company's
+   * jafnréttisáætlun, and a salary filing is not a jafnréttis-anything.
+   */
+  describe('naming the report the comment is attached to', () => {
+    const equality = reportOf(ReportProviderEnum.ISLAND_IS, 'a', 'EQUALITY')
+    const salary = reportOf(ReportProviderEnum.ISLAND_IS, 'a', 'SALARY')
+
+    it('calls an equality submission a jafnréttisáætlun', () => {
+      for (const rendered of [
+        ...bothRenderings(equality),
+        buildExternalCommentSubject(equality),
+      ]) {
+        expect(rendered).toContain('jafnréttisáætlun')
+        expect(rendered).not.toContain('jafnréttisskýrslu')
+      }
+    })
+
+    it('calls a salary filing a skýrsla, never a jafnréttisskýrsla', () => {
+      for (const rendered of [
+        ...bothRenderings(salary),
+        buildExternalCommentSubject(salary),
+      ]) {
+        expect(rendered).toContain('skýrslu')
+        expect(rendered).not.toContain('jafnréttisskýrslu')
+      }
+    })
   })
 })

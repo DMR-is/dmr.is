@@ -7,10 +7,8 @@ import { escapeHtml } from '@dmr.is/utils-server/escapeHtml'
 import { assertAdvertEditable } from '../../../core/utils/advert-status.util'
 import { AdvertModel, AdvertTemplateType } from '../../../models/advert.model'
 import { CategoryDefaultIdEnum } from '../../../models/category.model'
-import {
-  ForeclosureDto,
-  ForeclosureModel,
-} from '../../../models/foreclosure.model'
+import { ForeclosureDto } from '../../../models/foreclosure.dto'
+import { ForeclosureModel } from '../../../models/foreclosure.model'
 import {
   ForeclosurePropertyDto,
   ForeclosurePropertyModel,

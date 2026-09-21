@@ -1,10 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 
 import { ICompanyService } from '../company/company.service.interface'
 import { CompanyModel } from '../company/models/company.model'
 import { IConfigService } from '../config/config.service.interface'
 import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
-import { IReportService } from '../report/report.service.interface'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { IReportCreateService } from '../report-create/report-create.service.interface'
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
@@ -19,8 +18,6 @@ export class AdminReportService implements IAdminReportService {
   constructor(
     @Inject(ICompanyService)
     private readonly companyService: ICompanyService,
-    @Inject(IReportService)
-    private readonly reportService: IReportService,
     @Inject(IReportCreateService)
     private readonly reportCreateService: IReportCreateService,
     @Inject(IConfigService)
@@ -71,19 +68,16 @@ export class AdminReportService implements IAdminReportService {
   ): Promise<CreateReportResponseDto> {
     const company = await this.companyService.getById(companyId)
 
-    const equalityReport =
-      await this.reportService.getActiveEqualityForCompany(companyId)
-
-    if (!equalityReport) {
-      throw new NotFoundException(
-        `No approved equality report found for company ${companyId}`,
-      )
-    }
-
+    // No pre-check, and no `equalityReportId`: the creation service resolves
+    // the company's coverage itself, after its replay check, exactly as it does
+    // for the partner API. Resolving here instead used to be harmless and is
+    // not any more — it read only `report`, so an admin filing on behalf of a
+    // company certified under the old regime was refused a submission the
+    // portal would now accept, and a legacy certificate has no id to pass down
+    // this call anyway.
     return this.reportCreateService.createSalary({
       ...dto,
       outliersPostponed: dto.postponed,
-      equalityReportId: equalityReport.id,
       companies: [CompanyModel.toSnapshot(company)],
     })
   }

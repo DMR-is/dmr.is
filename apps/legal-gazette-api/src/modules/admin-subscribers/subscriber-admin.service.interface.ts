@@ -1,9 +1,7 @@
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
-import {
-  SubscriberDto,
-} from '../../models/subscriber.model'
+import { SubscriberDto } from '../../models/subscriber.model'
 import {
   CreateSubscriberAdminDto,
   GetSubscribersWithPagingResponse,
@@ -29,7 +27,10 @@ export interface ISubscriberAdminService {
 
   deactivateSubscriber(subscriberId: string, user: DMRUser): Promise<void>
 
-  activateSubscriber(subscriberId: string, user: DMRUser): Promise<SubscriberDto>
+  activateSubscriber(
+    subscriberId: string,
+    user: DMRUser,
+  ): Promise<SubscriberDto>
 }
 
 export const ISubscriberAdminService = Symbol('ISubscriberAdminService')

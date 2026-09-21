@@ -7,7 +7,7 @@ import { DraftSubCriterionWithStepsDto } from './draft-sub-criterion-with-steps.
 export class DraftCriterionWithSubCriteriaDto extends ReportCriterionDto {
   @ApiDtoArray(DraftSubCriterionWithStepsDto, {
     description:
-      'The criterion\'s sub-criteria in creation order, each with its scoring steps. Empty when none have been defined yet.',
+      "The criterion's sub-criteria in creation order, each with its scoring steps. Empty when none have been defined yet.",
   })
   subCriteria!: DraftSubCriterionWithStepsDto[]
 }

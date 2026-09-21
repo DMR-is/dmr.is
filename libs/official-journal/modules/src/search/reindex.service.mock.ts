@@ -7,10 +7,7 @@ import {
   IReindexRunnerService,
   ReindexStatus,
 } from './reindex-runner.service.interface'
-import {
-  UpdateAdvertInIndexRes,
-  UpdatePartyAdvertsInIndexRes,
-} from './types'
+import { UpdateAdvertInIndexRes, UpdatePartyAdvertsInIndexRes } from './types'
 
 @Injectable()
 export class MockRunnerService implements IReindexRunnerService {

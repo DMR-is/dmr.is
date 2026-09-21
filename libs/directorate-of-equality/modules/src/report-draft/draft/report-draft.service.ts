@@ -454,12 +454,15 @@ export class ReportDraftService implements IReportDraftService {
         }),
       )
 
-      this.logger.info(`Created DRAFT ${input.type} report row "${report.id}"`, {
-        context: LOGGING_CONTEXT,
-        reportId: report.id,
-      })
+      this.logger.info(
+        `Created DRAFT ${input.type} report row "${report.id}"`,
+        {
+          context: LOGGING_CONTEXT,
+          reportId: report.id,
+        },
+      )
 
-      return { reportId: report.id }
+      return { reportId: report.id, replayed: false }
     } catch (error) {
       // Lost a concurrent create race for the same tuple: the partial unique
       // index on (provider_type, provider_id) rejects the second insert. Treat
@@ -519,6 +522,6 @@ export class ReportDraftService implements IReportDraftService {
       providerId,
     })
 
-    return { reportId: existing.id }
+    return { reportId: existing.id, replayed: true }
   }
 }

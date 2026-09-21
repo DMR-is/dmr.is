@@ -1,9 +1,7 @@
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
-import type {
-  SelectProps,
-} from '@dmr.is/ui/components/island-is/Select'
+import type { SelectProps } from '@dmr.is/ui/components/island-is/Select'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 
 import { Editor } from '../editor/Editor'
@@ -21,10 +19,7 @@ type InputOptions = Omit<
   name?: string
   inputType?: React.ComponentProps<typeof Input>['type']
 }
-type SelectOptions = Omit<
-  SelectProps,
-  'size' | 'backgroundColor'
->
+type SelectOptions = Omit<SelectProps, 'size' | 'backgroundColor'>
 type DateOptions = Omit<
   React.ComponentProps<typeof DatePicker>,
   'size' | 'backgroundColor' | 'handleChange' | 'placeholderText'

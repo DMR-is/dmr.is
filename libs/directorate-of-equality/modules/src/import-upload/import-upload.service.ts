@@ -75,19 +75,73 @@ const KEY_PREFIX = 'doe-imports'
 const ONE_MB = 1024 * 1024
 const MAX_UPLOAD_BYTES = ONE_MB * 20
 
-/** Single wording for every place the cap is enforced. */
-const TOO_LARGE_MESSAGE = `Uploaded workbook exceeds the ${MAX_UPLOAD_BYTES / ONE_MB}MB limit`
+/**
+ * Single wording for every place a cap is enforced. Takes the cap because it is
+ * no longer one number — a mail attachment is held to a much smaller limit than
+ * an import workbook.
+ */
+const tooLargeMessage = (maxBytes: number) =>
+  `Uploaded file exceeds the ${maxBytes / ONE_MB}MB limit`
 
 const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
 
-/** doe-imports/<boundary>/<uuid>.xlsx */
-const keyPattern = (boundary: ImportUploadBoundary) =>
-  new RegExp(`^${KEY_PREFIX}/${boundary}/${UUID}\\.xlsx$`)
+/**
+ * Which extensions each boundary may stage — an allow-list, and a security
+ * control rather than a convenience.
+ *
+ * Per boundary, not global. The import boundaries stay `xlsx`-only: their keys
+ * are minted by this service, so any other extension is necessarily forged.
+ * Widening the set globally to serve mail attachments would quietly retire that
+ * check for the import path too.
+ *
+ * The mail-attachment set omits `.html`, `.svg` and anything executable — these
+ * objects are handed to recipients outside the Directorate.
+ */
+const BOUNDARY_EXTENSIONS: Record<ImportUploadBoundary, readonly string[]> = {
+  [ImportUploadBoundary.ADMIN]: ['xlsx'],
+  [ImportUploadBoundary.APPLICATION]: ['xlsx'],
+  [ImportUploadBoundary.MAIL_ATTACHMENT]: [
+    'pdf',
+    'doc',
+    'docx',
+    'xlsx',
+    'xls',
+    'csv',
+    'txt',
+    'png',
+    'jpg',
+    'jpeg',
+  ],
+}
 
-/** Matches a key for any known boundary — used when the boundary isn't known yet. */
+const extensionGroup = (boundary: ImportUploadBoundary) =>
+  BOUNDARY_EXTENSIONS[boundary].join('|')
+
+/** doe-imports/<boundary>/<uuid>.<ext>, with <ext> allowed for that boundary. */
+const keyPattern = (boundary: ImportUploadBoundary) =>
+  new RegExp(
+    `^${KEY_PREFIX}/${boundary}/${UUID}\\.(?:${extensionGroup(boundary)})$`,
+  )
+
+/**
+ * Matches a key for any known boundary — used when the boundary isn't known yet.
+ *
+ * Built per boundary and OR-ed rather than crossing every boundary with every
+ * extension, which would accept `doe-imports/admin/<uuid>.png`.
+ */
 const anyKeyPattern = new RegExp(
-  `^${KEY_PREFIX}/(${Object.values(ImportUploadBoundary).join('|')})/${UUID}\\.xlsx$`,
+  Object.values(ImportUploadBoundary)
+    .map(
+      (boundary) =>
+        `^${KEY_PREFIX}/${boundary}/${UUID}\\.(?:${extensionGroup(boundary)})$`,
+    )
+    .join('|'),
 )
+
+const isAllowedExtension = (
+  boundary: ImportUploadBoundary,
+  value: string,
+): boolean => BOUNDARY_EXTENSIONS[boundary].includes(value)
 
 /** Short, stable digest so a refused key can be correlated but not echoed. */
 const hashKey = (key: string): string =>
@@ -116,8 +170,19 @@ export class ImportUploadService implements IImportUploadService {
 
   async createUpload(
     boundary: ImportUploadBoundary,
+    opts: { extension?: string } = {},
   ): Promise<PresignUploadResponseDto> {
-    const key = `${KEY_PREFIX}/${boundary}/${randomUUID()}.xlsx`
+    // Defaults to xlsx so every existing caller — and the import path's whole
+    // key contract — is unchanged by this parameter existing.
+    const extension = (opts.extension ?? 'xlsx')
+      .toLowerCase()
+      .replace(/^\./, '')
+
+    if (!isAllowedExtension(boundary, extension)) {
+      throw new BadRequestException(`Unsupported file type: .${extension}`)
+    }
+
+    const key = `${KEY_PREFIX}/${boundary}/${randomUUID()}.${extension}`
 
     if (this.isLocal) {
       // The web's putWorkbookToPresignedUrl PUTs the file to whatever URL it's
@@ -165,6 +230,14 @@ export class ImportUploadService implements IImportUploadService {
     key: string,
     boundary: ImportUploadBoundary,
   ): Promise<Buffer> {
+    return this.fetchObject(key, boundary, MAX_UPLOAD_BYTES)
+  }
+
+  async fetchObject(
+    key: string,
+    boundary: ImportUploadBoundary,
+    maxBytes: number = MAX_UPLOAD_BYTES,
+  ): Promise<Buffer> {
     // Repeated even though gated callers assert this first: this method is the
     // one that touches storage, so the check belongs where the read happens
     // rather than only at the call sites that remember it.
@@ -178,18 +251,18 @@ export class ImportUploadService implements IImportUploadService {
       // up front. Capping the stream is the only bound that holds; capping the
       // finished buffer means we already read the whole thing into memory.
       const buffer = this.isLocal
-        ? await this.readLocal(key)
+        ? await this.readLocal(key, maxBytes)
         : (
             await this.aws.getObjectBuffer(key, getDoeImportsBucket(), {
-              maxBytes: MAX_UPLOAD_BYTES,
+              maxBytes,
             })
           ).unwrap()
 
       // Backstop only — both branches above already cap the read. This asserts
       // the contract of the functions we just called rather than adding
       // protection.
-      if (buffer.length > MAX_UPLOAD_BYTES) {
-        throw new PayloadTooLargeException(TOO_LARGE_MESSAGE)
+      if (buffer.length > maxBytes) {
+        throw new PayloadTooLargeException(tooLargeMessage(maxBytes))
       }
 
       return buffer
@@ -302,8 +375,11 @@ export class ImportUploadService implements IImportUploadService {
       throw new BadRequestException('Invalid import upload key')
     }
 
+    // The staging cap, not any per-caller cap: this endpoint stands in for the
+    // S3 PUT itself, which is equally uncapped in a deployed environment. A
+    // caller with a tighter limit enforces it where it reads the object.
     if (data.length > MAX_UPLOAD_BYTES) {
-      throw new PayloadTooLargeException(TOO_LARGE_MESSAGE)
+      throw new PayloadTooLargeException(tooLargeMessage(MAX_UPLOAD_BYTES))
     }
 
     await mkdir(LOCAL_UPLOAD_DIR, { recursive: true })
@@ -315,7 +391,7 @@ export class ImportUploadService implements IImportUploadService {
     })
   }
 
-  private async readLocal(key: string): Promise<Buffer> {
+  private async readLocal(key: string, maxBytes: number): Promise<Buffer> {
     const path = this.localPath(key)
 
     let size: number
@@ -327,8 +403,8 @@ export class ImportUploadService implements IImportUploadService {
 
     // Dev-only path, but it must not read an arbitrarily large file into memory
     // either — check the size on disk before opening it.
-    if (size > MAX_UPLOAD_BYTES) {
-      throw new PayloadTooLargeException(TOO_LARGE_MESSAGE)
+    if (size > maxBytes) {
+      throw new PayloadTooLargeException(tooLargeMessage(maxBytes))
     }
 
     try {

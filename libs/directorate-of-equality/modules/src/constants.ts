@@ -30,8 +30,23 @@ export enum DoeModels {
   REPORT_COMMENT = 'report_comment',
   COMPANY_EVENT = 'company_event',
   COMPANY_COMMENT = 'company_comment',
+  COMPANY_EMAIL = 'company_email',
+  COMPANY_EMAIL_RECIPIENT = 'company_email_recipient',
+  COMPANY_EMAIL_ATTACHMENT = 'company_email_attachment',
   LEGACY_REPORT = 'legacy_report',
   CONFIG = 'config',
+
+  /**
+   * The company-scoped scoring model (starfsmat) the partner API files
+   * against. Separate from the `report_*` criteria tree, which stays the
+   * per-report frozen snapshot.
+   */
+  SCORING_MODEL = 'scoring_model',
+  SCORING_CRITERION = 'scoring_criterion',
+  SCORING_SUB_CRITERION = 'scoring_sub_criterion',
+  SCORING_SUB_CRITERION_STEP = 'scoring_sub_criterion_step',
+  SCORING_ROLE = 'scoring_role',
+  SCORING_ROLE_STEP = 'scoring_role_step',
 }
 
 /**

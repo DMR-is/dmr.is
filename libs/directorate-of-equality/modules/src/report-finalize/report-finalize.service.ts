@@ -23,6 +23,8 @@ import {
   ReportEventModel,
   ReportEventTypeEnum,
 } from '../report/models/report-event.model'
+import { IReportService } from '../report/report.service.interface'
+import { EqualityCoverage } from '../report/types/equality-coverage'
 import { AUTO_REVIEW_ENFORCE } from '../report-auto-review/report-auto-review.constants'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
@@ -44,14 +46,83 @@ export class ReportFinalizeService implements IReportFinalizeService {
     private readonly reportEventModel: typeof ReportEventModel,
     @Inject(IReportAutoReviewService)
     private readonly autoReviewService: IReportAutoReviewService,
+    @Inject(IReportService)
+    private readonly reportService: IReportService,
   ) {}
 
   /**
-   * Schema invariant: a SALARY row's `equality_report_id` must point to an
-   * EQUALITY row that was APPROVED at the moment of insert and is still
-   * within its three-year validity window.
+   * What a new salary submission will be filed against, for a caller that does
+   * not name it — every partner-API submission, since that contract omits the
+   * field, and every island.is submission from a company whose coverage has no
+   * id to name.
+   *
+   * Lives beside `assertEqualityReportApproved` and is called from the same
+   * place, which is the point: this must run **after** the idempotent replay
+   * check, never before it. Resolving first made a retry of an
+   * already-filed report answer 404 once its equality report stopped being
+   * active, instead of replaying — a report that was successfully filed
+   * becoming un-retryable because a precondition for NEW submissions had since
+   * lapsed.
+   *
+   * **Delegates rather than querying**, and that is the whole point. This
+   * resolution has to select exactly what `GET /reports/salary/eligibility` and
+   * `GET /reports/equality/active` already told the caller, because those two
+   * are the pre-check for this submission. It once filtered
+   * `parentCompanyId: null` — equality reports the company filed as the parent
+   * — while both of those routes join on `companyId` alone and so also match a
+   * subsidiary. A company covered by a group equality report therefore read
+   * `eligible: true`, received a real report id, submitted, and was refused;
+   * and since the partner contract no longer carries `equalityReportId`, it had
+   * no field left to override the answer with. It could not file at all.
+   *
+   * Sharing the lookup is what keeps the pre-check and the submission from ever
+   * disagreeing again. It also collapses two round trips into one indexed join.
+   * `resolveEqualityCoverage` is now that shared lookup, and it answers with a
+   * legacy certificate as readily as with a report — which is the same class of
+   * bug caught a second time, and at far greater scale: the ~540 companies
+   * whose equality plan exists only on the retired register were told by both
+   * read routes that they had none, and could file no salary report at all.
    */
-  async assertEqualityReportApproved(equalityReportId: string): Promise<void> {
+  async resolveEqualityCoverage(companyId: string): Promise<EqualityCoverage> {
+    const coverage = await this.reportService.resolveEqualityCoverage(companyId)
+
+    if (!coverage) {
+      // The same sentence `GET .../reports/equality/active` answers with, so a
+      // caller that skipped the eligibility pre-check reads one message from
+      // either route.
+      throw new NotFoundException('No approved equality report is in force')
+    }
+
+    return coverage
+  }
+
+  /**
+   * Schema invariant: a SALARY row's `equality_report_id` must point to an
+   * EQUALITY row that was APPROVED at the moment of insert, is still within
+   * its three-year validity window — and covers the submitting company.
+   *
+   * The last clause is authorization, not schema. The id is the applicant's,
+   * and without the join a company with no equality plan of its own could file
+   * a salary report against any other company's approved plan: the borrowed
+   * identifier, `approvedAt` and `validUntil` then read back on
+   * `GET /application/reports/:providerId`, and approving the salary report
+   * moved the company's next due date out three years. Reachable from the
+   * partner API as well as island.is (Claude Security F8).
+   *
+   * Joins on `companyId` alone, NOT `parentCompanyId: null`, so that this
+   * selects exactly what `findActiveEqualityForCompany` selects for the
+   * eligibility and active-report routes and for `resolveEqualityCoverage`. A
+   * subsidiary covered by a group equality report is handed that report's id
+   * by those routes and must be allowed to name it back here; filtering to the
+   * parent row is the regression `resolveEqualityCoverage` documents above.
+   *
+   * 404 rather than 403, with the same sentence as for an unknown id: the
+   * caller learns nothing about whether the id exists for someone else.
+   */
+  async assertEqualityReportApproved(
+    equalityReportId: string,
+    companyId: string,
+  ): Promise<void> {
     const equalityReport = await this.reportModel.findOne({
       where: {
         id: equalityReportId,
@@ -59,6 +130,15 @@ export class ReportFinalizeService implements IReportFinalizeService {
         status: ReportStatusEnum.APPROVED,
         validUntil: { [Op.gt]: new Date() },
       },
+      include: [
+        {
+          model: CompanyReportModel,
+          as: 'companyReport',
+          where: { companyId },
+          required: true,
+          attributes: [],
+        },
+      ],
     })
 
     if (!equalityReport) {
@@ -105,6 +185,14 @@ export class ReportFinalizeService implements IReportFinalizeService {
       ReportStatusEnum.POSTPONED,
     ]
 
+    // Pinned to `parentCompanyId: null` — reports this company filed itself.
+    // A subsidiary also has a snapshot row on its parent's group report, and
+    // without the pin that row would resolve to the PARENT's report: a
+    // subsidiary's own submission would then withdraw a SUBMITTED parent
+    // report, or 409 against an IN_REVIEW one and leak its providerId. This
+    // is the opposite choice from `assertEqualityReportApproved`, which joins
+    // on `companyId` alone on purpose: coverage flows down a group, ownership
+    // of an in-flight filing does not.
     const parentSnapshots = await this.companyReportModel.findAll({
       where: { companyId, parentCompanyId: null },
       attributes: ['reportId'],
@@ -135,7 +223,11 @@ export class ReportFinalizeService implements IReportFinalizeService {
     )
     if (blocking) {
       throw new ConflictException(
-        `Company already has a ${type} report in status ${blocking.status} (providerId: ${blocking.providerId ?? 'n/a'}). Resolve it before submitting another.`,
+        `Company already has a ${type} report in status ${
+          blocking.status
+        } (providerId: ${
+          blocking.providerId ?? 'n/a'
+        }). Resolve it before submitting another.`,
       )
     }
 

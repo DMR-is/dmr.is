@@ -78,7 +78,7 @@
       "options": {
         "commands": [
           "curl http://localhost:4000/swagger-json > clientConfig.json",
-          "prettier --write clientConfig.json"
+          "yarn run -T prettier --write clientConfig.json"
         ],
         "parallel": true,
         "cwd": "apps/official-journal-web"

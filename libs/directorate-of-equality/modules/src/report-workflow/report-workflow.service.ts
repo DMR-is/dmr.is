@@ -20,6 +20,7 @@ import {
   IDoeMailService,
   ReportMailAttachment,
 } from '../mail/doe-mail.service.interface'
+import { endOfUtcDay } from '../report/lib/day-boundaries'
 import {
   CommunicationStatusEnum,
   ReportModel,
@@ -473,8 +474,16 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     const actorUserId = context.actor.userId
     const now = new Date()
-    const validUntil = new Date(now)
-    validUntil.setFullYear(validUntil.getFullYear() + 3)
+    const validUntilDay = new Date(now)
+    validUntilDay.setFullYear(validUntilDay.getFullYear() + 3)
+
+    // Validity runs to the END of the day it lands on, not to the time of day
+    // the reviewer happened to click approve. `advanceCompanyReportDueDate`
+    // mirrors this onto `company.next_*_report_due_at`, which `overdue`
+    // (`due_at < NOW()`) and the salary renewal window are both measured
+    // against — an un-normalised instant would put a company out of compliance
+    // at 14:20 on a day it is still covered through. See `endOfUtcDay`.
+    const validUntil = endOfUtcDay(validUntilDay)
 
     /*
      * ⚠️ **Compare-and-swap: the transition itself is the gate.**

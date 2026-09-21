@@ -4,6 +4,6 @@ services:
       context: ../..
       dockerfile: apps/regulations-api/Dockerfile
     ports:
-      - "${LG_WEB_PORT:-4200}:3000"
+      - '${LG_WEB_PORT:-4200}:3000'
     env_file:
       - .env.local

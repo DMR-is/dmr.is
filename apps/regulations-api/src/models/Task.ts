@@ -1,12 +1,12 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, Model, Table } from 'sequelize-typescript'
 
 type TaskAttributes = {
-  id: number;
-  regulationId: number;
-  done: boolean;
-  migrated: boolean;
-  lastEdited: Date;
-};
+  id: number
+  regulationId: number
+  done: boolean
+  migrated: boolean
+  lastEdited: Date
+}
 
 @Table({ tableName: 'Task', timestamps: false })
 export class DB_Task
@@ -14,17 +14,17 @@ export class DB_Task
   implements TaskAttributes
 {
   @Column({ primaryKey: true, autoIncrement: true, type: DataType.INTEGER })
-  id!: number;
+  id!: number
 
   @Column({ type: DataType.INTEGER })
-  regulationId!: number;
+  regulationId!: number
 
   @Column({ type: DataType.BOOLEAN })
-  done!: boolean;
+  done!: boolean
 
   @Column({ type: DataType.BOOLEAN })
-  migrated!: boolean;
+  migrated!: boolean
 
   @Column({ type: DataType.DATE })
-  lastEdited!: Date;
+  lastEdited!: Date
 }

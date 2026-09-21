@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import {
   BelongsTo,
   Column,
@@ -7,19 +8,14 @@ import {
   HasMany,
 } from 'sequelize-typescript'
 
-import {
-  ApiDateTime,
-  ApiDtoArray,
-  ApiOptionalString,
-  ApiString,
-  ApiUUId,
-} from '@dmr.is/decorators'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
+import type { AdvertModel as AdvertModelRef } from './advert.model'
 import { AdvertModel } from './advert.model'
+// Type-only: the DTO is only ever a mapper return type here. See `models.md`.
+import type { ForeclosureDto } from './foreclosure.dto'
 import {
-  ForeclosurePropertyDto,
   ForeclosurePropertyModel,
   ForeclosurePropertyModelCreateAttributes,
 } from './foreclosure-property.model'
@@ -71,7 +67,7 @@ export class ForeclosureModel extends ParanoidModel<
   foreclosureDate!: Date
 
   @BelongsTo(() => AdvertModel)
-  advert!: AdvertModel
+  advert!: AdvertModelRef
 
   @HasMany(() => ForeclosurePropertyModel)
   properties!: ForeclosurePropertyModel[]
@@ -93,33 +89,4 @@ export class ForeclosureModel extends ParanoidModel<
   fromModel(): ForeclosureDto {
     return ForeclosureModel.fromModel(this)
   }
-}
-
-export class ForeclosureDto {
-  @ApiUUId()
-  id!: string
-
-  @ApiUUId()
-  advertId!: string
-
-  @ApiOptionalString({ nullable: true })
-  caseNumberIdentifier!: string | null
-
-  @ApiString()
-  foreclosureRegion!: string
-
-  @ApiString()
-  foreclosureAddress!: string
-
-  @ApiDateTime()
-  foreclosureDate!: Date
-
-  @ApiDateTime()
-  createdAt!: Date
-
-  @ApiDateTime()
-  updatedAt!: Date
-
-  @ApiDtoArray(ForeclosurePropertyDto)
-  properties!: ForeclosurePropertyDto[]
 }

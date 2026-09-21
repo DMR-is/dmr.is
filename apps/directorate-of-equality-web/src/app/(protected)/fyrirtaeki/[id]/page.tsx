@@ -25,7 +25,9 @@ export default async function CompanyPage({
       <GridContainer>
         <GridRow>
           <GridColumn span="12/12">
-            <Suspense fallback={<SkeletonLoader repeat={4} height={40} space={2} />}>
+            <Suspense
+              fallback={<SkeletonLoader repeat={4} height={40} space={2} />}
+            >
               <CompanyDetailContainer id={id} />
             </Suspense>
           </GridColumn>

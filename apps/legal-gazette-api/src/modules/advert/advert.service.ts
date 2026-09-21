@@ -9,14 +9,14 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared-dto'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
+import {
+  generatePaging,
+  getLimitAndOffset,
+} from '@dmr.is/utils-server/serverUtils'
 
 import { LegalGazetteEvents } from '../../core/constants'
-import {
-  AdvertDetailedDto,
-  AdvertModel,
-  AdvertTemplateType,
-} from '../../models/advert.model'
+import { AdvertDetailedDto } from '../../models/advert.dto'
+import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import {
   type ApplicationAnswers,
@@ -886,7 +886,7 @@ export class AdvertService implements IAdvertService {
       caption: body.caption,
       courtDistrictId: body.courtDistrictId,
       judgementDate: body.judgementDate,
-      feeQuantity: body.feeQuantity
+      feeQuantity: body.feeQuantity,
     })
 
     return updated.fromModelToDetailed()

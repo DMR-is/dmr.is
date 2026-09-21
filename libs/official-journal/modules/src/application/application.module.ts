@@ -8,7 +8,6 @@ import { AdditionalPartiesModule } from '../additional-parties'
 import { AttachmentsModule } from '../attachments/attachments.module'
 import { AuthModule } from '../auth/auth.module'
 import { SharedCaseModule } from '../case/case.module'
-import {} from '../case/case.module'
 import caseModels from '../case/models'
 import commentModels from '../comment/v1/models'
 import { CommentModuleV2 } from '../comment/v2'
@@ -19,10 +18,8 @@ import { UtilityModule } from '../utility/utility.module'
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
 
-
 export { IApplicationService } from './application.service.interface'
 export { ApplicationService } from './application.service'
-
 
 @Module({
   imports: [
@@ -32,7 +29,10 @@ export { ApplicationService } from './application.service'
       ...commentModels,
     ]),
     AwsModule,
-    PriceModule,
+    // `forwardRef` because price.module.ts imports this module back.
+    // Named bare, this resolves to `undefined` whenever the cycle is
+    // entered at price rather than here.
+    forwardRef(() => PriceModule),
     LoggingModule,
     AuthModule,
     AdditionalPartiesModule,

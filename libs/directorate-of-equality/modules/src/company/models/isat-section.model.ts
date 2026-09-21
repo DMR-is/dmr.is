@@ -1,4 +1,11 @@
-import { Column, DataType, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript'
+import {
+  Column,
+  DataType,
+  HasMany,
+  Model,
+  PrimaryKey,
+  Table,
+} from 'sequelize-typescript'
 
 import { DoeModels } from '../../constants'
 import type { IsatSectionDto } from '../dto/isat-section.dto'
