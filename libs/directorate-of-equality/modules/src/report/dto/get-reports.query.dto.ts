@@ -1,11 +1,13 @@
-import { Transform } from 'class-transformer'
+import { Transform, Type } from 'class-transformer'
 import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
+  Min,
 } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
@@ -14,6 +16,7 @@ import {
   ApiOptionalArray,
   ApiOptionalDateTime,
   ApiOptionalEnum,
+  ApiOptionalNumber,
   ApiOptionalString,
 } from '@dmr.is/decorators'
 import { PagingQuery } from '@dmr.is/shared-dto'
@@ -25,6 +28,7 @@ import {
 import {
   CommunicationStatusEnum,
   EqualityCoverageSourceEnum,
+  GenderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
 } from '../models/report.enums'
@@ -198,6 +202,79 @@ export class GetReportsQueryDto extends PagingQuery {
   @IsArray()
   @IsEnum(EqualityCoverageSourceEnum, { each: true })
   equalitySource?: EqualityCoverageSourceEnum[]
+
+  @ApiProperty({
+    enum: GenderEnum,
+    enumName: 'GenderEnum',
+    isArray: true,
+    required: false,
+    description:
+      'Return only reports whose company executive (æðsti stjórnandi) has one of the given genders, as stated on the report. Frozen at submission like the rest of the report — this is who signed off on THAT filing, not who holds the post today.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(GenderEnum, { each: true })
+  companyAdminGender?: GenderEnum[]
+
+  // ---------------------------------------------------------------------
+  // Pay gap
+  //
+  // Two independent bounded ranges over the figures in
+  // `report_result.wage_gap_decomposition_snapshot`. Salary reports only — an
+  // equality plan has no gap, so any bound here excludes them, as does a
+  // salary report whose gap was not computable (a single-gender workforce has
+  // no measurable gap, which is not a gap of 0%).
+  //
+  // ⚠️ The two are NOT interchangeable and the difference is the point:
+  // `rawGapPercent` is the headline figure and routinely sits at 5–15%;
+  // `oskyrtPercent` is the regulated one and is tested against a ~3,9%
+  // benchmark. A filter written against the wrong one answers a different
+  // question with the same words.
+  // ---------------------------------------------------------------------
+
+  @ApiOptionalNumber({
+    description:
+      'Lower bound (inclusive, %) on the ÓLEIÐRÉTTUR pay gap — the headline figure, computed on arithmetic mean hourly wages. Magnitude, so it is never negative.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  rawGapPercentFrom?: number
+
+  @ApiOptionalNumber({
+    description:
+      'Upper bound (inclusive, %) on the óleiðréttur pay gap. See `rawGapPercentFrom`.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  rawGapPercentTo?: number
+
+  @ApiOptionalNumber({
+    description:
+      'Lower bound (inclusive, %) on the ÓSKÝRÐUR (leiðréttur) pay gap — the regulated figure the benchmark is tested against. Magnitude, so it is never negative.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  oskyrtPercentFrom?: number
+
+  @ApiOptionalNumber({
+    description:
+      'Upper bound (inclusive, %) on the óskýrður pay gap. See `oskyrtPercentFrom`.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  oskyrtPercentTo?: number
 
   // ---------------------------------------------------------------------
   // Company dimensions

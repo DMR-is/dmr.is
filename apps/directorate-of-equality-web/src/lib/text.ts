@@ -93,6 +93,19 @@ export const dataExportText = {
   // work out why their jafnréttisáætlanir vanished.
   salaryPeriodRange: 'Launatímabil (aðeins skýrslugjöf)',
 
+  adminGenderLabel: 'Kyn æðsta stjórnanda',
+  adminGenderPlaceholder: 'Veldu kyn',
+  cardGap: 'Launamunur',
+  // Named in full on BOTH controls. "Launamunur" alone would let an admin pick
+  // whichever one they landed on first, and the two answer different questions:
+  // the regulated figure sits under ~4%, the headline one routinely at 5–15%.
+  rawGapRange: 'Óleiðréttur launamunur',
+  oskyrtGapRange: 'Óskýrður (leiðréttur) launamunur',
+  gapFrom: 'Frá',
+  gapTo: 'Til',
+  gapPlaceholder: 'Ekki valið',
+  gapNoUpperBound: 'Ekkert efra mark',
+
   columnIdentifier: 'Auðkenni',
   columnType: 'Tegund',
   columnStatus: 'Staða',

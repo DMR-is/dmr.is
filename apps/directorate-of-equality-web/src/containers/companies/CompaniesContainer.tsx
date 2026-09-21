@@ -53,9 +53,7 @@ export const CompaniesContainer = () => {
     useCompanies({ pageSize: 10 })
 
   const [filters, setFilters] = useState<CompanyFilters>({
-    employees: filter.employeeCountCategory
-      ? [filter.employeeCountCategory]
-      : [],
+    employees: filter.employeeCountCategory ?? [],
     status: (filter.companyStatus ?? []) as CompanyReportStatusEnum[],
     registerStatus: (filter.status ?? []) as CompanyStatusEnum[],
     expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
@@ -70,6 +68,7 @@ export const CompaniesContainer = () => {
       ...(filter.neverFiledSalaryIncludingLegacy
         ? ['neverFiledSalaryIncludingLegacy']
         : []),
+      ...(filter.neverSubmitted ? ['neverSubmitted'] : []),
     ],
     regionCode: filter.regionCode ?? [],
     postcode: filter.postcode ?? [],
@@ -154,10 +153,11 @@ export const CompaniesContainer = () => {
         page: 1,
       })
     } else if (key === 'employees') {
-      // API supports a single employeeCountCategory; pass first selected value.
-      // Multi-select >1 categories would require an API change.
+      // A list since the API was widened: "25–49 and 50+" — everyone the law
+      // reaches — is one selection rather than two searches. Empty clears the
+      // param, so an unfiltered URL stays unfiltered.
       setFilter({
-        employeeCountCategory: (val[0] ?? null) as CompanySizeEnum | null,
+        employeeCountCategory: val.length ? (val as CompanySizeEnum[]) : null,
         page: 1,
       })
     } else if (key === 'expires') {
@@ -194,6 +194,7 @@ export const CompaniesContainer = () => {
         )
           ? true
           : null,
+        neverSubmitted: val.includes('neverSubmitted') ? true : null,
         page: 1,
       })
     } else if (key === 'postcode') {

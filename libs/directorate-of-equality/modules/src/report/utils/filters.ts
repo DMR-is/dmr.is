@@ -188,6 +188,60 @@ export const buildReportCompanyWhere = (
   }
 }
 
+/** Which figure in the decomposition snapshot a range applies to. */
+export type WageGapField = 'rawGapPercent' | 'oskyrtPercent'
+
+/**
+ * Build a `where` clause narrowing reports by a pay-gap percentage.
+ *
+ * The figure lives inside `report_result.wage_gap_decomposition_snapshot`,
+ * a JSONB column, so this is a correlated EXISTS with the value extracted and
+ * cast — the same shape as the other EXISTS builders here, and it keeps the
+ * `listview` scope free of a join only this filter needs.
+ *
+ * Three things fall OUT of the result whenever a bound is set, all correctly:
+ *
+ * - equality plans, which have no `report_result` at all;
+ * - salary reports whose gap was not computable, where the value is JSON null.
+ *   A single-gender workforce has no measurable gap, which is not a gap of 0%,
+ *   so it must not answer "show me 0–0,5%";
+ * - reports filed before the snapshot existed.
+ *
+ * `IS NOT NULL` is therefore load-bearing rather than defensive: in Postgres
+ * `NULL >= 0` is NULL, not false, which is the right answer here but only
+ * because the EXISTS then finds no row.
+ */
+export const buildWageGapRangeWhere = (
+  field: WageGapField,
+  from: number | undefined,
+  to: number | undefined,
+): WhereOptions | undefined => {
+  if (from === undefined && to === undefined) return undefined
+
+  // `field` is a union of two literals, never caller input; `from`/`to` are
+  // `@IsNumber`-validated and re-checked here before they reach the statement.
+  for (const bound of [from, to]) {
+    if (bound !== undefined && !Number.isFinite(bound)) return undefined
+  }
+
+  const value = `("rr"."wage_gap_decomposition_snapshot"->>'${field}')::numeric`
+  const bounds = [
+    `${value} IS NOT NULL`,
+    ...(from !== undefined ? [`${value} >= ${from}`] : []),
+    ...(to !== undefined ? [`${value} <= ${to}`] : []),
+  ]
+
+  return {
+    [Op.and]: [
+      literal(
+        `EXISTS (SELECT 1 FROM "${DoeModels.REPORT_RESULT}" "rr" ` +
+          `WHERE "rr"."report_id" = "${ReportModel.name}"."id" ` +
+          `AND ${bounds.join(' AND ')})`,
+      ),
+    ],
+  }
+}
+
 /**
  * Shape returned by {@link dateRangeFilter}. `symbol` keys carry Sequelize
  * `Op.*` tokens; the clause is spread into a `where` object under a column
@@ -290,6 +344,12 @@ export const buildReportListWhere = (
     })
   }
 
+  if (query.companyAdminGender?.length) {
+    Object.assign(where, {
+      companyAdminGender: { [Op.in]: query.companyAdminGender },
+    })
+  }
+
   const salaryPeriod = dateRangeFilter(
     query.salaryDataPeriodFrom,
     query.salaryDataPeriodTo,
@@ -306,6 +366,16 @@ export const buildReportListWhere = (
       ? buildImprovementPlanWhere(query.hasImprovementPlan)
       : undefined,
     buildReportCompanyWhere(query),
+    buildWageGapRangeWhere(
+      'rawGapPercent',
+      query.rawGapPercentFrom,
+      query.rawGapPercentTo,
+    ),
+    buildWageGapRangeWhere(
+      'oskyrtPercent',
+      query.oskyrtPercentFrom,
+      query.oskyrtPercentTo,
+    ),
   ].filter((clause): clause is WhereOptions => clause !== undefined)
 
   if (andClauses.length) Object.assign(where, { [Op.and]: andClauses })
