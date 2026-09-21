@@ -19,8 +19,10 @@ import { IsatCategoryFilter } from '../companies/IsatCategoryFilter'
 import { IsatSectionFilter } from '../companies/IsatSectionFilter'
 import { SelectFilter } from '../companies/SelectFilter'
 import {
+  ADMIN_GENDER_OPTIONS,
   COMMUNICATION_STATUS_OPTIONS,
   EQUALITY_SOURCE_OPTIONS,
+  GAP_BOUND_OPTIONS,
   REPORT_STATUS_OPTIONS,
   REPORT_TYPE_OPTIONS,
 } from './reportExportOptions'
@@ -43,6 +45,7 @@ export type ReportFilters = {
   status: string[]
   communicationStatus: string[]
   equalitySource: string[]
+  companyAdminGender: string[]
   employees: string[]
   sector: string[]
   isatSection: string[]
@@ -56,6 +59,7 @@ export const EMPTY_REPORT_FILTERS: ReportFilters = {
   status: [],
   communicationStatus: [],
   equalitySource: [],
+  companyAdminGender: [],
   employees: [],
   sector: [],
   isatSection: [],
@@ -81,6 +85,21 @@ export type ReportDateRanges = {
 
 export type ReportDateKey = keyof ReportDateRanges
 
+/**
+ * The two pay-gap ranges, as strings because they come straight off a select.
+ * Parsed to numbers where they are turned into query params.
+ */
+export type ReportGapBounds = {
+  rawGapPercentFrom?: string
+  rawGapPercentTo?: string
+  oskyrtPercentFrom?: string
+  oskyrtPercentTo?: string
+}
+
+export type ReportGapKey = keyof ReportGapBounds
+
+export const EMPTY_GAP_BOUNDS: ReportGapBounds = {}
+
 type Props = {
   query: string
   onQueryChange: (value: string) => void
@@ -88,6 +107,8 @@ type Props = {
   onFiltersChange: (key: keyof ReportFilters, values: string[]) => void
   dates: ReportDateRanges
   onDateChange: (key: ReportDateKey, value: Date | undefined) => void
+  gaps: ReportGapBounds
+  onGapChange: (key: ReportGapKey, value: string | undefined) => void
   onReset: () => void
   regionOptions: FilterOption[]
   postcodeOptions: FilterOption[]
@@ -100,6 +121,8 @@ export const ReportExportFilter = ({
   onFiltersChange,
   dates,
   onDateChange,
+  gaps,
+  onGapChange,
   onReset,
   regionOptions,
   postcodeOptions,
@@ -147,6 +170,49 @@ export const ReportExportFilter = ({
       />
     </Stack>
   )
+
+  /**
+   * One gap's bounds. Both selects share the same 0,5-step option list; the
+   * upper one is floored at the lower so an impossible range cannot be built.
+   */
+  const gapRange = (
+    label: string,
+    fromKey: ReportGapKey,
+    toKey: ReportGapKey,
+  ) => {
+    const from = gaps[fromKey]
+    const upperOptions = from
+      ? GAP_BOUND_OPTIONS.filter(
+          (option) => Number(option.value) >= Number(from),
+        )
+      : GAP_BOUND_OPTIONS
+
+    return (
+      <Stack space={1}>
+        <Text variant="eyebrow">{label}</Text>
+        <SelectFilter
+          name={fromKey}
+          label={dataExportText.gapFrom}
+          placeholder={dataExportText.gapPlaceholder}
+          noOptionsMessage={companiesText.filterNoResults}
+          options={GAP_BOUND_OPTIONS}
+          selected={from ? [from] : []}
+          isMulti={false}
+          onChange={(val) => onGapChange(fromKey, val[0])}
+        />
+        <SelectFilter
+          name={toKey}
+          label={dataExportText.gapTo}
+          placeholder={dataExportText.gapNoUpperBound}
+          noOptionsMessage={companiesText.filterNoResults}
+          options={upperOptions}
+          selected={gaps[toKey] ? [gaps[toKey] as string] : []}
+          isMulti={false}
+          onChange={(val) => onGapChange(toKey, val[0])}
+        />
+      </Stack>
+    )
+  }
 
   return (
     <>
@@ -235,6 +301,18 @@ export const ReportExportFilter = ({
                   selected={filters.equalitySource}
                   onChange={(val) => onFiltersChange('equalitySource', val)}
                 />
+                <MultiSelectFilter
+                  name="companyAdminGender"
+                  label={dataExportText.adminGenderLabel}
+                  placeholder={dataExportText.adminGenderPlaceholder}
+                  noOptionsMessage={companiesText.filterNoResults}
+                  isSearchable={false}
+                  options={ADMIN_GENDER_OPTIONS}
+                  selected={filters.companyAdminGender}
+                  onChange={(val) =>
+                    onFiltersChange('companyAdminGender', val)
+                  }
+                />
               </Stack>
             </AccordionItem>
 
@@ -313,6 +391,30 @@ export const ReportExportFilter = ({
                   selected={filters.postcode}
                   onChange={(val) => onFiltersChange('postcode', val)}
                 />
+              </Stack>
+            </AccordionItem>
+
+            <AccordionItem
+              id="reportGap"
+              label={dataExportText.cardGap}
+              labelUse="h5"
+              labelVariant="h5"
+              labelColor={labelColor(
+                Object.values(gaps).some((value) => value !== undefined),
+              )}
+              iconVariant="small"
+            >
+              <Stack space={3}>
+                {gapRange(
+                  dataExportText.rawGapRange,
+                  'rawGapPercentFrom',
+                  'rawGapPercentTo',
+                )}
+                {gapRange(
+                  dataExportText.oskyrtGapRange,
+                  'oskyrtPercentFrom',
+                  'oskyrtPercentTo',
+                )}
               </Stack>
             </AccordionItem>
 

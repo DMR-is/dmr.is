@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 
-import { buildReportCompanyWhere } from './filters'
+import { buildReportCompanyWhere, buildWageGapRangeWhere } from './filters'
 
 /**
  * Unwrap the single `literal()` a company filter produces, as SQL text.
@@ -93,5 +93,71 @@ describe('buildReportCompanyWhere', () => {
     const sql = sqlOf({ postcode: ["10'1"] })
 
     expect(sql).toContain("'10''1'")
+  })
+})
+
+describe('buildWageGapRangeWhere', () => {
+  const sqlOf = (
+    ...args: Parameters<typeof buildWageGapRangeWhere>
+  ): string => {
+    const where = buildWageGapRangeWhere(...args)
+    if (!where) throw new Error('expected a clause')
+
+    const clauses = (where as Record<symbol, { val: string }[]>)[Op.and]
+    expect(clauses).toHaveLength(1)
+    return clauses[0].val
+  }
+
+  it('is inert when neither bound is set', () => {
+    expect(
+      buildWageGapRangeWhere('oskyrtPercent', undefined, undefined),
+    ).toBeUndefined()
+  })
+
+  it('reads the named figure out of the snapshot', () => {
+    expect(sqlOf('rawGapPercent', 5, undefined)).toContain(
+      "\"rr\".\"wage_gap_decomposition_snapshot\"->>'rawGapPercent'",
+    )
+    expect(sqlOf('oskyrtPercent', 1, undefined)).toContain(
+      "\"rr\".\"wage_gap_decomposition_snapshot\"->>'oskyrtPercent'",
+    )
+  })
+
+  it('correlates the EXISTS on the outer report', () => {
+    expect(sqlOf('oskyrtPercent', 0, 0.5)).toContain(
+      '"rr"."report_id" = "ReportModel"."id"',
+    )
+  })
+
+  it('always excludes a null gap, even on a zero lower bound', () => {
+    // A single-gender workforce has no measurable gap, which is not a gap of
+    // 0% — it must not answer "show me 0–0,5%". In Postgres `NULL >= 0` is
+    // NULL rather than false, so the guard is what does the excluding.
+    expect(sqlOf('oskyrtPercent', 0, 0.5)).toContain('IS NOT NULL')
+  })
+
+  it('applies each bound inclusively', () => {
+    const sql = sqlOf('rawGapPercent', 5, 10)
+
+    expect(sql).toContain('>= 5')
+    expect(sql).toContain('<= 10')
+  })
+
+  it('supports an open-ended upper bound, for the 15%+ band', () => {
+    const sql = sqlOf('rawGapPercent', 15, undefined)
+
+    expect(sql).toContain('>= 15')
+    expect(sql).not.toContain('<=')
+  })
+
+  it('refuses a non-finite bound rather than emitting it', () => {
+    // `@IsNumber` already rejects these; this is the second line of defence,
+    // because the value lands inside a `literal()` uninterpolated.
+    expect(
+      buildWageGapRangeWhere('oskyrtPercent', Number.NaN, undefined),
+    ).toBeUndefined()
+    expect(
+      buildWageGapRangeWhere('oskyrtPercent', 0, Number.POSITIVE_INFINITY),
+    ).toBeUndefined()
   })
 })

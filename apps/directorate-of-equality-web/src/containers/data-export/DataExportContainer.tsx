@@ -21,11 +21,14 @@ import {
 } from '../../components/companies/CompanyFilter'
 import { CompanyTable } from '../../components/companies/CompanyTable'
 import {
+  EMPTY_GAP_BOUNDS,
   EMPTY_REPORT_FILTERS,
   type ReportDateKey,
   type ReportDateRanges,
   ReportExportFilter,
   type ReportFilters,
+  type ReportGapBounds,
+  type ReportGapKey,
 } from '../../components/data-export/ReportExportFilter'
 import { ReportExportTable } from '../../components/data-export/ReportExportTable'
 import {
@@ -85,6 +88,8 @@ export const DataExportContainer = () => {
   const [reportDraft, setReportDraft] =
     useState<ReportFilters>(EMPTY_REPORT_FILTERS)
   const [reportDates, setReportDates] = useState<ReportDateRanges>({})
+  const [reportGaps, setReportGaps] =
+    useState<ReportGapBounds>(EMPTY_GAP_BOUNDS)
   const [query, setQuery] = useState('')
 
   /**
@@ -132,10 +137,8 @@ export const DataExportContainer = () => {
   const toServerQuery = useCallback(
     (filters: CompanyFilters, q: string): Record<string, unknown> => ({
       ...(q.trim() ? { q: q.trim() } : {}),
-      // Single value until the generated client catches up with the API, which
-      // now takes a list — see the note in the commit that widened it.
       ...(filters.employees.length
-        ? { employeeCountCategory: filters.employees[0] as CompanySizeEnum }
+        ? { employeeCountCategory: filters.employees as CompanySizeEnum[] }
         : {}),
       ...(filters.status.length
         ? { companyStatus: filters.status as CompanyReportStatusEnum[] }
@@ -149,6 +152,9 @@ export const DataExportContainer = () => {
       ...(filters.flags.includes('fines') ? { finesStarted: true } : {}),
       ...(filters.flags.includes('overdue') ? { overdue: true } : {}),
       ...(filters.flags.includes('quarantined') ? { quarantined: true } : {}),
+      ...(filters.flags.includes('neverSubmitted')
+        ? { neverSubmitted: true }
+        : {}),
       ...(filters.visibility.includes('notObliged')
         ? { includeNotObliged: true }
         : {}),
@@ -174,6 +180,7 @@ export const DataExportContainer = () => {
     (
       filters: ReportFilters,
       dates: ReportDateRanges,
+      gaps: ReportGapBounds,
       q: string,
     ): Record<string, unknown> => ({
       ...(q.trim() ? { q: q.trim() } : {}),
@@ -184,6 +191,9 @@ export const DataExportContainer = () => {
         : {}),
       ...(filters.equalitySource.length
         ? { equalitySource: filters.equalitySource }
+        : {}),
+      ...(filters.companyAdminGender.length
+        ? { companyAdminGender: filters.companyAdminGender }
         : {}),
       ...(filters.employees.length
         ? { employeeCountCategory: filters.employees }
@@ -202,6 +212,14 @@ export const DataExportContainer = () => {
         Object.entries(dates)
           .filter(([, value]) => value instanceof Date)
           .map(([key, value]) => [key, (value as Date).toISOString()]),
+      ),
+      // The gap selects carry strings. `Number('')` is 0, which would read as
+      // a real lower bound of zero, so an empty value is dropped rather than
+      // converted.
+      ...Object.fromEntries(
+        Object.entries(gaps)
+          .filter(([, value]) => value !== undefined && value !== '')
+          .map(([key, value]) => [key, Number(value)]),
       ),
     }),
     [],
@@ -259,12 +277,26 @@ export const DataExportContainer = () => {
     setReportDates((prev) => ({ ...prev, [key]: value }))
   }
 
+  const handleGapChange = (key: ReportGapKey, value: string | undefined) => {
+    setReportGaps((prev) => {
+      const next = { ...prev, [key]: value }
+
+      // Clearing a lower bound clears its upper one too: "up to 4%" with no
+      // floor is a different question from the range that was being built, and
+      // silently keeping half of it would answer it without being asked.
+      if (key === 'rawGapPercentFrom' && !value) next.rawGapPercentTo = undefined
+      if (key === 'oskyrtPercentFrom' && !value) next.oskyrtPercentTo = undefined
+
+      return next
+    })
+  }
+
   const handleSubmit = () => {
     setPage(1)
     setSubmitted(
       isCompanies
         ? toServerQuery(draft, query)
-        : toReportQuery(reportDraft, reportDates, query),
+        : toReportQuery(reportDraft, reportDates, reportGaps, query),
     )
     // Deferred to the paint after the results render, otherwise focus moves to
     // a heading that still says "choose your filters".
@@ -275,6 +307,7 @@ export const DataExportContainer = () => {
     setDraft(EMPTY_FILTERS)
     setReportDraft(EMPTY_REPORT_FILTERS)
     setReportDates({})
+    setReportGaps(EMPTY_GAP_BOUNDS)
     setQuery('')
     setSubmitted(null)
     setPage(1)
@@ -308,7 +341,7 @@ export const DataExportContainer = () => {
     // filter in the same words the admin saw on screen.
     const summary = isCompanies
       ? buildFilterSummary(draft, query)
-      : buildReportFilterSummary(reportDraft, reportDates, query)
+      : buildReportFilterSummary(reportDraft, reportDates, reportGaps, query)
     for (const line of summary) {
       params.append('filterSummary', line)
     }
@@ -321,6 +354,7 @@ export const DataExportContainer = () => {
     draft,
     reportDraft,
     reportDates,
+    reportGaps,
     query,
   ])
 
@@ -374,6 +408,8 @@ export const DataExportContainer = () => {
                   onFiltersChange={handleReportFiltersChange}
                   dates={reportDates}
                   onDateChange={handleDateChange}
+                  gaps={reportGaps}
+                  onGapChange={handleGapChange}
                   onReset={handleReset}
                   regionOptions={regionOptions}
                   postcodeOptions={postcodeOptions}

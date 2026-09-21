@@ -48,6 +48,10 @@ const zGetCompaniesQuery = z.object({
   finesStarted: z.boolean().optional(),
   quarantined: z.boolean().optional(),
   overdue: z.boolean().optional(),
+  // Never filed anything — no report here and no row in the retired register.
+  // A separate axis from the obligation statuses above: a lapsed certification
+  // is missing NOW but was filed once.
+  neverSubmitted: z.boolean().optional(),
   // ⚠️ The two default-on hides, as opt-in reveals. This schema is hand-written
   // and strips anything it does not name, so omitting these here would drop
   // them silently — the toggle would appear to do nothing, with no error

@@ -256,6 +256,60 @@ export function buildCompanyExpiryWhere(
  * `overdue` and `expiresWithin` return `literal()` SQL bound to
  * `COMPANY_QUERY_ALIAS`, which does not resolve off the bare model.
  */
+/**
+ * Report statuses that count as having filed.
+ *
+ * DRAFT is excluded because it belongs to the applicant and has never been
+ * sent — that is exactly the state this filter looks for. WITHDRAWN is
+ * excluded for the same reason: a withdrawn filing was taken back, so the
+ * obligation is outstanding again.
+ *
+ * DENIED counts. A rejected filing was still filed, and calling that company
+ * "aldrei innsent" would be false.
+ */
+const SUBMITTED_REPORT_STATUSES = [
+  'SUBMITTED',
+  'POSTPONED',
+  'IN_REVIEW',
+  'DENIED',
+  'APPROVED',
+  'SUPERSEDED',
+]
+  .map((status) => `'${status}'`)
+  .join(', ')
+
+/**
+ * Companies that have never filed anything — no report in this system and no
+ * row in the retired register either.
+ *
+ * ⚠️ The legacy half is the part that is easy to get wrong. A company holding
+ * a SharePoint-era certification DID submit; it submitted to the old register.
+ * Ignoring `legacy_report` here would put roughly 600 certified companies on a
+ * list captioned "never submitted", which is both false and the opposite of
+ * actionable — those are the compliant ones.
+ *
+ * Distinct from the obligation columns, which answer "is something missing
+ * now". A company whose certification lapsed is MISSING but has filed before;
+ * this finds the ones that have never been in the system at all, which is a
+ * different conversation and often a different letter.
+ */
+export const buildCompanyNeverSubmittedWhere = (): WhereOptions => {
+  const alias = `"${COMPANY_QUERY_ALIAS}"`
+
+  return {
+    [Op.and]: [
+      literal(
+        `NOT EXISTS (SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" "cr" ` +
+          `INNER JOIN "${DoeModels.REPORT}" "r" ON "r"."id" = "cr"."report_id" ` +
+          `WHERE "cr"."company_id" = ${alias}."id" ` +
+          `AND "r"."status" IN (${SUBMITTED_REPORT_STATUSES})) ` +
+          `AND NOT EXISTS (SELECT 1 FROM "${DoeModels.LEGACY_REPORT}" "lr" ` +
+          `WHERE "lr"."company_id" = ${alias}."id")`,
+      ),
+    ],
+  }
+}
+
 export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   where: WhereOptions
   includes: Includeable[]
@@ -320,6 +374,10 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
 
   if (query.neverFiledSalaryIncludingLegacy) {
     conditions.push(literal(neverFiledAnywhereSql(ReportTypeEnum.SALARY)))
+  }
+
+  if (query.neverSubmitted) {
+    conditions.push(buildCompanyNeverSubmittedWhere())
   }
 
   // ⚠️ Three DEFAULT-ON hides, each suppressed by an explicit request on the
