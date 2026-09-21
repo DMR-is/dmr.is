@@ -516,9 +516,9 @@ describe('validateScoringModel', () => {
         (r) => r.message,
       )
 
-      expect(messages.filter((m) => /listinn er styttur/i.test(m))).toHaveLength(
-        1,
-      )
+      expect(
+        messages.filter((m) => /listinn er styttur/i.test(m)),
+      ).toHaveLength(1)
     })
 
     it('spends the last slot saying the list was cut short', () => {
