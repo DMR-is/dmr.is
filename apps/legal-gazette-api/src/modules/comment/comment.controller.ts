@@ -17,10 +17,7 @@ import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { CommentDto } from '../../models/comment.dto'
-import {
-  CreateTextCommentBodyDto,
-  GetCommentsDto,
-} from './dto/comment.dto'
+import { CreateTextCommentBodyDto, GetCommentsDto } from './dto/comment.dto'
 import { ICommentService } from './comment.service.interface'
 
 @Controller({

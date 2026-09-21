@@ -3,7 +3,6 @@ import { IsArray, IsNumber, ValidateNested } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-
 export class StatisticsOverviewCategory {
   @ApiProperty({
     type: Number,

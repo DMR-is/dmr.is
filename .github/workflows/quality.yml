@@ -56,8 +56,10 @@ jobs:
           cache-install-state: true
           cache-node-modules: true
 
+      # format:write writes and always exits 0, so this job could never fail and
+      # unformatted code landed on main unchecked. format:check reports instead.
       - name: Check formatting
-        run: yarn nx format:write --all
+        run: yarn nx format:check --all
 
   generated-files:
     # The DoE salary-report workbook feeds two committed TS files that no build

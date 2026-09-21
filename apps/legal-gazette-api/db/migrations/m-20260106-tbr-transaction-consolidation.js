@@ -197,7 +197,8 @@ module.exports = {
       // ============================================================
 
       // Check if subscription fee code exists, create if not
-      const subscriptionFeeCode = process.env.LG_SUBSCRIPTION_FEE_CODE || 'RL401'
+      const subscriptionFeeCode =
+        process.env.LG_SUBSCRIPTION_FEE_CODE || 'RL401'
       const subscriptionAmount = parseInt(
         process.env.LG_SUBSCRIPTION_AMOUNT || '4500',
         10,

@@ -36,5 +36,3 @@ runs:
       run: |
         MANIFEST=$(aws ecr batch-get-image --repository-name ${{ inputs.ECR_REPOSITORY }} --image-ids imageTag=sha-${{ github.sha }} --query 'images[].imageManifest' --output text)
         aws ecr put-image --repository-name ${{ inputs.ECR_REPOSITORY }} --image-tag ${{ inputs.VERSION_TAG }} --image-manifest "$MANIFEST"
-
-

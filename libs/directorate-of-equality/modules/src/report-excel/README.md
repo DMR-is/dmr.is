@@ -12,9 +12,9 @@ stay with the app-system's auth context and are never echoed back.
 
 ## Endpoints
 
-| Method | Path                             | What it does                                                                                  |
-| ------ | -------------------------------- | --------------------------------------------------------------------------------------------- |
-| `GET`  | `/api/v1/reports/excel/template` | Streams the blank salary-report xlsx                                                          |
+| Method | Path                             | What it does                                                                                                             |
+| ------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `GET`  | `/api/v1/reports/excel/template` | Streams the blank salary-report xlsx                                                                                     |
 | `POST` | `/api/v1/reports/excel/import`   | `ImportKeyDto` JSON (`{ "key": … }`, from the presign endpoint) → `ParsedReportDto`, or `400` with structured error list |
 
 Both routes are behind `TokenJwtAuthGuard` and `AdminGuard`
@@ -81,10 +81,7 @@ On success you'll get a `ParsedReportDto` tree. On failure, `400` with:
 ```json
 {
   "statusCode": 400,
-  "message": [
-    "Launagögn (röð 7, dálkur D): Óþekkt kyn „Other“",
-    "Viðmið: Vægi viðmiða leggst saman í 95%, á að vera 100%"
-  ],
+  "message": ["Launagögn (röð 7, dálkur D): Óþekkt kyn „Other“", "Viðmið: Vægi viðmiða leggst saman í 95%, á að vera 100%"],
   "errors": [
     { "sheet": "Launagögn", "row": 7, "column": "D", "message": "Óþekkt kyn „Other“" },
     { "sheet": "Viðmið", "row": null, "column": null, "message": "Vægi viðmiða leggst saman í 95%, á að vera 100%" }

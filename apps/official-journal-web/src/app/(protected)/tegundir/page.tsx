@@ -113,8 +113,7 @@ export default function AdvertTypesPage() {
                     options={mainTypeOptions}
                     placeholder="Veldu tegund"
                     value={mainTypeOptions?.find(
-                      (mainType) =>
-                        selectedMainType?.id === mainType.value.id,
+                      (mainType) => selectedMainType?.id === mainType.value.id,
                     )}
                     onChange={(opt) =>
                       setSelectedMainType(opt ? opt.value : null)
@@ -132,9 +131,7 @@ export default function AdvertTypesPage() {
                     value={typeOptions?.find(
                       (type) => selectedType?.id === type.value.id,
                     )}
-                    onChange={(opt) =>
-                      setSelectedType(opt ? opt.value : null)
-                    }
+                    onChange={(opt) => setSelectedType(opt ? opt.value : null)}
                   />
                 </Stack>
               </ContentWrapper>

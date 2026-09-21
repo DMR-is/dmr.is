@@ -39,7 +39,9 @@ export class BackfillHtmlResponseDto {
   @ApiProperty({ description: 'Total number of publications missing HTML' })
   total!: number
 
-  @ApiProperty({ description: 'Number of publications successfully backfilled' })
+  @ApiProperty({
+    description: 'Number of publications successfully backfilled',
+  })
   backfilled!: number
 
   @ApiProperty({ description: 'Number of publications that failed' })
@@ -94,7 +96,10 @@ export class BackfillStartResponseDto {
   @ApiPropertyOptional({ description: 'Info message' })
   message?: string
 
-  @ApiProperty({ description: 'Current job status', type: BackfillJobStatusDto })
+  @ApiProperty({
+    description: 'Current job status',
+    type: BackfillJobStatusDto,
+  })
   status!: BackfillJobStatusDto
 }
 

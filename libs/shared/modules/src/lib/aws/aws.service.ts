@@ -459,7 +459,10 @@ export class AWSService implements IAWSService {
   // `logArgs: false` because `message.attachments[].content` holds file buffers,
   // and `filterArgs` only drops buffers at the top level of the argument list.
   @LogAndHandle({ logArgs: false })
-  async sendMail(message: Mail.Options, context = 'S3Service'): Promise<SentMessageInfo> {
+  async sendMail(
+    message: Mail.Options,
+    context = 'S3Service',
+  ): Promise<SentMessageInfo> {
     this.logger.info('Sending email with SES', {
       category: LOGGING_CATEGORY,
       context: context,

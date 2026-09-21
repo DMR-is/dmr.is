@@ -17,7 +17,6 @@ export const getCurrentMonthDateRange = (date: Date): [Date, Date] => {
   return [getStartOfCurrentMonth(date), getEndOfCurrentMonth(date)]
 }
 
-
 export const getMonthName = (date: Date): string => {
   return format(date, 'LLLL', { locale: is })
 }
@@ -47,4 +46,3 @@ export const mapDepartmentIdToLetter = (departmentId: string): string => {
       throw new Error(`Unknown department ID: ${departmentId}`)
   }
 }
-

@@ -186,7 +186,8 @@ const stepLabels = (n: number): string[] => {
 
 const roleScore = (steps: number[]): number =>
   JOB_SUBS.reduce(
-    (total, sub, i) => total + computeStepScore(steps[i], sub.steps, sub.weight),
+    (total, sub, i) =>
+      total + computeStepScore(steps[i], sub.steps, sub.weight),
     0,
   )
 
@@ -284,14 +285,73 @@ const COMPANIES: CompanySpec[] = [
     targetOskyrtPercent: 2.6,
     tune: 'genderShift',
     roles: [
-      { title: 'Forstjóri', steps: [5, 5, 4, 4, 1, 2, 5, 4], count: 1, femaleShare: 0.2, field: 'Stjórnun', department: 'Framkvæmdastjórn', carAllowance: 95000 },
-      { title: 'Þróunarstjóri', steps: [4, 5, 4, 3, 1, 2, 5, 4], count: 3, femaleShare: 0.3, field: 'Stjórnun', department: 'Þróun', carAllowance: 60000 },
-      { title: 'Sölustjóri', steps: [4, 4, 4, 3, 1, 3, 4, 3], count: 2, femaleShare: 0.4, field: 'Sala', department: 'Sala og markaðir', carAllowance: 60000 },
-      { title: 'Verkefnastjóri', steps: [3, 3, 4, 3, 1, 2, 4, 3], count: 8, femaleShare: 0.5, field: 'Þróun', department: 'Verkefnastofa' },
-      { title: 'Sérfræðingur', steps: [2, 3, 3, 2, 1, 1, 5, 4], count: 24, femaleShare: 0.45, field: 'Þróun', department: 'Sérfræðisvið' },
-      { title: 'Hugbúnaðarsmiður', steps: [2, 2, 3, 2, 1, 1, 4, 2], count: 42, femaleShare: 0.35, field: 'Þróun', department: 'Hugbúnaðargerð' },
-      { title: 'Þjónusturáðgjafi', steps: [1, 2, 2, 3, 2, 1, 2, 2], count: 26, femaleShare: 0.75, field: 'Þjónusta', department: 'Þjónustuver' },
-      { title: 'Skrifstofumaður', steps: [1, 1, 2, 2, 1, 1, 2, 2], count: 14, femaleShare: 0.85, field: 'Stoðsvið', department: 'Skrifstofa' },
+      {
+        title: 'Forstjóri',
+        steps: [5, 5, 4, 4, 1, 2, 5, 4],
+        count: 1,
+        femaleShare: 0.2,
+        field: 'Stjórnun',
+        department: 'Framkvæmdastjórn',
+        carAllowance: 95000,
+      },
+      {
+        title: 'Þróunarstjóri',
+        steps: [4, 5, 4, 3, 1, 2, 5, 4],
+        count: 3,
+        femaleShare: 0.3,
+        field: 'Stjórnun',
+        department: 'Þróun',
+        carAllowance: 60000,
+      },
+      {
+        title: 'Sölustjóri',
+        steps: [4, 4, 4, 3, 1, 3, 4, 3],
+        count: 2,
+        femaleShare: 0.4,
+        field: 'Sala',
+        department: 'Sala og markaðir',
+        carAllowance: 60000,
+      },
+      {
+        title: 'Verkefnastjóri',
+        steps: [3, 3, 4, 3, 1, 2, 4, 3],
+        count: 8,
+        femaleShare: 0.5,
+        field: 'Þróun',
+        department: 'Verkefnastofa',
+      },
+      {
+        title: 'Sérfræðingur',
+        steps: [2, 3, 3, 2, 1, 1, 5, 4],
+        count: 24,
+        femaleShare: 0.45,
+        field: 'Þróun',
+        department: 'Sérfræðisvið',
+      },
+      {
+        title: 'Hugbúnaðarsmiður',
+        steps: [2, 2, 3, 2, 1, 1, 4, 2],
+        count: 42,
+        femaleShare: 0.35,
+        field: 'Þróun',
+        department: 'Hugbúnaðargerð',
+      },
+      {
+        title: 'Þjónusturáðgjafi',
+        steps: [1, 2, 2, 3, 2, 1, 2, 2],
+        count: 26,
+        femaleShare: 0.75,
+        field: 'Þjónusta',
+        department: 'Þjónustuver',
+      },
+      {
+        title: 'Skrifstofumaður',
+        steps: [1, 1, 2, 2, 1, 1, 2, 2],
+        count: 14,
+        femaleShare: 0.85,
+        field: 'Stoðsvið',
+        department: 'Skrifstofa',
+      },
     ],
   },
 
@@ -315,7 +375,8 @@ const COMPANIES: CompanySpec[] = [
   // mixed-direction set to render.
   {
     slug: '2-lagmarksmengi-50',
-    label: 'Vesturvík Þjónusta hf. — 50 starfsmenn, yfir viðmiði, lágmarksmengi',
+    label:
+      'Vesturvík Þjónusta hf. — 50 starfsmenn, yfir viðmiði, lágmarksmengi',
     females: 30,
     neutrals: 0,
     seed: 5150,
@@ -334,12 +395,56 @@ const COMPANIES: CompanySpec[] = [
       { gender: GenderEnum.FEMALE, from: 'middle', count: 5, shift: -0.3 },
     ],
     roles: [
-      { title: 'Framkvæmdastjóri', steps: [5, 5, 4, 4, 1, 2, 5, 4], count: 1, femaleShare: 0.3, field: 'Stjórnun', department: 'Framkvæmdastjórn', carAllowance: 90000 },
-      { title: 'Deildarstjóri', steps: [4, 4, 3, 3, 2, 2, 4, 3], count: 3, femaleShare: 0.4, field: 'Stjórnun', department: 'Deildarstjórn', carAllowance: 55000 },
-      { title: 'Verkstjóri', steps: [3, 2, 3, 3, 3, 2, 3, 3], count: 5, femaleShare: 0.4, field: 'Rekstur', department: 'Vaktstjórn' },
-      { title: 'Þjónusturáðgjafi', steps: [2, 2, 3, 3, 2, 2, 3, 2], count: 16, femaleShare: 0.7, field: 'Þjónusta', department: 'Þjónustuver' },
-      { title: 'Starfsmaður í afgreiðslu', steps: [1, 1, 3, 3, 2, 3, 2, 2], count: 17, femaleShare: 0.75, field: 'Þjónusta', department: 'Afgreiðsla' },
-      { title: 'Starfsmaður í ræstingu', steps: [1, 1, 2, 2, 3, 2, 1, 1], count: 8, femaleShare: 0.8, field: 'Rekstur', department: 'Umsjón húsnæðis' },
+      {
+        title: 'Framkvæmdastjóri',
+        steps: [5, 5, 4, 4, 1, 2, 5, 4],
+        count: 1,
+        femaleShare: 0.3,
+        field: 'Stjórnun',
+        department: 'Framkvæmdastjórn',
+        carAllowance: 90000,
+      },
+      {
+        title: 'Deildarstjóri',
+        steps: [4, 4, 3, 3, 2, 2, 4, 3],
+        count: 3,
+        femaleShare: 0.4,
+        field: 'Stjórnun',
+        department: 'Deildarstjórn',
+        carAllowance: 55000,
+      },
+      {
+        title: 'Verkstjóri',
+        steps: [3, 2, 3, 3, 3, 2, 3, 3],
+        count: 5,
+        femaleShare: 0.4,
+        field: 'Rekstur',
+        department: 'Vaktstjórn',
+      },
+      {
+        title: 'Þjónusturáðgjafi',
+        steps: [2, 2, 3, 3, 2, 2, 3, 2],
+        count: 16,
+        femaleShare: 0.7,
+        field: 'Þjónusta',
+        department: 'Þjónustuver',
+      },
+      {
+        title: 'Starfsmaður í afgreiðslu',
+        steps: [1, 1, 3, 3, 2, 3, 2, 2],
+        count: 17,
+        femaleShare: 0.75,
+        field: 'Þjónusta',
+        department: 'Afgreiðsla',
+      },
+      {
+        title: 'Starfsmaður í ræstingu',
+        steps: [1, 1, 2, 2, 3, 2, 1, 1],
+        count: 8,
+        femaleShare: 0.8,
+        field: 'Rekstur',
+        department: 'Umsjón húsnæðis',
+      },
     ],
   },
 
@@ -356,7 +461,8 @@ const COMPANIES: CompanySpec[] = [
   // spread and stops being unusual at all.
   {
     slug: '3-abendingar-50',
-    label: 'Höfðaborg Framleiðsla hf. — 50 starfsmenn, innan viðmiðs, ábendingar',
+    label:
+      'Höfðaborg Framleiðsla hf. — 50 starfsmenn, innan viðmiðs, ábendingar',
     females: 20,
     neutrals: 0,
     seed: 771,
@@ -364,16 +470,72 @@ const COMPANIES: CompanySpec[] = [
     targetOskyrtPercent: 2,
     tune: 'genderShift',
     injections: [
-      { gender: GenderEnum.FEMALE, from: 'spread', count: 4, shift: 0.45, alternate: true },
-      { gender: GenderEnum.MALE, from: 'spread', count: 4, shift: 0.45, alternate: true },
+      {
+        gender: GenderEnum.FEMALE,
+        from: 'spread',
+        count: 4,
+        shift: 0.45,
+        alternate: true,
+      },
+      {
+        gender: GenderEnum.MALE,
+        from: 'spread',
+        count: 4,
+        shift: 0.45,
+        alternate: true,
+      },
     ],
     roles: [
-      { title: 'Framleiðslustjóri', steps: [5, 4, 4, 3, 2, 2, 4, 4], count: 1, femaleShare: 0.2, field: 'Stjórnun', department: 'Framkvæmdastjórn', carAllowance: 85000 },
-      { title: 'Vörustjóri', steps: [3, 4, 3, 2, 2, 2, 4, 3], count: 3, femaleShare: 0.3, field: 'Stjórnun', department: 'Vöruhús', carAllowance: 50000 },
-      { title: 'Vélstjóri', steps: [2, 2, 3, 2, 3, 2, 3, 4], count: 6, femaleShare: 0.15, field: 'Framleiðsla', department: 'Vélasalur' },
-      { title: 'Tæknimaður', steps: [2, 2, 3, 2, 3, 2, 3, 2], count: 9, femaleShare: 0.25, field: 'Framleiðsla', department: 'Viðhald' },
-      { title: 'Framleiðslustarfsmaður', steps: [1, 1, 2, 3, 3, 3, 1, 2], count: 21, femaleShare: 0.45, field: 'Framleiðsla', department: 'Framleiðslulína' },
-      { title: 'Lagerstarfsmaður', steps: [1, 1, 2, 2, 3, 3, 1, 1], count: 10, femaleShare: 0.35, field: 'Rekstur', department: 'Lager' },
+      {
+        title: 'Framleiðslustjóri',
+        steps: [5, 4, 4, 3, 2, 2, 4, 4],
+        count: 1,
+        femaleShare: 0.2,
+        field: 'Stjórnun',
+        department: 'Framkvæmdastjórn',
+        carAllowance: 85000,
+      },
+      {
+        title: 'Vörustjóri',
+        steps: [3, 4, 3, 2, 2, 2, 4, 3],
+        count: 3,
+        femaleShare: 0.3,
+        field: 'Stjórnun',
+        department: 'Vöruhús',
+        carAllowance: 50000,
+      },
+      {
+        title: 'Vélstjóri',
+        steps: [2, 2, 3, 2, 3, 2, 3, 4],
+        count: 6,
+        femaleShare: 0.15,
+        field: 'Framleiðsla',
+        department: 'Vélasalur',
+      },
+      {
+        title: 'Tæknimaður',
+        steps: [2, 2, 3, 2, 3, 2, 3, 2],
+        count: 9,
+        femaleShare: 0.25,
+        field: 'Framleiðsla',
+        department: 'Viðhald',
+      },
+      {
+        title: 'Framleiðslustarfsmaður',
+        steps: [1, 1, 2, 3, 3, 3, 1, 2],
+        count: 21,
+        femaleShare: 0.45,
+        field: 'Framleiðsla',
+        department: 'Framleiðslulína',
+      },
+      {
+        title: 'Lagerstarfsmaður',
+        steps: [1, 1, 2, 2, 3, 3, 1, 1],
+        count: 10,
+        femaleShare: 0.35,
+        field: 'Rekstur',
+        department: 'Lager',
+      },
     ],
   },
 ]
@@ -508,7 +670,11 @@ const buildSkeleton = (company: CompanySpec): Skeleton[] => {
  * caps max |t| near √3, leaving the planted deviations as the only rows that
  * can clear 2.
  */
-const baselineResiduals = (n: number, sigma: number, seed: number): number[] => {
+const baselineResiduals = (
+  n: number,
+  sigma: number,
+  seed: number,
+): number[] => {
   const spread = Array.from({ length: n }, (_, i) =>
     n === 1 ? 0 : (-1 + (2 * i) / (n - 1)) * sigma,
   )
@@ -544,8 +710,11 @@ const injectionTargets = (
     // top nor the bottom employee is ever a target — those two carry the most
     // leverage, and moving them tilts the line the hardest.
     const stride = group.length / injection.count
-    return Array.from({ length: injection.count }, (_, i) =>
-      group[Math.min(group.length - 1, Math.floor(stride * (i + 0.5)))].ordinal,
+    return Array.from(
+      { length: injection.count },
+      (_, i) =>
+        group[Math.min(group.length - 1, Math.floor(stride * (i + 0.5)))]
+          .ordinal,
     )
   }
   const start = Math.max(0, Math.floor(group.length / 2) - 1)
@@ -582,7 +751,11 @@ const composePay = (
   // month — that is what "föst yfirvinna" means on the sheet.
   const fixedOvertime =
     skeleton.paidHours > STANDARD_MONTH
-      ? Math.round((regular * (skeleton.paidHours - STANDARD_MONTH)) / skeleton.paidHours / 1000) * 1000
+      ? Math.round(
+          (regular * (skeleton.paidHours - STANDARD_MONTH)) /
+            skeleton.paidHours /
+            1000,
+        ) * 1000
       : null
   const fixedOther = skeleton.ordinal % 5 === 0 ? 18000 : null
 
@@ -693,7 +866,10 @@ const calibrate = (company: CompanySpec, skeleton: Skeleton[]): number => {
 
 // ── Workbook writing ────────────────────────────────────────────────────────
 const toArrayBuffer = (buf: Buffer): ArrayBuffer =>
-  buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+  buf.buffer.slice(
+    buf.byteOffset,
+    buf.byteOffset + buf.byteLength,
+  ) as ArrayBuffer
 
 /**
  * The template asset itself, read from disk rather than through the
@@ -751,7 +927,11 @@ const normaliseTableStyles = (wb: ExcelJS.Workbook): void => {
 
 /** xlsx is a zip; every valid file starts with `PK\x03\x04`. */
 const isValidXlsx = (buf: Buffer): boolean =>
-  buf.length > 4 && buf[0] === 0x50 && buf[1] === 0x4b && buf[2] === 0x03 && buf[3] === 0x04
+  buf.length > 4 &&
+  buf[0] === 0x50 &&
+  buf[1] === 0x4b &&
+  buf[2] === 0x03 &&
+  buf[3] === 0x04
 
 /**
  * Re-attach the template's own `docProps/custom.xml` — copied out of the
@@ -783,10 +963,14 @@ const reinjectTemplateProps = async (buf: Buffer): Promise<Buffer> => {
 const serialize = async (wb: ExcelJS.Workbook): Promise<Buffer> => {
   normaliseTableStyles(wb)
   for (let attempt = 0; attempt < 3; attempt++) {
-    const buf = Buffer.from((await wb.xlsx.writeBuffer()) as unknown as ArrayBuffer)
+    const buf = Buffer.from(
+      (await wb.xlsx.writeBuffer()) as unknown as ArrayBuffer,
+    )
     if (isValidXlsx(buf)) return reinjectTemplateProps(buf)
   }
-  throw new Error('exceljs writeBuffer produced an invalid xlsx after 3 attempts')
+  throw new Error(
+    'exceljs writeBuffer produced an invalid xlsx after 3 attempts',
+  )
 }
 
 /**
@@ -799,7 +983,11 @@ const serialize = async (wb: ExcelJS.Workbook): Promise<Buffer> => {
  * literals — the same thing `workbook.parser.spec.ts` does, and what the cells
  * would hold after Excel recalculated them anyway.
  */
-const fillWorkbook = (wb: ExcelJS.Workbook, company: CompanySpec, cohort: Employee[]): void => {
+const fillWorkbook = (
+  wb: ExcelJS.Workbook,
+  company: CompanySpec,
+  cohort: Employee[],
+): void => {
   const criteria = wb.getWorksheet(SHEETS.CRITERIA)
   if (!criteria) throw new Error(`Missing sheet ${SHEETS.CRITERIA}`)
   for (const { row, weight } of JOB_CRITERIA) {
@@ -860,7 +1048,8 @@ const fillWorkbook = (wb: ExcelJS.Workbook, company: CompanySpec, cohort: Employ
   // Einstaklingsmat: one row per employee in ordinal order, personal-sub
   // inputs from column F — the EMP_STEP_INPUTS geometry.
   const personalSheet = wb.getWorksheet(SHEETS.EMPLOYEE_CLASSIFICATION)
-  if (!personalSheet) throw new Error(`Missing sheet ${SHEETS.EMPLOYEE_CLASSIFICATION}`)
+  if (!personalSheet)
+    throw new Error(`Missing sheet ${SHEETS.EMPLOYEE_CLASSIFICATION}`)
   cohort.forEach((e, index) => {
     personalSheet.getCell(11 + index, 6).value = e.personalStep
   })
@@ -883,7 +1072,9 @@ const summarise = (
   // on the margin between the largest |t| and the threshold, and a run that
   // silently crept over 2 would change what that file demonstrates.
   const maxT = Math.max(
-    ...studentizedResiduals(snapshot).map((r) => Math.abs(r.studentizedResidual)),
+    ...studentizedResiduals(snapshot).map((r) =>
+      Math.abs(r.studentizedResidual),
+    ),
   )
   const fullTime = cohort.filter((e) => e.paidHours >= STANDARD_MONTH)
   const monthly = fullTime.map(

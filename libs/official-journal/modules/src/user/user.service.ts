@@ -19,7 +19,10 @@ import {
   UserDto,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
+import {
+  generatePaging,
+  getLimitAndOffset,
+} from '@dmr.is/utils-server/serverUtils'
 
 import { advertInvolvedPartyMigrate } from '../journal/migrations'
 import { AdvertInvolvedPartyModel } from '../journal/models'

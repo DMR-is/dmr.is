@@ -81,7 +81,9 @@ function apiKeyEventBody(
         : reportText.timeline.apiKeyNoExpiry,
     )
   } else if (revokedReason) {
-    parts.push(`${reportText.timeline.apiKeyRevokedReasonPrefix} ${revokedReason}`)
+    parts.push(
+      `${reportText.timeline.apiKeyRevokedReasonPrefix} ${revokedReason}`,
+    )
   }
 
   // Nothing worth saying — better an empty body than a hex string. Happens

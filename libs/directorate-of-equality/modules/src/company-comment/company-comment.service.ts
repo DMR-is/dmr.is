@@ -76,10 +76,9 @@ export class CompanyCommentService implements ICompanyCommentService {
   }
 
   async delete(companyId: string, commentId: string): Promise<void> {
-    this.logger.info(
-      `Deleting comment ${commentId} for company ${companyId}`,
-      { context: LOGGING_CONTEXT },
-    )
+    this.logger.info(`Deleting comment ${commentId} for company ${companyId}`, {
+      context: LOGGING_CONTEXT,
+    })
 
     const comment = await this.companyCommentModel.findOneOrThrow(
       { where: { id: commentId, companyId } },

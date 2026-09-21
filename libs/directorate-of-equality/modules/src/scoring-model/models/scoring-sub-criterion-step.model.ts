@@ -12,8 +12,7 @@ type ScoringSubCriterionStepAttributes = {
   description: string
 }
 
-type ScoringSubCriterionStepCreateAttributes =
-  ScoringSubCriterionStepAttributes
+type ScoringSubCriterionStepCreateAttributes = ScoringSubCriterionStepAttributes
 
 /**
  * One step (þrep) on a sub-criterion's scale.

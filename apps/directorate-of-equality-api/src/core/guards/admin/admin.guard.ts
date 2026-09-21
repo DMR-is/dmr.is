@@ -9,7 +9,6 @@ import {
 import { IAuthorizationService } from '@dmr.is/doe-modules/authorization'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
-
 @Injectable()
 export class AdminGuard implements CanActivate {
   constructor(

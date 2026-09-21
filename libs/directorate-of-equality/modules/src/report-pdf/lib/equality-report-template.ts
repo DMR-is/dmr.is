@@ -93,8 +93,8 @@ export function buildEqualityReportHtml(
   <body>
     <h1 class="doc-title">Jafnréttisáætlun</h1>
     <p class="doc-intro">${escapeHtml(companyName)} — kennitala ${orDash(
-    report.company?.nationalId,
-  )}</p>
+      report.company?.nationalId,
+    )}</p>
 
     <div class="section">
       <div class="section__header">

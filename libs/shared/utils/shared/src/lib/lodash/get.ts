@@ -55,7 +55,10 @@ export function get(
   path: string,
   defaultValue?: unknown,
 ): unknown {
-  const keys = path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean)
+  const keys = path
+    .replace(/\[(\d+)\]/g, '.$1')
+    .split('.')
+    .filter(Boolean)
 
   let result: unknown = obj
   for (const key of keys) {

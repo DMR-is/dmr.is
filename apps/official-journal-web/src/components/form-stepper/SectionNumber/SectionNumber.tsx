@@ -49,8 +49,8 @@ export const SectionNumber: FC<React.PropsWithChildren<SectionNumberProps>> = ({
     currentState === 'active'
       ? lineColors[theme].active
       : currentState === 'previous'
-      ? lineColors[theme].active
-      : lineColors[theme].inActive
+        ? lineColors[theme].active
+        : lineColors[theme].inActive
 
   return (
     <SectionNumberColumn>

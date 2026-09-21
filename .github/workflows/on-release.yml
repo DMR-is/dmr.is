@@ -17,8 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ECR_REPOSITORY:
-          [
+        ECR_REPOSITORY: [
             official-journal-api,
             official-journal-admin-api,
             official-journal-application-api,

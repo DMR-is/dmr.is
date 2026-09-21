@@ -99,7 +99,7 @@ export const advertsRouter = router({
   getRelatedAdverts: protectedProcedure
     .input(z.object({ caseId: z.string() }))
     .query(async ({ ctx, input }) => {
-      return await ctx.api.getAdvertsByCaseId({ caseId: input.caseId})
+      return await ctx.api.getAdvertsByCaseId({ caseId: input.caseId })
     }),
   getAdvert: protectedProcedure
     .input(z.object({ id: z.string() }))
@@ -325,8 +325,7 @@ export const advertsRouter = router({
             settlementType: input.fields.settlementFields
               .type as RecallDeceasedFieldsDtoSettlementTypeEnum,
             companies: input.fields.settlementFields.companies,
-            partnerName:
-              input.fields.settlementFields.partnerName ?? undefined,
+            partnerName: input.fields.settlementFields.partnerName ?? undefined,
             partnerNationalId:
               input.fields.settlementFields.partnerNationalId ?? undefined,
             partnerDateOfDeath: input.fields.settlementFields.partnerDateOfDeath

@@ -6,7 +6,6 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { trpc } from '../../../../../lib/trpc/client/server'
 import { handlePublicationRedirects } from '../../../../../lib/utils/url-helpers'
 
-
 export const dynamic = 'force-dynamic'
 
 export default async function AdvertPage({

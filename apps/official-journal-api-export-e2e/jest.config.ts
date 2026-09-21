@@ -1,4 +1,3 @@
- 
 export default {
   displayName: 'official-journal-api-export-e2e',
   preset: '../..//jest.preset.js',

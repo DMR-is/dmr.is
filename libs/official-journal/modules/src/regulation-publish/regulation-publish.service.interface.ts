@@ -7,9 +7,7 @@ export interface IRegulationPublishService {
     publishedDate: Date,
     advert: Advert,
   ): Promise<ResultWrapper>
-  hasPendingTasks(
-    baseRegulationName: string,
-  ): Promise<ResultWrapper<boolean>>
+  hasPendingTasks(baseRegulationName: string): Promise<ResultWrapper<boolean>>
 }
 
 export const IRegulationPublishService = Symbol('IRegulationPublishService')

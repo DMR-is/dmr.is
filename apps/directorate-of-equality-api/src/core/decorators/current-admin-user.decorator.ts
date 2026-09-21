@@ -7,7 +7,6 @@ import {
 import { UserModel } from '@dmr.is/doe-modules/user'
 import { getLogger } from '@dmr.is/logging'
 
-
 /**
  * Resolves the acting admin (doe_user) that `AdminGuard` attached to the
  * request. Use only on routes guarded by `TokenJwtAuthGuard` + `AdminGuard`;

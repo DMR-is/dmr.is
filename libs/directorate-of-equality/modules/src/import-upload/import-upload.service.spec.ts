@@ -63,7 +63,9 @@ const awsError = (code: number, message: string) =>
 const bufferOfSize = (length: number) => ({ length }) as unknown as Buffer
 
 describe('ImportUploadService', () => {
-  let aws: jest.Mocked<Pick<IAWSService, 'getPresignedUrl' | 'getObjectBuffer' | 'deleteObject'>>
+  let aws: jest.Mocked<
+    Pick<IAWSService, 'getPresignedUrl' | 'getObjectBuffer' | 'deleteObject'>
+  >
   let service: ImportUploadService
 
   beforeAll(() => {
@@ -223,15 +225,24 @@ describe('ImportUploadService', () => {
       ['wrong prefix', 'other/admin/11111111-2222-3333-4444-555555555555.xlsx'],
       ['path traversal', 'doe-imports/admin/../../etc/passwd'],
       ['not a uuid', 'doe-imports/admin/not-a-uuid.xlsx'],
-      ['wrong extension', 'doe-imports/admin/11111111-2222-3333-4444-555555555555.csv'],
-      ['trailing segment', 'doe-imports/admin/11111111-2222-3333-4444-555555555555.xlsx/x'],
-    ])('rejects a malformed key (%s) without touching S3', async (_label, key) => {
-      await expect(
-        service.fetchWorkbook(key, ImportUploadBoundary.ADMIN),
-      ).rejects.toBeInstanceOf(BadRequestException)
+      [
+        'wrong extension',
+        'doe-imports/admin/11111111-2222-3333-4444-555555555555.csv',
+      ],
+      [
+        'trailing segment',
+        'doe-imports/admin/11111111-2222-3333-4444-555555555555.xlsx/x',
+      ],
+    ])(
+      'rejects a malformed key (%s) without touching S3',
+      async (_label, key) => {
+        await expect(
+          service.fetchWorkbook(key, ImportUploadBoundary.ADMIN),
+        ).rejects.toBeInstanceOf(BadRequestException)
 
-      expect(aws.getObjectBuffer).not.toHaveBeenCalled()
-    })
+        expect(aws.getObjectBuffer).not.toHaveBeenCalled()
+      },
+    )
 
     it('rejects a workbook over the 20MB cap', async () => {
       aws.getObjectBuffer.mockResolvedValue(
@@ -500,7 +511,10 @@ describe('ImportUploadService', () => {
       const data = Buffer.from('workbook-bytes')
 
       await service.storeLocalUpload(key, data)
-      const fetched = await service.fetchWorkbook(key, ImportUploadBoundary.ADMIN)
+      const fetched = await service.fetchWorkbook(
+        key,
+        ImportUploadBoundary.ADMIN,
+      )
 
       expect(fetched.equals(data)).toBe(true)
       expect(aws.getObjectBuffer).not.toHaveBeenCalled()

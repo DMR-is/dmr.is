@@ -11,14 +11,12 @@ export function ApiOptionalDtoArray<T>(
   options?: ApiPropertyOptions,
 ) {
   return applyDecorators(
-    ApiProperty(
-      {
-        type: () => classRef,
-        isArray: true,
-        required: false,
-        ...options,
-      } as ApiPropertyOptions,
-    ),
+    ApiProperty({
+      type: () => classRef,
+      isArray: true,
+      required: false,
+      ...options,
+    } as ApiPropertyOptions),
     IsOptional(),
     IsArray(),
     Type(() => classRef),

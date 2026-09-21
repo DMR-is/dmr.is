@@ -1,5 +1,3 @@
- 
-
 import {
   diffStyling,
   regulationContentStyling,
@@ -29,8 +27,8 @@ const addLegened = (
   const content = !$legend
     ? undefined
     : typeof $legend === 'string'
-    ? `"${$legend}"`
-    : $legend.value
+      ? `"${$legend}"`
+      : $legend.value
 
   return {
     position: 'absolute',

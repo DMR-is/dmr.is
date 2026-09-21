@@ -87,8 +87,6 @@ export interface IDoeMailService {
 }
 
 /** Outcome of one custom-email send. `error` is for the recipient row, not the reader. */
-export type CustomEmailSendResult =
-  | { ok: true }
-  | { ok: false; error: string }
+export type CustomEmailSendResult = { ok: true } | { ok: false; error: string }
 
 export const IDoeMailService = Symbol('IDoeMailService')

@@ -151,7 +151,6 @@ export class ScoringModelService implements IScoringModelService {
       // clause cannot reach a separately-fetched include. þrep are sorted in
       // `toDto` by `stepOrder`, which is their own meaning rather than a
       // tie-break.
-
     })
 
     if (!model) {

@@ -148,9 +148,7 @@ function groupSection(entry: ImprovementPlanGroup): string {
  *
  * Pure — takes the already-fetched groups and their members.
  */
-export function buildImprovementPlanHtml(
-  data: ImprovementPlanPdfData,
-): string {
+export function buildImprovementPlanHtml(data: ImprovementPlanPdfData): string {
   const { report, groups } = data
   const companyName = report.company?.name ?? ''
 

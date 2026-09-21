@@ -256,9 +256,7 @@ export function buildCompanyExpiryWhere(
  * `overdue` and `expiresWithin` return `literal()` SQL bound to
  * `COMPANY_QUERY_ALIAS`, which does not resolve off the bare model.
  */
-export function buildCompanyListQuery(
-  query: GetCompaniesQueryDto,
-): {
+export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   where: WhereOptions
   includes: Includeable[]
 } {
@@ -377,8 +375,8 @@ export function buildCompanyListQuery(
     conditions.length === 0
       ? {}
       : conditions.length === 1
-      ? conditions[0]
-      : { [Op.and]: conditions }
+        ? conditions[0]
+        : { [Op.and]: conditions }
 
   return { where, includes }
 }

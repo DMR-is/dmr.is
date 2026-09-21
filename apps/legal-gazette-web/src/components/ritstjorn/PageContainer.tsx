@@ -40,7 +40,6 @@ const DynamicCreateAdvertMenu = dynamic(
   },
 )
 
-
 export const PageContainer = () => {
   const [tab, setTab] = useQueryState('tab', parseAsStringEnum(TabIds))
   const { setParams, setStatusOptions, resetStatusOptions, params } =

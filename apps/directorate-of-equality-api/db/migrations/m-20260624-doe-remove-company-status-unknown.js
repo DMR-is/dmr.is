@@ -27,10 +27,18 @@ module.exports = {
       // 1. Collapse any lingering UNKNOWN rows. The `::text` comparison never
       //    coerces the literal into the enum, so it is safe whether or not
       //    UNKNOWN is still a member (it just matches nothing once it's gone).
-      await run(`UPDATE company SET status = 'INACTIVE' WHERE status::text = 'UNKNOWN';`)
-      await run(`UPDATE company_event SET status = 'INACTIVE' WHERE status::text = 'UNKNOWN';`)
-      await run(`UPDATE company_event SET from_status = 'INACTIVE' WHERE from_status::text = 'UNKNOWN';`)
-      await run(`UPDATE company_event SET to_status = 'INACTIVE' WHERE to_status::text = 'UNKNOWN';`)
+      await run(
+        `UPDATE company SET status = 'INACTIVE' WHERE status::text = 'UNKNOWN';`,
+      )
+      await run(
+        `UPDATE company_event SET status = 'INACTIVE' WHERE status::text = 'UNKNOWN';`,
+      )
+      await run(
+        `UPDATE company_event SET from_status = 'INACTIVE' WHERE from_status::text = 'UNKNOWN';`,
+      )
+      await run(
+        `UPDATE company_event SET to_status = 'INACTIVE' WHERE to_status::text = 'UNKNOWN';`,
+      )
 
       // 2. Converge the enum to ('ACTIVE','INACTIVE') and repoint every
       //    dependent column. Handles a fresh DB, an already-applied DB, and a

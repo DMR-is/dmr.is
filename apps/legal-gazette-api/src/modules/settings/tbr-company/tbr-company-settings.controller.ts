@@ -16,9 +16,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AdminAccess, LGResponse } from '../../../core/decorators'
 import { AuthorizationGuard } from '../../../core/guards'
-import {
-  TBRCompanySettingsItemDto,
-} from '../../../models/tbr-company-settings.model'
+import { TBRCompanySettingsItemDto } from '../../../models/tbr-company-settings.model'
 import {
   CreateTBRCompanySettingsDto,
   GetTBRCompanySettingsQueryDto,

@@ -12,7 +12,7 @@ using an API key the employer issued.
 Every path below is relative to `https://<partner-api-host>/api/v1`.
 
 **Read section C first if the employer has no scoring model yet.** A salary
-report is filed *against* one, so a company with none cannot file at all — and
+report is filed _against_ one, so a company with none cannot file at all — and
 authoring it is the employer's work, not yours.
 
 ---
@@ -27,7 +27,7 @@ out-of-band onboarding step, done on the internal DoE API by one of:
 
 - **the employer themselves**, self-service through island.is, which mints a key
   scoped to their own company; or
-- **Jafnréttisstofa**, on the employer's behalf, from the *Aðgangslyklar* tab on
+- **Jafnréttisstofa**, on the employer's behalf, from the _Aðgangslyklar_ tab on
   the company view.
 
 Practical consequences for an integration:
@@ -66,12 +66,12 @@ acting for ten customers means ten keys.
 
 A key carries some subset of:
 
-| Scope | Grants |
-| --- | --- |
-| `report:read` | every `GET` below, including reading a scoring model |
-| `salary:submit` | the analysis preview and the salary submission |
-| `equality:submit` | the equality submission |
-| `scoring:write` | authoring a scoring model — section C |
+| Scope             | Grants                                               |
+| ----------------- | ---------------------------------------------------- |
+| `report:read`     | every `GET` below, including reading a scoring model |
+| `salary:submit`   | the analysis preview and the salary submission       |
+| `equality:submit` | the equality submission                              |
+| `scoring:write`   | authoring a scoring model — section C                |
 
 A key issued without an explicit scope set gets the first three. **`scoring:write`
 is never granted by default** and has to be asked for: authoring a starfsmat is a
@@ -79,7 +79,7 @@ different act from filing against one, a vendor that only files never needs it,
 and it carries a `DELETE` that cascades a whole model away. If you only file,
 `report:read` plus a submit scope is the whole set.
 
-A call outside the key's scopes is `403`, and the scope check runs *before* the
+A call outside the key's scopes is `403`, and the scope check runs _before_ the
 rate limiter, so a refused call does not spend your allowance.
 
 ### A company off the register
@@ -130,7 +130,7 @@ submission. Rules that matter:
 - It is **your idempotency key.** Re-sending the same `providerId` for the same
   company returns the original `reportId` instead of filing a second report, so
   a network-level retry is safe. Persist it with the submission and reuse it for
-  every retry of *that* submission — do not mint a fresh UUID per HTTP attempt.
+  every retry of _that_ submission — do not mint a fresh UUID per HTTP attempt.
 - **One `providerId` per submission, and a correction is a new submission.**
   This is the distinction that costs data if you get it wrong, so it has its own
   section below.
@@ -157,10 +157,10 @@ id.
 
 **Two signals tell you which happened**, and you should assert on at least one:
 
-| | Filed | Replayed |
-| --- | --- | --- |
-| Status | `201 Created` | `200 OK` |
-| `replayed` | `false` | `true` |
+|            | Filed         | Replayed |
+| ---------- | ------------- | -------- |
+| Status     | `201 Created` | `200 OK` |
+| `replayed` | `false`       | `true`   |
 
 A `200` on a submission you believed was new means your `providerId` was already
 used. Note that a follow-up `GET /partner/reports/:providerId` cannot tell you
@@ -180,7 +180,7 @@ this flow comes first and has a human review step in the middle of it.
 
 ### A1. `GET /partner/company` — confirm the key
 
-*Scope: `report:read`*
+_Scope: `report:read`_
 
 Returns the company the key belongs to. No parameters. Use it as the first call
 of any integration: it proves the key is live and points at the employer you
@@ -189,15 +189,15 @@ expect, before you build a payload for the wrong company.
 A deliberately narrow projection (`PartnerCompanyDto`) — the Directorate's own
 working state is not part of this contract:
 
-| Field | Why it's here |
-| --- | --- |
-| `nationalId`, `name` | identity — is this the employer you meant? |
-| `address` | prefills the `company` snapshot a submission carries |
-| `employeeCountCategory` | `SMALL` 0–24, `MEDIUM` 25–49, `LARGE` 50+, `UNKNOWN`. What the company owes follows from this |
-| `salaryReportRequired` | whether a salary report is owed |
-| `reportStatus` | what is still outstanding: `MISSING_EQUALITY_REPORT`, `MISSING_SALARY_REPORT`, `MISSING_ACTION_PLAN`, `SATISFACTORY`. Reflects reports filed on any channel, not just this one |
-| `nextEqualityReportDueAt`, `nextSalaryReportDueAt` | deadlines. The salary renewal window opens six months before its date |
-| `equalityReportOverdue`, `salaryReportOverdue` | derived server-side, so they don't depend on your clock |
+| Field                                              | Why it's here                                                                                                                                                                  |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `nationalId`, `name`                               | identity — is this the employer you meant?                                                                                                                                     |
+| `address`                                          | prefills the `company` snapshot a submission carries                                                                                                                           |
+| `employeeCountCategory`                            | `SMALL` 0–24, `MEDIUM` 25–49, `LARGE` 50+, `UNKNOWN`. What the company owes follows from this                                                                                  |
+| `salaryReportRequired`                             | whether a salary report is owed                                                                                                                                                |
+| `reportStatus`                                     | what is still outstanding: `MISSING_EQUALITY_REPORT`, `MISSING_SALARY_REPORT`, `MISSING_ACTION_PLAN`, `SATISFACTORY`. Reflects reports filed on any channel, not just this one |
+| `nextEqualityReportDueAt`, `nextSalaryReportDueAt` | deadlines. The salary renewal window opens six months before its date                                                                                                          |
+| `equalityReportOverdue`, `salaryReportOverdue`     | derived server-side, so they don't depend on your clock                                                                                                                        |
 
 Not returned, and not coming: internal row ids, the Directorate's fines and
 quarantine flags, admin override flags, and RSK legal-form bookkeeping.
@@ -208,7 +208,7 @@ lapses.
 
 ### A2. `GET /partner/reports/equality/active` — is one already in force?
 
-*Scope: `report:read`*
+_Scope: `report:read`_
 
 Returns the company's currently approved, still-valid equality report:
 `{ id, identifier, providerId, approvedAt, validUntil }`. `404` means there is
@@ -227,20 +227,20 @@ there is none, when it is about to expire, or when the plan itself changed.
 
 ### A3. `POST /partner/reports/equality` — file it
 
-*Scope: `equality:submit` → `201 { reportId, replayed: false }`, or
-`200 { reportId, replayed: true }` on a replay — as on the salary submission.*
+_Scope: `equality:submit` → `201 { reportId, replayed: false }`, or
+`200 { reportId, replayed: true }` on a replay — as on the salary submission._
 
 Body (`SubmitEqualityReportDto`):
 
-| Field | Notes |
-| --- | --- |
-| `providerId` | your UUID for this submission — see above |
-| `equalityReportContent` | the plan itself, as **plain HTML**. Persisted as-is and rendered into the approved PDF. (A base64 body is still decoded, for the island.is client's benefit, but it is no longer part of this contract — send markup.) |
-| `companyAdminName` / `companyAdminTitle?` / `companyAdminEmail` / `companyAdminGender` | the company executive who stands behind the plan. `companyAdminGender` is a `GenderEnum` value |
-| `contactName` / `contactTitle?` / `contactEmail` / `contactPhone` | the day-to-day contact (tengiliður) Jafnréttisstofa writes to |
-| `averageEmployeeMaleCount?` / `averageEmployeeFemaleCount?` / `averageEmployeeNeutralCount?` | optional and nullable on an equality report (required on a salary one) |
-| `company` | the reporting company: `name`, `nationalId`, `address`, `city`, `postcode`, `isatCategory` — a snapshot frozen onto the report, not a lookup |
-| `subsidiaries?` | `[{ name, nationalId }]` when the plan covers a group |
+| Field                                                                                        | Notes                                                                                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `providerId`                                                                                 | your UUID for this submission — see above                                                                                                                                                                              |
+| `equalityReportContent`                                                                      | the plan itself, as **plain HTML**. Persisted as-is and rendered into the approved PDF. (A base64 body is still decoded, for the island.is client's benefit, but it is no longer part of this contract — send markup.) |
+| `companyAdminName` / `companyAdminTitle?` / `companyAdminEmail` / `companyAdminGender`       | the company executive who stands behind the plan. `companyAdminGender` is a `GenderEnum` value                                                                                                                         |
+| `contactName` / `contactTitle?` / `contactEmail` / `contactPhone`                            | the day-to-day contact (tengiliður) Jafnréttisstofa writes to                                                                                                                                                          |
+| `averageEmployeeMaleCount?` / `averageEmployeeFemaleCount?` / `averageEmployeeNeutralCount?` | optional and nullable on an equality report (required on a salary one)                                                                                                                                                 |
+| `company`                                                                                    | the reporting company: `name`, `nationalId`, `address`, `city`, `postcode`, `isatCategory` — a snapshot frozen onto the report, not a lookup                                                                           |
+| `subsidiaries?`                                                                              | `[{ name, nationalId }]` when the plan covers a group                                                                                                                                                                  |
 
 The report is created with status `SUBMITTED` and lands in the reviewer queue.
 
@@ -252,11 +252,11 @@ Two conflicts to expect on this route:
 - **`409` if the prior one is `IN_REVIEW`.** A reviewer is mid-workflow on it
   and it cannot be discarded. Resolve that report first.
 
-A `503` means the write collided — retry with the *same* `providerId`.
+A `503` means the write collided — retry with the _same_ `providerId`.
 
 ### A4. `GET /partner/reports/:providerId` — track the review
 
-*Scope: `report:read`*
+_Scope: `report:read`_
 
 Poll this with the `providerId` you sent. Only reports filed through **this
 channel** are visible — a report the employer filed themselves on island.is is
@@ -292,7 +292,7 @@ writes, or accepts an `.xlsx` file.
 
 A filing names a **scoring model** and sends a **payroll extract**. That is all.
 
-The scoring model (*starfsmat*) is the employer's: the criteria, the
+The scoring model (_starfsmat_) is the employer's: the criteria, the
 sub-criteria, the þrep on each, the weights, and which þrep every job sits at.
 It is authored once and reused, so it is **not part of a filing** — you send its
 id. A company's model rarely changes between filings, and re-transmitting a
@@ -307,11 +307,11 @@ need its id — `GET /partner/scoring-models` lists them.
 
 ### B1. `GET /partner/company` — confirm the key
 
-*Scope: `report:read`* — as A1.
+_Scope: `report:read`_ — as A1.
 
 ### B2. `GET /partner/reports/equality/active` — is one in force?
 
-*Scope: `report:read`*
+_Scope: `report:read`_
 
 A salary report is always audited against the company's approved equality
 report, but **you do not pass its id** — the submission resolves it itself, from
@@ -325,7 +325,7 @@ can look anything up by on this API — use `providerId` for that (see B8).
 
 ### B3. `GET /partner/reports/salary/eligibility` — may they file now?
 
-*Scope: `report:read`*
+_Scope: `report:read`_
 
 Returns `{ eligible, reason, dueAt, earliestSubmissionDate }`.
 
@@ -362,17 +362,17 @@ employer's assessment, carries roughly a tenth of the total weight, and has to
 be collected from them rather than defaulted — a default is a score they never
 agreed to. Everything else in the row is payroll data.
 
-`paidHours` is *greiddar stundir í mánuðinum*: fixed overtime counts, incidental
+`paidHours` is _greiddar stundir í mánuðinum_: fixed overtime counts, incidental
 hours do not. It is the denominator of reglulegt tímakaup, so an employee with
 unusable hours fails the payload gate rather than scoring oddly.
 
 **You do not send the criteria tree, the þrep, or the job step assignments.**
 They live in the scoring model you named, and the server expands them. If a þrep
-description or a weight is wrong, fix the *model* (section C) — not the filing.
+description or a weight is wrong, fix the _model_ (section C) — not the filing.
 
 ### B5. `POST /partner/reports/salary-analysis` — find the outliers first
 
-*Scope: `salary:submit`*
+_Scope: `salary:submit`_
 
 Body: `{ "scoringModelId", "employees" }` — the same pair the submission takes.
 Nothing is stored. Returns:
@@ -380,7 +380,7 @@ Nothing is stored. Returns:
 - **`outliers[]` — the lágmarksmengi.** This is the list that matters: each
   entry has `employeeOrdinal`, `gender`, `roleTitle`, `score`,
   `regularHourlyWage`, `expectedHourlyWage`, `deviationPercent`, `payStatus`
-  and `contributionShare`. Submission re-runs *this same computation*
+  and `contributionShare`. Submission re-runs _this same computation_
   server-side, so these ordinals are exactly the set the submission will
   demand explanations for.
   Membership is a property of the **set**, not of the individual: an employee
@@ -400,7 +400,7 @@ Nothing is stored. Returns:
   reason whatever the population.
 
 Run this before you ask the employer anything. It is how you find out which
-employees need an explanation *before* filing rather than after.
+employees need an explanation _before_ filing rather than after.
 
 ### B6. Build the outlier groups
 
@@ -409,15 +409,15 @@ Not a call — the modelling step between B5 and B7.
 Partition the `employeeOrdinal`s from B5 into one or more groups. Each group is
 one shared explanation (úrbótaáætlun) over the employees in it:
 
-| Field | Notes |
-| --- | --- |
-| `name?` | your label for the group. Not required to be unique; a default is assigned when omitted |
-| `reason` | why the difference exists. Required, non-empty |
-| `action` | what the employer will do about it. Required, non-empty |
-| `signatureName` | who signs off. Required, non-empty |
-| `signatureRole` | their role. Required, non-empty |
-| `remedyDate` | `YYYY-MM-DD` the improvements will be complete by. Must be in the **future** and no more than **three years** out — beyond that is a period this report cannot speak for |
-| `employeeOrdinals` | the ordinals this group covers. At least one |
+| Field              | Notes                                                                                                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name?`            | your label for the group. Not required to be unique; a default is assigned when omitted                                                                                  |
+| `reason`           | why the difference exists. Required, non-empty                                                                                                                           |
+| `action`           | what the employer will do about it. Required, non-empty                                                                                                                  |
+| `signatureName`    | who signs off. Required, non-empty                                                                                                                                       |
+| `signatureRole`    | their role. Required, non-empty                                                                                                                                          |
+| `remedyDate`       | `YYYY-MM-DD` the improvements will be complete by. Must be in the **future** and no more than **three years** out — beyond that is a period this report cannot speak for |
+| `employeeOrdinals` | the ordinals this group covers. At least one                                                                                                                             |
 
 The submission validates the partition strictly. The union of every group's
 `employeeOrdinals` must match the detected set **exactly**:
@@ -448,9 +448,9 @@ defer and finish on island.is themselves, send real groups.
 
 ### B7. `POST /partner/reports/salary` — file it
 
-*Scope: `salary:submit` → `201 { reportId, replayed: false }`, or
+_Scope: `salary:submit` → `201 { reportId, replayed: false }`, or
 `200 { reportId, replayed: true }` when the `providerId` was already used and
-nothing was filed — see the `providerId` section.*
+nothing was filed — see the `providerId` section._
 
 Body (`SubmitPartnerSalaryReportDto`) — beyond the admin/contact/`company`/
 `subsidiaries` fields, which are identical to A3 (but with the three average
@@ -466,16 +466,16 @@ the strict validation above:
 - **`importedFromExcel`** — there is no workbook on this API for a payload to
   have come from.
 
-| Field | Notes |
-| --- | --- |
-| `providerId` | your UUID — see the section above |
-| `salaryDataBasis` | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one |
-| `salaryDataPeriod` | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that has already happened and no earlier than 36 months ago. Ignored for `AVERAGE` |
-| `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required |
-| `scoringModelId` | the model B5 validated against. Must be `VALID` |
-| `employees` | the payroll extract from B4, unchanged since B5 |
-| `outlierGroups?` | the partition from B6 |
-| `outliersPostponed?` | defaults to `false`. `true` defers every explanation |
+| Field                                                             | Notes                                                                                                                                                                                    |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `providerId`                                                      | your UUID — see the section above                                                                                                                                                        |
+| `salaryDataBasis`                                                 | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one                                                                                |
+| `salaryDataPeriod`                                                | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that has already happened and no earlier than 36 months ago. Ignored for `AVERAGE` |
+| `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required                                                                                                                                                                                 |
+| `scoringModelId`                                                  | the model B5 validated against. Must be `VALID`                                                                                                                                          |
+| `employees`                                                       | the payroll extract from B4, unchanged since B5                                                                                                                                          |
+| `outlierGroups?`                                                  | the partition from B6                                                                                                                                                                    |
+| `outliersPostponed?`                                              | defaults to `false`. `true` defers every explanation                                                                                                                                     |
 
 Resulting status: `SUBMITTED` when explanations were supplied (it lands in the
 reviewer queue), `POSTPONED` when deferred (a reviewer cannot pick it up).
@@ -492,7 +492,7 @@ withdrawn and replaced; a prior `IN_REVIEW` **or `POSTPONED`** one gives `409`.
 
 ### B8. `GET /partner/reports/:providerId` — track the review
 
-*Scope: `report:read`*
+_Scope: `report:read`_
 
 As A4, plus the salary-only fields: `salaryDataBasis`, `salaryDataPeriod`,
 `outliersPostponed`, `includesImprovementPlan` (true when the report has at
@@ -501,7 +501,7 @@ decision rests on.
 
 ### B9. `GET /partner/reports/:providerId/outliers` — the filed outlier list
 
-*Scope: `report:read`*
+_Scope: `report:read`_
 
 Paginated (`?page=&pageSize=`), returning `{ outliers[], paging }`. Separate
 from the report detail because a large employer's list runs to hundreds of
@@ -564,9 +564,7 @@ response, reads included, carries:
 {
   "validation": {
     "status": "INVALID",
-    "reasons": [
-      { "scope": "SUB_CRITERIA", "message": "Vægi undirviðmiða leggst saman í 110%, á að vera 100%" }
-    ]
+    "reasons": [{ "scope": "SUB_CRITERIA", "message": "Vægi undirviðmiða leggst saman í 110%, á að vera 100%" }]
   }
 }
 ```
@@ -601,48 +599,48 @@ never move when the model changes or goes away.
 
 ## Quick reference
 
-| # | Method | Path | Scope |
-| --- | --- | --- | --- |
-| 1 | `GET` | `/partner/company` | `report:read` |
-| 2 | `GET` | `/partner/reports/equality/active` | `report:read` |
-| 3 | `GET` | `/partner/reports/salary/eligibility` | `report:read` |
-| 4 | `POST` | `/partner/reports/salary-analysis` | `salary:submit` |
-| 5 | `POST` | `/partner/reports/salary` | `salary:submit` |
-| 6 | `POST` | `/partner/reports/equality` | `equality:submit` |
-| 7 | `GET` | `/partner/reports/:providerId` | `report:read` |
-| 8 | `GET` | `/partner/reports/:providerId/outliers` | `report:read` |
+| #   | Method | Path                                    | Scope             |
+| --- | ------ | --------------------------------------- | ----------------- |
+| 1   | `GET`  | `/partner/company`                      | `report:read`     |
+| 2   | `GET`  | `/partner/reports/equality/active`      | `report:read`     |
+| 3   | `GET`  | `/partner/reports/salary/eligibility`   | `report:read`     |
+| 4   | `POST` | `/partner/reports/salary-analysis`      | `salary:submit`   |
+| 5   | `POST` | `/partner/reports/salary`               | `salary:submit`   |
+| 6   | `POST` | `/partner/reports/equality`             | `equality:submit` |
+| 7   | `GET`  | `/partner/reports/:providerId`          | `report:read`     |
+| 8   | `GET`  | `/partner/reports/:providerId/outliers` | `report:read`     |
 
 Scoring model (section C):
 
-| Method | Path | Scope |
-| --- | --- | --- |
-| `GET` | `/partner/scoring-models` | `report:read` |
-| `GET` | `/partner/scoring-models/{modelId}` | `report:read` |
-| `POST` | `/partner/scoring-models` | `scoring:write` |
-| `DELETE` | `/partner/scoring-models/{modelId}` | `scoring:write` |
-| `POST` | `/partner/scoring-models/{modelId}/criteria` | `scoring:write` |
-| `PATCH` | `/partner/scoring-models/{modelId}/criteria/{criterionId}` | `scoring:write` |
+| Method   | Path                                                       | Scope           |
+| -------- | ---------------------------------------------------------- | --------------- |
+| `GET`    | `/partner/scoring-models`                                  | `report:read`   |
+| `GET`    | `/partner/scoring-models/{modelId}`                        | `report:read`   |
+| `POST`   | `/partner/scoring-models`                                  | `scoring:write` |
+| `DELETE` | `/partner/scoring-models/{modelId}`                        | `scoring:write` |
+| `POST`   | `/partner/scoring-models/{modelId}/criteria`               | `scoring:write` |
+| `PATCH`  | `/partner/scoring-models/{modelId}/criteria/{criterionId}` | `scoring:write` |
 | `DELETE` | `/partner/scoring-models/{modelId}/criteria/{criterionId}` | `scoring:write` |
-| `POST` | `…/criteria/{criterionId}/sub-criteria` | `scoring:write` |
-| `PATCH` | `…/sub-criteria/{subCriterionId}` | `scoring:write` |
-| `DELETE` | `…/sub-criteria/{subCriterionId}` | `scoring:write` |
-| `PUT` | `…/sub-criteria/{subCriterionId}/steps` | `scoring:write` |
-| `POST` | `/partner/scoring-models/{modelId}/roles` | `scoring:write` |
-| `PATCH` | `…/roles/{roleId}` | `scoring:write` |
-| `DELETE` | `…/roles/{roleId}` | `scoring:write` |
-| `PUT` | `…/roles/{roleId}/step-assignments` | `scoring:write` |
-| `GET` | `/partner/sub-criteria/catalog` | `report:read` |
+| `POST`   | `…/criteria/{criterionId}/sub-criteria`                    | `scoring:write` |
+| `PATCH`  | `…/sub-criteria/{subCriterionId}`                          | `scoring:write` |
+| `DELETE` | `…/sub-criteria/{subCriterionId}`                          | `scoring:write` |
+| `PUT`    | `…/sub-criteria/{subCriterionId}/steps`                    | `scoring:write` |
+| `POST`   | `/partner/scoring-models/{modelId}/roles`                  | `scoring:write` |
+| `PATCH`  | `…/roles/{roleId}`                                         | `scoring:write` |
+| `DELETE` | `…/roles/{roleId}`                                         | `scoring:write` |
+| `PUT`    | `…/roles/{roleId}/step-assignments`                        | `scoring:write` |
+| `GET`    | `/partner/sub-criteria/catalog`                            | `report:read`   |
 
 ## Status codes
 
-| Code | Meaning |
-| --- | --- |
+| Code  | Meaning                                                                                                                                                    |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId` |
-| `201` | on a submission: filed |
-| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, non-UUID `providerId` |
-| `401` | missing or invalid key |
-| `403` | key lacks the scope the route declares |
-| `404` | no approved equality report; unknown `providerId`; report filed on another channel |
-| `409` | the company is not active in the register (any route); renewal window not open; a sibling report is `IN_REVIEW` or `POSTPONED` |
-| `429` | rate limit — per key (headers) or per IP |
-| `503` | write collision. Retry with the same `providerId` |
+| `201` | on a submission: filed                                                                                                                                     |
+| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, non-UUID `providerId`                                                      |
+| `401` | missing or invalid key                                                                                                                                     |
+| `403` | key lacks the scope the route declares                                                                                                                     |
+| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                         |
+| `409` | the company is not active in the register (any route); renewal window not open; a sibling report is `IN_REVIEW` or `POSTPONED`                             |
+| `429` | rate limit — per key (headers) or per IP                                                                                                                   |
+| `503` | write collision. Retry with the same `providerId`                                                                                                          |

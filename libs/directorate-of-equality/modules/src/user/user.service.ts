@@ -167,9 +167,7 @@ export class UserService implements IUserService {
       })
 
       if (otherActiveAdmins === 0) {
-        throw new BadRequestException(
-          'Cannot deactivate the last active admin',
-        )
+        throw new BadRequestException('Cannot deactivate the last active admin')
       }
     }
 

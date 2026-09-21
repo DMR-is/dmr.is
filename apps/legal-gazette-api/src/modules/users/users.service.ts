@@ -6,12 +6,12 @@ import { InjectModel } from '@nestjs/sequelize'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared-dto'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
-
 import {
-  UserDto,
-  UserModel,
-} from '../../models/users.model'
+  generatePaging,
+  getLimitAndOffset,
+} from '@dmr.is/utils-server/serverUtils'
+
+import { UserDto, UserModel } from '../../models/users.model'
 import { LGNationalRegistryService } from '../national-registry/national-registry.service'
 import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
 import {

@@ -7,7 +7,7 @@ import { ReportSubCriterionStepDto } from '../../../report-criterion/dto/report-
 export class DraftSubCriterionWithStepsDto extends ReportSubCriterionDto {
   @ApiDtoArray(ReportSubCriterionStepDto, {
     description:
-      'The sub-criterion\'s scoring steps, ordered by `order` ascending. Empty when no steps have been defined yet.',
+      "The sub-criterion's scoring steps, ordered by `order` ascending. Empty when no steps have been defined yet.",
   })
   steps!: ReportSubCriterionStepDto[]
 }

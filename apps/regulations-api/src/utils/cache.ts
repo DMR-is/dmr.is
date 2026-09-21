@@ -1,37 +1,37 @@
 /* eslint-disable no-console */
-import { FastifyRedis } from '@fastify/redis';
+import { FastifyRedis } from '@fastify/redis'
 
 export async function get<T = unknown | null>(
   client: FastifyRedis | null,
   cacheKey: string | null,
 ): Promise<T | null> {
   if (!client || !cacheKey) {
-    return null;
+    return null
   }
 
-  let cached;
+  let cached
 
   try {
-    cached = await client.get(cacheKey);
+    cached = await client.get(cacheKey)
   } catch (e) {
-    console.warn(`cache, unable to get, ${cacheKey}`, e);
-    return null;
+    console.warn(`cache, unable to get, ${cacheKey}`, e)
+    return null
   }
 
   if (!cached) {
-    return null;
+    return null
   }
 
-  let result;
+  let result
 
   try {
-    result = JSON.parse(cached);
+    result = JSON.parse(cached)
   } catch (e) {
-    console.warn(`cache, unable to parse, ${cacheKey}`, e);
-    return null;
+    console.warn(`cache, unable to parse, ${cacheKey}`, e)
+    return null
   }
 
-  return result as T;
+  return result as T
 }
 
 export async function set<T>(
@@ -41,18 +41,18 @@ export async function set<T>(
   ttl: number,
 ): Promise<boolean> {
   if (!client || !cacheKey) {
-    return false;
+    return false
   }
 
   try {
-    const serialized = JSON.stringify(data);
-    await client.set(cacheKey, serialized, 'EX', ttl);
+    const serialized = JSON.stringify(data)
+    await client.set(cacheKey, serialized, 'EX', ttl)
   } catch (e) {
-    console.warn('cache, unable to set', cacheKey, e);
-    return false;
+    console.warn('cache, unable to set', cacheKey, e)
+    return false
   }
 
-  return true;
+  return true
 }
 
 export async function del(
@@ -60,11 +60,11 @@ export async function del(
   pattern: string,
 ): Promise<number> {
   if (!client || !pattern) {
-    return 0;
+    return 0
   }
 
-  let deleted = 0;
-  let cursor = '0';
+  let deleted = 0
+  let cursor = '0'
 
   try {
     do {
@@ -74,16 +74,16 @@ export async function del(
         pattern,
         'COUNT',
         100,
-      );
-      cursor = next;
+      )
+      cursor = next
       if (keys.length > 0) {
-        deleted += await client.del(...keys);
+        deleted += await client.del(...keys)
       }
-    } while (cursor !== '0');
+    } while (cursor !== '0')
   } catch (e) {
-    console.warn(`cache, unable to delete pattern ${pattern}`, e);
-    return deleted;
+    console.warn(`cache, unable to delete pattern ${pattern}`, e)
+    return deleted
   }
 
-  return deleted;
+  return deleted
 }

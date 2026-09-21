@@ -1,4 +1,4 @@
-import {toast as toaster} from '../island-is/lib/ToastContainer'
+import { toast as toaster } from '../island-is/lib/ToastContainer'
 
 export const toast = {
   success: (message: string) => {

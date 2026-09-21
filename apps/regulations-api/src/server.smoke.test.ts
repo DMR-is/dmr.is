@@ -2,6 +2,11 @@ import type { FastifyInstance } from 'fastify'
 import { createServer, Server } from 'http'
 import { AddressInfo } from 'net'
 
+// Aliased so the `require` calls below stay on one line: prettier wraps the
+// inline `as typeof import(...)` form, which pushes `require` off the line the
+// preceding eslint-disable-next-line covers.
+type ServerUtils = typeof import('./utils/server-utils')
+
 /**
  * HTTP smoke tests for the Fastify server.
  *
@@ -435,7 +440,7 @@ describe('serveRobotsTxt', () => {
     // `serveRobotsTxt` joins against its own `__dirname` (src/utils), so walk
     // back up to the checked-in asset.
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const serverUtils = require('./utils/server-utils') as typeof import('./utils/server-utils')
+    const serverUtils = require('./utils/server-utils') as ServerUtils
     const { serveRobotsTxt } = serverUtils
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { readFileSync } = require('fs') as typeof import('fs')
@@ -463,7 +468,7 @@ describe('serveRobotsTxt', () => {
 
   it('fails closed with a full Disallow when the path does not resolve', async () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const serverUtils = require('./utils/server-utils') as typeof import('./utils/server-utils')
+    const serverUtils = require('./utils/server-utils') as ServerUtils
     const { serveRobotsTxt } = serverUtils
 
     app = bare()

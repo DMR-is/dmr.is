@@ -30,6 +30,4 @@ export interface IReportDraftAnalysisService {
   persistScores(reportId: string): Promise<void>
 }
 
-export const IReportDraftAnalysisService = Symbol(
-  'IReportDraftAnalysisService',
-)
+export const IReportDraftAnalysisService = Symbol('IReportDraftAnalysisService')

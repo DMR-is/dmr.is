@@ -156,7 +156,9 @@ export class IssuesTaskService implements IIssuesTask {
           return `<div class="advert-container">${html}</div>`
         }),
       )
-      const combinedHtml = htmlParts.join('<div class="advert-divider-line"></div>')
+      const combinedHtml = htmlParts.join(
+        '<div class="advert-divider-line"></div>',
+      )
 
       const currentYear = now.getFullYear()
 

@@ -92,25 +92,25 @@ These major version upgrades were deferred from the initial Dependabot security 
 
 These packages have open alerts but no patched version is available:
 
-| Package | Alert | Notes |
-|---------|-------|-------|
-| `elliptic` | Low | No patch available upstream. Monitor for patch. |
-| `aws-sdk` v2 | Low | Only pulled by `@types/multer-s3` (types only, not runtime). Low risk. |
-| `mammoth` | Medium | Indirect dep of `@dmr.is/regulations-tools` (external package). Cannot patch until upstream releases. |
+| Package      | Alert  | Notes                                                                                                 |
+| ------------ | ------ | ----------------------------------------------------------------------------------------------------- |
+| `elliptic`   | Low    | No patch available upstream. Monitor for patch.                                                       |
+| `aws-sdk` v2 | Low    | Only pulled by `@types/multer-s3` (types only, not runtime). Low risk.                                |
+| `mammoth`    | Medium | Indirect dep of `@dmr.is/regulations-tools` (external package). Cannot patch until upstream releases. |
 
 ---
 
 ## Status Tracking
 
-| Upgrade | PR | Status |
-|---------|-----|--------|
-| Fastify 4→5 | — | Pending |
-| Nodemailer 6→7 | — | Pending |
-| tar 6→7 | — | Pending |
-| AWS SDK (fast-xml-parser) | — | Pending |
-| elliptic patch | — | Blocked (no patch) |
-| aws-sdk v2 | — | Blocked (types only) |
-| mammoth | — | Blocked (upstream) |
+| Upgrade                   | PR  | Status               |
+| ------------------------- | --- | -------------------- |
+| Fastify 4→5               | —   | Pending              |
+| Nodemailer 6→7            | —   | Pending              |
+| tar 6→7                   | —   | Pending              |
+| AWS SDK (fast-xml-parser) | —   | Pending              |
+| elliptic patch            | —   | Blocked (no patch)   |
+| aws-sdk v2                | —   | Blocked (types only) |
+| mammoth                   | —   | Blocked (upstream)   |
 
 ---
 

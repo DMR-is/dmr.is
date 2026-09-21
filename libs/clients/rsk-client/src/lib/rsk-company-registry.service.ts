@@ -38,11 +38,14 @@ export class RskCompanyRegistryService implements IRskCompanyRegistryService {
     })
 
     if (error || !data) {
-      this.logger.error('Failed to fetch legal entity from RSK company registry', {
-        context: LOGGING_CONTEXT,
-        statusCode: response?.status,
-        error,
-      })
+      this.logger.error(
+        'Failed to fetch legal entity from RSK company registry',
+        {
+          context: LOGGING_CONTEXT,
+          statusCode: response?.status,
+          error,
+        },
+      )
       // A 404 means the legal entity simply does not exist — surface that
       // distinctly so callers can tell "not found" apart from a registry
       // outage (which stays a 502 Bad Gateway).

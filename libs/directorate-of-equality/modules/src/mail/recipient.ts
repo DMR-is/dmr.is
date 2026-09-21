@@ -26,6 +26,4 @@
 export const looksLikeOneAddress = (
   candidate: string | undefined,
 ): candidate is string =>
-  !!candidate &&
-  candidate.includes('@') &&
-  !/[,;<>\s]/.test(candidate)
+  !!candidate && candidate.includes('@') && !/[,;<>\s]/.test(candidate)

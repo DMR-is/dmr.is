@@ -1,5 +1,11 @@
 // Association annotations use a type-only alias — see `src/models.ts`.
-import { BelongsTo, Column, DataType, ForeignKey, HasMany } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  ForeignKey,
+  HasMany,
+} from 'sequelize-typescript'
 
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
@@ -55,7 +61,11 @@ export class CompanyEmailModel extends MutableModel<
   bodyHtml!: string
 
   @ForeignKey(() => UserModel)
-  @Column({ type: DataType.UUID, allowNull: false, field: 'created_by_user_id' })
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    field: 'created_by_user_id',
+  })
   createdByUserId!: string
 
   @Column({

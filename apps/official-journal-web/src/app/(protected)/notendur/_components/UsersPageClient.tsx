@@ -17,7 +17,9 @@ import { UserProvider } from '../../../../context/userContext'
 import { UserRoleDto } from '../../../../gen/fetch'
 import { Routes } from '../../../../lib/constants'
 
-const UserTable = dynamic(() => import('../../../../components/tables/UsersTable'))
+const UserTable = dynamic(
+  () => import('../../../../components/tables/UsersTable'),
+)
 const InstitutionTable = dynamic(
   () => import('../../../../components/tables/InstitutionTable'),
 )

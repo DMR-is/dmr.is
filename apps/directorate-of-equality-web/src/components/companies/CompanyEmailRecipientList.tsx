@@ -59,7 +59,10 @@ export const CompanyEmailRecipientList = ({
   return (
     <Box>
       <Box display="flex" alignItems="center" columnGap={1}>
-        <Text variant="eyebrow" color={tone === 'warning' ? 'red600' : 'dark400'}>
+        <Text
+          variant="eyebrow"
+          color={tone === 'warning' ? 'red600' : 'dark400'}
+        >
           {heading} ({rows.length})
         </Text>
         <Button

@@ -116,7 +116,7 @@ The logger automatically adjusts output format based on `NODE_ENV`:
 **Production** (JSON format):
 
 ```json
-{"level":"info","message":"User logged in","timestamp":"2024-11-26T14:30:00.123Z","category":"my-component","context":"my-component","userId":"123"}
+{ "level": "info", "message": "User logged in", "timestamp": "2024-11-26T14:30:00.123Z", "category": "my-component", "context": "my-component", "userId": "123" }
 ```
 
 ## PII Protection
@@ -212,17 +212,17 @@ export interface LogEntry {
 
 ## Comparison with @dmr.is/logging
 
-| Feature | @dmr.is/logging-next | @dmr.is/logging (Winston) |
-|---------|---------------------|---------------------------|
-| Edge Runtime | ✅ Yes | ❌ No |
-| Node.js | ✅ Yes | ✅ Yes |
-| Dependencies | 0 | Multiple (Winston, etc.) |
-| File output | ❌ No | ✅ Yes |
-| Console output | ✅ Yes | ✅ Yes |
-| JSON formatting | ✅ Yes | ✅ Yes |
-| PII masking | ✅ Yes | ✅ Yes |
-| Custom transports | ❌ No | ✅ Yes |
-| Bundle size | ~2KB | ~200KB+ |
+| Feature           | @dmr.is/logging-next | @dmr.is/logging (Winston) |
+| ----------------- | -------------------- | ------------------------- |
+| Edge Runtime      | ✅ Yes               | ❌ No                     |
+| Node.js           | ✅ Yes               | ✅ Yes                    |
+| Dependencies      | 0                    | Multiple (Winston, etc.)  |
+| File output       | ❌ No                | ✅ Yes                    |
+| Console output    | ✅ Yes               | ✅ Yes                    |
+| JSON formatting   | ✅ Yes               | ✅ Yes                    |
+| PII masking       | ✅ Yes               | ✅ Yes                    |
+| Custom transports | ❌ No                | ✅ Yes                    |
+| Bundle size       | ~2KB                 | ~200KB+                   |
 
 ## Examples
 

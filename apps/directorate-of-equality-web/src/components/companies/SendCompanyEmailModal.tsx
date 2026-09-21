@@ -113,11 +113,7 @@ type Props = {
   target: SendCompanyEmailTarget
 }
 
-export const SendCompanyEmailModal = ({
-  isOpen,
-  onClose,
-  target,
-}: Props) => {
+export const SendCompanyEmailModal = ({ isOpen, onClose, target }: Props) => {
   const trpc = useTRPC()
 
   const [step, setStep] = useState<'compose' | 'preview'>('compose')
@@ -711,7 +707,6 @@ export const SendCompanyEmailModal = ({
               {t.attachmentLimits}
             </Text>
           </Box>
-
         </Stack>
       ) : (
         <Stack space={3}>
@@ -799,7 +794,6 @@ export const SendCompanyEmailModal = ({
               </Box>
             </>
           )}
-
         </Stack>
       )}
     </Modal>

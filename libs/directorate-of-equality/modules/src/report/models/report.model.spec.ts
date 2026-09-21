@@ -31,7 +31,9 @@ function makeModel(content: string | null): ReportModel {
 describe('ReportModel.fromModelToEqualityReport', () => {
   it('keeps the formatting a rich-text plan actually uses', () => {
     const dto = ReportModel.fromModelToEqualityReport(
-      makeModel('<h2>Markmið</h2><p><strong>Jöfn laun</strong></p><ul><li>Úttekt</li></ul>'),
+      makeModel(
+        '<h2>Markmið</h2><p><strong>Jöfn laun</strong></p><ul><li>Úttekt</li></ul>',
+      ),
     )
 
     expect(dto.content).toContain('<h2>Markmið</h2>')
@@ -47,7 +49,9 @@ describe('ReportModel.fromModelToEqualityReport', () => {
    */
   it('strips event handlers, which fire from innerHTML even detached', () => {
     const dto = ReportModel.fromModelToEqualityReport(
-      makeModel('<img src="x" onerror="fetch(\'/api/trpc/reportWorkflow.approve\')" />'),
+      makeModel(
+        '<img src="x" onerror="fetch(\'/api/trpc/reportWorkflow.approve\')" />',
+      ),
     )
 
     expect(dto.content).not.toContain('onerror')
@@ -76,9 +80,7 @@ describe('ReportModel.fromModelToEqualityReport', () => {
       makeModel('<p>Áætlun</p><img src="x" onerror="alert(1)" />'),
     ).content
 
-    const twice = ReportModel.fromModelToEqualityReport(
-      makeModel(once),
-    ).content
+    const twice = ReportModel.fromModelToEqualityReport(makeModel(once)).content
 
     expect(twice).toBe(once)
   })

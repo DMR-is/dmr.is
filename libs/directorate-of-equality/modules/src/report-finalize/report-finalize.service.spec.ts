@@ -209,7 +209,9 @@ describe('ReportFinalizeService', () => {
     })
 
     it('throws 409 when an IN_REVIEW sibling exists', async () => {
-      companyReportFindAll.mockResolvedValueOnce([{ reportId: PRIOR_REPORT_ID }])
+      companyReportFindAll.mockResolvedValueOnce([
+        { reportId: PRIOR_REPORT_ID },
+      ])
       reportFindAll.mockResolvedValueOnce([
         {
           id: PRIOR_REPORT_ID,
@@ -225,7 +227,9 @@ describe('ReportFinalizeService', () => {
     })
 
     it('withdraws a SUBMITTED sibling and returns its id', async () => {
-      companyReportFindAll.mockResolvedValueOnce([{ reportId: PRIOR_REPORT_ID }])
+      companyReportFindAll.mockResolvedValueOnce([
+        { reportId: PRIOR_REPORT_ID },
+      ])
       reportFindAll.mockResolvedValueOnce([
         {
           id: PRIOR_REPORT_ID,
@@ -310,10 +314,7 @@ describe('ReportFinalizeService', () => {
 
   describe('emitWithdrawnEvents', () => {
     it('emits one WITHDRAWN event per retired report linked to the replacement', async () => {
-      await service.emitWithdrawnEvents(
-        [PRIOR_REPORT_ID],
-        REPLACING_REPORT_ID,
-      )
+      await service.emitWithdrawnEvents([PRIOR_REPORT_ID], REPLACING_REPORT_ID)
 
       expect(reportEventCreate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -363,9 +364,8 @@ describe('ReportFinalizeService', () => {
         legacyValidUntil: null,
       })
 
-      const coverage = await service.resolveEqualityCoverage(
-        'subsidiary-company',
-      )
+      const coverage =
+        await service.resolveEqualityCoverage('subsidiary-company')
 
       expect(coverage.report?.id).toBe('group-equality')
       // No second query of its own: a divergent one is how the two answers
@@ -403,7 +403,6 @@ describe('ReportFinalizeService', () => {
       ).rejects.toThrow('No approved equality report is in force')
     })
   })
-
 })
 
 function makeCompanySnapshot(

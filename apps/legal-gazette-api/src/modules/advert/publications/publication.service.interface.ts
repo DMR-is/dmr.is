@@ -1,6 +1,4 @@
-import {
-  AdvertVersionEnum,
-} from '../../../models/advert-publication.model'
+import { AdvertVersionEnum } from '../../../models/advert-publication.model'
 import {
   AdvertPublicationDetailedDto,
   GetCombinedHTMLDto,

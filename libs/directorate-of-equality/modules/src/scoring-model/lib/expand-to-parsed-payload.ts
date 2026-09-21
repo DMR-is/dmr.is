@@ -180,8 +180,7 @@ export const expandToParsedPayload = (
       additionalFixedCarAllowance: employee.additionalFixedCarAllowance ?? null,
       additionalFixedOther: employee.additionalFixedOther ?? null,
       bonusOccasionalOvertime: employee.bonusOccasionalOvertime ?? null,
-      bonusOccasionalCarAllowance:
-        employee.bonusOccasionalCarAllowance ?? null,
+      bonusOccasionalCarAllowance: employee.bonusOccasionalCarAllowance ?? null,
       bonusOther: employee.bonusOther ?? null,
       personalStepAssignments,
     }

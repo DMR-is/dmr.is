@@ -32,14 +32,12 @@ export function getDivisionMeetingDeceasedTemplate({
     ? getTableCell({ text: nameArr.join('<br />') })
     : ''
 
-  const [parsedMeetingDate, _eeee, parsedMeetingTime] = parseAndFormatDate(meetingDate)
+  const [parsedMeetingDate, _eeee, parsedMeetingTime] =
+    parseAndFormatDate(meetingDate)
 
   const meetingCell = parsedMeetingDate
     ? getTableCell({
-        text: [
-          parsedMeetingDate,
-          parsedMeetingTime,
-        ].join('<br />'),
+        text: [parsedMeetingDate, parsedMeetingTime].join('<br />'),
       })
     : ''
 

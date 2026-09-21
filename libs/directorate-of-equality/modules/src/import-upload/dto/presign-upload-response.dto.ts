@@ -6,7 +6,8 @@ import { ApiString } from '@dmr.is/decorators'
  */
 export class PresignUploadResponseDto {
   @ApiString({
-    description: 'Presigned S3 PUT URL the client uploads the .xlsx to. Expires in 1h.',
+    description:
+      'Presigned S3 PUT URL the client uploads the .xlsx to. Expires in 1h.',
   })
   url!: string
 

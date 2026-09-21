@@ -152,11 +152,7 @@ describe('UserService', () => {
       findByPkOrThrow.mockResolvedValue(target)
 
       await expect(
-        service.updateUser(
-          ADMIN_ID,
-          { role: DoeUserRole.EDITOR },
-          ADMIN_ID,
-        ),
+        service.updateUser(ADMIN_ID, { role: DoeUserRole.EDITOR }, ADMIN_ID),
       ).rejects.toThrow(BadRequestException)
     })
 
@@ -218,11 +214,7 @@ describe('UserService', () => {
       findOne.mockResolvedValue(baseUser({ id: 'someone-else' }))
 
       await expect(
-        service.updateUser(
-          EDITOR_ID,
-          { email: 'taken@example.is' },
-          ADMIN_ID,
-        ),
+        service.updateUser(EDITOR_ID, { email: 'taken@example.is' }, ADMIN_ID),
       ).rejects.toThrow(ConflictException)
     })
 

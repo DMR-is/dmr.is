@@ -169,13 +169,12 @@ export const AdvertsToBePublished = () => {
           }
         >
           {formatMessage(
-            ritstjornTableMessages.publishing.removeFromPublishingQueue, {
+            ritstjornTableMessages.publishing.removeFromPublishingQueue,
+            {
               count: selectedAdvertIds.length,
               noun:
-                selectedAdvertIds.length === 1
-                  ? 'auglýsingu'
-                  : 'auglýsingar',
-            }
+                selectedAdvertIds.length === 1 ? 'auglýsingu' : 'auglýsingar',
+            },
           )}
         </Button>
         <Button

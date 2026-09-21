@@ -18,7 +18,7 @@ const CRON_EXPRESSION =
     : CronExpression.EVERY_HOUR
 
 @Injectable()
-export class IssuesTaskService implements IIssuesTaskService   {
+export class IssuesTaskService implements IIssuesTaskService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(AdvisoryLockService)

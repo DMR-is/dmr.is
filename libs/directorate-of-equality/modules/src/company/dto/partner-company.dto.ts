@@ -47,7 +47,9 @@ import { CompanyDto } from './company.dto'
  * file untouched, and that is the point.
  */
 export class PartnerCompanyDto {
-  @ApiString({ description: 'Kennitala of the company the API key belongs to.' })
+  @ApiString({
+    description: 'Kennitala of the company the API key belongs to.',
+  })
   nationalId!: string
 
   @ApiString()

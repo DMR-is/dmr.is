@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer'
-import { IsArray, IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator'
+import {
+  IsArray,
+  IsBoolean,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator'
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
@@ -51,7 +57,10 @@ export class RegulationImpact {
   @IsOptional()
   title?: string
 
-  @ApiPropertyOptional({ type: String, description: 'New/replacement text HTML' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'New/replacement text HTML',
+  })
   @IsString()
   @IsOptional()
   text?: string
@@ -64,17 +73,26 @@ export class RegulationImpact {
   @IsOptional()
   appendixes?: string[]
 
-  @ApiPropertyOptional({ type: String, description: 'Comments about this impact' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Comments about this impact',
+  })
   @IsString()
   @IsOptional()
   comments?: string
 
-  @ApiPropertyOptional({ type: String, description: 'HTML diff showing changes' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'HTML diff showing changes',
+  })
   @IsString()
   @IsOptional()
   diff?: string
 
-  @ApiPropertyOptional({ type: Boolean, description: 'If true, this impact was dropped' })
+  @ApiPropertyOptional({
+    type: Boolean,
+    description: 'If true, this impact was dropped',
+  })
   @IsBoolean()
   @IsOptional()
   dropped?: boolean
@@ -119,12 +137,18 @@ export class RegulationDraft {
   @IsOptional()
   name?: string
 
-  @ApiPropertyOptional({ type: String, description: 'Internal drafting notes HTML' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Internal drafting notes HTML',
+  })
   @IsString()
   @IsOptional()
   draftingNotes?: string
 
-  @ApiPropertyOptional({ type: String, description: 'Desired publication date' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Desired publication date',
+  })
   @IsString()
   @IsOptional()
   idealPublishDate?: string
@@ -137,7 +161,10 @@ export class RegulationDraft {
   @IsOptional()
   effectiveDate?: string
 
-  @ApiPropertyOptional({ type: String, description: 'Responsible ministry name' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Responsible ministry name',
+  })
   @IsString()
   @IsOptional()
   ministry?: string
@@ -147,7 +174,10 @@ export class RegulationDraft {
   @IsOptional()
   signatureDate?: string
 
-  @ApiPropertyOptional({ type: String, description: 'Rendered signature block HTML' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Rendered signature block HTML',
+  })
   @IsString()
   @IsOptional()
   signatureText?: string
@@ -173,7 +203,10 @@ export class RegulationDraft {
   @IsOptional()
   lawChapters?: RegulationLawChapter[]
 
-  @ApiPropertyOptional({ type: Boolean, description: 'Skip normal publication timeline' })
+  @ApiPropertyOptional({
+    type: Boolean,
+    description: 'Skip normal publication timeline',
+  })
   @IsBoolean()
   @IsOptional()
   fastTrack?: boolean
@@ -188,7 +221,8 @@ export class RegulationDraft {
 
   @ApiPropertyOptional({
     type: [RegulationImpact],
-    description: 'Flattened list of impacts (amendments and repeals) across all affected regulations',
+    description:
+      'Flattened list of impacts (amendments and repeals) across all affected regulations',
   })
   @Type(() => RegulationImpact)
   @IsArray()
@@ -215,7 +249,10 @@ export class UpdateRegulationDraftBody {
   @IsString()
   draftingNotes!: string
 
-  @ApiPropertyOptional({ type: String, description: 'Regulation name (e.g., "0123/2020")' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Regulation name (e.g., "0123/2020")',
+  })
   @IsString()
   @IsOptional()
   name?: string
@@ -234,12 +271,18 @@ export class UpdateRegulationDraftBody {
   @IsOptional()
   comments?: string
 
-  @ApiPropertyOptional({ type: String, description: 'Desired publication date' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Desired publication date',
+  })
   @IsString()
   @IsOptional()
   idealPublishDate?: string
 
-  @ApiPropertyOptional({ type: String, description: 'Responsible ministry name' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Responsible ministry name',
+  })
   @IsString()
   @IsOptional()
   ministry?: string
@@ -249,17 +292,26 @@ export class UpdateRegulationDraftBody {
   @IsOptional()
   signatureDate?: string
 
-  @ApiPropertyOptional({ type: String, description: 'Rendered signature block HTML' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Rendered signature block HTML',
+  })
   @IsString()
   @IsOptional()
   signatureText?: string
 
-  @ApiPropertyOptional({ type: String, description: 'When the regulation takes legal effect' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'When the regulation takes legal effect',
+  })
   @IsString()
   @IsOptional()
   effectiveDate?: string
 
-  @ApiPropertyOptional({ type: String, description: 'Regulation type: base or amending' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Regulation type: base or amending',
+  })
   @IsString()
   @IsOptional()
   type?: string
@@ -279,14 +331,20 @@ export class UpdateRegulationDraftBody {
   @IsOptional()
   lawChapters?: string[]
 
-  @ApiPropertyOptional({ type: Boolean, description: 'Skip normal publication timeline' })
+  @ApiPropertyOptional({
+    type: Boolean,
+    description: 'Skip normal publication timeline',
+  })
   @IsBoolean()
   @IsOptional()
   fastTrack?: boolean
 }
 
 export class CreateRegulationChangeBody {
-  @ApiProperty({ type: String, description: 'RegName of the target regulation' })
+  @ApiProperty({
+    type: String,
+    description: 'RegName of the target regulation',
+  })
   @IsString()
   regulation!: string
 
@@ -311,19 +369,28 @@ export class CreateRegulationChangeBody {
   @IsOptional()
   appendixes?: RegulationAppendix[]
 
-  @ApiPropertyOptional({ type: String, description: 'Comments about this change' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Comments about this change',
+  })
   @IsString()
   @IsOptional()
   comments?: string
 
-  @ApiPropertyOptional({ type: String, description: 'HTML diff showing changes' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'HTML diff showing changes',
+  })
   @IsString()
   @IsOptional()
   diff?: string
 }
 
 export class UpdateRegulationChangeBody {
-  @ApiPropertyOptional({ type: String, description: 'When this change takes effect' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'When this change takes effect',
+  })
   @IsString()
   @IsOptional()
   date?: string
@@ -333,7 +400,10 @@ export class UpdateRegulationChangeBody {
   @IsOptional()
   title?: string
 
-  @ApiPropertyOptional({ type: String, description: 'New/replacement text HTML' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'New/replacement text HTML',
+  })
   @IsString()
   @IsOptional()
   text?: string
@@ -347,29 +417,44 @@ export class UpdateRegulationChangeBody {
   @IsOptional()
   appendixes?: RegulationAppendix[]
 
-  @ApiPropertyOptional({ type: String, description: 'Comments about this change' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Comments about this change',
+  })
   @IsString()
   @IsOptional()
   comments?: string
 
-  @ApiPropertyOptional({ type: String, description: 'HTML diff showing changes' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'HTML diff showing changes',
+  })
   @IsString()
   @IsOptional()
   diff?: string
 }
 
 export class CreateRegulationCancelBody {
-  @ApiProperty({ type: String, description: 'RegName of the target regulation' })
+  @ApiProperty({
+    type: String,
+    description: 'RegName of the target regulation',
+  })
   @IsString()
   regulation!: string
 
-  @ApiProperty({ type: String, description: 'When this cancellation takes effect' })
+  @ApiProperty({
+    type: String,
+    description: 'When this cancellation takes effect',
+  })
   @IsString()
   date!: string
 }
 
 export class UpdateRegulationCancelBody {
-  @ApiPropertyOptional({ type: String, description: 'When this cancellation takes effect' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'When this cancellation takes effect',
+  })
   @IsString()
   @IsOptional()
   date?: string

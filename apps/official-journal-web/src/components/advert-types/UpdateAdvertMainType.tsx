@@ -153,18 +153,13 @@ export const UpdateAdvertMainType = ({
         name="update-main-type-slug"
         value={
           hasEditedTitle
-            ? slugify(
-                `${mainType.department.title}-${updateState.title}`,
-                {
-                  lower: true,
-                },
-              )
+            ? slugify(`${mainType.department.title}-${updateState.title}`, {
+                lower: true,
+              })
             : mainType.slug
         }
         size="sm"
-        label={
-          !hasEditedTitle ? 'Slóð tegundar' : 'Uppfærð slóð tegundar'
-        }
+        label={!hasEditedTitle ? 'Slóð tegundar' : 'Uppfærð slóð tegundar'}
         backgroundColor="blue"
       />
       <Inline space={[2, 2, 3]} justifyContent="spaceBetween" flexWrap="wrap">
@@ -206,7 +201,7 @@ export const UpdateAdvertMainType = ({
                 onClick={() =>
                   updateTypeMutation.mutate({
                     id: type.id,
-                    mainTypeId: null
+                    mainTypeId: null,
                   })
                 }
                 variant="blueberry"

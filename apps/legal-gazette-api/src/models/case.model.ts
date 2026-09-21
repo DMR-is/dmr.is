@@ -10,11 +10,7 @@ import {
   HasOne,
 } from 'sequelize-typescript'
 
-import {
-  ApiOptionalEnum,
-  ApiString,
-  ApiUUId,
-} from '@dmr.is/decorators'
+import { ApiOptionalEnum, ApiString, ApiUUId } from '@dmr.is/decorators'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
@@ -55,7 +51,10 @@ type CaseCreateAttributes = {
   ],
   order: [['createdAt', 'DESC']],
 }))
-export class CaseModel extends ParanoidModel<CaseAttributes, CaseCreateAttributes> {
+export class CaseModel extends ParanoidModel<
+  CaseAttributes,
+  CaseCreateAttributes
+> {
   @Column({
     type: DataType.TEXT,
     allowNull: false,

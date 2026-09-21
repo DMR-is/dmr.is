@@ -27,4 +27,3 @@ export const MAX_SELECTABLE_YEAR = new Date().getFullYear() + 5
 export const MIN_SELECTABLE_YEAR = new Date().getFullYear() - 1
 
 export const ALLOWED_FORM_TYPES = Object.values(FormTypes)
-

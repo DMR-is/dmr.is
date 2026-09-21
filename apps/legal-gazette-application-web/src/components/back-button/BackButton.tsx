@@ -3,7 +3,6 @@ import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 
 import { PageRoutes } from '../../lib/constants'
 
-
 type PageRouteStrings = `${PageRoutes}`
 
 type Props = {

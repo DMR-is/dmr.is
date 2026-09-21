@@ -1,10 +1,5 @@
 // Association annotations use a type-only alias - see `models.md`.
-import {
-  BelongsTo,
-  Column,
-  DataType,
-  ForeignKey,
-} from 'sequelize-typescript'
+import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { ApiProperty } from '@nestjs/swagger'
 

@@ -79,7 +79,7 @@ export const DataTableColumn = ({
     >
       <Wrapper
         variant="text"
-        size='small'
+        size="small"
         onClick={() => {
           if (!sortable) return
           onSort ? onSort(field) : handleSort(field)

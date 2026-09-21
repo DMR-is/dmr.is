@@ -569,17 +569,17 @@ export const useUpdateAdvert = (id: string) => {
 
   const updateFeeQuantity = useCallback(
     (feeQuantity: number) => {
-      if(feeQuantity === advert.feeQuantity) return
+      if (feeQuantity === advert.feeQuantity) return
 
       return updateAdvert(
         { feeQuantity },
         {
           successMessage: 'Fjöldi uppfærður',
-          errorMessage: 'Ekki tókst að uppfæra fjölda'
-        }
+          errorMessage: 'Ekki tókst að uppfæra fjölda',
+        },
       )
     },
-    [updateAdvert, advert.feeQuantity]
+    [updateAdvert, advert.feeQuantity],
   )
 
   const moveToNextStatus = useCallback(() => {

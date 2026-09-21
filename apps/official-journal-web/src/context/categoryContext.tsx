@@ -116,9 +116,7 @@ export const CategoryProvider = ({ children }: CategoryProviderProps) => {
 
   const selectedMainCategory = useMemo(() => {
     if (!selectedMainCategoryId) return null
-    return (
-      mainCategories.find((mc) => mc.id === selectedMainCategoryId) ?? null
-    )
+    return mainCategories.find((mc) => mc.id === selectedMainCategoryId) ?? null
   }, [mainCategories, selectedMainCategoryId])
 
   const selectedCategory = useMemo(() => {
@@ -168,8 +166,7 @@ export const CategoryProvider = ({ children }: CategoryProviderProps) => {
       value={{
         mainCategories,
         mainCategoryOptions,
-        mainCategoryError:
-          (mainCategoryError as unknown as Error) ?? undefined,
+        mainCategoryError: (mainCategoryError as unknown as Error) ?? undefined,
         isValidatingMainCategories,
         categories,
         categoryOptions,

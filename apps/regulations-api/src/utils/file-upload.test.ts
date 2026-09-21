@@ -70,7 +70,7 @@ type FakeFile = {
 const makeReq = (
   query: Record<string, string | Array<string>> = {},
   headers: Record<string, string> = {},
-): ExpressRequest => ({ query, headers } as unknown as ExpressRequest)
+): ExpressRequest => ({ query, headers }) as unknown as ExpressRequest
 
 const makeFile = (originalname: string, $hash$?: string): FakeFile =>
   $hash$ === undefined ? { originalname } : { originalname, $hash$ }
@@ -167,9 +167,9 @@ describe('getKey — filename handling', () => {
   it('keeps the basename case but lowercases the extension', () => {
     const getKey = loadGetKey()
 
-    expect(
-      getKey(makeReq({ folder: 'foo' }), makeFile('BarChart.PNG')),
-    ).toBe('files/foo/BarChart.png')
+    expect(getKey(makeReq({ folder: 'foo' }), makeFile('BarChart.PNG'))).toBe(
+      'files/foo/BarChart.png',
+    )
   })
 
   it('appends the content hash between basename and extension', () => {
@@ -273,7 +273,10 @@ describe('getKey — rootFolder from the X-APIKey upload type', () => {
 
     expect(
       getKey(
-        makeReq({ folder: 'foo' }, { 'x-apikey': API_KEYS.FILE_UPLOAD_KEY_DRAFT }),
+        makeReq(
+          { folder: 'foo' },
+          { 'x-apikey': API_KEYS.FILE_UPLOAD_KEY_DRAFT },
+        ),
         makeFile('barchart.png'),
       ),
     ).toBe('admin-drafts/files/foo/barchart.png')
@@ -502,7 +505,10 @@ describe('the two candidate `location` values for a pasted upload', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { FILE_SERVER } = require('../constants') as { FILE_SERVER: string }
 
-    const named = getKey(makeReq({ folder: 'foo' }), makeFile('blobid12345.png'))
+    const named = getKey(
+      makeReq({ folder: 'foo' }),
+      makeFile('blobid12345.png'),
+    )
     const stored = toTransformedKey(named)
 
     expect(FILE_SERVER + '/' + stored).toBe(
@@ -514,4 +520,3 @@ describe('the two candidate `location` values for a pasted upload', () => {
     expect(stored).not.toBe(named)
   })
 })
-

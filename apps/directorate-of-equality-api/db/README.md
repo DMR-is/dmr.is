@@ -645,7 +645,7 @@ Bucket placement is informational only, and always was. Compliance is decided by
 | `CompanySizeEnum`         | `UNKNOWN`, `SMALL`, `MEDIUM`, `LARGE`                                                                                                                                                                                                                                                                          |
 | `CompanyEventTypeEnum`    | `CREATED`, `STATUS_CHANGED`, `FINES_STARTED`, `FINES_STOPPED`, `QUARANTINED`, `UNQUARANTINED`, `EQUALITY_REPORT_DEADLINE_REMINDER_SENT`, `SALARY_REPORT_DEADLINE_REMINDER_SENT`, `EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `API_KEY_ISSUED`, `API_KEY_REVOKED` |
 | `ApiKeyOriginEnum`        | `ISLAND_IS`, `ADMIN`                                                                                                                                                                                                                                                                                           |
-| `ApiKeyScopeEnum`         | `salary:submit`, `equality:submit`, `report:read`, `scoring:write`                                                                                                                                                                                                                                                              |
+| `ApiKeyScopeEnum`         | `salary:submit`, `equality:submit`, `report:read`, `scoring:write`                                                                                                                                                                                                                                             |
 | `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                                                                                                                                                                                                                                 |
 | `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                                                                                                                                                                                                                                         |
 | `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                                                                                                                                                                                                                                          |
@@ -701,24 +701,24 @@ Machine credential for the third-party integration API. See **API keys** above f
 exists and what is stored. Prefixed `doe_` for the same reason `doe_user` is — it is not a
 domain entity of the equality register but a service-level concern.
 
-| Column                   | Type                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------------ |
-| `id`                     | `uuid` PK                                                                            |
-| `company_id`             | `fk → company`                                                                       |
-| `company_national_id`    | `text` (denormalised from `company.national_id` — see below)                         |
-| `key_id`                 | `text` (unique — public half of the credential, the lookup key)                      |
-| `secret_hash`            | `text` (HMAC-SHA256 of the secret under a server-side pepper)                        |
-| `label`                  | `text` (nullable — free text set by the issuer)                                      |
+| Column                   | Type                                                                                                                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                     | `uuid` PK                                                                                                                                                                                        |
+| `company_id`             | `fk → company`                                                                                                                                                                                   |
+| `company_national_id`    | `text` (denormalised from `company.national_id` — see below)                                                                                                                                     |
+| `key_id`                 | `text` (unique — public half of the credential, the lookup key)                                                                                                                                  |
+| `secret_hash`            | `text` (HMAC-SHA256 of the secret under a server-side pepper)                                                                                                                                    |
+| `label`                  | `text` (nullable — free text set by the issuer)                                                                                                                                                  |
 | `scopes`                 | `text[]` (`ApiKeyScopeEnum`: `report:read`, `salary:submit`, `equality:submit`, `scoring:write`; never empty. The first three are the default set — `scoring:write` is never granted implicitly) |
-| `created_via`            | `doe_api_key_origin_enum` (`ApiKeyOriginEnum`)                                       |
-| `created_by_user_id`     | `fk → doe_user` (nullable — set on the `ADMIN` path)                                 |
-| `created_by_national_id` | `text` (nullable — set on the `ISLAND_IS` path)                                      |
-| `expires_at`             | `timestamptz` (nullable — null means no expiry)                                      |
-| `last_used_at`           | `timestamptz` (nullable — activity indicator, written at most once a minute per key) |
-| `revoked_at`             | `timestamptz` (nullable)                                                             |
-| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                           |
-| `revoked_by_national_id` | `text` (nullable)                                                                    |
-| `revoked_reason`         | `text` (nullable)                                                                    |
+| `created_via`            | `doe_api_key_origin_enum` (`ApiKeyOriginEnum`)                                                                                                                                                   |
+| `created_by_user_id`     | `fk → doe_user` (nullable — set on the `ADMIN` path)                                                                                                                                             |
+| `created_by_national_id` | `text` (nullable — set on the `ISLAND_IS` path)                                                                                                                                                  |
+| `expires_at`             | `timestamptz` (nullable — null means no expiry)                                                                                                                                                  |
+| `last_used_at`           | `timestamptz` (nullable — activity indicator, written at most once a minute per key)                                                                                                             |
+| `revoked_at`             | `timestamptz` (nullable)                                                                                                                                                                         |
+| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                                                                                                                                       |
+| `revoked_by_national_id` | `text` (nullable)                                                                                                                                                                                |
+| `revoked_reason`         | `text` (nullable)                                                                                                                                                                                |
 
 Invariants (enforced via CHECK):
 
@@ -740,7 +740,7 @@ the two columns cannot drift.
 
 A company's **starfsmat**: the criteria a salary report is scored against, stored once and
 named by a filing rather than re-transmitted with it. Written only by the partner API — see
-**API keys** above for the surface, and the *Scoring model* section for why the criteria
+**API keys** above for the surface, and the _Scoring model_ section for why the criteria
 tree stopped being part of a submission.
 
 It has **no FK from `report`**, deliberately. Submitting materialises the report's own
@@ -748,11 +748,11 @@ It has **no FK from `report`**, deliberately. Submitting materialises the report
 so a company can rework its starfsmat without moving the figures on a report already filed.
 That frozen copy is also why this table carries no version column.
 
-| Column       | Type             |
-| ------------ | ---------------- |
-| `id`         | `uuid` PK        |
-| `company_id` | `fk → company`   |
-| `name`       | `text`           |
+| Column       | Type           |
+| ------------ | -------------- |
+| `id`         | `uuid` PK      |
+| `company_id` | `fk → company` |
+| `name`       | `text`         |
 
 ### `scoring_criterion`
 
@@ -764,13 +764,13 @@ disagree with the figures that do.
 `type` reuses `report_criterion_type_enum` — the same five values with the same meaning as
 on a filed report.
 
-| Column             | Type                                          |
-| ------------------ | --------------------------------------------- |
-| `id`               | `uuid` PK                                     |
-| `scoring_model_id` | `fk → scoring_model` (cascade)                |
-| `type`             | `report_criterion_type_enum`                  |
-| `title`            | `text`                                        |
-| `description`      | `text`                                        |
+| Column             | Type                           |
+| ------------------ | ------------------------------ |
+| `id`               | `uuid` PK                      |
+| `scoring_model_id` | `fk → scoring_model` (cascade) |
+| `type`             | `report_criterion_type_enum`   |
+| `title`            | `text`                         |
+| `description`      | `text`                         |
 
 A valid model holds at least one criterion of each of the four job-based **types** and at
 most one `PERSONAL`. Two criteria of the same type are allowed.
@@ -781,12 +781,12 @@ One sub-criterion (undirviðmið), and the only place a weight is stored. Every
 sub-criterion weight **across the whole model** sums to 100 — not per criterion. This is
 the one weight that reaches a score.
 
-| Column                 | Type                               |
-| ---------------------- | ---------------------------------- |
-| `id`                   | `uuid` PK                          |
-| `scoring_criterion_id` | `fk → scoring_criterion` (cascade) |
-| `title`                | `text`                             |
-| `description`          | `text`                             |
+| Column                 | Type                                       |
+| ---------------------- | ------------------------------------------ |
+| `id`                   | `uuid` PK                                  |
+| `scoring_criterion_id` | `fk → scoring_criterion` (cascade)         |
+| `title`                | `text`                                     |
+| `description`          | `text`                                     |
 | `weight`               | `numeric(7,4)` (0–100, bounded on the DTO) |
 
 No two sub-criteria may share both their own title and their parent's: the submission
@@ -959,37 +959,37 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 
 ### `report`
 
-| Column                           | Type                                                                                                                           |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                             | `uuid` PK                                                                                                                      |
-| `type`                           | `ReportTypeEnum`                                                                                                               |
-| `company_admin_name`             | `text`                                                                                                                         |
-| `company_admin_title`            | `text` (nullable; job title of the company executive)                                                                          |
-| `company_admin_email`            | `text`                                                                                                                         |
-| `company_admin_gender`           | `GenderEnum`                                                                                                                   |
-| `contact_name`                   | `text`                                                                                                                         |
-| `contact_title`                  | `text` (nullable; job title of the company contact)                                                                            |
-| `company_national_id`            | `text` (nullable; cached submitter/company national ID when supplied)                                                          |
-| `contact_email`                  | `text`                                                                                                                         |
-| `contact_phone`                  | `text`                                                                                                                         |
-| `average_employee_male_count`    | `decimal(10, 2)`                                                                                                               |
-| `average_employee_female_count`  | `decimal(10, 2)`                                                                                                               |
-| `average_employee_neutral_count` | `decimal(10, 2)`                                                                                                               |
-| `salary_data_basis`              | `SalaryDataBasisEnum` (nullable — see "Salary-data basis")                                                                     |
-| `salary_data_period`             | `date` (nullable — the payroll month, always the 1st; set only when `salary_data_basis = MONTH`)                               |
-| `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                           |
-| `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)             |
-| `imported_from_excel`            | `boolean` (server-set — see "Excel import transport" → "Recording how the data was entered")                                   |
-| `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                  |
-| `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")         |
+| Column                           | Type                                                                                                                                                                 |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                             | `uuid` PK                                                                                                                                                            |
+| `type`                           | `ReportTypeEnum`                                                                                                                                                     |
+| `company_admin_name`             | `text`                                                                                                                                                               |
+| `company_admin_title`            | `text` (nullable; job title of the company executive)                                                                                                                |
+| `company_admin_email`            | `text`                                                                                                                                                               |
+| `company_admin_gender`           | `GenderEnum`                                                                                                                                                         |
+| `contact_name`                   | `text`                                                                                                                                                               |
+| `contact_title`                  | `text` (nullable; job title of the company contact)                                                                                                                  |
+| `company_national_id`            | `text` (nullable; cached submitter/company national ID when supplied)                                                                                                |
+| `contact_email`                  | `text`                                                                                                                                                               |
+| `contact_phone`                  | `text`                                                                                                                                                               |
+| `average_employee_male_count`    | `decimal(10, 2)`                                                                                                                                                     |
+| `average_employee_female_count`  | `decimal(10, 2)`                                                                                                                                                     |
+| `average_employee_neutral_count` | `decimal(10, 2)`                                                                                                                                                     |
+| `salary_data_basis`              | `SalaryDataBasisEnum` (nullable — see "Salary-data basis")                                                                                                           |
+| `salary_data_period`             | `date` (nullable — the payroll month, always the 1st; set only when `salary_data_basis = MONTH`)                                                                     |
+| `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                                                                 |
+| `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)                                                   |
+| `imported_from_excel`            | `boolean` (server-set — see "Excel import transport" → "Recording how the data was entered")                                                                         |
+| `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                                                        |
+| `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")                                               |
 | `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against; null when `equality_source = LEGACY`) |
-| `equality_source`                | `'REPORT' \| 'LEGACY'` (not null, default `REPORT` — what met the equality obligation; see "Gating rule")                       |
-| `equality_legacy_valid_until`    | `date` (nullable — the legacy certificate's stated expiry, snapshotted at filing; non-null exactly when `equality_source = LEGACY`) |
-| `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                     |
-| `approved_at`                    | `timestamp` (nullable)                                                                                                         |
-| `valid_until`                    | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede)                                                        |
-| `correction_deadline`            | `timestamp` (nullable — provisional name; never written today. See "Outlier deadlines")                                        |
-| `equality_report_content`        | `text` (nullable — narrative body for `type = EQUALITY`)                                                                       |
+| `equality_source`                | `'REPORT' \| 'LEGACY'` (not null, default `REPORT` — what met the equality obligation; see "Gating rule")                                                            |
+| `equality_legacy_valid_until`    | `date` (nullable — the legacy certificate's stated expiry, snapshotted at filing; non-null exactly when `equality_source = LEGACY`)                                  |
+| `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                                                           |
+| `approved_at`                    | `timestamp` (nullable)                                                                                                                                               |
+| `valid_until`                    | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede)                                                                                              |
+| `correction_deadline`            | `timestamp` (nullable — provisional name; never written today. See "Outlier deadlines")                                                                              |
+| `equality_report_content`        | `text` (nullable — narrative body for `type = EQUALITY`)                                                                                                             |
 
 ### `report_criterion`
 

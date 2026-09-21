@@ -10,7 +10,10 @@ import {
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { getOptions } from './sequelize'
-import { type DMRSequelizeConfig, IDMRSequelizeConfig } from './sequelize.config'
+import {
+  type DMRSequelizeConfig,
+  IDMRSequelizeConfig,
+} from './sequelize.config'
 
 const LOGGING_CONTEXT = 'SequelizeService'
 

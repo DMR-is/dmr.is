@@ -18,7 +18,10 @@ export type ParanoidModelStatic<T extends ParanoidModel = ParanoidModel> =
 export abstract class ParanoidModel<
   TAttributes = any,
   TCreateAttributes extends {} = any,
-> extends AbstractDmrModel<TAttributes & ParanoidModelAttributes, TCreateAttributes> {
+> extends AbstractDmrModel<
+  TAttributes & ParanoidModelAttributes,
+  TCreateAttributes
+> {
   @CreatedAt
   declare createdAt: Date
 

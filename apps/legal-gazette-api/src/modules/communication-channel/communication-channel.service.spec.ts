@@ -3,9 +3,7 @@ import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { AdvertModel } from '../../models/advert.model'
-import {
-  CommunicationChannelModel,
-} from '../../models/communication-channel.model'
+import { CommunicationChannelModel } from '../../models/communication-channel.model'
 import { StatusIdEnum } from '../../models/status.model'
 import {
   CreateCommunicationChannelDto,

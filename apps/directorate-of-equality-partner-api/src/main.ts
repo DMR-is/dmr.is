@@ -9,7 +9,7 @@ import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
-import { API_VERSION,applyApiRouting, GLOBAL_PREFIX } from './api-routing'
+import { API_VERSION, applyApiRouting, GLOBAL_PREFIX } from './api-routing'
 import { setupSwaggerDocument } from './setupSwaggerDocument'
 import { SWAGGER_CONFIG } from './swagger.config'
 

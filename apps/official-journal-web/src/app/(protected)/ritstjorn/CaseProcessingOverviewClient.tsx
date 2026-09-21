@@ -59,7 +59,10 @@ export function CaseProcessingOverviewClient() {
         enableDepartments={true}
         enableTypes={true}
         breadcrumbs={[
-          { title: caseProccessingMessages.breadcrumbs.home, href: Routes.Dashboard },
+          {
+            title: caseProccessingMessages.breadcrumbs.home,
+            href: Routes.Dashboard,
+          },
           { title: caseProccessingMessages.breadcrumbs.cases },
         ]}
       />
