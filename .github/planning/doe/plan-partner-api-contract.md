@@ -26,6 +26,16 @@ two equally-scored people are paid differently — days, not seconds. Every
 design that assumed it could happen inside one request was wrong, which is why
 detection moves *into* the submit rather than sitting in front of it.
 
+**The six-month renewal window is dead code on this channel.**
+`application.service.ts:189` wraps the whole gate in
+`if (process.env.API_ENV === 'prod')`. `ApplicationService` is shared by both
+apps, but `API_ENV` is declared only in `directorate-of-equality-api`'s
+`.env.schema`, and `varlock-run.sh` unsets every variable an app's own schema
+does not declare — so on the partner API it is always `undefined` and the gate
+never runs. `GET /reports/salary/eligibility` therefore returns
+`RENEWAL_WINDOW_NOT_OPEN` with an `earliestSubmissionDate` while the submission
+accepts the filing anyway. **Decided 21 Sept: the window does apply here.**
+
 **`POSTPONED` currently has no exit on this channel.** The only resolution route
 is `PUT /application/reports/:providerId/outliers` on the island.is surface, and
 the status then blocks the company's next submission. We offer an option that
@@ -45,8 +55,8 @@ Low risk, no schema change. Ships independently of everything below.
 | 1.4 | Move `GET /partner/sub-criteria/catalog` to the scoring-model group | `partner/partner.controller.ts` → `scoring-model/scoring-model.controller.ts`, guide §C |
 | 1.5 | Equality gets its own DTO via `OmitType`, dropping `equalityReportPdf` / `equalityReportPdfFilename` | new `application/dto/submit-partner-equality-report.dto.ts` |
 | 1.6 | Fix stale guide text: §A4 tells callers to carry an `equalityReportId` the contract removed in #1483; the catalog's description still says a submission carries a criteria tree | `docs/partner-api-guide.md`, catalog `@PartnerResponse` description |
-
-| 1.7 | Drop `company.nationalId` from the submission body | `application/dto/submit-report-company.dto.ts`, `application.service.ts` (the equality check at :915 goes with it), guide §A3/§B7 |
+| 1.7 | Declare `API_ENV` in the partner API's `.env.schema`, so the renewal-window gate fires | `apps/directorate-of-equality-partner-api/.env.schema` |
+| 1.8 | Drop `company.nationalId` from the submission body | `application/dto/submit-report-company.dto.ts`, `application.service.ts` (the equality check at :915 goes with it), guide §A3/§B7 |
 
 **Decided 21 Sept:** `company.nationalId` goes. It is validated to equal the
 authenticated company, so it can only ever hold one value. Note this gives up a
@@ -148,28 +158,41 @@ the one-policy-two-meanings divergence this codebase keeps getting caught by.
 If the support load proves real, the right fix is a `DELETE` or withdraw route on
 a `POSTPONED` report this channel filed — not a branch in the sibling policy.
 
-## Phase 4 — The playground
+## Phase 4 — The playground (a dry run)
 
-`POST /partner/reports/salary-analysis` → `POST /partner/playground/salary-analysis`.
+`POST /partner/reports/salary-analysis` stops being a mandatory pre-flight step
+and becomes an **optional dry run**: send a payload, find out whether it
+validates and what outliers it produces, then submit for real.
 
-A sandbox for a vendor, or a vendor's user, to define criteria and employees and
-see what the API makes of them. Nothing stored, nothing filed.
+**Locked exactly like every other route.** Full guard chain, and
+`@RequireApiScope(ApiKeyScopeEnum.SALARY_SUBMIT)` — the scope it already carries.
+No new scope, no `@PublicRoute`. It inherits `@RequireActiveCompany` from the
+controller, which is correct: a company off the register should not be
+dry-running filings it cannot make.
 
-- **Takes an inline criteria tree**, not a `scoringModelId` — you cannot
-  experiment with criteria you must persist first. This is the `ParsedReportDto`
-  shape #1508 removed from the submission; the shape is not dead, this is what it
-  is for.
-- **`payDispersion` moves here.** It asks nothing — no group, no reason, no
-  action, no signature — and on a filing route it needed a paragraph of guide
-  prose telling integrators not to act on it. In a playground that is simply what
-  a playground is for.
-- Own scope and own throttle. Label it unmistakably or somebody will build a
-  production flow on it.
+**It takes the submission's input, not an inline criteria tree.**
+`{ scoringModelId, employees }` — the same pair `POST /reports/salary` takes. A
+dry run against a different payload is not a dry run.
 
-**Blocked on a decision:** its scope — `report:read`, one of its own, or none
-beyond a valid credential.
+An earlier draft had it accept an inline criteria tree so a vendor's users could
+experiment with criteria definitions. Dropped: the 16 scoring-model routes
+already serve that. The employer authors or adjusts the model through those, and
+the dry run tests a filing against it.
 
----
+**Hard requirement: the dry run must go through the same validation code path as
+the submit.** If it can answer "valid" where the submission answers `400`, that
+is the fourth occurrence of "previews clean, rejected at submit" in this
+codebase. Same rules, not rules that agree today.
+
+- Stores nothing.
+- `payDispersion` stays here rather than on a filing route. It asks nothing — no
+  group, no reason, no action, no signature — and on a filing route it needed a
+  paragraph of guide prose telling integrators not to act on it. In a dry run it
+  is simply part of what you are shown.
+- Worth its own throttle, since it is now optional and repeatable.
+
+Whether the *path* changes (`/reports/salary-analysis` → `/playground/…`) is
+cosmetic and can follow the guide's section layout.
 
 ## Security considerations
 
@@ -215,6 +238,11 @@ beyond a valid credential.
 - [ ] Tenant isolation on `PUT …/outliers` — another company's `providerId` is
       indistinguishable from a missing one
 - [ ] `outliersPostponed` in the body → rejected by the strict whitelist
+- [ ] Renewal window: a submission outside the window → `409` on the partner API
+      in a deployed env, and `GET …/eligibility` agrees with it
+- [ ] Dry run and submit agree: a payload the dry run calls valid is accepted by
+      the submission, and one it refuses is refused there too — the assertion
+      that catches the two paths drifting
 - [ ] Replay semantics unchanged: same `providerId` → `200` with
       `replayed: true`, nothing filed
 - [ ] Playground stores nothing and is reachable without submit scopes (per the
@@ -231,11 +259,20 @@ beyond a valid credential.
 | 1 | Move the catalog route | — | Pending |
 | 1 | Partner equality DTO via `OmitType` | — | Pending |
 | 1 | Stale guide text | — | Pending |
+| 1 | Declare `API_ENV` on the partner API | — | Pending |
 | 1 | Drop `company.nationalId` | — | Pending |
 | 2 | Multipart + mammoth, document-only | — | Pending |
 | 3 | Detection at submit → `POSTPONED` | — | Pending |
 | 3 | `PUT …/outliers` | — | Pending |
-| 4 | Playground | — | Blocked — scope decision |
+| 4 | Dry run: scope, input shape, shared validation | — | Pending |
+
+## Deploy consequence
+
+Declaring `API_ENV` takes the partner API's required-variable count from **12 to
+13**. It is `@type=enum(dev, prod) @public @required=forEnv(deployed)`, copied
+from the sibling app, and `DMR_RUNTIME` is already declared in the partner
+schema so `forEnv` resolves. It must be set in ECS or the service will not boot
+once deployed — add it to the pre-launch env checklist.
 
 ## Needs Jafnréttisstofa
 
