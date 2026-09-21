@@ -8,16 +8,15 @@ import {
   VISIBILITY_FILTER_OPTIONS,
 } from '../../components/companies/companyStatus'
 import type {
+  ReportCriteria,
   ReportDateKey,
   ReportDateRanges,
-  ReportFilters,
   ReportGapBounds,
-} from '../../components/data-export/ReportExportFilter'
+} from '../../components/data-export/ReportCriteriaCards'
 import {
   ADMIN_GENDER_OPTIONS,
-  COMMUNICATION_STATUS_OPTIONS,
   EQUALITY_SOURCE_OPTIONS,
-  REPORT_STATUS_OPTIONS,
+  IMPROVEMENT_PLAN_OPTIONS,
   REPORT_TYPE_OPTIONS,
   type ReportFilterOption,
 } from '../../components/data-export/reportExportOptions'
@@ -41,12 +40,20 @@ import { EMPLOYEE_RANGES } from '../../lib/utils'
  * Codes we cannot resolve to a label (ÍSAT, postcode, region) are listed as
  * codes rather than omitted — an incomplete record is still better than a
  * filter line that silently leaves a dimension out.
+ *
+ * The report half is prefixed and appended by `reportSummary` below. It does
+ * NOT restate that only approved filings were considered — that is a property
+ * of the export, not of the filter, and belongs in the sheet's own heading
+ * rather than repeated on six lines.
  */
 const line = (label: string, values: string[]): string | null =>
   values.length ? `${label}: ${values.join(', ')}` : null
 
 export const buildFilterSummary = (
   filters: CompanyFilters,
+  criteria: ReportCriteria,
+  dates: ReportDateRanges,
+  gaps: ReportGapBounds,
   query: string,
 ): string[] => {
   const labelFor = (
@@ -83,14 +90,16 @@ export const buildFilterSummary = (
     line('ÍSAT atvinnugrein', filters.isatCategoryCode),
     line('Landshluti', filters.regionCode),
     line('Póstnúmer', filters.postcode),
+    ...reportSummary(criteria, dates, gaps),
   ].filter((value): value is string => value !== null)
 }
 
+
 const DATE_RANGE_LABELS: Array<[string, ReportDateKey, ReportDateKey]> = [
-  ['Innsent', 'createdFrom', 'createdTo'],
-  ['Samþykkt', 'approvedFrom', 'approvedTo'],
-  ['Gildir til', 'validUntilFrom', 'validUntilTo'],
-  ['Launatímabil', 'salaryDataPeriodFrom', 'salaryDataPeriodTo'],
+  ['Skýrsla innsend', 'reportSubmittedFrom', 'reportSubmittedTo'],
+  ['Skýrsla samþykkt', 'reportApprovedFrom', 'reportApprovedTo'],
+  ['Skýrsla gildir til', 'reportValidUntilFrom', 'reportValidUntilTo'],
+  ['Launatímabil', 'reportSalaryDataPeriodFrom', 'reportSalaryDataPeriodTo'],
 ]
 
 const formatDay = (date: Date) =>
@@ -138,11 +147,17 @@ const gapLine = (
   return `${label}: að ${pct(to as string)}`
 }
 
-export const buildReportFilterSummary = (
-  filters: ReportFilters,
+/**
+ * The report half of the filter, in words.
+ *
+ * Prefixed "Skýrslur —" throughout because these narrowed the companies rather
+ * than describing them: a reader who sees "Tegund: Skýrslugjöf" on a sheet of
+ * companies would otherwise reasonably wonder what a company's tegund is.
+ */
+const reportSummary = (
+  criteria: ReportCriteria,
   dates: ReportDateRanges,
   gaps: ReportGapBounds,
-  query: string,
 ): string[] => {
   const labelFor = (
     options: ReportFilterOption[],
@@ -152,56 +167,34 @@ export const buildReportFilterSummary = (
       (value) => options.find((o) => o.value === value)?.label ?? value,
     )
 
+  const prefix = 'Skýrslur — '
+
   return [
-    query.trim() ? `Leitarorð: ${query.trim()}` : null,
-    line('Tegund', labelFor(REPORT_TYPE_OPTIONS, filters.type)),
-    line('Staða', labelFor(REPORT_STATUS_OPTIONS, filters.status)),
+    line(`${prefix}tegund`, labelFor(REPORT_TYPE_OPTIONS, criteria.type)),
     line(
-      'Samskiptastaða',
-      labelFor(COMMUNICATION_STATUS_OPTIONS, filters.communicationStatus),
+      `${prefix}kyn æðsta stjórnanda`,
+      labelFor(ADMIN_GENDER_OPTIONS, criteria.companyAdminGender),
     ),
     line(
-      'Grundvöllur jafnréttisáætlunar',
-      labelFor(EQUALITY_SOURCE_OPTIONS, filters.equalitySource),
+      `${prefix}grundvöllur jafnréttisáætlunar`,
+      labelFor(EQUALITY_SOURCE_OPTIONS, criteria.equalitySource),
     ),
     line(
-      'Kyn æðsta stjórnanda',
-      labelFor(ADMIN_GENDER_OPTIONS, filters.companyAdminGender),
-    ),
-    line(
-      'Starfsmannafjöldi',
-      filters.employees.map(
-        (value) => EMPLOYEE_SIZE_LABEL[value] ?? value,
-      ),
-    ),
-    line(
-      'Rekstrarform',
-      filters.sector.map((value) => SECTOR_LABEL[value as CompanySectorEnum]),
-    ),
-    line('ÍSAT-bálkur', filters.isatSection),
-    line('ÍSAT atvinnugrein', filters.isatCategoryCode),
-    line('Landshluti', filters.regionCode),
-    line('Póstnúmer', filters.postcode),
-    gapLine(
-      'Óleiðréttur launamunur',
-      gaps.rawGapPercentFrom,
-      gaps.rawGapPercentTo,
+      `${prefix}úrbótaáætlun`,
+      labelFor(IMPROVEMENT_PLAN_OPTIONS, criteria.improvementPlan),
     ),
     gapLine(
-      'Óskýrður launamunur',
-      gaps.oskyrtPercentFrom,
-      gaps.oskyrtPercentTo,
+      `${prefix}óleiðréttur launamunur`,
+      gaps.reportRawGapPercentFrom,
+      gaps.reportRawGapPercentTo,
+    ),
+    gapLine(
+      `${prefix}óskýrður launamunur`,
+      gaps.reportOskyrtPercentFrom,
+      gaps.reportOskyrtPercentTo,
     ),
     ...DATE_RANGE_LABELS.map(([label, fromKey, toKey]) =>
-      dateLine(label, dates[fromKey], dates[toKey]),
+      dateLine(`${prefix}${label.toLowerCase()}`, dates[fromKey], dates[toKey]),
     ),
   ].filter((value): value is string => value !== null)
-}
-
-/** Same buckets the report filter offers; see `EMPLOYEE_RANGE_OPTIONS`. */
-const EMPLOYEE_SIZE_LABEL: Record<string, string> = {
-  SMALL: '0–24',
-  MEDIUM: '25–49',
-  LARGE: '50+',
-  UNKNOWN: 'Óþekkt',
 }

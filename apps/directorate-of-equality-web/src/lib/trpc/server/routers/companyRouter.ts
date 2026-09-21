@@ -74,6 +74,28 @@ const zGetCompaniesQuery = z.object({
   sector: z.array(zCompanySectorEnum).optional(),
   regionCode: z.array(z.string()).optional(),
   postcode: z.array(z.string()).optional(),
+  // ⚠️ Report criteria. They narrow the COMPANY list — a company matches when
+  // at least one of its APPROVED filings satisfies all of them. Named here
+  // because this schema strips anything it does not name: omitting one makes
+  // the control appear to do nothing, with no error anywhere.
+  reportType: z.array(z.enum(['SALARY', 'EQUALITY'])).optional(),
+  reportCompanyAdminGender: z
+    .array(z.enum(['MALE', 'FEMALE', 'NEUTRAL']))
+    .optional(),
+  reportEqualitySource: z.array(z.enum(['REPORT', 'LEGACY'])).optional(),
+  reportSubmittedFrom: z.string().optional(),
+  reportSubmittedTo: z.string().optional(),
+  reportApprovedFrom: z.string().optional(),
+  reportApprovedTo: z.string().optional(),
+  reportValidUntilFrom: z.string().optional(),
+  reportValidUntilTo: z.string().optional(),
+  reportSalaryDataPeriodFrom: z.string().optional(),
+  reportSalaryDataPeriodTo: z.string().optional(),
+  reportRawGapPercentFrom: z.number().min(0).optional(),
+  reportRawGapPercentTo: z.number().min(0).optional(),
+  reportOskyrtPercentFrom: z.number().min(0).optional(),
+  reportOskyrtPercentTo: z.number().min(0).optional(),
+  reportHasImprovementPlan: z.boolean().optional(),
   sortBy: z.enum(['name', 'employeeCount', 'nextReportDue']).optional(),
   direction: z.enum(['asc', 'desc']).optional(),
 })
