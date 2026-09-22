@@ -2,15 +2,24 @@ import { createAuthMiddleware } from '@dmr.is/auth/middleware-helpers'
 
 import { identityServerConfig } from './lib/auth/identityServerConfig'
 
-// createAuthMiddleware only refreshes on access-token expiry (isExpired on
-// token.accessToken) -- it has no id-token branch the way doe-web's
-// hand-rolled middleware does. This app authenticates to
-// directorate-of-equality-api with session.idToken, not the access token, so
-// if the id token expires first every API call 401s while the middleware
-// sees nothing wrong, and session.invalid never gets set to recover it. This
-// only holds as long as DOE_PARTNER_WEB_CLIENT_ID's id_token lifetime is at
-// least as long as its access-token lifetime -- if that IDS client
-// configuration ever changes, this helper needs an id-token check added.
+// This app authenticates to directorate-of-equality-api with session.idToken,
+// not the access token, because the access token carries no identity: its
+// claims are scope, client_id, sub, sid, idp, acr and jti -- no nationalId,
+// no name, no actor. All of those live on the ID token, and
+// CompanyResourceGuard resolves the company from user.nationalId.
+//
+// That is also why sending BOTH tokens (`Bearer <access>, Bearer <id>`, which
+// TokenJwtAuthGuard supports and the two public legal-gazette webs use for
+// their scope-guarded routes) does not work here: the guard builds
+// request.user from the FIRST token and lifts only name and actor off the
+// second, so nationalId would come back undefined and every request would
+// 401.
+//
+// The helper refreshes on access-token expiry alone, which is sufficient:
+// this client issues both tokens with the same 300s lifetime and the same
+// exp, so the ID token can never expire first. If that ever stops being true
+// -- check a decoded pair rather than assuming -- the helper needs an
+// ID-token branch, and doe-web's hand-rolled middleware shows the shape.
 export default createAuthMiddleware({
   clientId: identityServerConfig.clientId,
   clientSecret: identityServerConfig.clientSecret,
