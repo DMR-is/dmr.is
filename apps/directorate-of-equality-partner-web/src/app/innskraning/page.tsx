@@ -17,23 +17,26 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 // NextAuth's core (core/index.js) sends exactly ten error codes to the
 // sign-in page instead of `pages.error`: Signin, OAuthSignin, OAuthCallback,
 // OAuthCreateAccount, EmailCreateAccount, Callback, OAuthAccountNotLinked,
-// EmailSignin, CredentialsSignin and SessionRequired. `AccessDenied` - the
-// code authOptions' `signIn` callback produces for a caller with no company
-// `nationalId` on the token - is NOT in that list, so it never lands here;
-// it goes to /error instead. `SessionRequired` is the one code in this list
-// that is ordinary navigation (an unauthenticated visit to a protected
-// route), not a failure, so it gets no alert. Everything else in the list is
-// a genuine sign-in/OAuth failure and gets a generic retry message.
+// EmailSignin, CredentialsSignin and SessionRequired. `SessionRequired` is
+// the one of those that is ordinary navigation (an unauthenticated visit to a
+// protected route) rather than a failure, so it gets no alert; everything
+// else in the list is a genuine sign-in or OAuth failure and gets a generic
+// retry message.
 //
-// A refused sign-in (no company nationalId on the id token) is a separate,
-// higher-priority signal: `signIn` returns a string (not `false`) so it can
-// end the IDS session first, which means NextAuth attaches no `?error=` and
-// the round trip through IDS does not preserve query params either. The
-// redirect route sets a same-origin, JS-readable `doe-partner.signin_error`
-// cookie instead - see src/app/api/auth/access-denied/route.ts. Read it once
-// and clear it so the message shows exactly once, and let it take priority
-// over the generic query-param message if both were somehow present, since
-// it names the actual cause rather than a generic retry prompt.
+// `AccessDenied` is NOT in that list, so it never lands here - it goes to
+// /error. Note what does and does not produce it: only the two `return false`
+// branches in authOptions' `signIn` do, and both are handshake failures (no
+// id_token, or a provider/access_token mismatch). The refusal this app
+// actually cares about - an individual who signed in without procuration -
+// does NOT produce it, because that branch returns a string so it can end the
+// IDS session first, and NextAuth attaches no `?error=` to a string return.
+// The round trip through IDS would not preserve a query param either.
+//
+// That refusal arrives here instead as a same-origin, JS-readable
+// `doe-partner.signin_error` cookie set by src/app/api/auth/access-denied/route.ts.
+// Read it once and clear it so the message shows exactly once, and let it take
+// priority over the generic query-param message if both are somehow present,
+// since it names the actual cause rather than prompting a blind retry.
 const SIGNIN_ERROR_COOKIE = 'doe-partner.signin_error'
 
 function LoginContent() {

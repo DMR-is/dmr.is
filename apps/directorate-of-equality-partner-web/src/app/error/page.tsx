@@ -15,16 +15,22 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 // authOptions sets `pages.error: '/error'`. NextAuth's core (core/index.js)
 // only routes here for a code NOT among the ten it sends to the sign-in page
-// instead (see innskraning/page.tsx for that list). In practice the code we
-// expect to see here is `AccessDenied` - authOptions' `signIn` callback
-// returns false when the id token has no company `nationalId`, i.e. an
-// individual signed in without procuration for a company. Anything else
-// reaching this page is a genuine provider/configuration failure.
+// instead (see innskraning/page.tsx for that list).
+//
+// Everything that reaches this page is a handshake or configuration failure:
+// `AccessDenied` comes only from the two `return false` branches in `signIn`
+// (no id_token, or a provider/access_token mismatch), and anything else is a
+// provider error. The refusal for signing in without procuration does NOT
+// arrive here - it returns a string so it can end the IDS session first, so
+// no error code is attached, and it surfaces on /innskraning through the
+// `doe-partner.signin_error` cookie. So there is deliberately no per-code
+// branch here: one message for a failed handshake, with the code shown for
+// support. An earlier version told a user with a broken handshake to retry
+// with procuration, which sent them after the wrong problem.
 function ErrorContent() {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
   const [loading, setLoading] = useState(false)
-  const isAccessDenied = error === 'AccessDenied'
 
   return (
     <GridContainer>
@@ -35,17 +41,13 @@ function ErrorContent() {
           span={['12/12', '10/12']}
         >
           <Stack space={2}>
-            <Text variant="h2">
-              {isAccessDenied
-                ? 'Ekki hægt að skrá inn'
-                : 'Innskráning mistókst'}
-            </Text>
+            <Text variant="h2">Innskráning mistókst</Text>
             <Text variant="intro">
-              {isAccessDenied
-                ? 'Innskráningin þín er ekki tengd fyrirtæki. Skráðu þig inn með kennitölu fyrirtækisins - til dæmis með umboði - til að fá aðgang að API-lyklum þess.'
-                : 'Ekki tókst að staðfesta innskráningu hjá island.is. Reyndu aftur - ef villan er viðvarandi hafðu samband við þjónustuborð Jafnréttisstofu.'}
+              Ekki tókst að staðfesta innskráningu hjá island.is. Reyndu aftur -
+              ef villan er viðvarandi hafðu samband við þjónustuborð
+              Jafnréttisstofu.
             </Text>
-            {!isAccessDenied && error && (
+            {error && (
               <Text variant="small" color="dark400">
                 Villukóði: {error}
               </Text>
