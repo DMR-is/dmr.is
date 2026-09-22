@@ -438,10 +438,7 @@ export class PartnerController {
       'Explains the outliers on a report that was filed without explanations, which moves it from `POSTPONED` into the reviewer queue as `SUBMITTED`. All-or-none: the ordinals across the groups sent here must cover the detected set exactly — no extras, none missing, and none in two groups. The detected set is the one frozen when the report was filed, so it does not move under you; `GET …/:providerId/outliers` serves it. Also accepted while a report is `IN_REVIEW`, which leaves the status alone and updates the explanations a reviewer is looking at.',
   })
   editReportOutliers(
-    // TODO(after #1536): take `ProviderIdParamPipe`, as the two reads above
-    // will, so this normalises its providerId the same way the write path does.
-    // Not imported here because it lands with the .docx upload, not with this.
-    @Param('providerId') providerId: string,
+    @Param('providerId', ProviderIdParamPipe) providerId: string,
     @Body() input: EditOutliersDto,
     @CurrentCompany() company: CompanyDto,
   ): Promise<ApplicationReportDetailDto> {
