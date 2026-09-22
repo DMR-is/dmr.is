@@ -31,14 +31,30 @@ export const MAX_EQUALITY_DOCUMENT_BYTES = 10 * ONE_MEGA_BYTE
  * the archive's own claim about itself, and an attacker writes it. It is here to
  * refuse the honest-but-enormous before anything is inflated at all.
  *
- * The bound that actually holds is `MAX_DOCUMENT_XML_BYTES`, measured.
+ * The bound that actually holds is `MAX_INFLATED_ARCHIVE_BYTES`, measured.
  */
 export const MAX_DECLARED_ARCHIVE_BYTES = 20 * ONE_MEGA_BYTE
 
 /**
- * Largest `word/document.xml` we will inflate, **measured as it inflates**.
+ * Total inflated bytes we will read out of the archive, **measured as it
+ * inflates**.
  *
- * This is the bound that keeps the process alive, and the number comes from the
+ * A budget across every part, not a cap on one. The first version of this bound
+ * guarded `word/document.xml` alone, which is the part that carries the plan —
+ * but mammoth also reads `[Content_Types].xml`, both `_rels` parts, `styles`,
+ * `numbering`, `footnotes`, `endnotes` and `comments`, each as a full
+ * `async('uint8array')` with no cap of its own. Bounding one of nine left the
+ * other eight behind nothing but the declared-size pass, whose own docblock says
+ * why that is not a defence: the header is the caller's to write. A 6.8MB upload
+ * with one forged entry reached 2167MB RSS against a 1536MB task — a container
+ * kill, not a refusal.
+ *
+ * Budgeting the archive rather than enumerating mammoth's reads is deliberate.
+ * Which parts it opens is its business and can change with a version bump; a
+ * list of them here would be a defence that silently stops covering what it
+ * names.
+ *
+ * The number comes from the
  * heap rather than from roundness. Mammoth does not hold the XML: it builds a
  * DOM from it and then an HTML string, and the peak is tens of times the XML —
  * 38MB of declared XML was measured reaching 3.6GB RSS, about 96×. The deployed
@@ -55,13 +71,13 @@ export const MAX_DECLARED_ARCHIVE_BYTES = 20 * ONE_MEGA_BYTE
  * and the cost is paid before anything downstream notices the mismatch.
  * Counting bytes as they arrive is the only bound a lying header cannot pass.
  */
-export const MAX_DOCUMENT_XML_BYTES = 4 * ONE_MEGA_BYTE
+export const MAX_INFLATED_ARCHIVE_BYTES = 4 * ONE_MEGA_BYTE
 
 /**
  * Largest HTML the conversion may produce.
  *
  * Third line, and the weakest, because it can only be read once mammoth has
- * already allocated everything. With `MAX_DOCUMENT_XML_BYTES` in front of it
+ * already allocated everything. With `MAX_INFLATED_ARCHIVE_BYTES` in front of it
  * this should be unreachable through the route — 4MB of WordprocessingML does
  * not become 4MB of HTML, since the markup is smaller than the XML it came
  * from. It stays as what catches a wrong assumption about that, and is tested
@@ -112,6 +128,17 @@ const OLE2_MAGIC = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])
  * an `.xlsx`, a `.pptx` or a plain zip of documents — all of which pass the ZIP
  * signature and none of which mammoth can convert into anything useful.
  */
+/**
+ * Where a `.docx` keeps its pictures, and the one thing the budget skips.
+ *
+ * Mammoth never inflates these: `MAMMOTH_OPTIONS.convertImage` answers without
+ * reading the image part, so their bytes are not an attack surface — and
+ * inflating them here to count them would spend exactly the memory the budget
+ * exists to protect, on the one kind of part a real plan legitimately fills.
+ * A bomb hidden in `word/media` costs nothing because nothing ever opens it.
+ */
+const MEDIA_PREFIX = 'word/media/'
+
 const DOCX_ENTRY_PATH = 'word/document.xml'
 const DOCX_ENTRY = Buffer.from(DOCX_ENTRY_PATH, 'ascii')
 
@@ -252,7 +279,7 @@ export async function convertEqualityDocumentToHtml(
 
   if (zip) {
     assertDeclaredSizeWithinBound(zip)
-    await assertDocumentInflatesWithinBound(zip)
+    await assertArchiveInflatesWithinBudget(zip)
   }
 
   let result: { value: string; messages: { message: string }[] }
@@ -337,29 +364,55 @@ function assertDeclaredSizeWithinBound(zip: JSZip): void {
 }
 
 /**
- * Refuses a document part that inflates past the bound, **while it inflates**.
+ * Refuses an archive that inflates past the budget, **while it inflates**.
  *
- * The one check a forged header cannot pass. JSZip streams the entry, so the
- * count costs a chunk at a time rather than the whole part, and the stream is
- * paused the moment it goes over — the refusal happens instead of the
- * allocation, not after it.
+ * The one construction a forged header cannot beat. JSZip streams each entry, so
+ * the count costs a chunk at a time rather than the whole part, and the stream
+ * is paused the moment the running total goes over — the refusal happens instead
+ * of the allocation rather than after it.
  *
- * Mammoth inflates the part again afterwards, deliberately: a second pass over
- * something already known to be under the bound is cheap, and the alternative is
- * handing mammoth bytes we decompressed ourselves, which means owning a
- * WordprocessingML reader we have no reason to own.
+ * One budget across every part, spent in order, because the cost that matters is
+ * what the archive makes us hold in total and not what any single entry does.
+ * It runs before `mammoth.convertToHtml`, which is what covers the parts it
+ * reads first — `[Content_Types].xml` and the `_rels` are opened before anything
+ * structural is validated, so a guard attached to the document part alone would
+ * already have been too late.
+ *
+ * Mammoth inflates all of it again afterwards, deliberately: a second pass over
+ * something known to be under 4MB is cheap, and the alternative is handing it
+ * bytes we decompressed ourselves, which means owning a WordprocessingML reader
+ * we have no reason to own.
  */
-function assertDocumentInflatesWithinBound(zip: JSZip): Promise<void> {
-  const entry = zip.file(DOCX_ENTRY_PATH)
+async function assertArchiveInflatesWithinBudget(zip: JSZip): Promise<void> {
+  const parts: JSZip.JSZipObject[] = []
 
-  // Absent is not this function's problem: the byte scan before it already
-  // refused an archive with no document part.
-  if (!entry) {
-    return Promise.resolve()
+  zip.forEach((path, entry) => {
+    if (!entry.dir && !path.startsWith(MEDIA_PREFIX)) {
+      parts.push(entry)
+    }
+  })
+
+  let spent = 0
+
+  for (const part of parts) {
+    spent = await countInflatedBytes(part, spent)
   }
+}
 
-  return new Promise<void>((resolve, reject) => {
-    let inflated = 0
+/**
+ * Streams one entry, adding to the running total, and refuses the moment the
+ * budget is gone.
+ *
+ * Resolves with the new total so the next entry continues from it — the budget
+ * is archive-wide, and nine entries each just under it would be nine times the
+ * memory a single one is allowed.
+ */
+function countInflatedBytes(
+  entry: JSZip.JSZipObject,
+  alreadySpent: number,
+): Promise<number> {
+  return new Promise<number>((resolve, reject) => {
+    let spent = alreadySpent
     let settled = false
     const stream = entry.nodeStream('nodebuffer')
 
@@ -380,17 +433,17 @@ function assertDocumentInflatesWithinBound(zip: JSZip): Promise<void> {
       if (error) {
         reject(error)
       } else {
-        resolve()
+        resolve(spent)
       }
     }
 
     stream.on('data', (chunk: Buffer) => {
-      inflated += chunk.length
+      spent += chunk.length
 
-      if (inflated > MAX_DOCUMENT_XML_BYTES) {
+      if (spent > MAX_INFLATED_ARCHIVE_BYTES) {
         finish(
           new BadRequestException(
-            `The equality report document expands to more than ${MEGABYTES(MAX_DOCUMENT_XML_BYTES)}MB of content and was not read. A plan this large is usually one with images or scans embedded in it — a reviewer needs the text`,
+            `The equality report document expands to more than ${MEGABYTES(MAX_INFLATED_ARCHIVE_BYTES)}MB of content and was not read. A plan this large is usually one with images or scans embedded in it — a reviewer needs the text`,
           ),
         )
       }

@@ -8,8 +8,8 @@ import {
   assertConvertedHtmlWithinBound,
   convertEqualityDocumentToHtml,
   MAX_CONVERTED_HTML_BYTES,
-  MAX_DOCUMENT_XML_BYTES,
   MAX_EQUALITY_DOCUMENT_BYTES,
+  MAX_INFLATED_ARCHIVE_BYTES,
 } from './equality-document'
 
 /** Mirrors the converter's own rounding, so a message assertion matches it. */
@@ -278,7 +278,7 @@ describe('convertEqualityDocumentToHtml', () => {
     let bomb: Buffer
 
     beforeAll(async () => {
-      bomb = await inflatingDocx(MAX_DOCUMENT_XML_BYTES * 2)
+      bomb = await inflatingDocx(MAX_INFLATED_ARCHIVE_BYTES * 2)
     }, 60_000)
 
     /**
@@ -291,7 +291,7 @@ describe('convertEqualityDocumentToHtml', () => {
      */
     it('refuses it on measured bytes, not on the declared header', async () => {
       await expect(convertEqualityDocumentToHtml(bomb)).rejects.toThrow(
-        new RegExp(`${MEGABYTES(MAX_DOCUMENT_XML_BYTES)}MB of content`),
+        new RegExp(`${MEGABYTES(MAX_INFLATED_ARCHIVE_BYTES)}MB of content`),
       )
     })
 
@@ -303,6 +303,78 @@ describe('convertEqualityDocumentToHtml', () => {
      */
     it('refuses it while being far below the upload limit', () => {
       expect(bomb.length).toBeLessThan(MAX_EQUALITY_DOCUMENT_BYTES / 10)
+    })
+
+    /**
+     * The coverage the first version of this bound did not have. `styles.xml` is
+     * one of eight parts mammoth reads besides the document, and bounding the
+     * document alone left them behind the declared-size pass — a header the
+     * caller writes.
+     *
+     * Declared honestly here, and under the 20MB declared filter, so the only
+     * thing that can refuse it is the streaming budget. If this ever fails with
+     * the 20MB message instead, the budget stopped covering this part.
+     */
+    it('refuses a part that is not the document', async () => {
+      const zip = await JSZip.loadAsync(await docx(['Jafnréttisáætlun']))
+      zip.file('word/styles.xml', 'a'.repeat(MAX_INFLATED_ARCHIVE_BYTES * 2))
+
+      const archive = await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 1 },
+      })
+
+      await expect(convertEqualityDocumentToHtml(archive)).rejects.toThrow(
+        new RegExp(`${MEGABYTES(MAX_INFLATED_ARCHIVE_BYTES)}MB of content`),
+      )
+    })
+
+    /**
+     * The budget is archive-wide rather than per entry: several parts that are
+     * each comfortably under it must still add up to a refusal, or the bound is
+     * one multiplication away from being no bound at all.
+     */
+    it('spends one budget across the whole archive', async () => {
+      const zip = await JSZip.loadAsync(await docx(['Jafnréttisáætlun']))
+      const each = Math.ceil(MAX_INFLATED_ARCHIVE_BYTES / 2)
+
+      zip.file('word/styles.xml', 'a'.repeat(each))
+      zip.file('word/numbering.xml', 'b'.repeat(each))
+      zip.file('word/footnotes.xml', 'c'.repeat(each))
+
+      const archive = await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 1 },
+      })
+
+      await expect(convertEqualityDocumentToHtml(archive)).rejects.toThrow(
+        new RegExp(`${MEGABYTES(MAX_INFLATED_ARCHIVE_BYTES)}MB of content`),
+      )
+    })
+
+    /**
+     * And the exemption, which is what keeps a real plan with photographs
+     * working: mammoth never opens an image part, so counting it here would
+     * spend the budget on the one kind of part a legitimate document fills.
+     */
+    it('does not spend the budget on images, which are never read', async () => {
+      const zip = await JSZip.loadAsync(await docx(['Jafnréttisáætlun']))
+      zip.file(
+        'word/media/photo.png',
+        Buffer.alloc(MAX_INFLATED_ARCHIVE_BYTES * 2, 9),
+      )
+
+      const archive = await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 1 },
+      })
+
+      const { html } = await convertEqualityDocumentToHtml(archive)
+
+      expect(html).toContain('Jafnréttisáætlun')
     })
 
     it('still accepts an ordinary plan', async () => {
