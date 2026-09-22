@@ -2,6 +2,8 @@ import JSZip from 'jszip'
 
 import { BadRequestException } from '@nestjs/common'
 
+import { ONE_MEGA_BYTE } from '@dmr.is/constants'
+
 import {
   convertEqualityDocumentToHtml,
   MAX_EQUALITY_DOCUMENT_BYTES,
@@ -25,6 +27,13 @@ const docx = async (
    * to inflate — so the ratio only exists when this is on.
    */
   compression: 'STORE' | 'DEFLATE' = 'STORE',
+  /**
+   * Level 1, not 9. The fixture below deflates tens of megabytes of one
+   * repeated character, where the ratio is enormous at any level and the only
+   * thing level 9 buys is CPU — enough of it to blow Jest's default timeout on
+   * a CI runner.
+   */
+  level = 1,
 ): Promise<Buffer> => {
   const zip = new JSZip()
 
@@ -60,7 +69,7 @@ const docx = async (
   return zip.generateAsync({
     type: 'nodebuffer',
     compression,
-    compressionOptions: { level: 9 },
+    compressionOptions: { level },
   })
 }
 
@@ -249,9 +258,15 @@ describe('convertEqualityDocumentToHtml', () => {
    * so those two numbers are related only by a ratio the caller chooses.
    */
   describe('inflation', () => {
-    it('refuses an archive that declares more than the inflated bound', async () => {
-      const bomb = await inflatingDocx(MAX_INFLATED_DOCUMENT_BYTES * 2)
+    // Built once: assembling tens of megabytes and deflating it is the expensive
+    // part of this file, and both assertions below are about the same archive.
+    let bomb: Buffer
 
+    beforeAll(async () => {
+      bomb = await inflatingDocx(MAX_INFLATED_DOCUMENT_BYTES + ONE_MEGA_BYTE)
+    }, 60_000)
+
+    it('refuses an archive that declares more than the inflated bound', async () => {
       await expect(convertEqualityDocumentToHtml(bomb)).rejects.toThrow(
         /expands to more than/,
       )
@@ -263,9 +278,7 @@ describe('convertEqualityDocumentToHtml', () => {
      * stops holding, the fixture stopped being a bomb and the test above stopped
      * testing anything.
      */
-    it('refuses it while being far below the upload limit', async () => {
-      const bomb = await inflatingDocx(MAX_INFLATED_DOCUMENT_BYTES * 2)
-
+    it('refuses it while being far below the upload limit', () => {
       expect(bomb.length).toBeLessThan(MAX_EQUALITY_DOCUMENT_BYTES / 10)
     })
 
