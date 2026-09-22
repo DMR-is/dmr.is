@@ -6,7 +6,7 @@ import {
 import { ThrottlerGuard } from '@nestjs/throttler'
 
 import { ApiKeyRequest } from '../api-key/api-key.guard'
-import { PER_KEY_THROTTLER } from '../throttlers'
+import { PER_KEY_DRY_RUN_THROTTLER, PER_KEY_THROTTLER } from '../throttlers'
 
 /**
  * Rate limits per API key rather than per IP.
@@ -22,8 +22,10 @@ import { PER_KEY_THROTTLER } from '../throttlers'
  * credentials — `ApiKeyGuard` throws before this guard is reached, so nothing
  * here is incremented on the 401 path. `IpThrottlerGuard` covers that, globally.
  */
-@Injectable()
-export class ApiKeyThrottlerGuard extends ThrottlerGuard {
+export abstract class PerKeyThrottlerGuard extends ThrottlerGuard {
+  /** The one bucket this guard enforces. */
+  protected abstract readonly bucket: string
+
   /**
    * See `IpThrottlerGuard.onModuleInit` — the base class enforces every
    * configured throttler, and skip metadata cannot distinguish two guards on
@@ -33,7 +35,7 @@ export class ApiKeyThrottlerGuard extends ThrottlerGuard {
     await super.onModuleInit()
 
     this.throttlers = this.throttlers.filter(
-      (throttler) => throttler.name === PER_KEY_THROTTLER,
+      (throttler) => throttler.name === this.bucket,
     )
   }
 
@@ -69,4 +71,24 @@ export class ApiKeyThrottlerGuard extends ThrottlerGuard {
   ): string {
     return `${name}-${suffix}`
   }
+}
+
+/** The surface-wide per-key allowance. */
+@Injectable()
+export class ApiKeyThrottlerGuard extends PerKeyThrottlerGuard {
+  protected readonly bucket = PER_KEY_THROTTLER
+}
+
+/**
+ * The dry run's own allowance, applied on that route alone.
+ *
+ * A separate guard rather than a tighter limit on the shared one, because the
+ * point is that the two budgets are separate: see
+ * `PER_KEY_DRY_RUN_THROTTLER`. It tracks by the same key and keeps the same
+ * surface-wide (rather than per-route) storage key, so moving the dry run to a
+ * different path later does not silently reset anyone's allowance.
+ */
+@Injectable()
+export class DryRunThrottlerGuard extends PerKeyThrottlerGuard {
+  protected readonly bucket = PER_KEY_DRY_RUN_THROTTLER
 }

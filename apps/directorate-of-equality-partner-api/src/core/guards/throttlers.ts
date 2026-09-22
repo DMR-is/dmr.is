@@ -18,3 +18,20 @@
  */
 export const PER_KEY_THROTTLER = 'default'
 export const PER_IP_THROTTLER = 'perIp'
+
+/**
+ * A third bucket, for the dry run alone, and it exists to protect the vendor
+ * rather than us.
+ *
+ * The dry run is optional and repeatable: a vendor iterating on a payroll
+ * extract calls it as often as the extract changes, which is the point of it.
+ * Every one of those calls would otherwise spend the same per-key allowance the
+ * *filing* needs — so a debugging session could leave a company unable to submit
+ * its report, having done nothing wrong. The two activities want separate
+ * budgets because exhausting one must not be able to block the other.
+ *
+ * It is not a cost defence. A dry run does strictly less work than the
+ * submission it rehearses, so anything that can afford to file can afford to
+ * rehearse; the ceiling is against a loop, not against use.
+ */
+export const PER_KEY_DRY_RUN_THROTTLER = 'perKeyDryRun'

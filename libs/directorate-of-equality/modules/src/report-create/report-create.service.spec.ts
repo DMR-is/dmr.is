@@ -14,6 +14,8 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { analyzeSalaryPayload } from '../report-statistics/lib/salary-analysis'
+
 /**
  * The channel options, passed beside the body rather than in it. They are not
  * fields on `CreateReportDto` precisely so a request cannot set them — see
@@ -21,6 +23,13 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
  */
 const POSTPONE_UNEXPLAINED = { postponeUnexplainedOutliers: true }
 const WITHDRAW_POSTPONED = { withdrawPostponedSibling: true }
+
+/**
+ * The seeded threshold, named so the preview and the submission below are given
+ * the same number — comparing their verdicts under different benchmarks would
+ * compare nothing.
+ */
+const BENCHMARK_PERCENT = 3.9
 
 import { CompanySizeEnum } from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
@@ -185,7 +194,7 @@ describe('ReportCreateService', () => {
     // outlier-detected territory and fail submit-side guard checks.
     configGetByKey = jest.fn().mockResolvedValue({
       key: 'salary_difference_threshold_percent',
-      value: '3.9',
+      value: String(BENCHMARK_PERCENT),
     })
 
     const module = await Test.createTestingModule({
@@ -663,6 +672,74 @@ describe('ReportCreateService', () => {
     )
     expect(outlierGroupCreate).not.toHaveBeenCalled()
     expect(outlierBulkCreate).not.toHaveBeenCalled()
+  })
+
+  /**
+   * The cross-check the dry run rests on.
+   *
+   * `POST /partner/reports/salary-analysis` exists so a vendor can find out what
+   * a filing would say before filing it. That is worth something only if the two
+   * answer the same question — a preview that accepts what the submission
+   * refuses sends someone off to build against a payload that cannot be filed,
+   * and this codebase has been caught by that exact bug three separate times.
+   *
+   * So the guarantee under test is not "both call the same helper", which is an
+   * implementation detail a refactor can quietly undo. It is that for one
+   * payload, both reach the same verdict. These run real payloads through both
+   * paths and compare the answers.
+   */
+  describe('the dry run and the submission agree', () => {
+    const previewVerdict = (input: CreateReportDto) => {
+      try {
+        analyzeSalaryPayload(input.parsed, BENCHMARK_PERCENT)
+        return 'accepted'
+      } catch {
+        return 'refused'
+      }
+    }
+
+    const submitVerdict = async (input: CreateReportDto) => {
+      try {
+        await service.createSalary(input)
+        return 'accepted'
+      } catch (error) {
+        // Only a payload refusal counts as disagreement. A conflict or a
+        // missing equality report is the submission answering a question the
+        // preview never asks, and counting those would fail this test for
+        // reasons that have nothing to do with drift.
+        return error instanceof BadRequestException ? 'refused' : 'accepted'
+      }
+    }
+
+    it.each([
+      ['a payload both accept', (input: CreateReportDto) => input],
+      [
+        'a step assignment that resolves to nothing',
+        (input: CreateReportDto) => {
+          input.parsed.roles[0].stepAssignments[0].stepOrder = 99
+          return input
+        },
+      ],
+      [
+        'an employee whose role is not in roles[]',
+        (input: CreateReportDto) => {
+          input.parsed.employees[0].roleTitle = 'Engin slík staða'
+          return input
+        },
+      ],
+      [
+        'a sub-criterion weight total that is not 100',
+        (input: CreateReportDto) => {
+          input.parsed.criteria[0].subCriteria[0].weight += 5
+          return input
+        },
+      ],
+    ])('reaches the same verdict on %s', async (_case, mutate) => {
+      const preview = previewVerdict(mutate(makeInput()))
+      const submit = await submitVerdict(mutate(makeInput()))
+
+      expect(preview).toBe(submit)
+    })
   })
 
   /**
