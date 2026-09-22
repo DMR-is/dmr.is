@@ -92,16 +92,23 @@ it back would be absurd. Each channel takes the form its users actually hold, an
 neither has two ways to send one thing.
 
 **Status: shipped**, on `feat/doe-equality-document` — the converter in
-`a763469c` (12 cases) and the route in `82f8b776`.
+`1e47ac9f` (#1536, squash-merged) — the converter with 12 cases, the multipart
+route, and the archive inflation bounds two review rounds added to it.
 
-> **Hashes in this file are only as durable as the commits they name.** These
-> two changed once already when the branch was rebased onto the squashed #1532,
+> **Hashes in this file are only as durable as the commits they name**, and this
+> has now gone wrong twice. They changed when the branch was rebased onto the
+> squashed #1532,
 > and every phase 1 hash this file used to cite — five of them — stopped
 > resolving for anyone else the moment that PR squash-merged, since those commits
-> only ever existed on a branch that no longer exists. They now cite `2057c7b8`,
-> the commit on `main`. The check is
-> `git merge-base --is-ancestor <hash> origin/main`, not `git cat-file -e`: a
-> local object store still holds commits nobody else can see.
+> only ever existed on a branch that no longer exists — and then it happened
+> again to phase 2's three when #1536 merged. Every hash here now names a commit
+> on `main`.
+>
+> The rule this keeps teaching: **cite the squashed commit, not the branch
+> commit**, because a squash-merge is where a hash dies and a rebase is where it
+> moves. The check is `git merge-base --is-ancestor <hash> origin/main`, never
+> `git cat-file -e` — a local object store still holds commits nobody else can
+> see, which is why this looked fine both times.
 
 What landed, and the two decisions taken while wiring it:
 
@@ -183,24 +190,32 @@ this state.
 
 **None.**
 
-### The `409` stays, and it has a cost worth knowing
+### The `409` on a `POSTPONED` sibling: reversed, 22 Sept
 
-**Decided 21 Sept:** a prior `POSTPONED` report continues to give `409` on a new
-submission, unchanged from today and unchanged on island.is.
+**Superseded.** The plan had kept it: a prior `POSTPONED` report would continue
+to answer `409` on a new submission, unchanged from today and from island.is,
+and the cost was written down — a vendor who files, lands `POSTPONED`, and only
+then finds a payroll error cannot re-file, and has to explain outliers it
+already knows are wrong to reach a state it is allowed to replace.
 
-The consequence, so nobody is surprised by it in support: a vendor who submits,
-lands `POSTPONED`, and _then_ finds a payroll error cannot re-submit corrected
-data. Their only route out is `PUT …/outliers` — explaining outliers in a payload
-they already know is wrong — after which the report is `SUBMITTED` and a
-corrected filing silently withdraws and replaces it.
+That cost was accepted while `POSTPONED` was rare. This phase makes it the
+ordinary landing state for any submission with outliers, which turns an
+acceptable wart into the normal path, so it goes.
 
-Rejected alternatives: making `POSTPONED` replaceable, which changes behaviour on
-the channel employers already use and is a coordinated change rather than a
-drive-by; and making it replaceable only for `provider_type = OTHER`, which is
-the one-policy-two-meanings divergence this codebase keeps getting caught by.
+**A new filing now withdraws a `POSTPONED` sibling on this channel**, the same
+way it already withdraws a `SUBMITTED` one. `withdrawPostponedSibling` is opt-in
+rather than a change to the shared rule, so **island.is is untouched** — there
+`POSTPONED` is a deliberate "explain later" and being told to finish it is the
+right answer. `IN_REVIEW` still conflicts on both channels: a reviewer is
+mid-workflow on that report, which is a different act from replacing something
+nobody has picked up.
 
-If the support load proves real, the right fix is a `DELETE` or withdraw route on
-a `POSTPONED` report this channel filed — not a branch in the sibling policy.
+The earlier draft rejected "make it replaceable only for `provider_type =
+OTHER`" as the one-policy-two-meanings divergence this codebase keeps getting
+caught by, and that rejection still stands. The flag is not that: the behaviour
+is asked for by the caller that wants it, so reading either path tells you what
+it does without knowing the other exists, and neither channel's rule is
+expressed in terms of the other's identity.
 
 ## Phase 4 — The playground (a dry run)
 
@@ -243,8 +258,14 @@ cosmetic and can follow the guide's section layout.
 - **Phase 3 widens what a `salary:submit` credential can do**: it can now
   complete a `POSTPONED` report after the fact. `PUT …/outliers` must go through
   `PartnerCompanyGuard`, so a vendor cannot resolve another company's report, and
-  it must refuse a report that is not `POSTPONED` — a `SUBMITTED` or `IN_REVIEW`
-  report is not theirs to rewrite. Tenant-isolation specs on both conditions.
+  it delegates to the shared `editOutliers` rather than re-implementing the
+  rules. **Revised 22 Sept:** the note here had said it must refuse anything
+  that is not `POSTPONED`. The sibling route already accepts `IN_REVIEW` as
+  well, leaving the status alone and updating what the reviewer is reading, and
+  refusing that on this channel would re-create a smaller version of the dead
+  end this phase exists to remove — a reviewer asks for a better explanation and
+  the employer has to log in to island.is to give it. Matching the sibling also
+  means one status rule rather than two to keep in agreement. Tenant-isolation specs on both conditions.
 - **Phase 2 accepts an uploaded file on a public, internet-facing surface.** Cap
   the multer file size per route, check the magic bytes rather than trusting the
   filename or content type, and make `.pdf` and `.doc` explicit refusals rather
@@ -282,18 +303,20 @@ cosmetic and can follow the guide's section layout.
       rather than validated as an empty one
 - [ ] Conversion output asserted on a real plan fixture, not a synthetic one —
       waiting on the calibration documents
-- [ ] Submit with no outliers → `SUBMITTED`
-- [ ] Submit with outliers and no groups → `POSTPONED`, outlier list in the body
-- [ ] Submit with outliers and a correct partition → `SUBMITTED` in one call
+- [x] Submit with no outliers → `SUBMITTED`
+- [x] Submit with outliers and no groups → `POSTPONED`, ordinals in the body
+- [x] Submit with outliers and a correct partition → `SUBMITTED` in one call
 - [ ] Every partition failure: non-outlier ordinal, missing outlier, duplicate
       ordinal, empty groups
 - [ ] `PUT …/outliers` on a `POSTPONED` report → `SUBMITTED`
 - [ ] `PUT …/outliers` on a `SUBMITTED` or `IN_REVIEW` report → refused
-- [ ] A second submission while a `POSTPONED` report stands → `409`, and the
-      message says which conflict it is
+- [x] A second submission while a `POSTPONED` report stands → the postponed one
+      is **withdrawn** and replaced on this channel, while island.is keeps its
+      `409`, and an `IN_REVIEW` sibling still conflicts on both
 - [ ] Tenant isolation on `PUT …/outliers` — another company's `providerId` is
       indistinguishable from a missing one
-- [ ] `outliersPostponed` in the body → rejected by the strict whitelist
+- [x] `outliersPostponed` in the body → rejected by the strict whitelist, and
+      so are the two channel-policy options, which are not request fields
 - [ ] Renewal window: a submission outside the window → `409` on the partner API
       in a deployed env, and `GET …/eligibility` agrees with it
 - [ ] Dry run and submit agree: a payload the dry run calls valid is accepted by
@@ -303,28 +326,39 @@ cosmetic and can follow the guide's section layout.
       `replayed: true`, nothing filed
 - [ ] Playground stores nothing and is reachable without submit scopes (per the
       scope decision)
-- [ ] `clientConfig.json` regenerated if any admin-visible shape changed
+- [ ] **`clientConfig.json` needs regenerating — phase 3 changed an
+      admin-visible shape.** `CreateReportResponseDto` gained `status` and
+      `unexplainedOutlierOrdinals`, and the committed snapshot in
+      `apps/directorate-of-equality-web/` still declares the old two-field
+      version. It is produced by curling a running `doe-api`
+      (`nx run directorate-of-equality-web:update-openapi-schema`, then
+      `codegen`), so it cannot be written by hand without fabricating generator
+      output. **The `generated-files` CI gate does not cover this file** — it
+      guards only the two workbook-derived ones — so green CI is not evidence
+      either way.
 
 ## Status Tracking
 
-| Phase | Item                                           | PR    | Status                                  |
-| ----- | ---------------------------------------------- | ----- | --------------------------------------- |
-| 1     | `providerId` format                            | —     | **Done**, `2057c7b8`                    |
-| 1     | Remove `equality/active`                       | —     | **Done**, `2057c7b8`                    |
-| 1     | Reject `salaryDataPeriod` on `AVERAGE`         | —     | **Done**, `2057c7b8`                    |
-| 1     | Move the catalog route                         | —     | **Deferred** — module boundary, see 1.4 |
-| 1     | Partner equality DTO via `OmitType`            | —     | **Done**, `2057c7b8`                    |
-| 1     | Stale guide text                               | —     | **Done**, `2057c7b8`                    |
-| 1     | Declare `API_ENV` on the partner API           | —     | **Done**, `2057c7b8`                    |
-| 1     | Drop `company.nationalId`                      | —     | **Done**, `2057c7b8`                    |
-| 1     | `/` bound on `providerId`                      | #1532 | **Done**, `2057c7b8`                    |
-| 1     | `\`, `.`, `..` and the untrimmed read path     | #1532 | **Done**, `d1dc821a`                    |
-| 2     | `.docx` → HTML converter                       | —     | **Done**, `a763469c` (12 cases)         |
-| 2     | Multipart route, document-only DTO             | —     | **Done**, `82f8b776`                    |
-| 2     | Calibration on real plans                      | —     | Pending — needs real documents          |
-| 3     | Detection at submit → `POSTPONED`              | —     | Pending                                 |
-| 3     | `PUT …/outliers`                               | —     | Pending                                 |
-| 4     | Dry run: scope, input shape, shared validation | —     | Pending                                 |
+| Phase | Item                                           | PR    | Status                                   |
+| ----- | ---------------------------------------------- | ----- | ---------------------------------------- |
+| 1     | `providerId` format                            | —     | **Done**, `2057c7b8`                     |
+| 1     | Remove `equality/active`                       | —     | **Done**, `2057c7b8`                     |
+| 1     | Reject `salaryDataPeriod` on `AVERAGE`         | —     | **Done**, `2057c7b8`                     |
+| 1     | Move the catalog route                         | —     | **Deferred** — module boundary, see 1.4  |
+| 1     | Partner equality DTO via `OmitType`            | —     | **Done**, `2057c7b8`                     |
+| 1     | Stale guide text                               | —     | **Done**, `2057c7b8`                     |
+| 1     | Declare `API_ENV` on the partner API           | —     | **Done**, `2057c7b8`                     |
+| 1     | Drop `company.nationalId`                      | —     | **Done**, `2057c7b8`                     |
+| 1     | `/` bound on `providerId`                      | #1532 | **Done**, `2057c7b8`                     |
+| 1     | `\`, `.`, `..` and the untrimmed read path     | #1536 | **Done**, `1e47ac9f`                     |
+| 2     | `.docx` → HTML converter                       | #1536 | **Done**, `1e47ac9f`                     |
+| 2     | Multipart route, document-only DTO             | #1536 | **Done**, `1e47ac9f`                     |
+| 2     | Archive inflation bounds                       | #1536 | **Done**, `1e47ac9f`                     |
+| 2     | Calibration on real plans                      | —     | Pending — needs real documents           |
+| 3     | Detection at submit → `POSTPONED`              | —     | **Done**, `7db31858`                     |
+| 3     | `PUT …/outliers`                               | —     | **Done**, `7db31858`                     |
+| 3     | `POSTPONED` sibling withdrawn, not `409`       | —     | **Done**, `7db31858` — reversed decision |
+| 4     | Dry run: scope, input shape, shared validation | —     | Pending                                  |
 
 ## Phase 1 outcome
 
@@ -358,7 +392,7 @@ field set out to undo.
 
 **The re-review then found the bound was one value short of its own reasoning.**
 `\`, `.` and `..` are rewritten by a URL before routing and fail identically;
-`d1dc821a` closes them, along with the read path not trimming while the write
+`1e47ac9f` closes them, along with the read path not trimming while the write
 path did. Both shipped with phase 2 rather than waiting for a branch of their
 own, since phase 1 had already merged.
 

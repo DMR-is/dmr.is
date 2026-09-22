@@ -28,6 +28,7 @@ import { EqualityCoverage } from '../report/types/equality-coverage'
 import { AUTO_REVIEW_ENFORCE } from '../report-auto-review/report-auto-review.constants'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
+import { WithdrawInflightSiblingOptions } from './report-finalize.service.interface'
 import { IReportFinalizeService } from './report-finalize.service.interface'
 
 const LOGGING_CONTEXT = 'ReportFinalizeService'
@@ -156,9 +157,14 @@ export class ReportFinalizeService implements IReportFinalizeService {
    * - SUBMITTED → silently withdraw the prior report. The applicant changed
    *   their mind before any reviewer interaction, so retiring the old row is
    *   safe; the new submission takes its place.
-   * - IN_REVIEW or POSTPONED → reject with 409. The reviewer (or the
-   *   postponement-resolution flow) is mid-workflow on the prior report and
-   *   it cannot be discarded silently.
+   * - IN_REVIEW → reject with 409. A reviewer is mid-workflow on the prior
+   *   report and it cannot be discarded silently.
+   * - POSTPONED → 409 by default, for the same reason: the applicant chose to
+   *   defer and the resolution flow is mid-workflow. A caller for whom
+   *   POSTPONED is simply what a submission *becomes* can pass
+   *   `withdrawPostponed` and have it withdrawn instead — and only then, and
+   *   only for a sibling filed on its own channel. See
+   *   `WithdrawInflightSiblingOptions`.
    *
    * Returns the ids of any reports that were withdrawn so the caller can
    * emit one WITHDRAWN event per retiree linked to the new replacing report.
@@ -172,6 +178,7 @@ export class ReportFinalizeService implements IReportFinalizeService {
   async withdrawInflightSibling(
     companyId: string,
     type: ReportTypeEnum,
+    options: WithdrawInflightSiblingOptions = {},
   ): Promise<string[]> {
     await this.companyModel.findOne({
       where: { id: companyId },
@@ -216,10 +223,29 @@ export class ReportFinalizeService implements IReportFinalizeService {
       return []
     }
 
+    // `IN_REVIEW` always collides: a reviewer is mid-workflow on that report, so
+    // withdrawing it out from under them is a different act from replacing
+    // something nobody has picked up. `POSTPONED` collides by default for the
+    // same reason it exists — the applicant chose to defer and should finish —
+    // but a caller for whom `POSTPONED` is simply what a submission with
+    // outliers becomes can ask for it to be replaced instead. See
+    // `CreateReportDto.withdrawPostponedSibling`.
+    // `withdrawPostponed` is the caller saying "on my channel, POSTPONED is what
+    // a submission becomes". That is only true of siblings filed on the same
+    // channel: an applicant who deliberately deferred on island.is has not asked
+    // for their report to be retired by their vendor's next filing, and would
+    // get no signal if it were — they cannot see the vendor's report and the
+    // `409` that used to name theirs would be gone.
+    const replaceable = (sibling: ReportModel) =>
+      options.withdrawPostponed &&
+      (options.providerType === undefined ||
+        sibling.providerType === options.providerType)
+
     const blocking = siblings.find(
       (sibling) =>
         sibling.status === ReportStatusEnum.IN_REVIEW ||
-        sibling.status === ReportStatusEnum.POSTPONED,
+        (sibling.status === ReportStatusEnum.POSTPONED &&
+          !replaceable(sibling)),
     )
     if (blocking) {
       throw new ConflictException(
@@ -238,8 +264,12 @@ export class ReportFinalizeService implements IReportFinalizeService {
     )
 
     this.logger.info(
-      `Withdrew ${withdrawnIds.length} SUBMITTED ${type} report(s) for company ${companyId}`,
-      { context: LOGGING_CONTEXT, withdrawnIds },
+      `Withdrew ${withdrawnIds.length} in-flight ${type} report(s) for company ${companyId}`,
+      {
+        context: LOGGING_CONTEXT,
+        withdrawnIds,
+        statuses: siblings.map((sibling) => sibling.status),
+      },
     )
 
     return withdrawnIds

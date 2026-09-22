@@ -61,7 +61,16 @@ export class PartnerSubmissionService {
       employees,
     )
 
-    return this.applicationService.submitSalary({ ...rest, parsed }, company)
+    // The channel's own shape, not anything the vendor asked for — see
+    // `SubmitSalaryOptions`. A payroll system files once and has no preview
+    // step, so unexplained outliers postpone rather than refuse; and because
+    // `POSTPONED` is therefore what a submission *becomes* here rather than a
+    // choice someone made, a corrected re-file replaces it instead of colliding
+    // with it. On island.is neither is true, and neither option is passed.
+    return this.applicationService.submitSalary({ ...rest, parsed }, company, {
+      postponeUnexplainedOutliers: true,
+      withdrawPostponedSibling: true,
+    })
   }
 
   /**

@@ -75,7 +75,10 @@ import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
 import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
-import { SubmitSalaryReportInput } from './dto/submit-partner-salary-report.dto'
+import {
+  SubmitSalaryOptions,
+  SubmitSalaryReportInput,
+} from './dto/submit-partner-salary-report.dto'
 import type {
   SubmitReportCompanyDto,
   SubmitReportSubsidiaryDto,
@@ -171,6 +174,7 @@ export class ApplicationService implements IApplicationService {
   async submitSalary(
     input: SubmitSalaryReportInput,
     company: CompanyDto,
+    options: SubmitSalaryOptions = {},
   ): Promise<CreateReportResponseDto> {
     this.logger.info('Submitting salary report from application portal', {
       context: LOGGING_CONTEXT,
@@ -199,7 +203,9 @@ export class ApplicationService implements IApplicationService {
     }
 
     const createInput = await this.createSalaryReportInput(input, company)
-    return this.reportCreateService.createSalary(createInput)
+
+    // Beside the body, not in it — see `CreateSalaryOptions`.
+    return this.reportCreateService.createSalary(createInput, options)
   }
 
   async getSalaryReportEligibility(
@@ -736,10 +742,33 @@ export class ApplicationService implements IApplicationService {
     const newStatus = wasPostponed ? ReportStatusEnum.SUBMITTED : report.status
 
     if (wasPostponed) {
-      await this.reportModel.update(
+      // Compare-and-set on the status this method read and validated, rather
+      // than a bare `where: { id }`.
+      //
+      // It became reachable when a `POSTPONED` sibling stopped answering `409`
+      // on the partner channel: a submission carrying `withdrawPostponedSibling`
+      // can now retire this very report while these explanations are being
+      // written. `withdrawInflightSibling` takes the company row's lock for
+      // exactly that reason; this path takes none, so an unconditional write
+      // would resurrect a `WITHDRAWN` row as `SUBMITTED` and leave the company
+      // with two in-flight salary reports — the invariant that lock exists to
+      // hold — plus a `STATUS_CHANGED` event on a report that was already
+      // retired.
+      //
+      // Zero rows means somebody else moved it first, which is a conflict rather
+      // than a failure of this request: the explanations were written against a
+      // report that is no longer the one being reviewed.
+      const [moved] = await this.reportModel.update(
         { status: ReportStatusEnum.SUBMITTED },
-        { where: { id: report.id } },
+        { where: { id: report.id, status: ReportStatusEnum.POSTPONED } },
       )
+
+      if (moved === 0) {
+        throw new ConflictException(
+          'This report is no longer awaiting outlier explanations — it was withdrawn or moved on while this request was in flight. Read it back before retrying.',
+        )
+      }
+
       await this.reportEventService.emitStatusChanged(
         report.id,
         ReportStatusEnum.POSTPONED,

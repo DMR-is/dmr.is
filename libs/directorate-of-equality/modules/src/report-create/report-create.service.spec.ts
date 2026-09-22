@@ -14,6 +14,14 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+/**
+ * The channel options, passed beside the body rather than in it. They are not
+ * fields on `CreateReportDto` precisely so a request cannot set them — see
+ * `CreateSalaryOptions`.
+ */
+const POSTPONE_UNEXPLAINED = { postponeUnexplainedOutliers: true }
+const WITHDRAW_POSTPONED = { withdrawPostponedSibling: true }
+
 import { CompanySizeEnum } from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
@@ -279,7 +287,7 @@ describe('ReportCreateService', () => {
   it('creates a SALARY report with all child rows', async () => {
     const result = await service.createSalary(makeInput())
 
-    expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
+    expect(result).toMatchObject({ reportId: REPORT_ID, replayed: false })
 
     expect(reportFindOne).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -657,6 +665,143 @@ describe('ReportCreateService', () => {
     expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
+  /**
+   * The partner channel's half of the postponement decision.
+   *
+   * `outliersPostponed` asks a caller to state something it can only know by
+   * previewing first. A channel that files the payroll once cannot answer it:
+   * set it and a clean payroll is refused, leave it and an unexplained outlier
+   * is. `postponeUnexplainedOutliers` asks the question the other way round and
+   * is answered here, where detection has already run.
+   */
+  describe('postponeUnexplainedOutliers', () => {
+    it('files POSTPONED when outliers are detected and no groups were sent', async () => {
+      const input = makeInputWithDetectedOutlier()
+      input.outlierGroups = []
+
+      const result = await service.createSalary(input, POSTPONE_UNEXPLAINED)
+
+      expect(reportCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ status: ReportStatusEnum.POSTPONED }),
+      )
+      expect(result.status).toBe(ReportStatusEnum.POSTPONED)
+    })
+
+    /**
+     * The ordinals come back on the submission itself, because this is the only
+     * moment the caller learns it owes anything — it never ran a preview. They
+     * are the caller's own ordinals, so a payroll system maps them straight back
+     * to its rows.
+     */
+    it('returns the ordinals still owed an explanation', async () => {
+      const input = makeInputWithDetectedOutlier()
+      input.outlierGroups = []
+
+      const result = await service.createSalary(input, POSTPONE_UNEXPLAINED)
+
+      expect(result.unexplainedOutlierOrdinals).toEqual([1])
+    })
+
+    it('files SUBMITTED when the payroll is clean, rather than refusing', async () => {
+      const input = makeInput()
+      input.outlierGroups = []
+
+      const result = await service.createSalary(input, POSTPONE_UNEXPLAINED)
+
+      expect(result.status).toBe(ReportStatusEnum.SUBMITTED)
+      expect(result.unexplainedOutlierOrdinals).toBeUndefined()
+      expect(outlierGroupCreate).not.toHaveBeenCalled()
+    })
+
+    /**
+     * The difference from `outliersPostponed`, which throws here. A caller that
+     * could not preview has done nothing wrong by sending a clean payroll with
+     * no groups, and refusing it would put back the round trip this removes.
+     */
+    it('does not refuse a clean payroll the way outliersPostponed does', async () => {
+      const postponed = makeInput()
+      postponed.outlierGroups = []
+      postponed.outliersPostponed = true
+
+      await expect(service.createSalary(postponed)).rejects.toThrow(
+        /Cannot postpone/,
+      )
+    })
+
+    it('still validates the partition when groups are sent', async () => {
+      const input = makeInputWithDetectedOutlier()
+      input.outlierGroups = [
+        {
+          reason: 'r',
+          action: 'a',
+          signatureName: 'n',
+          signatureRole: 'role',
+          remedyDate: REMEDY_DATE,
+          employeeOrdinals: [99],
+        },
+      ]
+
+      await expect(
+        service.createSalary(input, POSTPONE_UNEXPLAINED),
+      ).rejects.toThrow(/non-outlier employee ordinal/)
+    })
+
+    /**
+     * The branch between the two outcomes, and the one a caller reaches by
+     * accident: supplying groups turns the postpone *off*, so a partition that
+     * does not match the detected set is refused exactly as it is without the
+     * option — never partially postponed. Otherwise a vendor that mis-modelled
+     * its groups would file a report whose unexplained rows nobody agreed to
+     * defer.
+     *
+     * Asserted through a wrong partition rather than a strictly-partial one on
+     * purpose. Reaching the "missing ordinals" message specifically needs a
+     * minimum set with two members, which means a fixture tuned against the
+     * wage-gap regression — and a test that depends on the detection maths
+     * producing exactly two outliers breaks every time that maths is touched,
+     * which is worse than not having it. The partition rules themselves are
+     * covered by the non-postpone specs above; what is new here is that the
+     * option does not soften them.
+     */
+    it('refuses a mismatched partition rather than postponing the remainder', async () => {
+      const input = makeInputWithDetectedOutlier()
+      input.outlierGroups = [
+        {
+          reason: 'r',
+          action: 'a',
+          signatureName: 'n',
+          signatureRole: 'role',
+          remedyDate: REMEDY_DATE,
+          employeeOrdinals: [4],
+        },
+      ]
+
+      await expect(
+        service.createSalary(input, POSTPONE_UNEXPLAINED),
+      ).rejects.toThrow(BadRequestException)
+      expect(reportCreate).not.toHaveBeenCalled()
+    })
+
+    it('files SUBMITTED in one call when the groups cover the detected set', async () => {
+      const input = makeInputWithDetectedOutlier()
+      input.outlierGroups = [
+        {
+          reason: 'r',
+          action: 'a',
+          signatureName: 'n',
+          signatureRole: 'role',
+          remedyDate: REMEDY_DATE,
+          employeeOrdinals: [1],
+        },
+      ]
+
+      const result = await service.createSalary(input, POSTPONE_UNEXPLAINED)
+
+      expect(result.status).toBe(ReportStatusEnum.SUBMITTED)
+      expect(result.unexplainedOutlierOrdinals).toBeUndefined()
+    })
+  })
+
   it('creates a single default group with NULL explanation when postponed', async () => {
     const input = makeInputWithDetectedOutlier()
     input.outliersPostponed = true
@@ -708,7 +853,7 @@ describe('ReportCreateService', () => {
   it('creates an EQUALITY report with content + company snapshot + event', async () => {
     const result = await service.createEquality(makeEqualityInput())
 
-    expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
+    expect(result).toMatchObject({ reportId: REPORT_ID, replayed: false })
 
     expect(reportCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -1011,7 +1156,10 @@ describe('ReportCreateService', () => {
 
       const result = await service.createSalary(input)
 
-      expect(result).toEqual({ reportId: FILED_REPORT_ID, replayed: true })
+      expect(result).toMatchObject({
+        reportId: FILED_REPORT_ID,
+        replayed: true,
+      })
       expect(reportCreate).not.toHaveBeenCalled()
     })
   })
@@ -1032,6 +1180,10 @@ describe('ReportCreateService', () => {
         providerType: input.providerType,
         providerId: input.providerId,
         type: ReportTypeEnum.SALARY,
+        // Set deliberately: without it `status: existing.status` is `undefined`,
+        // and `toEqual` ignores undefined properties — so the replay's status
+        // passed through untested while looking covered.
+        status: ReportStatusEnum.IN_REVIEW,
       })
       companyReportFindOne.mockResolvedValueOnce({
         companyId: PARENT_COMPANY_ID,
@@ -1043,6 +1195,9 @@ describe('ReportCreateService', () => {
       expect(result).toEqual({
         reportId: EXISTING_REPORT_ID,
         replayed: true,
+        // The earlier report's status as it stands now, which may have moved on
+        // since it was filed — a replay reports the report, not the request.
+        status: ReportStatusEnum.IN_REVIEW,
       })
       expect(reportCreate).not.toHaveBeenCalled()
       expect(companyReportBulkCreate).not.toHaveBeenCalled()
@@ -1181,7 +1336,7 @@ describe('ReportCreateService', () => {
 
       const result = await service.createSalary(input)
 
-      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
+      expect(result).toMatchObject({ reportId: REPORT_ID, replayed: false })
       expect(reportCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           providerType: ReportProviderEnum.ISLAND_IS,
@@ -1209,12 +1364,15 @@ describe('ReportCreateService', () => {
     function mockPriorSibling(
       status: ReportStatusEnum,
       providerId = 'prior-1',
+      // Defaults to the channel `makeInput` files on, so the sibling looks like
+      // one the same caller left behind. The cross-channel case passes another.
+      providerType = ReportProviderEnum.SYSTEM,
     ) {
       companyReportFindAll.mockResolvedValueOnce([
         { reportId: PRIOR_REPORT_ID },
       ])
       reportFindAll.mockResolvedValueOnce([
-        { id: PRIOR_REPORT_ID, status, providerId },
+        { id: PRIOR_REPORT_ID, status, providerId, providerType },
       ])
     }
 
@@ -1223,7 +1381,7 @@ describe('ReportCreateService', () => {
 
       const result = await service.createSalary(makeInput())
 
-      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
+      expect(result).toMatchObject({ reportId: REPORT_ID, replayed: false })
       expect(reportUpdate).toHaveBeenCalledWith(
         { status: ReportStatusEnum.WITHDRAWN },
         { where: { id: [PRIOR_REPORT_ID] } },
@@ -1267,6 +1425,59 @@ describe('ReportCreateService', () => {
 
       expect(reportCreate).not.toHaveBeenCalled()
       expect(reportUpdate).not.toHaveBeenCalled()
+    })
+
+    /**
+     * Phase 3 makes POSTPONED the ordinary landing state for a channel with no
+     * preview, which turns the 409 above into a trap: a vendor that files, lands
+     * POSTPONED and then finds a payroll error would have to explain outliers it
+     * knows are wrong just to reach a state it is allowed to replace.
+     *
+     * `withdrawPostponedSibling` is opt-in precisely so island.is keeps the 409
+     * — there POSTPONED is a deliberate "explain later", and being told to
+     * finish it is the right answer.
+     */
+    it('SALARY: withdraws a POSTPONED predecessor when the caller asks for it', async () => {
+      mockPriorSibling(ReportStatusEnum.POSTPONED, 'prior-providerId')
+
+      await service.createSalary(makeInput(), WITHDRAW_POSTPONED)
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ status: ReportStatusEnum.WITHDRAWN }),
+        expect.anything(),
+      )
+      expect(reportCreate).toHaveBeenCalled()
+    })
+
+    /**
+     * The flag says "on my channel, POSTPONED is what a submission becomes". It
+     * cannot speak for another channel's postponement: an applicant who
+     * deliberately deferred on island.is has not asked for that report to be
+     * retired by their payroll vendor's next filing, and would never learn it
+     * had been — they cannot see the vendor's report, and the 409 that used to
+     * name theirs would be gone.
+     */
+    it('SALARY: leaves a POSTPONED sibling from another channel alone', async () => {
+      mockPriorSibling(
+        ReportStatusEnum.POSTPONED,
+        'prior-providerId',
+        ReportProviderEnum.ISLAND_IS,
+      )
+
+      await expect(
+        service.createSalary(makeInput(), WITHDRAW_POSTPONED),
+      ).rejects.toThrow(ConflictException)
+
+      expect(reportCreate).not.toHaveBeenCalled()
+    })
+
+    it('SALARY: still rejects an IN_REVIEW predecessor even then', async () => {
+      mockPriorSibling(ReportStatusEnum.IN_REVIEW, 'prior-providerId')
+
+      await expect(
+        service.createSalary(makeInput(), WITHDRAW_POSTPONED),
+      ).rejects.toThrow(ConflictException)
+      expect(reportCreate).not.toHaveBeenCalled()
     })
 
     it('SALARY: proceeds normally when no in-flight sibling exists', async () => {
@@ -1335,7 +1546,7 @@ describe('ReportCreateService', () => {
 
       const result = await service.createEquality(makeEqualityInput())
 
-      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
+      expect(result).toMatchObject({ reportId: REPORT_ID, replayed: false })
       expect(reportUpdate).toHaveBeenCalledWith(
         { status: ReportStatusEnum.WITHDRAWN },
         { where: { id: [PRIOR_REPORT_ID] } },

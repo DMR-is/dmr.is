@@ -15,7 +15,10 @@ import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
 import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
-import { SubmitSalaryReportInput } from './dto/submit-partner-salary-report.dto'
+import {
+  SubmitSalaryOptions,
+  SubmitSalaryReportInput,
+} from './dto/submit-partner-salary-report.dto'
 
 export interface IApplicationService {
   salaryAnalysis(
@@ -25,6 +28,7 @@ export interface IApplicationService {
   submitSalary(
     input: SubmitSalaryReportInput,
     company: CompanyDto,
+    options?: SubmitSalaryOptions,
   ): Promise<CreateReportResponseDto>
   submitEquality(
     input: SubmitEqualityReportDto,

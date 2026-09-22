@@ -462,7 +462,11 @@ export class ReportDraftService implements IReportDraftService {
         },
       )
 
-      return { reportId: report.id, replayed: false }
+      return {
+        reportId: report.id,
+        replayed: false,
+        status: ReportStatusEnum.DRAFT,
+      }
     } catch (error) {
       // Lost a concurrent create race for the same tuple: the partial unique
       // index on (provider_type, provider_id) rejects the second insert. Treat
@@ -522,6 +526,10 @@ export class ReportDraftService implements IReportDraftService {
       providerId,
     })
 
-    return { reportId: existing.id, replayed: true }
+    return {
+      reportId: existing.id,
+      replayed: true,
+      status: existing.status,
+    }
   }
 }
