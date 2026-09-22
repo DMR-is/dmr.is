@@ -14,20 +14,48 @@ import { ApiProperty, ApiPropertyOptions } from '@nestjs/swagger'
 export const MAX_PROVIDER_ID_LENGTH = 256
 
 /**
- * Refuses a `/`, because the value is a single path segment on the way back.
+ * Refuses the values that cannot survive being a path segment on the way back.
  *
  * `GET /partner/reports/:providerId` is the only handle this API gives a vendor
- * on a filed report. An id containing a slash files happily and then matches no
- * route — `2026/Q1/042` is three segments — so the report becomes unreadable by
- * the very id the vendor chose for it. Percent-encoding is not a dependable way
- * out either: `%2F` is normalised by proxies and clients on the way in, and this
- * API sits behind a shared ALB.
+ * on a filed report. An id that a URL rewrites before routing files happily and
+ * then matches no route, so the report becomes unreadable by the very id the
+ * vendor chose for it. Four values do that, and percent-encoding rescues none of
+ * them:
  *
- * Only `/`. Every other awkward character is the caller's percent-encoding
- * problem and round-trips reliably, so bounding further would re-impose a
- * format for taste — which is the thing loosening this field set out to undo.
+ * - **`/`** — `2026/Q1/042` is three segments. `%2F` is normalised back by
+ *   proxies and clients on the way in, and this API sits behind a shared ALB.
+ * - **`.` and `..`** as the whole segment — dot-segment removal is part of URL
+ *   resolution (RFC 3986 §5.2.4), applied by browsers, by `curl` without
+ *   `--path-as-is`, and at proxies. `…/reports/..` resolves to the parent
+ *   collection and `…/reports/.` to the collection itself, so neither ever
+ *   reaches the handler.
+ * - **`\`** — WHATWG URL parsing rewrites a backslash to `/`, so it becomes the
+ *   first case in any client that follows the URL standard.
+ *
+ * A dot *within* an id is fine: `2026.Q1.042` is one segment and routes. Only
+ * the whole segment being `.` or `..` is the problem, which is why the rule is
+ * anchored rather than a ban on the character.
+ *
+ * Nothing else is bounded. Every other awkward character round-trips once
+ * encoded, so refusing more would re-impose a format for taste — the thing
+ * loosening this field set out to undo. The specs pin the acceptances for that
+ * reason, not only the rejections.
  */
-export const PROVIDER_ID_PATTERN = /^[^/]+$/
+export const PROVIDER_ID_PATTERN = /^(?!\.{1,2}$)[^/\\]+$/
+
+/**
+ * The one normalisation this value gets, exported so the read path applies the
+ * identical one.
+ *
+ * The write path trims (see below) because `providerId` is an idempotency key.
+ * If a read did not, a vendor whose id reached us with a trailing space would
+ * file under the trimmed form and then fetch the untrimmed one and get a `404`
+ * on a report that exists. Two trims that agree today is not the same as one
+ * trim, which is why this is a function rather than a `.trim()` in each place.
+ */
+export function normaliseProviderId(value: unknown): unknown {
+  return typeof value === 'string' ? value.trim() : value
+}
 
 /**
  * The caller's own identifier for a submission, stored as `report.provider_id`.
@@ -56,10 +84,9 @@ export const PROVIDER_ID_PATTERN = /^[^/]+$/
  * unreachable for free; a bounded string has to say so. Trimming also means
  * `MinLength(1)` refuses a whitespace-only id rather than storing one.
  *
- * **A `/` is refused** for the reason on `PROVIDER_ID_PATTERN`: it is the one
- * character that makes a filed report unreadable through the route that reads
- * it back. That is a defect the loosening introduced, not a leftover of the
- * UUID rule.
+ * **The values a URL rewrites are refused** — see `PROVIDER_ID_PATTERN`. They
+ * make a filed report unreadable through the route that reads it back, which is
+ * a defect the loosening introduced rather than a leftover of the UUID rule.
  */
 export function ApiProviderId(options: ApiPropertyOptions = {}) {
   return applyDecorators(
@@ -70,18 +97,16 @@ export function ApiProviderId(options: ApiPropertyOptions = {}) {
       pattern: PROVIDER_ID_PATTERN.source,
       example: '2026-Q1-042',
       description:
-        'The caller’s own identifier for this submission, stored as the report provider_id. Any non-empty string up to 256 characters — a UUID, `2026-Q1-042`, whatever the calling system mints; the format carries no meaning here. Surrounding whitespace is trimmed, because this value is also the idempotency key and two ids differing only by spacing would file two reports. Uniqueness is enforced on `(provider_type, provider_id)`. The one character it may not contain is `/`, since this id is also the path segment that reads the report back.',
+        'The caller’s own identifier for this submission, stored as the report provider_id. Any non-empty string up to 256 characters — a UUID, `2026-Q1-042`, whatever the calling system mints; the format carries no meaning here. Surrounding whitespace is trimmed, because this value is also the idempotency key and two ids differing only by spacing would file two reports. Uniqueness is enforced on `(provider_type, provider_id)`. It may not contain `/` or `\\`, and may not be `.` or `..`, since this id is also the path segment that reads the report back and a URL rewrites those before routing.',
       ...options,
     }),
-    Transform(({ value }) =>
-      typeof value === 'string' ? value.trim() : value,
-    ),
+    Transform(({ value }) => normaliseProviderId(value)),
     IsString(),
     MinLength(1),
     MaxLength(MAX_PROVIDER_ID_LENGTH),
     Matches(PROVIDER_ID_PATTERN, {
       message:
-        'providerId must not contain “/” — it is the path segment that reads the report back, so a slash files a report that can never be read',
+        'providerId must not contain “/” or “\\”, and must not be “.” or “..” — it is the path segment that reads the report back, and a URL rewrites those before routing, so the report could never be read',
     }),
   )
 }

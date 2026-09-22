@@ -80,7 +80,9 @@ describe.each([
    * `GET /partner/reports/:providerId` is a single path segment, so an id
    * carrying a slash files and then matches no route — the report becomes
    * unreadable by the id its own filer chose. Raised as optional in the #1532
-   * review and promoted, because the loosening is what introduced it.
+   * review and promoted, because the loosening is what introduced it; the
+   * re-review then found three more values that fail the same way — `\`, and
+   * `.`/`..` as the whole segment.
    */
   describe('the path-segment bound', () => {
     it.each([
@@ -88,16 +90,32 @@ describe.each([
       ['a single leading slash', '/042'],
       ['a trailing slash', '042/'],
       ['a slash left behind after trimming', ' 2026/Q1 '],
+      // WHATWG URL parsing rewrites a backslash to a forward slash, so this is
+      // the slash case in any client that follows the URL standard.
+      ['a backslash, which a URL rewrites to a slash', '2026\\Q1'],
+      // RFC 3986 §5.2.4 dot-segment removal happens during URL resolution, so
+      // neither of these ever reaches the handler.
+      ['a lone dot, which resolves to the collection', '.'],
+      ['a double dot, which resolves to the parent', '..'],
+      ['a dot segment left behind after trimming', '  ..  '],
     ])('rejects %s', (_case, value) => {
       expect(providerIdConstraints(cls, value)).not.toEqual([])
     })
 
+    /**
+     * The bound is on values a URL *rewrites*, not on punctuation. Pinning the
+     * acceptances is what stops the next reader turning this into a charset
+     * allowlist and re-imposing the format rule the loosening removed.
+     */
     it.each([
       ['a space, which percent-encodes reliably', 'Q1 042'],
       ['a question mark', '2026?Q1'],
       ['a hash', '2026#Q1'],
       ['a percent sign', '100%-audit'],
-    ])('still accepts %s — only the slash is bounded', (_case, value) => {
+      ['dots inside an id, which are one ordinary segment', '2026.Q1.042'],
+      ['a leading dot', '.042'],
+      ['three dots, which is not a dot segment', '...'],
+    ])('still accepts %s', (_case, value) => {
       expect(providerIdConstraints(cls, value)).toEqual([])
     })
   })

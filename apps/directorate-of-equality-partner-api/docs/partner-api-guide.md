@@ -126,8 +126,13 @@ submission. Rules that matter:
   no meaning to us; we only ever compare it for equality, so you do not need a
   mapping table to file through this API. **One exception: it may not contain
   `/`.** It is a single path segment when you read the report back, so
-  `2026/Q1/042` would file a report you could never fetch. Surrounding
-  whitespace is trimmed, so `042` and `042` are the same id rather than two.
+  `2026/Q1/042` would file a report you could never fetch. For the same reason
+  it may not contain a backslash, and may not be `.` or `..` on its own — a URL
+  rewrites all of those before the request is routed. Dots _inside_ an id are
+  fine: `2026.Q1.042` is one segment and reads back.
+- **Surrounding whitespace is trimmed**, on filing and on reading alike, so an
+  id that reaches us as `"042 "` is stored and fetched as `042` rather than
+  becoming a second key.
 - It is **required**, not optional, and it is the only handle you get for
   reading a report back — `GET /partner/reports/:providerId`. The `reportId`
   returned on submit is a DoE-internal id and is not a lookup key on this
@@ -268,7 +273,7 @@ The `payload` part (`SubmitPartnerEqualityReportDto`):
 
 | Field                                                                                        | Notes                                                                                                                                                                                                                                                                                            |
 | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `providerId`                                                                                 | your own id for this submission, any non-empty string up to 256 chars, no `/` — see above                                                                                                                                                                                                        |
+| `providerId`                                                                                 | your own id for this submission, any non-empty string up to 256 chars, no `/` or `\\` — see above                                                                                                                                                                                                |
 | `companyAdminName` / `companyAdminTitle?` / `companyAdminEmail` / `companyAdminGender`       | the company executive who stands behind the plan. `companyAdminGender` is a `GenderEnum` value                                                                                                                                                                                                   |
 | `contactName` / `contactTitle?` / `contactEmail` / `contactPhone`                            | the day-to-day contact (tengiliður) Jafnréttisstofa writes to                                                                                                                                                                                                                                    |
 | `averageEmployeeMaleCount?` / `averageEmployeeFemaleCount?` / `averageEmployeeNeutralCount?` | optional and nullable on an equality report (required on a salary one)                                                                                                                                                                                                                           |
@@ -494,7 +499,7 @@ the strict validation above:
 
 | Field                                                             | Notes                                                                                                                                                                                                                                                                             |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `providerId`                                                      | your own id for this submission, any non-empty string up to 256 chars, no `/` — see the section above                                                                                                                                                                             |
+| `providerId`                                                      | your own id for this submission, any non-empty string up to 256 chars, no `/` or `\\` — see the section above                                                                                                                                                                     |
 | `salaryDataBasis`                                                 | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one                                                                                                                                                                         |
 | `salaryDataPeriod`                                                | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that has already happened and no earlier than 36 months ago. **Refused when the basis is `AVERAGE`** — an average covers twelve months, so there is no single month to name |
 | `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required                                                                                                                                                                                                                                                                          |

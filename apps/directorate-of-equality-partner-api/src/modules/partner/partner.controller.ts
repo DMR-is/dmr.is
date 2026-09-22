@@ -61,6 +61,7 @@ import {
 } from '../submission/equality-document'
 import { JsonPartPipe } from '../submission/json-part.pipe'
 import { PartnerSubmissionService } from '../submission/partner-submission.service'
+import { ProviderIdParamPipe } from './provider-id-param.pipe'
 
 import 'multer'
 
@@ -334,7 +335,7 @@ export class PartnerController {
       'Status and detail of a submitted report — where it is in review, its deadlines, and any reviewer comments. This is how a vendor learns a report was approved or denied. Only reports filed through this channel are visible: a report the company filed on island.is is not readable here.',
   })
   getReport(
-    @Param('providerId') providerId: string,
+    @Param('providerId', ProviderIdParamPipe) providerId: string,
     @CurrentCompany() company: CompanyDto,
   ): Promise<ApplicationReportDetailDto> {
     return this.applicationService.getReport(providerId, company)
@@ -351,7 +352,7 @@ export class PartnerController {
       'The detected outliers on a submitted report, paginated. Separate from the report detail because the list can be long on a large employer.',
   })
   getReportOutliers(
-    @Param('providerId') providerId: string,
+    @Param('providerId', ProviderIdParamPipe) providerId: string,
     @Query() query: PagingQuery,
     @CurrentCompany() company: CompanyDto,
   ): Promise<GetReportOutliersResponseDto> {
