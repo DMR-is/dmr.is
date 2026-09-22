@@ -4,26 +4,11 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 
 import { decodeJwt } from 'jose'
 
+import { type DecodedIdToken, isCompanySubject } from './companySubject'
 import { identityServerConfig } from './identityServerConfig'
 import { setLogoutHint } from './logoutHint'
 
 const SESSION_TIMEOUT = 60 * 60 * 8 + 30
-
-// The id token's `actor` claim only appears under a procuration (company)
-// login: it is the human who is acting for the company, distinct from the
-// token's own `nationalId`, which is the company being acted for. See
-// libs/directorate-of-equality/modules/src/api-key/lib/resolve-actor.ts on
-// the API side for the same distinction.
-interface IdTokenActor {
-  nationalId: string
-  name: string
-  scope: Array<string>
-}
-
-interface DecodedIdToken {
-  nationalId?: string
-  actor?: IdTokenActor
-}
 
 export const authOptions: AuthOptions = {
   pages: {
@@ -74,7 +59,9 @@ export const authOptions: AuthOptions = {
     // Unlike directorate-of-equality-web, this app has no allowlist: any
     // company that authenticates through IDS belongs here, so there is no
     // getMyUser call and no authorize() helper. The only gates are "did IDS
-    // hand us an id token" and "does that token carry a company to act for".
+    // hand us an id token" and "is its subject a company" -- see
+    // isCompanySubject in ./companySubject for why the nationalId claim
+    // alone cannot answer the second.
     // A refusal still has to end the upstream IDS session (see
     // access-denied/route.ts) or a retry silently SSOs the same token back
     // in and loops.
@@ -90,7 +77,7 @@ export const authOptions: AuthOptions = {
         const decodedIdToken = decodeJwt(account.id_token) as DecodedIdToken
         const companyNationalId = decodedIdToken.nationalId
 
-        if (!companyNationalId) {
+        if (!isCompanySubject(decodedIdToken)) {
           await setLogoutHint(account.id_token)
 
           return '/api/auth/access-denied'
@@ -117,6 +104,7 @@ export const authOptions: AuthOptions = {
           scope: `${identityServerConfig.scope}`,
           domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
           protection: 'pkce',
+          prompt: 'select_account',
         },
       },
     }),

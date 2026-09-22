@@ -117,6 +117,13 @@
         "cwd": "apps/directorate-of-equality-partner-web",
         "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env && find dist/env -type f ! -name '.env.schema' -delete"
       }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/directorate-of-equality-partner-web/jest.config.ts"
+      }
     }
   }
 }
