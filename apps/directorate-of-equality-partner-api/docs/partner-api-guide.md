@@ -98,13 +98,23 @@ invalid one answers `401`), the company simply cannot file.
 
 ### Rate limits
 
-- **Per key:** 5 000 requests per hour, across the whole surface. Reported in
-  the `X-RateLimit-*` response headers. It is a backstop against a runaway
-  retry loop, not a commercial quota.
-- **Per IP:** 600 requests per minute, counted before authentication (so failed
-  keys count too). No headers — the per-key bucket owns the published contract.
+Three allowances, and which one you are spending depends on the route.
 
-Both return `429` when exceeded.
+- **Per key:** 5 000 requests per hour, across every route **except the dry
+  run**. Reported in the `X-RateLimit-*` response headers. A backstop against a
+  runaway retry loop, not a commercial quota.
+- **Per key, dry run only:** 500 requests per hour for
+  `POST /reports/salary-analysis`, which draws on nothing else. Rehearsing a
+  filing as often as an extract changes is what that route is for, and it must
+  not be able to use up the allowance you need for _filing_. Because it is a
+  separate bucket it reports separate headers, suffixed with its name —
+  `X-RateLimit-Limit-perKeyDryRun` and friends — and the unsuffixed set does not
+  appear on that route. **If you read `X-RateLimit-Remaining` generically for
+  backoff, handle its absence there rather than reading it as unlimited.**
+- **Per IP:** 600 requests per minute, counted before authentication (so failed
+  keys count too). No headers — a caller is not the subject of that limit.
+
+All three return `429` when exceeded.
 
 ### Request/response conventions
 

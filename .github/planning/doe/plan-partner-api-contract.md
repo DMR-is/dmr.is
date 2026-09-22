@@ -96,7 +96,7 @@ neither has two ways to send one thing.
 route, and the archive inflation bounds two review rounds added to it.
 
 > **Hashes in this file are only as durable as the commits they name**, and this
-> has now gone wrong twice. They changed when the branch was rebased onto the
+> has now gone wrong three times. They changed when the branch was rebased onto the
 > squashed #1532,
 > and every phase 1 hash this file used to cite — five of them — stopped
 > resolving for anyone else the moment that PR squash-merged, since those commits
@@ -106,7 +106,9 @@ route, and the archive inflation bounds two review rounds added to it.
 >
 > The rule this keeps teaching: **cite the squashed commit, not the branch
 > commit**, because a squash-merge is where a hash dies and a rebase is where it
-> moves. The check is `git merge-base --is-ancestor <hash> origin/main`, never
+> moves. A phase writes its own hashes while they are still branch commits, so
+> every phase inherits the job of repointing the previous one — check this table
+> as part of each rebase rather than when something looks wrong. The check is `git merge-base --is-ancestor <hash> origin/main`, never
 > `git cat-file -e` — a local object store still holds commits nobody else can
 > see, which is why this looked fine both times.
 
@@ -253,7 +255,7 @@ codebase. Same rules, not rules that agree today.
 Whether the _path_ changes (`/reports/salary-analysis` → `/playground/…`) is
 cosmetic and can follow the guide's section layout.
 
-**Shipped** in `9947a8aa`, and most of it turned out to be already true.
+**Shipped** in `b48dfa99`, and most of it turned out to be already true.
 
 The input shape was right (`PartnerSalaryPayloadFields` is the same
 `{ scoringModelId, employees }` the submission takes), `payDispersion` was
@@ -384,11 +386,11 @@ postponed report could only be finished on island.is. Both fixed here.
 | 2     | Multipart route, document-only DTO             | #1536 | **Done**, `1e47ac9f`                     |
 | 2     | Archive inflation bounds                       | #1536 | **Done**, `1e47ac9f`                     |
 | 2     | Calibration on real plans                      | —     | Pending — needs real documents           |
-| 3     | Detection at submit → `POSTPONED`              | —     | **Done**, `7db31858`                     |
-| 3     | `PUT …/outliers`                               | —     | **Done**, `7db31858`                     |
-| 3     | `POSTPONED` sibling withdrawn, not `409`       | —     | **Done**, `7db31858` — reversed decision |
-| 4     | Dry run: scope, input shape, shared validation | —     | **Done**, `9947a8aa`                     |
-| 4     | Dry run gets its own throttle bucket           | —     | **Done**, `9947a8aa`                     |
+| 3     | Detection at submit → `POSTPONED`              | —     | **Done**, `a9527ec3`                     |
+| 3     | `PUT …/outliers`                               | —     | **Done**, `a9527ec3`                     |
+| 3     | `POSTPONED` sibling withdrawn, not `409`       | —     | **Done**, `a9527ec3` — reversed decision |
+| 4     | Dry run: scope, input shape, shared validation | —     | **Done**, `b48dfa99`                     |
+| 4     | Dry run gets its own throttle bucket           | —     | **Done**, `b48dfa99`                     |
 
 ## Phase 1 outcome
 

@@ -62,9 +62,14 @@ import { HealthController } from './health.controller'
       },
       {
         // The dry run's own allowance, so rehearsing a filing cannot spend the
-        // budget the filing needs — see `PER_KEY_DRY_RUN_THROTTLER`. Well above
-        // what iterating on an extract takes and well below the surface-wide
-        // limit, which is the whole point of it being separate.
+        // budget the filing needs — see `PER_KEY_DRY_RUN_THROTTLER`.
+        //
+        // 500 is a starting figure, not a measured one: no vendor has integrated
+        // yet, so there is no traffic to derive it from. It is set where it is
+        // because an integrator iterating on one employer's extract works in
+        // tens of calls, and a runaway loop reaches hundreds in seconds — so
+        // this separates those two without a real caller noticing it. Revisit
+        // once there is traffic rather than treating it as settled.
         name: PER_KEY_DRY_RUN_THROTTLER,
         ttl: 3600000, // 1 hour
         limit: 500,
