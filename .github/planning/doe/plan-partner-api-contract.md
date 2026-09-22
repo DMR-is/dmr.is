@@ -47,16 +47,16 @@ strands whoever takes it.
 
 Low risk, no schema change. Ships independently of everything below.
 
-| #   | Change                                                                                                                                                                                                                                                              | Files                                                                                                                                  |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.1 | ✅ `providerId` accepts any non-empty string ≤256 instead of a UUID                                                                                                                                                                                                 | `application/dto/submit-salary-report.dto.ts`, `submit-equality-report.dto.ts`, `dto/provider-id.spec.ts`, `docs/partner-api-guide.md` |
-| 1.2 | Remove `GET /partner/reports/equality/active`                                                                                                                                                                                                                       | `partner/partner.controller.ts`, guide §A2/§B2                                                                                         |
-| 1.3 | Reject `salaryDataPeriod` when `salaryDataBasis` is `AVERAGE` (currently ignored silently)                                                                                                                                                                          | `application/dto/submit-salary-report.dto.ts`                                                                                          |
+| #   | Change                                                                                                                                                                                                                                                               | Files                                                                                                                                  |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1 | ✅ `providerId` accepts any non-empty string ≤256 instead of a UUID                                                                                                                                                                                                  | `application/dto/submit-salary-report.dto.ts`, `submit-equality-report.dto.ts`, `dto/provider-id.spec.ts`, `docs/partner-api-guide.md` |
+| 1.2 | Remove `GET /partner/reports/equality/active`                                                                                                                                                                                                                        | `partner/partner.controller.ts`, guide §A2/§B2                                                                                         |
+| 1.3 | Reject `salaryDataPeriod` when `salaryDataBasis` is `AVERAGE` (currently ignored silently)                                                                                                                                                                           | `application/dto/submit-salary-report.dto.ts`                                                                                          |
 | 1.4 | ⏸ **Deferred.** Group the catalog with the scoring-model routes — documentation only for now; moving the _route_ needs the catalog data moved out of `ApplicationService` first, because `ScoringModelApiModule` deliberately does not boot `ApplicationCoreModule` | `sub-criterion-catalog/`, then `scoring-model.controller.ts`                                                                           |
-| 1.5 | Equality gets its own DTO via `OmitType`, dropping `equalityReportPdf` / `equalityReportPdfFilename`                                                                                                                                                                | new `application/dto/submit-partner-equality-report.dto.ts`                                                                            |
-| 1.6 | Fix stale guide text: §A4 tells callers to carry an `equalityReportId` the contract removed in #1483; the catalog's description still says a submission carries a criteria tree                                                                                     | `docs/partner-api-guide.md`, catalog `@PartnerResponse` description                                                                    |
-| 1.7 | Declare `API_ENV` in the partner API's `.env.schema`, so the renewal-window gate fires                                                                                                                                                                              | `apps/directorate-of-equality-partner-api/.env.schema`                                                                                 |
-| 1.8 | Drop `company.nationalId` from the submission body                                                                                                                                                                                                                  | `application/dto/submit-report-company.dto.ts`, `application.service.ts` (the equality check at :915 goes with it), guide §A3/§B7      |
+| 1.5 | Equality gets its own DTO via `OmitType`, dropping `equalityReportPdf` / `equalityReportPdfFilename`                                                                                                                                                                 | new `application/dto/submit-partner-equality-report.dto.ts`                                                                            |
+| 1.6 | Fix stale guide text: §A4 tells callers to carry an `equalityReportId` the contract removed in #1483; the catalog's description still says a submission carries a criteria tree                                                                                      | `docs/partner-api-guide.md`, catalog `@PartnerResponse` description                                                                    |
+| 1.7 | Declare `API_ENV` in the partner API's `.env.schema`, so the renewal-window gate fires                                                                                                                                                                               | `apps/directorate-of-equality-partner-api/.env.schema`                                                                                 |
+| 1.8 | Drop `company.nationalId` from the submission body                                                                                                                                                                                                                   | `application/dto/submit-report-company.dto.ts`, `application.service.ts` (the equality check at :915 goes with it), guide §A3/§B7      |
 
 **Decided 21 Sept:** `company.nationalId` goes. It is validated to equal the
 authenticated company, so it can only ever hold one value. Note this gives up a
@@ -246,8 +246,9 @@ cosmetic and can follow the guide's section layout.
 - [x] `company.nationalId` in the body → rejected by the strict whitelist
 - [x] `equalityReportContent` **required** on the partner equality route; the
       PDF fields refused there, still accepted on island.is
-- [ ] `providerId` containing `/` → rejected, so nothing files under a handle
-      `GET …/:providerId` cannot match
+- [x] `providerId` containing `/` → rejected, so nothing files under a handle
+      `GET …/:providerId` cannot match — and `?`, `#`, `%` and a space still
+      accepted, so the bound cannot drift into a charset allowlist
 - [x] Converter: `.pdf`, `.doc`, non-document, non-Word zip, empty document,
       oversized and corrupt archive all refused (`equality-document.spec.ts`)
 - [ ] Multipart submit: valid `.docx`, `.pdf` refused, `.doc` refused, oversized
@@ -288,7 +289,7 @@ cosmetic and can follow the guide's section layout.
 | 1     | Stale guide text                               | —     | **Done**, `2a66fb537`                   |
 | 1     | Declare `API_ENV` on the partner API           | —     | **Done**, `2a66fb537`                   |
 | 1     | Drop `company.nationalId`                      | —     | **Done**, `2a66fb537`                   |
-| 1     | `/` bound on `providerId`                      | #1532 | **Promised in review, unwritten**       |
+| 1     | `/` bound on `providerId`                      | #1532 | **Done**, `a42efe44`                    |
 | 2     | `.docx` → HTML converter                       | —     | **Done**, `6853deedd` (12 cases)        |
 | 2     | Multipart route, document-only DTO             | —     | Pending — converter waiting on it       |
 | 3     | Detection at submit → `POSTPONED`              | —     | Pending                                 |
@@ -309,25 +310,27 @@ Two things the work turned up that the plan had not anticipated:
 - **1.4 is not a route move.** See above — it needs the catalog data relocated
   first, and `ScoringModelApiModule`'s comment says why that boundary exists.
 
-## Open commitment from the #1532 review
+## The #1532 review, settled
 
-**The `/` bound on `providerId` is promised in public and not yet written.**
-The review raised `reports/:providerId` having no charset bound as _optional_;
-the reply on #1532 promoted it out of optional and committed to it, because it
-is a defect this branch introduced rather than a nice-to-have. `2026/Q1/042` now
-passes validation and files, and then `GET /partner/reports/2026/Q1/042` matches
-no route — a vendor can file a report they can never read back, on the only
-handle this API gives them. That is worse than the UUID requirement it replaced.
+**The `/` bound is written** (`a42efe44`). The review raised
+`reports/:providerId` having no charset bound as _optional_; it was promoted and
+committed to in public, because it is a defect this branch introduced rather
+than a nice-to-have — `2026/Q1/042` filed and then matched no route, so a vendor
+could file a report it could never read back on the only handle this API gives
+it. It lives in `@ApiProviderId()` next to the trim from `e3bbc41b`, so all
+three writers of `report.provider_id` inherit it, and the pattern reaches the
+generated client rather than only the guide.
 
-The shape agreed in that comment: `/` is the character that genuinely cannot
-work, and the rest is the caller's percent-encoding problem. It belongs in
-`@ApiProviderId()` in `@dmr.is/decorators` next to the trim that landed in
-`e3bbc41b`, so all three writers of `report.provider_id` inherit it.
+Scoped to `/` alone, as promised: everything else round-trips once encoded, and
+the specs pin the acceptances too so the bound cannot later drift into a charset
+allowlist — which would re-impose a format for taste, the thing loosening this
+field set out to undo.
 
 Nothing else from that review is outstanding. Three findings were pushed back on
-with reasons — `CreateDraftReportDto` keeping `@ApiUUID` (one minter, no
-consumer for a loosening), and the two above that are deferred to phase 2 rather
-than fixed and reverted a week later.
+with reasons: `CreateDraftReportDto` keeping `@ApiUUID` (one minter, no consumer
+for a loosening), and two deferred to phase 2 rather than fixed and reverted a
+week later — the `@ApiHTML` base64 transform on the partner equality field, and
+a spec pinning that DTO's key set.
 
 ## Deploy consequence
 
