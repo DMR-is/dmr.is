@@ -121,8 +121,13 @@ Both return `429` when exceeded.
 Both submissions require a `providerId`: **your own** identifier for the
 submission. Rules that matter:
 
-- It **must be a UUID.** The field is UUID-validated; an id like
-  `2026-Q1-042` is rejected with `400`.
+- **It is yours to shape.** Any non-empty string up to 256 characters — a
+  UUID, `2026-Q1-042`, whatever your system already mints. The format carries
+  no meaning to us; we only ever compare it for equality, so you do not need a
+  mapping table to file through this API. **One exception: it may not contain
+  `/`.** It is a single path segment when you read the report back, so
+  `2026/Q1/042` would file a report you could never fetch. Surrounding
+  whitespace is trimmed, so `042` and `042` are the same id rather than two.
 - It is **required**, not optional, and it is the only handle you get for
   reading a report back — `GET /partner/reports/:providerId`. The `reportId`
   returned on submit is a DoE-internal id and is not a lookup key on this
@@ -130,7 +135,7 @@ submission. Rules that matter:
 - It is **your idempotency key.** Re-sending the same `providerId` for the same
   company returns the original `reportId` instead of filing a second report, so
   a network-level retry is safe. Persist it with the submission and reuse it for
-  every retry of _that_ submission — do not mint a fresh UUID per HTTP attempt.
+  every retry of _that_ submission — do not mint a fresh id per HTTP attempt.
 - **One `providerId` per submission, and a correction is a new submission.**
   This is the distinction that costs data if you get it wrong, so it has its own
   section below.
@@ -206,41 +211,35 @@ Nor the company's register lifecycle status. It is the Directorate's own
 bookkeeping — see **A company off the register** below for what happens when it
 lapses.
 
-### A2. `GET /partner/reports/equality/active` — is one already in force?
+### A2. _(removed)_ `GET /partner/reports/equality/active`
 
-_Scope: `report:read`_
+**This route no longer exists.** It returned the company's in-force equality
+report, and nothing could be done with the answer: the salary submission
+resolves the company's approved equality report server-side and has carried no
+`equalityReportId` since the contract narrowed. Its only remaining use was
+correlating a `providerId` back to your own records, which did not justify a
+route.
 
-Returns the company's currently approved, still-valid equality report:
-`{ id, identifier, providerId, approvedAt, validUntil }`. `404` means there is
-none.
-
-`providerId` is **your own** id for the submission that became this report, with
-the server-side namespace stripped — so it correlates the report back to your
-records. It is `null` when the report did not arrive through this API (the
-employer filed it on island.is, or an admin created it), in which case none of
-your submissions produced it and no route here can read it.
-
-Call it before filing: if it returns a report whose `validUntil` is comfortably
-in the future, the employer has no equality obligation right now, and what you
-actually want is the salary flow (section B). File a new equality report when
-there is none, when it is about to expire, or when the plan itself changed.
+To find out whether a company owes an equality report, read `reportStatus`,
+`nextEqualityReportDueAt` and `equalityReportOverdue` from **A1** — all derived
+server-side, so they do not depend on your clock.
 
 ### A3. `POST /partner/reports/equality` — file it
 
 _Scope: `equality:submit` → `201 { reportId, replayed: false }`, or
 `200 { reportId, replayed: true }` on a replay — as on the salary submission._
 
-Body (`SubmitEqualityReportDto`):
+Body (`SubmitPartnerEqualityReportDto`):
 
-| Field                                                                                        | Notes                                                                                                                                                                                                                  |
-| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `providerId`                                                                                 | your UUID for this submission — see above                                                                                                                                                                              |
-| `equalityReportContent`                                                                      | the plan itself, as **plain HTML**. Persisted as-is and rendered into the approved PDF. (A base64 body is still decoded, for the island.is client's benefit, but it is no longer part of this contract — send markup.) |
-| `companyAdminName` / `companyAdminTitle?` / `companyAdminEmail` / `companyAdminGender`       | the company executive who stands behind the plan. `companyAdminGender` is a `GenderEnum` value                                                                                                                         |
-| `contactName` / `contactTitle?` / `contactEmail` / `contactPhone`                            | the day-to-day contact (tengiliður) Jafnréttisstofa writes to                                                                                                                                                          |
-| `averageEmployeeMaleCount?` / `averageEmployeeFemaleCount?` / `averageEmployeeNeutralCount?` | optional and nullable on an equality report (required on a salary one)                                                                                                                                                 |
-| `company`                                                                                    | the reporting company: `name`, `nationalId`, `address`, `city`, `postcode`, `isatCategory` — a snapshot frozen onto the report, not a lookup                                                                           |
-| `subsidiaries?`                                                                              | `[{ name, nationalId }]` when the plan covers a group                                                                                                                                                                  |
+| Field                                                                                        | Notes                                                                                                                                                                                                                                                                                                       |
+| -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `providerId`                                                                                 | your own id for this submission, any non-empty string up to 256 chars, no `/` — see above                                                                                                                                                                                                                   |
+| `equalityReportContent`                                                                      | **required.** The plan itself, as **plain HTML**. Persisted as-is and rendered into the approved PDF. This channel accepts no other form — the base64 PDF fields on the island.is contract are not part of this one. (A base64 body is still decoded, for the island.is client's benefit, but send markup.) |
+| `companyAdminName` / `companyAdminTitle?` / `companyAdminEmail` / `companyAdminGender`       | the company executive who stands behind the plan. `companyAdminGender` is a `GenderEnum` value                                                                                                                                                                                                              |
+| `contactName` / `contactTitle?` / `contactEmail` / `contactPhone`                            | the day-to-day contact (tengiliður) Jafnréttisstofa writes to                                                                                                                                                                                                                                               |
+| `averageEmployeeMaleCount?` / `averageEmployeeFemaleCount?` / `averageEmployeeNeutralCount?` | optional and nullable on an equality report (required on a salary one)                                                                                                                                                                                                                                      |
+| `company`                                                                                    | the reporting company: `name`, `address`, `city`, `postcode`, `isatCategory` — a snapshot frozen onto the report, not a lookup. **No `nationalId`**: it had to equal the company your key belongs to, so the only accepted value was the one we already had. The snapshot takes it from your key            |
+| `subsidiaries?`                                                                              | `[{ name, nationalId }]` when the plan covers a group                                                                                                                                                                                                                                                       |
 
 The report is created with status `SUBMITTED` and lands in the reviewer queue.
 
@@ -273,8 +272,10 @@ What to watch:
   for changes actually arrives — surface it to the employer.
 - `denialReason`: populated on `DENIED`.
 
-Only when this report is `APPROVED` can the salary flow reference it. Its `id`
-(not its `providerId`) is what the salary submission needs.
+Only when this report is `APPROVED` can a salary report be filed against it.
+**You do not pass its id** — the salary submission resolves the company's
+approved equality report itself, so there is nothing here to carry forward.
+Watch for `APPROVED`, then move to section B.
 
 ---
 
@@ -285,7 +286,7 @@ before you have built a large payload.
 
 **There is no spreadsheet anywhere in this flow, by design.** Replacing the
 workbook is the reason this API exists: you build the payload from payroll data
-and validate it against B5 until it comes back clean. Nothing here reads,
+and validate it against B4 until it comes back clean. Nothing here reads,
 writes, or accepts an `.xlsx` file.
 
 ### What you send, and what you do not
@@ -309,21 +310,7 @@ need its id — `GET /partner/scoring-models` lists them.
 
 _Scope: `report:read`_ — as A1.
 
-### B2. `GET /partner/reports/equality/active` — is one in force?
-
-_Scope: `report:read`_
-
-A salary report is always audited against the company's approved equality
-report, but **you do not pass its id** — the submission resolves it itself, from
-the same lookup this route answers from. So this call is a precondition check,
-not a value to carry: a `404` here means the salary flow cannot start, and
-section A has to happen first and be approved. The submission answers the same
-`404` for the same reason if you skip ahead.
-
-The `id` in the response is the Directorate's own key. It is not a handle you
-can look anything up by on this API — use `providerId` for that (see B8).
-
-### B3. `GET /partner/reports/salary/eligibility` — may they file now?
+### B2. `GET /partner/reports/salary/eligibility` — may they file now?
 
 _Scope: `report:read`_
 
@@ -339,7 +326,7 @@ Returns `{ eligible, reason, dueAt, earliestSubmissionDate }`.
 Cheaper than discovering the renewal window from a rejected submission after
 building the payload.
 
-### B4. Build the payroll extract
+### B3. Build the payroll extract
 
 Not a call — the work, and it is smaller than it used to be. One row per
 employee:
@@ -370,7 +357,7 @@ unusable hours fails the payload gate rather than scoring oddly.
 They live in the scoring model you named, and the server expands them. If a þrep
 description or a weight is wrong, fix the _model_ (section C) — not the filing.
 
-### B5. `POST /partner/reports/salary-analysis` — find the outliers first
+### B4. `POST /partner/reports/salary-analysis` — find the outliers first
 
 _Scope: `salary:submit`_
 
@@ -402,11 +389,11 @@ Nothing is stored. Returns:
 Run this before you ask the employer anything. It is how you find out which
 employees need an explanation _before_ filing rather than after.
 
-### B6. Build the outlier groups
+### B5. Build the outlier groups
 
-Not a call — the modelling step between B5 and B7.
+Not a call — the modelling step between B4 and B6.
 
-Partition the `employeeOrdinal`s from B5 into one or more groups. Each group is
+Partition the `employeeOrdinal`s from B4 into one or more groups. Each group is
 one shared explanation (úrbótaáætlun) over the employees in it:
 
 | Field              | Notes                                                                                                                                                                    |
@@ -430,7 +417,7 @@ The submission validates the partition strictly. The union of every group's
 
 Because the set is recomputed at submit time, **any edit to the payroll extract
 or the scoring model between
-B5 and B7 can reshuffle who is in it.** If the payload changes, re-run B5 and
+B4 and B6 can reshuffle who is in it.** If the payload changes, re-run B4 and
 re-partition; do not carry groups over.
 
 **The deferral option.** Instead of groups, send `outliersPostponed: true` and
@@ -446,7 +433,7 @@ only on the island.is surface; the partner API exposes no such route. A
 submission until it is resolved. Unless the employer specifically wants to
 defer and finish on island.is themselves, send real groups.
 
-### B7. `POST /partner/reports/salary` — file it
+### B6. `POST /partner/reports/salary` — file it
 
 _Scope: `salary:submit` → `201 { reportId, replayed: false }`, or
 `200 { reportId, replayed: true }` when the `providerId` was already used and
@@ -462,20 +449,20 @@ the strict validation above:
 - **`equalityReportId`** — resolved server-side to the company's approved,
   in-force equality report (`404` when there is none). There was only ever one
   value the submission would accept, and it is the one the server already
-  computes for B2 and B3.
+  computes for B2.
 - **`importedFromExcel`** — there is no workbook on this API for a payload to
   have come from.
 
-| Field                                                             | Notes                                                                                                                                                                                    |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `providerId`                                                      | your UUID — see the section above                                                                                                                                                        |
-| `salaryDataBasis`                                                 | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one                                                                                |
-| `salaryDataPeriod`                                                | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that has already happened and no earlier than 36 months ago. Ignored for `AVERAGE` |
-| `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required                                                                                                                                                                                 |
-| `scoringModelId`                                                  | the model B5 validated against. Must be `VALID`                                                                                                                                          |
-| `employees`                                                       | the payroll extract from B4, unchanged since B5                                                                                                                                          |
-| `outlierGroups?`                                                  | the partition from B6                                                                                                                                                                    |
-| `outliersPostponed?`                                              | defaults to `false`. `true` defers every explanation                                                                                                                                     |
+| Field                                                             | Notes                                                                                                                                                                                                                                                                             |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `providerId`                                                      | your own id for this submission, any non-empty string up to 256 chars, no `/` — see the section above                                                                                                                                                                             |
+| `salaryDataBasis`                                                 | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one                                                                                                                                                                         |
+| `salaryDataPeriod`                                                | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that has already happened and no earlier than 36 months ago. **Refused when the basis is `AVERAGE`** — an average covers twelve months, so there is no single month to name |
+| `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required                                                                                                                                                                                                                                                                          |
+| `scoringModelId`                                                  | the model B4 validated against. Must be `VALID`                                                                                                                                                                                                                                   |
+| `employees`                                                       | the payroll extract from B3, unchanged since B4                                                                                                                                                                                                                                   |
+| `outlierGroups?`                                                  | the partition from B5                                                                                                                                                                                                                                                             |
+| `outliersPostponed?`                                              | defaults to `false`. `true` defers every explanation                                                                                                                                                                                                                              |
 
 Resulting status: `SUBMITTED` when explanations were supplied (it lands in the
 reviewer queue), `POSTPONED` when deferred (a reviewer cannot pick it up).
@@ -490,7 +477,7 @@ withdrawn and replaced; a prior `IN_REVIEW` **or `POSTPONED`** one gives `409`.
 `503` means the write collided and should be retried with the same
 `providerId` — it does not mean the payload was wrong.
 
-### B8. `GET /partner/reports/:providerId` — track the review
+### B7. `GET /partner/reports/:providerId` — track the review
 
 _Scope: `report:read`_
 
@@ -499,7 +486,7 @@ As A4, plus the salary-only fields: `salaryDataBasis`, `salaryDataPeriod`,
 least one outlier), and `result` — the frozen `ReportResultDto` snapshot the
 decision rests on.
 
-### B9. `GET /partner/reports/:providerId/outliers` — the filed outlier list
+### B8. `GET /partner/reports/:providerId/outliers` — the filed outlier list
 
 _Scope: `report:read`_
 
@@ -509,7 +496,7 @@ rows.
 
 Use it to show the employer what was actually filed and how each row was
 explained. If all you need is "are there any", read `includesImprovementPlan`
-from B8 instead of paginating.
+from B7 instead of paginating.
 
 ---
 
@@ -550,7 +537,7 @@ edit whatever you copy.
 - Each sub-criterion has between 2 and 8 þrep, numbered 1..n with no gaps. You
   do not send the numbers: position in the array is the þrep.
 - Every job carries exactly one þrep per **job-based** sub-criterion. Personal
-  sub-criteria are scored per employee (B4), never per job.
+  sub-criteria are scored per employee (B3), never per job.
 - Two sub-criteria may not share both their title and their parent's.
 
 ### Writes always succeed; the filing is what refuses
@@ -564,7 +551,12 @@ response, reads included, carries:
 {
   "validation": {
     "status": "INVALID",
-    "reasons": [{ "scope": "SUB_CRITERIA", "message": "Vægi undirviðmiða leggst saman í 110%, á að vera 100%" }]
+    "reasons": [
+      {
+        "scope": "SUB_CRITERIA",
+        "message": "Vægi undirviðmiða leggst saman í 110%, á að vera 100%"
+      }
+    ]
   }
 }
 ```
@@ -602,13 +594,13 @@ never move when the model changes or goes away.
 | #   | Method | Path                                    | Scope             |
 | --- | ------ | --------------------------------------- | ----------------- |
 | 1   | `GET`  | `/partner/company`                      | `report:read`     |
-| 2   | `GET`  | `/partner/reports/equality/active`      | `report:read`     |
-| 3   | `GET`  | `/partner/reports/salary/eligibility`   | `report:read`     |
-| 4   | `POST` | `/partner/reports/salary-analysis`      | `salary:submit`   |
-| 5   | `POST` | `/partner/reports/salary`               | `salary:submit`   |
-| 6   | `POST` | `/partner/reports/equality`             | `equality:submit` |
-| 7   | `GET`  | `/partner/reports/:providerId`          | `report:read`     |
-| 8   | `GET`  | `/partner/reports/:providerId/outliers` | `report:read`     |
+| 2   | `GET`  | `/partner/reports/salary/eligibility`   | `report:read`     |
+| 3   | `POST` | `/partner/reports/salary-analysis`      | `salary:submit`   |
+| 4   | `POST` | `/partner/reports/salary`               | `salary:submit`   |
+| 5   | `POST` | `/partner/reports/equality`             | `equality:submit` |
+| 6   | `GET`  | `/partner/reports/:providerId`          | `report:read`     |
+| 7   | `GET`  | `/partner/reports/:providerId/outliers` | `report:read`     |
+| 8   | `GET`  | `/partner/sub-criteria/catalog`         | `report:read`     |
 
 Scoring model (section C):
 
@@ -637,7 +629,7 @@ Scoring model (section C):
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId` |
 | `201` | on a submission: filed                                                                                                                                     |
-| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, non-UUID `providerId`                                                      |
+| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`                                            |
 | `401` | missing or invalid key                                                                                                                                     |
 | `403` | key lacks the scope the route declares                                                                                                                     |
 | `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                         |

@@ -7,8 +7,8 @@ import {
   ApiOptionalDtoArray,
   ApiOptionalString,
   ApiOptionalUUID,
+  ApiProviderId,
   ApiString,
-  ApiUUID,
 } from '@dmr.is/decorators'
 
 import {
@@ -56,10 +56,10 @@ export class SubmitSalaryReportDto {
   @ApiBoolean()
   importedFromExcel!: boolean
 
-  @ApiUUID({
-    description:
-      'Upstream island.is application UUID, stored as the report provider_id.',
-  })
+  // Shared, because the rule and its rationale belong in one place and the
+  // rationale is subtler than it looks — see `ApiProviderId`, which also
+  // trims, since this value is an idempotency key.
+  @ApiProviderId()
   providerId!: string
 
   @ApiString()
@@ -111,7 +111,7 @@ export class SubmitSalaryReportDto {
   @ApiOptionalString({
     nullable: true,
     description:
-      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`, ignored for `AVERAGE`. Must name a month that has already happened, no earlier than 36 months ago.',
+      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that has already happened, no earlier than 36 months ago. When the basis is `AVERAGE` there is no single month to name: island.is clears any value sent, and the partner API refuses it with a 400 — so do not send one.',
   })
   salaryDataPeriod?: string | null
 

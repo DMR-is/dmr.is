@@ -9,8 +9,8 @@ import {
   ApiOptionalHTML,
   ApiOptionalNumber,
   ApiOptionalString,
+  ApiProviderId,
   ApiString,
-  ApiUUID,
 } from '@dmr.is/decorators'
 
 import { GenderEnum } from '../../report/models/report.enums'
@@ -28,10 +28,10 @@ import {
  * for the island.is client change that pairs with its removal.
  */
 export class SubmitEqualityReportDto {
-  @ApiUUID({
-    description:
-      'Upstream island.is application UUID, stored as the report provider_id.',
-  })
+  // Shared, because the rule and its rationale belong in one place and the
+  // rationale is subtler than it looks — see `ApiProviderId`, which also
+  // trims, since this value is an idempotency key.
+  @ApiProviderId()
   providerId!: string
 
   @ApiString()

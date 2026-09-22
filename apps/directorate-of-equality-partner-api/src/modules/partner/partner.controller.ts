@@ -19,7 +19,7 @@ import {
   ApplicationReportDetailDto,
   IApplicationService,
   SalaryReportEligibilityDto,
-  SubmitEqualityReportDto,
+  SubmitPartnerEqualityReportDto,
   SubmitPartnerSalaryReportDto,
 } from '@dmr.is/doe-modules/application'
 import { GetSubCriterionCatalogResponseDto } from '@dmr.is/doe-modules/application'
@@ -28,7 +28,6 @@ import {
   PartnerCompanyDto,
   toPartnerCompanyDto,
 } from '@dmr.is/doe-modules/company'
-import { EqualityReportSummaryDto } from '@dmr.is/doe-modules/report'
 import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
 import { GetReportOutliersResponseDto } from '@dmr.is/doe-modules/report-employee'
 import { SalaryAnalysisResponseDto } from '@dmr.is/doe-modules/report-statistics'
@@ -112,21 +111,6 @@ export class PartnerController {
     return toPartnerCompanyDto(company)
   }
 
-  @Get('reports/equality/active')
-  @RequireApiScope(ApiKeyScopeEnum.REPORT_READ)
-  @PartnerResponse({
-    operationId: 'getPartnerActiveEqualityReport',
-    type: EqualityReportSummaryDto,
-    include404: true,
-    description:
-      'Whatever currently meets the company’s equality obligation, and `source` says which of the two it is. `REPORT` is an approved equality report filed through this system. `LEGACY` is an unexpired certificate from the Directorate’s retired register, which has no report row behind it — `id`, `identifier`, `providerId` and `approvedAt` are all null there and only `validUntil` is populated. Either satisfies the precondition for filing a salary report, which is resolved server-side on submission, so nothing here has to be passed back. First call in the salary flow: a 404 means neither kind of coverage is in force and no salary report can be filed.',
-  })
-  getActiveEqualityReport(
-    @CurrentCompany() company: CompanyDto,
-  ): Promise<EqualityReportSummaryDto> {
-    return this.applicationService.getActiveEqualityReport(company)
-  }
-
   @Get('reports/salary/eligibility')
   @RequireApiScope(ApiKeyScopeEnum.REPORT_READ)
   @PartnerResponse({
@@ -141,13 +125,19 @@ export class PartnerController {
     return this.applicationService.getSalaryReportEligibility(company)
   }
 
+  // Reference data for *authoring* a scoring model, not for building a
+  // submission — the criteria tree stopped crossing the wire in #1508. It sits
+  // on this controller rather than beside the scoring-model routes only because
+  // `ScoringModelApiModule` deliberately does not boot `ApplicationCoreModule`,
+  // and the catalog is still served from `ApplicationService`. Moving the route
+  // means moving the catalog data into the scoring-model module first.
   @Get('sub-criteria/catalog')
   @RequireApiScope(ApiKeyScopeEnum.REPORT_READ)
   @PartnerResponse({
     operationId: 'getPartnerSubCriterionCatalog',
     type: GetSubCriterionCatalogResponseDto,
     description:
-      'Jafnréttisstofa’s catalog of sub-criteria and the generic step scale. Reference data for building the criteria tree a submission carries — the authoritative list of what may be scored and on what steps, so a vendor maps its own job data onto it rather than guessing.',
+      'Jafnréttisstofa’s catalog of standard sub-criteria and the generic step scale. Reference data for **authoring a scoring model** — the list an employer may pick from, and on what steps. Entries are not a closed set: a model may take one and reword it, or register a sub-criterion as free text. Personal entries ship with step 1 only and no step count; the employer authors those scales, deliberately. A submission carries no criteria tree, so nothing here is sent back on a filing — it is consumed when building the model a filing names.',
   })
   getSubCriterionCatalog(): GetSubCriterionCatalogResponseDto {
     return this.applicationService.getSubCriterionCatalog()
@@ -193,7 +183,7 @@ export class PartnerController {
         'Replayed. The `providerId` had already been used, so nothing was filed and `reportId` names the report that submission created earlier — the body just sent was not read. A corrected re-file needs a NEW `providerId`; see `replayed`.',
     },
     description:
-      'Files a salary report. What it is audited against is resolved server-side — the company’s approved, in-force equality report, or the unexpired legacy certificate covering it, whichever `GET /reports/equality/active` returns — so it is not part of this body, and the filed report records which of the two it was; a **404** means either there is none, or the `scoringModelId` names a model this key’s company does not own. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, the renewal window is not open, or a previous report is still in review — the response says which.',
+      'Files a salary report. What it is audited against is resolved server-side — the company’s approved, in-force equality report, or the unexpired legacy certificate covering it — so it is not part of this body, and the filed report records which of the two it was; a **404** means either there is none, or the `scoringModelId` names a model this key’s company does not own. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, the renewal window is not open, or a previous report is still in review — the response says which.',
   })
   async submitSalaryReport(
     @Body() input: SubmitPartnerSalaryReportDto,
@@ -220,7 +210,7 @@ export class PartnerController {
       'Files an equality report — the narrative document that must be approved before any salary report can reference it. Same `providerId` and idempotency rules as the salary submission. A **409** means the company’s own state prevents filing: it is not active in the register, or a previous equality report is still in review.',
   })
   async submitEqualityReport(
-    @Body() input: SubmitEqualityReportDto,
+    @Body() input: SubmitPartnerEqualityReportDto,
     @CurrentCompany() company: CompanyDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {

@@ -101,10 +101,14 @@ jobs:
           # as the terragrunt service definition -- not before. Two things that
           # PR needs: the partner API must sit on the PUBLIC alb, not the
           # internal one directorate-of-equality-api uses, because payroll
-          # vendors call it from the internet; and of its twelve required
-          # variables only DOE_API_KEY_HMAC_SECRET is new -- the other eleven are
-          # already SSM parameters for directorate-of-equality-api and should be
-          # referenced, not duplicated, so the shared pepper cannot drift.
+          # vendors call it from the internet; and of its thirteen required
+          # variables two are new -- DOE_API_KEY_HMAC_SECRET and API_ENV -- while
+          # the other eleven are already SSM parameters for
+          # directorate-of-equality-api and should be referenced, not duplicated,
+          # so the shared pepper cannot drift. API_ENV is @required=forEnv(deployed)
+          # and the Dockerfile CMD wraps main.js in `varlock run`, so a miss is a
+          # hard boot failure surfacing as an `aws ecs wait services-stable`
+          # timeout -- which is what this note exists to prevent.
           ALL_CONTAINERS='[
             {"name":"official-journal-api",              "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"official-journal-admin-api",        "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},

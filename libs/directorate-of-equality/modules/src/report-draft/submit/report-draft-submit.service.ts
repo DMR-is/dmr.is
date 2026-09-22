@@ -382,19 +382,17 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
 
   /**
    * Builds the company_report snapshot input from the submit payload: the
-   * parent (must match the authenticated company) plus resolved subsidiaries.
-   * Mirrors the application-portal submit mapping.
+   * parent's details, its kennitala taken from the authenticated company, plus
+   * resolved subsidiaries. Mirrors the application-portal submit mapping.
    */
   private async buildCompanySnapshots(
     input: SubmitDraftDto,
     company: CompanyDto,
   ): Promise<CreateReportCompanySnapshotDto[]> {
-    const parentNationalId = input.company.nationalId.trim()
-    if (parentNationalId !== company.nationalId) {
-      throw new BadRequestException(
-        'Submitted parent company does not match the authenticated company',
-      )
-    }
+    // From the authenticated company, not the payload. `SubmitReportCompanyDto`
+    // used to carry it and this method refused any value that did not match —
+    // so the only accepted value was the one already in hand. See the DTO.
+    const parentNationalId = company.nationalId
 
     const subsidiaries = (input.subsidiaries ?? []).map((subsidiary) => ({
       name: subsidiary.name,
