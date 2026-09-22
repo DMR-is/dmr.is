@@ -130,6 +130,8 @@ apps/official-journal-api-export/sql/*
 backup-json/all-extra.json
 
 # AI setup
+# Next 16 generates both of these per app on dev/build (next.config `agentRules`).
 AGENTS.md
+CLAUDE.md
 
 apps/directorate-of-equality-api/src/modules/report-excel/template.numbers

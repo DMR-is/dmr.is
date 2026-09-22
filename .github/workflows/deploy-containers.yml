@@ -109,6 +109,12 @@ jobs:
           # and the Dockerfile CMD wraps main.js in `varlock run`, so a miss is a
           # hard boot failure surfacing as an `aws ecs wait services-stable`
           # timeout -- which is what this note exists to prevent.
+          #
+          # directorate-of-equality-partner-web is deliberately NOT in this list
+          # either, for the same reason: its ECS service does not exist in the
+          # DMR-Jafnrettisstofa terragrunt tree yet. Re-add it here (and in
+          # on-release.yml) in the same PR as that terragrunt service definition,
+          # once DOE_PARTNER_WEB_CLIENT_ID/_SECRET are real.
           ALL_CONTAINERS='[
             {"name":"official-journal-api",              "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"official-journal-admin-api",        "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},

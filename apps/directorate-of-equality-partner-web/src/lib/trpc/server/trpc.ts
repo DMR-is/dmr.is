@@ -13,17 +13,19 @@ import { initTRPC, TRPCError } from '@trpc/server'
 
 export const createTRPCContext = cache(async () => {
   const session = await getServerSession(authOptions)
-  if (session?.invalid || !session?.idToken) {
+  if (session?.invalid || !session?.accessToken) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'No session found',
     })
   }
 
-  const client = await getServerClient(session.idToken)
+  const client = await getServerClient(session.accessToken)
 
   return {
     api: bindSdk(client, doeApiSdk),
+    companyNationalId: session.user.companyNationalId,
+    actor: session.user.actor,
   }
 })
 
@@ -41,10 +43,6 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
         ...shape.data,
         apiErrorName: cause?.name,
         validationErrors: cause?.details,
-        // `shape.message` is the API's English developer message. Error-message
-        // files ship a curated Icelandic string alongside it, which the HTTP
-        // filter puts on `translatedMessage`; forward it so UI callers can show
-        // it instead of leaking English into an Icelandic screen.
         translatedMessage: cause?.translatedMessage,
       },
     }
@@ -55,25 +53,4 @@ export const createCallerFactory = t.createCallerFactory
 export const router = t.router
 export const mergeRouters = t.mergeRouters
 
-export const publicProcedure = t.procedure.use(({ ctx, next }) => {
-  return next({
-    ctx: {
-      ...ctx,
-    },
-  })
-})
-
-export const protectedProcedure = publicProcedure
-  .use(({ ctx, next }) => {
-    if (!ctx.api) {
-      throw new TRPCError({ code: 'UNAUTHORIZED' })
-    }
-
-    return next({
-      ctx: {
-        ...ctx,
-        api: ctx.api,
-      },
-    })
-  })
-  .use(apiErrorMiddleware)
+export const protectedProcedure = t.procedure.use(apiErrorMiddleware)

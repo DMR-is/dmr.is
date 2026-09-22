@@ -1,7 +1,7 @@
 {
-  "name": "directorate-of-equality-web",
+  "name": "directorate-of-equality-partner-web",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/directorate-of-equality-web",
+  "sourceRoot": "apps/directorate-of-equality-partner-web",
   "projectType": "application",
   "tags": [],
   "targets": {
@@ -10,7 +10,7 @@
       "dependsOn": ["codegen"],
       "options": {
         "commands": ["tsc -p tsconfig.json --noEmit"],
-        "cwd": "apps/directorate-of-equality-web",
+        "cwd": "apps/directorate-of-equality-partner-web",
         "forwardAllArgs": false
       }
     },
@@ -20,11 +20,11 @@
       "dependsOn": ["codegen"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "apps/directorate-of-equality-web/dist"
+        "outputPath": "apps/directorate-of-equality-partner-web/dist"
       },
       "configurations": {
         "development": {
-          "outputPath": "apps/directorate-of-equality-web"
+          "outputPath": "apps/directorate-of-equality-partner-web"
         },
         "production": {}
       }
@@ -32,51 +32,37 @@
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "./scripts/varlock-run.sh directorate-of-equality-web nx run directorate-of-equality-web:serve-raw"
+        "command": "./scripts/varlock-run.sh directorate-of-equality-partner-web nx run directorate-of-equality-partner-web:serve-raw"
       }
     },
     "serve-raw": {
       "executor": "@nx/next:server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "directorate-of-equality-web:build",
+        "buildTarget": "directorate-of-equality-partner-web:build",
         "dev": true,
-        "port": 5200
+        "port": 5201
       },
       "configurations": {
         "development": {
-          "buildTarget": "directorate-of-equality-web:build:development",
+          "buildTarget": "directorate-of-equality-partner-web:build:development",
           "dev": true
         },
         "production": {
-          "buildTarget": "directorate-of-equality-web:build:production",
+          "buildTarget": "directorate-of-equality-partner-web:build:production",
           "dev": false
         }
       }
-    },
-    "format": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "commands": [
-          "nx format:write --projects=directorate-of-equality-web",
-          "nx run directorate-of-equality-web:lint --fix=true --skip-nx-cache"
-        ],
-        "parallel": false
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint"
     },
     "update-openapi-schema": {
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "curl http://localhost:5100/swagger/internal/json > clientConfig.json",
+          "curl http://localhost:5100/swagger/application/json > clientConfig.json",
           "yarn run -T prettier --write clientConfig.json"
         ],
         "parallel": false,
-        "cwd": "apps/directorate-of-equality-web"
+        "cwd": "apps/directorate-of-equality-partner-web"
       }
     },
     "update-client": {
@@ -84,7 +70,7 @@
       "dependsOn": ["update-openapi-schema"],
       "options": {
         "commands": [
-          "node_modules/.bin/openapi-ts -f apps/directorate-of-equality-web/openapi-ts.config.ts"
+          "node_modules/.bin/openapi-ts -f apps/directorate-of-equality-partner-web/openapi-ts.config.ts"
         ]
       },
       "outputs": ["{projectRoot}/src/gen/fetch"]
@@ -94,10 +80,24 @@
       "inputs": ["{projectRoot}/clientConfig.json"],
       "options": {
         "commands": [
-          "node_modules/.bin/openapi-ts -f apps/directorate-of-equality-web/openapi-ts.config.ts"
+          "node_modules/.bin/openapi-ts -f apps/directorate-of-equality-partner-web/openapi-ts.config.ts"
         ]
       },
       "outputs": ["{projectRoot}/src/gen/fetch"]
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "commands": [
+          "nx format:write --projects=directorate-of-equality-partner-web",
+          "nx run directorate-of-equality-partner-web:lint --fix=true --skip-nx-cache"
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",
@@ -107,15 +107,22 @@
         "metadata": {
           "load": true
         },
-        "file": "apps/directorate-of-equality-web/Dockerfile"
+        "file": "apps/directorate-of-equality-partner-web/Dockerfile"
       }
     },
     "flatten-env": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "cwd": "apps/directorate-of-equality-web",
+        "cwd": "apps/directorate-of-equality-partner-web",
         "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env && find dist/env -type f ! -name '.env.schema' -delete"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/directorate-of-equality-partner-web/jest.config.ts"
       }
     }
   }
