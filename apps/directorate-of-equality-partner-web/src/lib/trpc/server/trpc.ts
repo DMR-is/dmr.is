@@ -13,14 +13,14 @@ import { initTRPC, TRPCError } from '@trpc/server'
 
 export const createTRPCContext = cache(async () => {
   const session = await getServerSession(authOptions)
-  if (session?.invalid || !session?.idToken) {
+  if (session?.invalid || !session?.accessToken) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'No session found',
     })
   }
 
-  const client = await getServerClient(session.idToken)
+  const client = await getServerClient(session.accessToken)
 
   return {
     api: bindSdk(client, doeApiSdk),

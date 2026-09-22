@@ -2,24 +2,19 @@ import { createAuthMiddleware } from '@dmr.is/auth/middleware-helpers'
 
 import { identityServerConfig } from './lib/auth/identityServerConfig'
 
-// This app authenticates to directorate-of-equality-api with session.idToken,
-// not the access token, because the access token carries no identity: its
-// claims are scope, client_id, sub, sid, idp, acr and jti -- no nationalId,
-// no name, no actor. All of those live on the ID token, and
-// CompanyResourceGuard resolves the company from user.nationalId.
+// This app authenticates to directorate-of-equality-api with
+// session.accessToken. That works only because the client requests the
+// `@jafnretti.is/doe-partner-web` API resource scope: without it IDS issues an
+// access token carrying no identity at all -- no nationalId, no actor -- and
+// CompanyResourceGuard has nothing to resolve a company from. See
+// identityServerConfig.ts.
 //
-// That is also why sending BOTH tokens (`Bearer <access>, Bearer <id>`, which
-// TokenJwtAuthGuard supports and the two public legal-gazette webs use for
-// their scope-guarded routes) does not work here: the guard builds
-// request.user from the FIRST token and lifts only name and actor off the
-// second, so nationalId would come back undefined and every request would
-// 401.
+// The ID token is still issued and still stored on the session, but only the
+// browser side uses it: `name` and `subjectType` are ID-token-only claims, and
+// logout needs it as `id_token_hint`. It is no longer sent to the API.
 //
-// The helper refreshes on access-token expiry alone, which is sufficient:
-// this client issues both tokens with the same 300s lifetime and the same
-// exp, so the ID token can never expire first. If that ever stops being true
-// -- check a decoded pair rather than assuming -- the helper needs an
-// ID-token branch, and doe-web's hand-rolled middleware shows the shape.
+// Refreshing on access-token expiry alone is therefore correct here, which is
+// what the shared helper does.
 export default createAuthMiddleware({
   clientId: identityServerConfig.clientId,
   clientSecret: identityServerConfig.clientSecret,
