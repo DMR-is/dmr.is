@@ -2,6 +2,15 @@ import { createAuthMiddleware } from '@dmr.is/auth/middleware-helpers'
 
 import { identityServerConfig } from './lib/auth/identityServerConfig'
 
+// createAuthMiddleware only refreshes on access-token expiry (isExpired on
+// token.accessToken) -- it has no id-token branch the way doe-web's
+// hand-rolled middleware does. This app authenticates to
+// directorate-of-equality-api with session.idToken, not the access token, so
+// if the id token expires first every API call 401s while the middleware
+// sees nothing wrong, and session.invalid never gets set to recover it. This
+// only holds as long as DOE_PARTNER_WEB_CLIENT_ID's id_token lifetime is at
+// least as long as its access-token lifetime -- if that IDS client
+// configuration ever changes, this helper needs an id-token check added.
 export default createAuthMiddleware({
   clientId: identityServerConfig.clientId,
   clientSecret: identityServerConfig.clientSecret,

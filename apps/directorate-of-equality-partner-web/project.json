@@ -61,7 +61,7 @@
           "curl http://localhost:5100/swagger/application/json > clientConfig.json",
           "yarn run -T prettier --write clientConfig.json"
         ],
-        "parallel": true,
+        "parallel": false,
         "cwd": "apps/directorate-of-equality-partner-web"
       }
     },

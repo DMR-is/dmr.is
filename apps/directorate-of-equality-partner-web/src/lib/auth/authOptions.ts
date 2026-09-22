@@ -5,6 +5,7 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { decodeJwt } from 'jose'
 
 import { identityServerConfig } from './identityServerConfig'
+import { setLogoutHint } from './logoutHint'
 
 const SESSION_TIMEOUT = 60 * 60 * 8 + 30
 
@@ -71,10 +72,12 @@ export const authOptions: AuthOptions = {
       return session
     },
     // Unlike directorate-of-equality-web, this app has no allowlist: any
-    // company that authenticates through IDS belongs here, so the only gate
-    // is "did IDS actually hand us an id token". There is no getMyUser call,
-    // no access-denied redirect, and nothing to log the caller out of on
-    // refusal.
+    // company that authenticates through IDS belongs here, so there is no
+    // getMyUser call and no authorize() helper. The only gates are "did IDS
+    // hand us an id token" and "does that token carry a company to act for".
+    // A refusal still has to end the upstream IDS session (see
+    // access-denied/route.ts) or a retry silently SSOs the same token back
+    // in and loops.
     signIn: async ({ user, account }) => {
       if (
         account?.provider === identityServerConfig.id &&
@@ -88,7 +91,9 @@ export const authOptions: AuthOptions = {
         const companyNationalId = decodedIdToken.nationalId
 
         if (!companyNationalId) {
-          return false
+          await setLogoutHint(account.id_token)
+
+          return '/api/auth/access-denied'
         }
 
         user.companyNationalId = companyNationalId

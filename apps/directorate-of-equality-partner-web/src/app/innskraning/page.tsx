@@ -2,7 +2,7 @@
 import { useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 
 import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -24,12 +24,35 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 // that is ordinary navigation (an unauthenticated visit to a protected
 // route), not a failure, so it gets no alert. Everything else in the list is
 // a genuine sign-in/OAuth failure and gets a generic retry message.
+//
+// A refused sign-in (no company nationalId on the id token) is a separate,
+// higher-priority signal: `signIn` returns a string (not `false`) so it can
+// end the IDS session first, which means NextAuth attaches no `?error=` and
+// the round trip through IDS does not preserve query params either. The
+// redirect route sets a same-origin, JS-readable `doe-partner.signin_error`
+// cookie instead - see src/app/api/auth/access-denied/route.ts. Read it once
+// and clear it so the message shows exactly once, and let it take priority
+// over the generic query-param message if both were somehow present, since
+// it names the actual cause rather than a generic retry prompt.
+const SIGNIN_ERROR_COOKIE = 'doe-partner.signin_error'
+
 function LoginContent() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') ?? '/'
   const error = searchParams.get('error')
   const hasSignInFailure = !!error && error !== 'SessionRequired'
+  const [hasProcurationError, setHasProcurationError] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const present = document.cookie
+      .split('; ')
+      .some((c) => c.startsWith(`${SIGNIN_ERROR_COOKIE}=`))
+    if (present) {
+      setHasProcurationError(true)
+      document.cookie = `${SIGNIN_ERROR_COOKIE}=; Max-Age=0; Path=/`
+    }
+  }, [])
 
   return (
     <GridContainer>
@@ -51,12 +74,20 @@ function LoginContent() {
                 Skráðu þig inn með rafrænum skilríkjum fyrirtækisins til að
                 sækja um eða endurnýja API-lykil fyrir Jafnréttisstofu.
               </Text>
-              {hasSignInFailure && (
+              {hasProcurationError ? (
                 <AlertMessage
                   type="error"
                   title="Ekki tókst að skrá inn"
-                  message="Innskráning mistókst. Reyndu aftur eða hafðu samband við þjónustuborð Jafnréttisstofu ef villan er viðvarandi."
+                  message="Innskráningin þín er ekki tengd fyrirtæki. Skráðu þig inn með kennitölu fyrirtækisins - til dæmis með umboði (prókúru) - til að fá aðgang að API-lyklum þess."
                 />
+              ) : (
+                hasSignInFailure && (
+                  <AlertMessage
+                    type="error"
+                    title="Ekki tókst að skrá inn"
+                    message="Innskráning mistókst. Reyndu aftur eða hafðu samband við þjónustuborð Jafnréttisstofu ef villan er viðvarandi."
+                  />
+                )
               )}
               <Box marginTop={[2, 2, 3]}>
                 <Button
