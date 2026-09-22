@@ -253,6 +253,33 @@ codebase. Same rules, not rules that agree today.
 Whether the _path_ changes (`/reports/salary-analysis` → `/playground/…`) is
 cosmetic and can follow the guide's section layout.
 
+**Shipped** in `9947a8aa`, and most of it turned out to be already true.
+
+The input shape was right (`PartnerSalaryPayloadFields` is the same
+`{ scoringModelId, employees }` the submission takes), `payDispersion` was
+already on the analysis response rather than a filing route, and
+`analyzeSalaryPayload` already called the same `assertParsedPayloadValid` as
+`createSalary`. What was missing was the throttle, the framing, and — the part
+that matters — a test holding the shared validation in place rather than a
+comment claiming it.
+
+**The throttle's rationale changed while writing it.** The plan said "worth its
+own throttle, since it is now optional and repeatable", which reads as a cost
+defence. It is not: a dry run does strictly less work than the submission it
+rehearses, so anything that can afford to file can afford to rehearse. The real
+reason is that rehearsing draws on the same per-key allowance as _filing_, so an
+afternoon of debugging could leave a company unable to submit — the route
+therefore skips the surface-wide bucket entirely rather than counting against
+both, which would have left that failure exactly where it was.
+
+**The path stays `/reports/salary-analysis`.** The plan called a move to
+`/playground/…` cosmetic and optional; it is also a fourth breaking change to a
+route in three PRs, for a rename. Not worth it.
+
+**Two phase 3 leftovers surfaced in the guide** while reframing B4: the B6 body
+table still listed `outliersPostponed`, and a paragraph still told vendors a
+postponed report could only be finished on island.is. Both fixed here.
+
 ## Security considerations
 
 - **Phase 3 widens what a `salary:submit` credential can do**: it can now
@@ -319,13 +346,15 @@ cosmetic and can follow the guide's section layout.
       so are the two channel-policy options, which are not request fields
 - [ ] Renewal window: a submission outside the window → `409` on the partner API
       in a deployed env, and `GET …/eligibility` agrees with it
-- [ ] Dry run and submit agree: a payload the dry run calls valid is accepted by
+- [x] Dry run and submit agree: a payload the dry run calls valid is accepted by
       the submission, and one it refuses is refused there too — the assertion
-      that catches the two paths drifting
+      that catches the two paths drifting. Mutation-checked against pointing the
+      preview at `assertParsedPayloadIntegrity`, which it catches
 - [ ] Replay semantics unchanged: same `providerId` → `200` with
       `replayed: true`, nothing filed
-- [ ] Playground stores nothing and is reachable without submit scopes (per the
-      scope decision)
+- [x] Playground stores nothing, and is reachable **with** the `salary:submit`
+      scope it already carried — the scope decision was that it gets no new one
+      and no public access, not that it drops the requirement
 - [ ] **`clientConfig.json` needs regenerating — phase 3 changed an
       admin-visible shape.** `CreateReportResponseDto` gained `status` and
       `unexplainedOutlierOrdinals`, and the committed snapshot in
@@ -358,7 +387,8 @@ cosmetic and can follow the guide's section layout.
 | 3     | Detection at submit → `POSTPONED`              | —     | **Done**, `7db31858`                     |
 | 3     | `PUT …/outliers`                               | —     | **Done**, `7db31858`                     |
 | 3     | `POSTPONED` sibling withdrawn, not `409`       | —     | **Done**, `7db31858` — reversed decision |
-| 4     | Dry run: scope, input shape, shared validation | —     | Pending                                  |
+| 4     | Dry run: scope, input shape, shared validation | —     | **Done**, `9947a8aa`                     |
+| 4     | Dry run gets its own throttle bucket           | —     | **Done**, `9947a8aa`                     |
 
 ## Phase 1 outcome
 
