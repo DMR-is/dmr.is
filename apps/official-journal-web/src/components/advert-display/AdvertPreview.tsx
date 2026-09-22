@@ -1,4 +1,5 @@
 import cn from 'classnames'
+import { useId } from 'react'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -17,11 +18,16 @@ type Props = {
   disclosure: React.ComponentProps<typeof ModalBase>['disclosure']
 }
 export const AdvertPreview = ({ disclosure }: Props) => {
+  // Both this and its sibling dialog previously hardcoded baseId="myDialog",
+  // and CaseFields renders them on the same screen: ModalBase feeds baseId to
+  // both the element id and aria-controls, so that was a duplicate DOM id and
+  // an ambiguous reference. useId is unique per instance and stable across SSR.
+  const baseId = useId()
   const { currentCase } = useCaseContext()
   const { html: signatureHtml } = currentCase.signature
 
   return (
-    <ModalBase baseId="myDialog" disclosure={disclosure}>
+    <ModalBase baseId={baseId} disclosure={disclosure}>
       {({ closeModal }) => (
         <GridContainer>
           <GridRow>

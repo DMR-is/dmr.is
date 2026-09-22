@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useId } from 'react'
 
 import { Drawer as DrawerBase } from '../../island-is/'
 
@@ -12,15 +12,20 @@ type Props = {
 }
 
 export const Drawer = ({
-  baseId = '',
+  baseId,
   isVisible = false,
   disclosure,
   children,
 }: Props) => {
+  // See Modal: a default of '' is falsy, so reakit falls through to its random
+  // generator. useId is stable across server and client.
+  const fallbackBaseId = useId()
+  const resolvedBaseId = baseId || fallbackBaseId
+
   return (
     <DrawerBase
       ariaLabel={''}
-      baseId={baseId}
+      baseId={resolvedBaseId}
       initialVisibility={isVisible}
       disclosure={disclosure}
     >
