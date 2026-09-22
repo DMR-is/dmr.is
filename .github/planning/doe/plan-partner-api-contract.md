@@ -365,25 +365,28 @@ branch's own reflog.
 
 ## Context that lives outside this repo
 
-Two things a fresh session depends on are not in `dmr.is` and not committed
-anywhere:
+The guidance a fresh session needs is not in `dmr.is` — `.claude` is gitignored
+here (`.gitignore:5`) and the tree is symlinked out of the `hxm-claude` repo.
+Both halves of that are now committed there rather than living on one machine:
 
-- **The DoE app guide** (`.claude/apps/directorate-of-equality/CLAUDE.md`) and
-  the parent doc-list entry that links to it live uncommitted in the
-  `hxm-claude` working copy, on `main` — one modified file and one untracked
-  directory. They are what hands a session the ports, `dev-init`, the
-  one-pipeline principle, the guard chains and the Icelandic vocabulary without
-  it having to ask.
-- **The symlink that makes `.claude/CLAUDE.md` resolve at all** is local only,
-  since `.claude` is gitignored here (`.gitignore:5`).
+- **The DoE app guide** — `dmr-is/.claude/apps/directorate-of-equality/CLAUDE.md`
+  in `hxm-claude` (`1e9abf6`), with the `rules/app-*.md` stub that loads it. It
+  hands a session the ports, `dev-init`'s load-bearing seed, the one-pipeline
+  principle, the ordered guard chains, the starfsmat rules that read as bugs,
+  and the Icelandic vocabulary, without it having to ask.
+- **The symlinks that make any of it resolve** — `setup-claude-symlinks.sh`
+  (`f163ce9`). It previously assumed `hxm-claude` and `dmr.is` were siblings and
+  exited 1 anywhere else, which is why the links had been made by hand. It now
+  takes the path, computes relative targets, and covers `agents/` and the
+  per-app Copilot instructions it used to miss.
 
-So another machine — or this one after a fresh clone — starts with none of it.
-This plan file and the PR bodies are the whole of the handover that travels.
+So a fresh clone is one script away from the full context. What still does not
+travel is this repo's own history: the PR bodies and the commit messages on the
+stack carry reasoning this plan does not repeat.
 
-The vault holds the reasoning rather than the state: _Directorate of Equality
-Partner API_ and _Directorate of Equality Partner API Authentication_, mirrored
-to Notion for colleagues. Useful for judgement calls, not for picking up the
-code.
+The vault holds the why rather than the state: _Directorate of Equality Partner
+API_ and _Directorate of Equality Partner API Authentication_, mirrored to Notion
+for colleagues. Useful for judgement calls, not for picking up the code.
 
 ## Related
 
