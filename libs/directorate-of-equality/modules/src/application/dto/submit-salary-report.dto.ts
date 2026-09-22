@@ -7,6 +7,7 @@ import {
   ApiOptionalDtoArray,
   ApiOptionalString,
   ApiOptionalUUID,
+  ApiProviderId,
   ApiString,
 } from '@dmr.is/decorators'
 
@@ -55,20 +56,10 @@ export class SubmitSalaryReportDto {
   @ApiBoolean()
   importedFromExcel!: boolean
 
-  // Deliberately not a UUID. The field is the caller's own submission id,
-  // and demanding that shape of it forced any vendor whose ids are not
-  // UUIDs — `2026-Q1-042` is the example this API's own guide published,
-  // and it was rejected — to keep a mapping table for a value we only ever
-  // compare for equality. The bound replaces the format: the
-  // `(provider_type, provider_id)` uniqueness and the partner channel's
-  // kennitala namespacing are what carry the safety, never the shape.
-  // island.is keeps sending its application UUID, which still validates.
-  @ApiString({
-    minLength: 1,
-    maxLength: 256,
-    description:
-      'The caller’s own identifier for this submission, stored as the report provider_id. Any non-empty string: island.is sends the upstream application UUID, while a partner vendor sends whatever its own system mints — the format carries no meaning here. Uniqueness is enforced on `(provider_type, provider_id)`, and the partner channel namespaces the value with the authenticated company’s kennitala, so the safety comes from the key rather than the shape.',
-  })
+  // Shared, because the rule and its rationale belong in one place and the
+  // rationale is subtler than it looks — see `ApiProviderId`, which also
+  // trims, since this value is an idempotency key.
+  @ApiProviderId()
   providerId!: string
 
   @ApiString()
@@ -120,7 +111,7 @@ export class SubmitSalaryReportDto {
   @ApiOptionalString({
     nullable: true,
     description:
-      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`, ignored for `AVERAGE`. Must name a month that has already happened, no earlier than 36 months ago.',
+      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that has already happened, no earlier than 36 months ago. When the basis is `AVERAGE` there is no single month to name: island.is clears any value sent, and the partner API refuses it with a 400 — so do not send one.',
   })
   salaryDataPeriod?: string | null
 

@@ -335,6 +335,40 @@ describe('ReportDraftSubmitService', () => {
     )
   })
 
+  /**
+   * Replaces a deleted test that asserted a `400` when the payload's parent
+   * kennitala disagreed with the authenticated company. `SubmitDraftDto` no
+   * longer carries one, so the disagreement is unreachable — but this method
+   * builds its own snapshots rather than sharing `ApplicationService`'s, so the
+   * guarantee that replaced it needs pinning here too and not only there.
+   *
+   * The hostile value goes in at the JS level on purpose: `nationalId` is gone
+   * from the TypeScript type, so a typed fixture cannot express the case this
+   * is protecting against.
+   */
+  it('snapshots the authenticated company’s kennitala, ignoring anything in the payload', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.EQUALITY))
+
+    const body = {
+      company: {
+        ...salaryBody().company,
+        nationalId: '9999999999',
+      },
+    } as never
+
+    await service.submitDraft(PROVIDER_ID, COMPANY, body)
+
+    expect(createCompanyReportSnapshots).toHaveBeenCalledWith(
+      REPORT_ID,
+      expect.arrayContaining([
+        expect.objectContaining({
+          parentCompanyId: null,
+          nationalId: COMPANY_NATIONAL_ID,
+        }),
+      ]),
+    )
+  })
+
   it('submits an equality draft as SUBMITTED without touching scores/result', async () => {
     findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.EQUALITY))
 

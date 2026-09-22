@@ -226,7 +226,7 @@ server-side, so they do not depend on your clock.
 _Scope: `equality:submit` → `201 { reportId, replayed: false }`, or
 `200 { reportId, replayed: true }` on a replay — as on the salary submission._
 
-Body (`SubmitEqualityReportDto`):
+Body (`SubmitPartnerEqualityReportDto`):
 
 | Field                                                                                        | Notes                                                                                                                                                                                                                                                                                                       |
 | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

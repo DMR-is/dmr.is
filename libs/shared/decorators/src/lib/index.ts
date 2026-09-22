@@ -18,6 +18,7 @@ export * from './user-role.decorator'
 
 // api decorators
 export * from './api-national-id.decorator'
+export * from './api-provider-id.decorator'
 export * from './api-date-time.decorator'
 export * from './api-date.decorator'
 export * from './api-date-time-array.decorator'
