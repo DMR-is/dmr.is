@@ -262,7 +262,12 @@ curl -X POST https://<host>/api/v1/partner/reports/equality \
 - **The file is checked by its content, not its name.** Renaming a PDF to
   `.docx` does not get it past; nor does the `Content-Type` you declare.
 - **A plan whose text is a scan or an image is refused.** The text has to be
-  present as text for a reviewer to work with it.
+  present as text for a reviewer to work with it. Pictures inside a plan that
+  also has text are fine — they are simply not carried into what gets filed,
+  which is the text.
+- **There is a limit on what it expands to, as well as on the file.** A
+  document that inflates past 40MB, or converts to more than 4MB of content, is
+  refused unread. In practice only a document built to be large reaches either.
 - **We do not keep the file.** What is stored is the converted content, which is
   what the reviewer edits and what the approved PDF is rendered from. Keep your
   own copy of the original if you need one.

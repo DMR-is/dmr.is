@@ -3,6 +3,8 @@ import { IsInt, IsString } from 'class-validator'
 
 import { ArgumentMetadata, BadRequestException } from '@nestjs/common'
 
+import { SubmitPartnerEqualityReportDto } from '@dmr.is/doe-modules/application'
+
 import { JsonPartPipe } from './json-part.pipe'
 
 class ExampleDto {
@@ -124,5 +126,30 @@ describe('JsonPartPipe', () => {
     const throughBody = plainToInstance(ExampleDto, JSON.parse(valid))
 
     expect({ ...throughPipe }).toEqual({ ...throughBody })
+  })
+
+  /**
+   * The cases above use a local DTO to test the pipe's own mechanics. This one
+   * uses the class the route actually binds, because the contract it enforces is
+   * the point of the phase: the plan arrives as a document, so there is no
+   * content field left to send. A vendor still sending markup is told, rather
+   * than having it silently dropped and a report filed with no plan in it.
+   */
+  describe('against the real partner equality DTO', () => {
+    const realPipe = new JsonPartPipe(SubmitPartnerEqualityReportDto, 'payload')
+
+    it.each([
+      'equalityReportContent',
+      'equalityReportPdf',
+      'equalityReportPdfFilename',
+    ])('refuses %s — the document part is the only way in', async (field) => {
+      const body = JSON.stringify({ providerId: 'p-1', [field]: 'x' })
+
+      await expect(realPipe.transform(body, META)).rejects.toMatchObject({
+        response: {
+          message: expect.arrayContaining([expect.stringContaining(field)]),
+        },
+      })
+    })
   })
 })

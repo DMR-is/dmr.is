@@ -92,7 +92,13 @@ it back would be absurd. Each channel takes the form its users actually hold, an
 neither has two ways to send one thing.
 
 **Status: shipped**, on `feat/doe-equality-document` — the converter in
-`6e22742b` (12 cases) and the route in `21de1d30`.
+`a763469c` (12 cases) and the route in `82f8b776`.
+
+> Those two hashes changed once already: the branch was rebased onto the
+> squashed #1532, which rewrites every commit on it. A hash written into a file
+> on the same branch it names is a hash that goes stale the next time the branch
+> moves — worth checking against `git log` rather than trusting, here and in the
+> status table.
 
 What landed, and the two decisions taken while wiring it:
 
@@ -310,8 +316,8 @@ cosmetic and can follow the guide's section layout.
 | 1     | Drop `company.nationalId`                      | —     | **Done**, `2a66fb537`                   |
 | 1     | `/` bound on `providerId`                      | #1532 | **Done**, `a42efe44`                    |
 | 1     | `\`, `.`, `..` and the untrimmed read path     | #1532 | **Done**, `d1dc821a`                    |
-| 2     | `.docx` → HTML converter                       | —     | **Done**, `6e22742b` (12 cases)         |
-| 2     | Multipart route, document-only DTO             | —     | **Done**, `21de1d30`                    |
+| 2     | `.docx` → HTML converter                       | —     | **Done**, `a763469c` (12 cases)         |
+| 2     | Multipart route, document-only DTO             | —     | **Done**, `82f8b776`                    |
 | 2     | Calibration on real plans                      | —     | Pending — needs real documents          |
 | 3     | Detection at submit → `POSTPONED`              | —     | Pending                                 |
 | 3     | `PUT …/outliers`                               | —     | Pending                                 |

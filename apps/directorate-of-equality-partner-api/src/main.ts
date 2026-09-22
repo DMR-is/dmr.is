@@ -10,6 +10,7 @@ import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
 import { API_VERSION, applyApiRouting, GLOBAL_PREFIX } from './api-routing'
+import { MAX_PARTNER_JSON_BYTES } from './request-limits'
 import { setupSwaggerDocument } from './setupSwaggerDocument'
 import { SWAGGER_CONFIG } from './swagger.config'
 import { PARTNER_VALIDATION_OPTIONS } from './validation-options'
@@ -39,8 +40,8 @@ async function bootstrap() {
   // as JSON on the submission itself. 8mb rather than the sibling app's 6mb
   // because there is no island.is payload cap in front of this one — a vendor
   // posts the report whole.
-  app.use(json({ limit: '8mb' }))
-  app.use(urlencoded({ extended: true, limit: '8mb' }))
+  app.use(json({ limit: MAX_PARTNER_JSON_BYTES }))
+  app.use(urlencoded({ extended: true, limit: MAX_PARTNER_JSON_BYTES }))
 
   // Shared with the multipart equality route's own pipe — see
   // `PARTNER_VALIDATION_OPTIONS`. One definition, so the two paths cannot drift.

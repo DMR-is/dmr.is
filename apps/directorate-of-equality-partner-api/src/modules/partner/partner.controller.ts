@@ -26,6 +26,7 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger'
 
+import { ONE_MEGA_BYTE } from '@dmr.is/constants'
 import {
   ApplicationReportDetailDto,
   IApplicationService,
@@ -55,6 +56,7 @@ import { RequireApiScope } from '../../core/guards/api-key-scope/require-api-sco
 import { RequireApiScopeGuard } from '../../core/guards/api-key-scope/require-api-scope.guard'
 import { ApiKeyThrottlerGuard } from '../../core/guards/api-key-throttler/api-key-throttler.guard'
 import { PartnerCompanyGuard } from '../../core/guards/partner-company/partner-company.guard'
+import { MAX_PARTNER_JSON_BYTES } from '../../request-limits'
 import {
   DOCX_MIME_TYPE,
   MAX_EQUALITY_DOCUMENT_BYTES,
@@ -247,15 +249,19 @@ export class PartnerController {
       type: 'object',
       required: ['payload', 'document'],
       properties: {
+        // `allOf` rather than a bare `$ref`: OpenAPI 3.0 requires a `$ref`'s
+        // siblings to be ignored, so a description written beside one is
+        // dropped by every consumer — including the sentence that states the
+        // strict-validation contract. Wrapping it makes both survive.
         payload: {
-          ...{ $ref: getSchemaPath(SubmitPartnerEqualityReportDto) },
+          allOf: [{ $ref: getSchemaPath(SubmitPartnerEqualityReportDto) }],
           description:
-            'The report fields, as a JSON object. Validated exactly as a JSON request body on any other route here: unknown fields are refused rather than ignored.',
+            'The report fields, as a JSON object. Send this part as application/json — a client that sends it as a file part is rejected, since this route accepts exactly one file and it is the document. Validated exactly as a JSON request body on any other route here: unknown fields are refused rather than ignored.',
         },
         document: {
           type: 'string',
           format: 'binary',
-          description: `The equality plan as a .docx (${DOCX_MIME_TYPE}), at most ${MAX_EQUALITY_DOCUMENT_BYTES / (1024 * 1024)}MB. A .pdf or a legacy .doc is refused with an explanation rather than converted badly. The file is read for its content and not stored — what is kept is the converted HTML, which is what a reviewer edits and approves.`,
+          description: `The equality plan as a .docx (${DOCX_MIME_TYPE}), at most ${MAX_EQUALITY_DOCUMENT_BYTES / ONE_MEGA_BYTE}MB. A .pdf or a legacy .doc is refused with an explanation rather than converted badly. The file is read for its content and not stored — what is kept is the converted HTML, which is what a reviewer edits and approves.`,
         },
       },
     },
@@ -265,7 +271,27 @@ export class PartnerController {
       // Memory storage, which is multer's default here: the buffer is converted
       // and dropped inside the request. Nothing about this file outlives the
       // call, so writing it to disk would only create something to clean up.
-      limits: { fileSize: MAX_EQUALITY_DOCUMENT_BYTES, files: 1 },
+      //
+      // ⚠️ **Every one of these is load-bearing.** `express.json({ limit })` does
+      // not see multipart, so this object is the *only* bound on this route —
+      // and busboy's defaults for everything left unset are `fields: Infinity`
+      // and `parts: Infinity`. Setting `fileSize` alone bounds the half of the
+      // request that was already obvious and leaves the other half unbounded: a
+      // caller can post ten thousand text fields under a valid key and every one
+      // of them is buffered.
+      limits: {
+        fileSize: MAX_EQUALITY_DOCUMENT_BYTES,
+        files: 1,
+        // Two parts is the contract. Three is a caller sending something this
+        // route does not read, and there is no reason to buffer it first.
+        parts: 2,
+        fields: 1,
+        // The `payload` part is a JSON body in all but transport, so it gets the
+        // body limit the JSON routes get. Busboy's default is 1MB, which would
+        // have made a large group submission fail with "Field value too long"
+        // while the description promised it validates like any other body.
+        fieldSize: MAX_PARTNER_JSON_BYTES,
+      },
     }),
   )
   @PartnerResponse({

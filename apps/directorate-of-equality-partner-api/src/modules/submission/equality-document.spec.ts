@@ -5,6 +5,7 @@ import { BadRequestException } from '@nestjs/common'
 import {
   convertEqualityDocumentToHtml,
   MAX_EQUALITY_DOCUMENT_BYTES,
+  MAX_INFLATED_DOCUMENT_BYTES,
 } from './equality-document'
 
 /**
@@ -16,7 +17,15 @@ import {
  * reads — which is also the only way the "zip but not a Word document" case
  * means anything.
  */
-const docx = async (paragraphs: string[]): Promise<Buffer> => {
+const docx = async (
+  paragraphs: string[],
+  /**
+   * JSZip writes `STORE` by default, which makes an archive exactly as large as
+   * its contents. Real `.docx` files are deflated, and so is any archive built
+   * to inflate — so the ratio only exists when this is on.
+   */
+  compression: 'STORE' | 'DEFLATE' = 'STORE',
+): Promise<Buffer> => {
   const zip = new JSZip()
 
   zip.file(
@@ -45,6 +54,78 @@ const docx = async (paragraphs: string[]): Promise<Buffer> => {
     `<?xml version="1.0" encoding="UTF-8"?>
      <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
        <w:body>${body}</w:body>
+     </w:document>`,
+  )
+
+  return zip.generateAsync({
+    type: 'nodebuffer',
+    compression,
+    compressionOptions: { level: 9 },
+  })
+}
+
+/**
+ * A `.docx` whose `word/document.xml` declares far more than it costs to send.
+ *
+ * Highly repetitive XML is what makes this cheap: a megabyte of one repeated
+ * paragraph compresses to a few kilobytes, so the archive stays trivially small
+ * while the inflated document does not. This is the shape of the request the
+ * size bounds exist for — a valid key, a valid Word document, and an allocation
+ * the process cannot survive.
+ */
+const inflatingDocx = async (inflatedBytes: number): Promise<Buffer> => {
+  const paragraph = 'a'.repeat(1000)
+  const count = Math.ceil(inflatedBytes / paragraph.length)
+
+  return docx(
+    Array.from({ length: count }, () => paragraph),
+    'DEFLATE',
+  )
+}
+
+/** A plan whose content is a picture — a scan, in practice. */
+const imageOnlyDocx = async (): Promise<Buffer> => {
+  const zip = new JSZip()
+
+  zip.file(
+    '[Content_Types].xml',
+    `<?xml version="1.0" encoding="UTF-8"?>
+     <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+       <Default Extension="xml" ContentType="application/xml"/>
+       <Default Extension="png" ContentType="image/png"/>
+       <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+     </Types>`,
+  )
+  zip.file(
+    '_rels/.rels',
+    `<?xml version="1.0" encoding="UTF-8"?>
+     <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+       <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+     </Relationships>`,
+  )
+  zip.file(
+    'word/_rels/document.xml.rels',
+    `<?xml version="1.0" encoding="UTF-8"?>
+     <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+       <Relationship Id="rIdImg" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/scan.png"/>
+     </Relationships>`,
+  )
+  zip.file('word/media/scan.png', Buffer.alloc(64 * 1024, 7))
+  zip.file(
+    'word/document.xml',
+    `<?xml version="1.0" encoding="UTF-8"?>
+     <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+                 xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+                 xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+                 xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+                 xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+       <w:body>
+         <w:p><w:r><w:drawing><wp:inline>
+           <a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+             <pic:pic><pic:blipFill><a:blip r:embed="rIdImg"/></pic:blipFill></pic:pic>
+           </a:graphicData></a:graphic>
+         </wp:inline></w:drawing></w:r></w:p>
+       </w:body>
      </w:document>`,
   )
 
@@ -158,6 +239,65 @@ describe('convertEqualityDocumentToHtml', () => {
       await expect(convertEqualityDocumentToHtml(corrupt)).rejects.toThrow(
         /could not be read/,
       )
+    })
+  })
+
+  /**
+   * The bound that matters, and the one the first version of this file did not
+   * have. Every other guard here measures the *compressed* buffer — which is
+   * the size of the request, not the size of the allocation. A `.docx` is a ZIP,
+   * so those two numbers are related only by a ratio the caller chooses.
+   */
+  describe('inflation', () => {
+    it('refuses an archive that declares more than the inflated bound', async () => {
+      const bomb = await inflatingDocx(MAX_INFLATED_DOCUMENT_BYTES * 2)
+
+      await expect(convertEqualityDocumentToHtml(bomb)).rejects.toThrow(
+        /expands to more than/,
+      )
+    })
+
+    /**
+     * The measurement the finding rested on: the archive is a rounding error
+     * against the upload cap, and inflating it is what costs. If this ever
+     * stops holding, the fixture stopped being a bomb and the test above stopped
+     * testing anything.
+     */
+    it('refuses it while being far below the upload limit', async () => {
+      const bomb = await inflatingDocx(MAX_INFLATED_DOCUMENT_BYTES * 2)
+
+      expect(bomb.length).toBeLessThan(MAX_EQUALITY_DOCUMENT_BYTES / 10)
+    })
+
+    it('still accepts an ordinary plan', async () => {
+      const { html } = await convertEqualityDocumentToHtml(
+        await docx(['Jafnréttisáætlun 2026', 'Markmið og aðgerðir']),
+      )
+
+      expect(html).toContain('Jafnréttisáætlun 2026')
+    })
+  })
+
+  /**
+   * Mammoth inlines images as base64 `data:` URIs unless told otherwise, which
+   * made two promises false at once: the HTML was unbounded, and a scanned plan
+   * converted to a page of `<img>` elements — a non-empty string, so the
+   * "no text" refusal the guide advertises could never fire on the file it was
+   * written for.
+   */
+  describe('images', () => {
+    it('refuses a plan whose content is only a picture', async () => {
+      await expect(
+        convertEqualityDocumentToHtml(await imageOnlyDocx()),
+      ).rejects.toThrow(/contains no text/)
+    })
+
+    it('does not inline image data into the stored HTML', async () => {
+      const withText = await convertEqualityDocumentToHtml(
+        await docx(['Jafnréttisáætlun']),
+      )
+
+      expect(withText.html).not.toContain('data:')
     })
   })
 })
