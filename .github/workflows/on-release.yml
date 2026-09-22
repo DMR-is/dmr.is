@@ -31,6 +31,8 @@ jobs:
             # directorate-of-equality-partner-api omitted until its ECS service
             # exists in DMR-Jafnrettisstofa; re-add with the terragrunt definition.
             directorate-of-equality-web,
+            # directorate-of-equality-partner-web omitted for the same reason;
+            # re-add with its terragrunt service definition.
           ]
     steps:
       - name: 📁 Checkout

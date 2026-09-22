@@ -1,0 +1,23 @@
+import { createAuthMiddleware } from '@dmr.is/auth/middleware-helpers'
+
+import { identityServerConfig } from './lib/auth/identityServerConfig'
+
+export default createAuthMiddleware({
+  clientId: identityServerConfig.clientId,
+  clientSecret: identityServerConfig.clientSecret,
+  redirectUriEnvVar: 'BASE_URL',
+  fallbackRedirectUri: process.env.BASE_URL as string,
+  signInPath: '/innskraning',
+  checkIsActive: false,
+  skipDefaultUrlCheck: true,
+})
+
+export const config = {
+  matcher: [
+    // Exclude specific paths from authentication
+    // This should be statically defined as dynamic values do not work
+    // for each route to exclude, add it to the list in following patterns: |<route>|
+    `/((?!api|innskraning|error|_next/static|_next/image|images|fonts|.well-known|favicon.ico).*)`,
+    '/api/trpc/(.*)',
+  ],
+}
