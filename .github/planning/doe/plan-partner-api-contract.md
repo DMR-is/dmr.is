@@ -258,9 +258,12 @@ cosmetic and can follow the guide's section layout.
 - [x] `company.nationalId` in the body → rejected by the strict whitelist
 - [x] `equalityReportContent` **required** on the partner equality route; the
       PDF fields refused there, still accepted on island.is
-- [x] `providerId` containing `/` → rejected, so nothing files under a handle
-      `GET …/:providerId` cannot match — and `?`, `#`, `%` and a space still
-      accepted, so the bound cannot drift into a charset allowlist
+- [x] `providerId` containing `/` or `\`, or equal to `.` or `..` → rejected, so
+      nothing files under a handle `GET …/:providerId` cannot match — and `?`,
+      `#`, `%`, a space and `2026.Q1.042` still accepted, so the bound cannot
+      drift into a charset allowlist
+- [x] A read trims its `providerId`, so a trailing space finds the report the
+      submission stored
 - [x] Converter: `.pdf`, `.doc`, non-document, non-Word zip, empty document,
       oversized and corrupt archive all refused (`equality-document.spec.ts`)
 - [x] Multipart submit: valid `.docx`, `.pdf` refused, `.doc` refused, oversized
@@ -306,6 +309,7 @@ cosmetic and can follow the guide's section layout.
 | 1     | Declare `API_ENV` on the partner API           | —     | **Done**, `2a66fb537`                   |
 | 1     | Drop `company.nationalId`                      | —     | **Done**, `2a66fb537`                   |
 | 1     | `/` bound on `providerId`                      | #1532 | **Done**, `a42efe44`                    |
+| 1     | `\`, `.`, `..` and the untrimmed read path     | #1532 | **Done**, `d1dc821a`                    |
 | 2     | `.docx` → HTML converter                       | —     | **Done**, `6e22742b` (12 cases)         |
 | 2     | Multipart route, document-only DTO             | —     | **Done**, `21de1d30`                    |
 | 2     | Calibration on real plans                      | —     | Pending — needs real documents          |
@@ -343,11 +347,30 @@ the specs pin the acceptances too so the bound cannot later drift into a charset
 allowlist — which would re-impose a format for taste, the thing loosening this
 field set out to undo.
 
-Nothing else from that review is outstanding. Three findings were pushed back on
-with reasons: `CreateDraftReportDto` keeping `@ApiUUID` (one minter, no consumer
-for a loosening), and two deferred to phase 2 rather than fixed and reverted a
-week later — the `@ApiHTML` base64 transform on the partner equality field, and
-a spec pinning that DTO's key set.
+**The re-review then found the bound was one value short of its own reasoning.**
+`\`, `.` and `..` are rewritten by a URL before routing and fail identically;
+`d1dc821a` closes them, along with the read path not trimming while the write
+path did. Both shipped with phase 2 rather than waiting for a branch of their
+own, since phase 1 had already merged.
+
+Outstanding from the re-review, none of it blocking and none of it in phase 3's
+path:
+
+- `application-system.service.ts:110` — a comment claiming the DTOs still
+  constrain `providerId` to a UUID, which is the stated reason that function
+  treats the value as untrusted. The behaviour is right; the comment now
+  misleads, and a non-UUID on the island.is channel would make the approve/deny
+  callback a logged no-op.
+- `provider-id.spec.ts` covers the two base DTOs rather than the partner
+  subclasses the API actually binds. Metadata inheritance was verified, so this
+  is coverage rather than a bug.
+- `application.service.spec.ts:605`/`:858` assert the payload-silent case only;
+  the third replacement injects a hostile value and these two should match it.
+
+Three findings were pushed back on with reasons, and one of those —
+`CreateDraftReportDto` keeping `@ApiUUID` — stands: one minter, no consumer for
+a loosening. The other two were deferred to phase 2 and are settled there by
+removing the field they were about.
 
 ## Deploy consequence
 
@@ -369,24 +392,15 @@ once deployed — add it to the pre-launch env checklist.
 
 ## Branch stack
 
-`feat/doe-equality-document` is stacked on `feat/doe-partner-api-contract` and
-branches at **`5ea4e8e0`**, that branch's tip.
+Flat again. #1532 squash-merged as `2057c7b8` on 22 Sept, and
+`feat/doe-equality-document` was rebased straight onto `origin/main` — three
+commits, no conflicts. Phase 3 branches off `main` like any other work.
 
-It used to branch at `e86fb9de1`, four commits earlier, which would have
-conflicted: phase 2 edits `partner.controller.ts` and the guide, and both
-changed after that point. It was restacked before the route work started.
-
-When #1532 squash-merges, the base disappears from the history and phase 2 has
-to be moved onto the squashed commit explicitly:
-
-```bash
-git rebase --onto origin/main 5ea4e8e0 feat/doe-equality-document
-```
-
-Written down because `5ea4e8e0` is otherwise only recoverable from that branch's
-own reflog. **Update this line if the phase 1 branch gains another commit** —
-the base is whatever `feat/doe-equality-document` is currently stacked on, not
-whatever this file last said.
+The stacking is worth remembering for the next pair, because it cost a restack
+mid-phase: phase 2 originally branched at `e86fb9de1`, four commits before its
+parent's tip, and it edits `partner.controller.ts` and the guide, both of which
+phase 1 changed after that point. A stacked branch wants the tip, not the commit
+that happened to be current when it was created.
 
 ## Context that lives outside this repo
 
