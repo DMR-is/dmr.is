@@ -443,6 +443,14 @@ employees need an explanation _before_ filing rather than after.
 
 Not a call — the modelling step between B4 and B6.
 
+**This step is optional, and that is the important change.** Explaining an
+outlier means asking the employer _why_ two equally-scored people are paid
+differently, which takes days, not milliseconds. You are not expected to hold a
+submission open while that happens. File without groups and the report lands
+`POSTPONED` — filed, recorded, not yet reviewable — and you send the
+explanations later with B9. File with them and it goes straight into the
+reviewer queue. Both are one call.
+
 Partition the `employeeOrdinal`s from B4 into one or more groups. Each group is
 one shared explanation (úrbótaáætlun) over the employees in it:
 
@@ -485,16 +493,39 @@ defer and finish on island.is themselves, send real groups.
 
 ### B6. `POST /partner/reports/salary` — file it
 
-_Scope: `salary:submit` → `201 { reportId, replayed: false }`, or
-`200 { reportId, replayed: true }` when the `providerId` was already used and
-nothing was filed — see the `providerId` section._
+_Scope: `salary:submit` → `201 { reportId, replayed: false, status }`, or
+`200 { reportId, replayed: true, status }` when the `providerId` was already
+used and nothing was filed — see the `providerId` section._
+
+**The payroll crosses the wire once.** Outliers are detected during this call,
+so what you send is what is scored, and there is no window in which an edit
+between a preview and a submit could reshuffle the set.
+
+Three outcomes, all `201`:
+
+| What you sent                          | `status`    | What it means                                                                                                                  |
+| -------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| a clean payroll                        | `SUBMITTED` | nothing was flagged; it is in the reviewer queue                                                                               |
+| outliers **with** groups covering them | `SUBMITTED` | explained on the spot, in one call                                                                                             |
+| outliers **without** groups            | `POSTPONED` | filed, but not reviewable until you explain them — the response carries `unexplainedOutlierOrdinals`, and B9 is how you finish |
+
+`unexplainedOutlierOrdinals` is the complete set, not a page of it, and they are
+**your** ordinals — the ones you sent — so they map straight back to your own
+rows. Persist them, or recover them later from B8.
+
+**A `POSTPONED` report does not block your next filing.** Send a corrected
+report under a new `providerId` and the postponed one is withdrawn and replaced.
+That matters because `POSTPONED` is simply what a submission with outliers
+becomes here — you should not have to explain figures you already know are wrong
+in order to be allowed to replace them. (A report a reviewer has already picked
+up is different: that still conflicts. See the status codes.)
 
 Body (`SubmitPartnerSalaryReportDto`) — beyond the admin/contact/`company`/
 `subsidiaries` fields, which are identical to A3 (but with the three average
 employee counts **required** here):
 
-Two fields are **not** part of this body, and sending either is a `400` under
-the strict validation above:
+Three fields are **not** part of this body, and sending any of them is a `400`
+under the strict validation above:
 
 - **`equalityReportId`** — resolved server-side to the company's approved,
   in-force equality report (`404` when there is none). There was only ever one
@@ -502,6 +533,10 @@ the strict validation above:
   computes for B2.
 - **`importedFromExcel`** — there is no workbook on this API for a payload to
   have come from.
+- **`outliersPostponed`** — you no longer declare this. Omitting the groups when
+  outliers exist _is_ the postpone, so the flag had nothing left to say, and it
+  asked you to predict an answer only detection could give: set it on a clean
+  payroll and the filing was refused for postponing nothing.
 
 | Field                                                             | Notes                                                                                                                                                                                                                                                                             |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -532,8 +567,9 @@ withdrawn and replaced; a prior `IN_REVIEW` **or `POSTPONED`** one gives `409`.
 _Scope: `report:read`_
 
 As A4, plus the salary-only fields: `salaryDataBasis`, `salaryDataPeriod`,
-`outliersPostponed`, `includesImprovementPlan` (true when the report has at
-least one outlier), and `result` — the frozen `ReportResultDto` snapshot the
+`outliersPostponed` (true when it was filed without explanations, and it stays
+true after B9 as the record that it was), `includesImprovementPlan` (true when
+the report has at least one outlier), and `result` — the frozen `ReportResultDto` snapshot the
 decision rests on.
 
 ### B8. `GET /partner/reports/:providerId/outliers` — the filed outlier list
@@ -547,6 +583,42 @@ rows.
 Use it to show the employer what was actually filed and how each row was
 explained. If all you need is "are there any", read `includesImprovementPlan`
 from B7 instead of paginating.
+
+### B9. `PUT /partner/reports/:providerId/outliers` — explain them
+
+_Scope: `salary:submit` → the full report detail, as B7._
+
+The exit from `POSTPONED`, and the reason filing without explanations is safe.
+Send the groups once the employer has answered; the report moves to `SUBMITTED`
+and enters the reviewer queue.
+
+```json
+{
+  "groups": [
+    {
+      "name": "Parental leave",
+      "reason": "On parental leave for six months of the reference period",
+      "action": "No adjustment; salary frozen for the period",
+      "signatureName": "Anna Admin",
+      "signatureRole": "Mannauðsstjóri",
+      "remedyDate": "2027-01-31",
+      "employeeOrdinals": [4, 11]
+    }
+  ]
+}
+```
+
+- **All-or-none.** The ordinals across your groups must cover the detected set
+  exactly: no extras, none missing, and none in two groups. A partial answer is
+  refused rather than half-applied.
+- **The detected set does not move under you.** It was frozen when the report
+  was filed, so the ordinals from B6 are still the right ones however long the
+  employer takes. B8 serves the same set if you no longer hold them.
+- Each group needs the complete explanation — `reason`, `action`,
+  `signatureName`, `signatureRole` and a `remedyDate` in the future and within
+  three years.
+- Also accepted while the report is `IN_REVIEW`, which leaves the status alone
+  and updates what the reviewer is looking at.
 
 ---
 
@@ -650,6 +722,7 @@ never move when the model changes or goes away.
 | 5   | `POST` | `/partner/reports/equality` ¹           | `equality:submit` |
 | 6   | `GET`  | `/partner/reports/:providerId`          | `report:read`     |
 | 7   | `GET`  | `/partner/reports/:providerId/outliers` | `report:read`     |
+| 7b  | `PUT`  | `/partner/reports/:providerId/outliers` | `salary:submit`   |
 | 8   | `GET`  | `/partner/sub-criteria/catalog`         | `report:read`     |
 
 ¹ `multipart/form-data` — a JSON `payload` part and a `.docx` `document` part.
@@ -678,15 +751,15 @@ Scoring model (section C):
 
 ## Status codes
 
-| Code  | Meaning                                                                                                                                                               |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId`            |
-| `201` | on a submission: filed                                                                                                                                                |
-| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx` |
-| `401` | missing or invalid key                                                                                                                                                |
-| `403` | key lacks the scope the route declares                                                                                                                                |
-| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                    |
-| `409` | the company is not active in the register (any route); renewal window not open; a sibling report is `IN_REVIEW` or `POSTPONED`                                        |
-| `413` | the equality document is past the 10MB limit                                                                                                                          |
-| `429` | rate limit — per key (headers) or per IP                                                                                                                              |
-| `503` | write collision. Retry with the same `providerId`                                                                                                                     |
+| Code  | Meaning                                                                                                                                                                                                 |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId`                                              |
+| `201` | on a submission: filed — `status` says whether it is `SUBMITTED` or `POSTPONED`                                                                                                                         |
+| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx`                                   |
+| `401` | missing or invalid key                                                                                                                                                                                  |
+| `403` | key lacks the scope the route declares                                                                                                                                                                  |
+| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                                                      |
+| `409` | the company is not active in the register (any route); renewal window not open; a sibling report is `IN_REVIEW`. A `POSTPONED` sibling does **not** conflict on this API — it is withdrawn and replaced |
+| `413` | the equality document is past the 10MB limit                                                                                                                                                            |
+| `429` | rate limit — per key (headers) or per IP                                                                                                                                                                |
+| `503` | write collision. Retry with the same `providerId`                                                                                                                                                       |

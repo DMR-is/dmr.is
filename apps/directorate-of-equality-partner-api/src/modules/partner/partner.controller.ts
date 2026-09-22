@@ -9,6 +9,7 @@ import {
   Inject,
   Param,
   Post,
+  Put,
   Query,
   Res,
   UploadedFile,
@@ -29,6 +30,7 @@ import {
 import { ONE_MEGA_BYTE } from '@dmr.is/constants'
 import {
   ApplicationReportDetailDto,
+  EditOutliersDto,
   IApplicationService,
   SalaryReportEligibilityDto,
   SubmitPartnerEqualityReportDto,
@@ -400,5 +402,49 @@ export class PartnerController {
     @CurrentCompany() company: CompanyDto,
   ): Promise<GetReportOutliersResponseDto> {
     return this.applicationService.getReportOutliers(providerId, company, query)
+  }
+
+  /**
+   * The exit from `POSTPONED`, and the reason this channel may land there at
+   * all.
+   *
+   * A submission with unexplained outliers now files as `POSTPONED` rather than
+   * being refused. Without this route that would be a worse outcome than the
+   * refusal it replaced: the report exists, no reviewer can pick it up, and
+   * nothing the vendor can send would change that — the employer would have to
+   * log in to island.is to finish a filing their payroll system made.
+   *
+   * It is the same `editOutliers` the island.is route calls, with no partner
+   * wrapper around it. Ownership, the all-or-none partition against the
+   * canonical detected set, the `POSTPONED → SUBMITTED` transition and the audit
+   * events are all its business, so the two channels cannot drift on any of
+   * them. Tenant scoping is `findOwnedReportByProviderTuple` inside that method
+   * plus `PartnerCompanyGuard` deciding whose company this is — another
+   * company's `providerId` is indistinguishable from one that does not exist.
+   */
+  @Put('reports/:providerId/outliers')
+  @RequireApiScope(ApiKeyScopeEnum.SALARY_SUBMIT)
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'The `providerId` of the postponed report, exactly as sent when filing it.',
+  })
+  @PartnerResponse({
+    operationId: 'editPartnerReportOutliers',
+    type: ApplicationReportDetailDto,
+    include404: true,
+    description:
+      'Explains the outliers on a report that was filed without explanations, which moves it from `POSTPONED` into the reviewer queue as `SUBMITTED`. All-or-none: the ordinals across the groups sent here must cover the detected set exactly — no extras, none missing, and none in two groups. The detected set is the one frozen when the report was filed, so it does not move under you; `GET …/:providerId/outliers` serves it. Also accepted while a report is `IN_REVIEW`, which leaves the status alone and updates the explanations a reviewer is looking at.',
+  })
+  editReportOutliers(
+    // TODO(after #1536): take `ProviderIdParamPipe`, as the two reads above
+    // will, so this normalises its providerId the same way the write path does.
+    // Not imported here because it lands with the .docx upload, not with this.
+    @Param('providerId') providerId: string,
+    @Body() input: EditOutliersDto,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<ApplicationReportDetailDto> {
+    return this.applicationService.editOutliers(providerId, input, company)
   }
 }

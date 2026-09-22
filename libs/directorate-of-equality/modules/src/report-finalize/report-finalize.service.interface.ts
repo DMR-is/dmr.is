@@ -2,6 +2,20 @@ import { ReportStatusEnum, ReportTypeEnum } from '../report/models/report.model'
 import { EqualityCoverage } from '../report/types/equality-coverage'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
 
+/**
+ * How a new filing should treat a pending sibling.
+ *
+ * `SUBMITTED` is always withdrawn and replaced; `IN_REVIEW` always conflicts.
+ * Only `POSTPONED` is negotiable, because only `POSTPONED` means two different
+ * things depending on who filed it — a deliberate "explain later" on island.is,
+ * or simply what a submission with unexplained outliers becomes on a channel
+ * that cannot preview first.
+ */
+export interface WithdrawInflightSiblingOptions {
+  /** Withdraw a `POSTPONED` sibling rather than answering `409`. */
+  withdrawPostponed?: boolean
+}
+
 export interface IReportFinalizeService {
   resolveEqualityCoverage(companyId: string): Promise<EqualityCoverage>
   /**
@@ -22,6 +36,7 @@ export interface IReportFinalizeService {
   withdrawInflightSibling(
     companyId: string,
     type: ReportTypeEnum,
+    options?: WithdrawInflightSiblingOptions,
   ): Promise<string[]>
   emitWithdrawnEvents(
     withdrawnReportIds: string[],

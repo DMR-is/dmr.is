@@ -75,7 +75,10 @@ import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
 import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
-import { SubmitSalaryReportInput } from './dto/submit-partner-salary-report.dto'
+import {
+  SubmitSalaryOptions,
+  SubmitSalaryReportInput,
+} from './dto/submit-partner-salary-report.dto'
 import type {
   SubmitReportCompanyDto,
   SubmitReportSubsidiaryDto,
@@ -171,6 +174,7 @@ export class ApplicationService implements IApplicationService {
   async submitSalary(
     input: SubmitSalaryReportInput,
     company: CompanyDto,
+    options: SubmitSalaryOptions = {},
   ): Promise<CreateReportResponseDto> {
     this.logger.info('Submitting salary report from application portal', {
       context: LOGGING_CONTEXT,
@@ -198,7 +202,11 @@ export class ApplicationService implements IApplicationService {
       }
     }
 
-    const createInput = await this.createSalaryReportInput(input, company)
+    const createInput = await this.createSalaryReportInput(
+      input,
+      company,
+      options,
+    )
     return this.reportCreateService.createSalary(createInput)
   }
 
@@ -828,6 +836,7 @@ export class ApplicationService implements IApplicationService {
   private async createSalaryReportInput(
     input: SubmitSalaryReportInput,
     company: CompanyDto,
+    options: SubmitSalaryOptions,
   ): Promise<CreateReportDto> {
     const companies = await this.createReportCompanySnapshots(input, company)
 
@@ -867,6 +876,11 @@ export class ApplicationService implements IApplicationService {
       companies,
       outliersPostponed: input.outliersPostponed,
       outlierGroups: input.outlierGroups,
+      // Channel policy rather than anything the caller sent, which is why these
+      // two arrive as options and not as fields on either wire contract. See
+      // `SubmitSalaryOptions`.
+      postponeUnexplainedOutliers: options.postponeUnexplainedOutliers,
+      withdrawPostponedSibling: options.withdrawPostponedSibling,
     }
   }
 

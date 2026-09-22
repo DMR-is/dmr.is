@@ -185,7 +185,7 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       reportId: report.id,
     })
 
-    return { reportId: report.id, replayed: false }
+    return { reportId: report.id, replayed: false, status }
   }
 
   /**

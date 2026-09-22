@@ -376,7 +376,7 @@ describe('ReportDraftSubmitService', () => {
       company: salaryBody().company,
     })
 
-    expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
+    expect(result).toMatchObject({ reportId: REPORT_ID, replayed: false })
     expect(createCompanyReportSnapshots).toHaveBeenCalled()
     expect(persistScores).not.toHaveBeenCalled()
     expect(createForReport).not.toHaveBeenCalled()

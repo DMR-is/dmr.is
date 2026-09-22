@@ -132,7 +132,10 @@ export class ReportCreateService implements IReportCreateService {
       input,
       employeeScores,
     )
-    this.assertOutlierGroupsMatchDetected(input, detectedOrdinals)
+    const outliersPostponed = this.resolveOutlierPostponement(
+      input,
+      detectedOrdinals,
+    )
 
     // Absent on the partner channel, whose contract omits it, and on any
     // submission from a company whose coverage has no id to name — resolved
@@ -196,15 +199,16 @@ export class ReportCreateService implements IReportCreateService {
       await this.finalizeService.withdrawInflightSibling(
         submittingCompany.companyId,
         ReportTypeEnum.SALARY,
+        { withdrawPostponed: input.withdrawPostponedSibling ?? false },
       )
 
-    const outliersPostponed = input.outliersPostponed ?? false
-
-    // 1. report row. Status splits on the postponement choice:
-    //   - outliersPostponed = false → SUBMITTED (lands in reviewer queue).
-    //   - outliersPostponed = true  → POSTPONED (cannot be picked up; the
-    //     applicant must resolve via PUT /application/reports/:providerId/
-    //     outliers, which transitions POSTPONED → SUBMITTED).
+    // 1. report row. Status splits on the postponement resolved above —
+    //    resolved there rather than read from the input, because a caller that
+    //    cannot preview does not know the answer until detection has run:
+    //   - not postponed → SUBMITTED (lands in reviewer queue).
+    //   - postponed     → POSTPONED (cannot be picked up; the applicant must
+    //     resolve via PUT /application/reports/:providerId/outliers or its
+    //     partner twin, which transitions POSTPONED → SUBMITTED).
     // See db/README.md → "Report lifecycle".
     const initialStatus = outliersPostponed
       ? ReportStatusEnum.POSTPONED
@@ -338,7 +342,18 @@ export class ReportCreateService implements IReportCreateService {
       report.id,
     )
 
-    return { reportId: report.id, replayed: false }
+    return {
+      reportId: report.id,
+      replayed: false,
+      status: initialStatus,
+      // Only when postponed: on a report filed with its groups, every detected
+      // outlier is already explained and nothing is owed. Taken from the set
+      // detection produced above rather than re-read, so the answer cannot
+      // disagree with the groups that were just written.
+      unexplainedOutlierOrdinals: outliersPostponed
+        ? detectedOrdinals
+        : undefined,
+    }
   }
 
   /**
@@ -416,7 +431,11 @@ export class ReportCreateService implements IReportCreateService {
       report.id,
     )
 
-    return { reportId: report.id, replayed: false }
+    return {
+      reportId: report.id,
+      replayed: false,
+      status: ReportStatusEnum.SUBMITTED,
+    }
   }
 
   /**
@@ -485,7 +504,14 @@ export class ReportCreateService implements IReportCreateService {
       providerId,
     })
 
-    return { reportId: existing.id, replayed: true }
+    // No ordinals: this call read nothing and filed nothing, so it has no
+    // detection of its own to report. The status is the earlier report's as it
+    // stands now, which may have moved on since it was filed.
+    return {
+      reportId: existing.id,
+      replayed: true,
+      status: existing.status,
+    }
   }
 
   private getSubmittingCompany(
@@ -523,7 +549,7 @@ export class ReportCreateService implements IReportCreateService {
    * ⚠️ Was the ±1,95% band around a fitted line. See `selectMinimumSet`: the set
    * is two-directional, so a returned ordinal may be someone paid ABOVE their
    * stig, and an already-compliant company yields an EMPTY set, which makes
-   * `assertOutlierGroupsMatchDetected` below require no groups at all. The guard
+   * `resolveOutlierPostponement` below require no groups at all. The guard
    * itself is indifferent to direction — it compares ordinals.
    */
   private async computeDetectedOutlierOrdinals(
@@ -548,35 +574,51 @@ export class ReportCreateService implements IReportCreateService {
   }
 
   /**
-   * Submit-side outlier-group guard, given the canonical detected ordinals:
+   * Decides whether this submission is postponed, and validates the groups it
+   * was given. One function because the two answers are the same question:
+   * a submission is postponed exactly when its outliers are left unexplained.
    *
-   * - Postponed: there must be at least one detected outlier (can't postpone
-   *   nothing). `outlierGroups` is ignored — a single default group with a NULL
+   * Given the canonical detected ordinals:
+   *
+   * - `outliersPostponed`: the caller already knows, having previewed. There
+   *   must be at least one detected outlier (can't postpone nothing).
+   *   `outlierGroups` is ignored — a single default group with a NULL
    *   explanation is created at persist time.
+   * - `postponeUnexplainedOutliers` with no groups: the caller could not know.
+   *   Postpone if anything was detected, otherwise file normally. Never an
+   *   error, which is the whole point — it is the answer for a channel that
+   *   sends the payroll once rather than previewing and then submitting.
    * - Not postponed: the union of every group's `employeeOrdinals` must cover
    *   the detected set exactly — no extras, no missing, and no ordinal in two
    *   groups. Explanation completeness (all four fields non-empty) is enforced
    *   by the DTO.
    */
-  private assertOutlierGroupsMatchDetected(
+  private resolveOutlierPostponement(
     input: CreateReportDto,
     detectedOrdinals: number[],
-  ) {
-    const outliersPostponed = input.outliersPostponed ?? false
+  ): boolean {
     const detectedSet = new Set(detectedOrdinals)
 
-    if (outliersPostponed) {
+    if (input.outliersPostponed) {
       if (detectedSet.size === 0) {
         throw new BadRequestException(
           'Cannot postpone outlier explanations because this salary report has no detected outliers.',
         )
       }
-      return
+      return true
     }
 
     const groups = input.outlierGroups ?? []
 
     if (detectedSet.size > 0 && groups.length === 0) {
+      // The caller that could not know: it had no preview, so it could not have
+      // set `outliersPostponed` honestly. Postponing is the same outcome it
+      // would have reached by setting the flag, arrived at from the one place
+      // that knows whether there was anything to postpone.
+      if (input.postponeUnexplainedOutliers) {
+        return true
+      }
+
       throw new BadRequestException(
         'This salary report has detected outliers but no outlier groups were provided.',
       )
@@ -613,6 +655,8 @@ export class ReportCreateService implements IReportCreateService {
         )}`,
       )
     }
+
+    return false
   }
 
   private async getSalaryDifferenceThresholdPercent(): Promise<number> {

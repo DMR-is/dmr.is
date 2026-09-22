@@ -28,6 +28,7 @@ import { EqualityCoverage } from '../report/types/equality-coverage'
 import { AUTO_REVIEW_ENFORCE } from '../report-auto-review/report-auto-review.constants'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
+import { WithdrawInflightSiblingOptions } from './report-finalize.service.interface'
 import { IReportFinalizeService } from './report-finalize.service.interface'
 
 const LOGGING_CONTEXT = 'ReportFinalizeService'
@@ -172,6 +173,7 @@ export class ReportFinalizeService implements IReportFinalizeService {
   async withdrawInflightSibling(
     companyId: string,
     type: ReportTypeEnum,
+    options: WithdrawInflightSiblingOptions = {},
   ): Promise<string[]> {
     await this.companyModel.findOne({
       where: { id: companyId },
@@ -216,10 +218,18 @@ export class ReportFinalizeService implements IReportFinalizeService {
       return []
     }
 
+    // `IN_REVIEW` always collides: a reviewer is mid-workflow on that report, so
+    // withdrawing it out from under them is a different act from replacing
+    // something nobody has picked up. `POSTPONED` collides by default for the
+    // same reason it exists — the applicant chose to defer and should finish —
+    // but a caller for whom `POSTPONED` is simply what a submission with
+    // outliers becomes can ask for it to be replaced instead. See
+    // `CreateReportDto.withdrawPostponedSibling`.
     const blocking = siblings.find(
       (sibling) =>
         sibling.status === ReportStatusEnum.IN_REVIEW ||
-        sibling.status === ReportStatusEnum.POSTPONED,
+        (sibling.status === ReportStatusEnum.POSTPONED &&
+          !options.withdrawPostponed),
     )
     if (blocking) {
       throw new ConflictException(
@@ -238,8 +248,12 @@ export class ReportFinalizeService implements IReportFinalizeService {
     )
 
     this.logger.info(
-      `Withdrew ${withdrawnIds.length} SUBMITTED ${type} report(s) for company ${companyId}`,
-      { context: LOGGING_CONTEXT, withdrawnIds },
+      `Withdrew ${withdrawnIds.length} in-flight ${type} report(s) for company ${companyId}`,
+      {
+        context: LOGGING_CONTEXT,
+        withdrawnIds,
+        statuses: siblings.map((sibling) => sibling.status),
+      },
     )
 
     return withdrawnIds
