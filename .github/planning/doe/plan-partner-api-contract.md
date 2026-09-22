@@ -91,28 +91,40 @@ because its editor already produces HTML and wrapping that in a `.docx` to send
 it back would be absurd. Each channel takes the form its users actually hold, and
 neither has two ways to send one thing.
 
-**Status: the converter is landed, the route is not.**
-`feat/doe-equality-document` (`6853deedd`) adds
-`apps/directorate-of-equality-partner-api/src/modules/submission/equality-document.ts`
-and its spec — 12 cases — and promotes `mammoth` to a direct dependency. It
-already does the security work the section below asks for: magic-byte sniffing
-rather than trusting the filename or content type (ZIP, PDF and OLE2 signatures,
-plus `word/document.xml` present inside the archive, which is what separates a
-`.docx` from an `.xlsx` or a plain zip), a 10 MB cap in
-`MAX_EQUALITY_DOCUMENT_BYTES`, explicit `.pdf` and `.doc` refusals that say what
-to do instead, and the library's own wording kept out of the error message.
+**Status: shipped**, on `feat/doe-equality-document` — the converter in
+`6e22742b` (12 cases) and the route in `21de1d30`.
 
-What is left on this phase:
+What landed, and the two decisions taken while wiring it:
 
-- Wire the multipart route — `POST /partner/reports/equality` as
-  `multipart/form-data`, multer's per-route file size set from
-  `MAX_EQUALITY_DOCUMENT_BYTES`.
-- Drop `equalityReportContent` from the partner DTO, which is also what settles
-  the two #1532 findings deferred to here: the `@ApiHTML` base64 transform on
-  that field, and a spec pinning the partner DTO's key set so a field added to
-  the island.is base cannot silently join an external contract.
-- The calibration run — five or six real equality plans through mammoth.
-- Guide §B.
+- `POST /partner/reports/equality` is `multipart/form-data` with a JSON
+  `payload` part and a `.docx` `document` part. `equalityReportContent` is off
+  the partner DTO entirely, so it is a plain `OmitType` again.
+- **`JsonPartPipe`** is the part that needed care. A multipart part is a string,
+  so the global `ValidationPipe` would have passed any text through and this
+  route would have accepted bodies the JSON routes reject — the fourth
+  "previews clean, rejected at submit", in the phase whose plan named it as the
+  thing not to add. The pipe owns no rules: it parses and delegates to a real
+  `ValidationPipe` built from `PARTNER_VALIDATION_OPTIONS`, now shared with
+  `bootstrap`. Same options by construction rather than by agreement, and a spec
+  pins that an unknown field inside the part is still a `400` naming it.
+- **The conversion lives in `PartnerSubmissionService`**, not the shared service.
+  `ApplicationService` receives `equalityReportContent` exactly as the portal
+  sends it, so nothing downstream can tell the two channels apart.
+- Multer's cap is per route from `MAX_EQUALITY_DOCUMENT_BYTES`, with memory
+  storage so nothing reaches disk. Content checks stay in the converter, which
+  sniffs magic bytes rather than trusting the filename or content type. Oversized
+  is a `413` from multer; every other document refusal is a `400` that says what
+  to send instead.
+
+Three findings from the #1532 review are settled here rather than patched there,
+which is why they were deferred: the `@ApiHTML` base64 transform on a field
+documented as plain HTML, a spec pinning that DTO's key set, and `"required"`
+never having rejected `""` — all three concerned a field this phase removes.
+
+**Still outstanding on this phase:** the calibration run — five or six real
+equality plans through mammoth, to see what the conversion does to documents
+Jafnréttisstofa will actually receive. That is a judgement about reviewer
+workload, not something a test can answer.
 
 ## Phase 3 — Outliers detected at submit
 
@@ -251,9 +263,13 @@ cosmetic and can follow the guide's section layout.
       accepted, so the bound cannot drift into a charset allowlist
 - [x] Converter: `.pdf`, `.doc`, non-document, non-Word zip, empty document,
       oversized and corrupt archive all refused (`equality-document.spec.ts`)
-- [ ] Multipart submit: valid `.docx`, `.pdf` refused, `.doc` refused, oversized
+- [x] Multipart submit: valid `.docx`, `.pdf` refused, `.doc` refused, oversized
       refused, missing part refused, malformed zip refused
-- [ ] Conversion output asserted on a real plan fixture, not a synthetic one
+- [x] The JSON part validates by the same rules as a JSON body — unknown field
+      refused inside the part, and valid JSON that is not an object refused
+      rather than validated as an empty one
+- [ ] Conversion output asserted on a real plan fixture, not a synthetic one —
+      waiting on the calibration documents
 - [ ] Submit with no outliers → `SUBMITTED`
 - [ ] Submit with outliers and no groups → `POSTPONED`, outlier list in the body
 - [ ] Submit with outliers and a correct partition → `SUBMITTED` in one call
@@ -290,8 +306,9 @@ cosmetic and can follow the guide's section layout.
 | 1     | Declare `API_ENV` on the partner API           | —     | **Done**, `2a66fb537`                   |
 | 1     | Drop `company.nationalId`                      | —     | **Done**, `2a66fb537`                   |
 | 1     | `/` bound on `providerId`                      | #1532 | **Done**, `a42efe44`                    |
-| 2     | `.docx` → HTML converter                       | —     | **Done**, `6853deedd` (12 cases)        |
-| 2     | Multipart route, document-only DTO             | —     | Pending — converter waiting on it       |
+| 2     | `.docx` → HTML converter                       | —     | **Done**, `6e22742b` (12 cases)         |
+| 2     | Multipart route, document-only DTO             | —     | **Done**, `21de1d30`                    |
+| 2     | Calibration on real plans                      | —     | Pending — needs real documents          |
 | 3     | Detection at submit → `POSTPONED`              | —     | Pending                                 |
 | 3     | `PUT …/outliers`                               | —     | Pending                                 |
 | 4     | Dry run: scope, input shape, shared validation | —     | Pending                                 |
@@ -352,19 +369,24 @@ once deployed — add it to the pre-launch env checklist.
 
 ## Branch stack
 
-`feat/doe-equality-document` is stacked on this branch, but it branches at
-`e86fb9de1` (_docs(doe): record phase 1 as shipped_), which is **not** the tip —
-`e3bbc41b5`, the review fixes, landed after it.
+`feat/doe-equality-document` is stacked on `feat/doe-partner-api-contract` and
+branches at **`5ea4e8e0`**, that branch's tip.
 
-When #1532 squash-merges, that base commit disappears from the history and phase
-2 has to be moved onto the squashed commit explicitly:
+It used to branch at `e86fb9de1`, four commits earlier, which would have
+conflicted: phase 2 edits `partner.controller.ts` and the guide, and both
+changed after that point. It was restacked before the route work started.
+
+When #1532 squash-merges, the base disappears from the history and phase 2 has
+to be moved onto the squashed commit explicitly:
 
 ```bash
-git rebase --onto origin/main e86fb9de1 feat/doe-equality-document
+git rebase --onto origin/main 5ea4e8e0 feat/doe-equality-document
 ```
 
-Written down because `e86fb9de1` is otherwise only recoverable from that
-branch's own reflog.
+Written down because `5ea4e8e0` is otherwise only recoverable from that branch's
+own reflog. **Update this line if the phase 1 branch gains another commit** —
+the base is whatever `feat/doe-equality-document` is currently stacked on, not
+whatever this file last said.
 
 ## Context that lives outside this repo
 
