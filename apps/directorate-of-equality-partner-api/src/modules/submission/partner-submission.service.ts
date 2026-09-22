@@ -2,6 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
 import {
   IApplicationService,
+  SubmitPartnerEqualityReportDto,
   SubmitPartnerSalaryReportDto,
 } from '@dmr.is/doe-modules/application'
 import { CompanyDto } from '@dmr.is/doe-modules/company'
@@ -12,6 +13,13 @@ import {
   IScoringModelService,
   PartnerSalaryPayloadFields,
 } from '@dmr.is/doe-modules/scoring-model'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
+import { convertEqualityDocumentToHtml } from './equality-document'
+
+import 'multer'
+
+const LOGGING_CONTEXT = 'PartnerSubmissionService'
 
 /**
  * Translates this surface's payload into the one the shared submission path
@@ -35,6 +43,8 @@ export class PartnerSubmissionService {
     private readonly applicationService: IApplicationService,
     @Inject(IScoringModelService)
     private readonly scoringModelService: IScoringModelService,
+    @Inject(LOGGER_PROVIDER)
+    private readonly logger: Logger,
   ) {}
 
   async submitSalary(
@@ -52,6 +62,50 @@ export class PartnerSubmissionService {
     )
 
     return this.applicationService.submitSalary({ ...rest, parsed }, company)
+  }
+
+  /**
+   * Converts the uploaded plan, then files the identical way island.is does.
+   *
+   * The conversion is the whole of what this channel adds. `ApplicationService`
+   * receives `equalityReportContent` exactly as it does from the portal, so the
+   * stored report, the reviewer's editor and the approved PDF cannot tell the
+   * two channels apart — which is the point. A `.docx` is transport, not a
+   * second kind of equality report.
+   *
+   * The original is deliberately not stored. The reviewer edits and approves the
+   * HTML, so the approved HTML is the record; keeping the upload beside it would
+   * create a second artefact that diverges from the approved one the moment a
+   * reviewer touches it, with nothing to say which is the plan.
+   */
+  async submitEquality(
+    input: SubmitPartnerEqualityReportDto,
+    document: Express.Multer.File | undefined,
+    company: CompanyDto,
+  ): Promise<CreateReportResponseDto> {
+    const { html, warnings } = await convertEqualityDocumentToHtml(
+      document?.buffer,
+    )
+
+    // Not returned to the vendor: an unmapped paragraph style is not something a
+    // payroll system can act on, and a warning on a 201 invites a vendor to
+    // treat a filed report as failed. It is logged because conversion quality
+    // lands on Jafnréttisstofa's reviewers, and this is the only signal that
+    // something in the plan did not survive.
+    if (warnings.length > 0) {
+      this.logger.warn('Equality plan converted with warnings', {
+        context: LOGGING_CONTEXT,
+        companyId: company.id,
+        providerId: input.providerId,
+        warningCount: warnings.length,
+        warnings,
+      })
+    }
+
+    return this.applicationService.submitEquality(
+      { ...input, equalityReportContent: html },
+      company,
+    )
   }
 
   /**

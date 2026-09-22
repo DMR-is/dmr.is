@@ -8,7 +8,16 @@ import { CompanyDto } from '@dmr.is/doe-modules/company'
 import { PartnerSubmissionService } from '../submission/partner-submission.service'
 import { PartnerController } from './partner.controller'
 
+import 'multer'
+
 const COMPANY = { id: 'company-1', nationalId: '5555555555' } as CompanyDto
+
+/**
+ * The upload never reaches a converter here — `submitEquality` is a double.
+ * The subject is still `answerCreated`, and the document is only present
+ * because the handler now takes one.
+ */
+const DOCUMENT = { buffer: Buffer.from('docx') } as Express.Multer.File
 
 const responseDouble = () => {
   const status = jest.fn()
@@ -37,8 +46,8 @@ describe('PartnerController — the replay status split', () => {
     submitEquality = jest.fn()
 
     controller = new PartnerController(
-      { submitEquality } as unknown as IApplicationService,
-      { submitSalary } as unknown as PartnerSubmissionService,
+      {} as unknown as IApplicationService,
+      { submitSalary, submitEquality } as unknown as PartnerSubmissionService,
     )
   })
 
@@ -90,7 +99,7 @@ describe('PartnerController — the replay status split', () => {
       submitEquality.mockResolvedValue({ reportId: 'e1', replayed: false })
       const { res, status } = responseDouble()
 
-      await controller.submitEqualityReport({} as never, COMPANY, res)
+      await controller.submitEqualityReport({} as never, DOCUMENT, COMPANY, res)
 
       expect(status).toHaveBeenCalledWith(HttpStatus.CREATED)
     })
@@ -99,7 +108,7 @@ describe('PartnerController — the replay status split', () => {
       submitEquality.mockResolvedValue({ reportId: 'e1', replayed: true })
       const { res, status } = responseDouble()
 
-      await controller.submitEqualityReport({} as never, COMPANY, res)
+      await controller.submitEqualityReport({} as never, DOCUMENT, COMPANY, res)
 
       expect(status).toHaveBeenCalledWith(HttpStatus.OK)
     })

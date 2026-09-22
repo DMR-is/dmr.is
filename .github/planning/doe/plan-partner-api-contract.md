@@ -91,28 +91,49 @@ because its editor already produces HTML and wrapping that in a `.docx` to send
 it back would be absurd. Each channel takes the form its users actually hold, and
 neither has two ways to send one thing.
 
-**Status: the converter is landed, the route is not.**
-`feat/doe-equality-document` (`6853deedd`) adds
-`apps/directorate-of-equality-partner-api/src/modules/submission/equality-document.ts`
-and its spec — 12 cases — and promotes `mammoth` to a direct dependency. It
-already does the security work the section below asks for: magic-byte sniffing
-rather than trusting the filename or content type (ZIP, PDF and OLE2 signatures,
-plus `word/document.xml` present inside the archive, which is what separates a
-`.docx` from an `.xlsx` or a plain zip), a 10 MB cap in
-`MAX_EQUALITY_DOCUMENT_BYTES`, explicit `.pdf` and `.doc` refusals that say what
-to do instead, and the library's own wording kept out of the error message.
+**Status: shipped**, on `feat/doe-equality-document` — the converter in
+`a763469c` (12 cases) and the route in `82f8b776`.
 
-What is left on this phase:
+> **Hashes in this file are only as durable as the commits they name.** These
+> two changed once already when the branch was rebased onto the squashed #1532,
+> and every phase 1 hash this file used to cite — five of them — stopped
+> resolving for anyone else the moment that PR squash-merged, since those commits
+> only ever existed on a branch that no longer exists. They now cite `2057c7b8`,
+> the commit on `main`. The check is
+> `git merge-base --is-ancestor <hash> origin/main`, not `git cat-file -e`: a
+> local object store still holds commits nobody else can see.
 
-- Wire the multipart route — `POST /partner/reports/equality` as
-  `multipart/form-data`, multer's per-route file size set from
-  `MAX_EQUALITY_DOCUMENT_BYTES`.
-- Drop `equalityReportContent` from the partner DTO, which is also what settles
-  the two #1532 findings deferred to here: the `@ApiHTML` base64 transform on
-  that field, and a spec pinning the partner DTO's key set so a field added to
-  the island.is base cannot silently join an external contract.
-- The calibration run — five or six real equality plans through mammoth.
-- Guide §B.
+What landed, and the two decisions taken while wiring it:
+
+- `POST /partner/reports/equality` is `multipart/form-data` with a JSON
+  `payload` part and a `.docx` `document` part. `equalityReportContent` is off
+  the partner DTO entirely, so it is a plain `OmitType` again.
+- **`JsonPartPipe`** is the part that needed care. A multipart part is a string,
+  so the global `ValidationPipe` would have passed any text through and this
+  route would have accepted bodies the JSON routes reject — the fourth
+  "previews clean, rejected at submit", in the phase whose plan named it as the
+  thing not to add. The pipe owns no rules: it parses and delegates to a real
+  `ValidationPipe` built from `PARTNER_VALIDATION_OPTIONS`, now shared with
+  `bootstrap`. Same options by construction rather than by agreement, and a spec
+  pins that an unknown field inside the part is still a `400` naming it.
+- **The conversion lives in `PartnerSubmissionService`**, not the shared service.
+  `ApplicationService` receives `equalityReportContent` exactly as the portal
+  sends it, so nothing downstream can tell the two channels apart.
+- Multer's cap is per route from `MAX_EQUALITY_DOCUMENT_BYTES`, with memory
+  storage so nothing reaches disk. Content checks stay in the converter, which
+  sniffs magic bytes rather than trusting the filename or content type. Oversized
+  is a `413` from multer; every other document refusal is a `400` that says what
+  to send instead.
+
+Three findings from the #1532 review are settled here rather than patched there,
+which is why they were deferred: the `@ApiHTML` base64 transform on a field
+documented as plain HTML, a spec pinning that DTO's key set, and `"required"`
+never having rejected `""` — all three concerned a field this phase removes.
+
+**Still outstanding on this phase:** the calibration run — five or six real
+equality plans through mammoth, to see what the conversion does to documents
+Jafnréttisstofa will actually receive. That is a judgement about reviewer
+workload, not something a test can answer.
 
 ## Phase 3 — Outliers detected at submit
 
@@ -246,14 +267,21 @@ cosmetic and can follow the guide's section layout.
 - [x] `company.nationalId` in the body → rejected by the strict whitelist
 - [x] `equalityReportContent` **required** on the partner equality route; the
       PDF fields refused there, still accepted on island.is
-- [x] `providerId` containing `/` → rejected, so nothing files under a handle
-      `GET …/:providerId` cannot match — and `?`, `#`, `%` and a space still
-      accepted, so the bound cannot drift into a charset allowlist
+- [x] `providerId` containing `/` or `\`, or equal to `.` or `..` → rejected, so
+      nothing files under a handle `GET …/:providerId` cannot match — and `?`,
+      `#`, `%`, a space and `2026.Q1.042` still accepted, so the bound cannot
+      drift into a charset allowlist
+- [x] A read trims its `providerId`, so a trailing space finds the report the
+      submission stored
 - [x] Converter: `.pdf`, `.doc`, non-document, non-Word zip, empty document,
       oversized and corrupt archive all refused (`equality-document.spec.ts`)
-- [ ] Multipart submit: valid `.docx`, `.pdf` refused, `.doc` refused, oversized
+- [x] Multipart submit: valid `.docx`, `.pdf` refused, `.doc` refused, oversized
       refused, missing part refused, malformed zip refused
-- [ ] Conversion output asserted on a real plan fixture, not a synthetic one
+- [x] The JSON part validates by the same rules as a JSON body — unknown field
+      refused inside the part, and valid JSON that is not an object refused
+      rather than validated as an empty one
+- [ ] Conversion output asserted on a real plan fixture, not a synthetic one —
+      waiting on the calibration documents
 - [ ] Submit with no outliers → `SUBMITTED`
 - [ ] Submit with outliers and no groups → `POSTPONED`, outlier list in the body
 - [ ] Submit with outliers and a correct partition → `SUBMITTED` in one call
@@ -281,24 +309,26 @@ cosmetic and can follow the guide's section layout.
 
 | Phase | Item                                           | PR    | Status                                  |
 | ----- | ---------------------------------------------- | ----- | --------------------------------------- |
-| 1     | `providerId` format                            | —     | **Done**, `d1956e86f`                   |
-| 1     | Remove `equality/active`                       | —     | **Done**, `2a66fb537`                   |
-| 1     | Reject `salaryDataPeriod` on `AVERAGE`         | —     | **Done**, `2a66fb537`                   |
+| 1     | `providerId` format                            | —     | **Done**, `2057c7b8`                    |
+| 1     | Remove `equality/active`                       | —     | **Done**, `2057c7b8`                    |
+| 1     | Reject `salaryDataPeriod` on `AVERAGE`         | —     | **Done**, `2057c7b8`                    |
 | 1     | Move the catalog route                         | —     | **Deferred** — module boundary, see 1.4 |
-| 1     | Partner equality DTO via `OmitType`            | —     | **Done**, `2a66fb537`                   |
-| 1     | Stale guide text                               | —     | **Done**, `2a66fb537`                   |
-| 1     | Declare `API_ENV` on the partner API           | —     | **Done**, `2a66fb537`                   |
-| 1     | Drop `company.nationalId`                      | —     | **Done**, `2a66fb537`                   |
-| 1     | `/` bound on `providerId`                      | #1532 | **Done**, `a42efe44`                    |
-| 2     | `.docx` → HTML converter                       | —     | **Done**, `6853deedd` (12 cases)        |
-| 2     | Multipart route, document-only DTO             | —     | Pending — converter waiting on it       |
+| 1     | Partner equality DTO via `OmitType`            | —     | **Done**, `2057c7b8`                    |
+| 1     | Stale guide text                               | —     | **Done**, `2057c7b8`                    |
+| 1     | Declare `API_ENV` on the partner API           | —     | **Done**, `2057c7b8`                    |
+| 1     | Drop `company.nationalId`                      | —     | **Done**, `2057c7b8`                    |
+| 1     | `/` bound on `providerId`                      | #1532 | **Done**, `2057c7b8`                    |
+| 1     | `\`, `.`, `..` and the untrimmed read path     | #1532 | **Done**, `d1dc821a`                    |
+| 2     | `.docx` → HTML converter                       | —     | **Done**, `a763469c` (12 cases)         |
+| 2     | Multipart route, document-only DTO             | —     | **Done**, `82f8b776`                    |
+| 2     | Calibration on real plans                      | —     | Pending — needs real documents          |
 | 3     | Detection at submit → `POSTPONED`              | —     | Pending                                 |
 | 3     | `PUT …/outliers`                               | —     | Pending                                 |
 | 4     | Dry run: scope, input shape, shared validation | —     | Pending                                 |
 
 ## Phase 1 outcome
 
-Shipped in `2a66fb537`, with `d1956e86f` ahead of it. Typecheck, lint and tests
+Shipped in `2057c7b8` (#1532, squash-merged). Typecheck, lint and tests
 clean across `doe-modules` (78 suites / 1539), the partner API (10 / 82) and
 `directorate-of-equality-api` (15 / 179).
 
@@ -312,12 +342,12 @@ Two things the work turned up that the plan had not anticipated:
 
 ## The #1532 review, settled
 
-**The `/` bound is written** (`a42efe44`). The review raised
+**The `/` bound is written** (`2057c7b8`). The review raised
 `reports/:providerId` having no charset bound as _optional_; it was promoted and
 committed to in public, because it is a defect this branch introduced rather
 than a nice-to-have — `2026/Q1/042` filed and then matched no route, so a vendor
 could file a report it could never read back on the only handle this API gives
-it. It lives in `@ApiProviderId()` next to the trim from `e3bbc41b`, so all
+it. It lives in `@ApiProviderId()` next to the trim that shipped with it, so all
 three writers of `report.provider_id` inherit it, and the pattern reaches the
 generated client rather than only the guide.
 
@@ -326,11 +356,30 @@ the specs pin the acceptances too so the bound cannot later drift into a charset
 allowlist — which would re-impose a format for taste, the thing loosening this
 field set out to undo.
 
-Nothing else from that review is outstanding. Three findings were pushed back on
-with reasons: `CreateDraftReportDto` keeping `@ApiUUID` (one minter, no consumer
-for a loosening), and two deferred to phase 2 rather than fixed and reverted a
-week later — the `@ApiHTML` base64 transform on the partner equality field, and
-a spec pinning that DTO's key set.
+**The re-review then found the bound was one value short of its own reasoning.**
+`\`, `.` and `..` are rewritten by a URL before routing and fail identically;
+`d1dc821a` closes them, along with the read path not trimming while the write
+path did. Both shipped with phase 2 rather than waiting for a branch of their
+own, since phase 1 had already merged.
+
+Outstanding from the re-review, none of it blocking and none of it in phase 3's
+path:
+
+- `application-system.service.ts:110` — a comment claiming the DTOs still
+  constrain `providerId` to a UUID, which is the stated reason that function
+  treats the value as untrusted. The behaviour is right; the comment now
+  misleads, and a non-UUID on the island.is channel would make the approve/deny
+  callback a logged no-op.
+- `provider-id.spec.ts` covers the two base DTOs rather than the partner
+  subclasses the API actually binds. Metadata inheritance was verified, so this
+  is coverage rather than a bug.
+- `application.service.spec.ts:605`/`:858` assert the payload-silent case only;
+  the third replacement injects a hostile value and these two should match it.
+
+Three findings were pushed back on with reasons, and one of those —
+`CreateDraftReportDto` keeping `@ApiUUID` — stands: one minter, no consumer for
+a loosening. The other two were deferred to phase 2 and are settled there by
+removing the field they were about.
 
 ## Deploy consequence
 
@@ -352,19 +401,15 @@ once deployed — add it to the pre-launch env checklist.
 
 ## Branch stack
 
-`feat/doe-equality-document` is stacked on this branch, but it branches at
-`e86fb9de1` (_docs(doe): record phase 1 as shipped_), which is **not** the tip —
-`e3bbc41b5`, the review fixes, landed after it.
+Flat again. #1532 squash-merged as `2057c7b8` on 22 Sept, and
+`feat/doe-equality-document` was rebased straight onto `origin/main` — three
+commits, no conflicts. Phase 3 branches off `main` like any other work.
 
-When #1532 squash-merges, that base commit disappears from the history and phase
-2 has to be moved onto the squashed commit explicitly:
-
-```bash
-git rebase --onto origin/main e86fb9de1 feat/doe-equality-document
-```
-
-Written down because `e86fb9de1` is otherwise only recoverable from that
-branch's own reflog.
+The stacking is worth remembering for the next pair, because it cost a restack
+mid-phase: phase 2 originally branched four commits before its
+parent's tip, and it edits `partner.controller.ts` and the guide, both of which
+phase 1 changed after that point. A stacked branch wants the tip, not the commit
+that happened to be current when it was created.
 
 ## Context that lives outside this repo
 

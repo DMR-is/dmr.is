@@ -10,8 +10,10 @@ import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
 import { API_VERSION, applyApiRouting, GLOBAL_PREFIX } from './api-routing'
+import { MAX_PARTNER_JSON_BYTES } from './request-limits'
 import { setupSwaggerDocument } from './setupSwaggerDocument'
 import { SWAGGER_CONFIG } from './swagger.config'
+import { PARTNER_VALIDATION_OPTIONS } from './validation-options'
 
 async function bootstrap() {
   // Typed as the Express application because `trust proxy` below is an Express
@@ -38,20 +40,12 @@ async function bootstrap() {
   // as JSON on the submission itself. 8mb rather than the sibling app's 6mb
   // because there is no island.is payload cap in front of this one — a vendor
   // posts the report whole.
-  app.use(json({ limit: '8mb' }))
-  app.use(urlencoded({ extended: true, limit: '8mb' }))
+  app.use(json({ limit: MAX_PARTNER_JSON_BYTES }))
+  app.use(urlencoded({ extended: true, limit: MAX_PARTNER_JSON_BYTES }))
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      // Unlike the sibling app, which strips unknown fields silently. On a
-      // public API that silence is a trap: a vendor misspells a field, the
-      // request succeeds, and the value is quietly absent from the report. Tell
-      // them instead.
-      forbidNonWhitelisted: true,
-    }),
-  )
+  // Shared with the multipart equality route's own pipe — see
+  // `PARTNER_VALIDATION_OPTIONS`. One definition, so the two paths cannot drift.
+  app.useGlobalPipes(new ValidationPipe(PARTNER_VALIDATION_OPTIONS))
 
   applyApiRouting(app)
 

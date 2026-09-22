@@ -11,10 +11,22 @@ import {
   Post,
   Query,
   Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common'
-import { ApiParam, ApiSecurity, ApiTags } from '@nestjs/swagger'
+import { FileInterceptor } from '@nestjs/platform-express'
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiExtraModels,
+  ApiParam,
+  ApiSecurity,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger'
 
+import { ONE_MEGA_BYTE } from '@dmr.is/constants'
 import {
   ApplicationReportDetailDto,
   IApplicationService,
@@ -44,7 +56,16 @@ import { RequireApiScope } from '../../core/guards/api-key-scope/require-api-sco
 import { RequireApiScopeGuard } from '../../core/guards/api-key-scope/require-api-scope.guard'
 import { ApiKeyThrottlerGuard } from '../../core/guards/api-key-throttler/api-key-throttler.guard'
 import { PartnerCompanyGuard } from '../../core/guards/partner-company/partner-company.guard'
+import { MAX_PARTNER_JSON_BYTES } from '../../request-limits'
+import {
+  DOCX_MIME_TYPE,
+  MAX_EQUALITY_DOCUMENT_BYTES,
+} from '../submission/equality-document'
+import { JsonPartPipe } from '../submission/json-part.pipe'
 import { PartnerSubmissionService } from '../submission/partner-submission.service'
+import { ProviderIdParamPipe } from './provider-id-param.pipe'
+
+import 'multer'
 
 /**
  * The public third-party surface.
@@ -195,8 +216,101 @@ export class PartnerController {
     return this.answerCreated(res, result)
   }
 
+  /**
+   * The one route on this surface that is not JSON.
+   *
+   * An equality plan is a document an employer already has, almost always in
+   * Word. Asking a payroll vendor to turn it into HTML put a conversion problem
+   * on the party least able to solve it — so the file arrives as it exists and
+   * the conversion happens here.
+   *
+   * **Two parts, not fifteen form fields.** `payload` carries the report fields
+   * as JSON so nested `company` and `subsidiaries[]` keep their structure and
+   * every existing validator applies unchanged; `document` carries the `.docx`.
+   * Flattening the object into form fields would have meant re-expressing that
+   * structure in a shape class-validator cannot see.
+   *
+   * **One request, not three.** A presigned upload followed by a submit is the
+   * right shape for a payroll extract measured in megabytes; for a Word document
+   * it is two extra round trips and a half-filed state to clean up when the
+   * second one never comes.
+   *
+   * The `json()` body limit does not apply here — Express's JSON and urlencoded
+   * parsers do not touch `multipart/form-data`. The file bound is multer's,
+   * below, and it is per route rather than global.
+   */
   @Post('reports/equality')
   @RequireApiScope(ApiKeyScopeEnum.EQUALITY_SUBMIT)
+  @ApiConsumes('multipart/form-data')
+  @ApiExtraModels(SubmitPartnerEqualityReportDto)
+  @ApiBody({
+    required: true,
+    schema: {
+      type: 'object',
+      required: ['payload', 'document'],
+      properties: {
+        // `allOf` rather than a bare `$ref`: OpenAPI 3.0 requires a `$ref`'s
+        // siblings to be ignored, so a description written beside one is
+        // dropped by every consumer — including the sentence that states the
+        // strict-validation contract. Wrapping it makes both survive.
+        payload: {
+          // `type` alongside `allOf` is legal where a `$ref` sibling is not, so
+          // a generator that does not resolve the `allOf` still knows this part
+          // is an object rather than having nothing to go on.
+          type: 'object',
+          allOf: [{ $ref: getSchemaPath(SubmitPartnerEqualityReportDto) }],
+          description:
+            'The report fields, as a JSON object. Send this part as application/json — a client that sends it as a file part is rejected, since this route accepts exactly one file and it is the document. Validated exactly as a JSON request body on any other route here: unknown fields are refused rather than ignored.',
+        },
+        document: {
+          type: 'string',
+          format: 'binary',
+          description: `The equality plan as a .docx (${DOCX_MIME_TYPE}), at most ${MAX_EQUALITY_DOCUMENT_BYTES / ONE_MEGA_BYTE}MB. A .pdf or a legacy .doc is refused with an explanation rather than converted badly. The file is read for its content and not stored — what is kept is the converted HTML, which is what a reviewer edits and approves.`,
+        },
+      },
+    },
+    // What tells a generated client to send each part as the route reads it.
+    // Without this a client handed a typed object has to guess, and the ones
+    // that guess "file" get `400 Unexpected field` from multer — this route
+    // accepts exactly one file and it is the document. The guide's curl says the
+    // same thing by hand with `;type=application/json`; this is the document
+    // carrying it so a client does not have to be told.
+    encoding: {
+      payload: { contentType: 'application/json' },
+      document: { contentType: DOCX_MIME_TYPE },
+    },
+  })
+  @UseInterceptors(
+    FileInterceptor('document', {
+      // Memory storage, which is multer's default here: the buffer is converted
+      // and dropped inside the request. Nothing about this file outlives the
+      // call, so writing it to disk would only create something to clean up.
+      //
+      // ⚠️ **Every one of these is load-bearing.** `express.json({ limit })` does
+      // not see multipart, so this object is the *only* bound on this route —
+      // and busboy's defaults for everything left unset are `fields: Infinity`
+      // and `parts: Infinity`. Setting `fileSize` alone bounds the half of the
+      // request that was already obvious and leaves the other half unbounded: a
+      // caller can post ten thousand text fields under a valid key and every one
+      // of them is buffered.
+      limits: {
+        fileSize: MAX_EQUALITY_DOCUMENT_BYTES,
+        files: 1,
+        // Three, for a two-part contract. Busboy raises this when the counter
+        // *reaches* the limit — `if (++parts === partsLimit)` — so `parts: N`
+        // permits N−1, and `parts: 2` rejected every valid upload with
+        // "Too many parts". `fields: 1` is what actually refuses the extras,
+        // and it is checked before the counter moves.
+        parts: 3,
+        fields: 1,
+        // The `payload` part is a JSON body in all but transport, so it gets the
+        // body limit the JSON routes get. Busboy's default is 1MB, which would
+        // have made a large group submission fail with "Field value too long"
+        // while the description promised it validates like any other body.
+        fieldSize: MAX_PARTNER_JSON_BYTES,
+      },
+    }),
+  )
   @PartnerResponse({
     operationId: 'submitPartnerEqualityReport',
     status: HttpStatus.CREATED,
@@ -207,14 +321,23 @@ export class PartnerController {
         'Replayed — as on the salary submission. Nothing was filed and the body was not read.',
     },
     description:
-      'Files an equality report — the narrative document that must be approved before any salary report can reference it. Same `providerId` and idempotency rules as the salary submission. A **409** means the company’s own state prevents filing: it is not active in the register, or a previous equality report is still in review.',
+      'Files an equality report — the narrative plan that must be approved before any salary report can reference it. Sent as `multipart/form-data`: a JSON `payload` part and the plan itself as a `.docx` in a `document` part. Same `providerId` and idempotency rules as the salary submission. A **400** means the payload was rejected or the document could not be used — the message says which, and for a document it says what to send instead. A **413** means the file is past the size limit. A **409** means the company’s own state prevents filing: it is not active in the register, or a previous equality report is still in review.',
   })
   async submitEqualityReport(
-    @Body() input: SubmitPartnerEqualityReportDto,
+    @Body(
+      'payload',
+      new JsonPartPipe(SubmitPartnerEqualityReportDto, 'payload'),
+    )
+    input: SubmitPartnerEqualityReportDto,
+    @UploadedFile() document: Express.Multer.File | undefined,
     @CurrentCompany() company: CompanyDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {
-    const result = await this.applicationService.submitEquality(input, company)
+    const result = await this.submissionService.submitEquality(
+      input,
+      document,
+      company,
+    )
 
     return this.answerCreated(res, result)
   }
@@ -255,7 +378,7 @@ export class PartnerController {
       'Status and detail of a submitted report — where it is in review, its deadlines, and any reviewer comments. This is how a vendor learns a report was approved or denied. Only reports filed through this channel are visible: a report the company filed on island.is is not readable here.',
   })
   getReport(
-    @Param('providerId') providerId: string,
+    @Param('providerId', ProviderIdParamPipe) providerId: string,
     @CurrentCompany() company: CompanyDto,
   ): Promise<ApplicationReportDetailDto> {
     return this.applicationService.getReport(providerId, company)
@@ -272,7 +395,7 @@ export class PartnerController {
       'The detected outliers on a submitted report, paginated. Separate from the report detail because the list can be long on a large employer.',
   })
   getReportOutliers(
-    @Param('providerId') providerId: string,
+    @Param('providerId', ProviderIdParamPipe) providerId: string,
     @Query() query: PagingQuery,
     @CurrentCompany() company: CompanyDto,
   ): Promise<GetReportOutliersResponseDto> {
