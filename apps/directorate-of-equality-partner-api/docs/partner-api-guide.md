@@ -229,17 +229,56 @@ server-side, so they do not depend on your clock.
 _Scope: `equality:submit` → `201 { reportId, replayed: false }`, or
 `200 { reportId, replayed: true }` on a replay — as on the salary submission._
 
-Body (`SubmitPartnerEqualityReportDto`):
+**This is the one route here that is not JSON.** It is `multipart/form-data`
+with exactly two parts:
 
-| Field                                                                                        | Notes                                                                                                                                                                                                                                                                                                       |
-| -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `providerId`                                                                                 | your own id for this submission, any non-empty string up to 256 chars, no `/` — see above                                                                                                                                                                                                                   |
-| `equalityReportContent`                                                                      | **required.** The plan itself, as **plain HTML**. Persisted as-is and rendered into the approved PDF. This channel accepts no other form — the base64 PDF fields on the island.is contract are not part of this one. (A base64 body is still decoded, for the island.is client's benefit, but send markup.) |
-| `companyAdminName` / `companyAdminTitle?` / `companyAdminEmail` / `companyAdminGender`       | the company executive who stands behind the plan. `companyAdminGender` is a `GenderEnum` value                                                                                                                                                                                                              |
-| `contactName` / `contactTitle?` / `contactEmail` / `contactPhone`                            | the day-to-day contact (tengiliður) Jafnréttisstofa writes to                                                                                                                                                                                                                                               |
-| `averageEmployeeMaleCount?` / `averageEmployeeFemaleCount?` / `averageEmployeeNeutralCount?` | optional and nullable on an equality report (required on a salary one)                                                                                                                                                                                                                                      |
-| `company`                                                                                    | the reporting company: `name`, `address`, `city`, `postcode`, `isatCategory` — a snapshot frozen onto the report, not a lookup. **No `nationalId`**: it had to equal the company your key belongs to, so the only accepted value was the one we already had. The snapshot takes it from your key            |
-| `subsidiaries?`                                                                              | `[{ name, nationalId }]` when the plan covers a group                                                                                                                                                                                                                                                       |
+| Part       | What it is                                                                                                                                                                                   |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `payload`  | the report fields, as a **JSON object** (`SubmitPartnerEqualityReportDto`, below). Validated exactly as a JSON body elsewhere here: an unknown field is a `400` naming it, not a silent drop |
+| `document` | the plan itself, as a **`.docx`**, at most 10MB                                                                                                                                              |
+
+You do not send the plan's text. Send the Word document the employer already
+has, and we convert it — because the employer keeps the plan in Word, and
+turning it into markup was a job you were never the right party to do.
+
+```bash
+curl -X POST https://<host>/api/v1/partner/reports/equality \
+  -H "Authorization: Bearer $API_KEY" \
+  -F 'payload={"providerId":"2026-Q1-042","companyAdminName":"…"};type=application/json' \
+  -F 'document=@jafnrettisaaetlun.docx'
+```
+
+**About the document:**
+
+- **`.docx` only.** A `.pdf` is refused with a message telling you to save as
+  `.docx`, and a legacy `.doc` with one telling you to re-save it. Neither is
+  converted badly — a mangled plan reaches a reviewer looking like the
+  employer's own work, which is worse than a clear refusal.
+- **The file is checked by its content, not its name.** Renaming a PDF to
+  `.docx` does not get it past; nor does the `Content-Type` you declare.
+- **A plan whose text is a scan or an image is refused.** The text has to be
+  present as text for a reviewer to work with it.
+- **We do not keep the file.** What is stored is the converted content, which is
+  what the reviewer edits and what the approved PDF is rendered from. Keep your
+  own copy of the original if you need one.
+- Over the size limit is a **`413`**; anything else wrong with the document is a
+  **`400`** whose message says what to send instead.
+
+The `payload` part (`SubmitPartnerEqualityReportDto`):
+
+| Field                                                                                        | Notes                                                                                                                                                                                                                                                                                            |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `providerId`                                                                                 | your own id for this submission, any non-empty string up to 256 chars, no `/` — see above                                                                                                                                                                                                        |
+| `companyAdminName` / `companyAdminTitle?` / `companyAdminEmail` / `companyAdminGender`       | the company executive who stands behind the plan. `companyAdminGender` is a `GenderEnum` value                                                                                                                                                                                                   |
+| `contactName` / `contactTitle?` / `contactEmail` / `contactPhone`                            | the day-to-day contact (tengiliður) Jafnréttisstofa writes to                                                                                                                                                                                                                                    |
+| `averageEmployeeMaleCount?` / `averageEmployeeFemaleCount?` / `averageEmployeeNeutralCount?` | optional and nullable on an equality report (required on a salary one)                                                                                                                                                                                                                           |
+| `company`                                                                                    | the reporting company: `name`, `address`, `city`, `postcode`, `isatCategory` — a snapshot frozen onto the report, not a lookup. **No `nationalId`**: it had to equal the company your key belongs to, so the only accepted value was the one we already had. The snapshot takes it from your key |
+| `subsidiaries?`                                                                              | `[{ name, nationalId }]` when the plan covers a group                                                                                                                                                                                                                                            |
+
+There is **no content field**. `equalityReportContent` and the two base64 PDF
+fields of the island.is contract are all absent here: the document part is the
+only way a plan arrives on this channel, so there is exactly one way to send it
+and nothing to be exclusive with.
 
 The report is created with status `SUBMITTED` and lands in the reviewer queue.
 
@@ -597,10 +636,13 @@ never move when the model changes or goes away.
 | 2   | `GET`  | `/partner/reports/salary/eligibility`   | `report:read`     |
 | 3   | `POST` | `/partner/reports/salary-analysis`      | `salary:submit`   |
 | 4   | `POST` | `/partner/reports/salary`               | `salary:submit`   |
-| 5   | `POST` | `/partner/reports/equality`             | `equality:submit` |
+| 5   | `POST` | `/partner/reports/equality` ¹           | `equality:submit` |
 | 6   | `GET`  | `/partner/reports/:providerId`          | `report:read`     |
 | 7   | `GET`  | `/partner/reports/:providerId/outliers` | `report:read`     |
 | 8   | `GET`  | `/partner/sub-criteria/catalog`         | `report:read`     |
+
+¹ `multipart/form-data` — a JSON `payload` part and a `.docx` `document` part.
+Every other route on this API takes and returns JSON.
 
 Scoring model (section C):
 
@@ -625,14 +667,15 @@ Scoring model (section C):
 
 ## Status codes
 
-| Code  | Meaning                                                                                                                                                    |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId` |
-| `201` | on a submission: filed                                                                                                                                     |
-| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`                                            |
-| `401` | missing or invalid key                                                                                                                                     |
-| `403` | key lacks the scope the route declares                                                                                                                     |
-| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                         |
-| `409` | the company is not active in the register (any route); renewal window not open; a sibling report is `IN_REVIEW` or `POSTPONED`                             |
-| `429` | rate limit — per key (headers) or per IP                                                                                                                   |
-| `503` | write collision. Retry with the same `providerId`                                                                                                          |
+| Code  | Meaning                                                                                                                                                               |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId`            |
+| `201` | on a submission: filed                                                                                                                                                |
+| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx` |
+| `401` | missing or invalid key                                                                                                                                                |
+| `403` | key lacks the scope the route declares                                                                                                                                |
+| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                    |
+| `409` | the company is not active in the register (any route); renewal window not open; a sibling report is `IN_REVIEW` or `POSTPONED`                                        |
+| `413` | the equality document is past the 10MB limit                                                                                                                          |
+| `429` | rate limit — per key (headers) or per IP                                                                                                                              |
+| `503` | write collision. Retry with the same `providerId`                                                                                                                     |

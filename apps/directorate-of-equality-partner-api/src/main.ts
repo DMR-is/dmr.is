@@ -12,6 +12,7 @@ import { AppModule } from './app/app.module'
 import { API_VERSION, applyApiRouting, GLOBAL_PREFIX } from './api-routing'
 import { setupSwaggerDocument } from './setupSwaggerDocument'
 import { SWAGGER_CONFIG } from './swagger.config'
+import { PARTNER_VALIDATION_OPTIONS } from './validation-options'
 
 async function bootstrap() {
   // Typed as the Express application because `trust proxy` below is an Express
@@ -41,17 +42,9 @@ async function bootstrap() {
   app.use(json({ limit: '8mb' }))
   app.use(urlencoded({ extended: true, limit: '8mb' }))
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      // Unlike the sibling app, which strips unknown fields silently. On a
-      // public API that silence is a trap: a vendor misspells a field, the
-      // request succeeds, and the value is quietly absent from the report. Tell
-      // them instead.
-      forbidNonWhitelisted: true,
-    }),
-  )
+  // Shared with the multipart equality route's own pipe — see
+  // `PARTNER_VALIDATION_OPTIONS`. One definition, so the two paths cannot drift.
+  app.useGlobalPipes(new ValidationPipe(PARTNER_VALIDATION_OPTIONS))
 
   applyApiRouting(app)
 

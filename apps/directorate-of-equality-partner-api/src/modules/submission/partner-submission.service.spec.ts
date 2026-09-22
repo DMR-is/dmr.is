@@ -4,8 +4,18 @@ import { IApplicationService } from '@dmr.is/doe-modules/application'
 import { CompanyDto } from '@dmr.is/doe-modules/company'
 import { SalaryDataBasisEnum } from '@dmr.is/doe-modules/report'
 import { IScoringModelService } from '@dmr.is/doe-modules/scoring-model'
+import { Logger } from '@dmr.is/logging'
 
+import { convertEqualityDocumentToHtml } from './equality-document'
 import { PartnerSubmissionService } from './partner-submission.service'
+
+jest.mock('./equality-document', () => ({
+  convertEqualityDocumentToHtml: jest.fn(),
+}))
+
+const convert = convertEqualityDocumentToHtml as jest.MockedFunction<
+  typeof convertEqualityDocumentToHtml
+>
 
 const COMPANY = { id: 'company-1' } as CompanyDto
 const PARSED = { criteria: [], roles: [], employees: [] }
@@ -24,6 +34,8 @@ describe('PartnerSubmissionService', () => {
   let expandToParsedPayload: jest.Mock
   let submitSalary: jest.Mock
   let salaryAnalysis: jest.Mock
+  let submitEquality: jest.Mock
+  let warn: jest.Mock
 
   beforeEach(() => {
     expandToParsedPayload = jest.fn().mockResolvedValue(PARSED)
@@ -32,10 +44,25 @@ describe('PartnerSubmissionService', () => {
       replayed: false,
     })
     salaryAnalysis = jest.fn().mockResolvedValue({ outliers: [] })
+    submitEquality = jest.fn().mockResolvedValue({
+      reportId: 'e1',
+      replayed: false,
+    })
+    warn = jest.fn()
+    convert.mockReset()
+    convert.mockResolvedValue({
+      html: '<h1>Jafnréttisáætlun</h1>',
+      warnings: [],
+    })
 
     service = new PartnerSubmissionService(
-      { submitSalary, salaryAnalysis } as unknown as IApplicationService,
+      {
+        submitSalary,
+        salaryAnalysis,
+        submitEquality,
+      } as unknown as IApplicationService,
       { expandToParsedPayload } as unknown as IScoringModelService,
+      { warn: warn } as unknown as Logger,
     )
   })
 
@@ -208,6 +235,94 @@ describe('PartnerSubmissionService', () => {
 
       await expect(service.salaryAnalysis(input, COMPANY)).rejects.toThrow()
       expect(salaryAnalysis).not.toHaveBeenCalled()
+    })
+  })
+
+  /**
+   * The converter has its own suite; what is pinned here is the seam. The
+   * document is transport: once it is HTML, this channel has nothing left to
+   * add, and `ApplicationService` must receive exactly what the portal sends it.
+   */
+  describe('submitEquality', () => {
+    const input = {
+      providerId: 'p-1',
+      company: { name: 'Fyrirtæki ehf.' },
+    } as never
+
+    const document = { buffer: Buffer.from('PK docx') } as Express.Multer.File
+
+    it('files the converted HTML as the report content', async () => {
+      await service.submitEquality(input, document, COMPANY)
+
+      expect(convert).toHaveBeenCalledWith(document.buffer)
+      expect(submitEquality).toHaveBeenCalledWith(
+        {
+          providerId: 'p-1',
+          company: { name: 'Fyrirtæki ehf.' },
+          equalityReportContent: '<h1>Jafnréttisáætlun</h1>',
+        },
+        COMPANY,
+      )
+    })
+
+    it('returns the shared service’s result untouched', async () => {
+      await expect(
+        service.submitEquality(input, document, COMPANY),
+      ).resolves.toEqual({ reportId: 'e1', replayed: false })
+    })
+
+    /**
+     * A conversion warning is about markup this channel could not represent —
+     * nothing a payroll system can act on, and surfacing it on a `201` invites a
+     * vendor to treat a filed report as failed. It still has to reach someone,
+     * because conversion quality lands on the reviewers.
+     */
+    it('logs conversion warnings rather than returning them', async () => {
+      convert.mockResolvedValue({
+        html: '<p>plan</p>',
+        warnings: ['Unrecognised paragraph style: Heading 7'],
+      })
+
+      const result = await service.submitEquality(input, document, COMPANY)
+
+      expect(result).not.toHaveProperty('warnings')
+      expect(warn).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          providerId: 'p-1',
+          warningCount: 1,
+        }),
+      )
+    })
+
+    it('says nothing when the conversion was clean', async () => {
+      await service.submitEquality(input, document, COMPANY)
+
+      expect(warn).not.toHaveBeenCalled()
+    })
+
+    /**
+     * The refusal has to happen before anything is filed. A report stored with
+     * an empty plan is worse than a rejected submission: it reaches a reviewer
+     * looking like the employer's own work.
+     */
+    it('files nothing when the document is refused', async () => {
+      convert.mockRejectedValue(new BadRequestException('not a .docx'))
+
+      await expect(
+        service.submitEquality(input, document, COMPANY),
+      ).rejects.toThrow(BadRequestException)
+      expect(submitEquality).not.toHaveBeenCalled()
+    })
+
+    it('passes a missing document to the converter, which owns that refusal', async () => {
+      convert.mockRejectedValue(new BadRequestException('missing or empty'))
+
+      await expect(
+        service.submitEquality(input, undefined, COMPANY),
+      ).rejects.toThrow(BadRequestException)
+      expect(convert).toHaveBeenCalledWith(undefined)
+      expect(submitEquality).not.toHaveBeenCalled()
     })
   })
 })
