@@ -41,6 +41,7 @@ import { minimumSetOrdinals } from '../report-statistics/lib/minimum-set'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
 import { CreateReportResponseDto } from './dto/create-report-response.dto'
+import { CreateSalaryOptions } from './dto/create-salary-options'
 import { IReportCreateService } from './report-create.service.interface'
 
 const LOGGING_CONTEXT = 'ReportCreateService'
@@ -94,8 +95,11 @@ export class ReportCreateService implements IReportCreateService {
     }
   }
 
-  async createSalary(input: CreateReportDto): Promise<CreateReportResponseDto> {
-    return this.createSalaryReport(input)
+  async createSalary(
+    input: CreateReportDto,
+    options: CreateSalaryOptions = {},
+  ): Promise<CreateReportResponseDto> {
+    return this.createSalaryReport(input, options)
   }
 
   async createEquality(
@@ -106,6 +110,7 @@ export class ReportCreateService implements IReportCreateService {
 
   private async createSalaryReport(
     input: CreateReportDto,
+    options: CreateSalaryOptions,
   ): Promise<CreateReportResponseDto> {
     const submittingCompany = this.getSubmittingCompany(input.companies)
 
@@ -134,6 +139,7 @@ export class ReportCreateService implements IReportCreateService {
     )
     const outliersPostponed = this.resolveOutlierPostponement(
       input,
+      options,
       detectedOrdinals,
     )
 
@@ -199,7 +205,13 @@ export class ReportCreateService implements IReportCreateService {
       await this.finalizeService.withdrawInflightSibling(
         submittingCompany.companyId,
         ReportTypeEnum.SALARY,
-        { withdrawPostponed: input.withdrawPostponedSibling ?? false },
+        {
+          withdrawPostponed: options.withdrawPostponedSibling ?? false,
+          // Only a sibling this channel filed. An applicant who deliberately
+          // postponed on island.is has not asked for their report to be retired
+          // by their payroll vendor's next filing.
+          providerType: input.providerType,
+        },
       )
 
     // 1. report row. Status splits on the postponement resolved above —
@@ -549,7 +561,7 @@ export class ReportCreateService implements IReportCreateService {
    * ⚠️ Was the ±1,95% band around a fitted line. See `selectMinimumSet`: the set
    * is two-directional, so a returned ordinal may be someone paid ABOVE their
    * stig, and an already-compliant company yields an EMPTY set, which makes
-   * `resolveOutlierPostponement` below require no groups at all. The guard
+   * `resolveOutlierPostponement` below require no groups at all. That function
    * itself is indifferent to direction — it compares ordinals.
    */
   private async computeDetectedOutlierOrdinals(
@@ -595,6 +607,7 @@ export class ReportCreateService implements IReportCreateService {
    */
   private resolveOutlierPostponement(
     input: CreateReportDto,
+    options: CreateSalaryOptions,
     detectedOrdinals: number[],
   ): boolean {
     const detectedSet = new Set(detectedOrdinals)
@@ -615,7 +628,7 @@ export class ReportCreateService implements IReportCreateService {
       // set `outliersPostponed` honestly. Postponing is the same outcome it
       // would have reached by setting the flag, arrived at from the one place
       // that knows whether there was anything to postpone.
-      if (input.postponeUnexplainedOutliers) {
+      if (options.postponeUnexplainedOutliers) {
         return true
       }
 

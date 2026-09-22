@@ -326,7 +326,16 @@ cosmetic and can follow the guide's section layout.
       `replayed: true`, nothing filed
 - [ ] Playground stores nothing and is reachable without submit scopes (per the
       scope decision)
-- [ ] `clientConfig.json` regenerated if any admin-visible shape changed
+- [ ] **`clientConfig.json` needs regenerating — phase 3 changed an
+      admin-visible shape.** `CreateReportResponseDto` gained `status` and
+      `unexplainedOutlierOrdinals`, and the committed snapshot in
+      `apps/directorate-of-equality-web/` still declares the old two-field
+      version. It is produced by curling a running `doe-api`
+      (`nx run directorate-of-equality-web:update-openapi-schema`, then
+      `codegen`), so it cannot be written by hand without fabricating generator
+      output. **The `generated-files` CI gate does not cover this file** — it
+      guards only the two workbook-derived ones — so green CI is not evidence
+      either way.
 
 ## Status Tracking
 

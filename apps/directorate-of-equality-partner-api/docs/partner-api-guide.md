@@ -471,25 +471,16 @@ The submission validates the partition strictly. The union of every group's
   employee ordinal(s)")
 - a detected outlier in no group → `400` ("missing from the outlier groups")
 - an ordinal in two groups → `400` ("appears in more than one outlier group")
-- detected outliers but `outlierGroups` empty or absent → `400`
 
-Because the set is recomputed at submit time, **any edit to the payroll extract
-or the scoring model between
-B4 and B6 can reshuffle who is in it.** If the payload changes, re-run B4 and
-re-partition; do not carry groups over.
+Sending **no** groups is not one of these. That is the postpone: the report is
+filed as `POSTPONED` with one default group over every detected outlier, and the
+response tells you which ordinals it is waiting on. B9 is how you finish it.
 
-**The deferral option.** Instead of groups, send `outliersPostponed: true` and
-omit `outlierGroups`. The report is filed with status `POSTPONED`, carrying one
-default group with an empty explanation over every detected outlier. It is
-all-or-none — postponement applies to the whole report, never to individual
-rows — and it requires at least one detected outlier (`400` otherwise).
-
-⚠️ **A postponed report cannot be completed through this API.** Resolving the
-explanations is `PUT /application/reports/:providerId/outliers`, which exists
-only on the island.is surface; the partner API exposes no such route. A
-`POSTPONED` report also sits in a status that blocks the employer's next
-submission until it is resolved. Unless the employer specifically wants to
-defer and finish on island.is themselves, send real groups.
+**The detected set is computed from the payload you submit**, in the same call,
+so nothing can reshuffle it between finding the outliers and explaining them.
+The old warning to re-run the analysis after any edit no longer applies — if you
+ran B4 first and then changed the extract, the submission simply detects the new
+set and reports it.
 
 ### B6. `POST /partner/reports/salary` — file it
 
@@ -547,7 +538,6 @@ under the strict validation above:
 | `scoringModelId`                                                  | the model B4 validated against. Must be `VALID`                                                                                                                                                                                                                                   |
 | `employees`                                                       | the payroll extract from B3, unchanged since B4                                                                                                                                                                                                                                   |
 | `outlierGroups?`                                                  | the partition from B5                                                                                                                                                                                                                                                             |
-| `outliersPostponed?`                                              | defaults to `false`. `true` defers every explanation                                                                                                                                                                                                                              |
 
 Resulting status: `SUBMITTED` when explanations were supplied (it lands in the
 reviewer queue), `POSTPONED` when deferred (a reviewer cannot pick it up).
@@ -556,8 +546,12 @@ Two more `409`s live on this route beyond the register check above: the renewal
 window being shut, and a previous report still in review. The response says
 which.
 
-Same sibling policy as A3: a prior `SUBMITTED` salary report is silently
-withdrawn and replaced; a prior `IN_REVIEW` **or `POSTPONED`** one gives `409`.
+Sibling policy: a prior `SUBMITTED` salary report is silently withdrawn and
+replaced, **and so is a prior `POSTPONED` one you filed through this API** —
+that is what lets you correct a payroll error after landing `POSTPONED` without
+first explaining figures you know are wrong. A prior `IN_REVIEW` report gives
+`409`; so does a `POSTPONED` report the employer filed on island.is, since
+deferring there was their deliberate choice and is theirs to finish.
 
 `503` means the write collided and should be retried with the same
 `providerId` — it does not mean the payload was wrong.
@@ -567,8 +561,10 @@ withdrawn and replaced; a prior `IN_REVIEW` **or `POSTPONED`** one gives `409`.
 _Scope: `report:read`_
 
 As A4, plus the salary-only fields: `salaryDataBasis`, `salaryDataPeriod`,
-`outliersPostponed` (true when it was filed without explanations, and it stays
-true after B9 as the record that it was), `includesImprovementPlan` (true when
+`outliersPostponed` (**derived from the current status**, not a record of
+history: it is true only while the report is `POSTPONED`, and reads `false` once
+B9 moves it to `SUBMITTED` — do not poll it to confirm your PUT applied, read
+`status`), `includesImprovementPlan` (true when
 the report has at least one outlier), and `result` — the frozen `ReportResultDto` snapshot the
 decision rests on.
 
@@ -619,6 +615,11 @@ and enters the reviewer queue.
   three years.
 - Also accepted while the report is `IN_REVIEW`, which leaves the status alone
   and updates what the reviewer is looking at.
+- **Any other status is a `400`**, including `SUBMITTED` — a report that is
+  already in the queue has nothing outstanding to explain, so this is a mistake
+  about which report you are addressing rather than a conflict to retry. The
+  same `400` covers a report that was withdrawn and replaced while your request
+  was in flight; read it back with B7 before retrying.
 
 ---
 

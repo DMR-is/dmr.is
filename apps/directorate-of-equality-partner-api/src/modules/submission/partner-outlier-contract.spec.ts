@@ -1,7 +1,9 @@
 import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
 
-import { SubmitPartnerSalaryReportDto } from './submit-partner-salary-report.dto'
+import { SubmitPartnerSalaryReportDto } from '@dmr.is/doe-modules/application'
+
+import { PARTNER_VALIDATION_OPTIONS } from '../../validation-options'
 
 /**
  * `outliersPostponed` is gone from this channel's contract, and this is what
@@ -16,10 +18,15 @@ import { SubmitPartnerSalaryReportDto } from './submit-partner-salary-report.dto
  */
 describe('SubmitPartnerSalaryReportDto — the outlier contract', () => {
   const errorsFor = (payload: Record<string, unknown>) =>
-    validateSync(plainToInstance(SubmitPartnerSalaryReportDto, payload), {
-      whitelist: true,
-      forbidNonWhitelisted: true,
-    })
+    validateSync(
+      plainToInstance(SubmitPartnerSalaryReportDto, payload),
+      // The app's own options, not a copy of them. Restating the two flags here
+      // meant this spec would keep passing if `forbidNonWhitelisted` were
+      // dropped from `bootstrap` — it would have been asserting its own
+      // literals. Which is also why the spec lives here rather than beside the
+      // DTO: a lib cannot reach into the app that configures the validation.
+      PARTNER_VALIDATION_OPTIONS,
+    )
 
   const propertiesRejected = (payload: Record<string, unknown>) =>
     errorsFor(payload).map((error) => error.property)
@@ -47,10 +54,12 @@ describe('SubmitPartnerSalaryReportDto — the outlier contract', () => {
   })
 
   /**
-   * Neither option is a field. If either ever became one, a vendor could ask for
-   * a POSTPONED sibling to be withdrawn on a channel where that is not the
-   * policy — the flag exists so the app states its own shape, not so a request
-   * can.
+   * Neither option is a field on this contract, and a review found they were
+   * fields on the *shared* `CreateReportDto` — which is the body of the
+   * island.is creation route, so an applicant there could set either one. They
+   * are a separate argument now (`CreateSalaryOptions`), off every wire
+   * contract. This pins the partner half; `create-report-options.spec.ts` pins
+   * the other.
    */
   it.each(['postponeUnexplainedOutliers', 'withdrawPostponedSibling'])(
     'refuses %s — channel policy is not a request field',

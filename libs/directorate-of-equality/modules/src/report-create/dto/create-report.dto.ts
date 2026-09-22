@@ -220,69 +220,13 @@ export class CreateReportDto {
   outliersPostponed?: boolean
 
   /**
-   * Postpone only if there turns out to be something to postpone.
-   *
-   * `outliersPostponed` is a caller who already knows the answer: the island.is
-   * portal ran the preview, showed the applicant their outliers, and the
-   * applicant pressed "explain later". A caller that has not previewed cannot
-   * fill that flag in honestly — set it and a clean payroll is refused
-   * ("cannot postpone nothing"), leave it and an unexplained outlier is refused
-   * too. Neither answer is available before detection has run, and detection
-   * runs here.
-   *
-   * So this asks the question the other way round: **if** outliers are detected
-   * and no groups were supplied, file `POSTPONED` with the default group rather
-   * than rejecting; if none are detected, file normally. It changes no outcome
-   * the caller could have reached by setting `outliersPostponed` correctly — it
-   * removes the need to know in advance, which is what lets the partner channel
-   * send the payroll once instead of previewing first and submitting second.
-   *
-   * Ignored when `outlierGroups` are supplied: explaining outliers is always a
-   * complete answer, and the partition is validated as usual. Ignored when
-   * `outliersPostponed` is already true, which says the same thing unconditionally.
-   */
-  @ApiOptionalBoolean({
-    description:
-      'When true, a report whose outliers are detected but unexplained is filed as POSTPONED rather than refused, and one whose payroll is clean is filed normally. For callers that cannot preview before submitting. Defaults to false.',
-  })
-  postponeUnexplainedOutliers?: boolean
-
-  /**
-   * Let a new filing replace a `POSTPONED` one instead of colliding with it.
-   *
-   * A pending sibling normally blocks: `SUBMITTED` is withdrawn and replaced,
-   * but `POSTPONED` and `IN_REVIEW` both answer `409`. That is right where
-   * `POSTPONED` is a deliberate act — the island.is applicant pressed "explain
-   * later", so being told to finish it is the correct answer.
-   *
-   * It is wrong where `POSTPONED` is simply what a submission with outliers
-   * *becomes*. A caller that files, lands `POSTPONED`, and then finds an error
-   * in the payroll would otherwise have to explain outliers it already knows are
-   * wrong — purely to reach a state it is allowed to replace — and only then
-   * file the correction. This flag says: treat a `POSTPONED` sibling the way a
-   * `SUBMITTED` one is treated, and withdraw it.
-   *
-   * **`IN_REVIEW` still collides**, with or without this, and that is not an
-   * oversight: a reviewer is mid-workflow on that report, and withdrawing it
-   * under them is a different act from replacing something nobody has picked up.
-   *
-   * A flag rather than a rule keyed on `providerType`: the behaviour is asked
-   * for by the caller that wants it, not inferred from which channel a report
-   * arrived on — so reading either path tells you what it does without knowing
-   * the other exists.
-   */
-  @ApiOptionalBoolean({
-    description:
-      'When true, a POSTPONED report for the same company is withdrawn and replaced by this one rather than answering 409. An IN_REVIEW report still conflicts. Defaults to false.',
-  })
-  withdrawPostponedSibling?: boolean
-
-  /**
    * Outlier groups the company has defined. Required (non-empty) when the
    * report has detected outliers and is not postponed: the union of each
    * group's `employeeOrdinals` must cover every detected outlier exactly once.
    * Ignored when `outliersPostponed` is true. Omit when no outliers were
-   * detected — or, with `postponeUnexplainedOutliers`, omit to postpone them.
+   * detected — or, on a channel that passes `postponeUnexplainedOutliers` (see
+   * `CreateSalaryOptions`, which is not part of this body), omit to postpone
+   * them.
    */
   @ApiOptionalDtoArray(CreateReportOutlierGroupDto)
   outlierGroups?: CreateReportOutlierGroupDto[]

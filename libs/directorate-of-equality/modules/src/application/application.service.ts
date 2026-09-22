@@ -202,12 +202,10 @@ export class ApplicationService implements IApplicationService {
       }
     }
 
-    const createInput = await this.createSalaryReportInput(
-      input,
-      company,
-      options,
-    )
-    return this.reportCreateService.createSalary(createInput)
+    const createInput = await this.createSalaryReportInput(input, company)
+
+    // Beside the body, not in it — see `CreateSalaryOptions`.
+    return this.reportCreateService.createSalary(createInput, options)
   }
 
   async getSalaryReportEligibility(
@@ -744,10 +742,33 @@ export class ApplicationService implements IApplicationService {
     const newStatus = wasPostponed ? ReportStatusEnum.SUBMITTED : report.status
 
     if (wasPostponed) {
-      await this.reportModel.update(
+      // Compare-and-set on the status this method read and validated, rather
+      // than a bare `where: { id }`.
+      //
+      // It became reachable when a `POSTPONED` sibling stopped answering `409`
+      // on the partner channel: a submission carrying `withdrawPostponedSibling`
+      // can now retire this very report while these explanations are being
+      // written. `withdrawInflightSibling` takes the company row's lock for
+      // exactly that reason; this path takes none, so an unconditional write
+      // would resurrect a `WITHDRAWN` row as `SUBMITTED` and leave the company
+      // with two in-flight salary reports — the invariant that lock exists to
+      // hold — plus a `STATUS_CHANGED` event on a report that was already
+      // retired.
+      //
+      // Zero rows means somebody else moved it first, which is a conflict rather
+      // than a failure of this request: the explanations were written against a
+      // report that is no longer the one being reviewed.
+      const [moved] = await this.reportModel.update(
         { status: ReportStatusEnum.SUBMITTED },
-        { where: { id: report.id } },
+        { where: { id: report.id, status: ReportStatusEnum.POSTPONED } },
       )
+
+      if (moved === 0) {
+        throw new ConflictException(
+          'This report is no longer awaiting outlier explanations — it was withdrawn or moved on while this request was in flight. Read it back before retrying.',
+        )
+      }
+
       await this.reportEventService.emitStatusChanged(
         report.id,
         ReportStatusEnum.POSTPONED,
@@ -836,7 +857,6 @@ export class ApplicationService implements IApplicationService {
   private async createSalaryReportInput(
     input: SubmitSalaryReportInput,
     company: CompanyDto,
-    options: SubmitSalaryOptions,
   ): Promise<CreateReportDto> {
     const companies = await this.createReportCompanySnapshots(input, company)
 
@@ -876,11 +896,6 @@ export class ApplicationService implements IApplicationService {
       companies,
       outliersPostponed: input.outliersPostponed,
       outlierGroups: input.outlierGroups,
-      // Channel policy rather than anything the caller sent, which is why these
-      // two arrive as options and not as fields on either wire contract. See
-      // `SubmitSalaryOptions`.
-      postponeUnexplainedOutliers: options.postponeUnexplainedOutliers,
-      withdrawPostponedSibling: options.withdrawPostponedSibling,
     }
   }
 

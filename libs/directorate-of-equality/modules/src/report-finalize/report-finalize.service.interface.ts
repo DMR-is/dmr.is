@@ -1,4 +1,8 @@
-import { ReportStatusEnum, ReportTypeEnum } from '../report/models/report.model'
+import {
+  ReportProviderEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from '../report/models/report.model'
 import { EqualityCoverage } from '../report/types/equality-coverage'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
 
@@ -14,6 +18,20 @@ import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-repo
 export interface WithdrawInflightSiblingOptions {
   /** Withdraw a `POSTPONED` sibling rather than answering `409`. */
   withdrawPostponed?: boolean
+
+  /**
+   * Restrict `withdrawPostponed` to siblings filed on this channel.
+   *
+   * Without it the flag is keyed on who is *filing* rather than on what is being
+   * replaced, so a payroll vendor's submission would retire a `POSTPONED` report
+   * the employer had deliberately deferred on island.is — with no signal to
+   * either party, since the vendor cannot see that report and the employer used
+   * to get a `409` naming it.
+   *
+   * `POSTPONED` means two different things depending on who filed it, so the
+   * decision has to look at the sibling, not only at the caller.
+   */
+  providerType?: ReportProviderEnum
 }
 
 export interface IReportFinalizeService {
