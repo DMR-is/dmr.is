@@ -254,6 +254,10 @@ export class PartnerController {
         // dropped by every consumer — including the sentence that states the
         // strict-validation contract. Wrapping it makes both survive.
         payload: {
+          // `type` alongside `allOf` is legal where a `$ref` sibling is not, so
+          // a generator that does not resolve the `allOf` still knows this part
+          // is an object rather than having nothing to go on.
+          type: 'object',
           allOf: [{ $ref: getSchemaPath(SubmitPartnerEqualityReportDto) }],
           description:
             'The report fields, as a JSON object. Send this part as application/json — a client that sends it as a file part is rejected, since this route accepts exactly one file and it is the document. Validated exactly as a JSON request body on any other route here: unknown fields are refused rather than ignored.',
@@ -264,6 +268,16 @@ export class PartnerController {
           description: `The equality plan as a .docx (${DOCX_MIME_TYPE}), at most ${MAX_EQUALITY_DOCUMENT_BYTES / ONE_MEGA_BYTE}MB. A .pdf or a legacy .doc is refused with an explanation rather than converted badly. The file is read for its content and not stored — what is kept is the converted HTML, which is what a reviewer edits and approves.`,
         },
       },
+    },
+    // What tells a generated client to send each part as the route reads it.
+    // Without this a client handed a typed object has to guess, and the ones
+    // that guess "file" get `400 Unexpected field` from multer — this route
+    // accepts exactly one file and it is the document. The guide's curl says the
+    // same thing by hand with `;type=application/json`; this is the document
+    // carrying it so a client does not have to be told.
+    encoding: {
+      payload: { contentType: 'application/json' },
+      document: { contentType: DOCX_MIME_TYPE },
     },
   })
   @UseInterceptors(
@@ -282,9 +296,12 @@ export class PartnerController {
       limits: {
         fileSize: MAX_EQUALITY_DOCUMENT_BYTES,
         files: 1,
-        // Two parts is the contract. Three is a caller sending something this
-        // route does not read, and there is no reason to buffer it first.
-        parts: 2,
+        // Three, for a two-part contract. Busboy raises this when the counter
+        // *reaches* the limit — `if (++parts === partsLimit)` — so `parts: N`
+        // permits N−1, and `parts: 2` rejected every valid upload with
+        // "Too many parts". `fields: 1` is what actually refuses the extras,
+        // and it is checked before the counter moves.
+        parts: 3,
         fields: 1,
         // The `payload` part is a JSON body in all but transport, so it gets the
         // body limit the JSON routes get. Busboy's default is 1MB, which would

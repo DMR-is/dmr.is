@@ -5,10 +5,15 @@ import { BadRequestException } from '@nestjs/common'
 import { ONE_MEGA_BYTE } from '@dmr.is/constants'
 
 import {
+  assertConvertedHtmlWithinBound,
   convertEqualityDocumentToHtml,
+  MAX_CONVERTED_HTML_BYTES,
+  MAX_DOCUMENT_XML_BYTES,
   MAX_EQUALITY_DOCUMENT_BYTES,
-  MAX_INFLATED_DOCUMENT_BYTES,
 } from './equality-document'
+
+/** Mirrors the converter's own rounding, so a message assertion matches it. */
+const MEGABYTES = (bytes: number) => Math.round(bytes / ONE_MEGA_BYTE)
 
 /**
  * Builds a real `.docx` rather than mocking mammoth.
@@ -92,8 +97,15 @@ const inflatingDocx = async (inflatedBytes: number): Promise<Buffer> => {
   )
 }
 
-/** A plan whose content is a picture — a scan, in practice. */
-const imageOnlyDocx = async (): Promise<Buffer> => {
+/**
+ * A plan containing a picture, and optionally text alongside it.
+ *
+ * With no paragraphs this is a scan: the case the "no text" refusal exists for.
+ * With paragraphs it is an ordinary plan that happens to have a diagram in it,
+ * which is what pins that images are dropped rather than inlined — the
+ * scan-only case cannot pin that, because it is refused either way.
+ */
+const imageDocx = async (paragraphs: string[] = []): Promise<Buffer> => {
   const zip = new JSZip()
 
   zip.file(
@@ -129,6 +141,9 @@ const imageOnlyDocx = async (): Promise<Buffer> => {
                  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
                  xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
        <w:body>
+         ${paragraphs
+           .map((text) => `<w:p><w:r><w:t>${text}</w:t></w:r></w:p>`)
+           .join('')}
          <w:p><w:r><w:drawing><wp:inline>
            <a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
              <pic:pic><pic:blipFill><a:blip r:embed="rIdImg"/></pic:blipFill></pic:pic>
@@ -263,12 +278,20 @@ describe('convertEqualityDocumentToHtml', () => {
     let bomb: Buffer
 
     beforeAll(async () => {
-      bomb = await inflatingDocx(MAX_INFLATED_DOCUMENT_BYTES + ONE_MEGA_BYTE)
+      bomb = await inflatingDocx(MAX_DOCUMENT_XML_BYTES * 2)
     }, 60_000)
 
-    it('refuses an archive that declares more than the inflated bound', async () => {
+    /**
+     * Sized to clear the declared-size filter and be caught by the measured one,
+     * because that is the bound that has to hold: the declared sizes are the
+     * archive's own claim, and an attacker writes them. Asserting the 4MB
+     * message rather than just "expands to more than" is what distinguishes the
+     * two — the header check firing here would mean the streaming check was
+     * never exercised.
+     */
+    it('refuses it on measured bytes, not on the declared header', async () => {
       await expect(convertEqualityDocumentToHtml(bomb)).rejects.toThrow(
-        /expands to more than/,
+        new RegExp(`${MEGABYTES(MAX_DOCUMENT_XML_BYTES)}MB of content`),
       )
     })
 
@@ -292,6 +315,37 @@ describe('convertEqualityDocumentToHtml', () => {
   })
 
   /**
+   * Reachable only here. Once the input is bounded at 4MB of WordprocessingML,
+   * no document that converts at all can produce 4MB of HTML — so a fixture
+   * cannot exercise this, and an untested bound is one that quietly stops
+   * working. It is the backstop for the input bound being wrong, which is
+   * exactly the assumption that was wrong last time.
+   */
+  describe('the converted-size backstop', () => {
+    it('accepts output at the bound', () => {
+      expect(() =>
+        assertConvertedHtmlWithinBound('a'.repeat(MAX_CONVERTED_HTML_BYTES)),
+      ).not.toThrow()
+    })
+
+    it('refuses output past it', () => {
+      expect(() =>
+        assertConvertedHtmlWithinBound(
+          'a'.repeat(MAX_CONVERTED_HTML_BYTES + 1),
+        ),
+      ).toThrow(/converts to more than/)
+    })
+
+    it('counts bytes rather than characters', () => {
+      // Icelandic prose is multi-byte, so a character count would admit
+      // roughly twice the bytes the column and the wire actually carry.
+      const twoByteChars = 'á'.repeat(MAX_CONVERTED_HTML_BYTES / 2 + 1)
+
+      expect(() => assertConvertedHtmlWithinBound(twoByteChars)).toThrow()
+    })
+  })
+
+  /**
    * Mammoth inlines images as base64 `data:` URIs unless told otherwise, which
    * made two promises false at once: the HTML was unbounded, and a scanned plan
    * converted to a page of `<img>` elements — a non-empty string, so the
@@ -301,16 +355,24 @@ describe('convertEqualityDocumentToHtml', () => {
   describe('images', () => {
     it('refuses a plan whose content is only a picture', async () => {
       await expect(
-        convertEqualityDocumentToHtml(await imageOnlyDocx()),
+        convertEqualityDocumentToHtml(await imageDocx()),
       ).rejects.toThrow(/contains no text/)
     })
 
-    it('does not inline image data into the stored HTML', async () => {
-      const withText = await convertEqualityDocumentToHtml(
-        await docx(['Jafnréttisáætlun']),
+    /**
+     * The assertion that actually pins `MAMMOTH_OPTIONS`. A plan with text *and*
+     * a picture is accepted either way, so the only thing distinguishing a
+     * dropped image from an inlined one is whether its bytes are in the output.
+     * Without this, removing `convertImage` left the whole suite green.
+     */
+    it('keeps the text and drops the image data', async () => {
+      const { html } = await convertEqualityDocumentToHtml(
+        await imageDocx(['Jafnréttisáætlun 2026']),
       )
 
-      expect(withText.html).not.toContain('data:')
+      expect(html).toContain('Jafnréttisáætlun 2026')
+      expect(html).not.toContain('data:')
+      expect(html).not.toContain('base64')
     })
   })
 })

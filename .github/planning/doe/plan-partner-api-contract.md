@@ -94,11 +94,14 @@ neither has two ways to send one thing.
 **Status: shipped**, on `feat/doe-equality-document` — the converter in
 `a763469c` (12 cases) and the route in `82f8b776`.
 
-> Those two hashes changed once already: the branch was rebased onto the
-> squashed #1532, which rewrites every commit on it. A hash written into a file
-> on the same branch it names is a hash that goes stale the next time the branch
-> moves — worth checking against `git log` rather than trusting, here and in the
-> status table.
+> **Hashes in this file are only as durable as the commits they name.** These
+> two changed once already when the branch was rebased onto the squashed #1532,
+> and every phase 1 hash this file used to cite — five of them — stopped
+> resolving for anyone else the moment that PR squash-merged, since those commits
+> only ever existed on a branch that no longer exists. They now cite `2057c7b8`,
+> the commit on `main`. The check is
+> `git merge-base --is-ancestor <hash> origin/main`, not `git cat-file -e`: a
+> local object store still holds commits nobody else can see.
 
 What landed, and the two decisions taken while wiring it:
 
@@ -306,15 +309,15 @@ cosmetic and can follow the guide's section layout.
 
 | Phase | Item                                           | PR    | Status                                  |
 | ----- | ---------------------------------------------- | ----- | --------------------------------------- |
-| 1     | `providerId` format                            | —     | **Done**, `d1956e86f`                   |
-| 1     | Remove `equality/active`                       | —     | **Done**, `2a66fb537`                   |
-| 1     | Reject `salaryDataPeriod` on `AVERAGE`         | —     | **Done**, `2a66fb537`                   |
+| 1     | `providerId` format                            | —     | **Done**, `2057c7b8`                    |
+| 1     | Remove `equality/active`                       | —     | **Done**, `2057c7b8`                    |
+| 1     | Reject `salaryDataPeriod` on `AVERAGE`         | —     | **Done**, `2057c7b8`                    |
 | 1     | Move the catalog route                         | —     | **Deferred** — module boundary, see 1.4 |
-| 1     | Partner equality DTO via `OmitType`            | —     | **Done**, `2a66fb537`                   |
-| 1     | Stale guide text                               | —     | **Done**, `2a66fb537`                   |
-| 1     | Declare `API_ENV` on the partner API           | —     | **Done**, `2a66fb537`                   |
-| 1     | Drop `company.nationalId`                      | —     | **Done**, `2a66fb537`                   |
-| 1     | `/` bound on `providerId`                      | #1532 | **Done**, `a42efe44`                    |
+| 1     | Partner equality DTO via `OmitType`            | —     | **Done**, `2057c7b8`                    |
+| 1     | Stale guide text                               | —     | **Done**, `2057c7b8`                    |
+| 1     | Declare `API_ENV` on the partner API           | —     | **Done**, `2057c7b8`                    |
+| 1     | Drop `company.nationalId`                      | —     | **Done**, `2057c7b8`                    |
+| 1     | `/` bound on `providerId`                      | #1532 | **Done**, `2057c7b8`                    |
 | 1     | `\`, `.`, `..` and the untrimmed read path     | #1532 | **Done**, `d1dc821a`                    |
 | 2     | `.docx` → HTML converter                       | —     | **Done**, `a763469c` (12 cases)         |
 | 2     | Multipart route, document-only DTO             | —     | **Done**, `82f8b776`                    |
@@ -325,7 +328,7 @@ cosmetic and can follow the guide's section layout.
 
 ## Phase 1 outcome
 
-Shipped in `2a66fb537`, with `d1956e86f` ahead of it. Typecheck, lint and tests
+Shipped in `2057c7b8` (#1532, squash-merged). Typecheck, lint and tests
 clean across `doe-modules` (78 suites / 1539), the partner API (10 / 82) and
 `directorate-of-equality-api` (15 / 179).
 
@@ -339,12 +342,12 @@ Two things the work turned up that the plan had not anticipated:
 
 ## The #1532 review, settled
 
-**The `/` bound is written** (`a42efe44`). The review raised
+**The `/` bound is written** (`2057c7b8`). The review raised
 `reports/:providerId` having no charset bound as _optional_; it was promoted and
 committed to in public, because it is a defect this branch introduced rather
 than a nice-to-have — `2026/Q1/042` filed and then matched no route, so a vendor
 could file a report it could never read back on the only handle this API gives
-it. It lives in `@ApiProviderId()` next to the trim from `e3bbc41b`, so all
+it. It lives in `@ApiProviderId()` next to the trim that shipped with it, so all
 three writers of `report.provider_id` inherit it, and the pattern reaches the
 generated client rather than only the guide.
 
@@ -403,7 +406,7 @@ Flat again. #1532 squash-merged as `2057c7b8` on 22 Sept, and
 commits, no conflicts. Phase 3 branches off `main` like any other work.
 
 The stacking is worth remembering for the next pair, because it cost a restack
-mid-phase: phase 2 originally branched at `e86fb9de1`, four commits before its
+mid-phase: phase 2 originally branched four commits before its
 parent's tip, and it edits `partner.controller.ts` and the guide, both of which
 phase 1 changed after that point. A stacked branch wants the tip, not the commit
 that happened to be current when it was created.
