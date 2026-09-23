@@ -32,6 +32,7 @@ import {
 } from '@dmr.is/doe-modules/scoring-model'
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 
+import { ApiCompanyHeader } from '../../core/decorators/company-header.decorator'
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { PartnerResponse } from '../../core/decorators/partner-response.decorator'
 import { RequireActiveCompany } from '../../core/guards/active-company/require-active-company.decorator'
@@ -72,6 +73,7 @@ import { PartnerCompanyGuard } from '../../core/guards/partner-company/partner-c
 })
 @ApiTags('Partner')
 @ApiSecurity('apiKey')
+@ApiCompanyHeader()
 @RequireActiveCompany()
 @UseGuards(
   ApiKeyGuard,

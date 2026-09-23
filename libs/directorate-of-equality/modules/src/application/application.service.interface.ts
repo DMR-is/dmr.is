@@ -16,6 +16,7 @@ import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.d
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import {
+  SubmitEqualityOptions,
   SubmitSalaryOptions,
   SubmitSalaryReportInput,
 } from './dto/submit-partner-salary-report.dto'
@@ -33,6 +34,7 @@ export interface IApplicationService {
   submitEquality(
     input: SubmitEqualityReportDto,
     company: CompanyDto,
+    options?: SubmitEqualityOptions,
   ): Promise<CreateReportResponseDto>
   getActiveEqualityReport(
     company: CompanyDto,

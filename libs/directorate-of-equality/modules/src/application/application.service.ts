@@ -76,6 +76,7 @@ import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.d
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import {
+  SubmitEqualityOptions,
   SubmitSalaryOptions,
   SubmitSalaryReportInput,
 } from './dto/submit-partner-salary-report.dto'
@@ -251,6 +252,7 @@ export class ApplicationService implements IApplicationService {
   async submitEquality(
     input: SubmitEqualityReportDto,
     company: CompanyDto,
+    options: SubmitEqualityOptions = {},
   ): Promise<CreateReportResponseDto> {
     this.logger.info('Submitting equality report from application portal', {
       context: LOGGING_CONTEXT,
@@ -259,7 +261,7 @@ export class ApplicationService implements IApplicationService {
     })
 
     const createInput = await this.createEqualityReportInput(input, company)
-    return this.reportCreateService.createEquality(createInput)
+    return this.reportCreateService.createEquality(createInput, options)
   }
 
   /**

@@ -50,7 +50,9 @@ import { PartnerSalaryPayloadFields } from '@dmr.is/doe-modules/scoring-model'
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
+import { ApiCompanyHeader } from '../../core/decorators/company-header.decorator'
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
+import { CurrentPartnerClientId } from '../../core/decorators/current-partner-client.decorator'
 import { PartnerResponse } from '../../core/decorators/partner-response.decorator'
 import { RequireActiveCompany } from '../../core/guards/active-company/require-active-company.decorator'
 import { RequireActiveCompanyGuard } from '../../core/guards/active-company/require-active-company.guard'
@@ -86,7 +88,7 @@ import 'multer'
  * Guard order matters and is not arbitrary:
  *
  *   ApiKeyGuard                who is calling
- *   PartnerCompanyGuard        which company that key belongs to
+ *   PartnerCompanyGuard        which company the request acts for
  *   RequireApiScopeGuard       whether the key may do this
  *   RequireActiveCompanyGuard  whether that company may use this API at all
  *   ApiKeyThrottlerGuard       how often, bucketed per key
@@ -109,6 +111,7 @@ import 'multer'
 })
 @ApiTags('Partner')
 @ApiSecurity('apiKey')
+@ApiCompanyHeader()
 @RequireActiveCompany()
 @UseGuards(
   ApiKeyGuard,
@@ -130,7 +133,7 @@ export class PartnerController {
     operationId: 'getPartnerCompany',
     type: PartnerCompanyDto,
     description:
-      'The company this API key belongs to. Useful as a first call to confirm a key is live and points where the integrator expects — the company is never taken from a request, only from the key. A narrow projection: the Directorate’s own working state (fines, quarantine, admin overrides, RSK bookkeeping, internal keys) is not part of this contract — see `PartnerCompanyDto`.',
+      'The company this request acts for: the one a company key belongs to, or — with a vendor client key — the one named in `X-Company-National-Id`, if it has delegated to you. Useful as a first call to confirm a key is live and points where the integrator expects. A narrow projection: the Directorate’s own working state (fines, quarantine, admin overrides, RSK bookkeeping, internal keys) is not part of this contract — see `PartnerCompanyDto`.',
   })
   getCompany(@CurrentCompany() company: CompanyDto): PartnerCompanyDto {
     // Projected, never returned whole. `CompanyDto` is the back office's view
@@ -245,9 +248,14 @@ export class PartnerController {
   async submitSalaryReport(
     @Body() input: SubmitPartnerSalaryReportDto,
     @CurrentCompany() company: CompanyDto,
+    @CurrentPartnerClientId() partnerClientId: string | null,
     @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {
-    const result = await this.submissionService.submitSalary(input, company)
+    const result = await this.submissionService.submitSalary(
+      input,
+      company,
+      partnerClientId,
+    )
 
     return this.answerCreated(res, result)
   }
@@ -367,12 +375,14 @@ export class PartnerController {
     input: SubmitPartnerEqualityReportDto,
     @UploadedFile() document: Express.Multer.File | undefined,
     @CurrentCompany() company: CompanyDto,
+    @CurrentPartnerClientId() partnerClientId: string | null,
     @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {
     const result = await this.submissionService.submitEquality(
       input,
       document,
       company,
+      partnerClientId,
     )
 
     return this.answerCreated(res, result)

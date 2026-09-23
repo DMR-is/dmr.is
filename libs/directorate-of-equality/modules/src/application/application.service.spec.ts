@@ -779,24 +779,27 @@ describe('ApplicationService', () => {
       const result = await service.submitEquality(input, COMPANY)
 
       expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
-      expect(createEquality).toHaveBeenCalledWith({
-        // No `identifier` — the creation service mints it.
-        providerType: ReportProviderEnum.ISLAND_IS,
-        providerId: input.providerId,
-        companyAdminName: input.companyAdminName,
-        companyAdminTitle: input.companyAdminTitle ?? null,
-        companyAdminEmail: input.companyAdminEmail,
-        companyAdminGender: input.companyAdminGender,
-        contactName: input.contactName,
-        contactTitle: input.contactTitle ?? null,
-        contactEmail: input.contactEmail,
-        contactPhone: input.contactPhone,
-        equalityReportContent: input.equalityReportContent,
-        averageEmployeeMaleCount: undefined,
-        averageEmployeeFemaleCount: undefined,
-        averageEmployeeNeutralCount: undefined,
-        companies: [makeCompanySnapshot()],
-      })
+      expect(createEquality).toHaveBeenCalledWith(
+        {
+          // No `identifier` — the creation service mints it.
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: input.providerId,
+          companyAdminName: input.companyAdminName,
+          companyAdminTitle: input.companyAdminTitle ?? null,
+          companyAdminEmail: input.companyAdminEmail,
+          companyAdminGender: input.companyAdminGender,
+          contactName: input.contactName,
+          contactTitle: input.contactTitle ?? null,
+          contactEmail: input.contactEmail,
+          contactPhone: input.contactPhone,
+          equalityReportContent: input.equalityReportContent,
+          averageEmployeeMaleCount: undefined,
+          averageEmployeeFemaleCount: undefined,
+          averageEmployeeNeutralCount: undefined,
+          companies: [makeCompanySnapshot()],
+        },
+        {},
+      )
       expect(result).toEqual({ reportId: 'report-1', replayed: false })
     })
 
@@ -814,6 +817,7 @@ describe('ApplicationService', () => {
           averageEmployeeFemaleCount: 18,
           averageEmployeeNeutralCount: 2,
         }),
+        {},
       )
     })
 
@@ -848,6 +852,7 @@ describe('ApplicationService', () => {
             },
           ],
         }),
+        {},
       )
     })
 
@@ -867,6 +872,7 @@ describe('ApplicationService', () => {
             }),
           ]),
         }),
+        {},
       )
     })
 

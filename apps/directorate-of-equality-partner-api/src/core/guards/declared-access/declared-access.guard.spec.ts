@@ -6,6 +6,7 @@ import { PUBLIC_ROUTE_METADATA } from '../../decorators/public-route.decorator'
 import { RequireActiveCompanyGuard } from '../active-company/require-active-company.guard'
 import { ApiKeyGuard } from '../api-key/api-key.guard'
 import { RequireApiScopeGuard } from '../api-key-scope/require-api-scope.guard'
+import { PartnerClientGuard } from '../partner-client/partner-client.guard'
 import { PartnerCompanyGuard } from '../partner-company/partner-company.guard'
 import { DeclaredAccessGuard } from './declared-access.guard'
 
@@ -73,6 +74,18 @@ describe('DeclaredAccessGuard', () => {
     ).toBe(true)
   })
 
+  /**
+   * A route about the calling firm, with no company to act for, declares access
+   * without the register check — there is no company whose status applies.
+   */
+  it('allows a firm-only chain without the register check', () => {
+    expect(
+      guard().canActivate(
+        contextWith([ApiKeyGuard, PartnerClientGuard, RequireApiScopeGuard]),
+      ),
+    ).toBe(true)
+  })
+
   it('allows a fully declared chain', () => {
     expect(guard().canActivate(contextWith(FULL_CHAIN))).toBe(true)
   })
@@ -115,6 +128,16 @@ describe('DeclaredAccessGuard', () => {
       [
         'everything but the register check',
         [ApiKeyGuard, PartnerCompanyGuard, RequireApiScopeGuard],
+      ],
+      // The firm-only relaxation is on the firm guard alone: it does not make
+      // the scope check or authentication optional.
+      [
+        'a firm route without scope enforcement',
+        [ApiKeyGuard, PartnerClientGuard],
+      ],
+      [
+        'a firm route without authentication',
+        [PartnerClientGuard, RequireApiScopeGuard],
       ],
     ]
 

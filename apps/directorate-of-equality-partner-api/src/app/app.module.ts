@@ -20,6 +20,7 @@ import {
   PER_IP_THROTTLER,
   PER_KEY_DRY_RUN_THROTTLER,
   PER_KEY_THROTTLER,
+  perKeyLimit,
 } from '../core/guards/throttlers'
 import { ApiKeyCoreModule } from '../modules/api-key/api-key.core.module'
 import { PartnerSwaggerModule } from '../modules/swagger/partner.swagger.module'
@@ -56,9 +57,11 @@ import { HealthController } from './health.controller'
         // Per key, across the whole surface. Generous because a legitimate
         // integrator submits a handful of reports a year per customer — this is
         // a backstop against a broken retry loop, not a commercial quota.
+        // 5 000/h for a company key, 10 000/h for a vendor client key, which
+        // spends it across its whole book — see `perKeyLimit`.
         name: PER_KEY_THROTTLER,
         ttl: 3600000, // 1 hour
-        limit: 5000,
+        limit: perKeyLimit,
       },
       {
         // The dry run's own allowance, so rehearsing a filing cannot spend the

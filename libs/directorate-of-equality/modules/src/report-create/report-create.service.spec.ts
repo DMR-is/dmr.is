@@ -1052,6 +1052,35 @@ describe('ReportCreateService', () => {
     )
   })
 
+  /**
+   * `report.partner_client_id` names the vendor client that filed. It is an
+   * option beside the body, set by the partner API from the verified key, so
+   * a request cannot claim or disown it — and null for every other channel.
+   */
+  describe('provenance', () => {
+    it('records the filing vendor client on a salary report', async () => {
+      await service.createSalary(makeInput(), { partnerClientId: 'client-1' })
+
+      expect(reportCreate.mock.calls[0][0].partnerClientId).toBe('client-1')
+    })
+
+    it('records the filing vendor client on an equality report', async () => {
+      await service.createEquality(makeEqualityInput(), {
+        partnerClientId: 'client-1',
+      })
+
+      expect(reportCreate.mock.calls[0][0].partnerClientId).toBe('client-1')
+    })
+
+    it('records none when the report was not filed under a client key', async () => {
+      await service.createSalary(makeInput())
+      await service.createEquality(makeEqualityInput())
+
+      expect(reportCreate.mock.calls[0][0].partnerClientId).toBeNull()
+      expect(reportCreate.mock.calls[1][0].partnerClientId).toBeNull()
+    })
+  })
+
   it('leaves average employee counts undefined on an EQUALITY report when omitted', async () => {
     await service.createEquality(makeEqualityInput())
 

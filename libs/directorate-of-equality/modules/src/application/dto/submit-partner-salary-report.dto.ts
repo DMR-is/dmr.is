@@ -96,7 +96,12 @@ export type SubmitSalaryReportInput = Omit<
  * for its outliers to be postponed; postponement is simply what happens on a
  * channel that files the payroll once.
  */
-export interface SubmitSalaryOptions {
+export interface SubmitEqualityOptions {
+  /** The vendor client filing, recorded as `report.partner_client_id`. */
+  partnerClientId?: string | null
+}
+
+export interface SubmitSalaryOptions extends SubmitEqualityOptions {
   /**
    * File `POSTPONED` when outliers are detected and no groups were supplied,
    * rather than refusing. For a channel with no preview step.
