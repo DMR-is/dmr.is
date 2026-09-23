@@ -128,6 +128,10 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
 
   const issue = useMutation({
     ...trpc.apiKey.issue.mutationOptions(),
+    // Evicted from the MutationCache as soon as nothing observes it. `reset()`
+    // on close only detaches the observer; without this the plaintext secret
+    // would sit in the cache for the default five minutes.
+    gcTime: 0,
     onSuccess: (created) => {
       queryClient.invalidateQueries({
         queryKey: trpc.apiKey.listForCompany.queryKey({ companyId }),
