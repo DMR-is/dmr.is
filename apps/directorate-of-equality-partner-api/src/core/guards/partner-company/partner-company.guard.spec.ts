@@ -38,6 +38,7 @@ const clientKey: ApiKeyContext = {
   id: 'client-key-1',
   keyId: 'bbbbbbbbbbbbbbb1',
   partnerClientId: 'client-a',
+  scopesResolved: false,
   scopes: [
     ApiKeyScopeEnum.REPORT_READ,
     ApiKeyScopeEnum.SALARY_SUBMIT,
@@ -51,6 +52,7 @@ const clientKey: ApiKeyContext = {
  */
 describe('PartnerCompanyGuard', () => {
   let getByNationalId: jest.Mock
+  let getById: jest.Mock
   let findLive: jest.Mock
   let guard: PartnerCompanyGuard
 
@@ -76,6 +78,10 @@ describe('PartnerCompanyGuard', () => {
         id: `company-${nationalId}`,
         nationalId,
       }))
+    getById = jest.fn().mockImplementation(async (id: string) => ({
+      id,
+      nationalId: id === 'company-x' ? COMPANY_X : COMPANY_Y,
+    }))
     // Client A is delegated by company X only, for read and salary.
     findLive = jest
       .fn()
@@ -83,6 +89,7 @@ describe('PartnerCompanyGuard', () => {
         async (partnerClientId: string, nationalId: string) =>
           partnerClientId === 'client-a' && nationalId === COMPANY_X
             ? {
+                companyId: 'company-x',
                 companyNationalId: COMPANY_X,
                 scopes: [
                   ApiKeyScopeEnum.REPORT_READ,
@@ -94,7 +101,7 @@ describe('PartnerCompanyGuard', () => {
 
     guard = new PartnerCompanyGuard(
       logger as never,
-      { getByNationalId } as never,
+      { getByNationalId, getById } as never,
       { findLive } as never,
     )
   })
@@ -146,7 +153,7 @@ describe('PartnerCompanyGuard', () => {
       await expect(
         run(clientKey, { [COMPANY_NATIONAL_ID_HEADER]: COMPANY_Y }),
       ).rejects.toBeInstanceOf(ForbiddenException)
-      expect(getByNationalId).not.toHaveBeenCalled()
+      expect(getById).not.toHaveBeenCalled()
     })
 
     it('cannot act for a company once the delegation is withdrawn', async () => {
@@ -195,6 +202,7 @@ describe('PartnerCompanyGuard', () => {
 
     it('grants nothing a delegation allows but the firm was never approved for', async () => {
       findLive.mockResolvedValue({
+        companyId: 'company-x',
         companyNationalId: COMPANY_X,
         scopes: [ApiKeyScopeEnum.EQUALITY_SUBMIT, ApiKeyScopeEnum.REPORT_READ],
       })
@@ -208,10 +216,19 @@ describe('PartnerCompanyGuard', () => {
       ])
     })
 
-    it('resolves the tenant from the delegation, not from the raw header', async () => {
+    it('resolves the tenant from the delegation’s company id, not from the raw header', async () => {
       await run(clientKey, { [COMPANY_NATIONAL_ID_HEADER]: COMPANY_X })
 
-      expect(getByNationalId).toHaveBeenCalledWith(COMPANY_X)
+      expect(getById).toHaveBeenCalledWith('company-x')
+      expect(getByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('marks the scopes as resolved, which the scope guard requires', async () => {
+      const request = await run(clientKey, {
+        [COMPANY_NATIONAL_ID_HEADER]: COMPANY_X,
+      })
+
+      expect(request.apiKeyContext).toMatchObject({ scopesResolved: true })
     })
   })
 })

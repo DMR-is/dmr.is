@@ -119,6 +119,8 @@ export class ApiKeyVerifyService implements IApiKeyVerifyService {
       keyId: key.keyId,
       partnerClientId: client.id,
       scopes: client.scopes,
+      // The firm's ceiling, not yet what this request may do.
+      scopesResolved: false,
     }
   }
 

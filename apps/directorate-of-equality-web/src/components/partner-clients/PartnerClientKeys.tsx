@@ -59,11 +59,23 @@ const issuedBy = (key: PartnerClientKeyDto): string =>
 
 type Props = {
   partnerClientId: string
-  /** False for a revoked firm, which the API refuses to issue keys for. */
-  canIssue: boolean
+  /**
+   * Whether to offer issuing and revoking: an admin, and a firm that is not
+   * revoked — the API refuses both otherwise.
+   */
+  canManage: boolean
+  /**
+   * The firm has been cut off. Its keys still read live on their own rows, but
+   * none of them authenticates, so none is shown as in force.
+   */
+  revoked: boolean
 }
 
-export const PartnerClientKeys = ({ partnerClientId, canIssue }: Props) => {
+export const PartnerClientKeys = ({
+  partnerClientId,
+  canManage,
+  revoked,
+}: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -119,7 +131,7 @@ export const PartnerClientKeys = ({ partnerClientId, canIssue }: Props) => {
           {t.intro}
         </Text>
 
-        {canIssue && (
+        {canManage && (
           <Inline justifyContent="flexEnd">
             <Button size="small" onClick={() => setIsIssueOpen(true)}>
               {t.issueButton}
@@ -131,7 +143,9 @@ export const PartnerClientKeys = ({ partnerClientId, canIssue }: Props) => {
           <Text variant="small">{t.empty}</Text>
         ) : (
           keys.map((key) => {
-            const state = keyState(key)
+            // A revoked firm's keys authenticate nowhere, whatever their own
+            // row says.
+            const state = revoked ? 'revoked' : keyState(key)
 
             return (
               <Box
@@ -164,7 +178,7 @@ export const PartnerClientKeys = ({ partnerClientId, canIssue }: Props) => {
                       ? formatDateIS(key.lastUsedAt)
                       : k.neverUsed}
                   </Text>
-                  {state === 'active' && (
+                  {canManage && state === 'active' && (
                     <Inline justifyContent="flexEnd">
                       <Button
                         variant="text"

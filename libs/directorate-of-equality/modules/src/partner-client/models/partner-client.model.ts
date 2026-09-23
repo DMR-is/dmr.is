@@ -33,6 +33,10 @@ type PartnerClientCreateAttributes = {
  * Jafnréttisstofa. The firm proves itself with a `PartnerClientKeyModel`, and
  * may act for a company only while a live `PartnerDelegationModel` names both.
  *
+ * Revoking a client stamps only this row. Its keys and delegations keep their
+ * own `revoked_at`, so a key or a delegation is live only while its own
+ * `revoked_at` AND this row's are both null — every reader checks both.
+ *
  * `scopes` is the ceiling. What a request may do is this intersected with the
  * delegation's scopes, so one employer can withhold `scoring:write` from a firm
  * another employer grants it to.

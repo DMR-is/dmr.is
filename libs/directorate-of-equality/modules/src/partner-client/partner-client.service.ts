@@ -33,6 +33,7 @@ import {
 import { PartnerProviderDto } from './dto/partner-provider.dto'
 import { PartnerClientModel } from './models/partner-client.model'
 import { PartnerClientKeyModel } from './models/partner-client-key.model'
+import { partnerClientMessages } from './partner-client.messages'
 import {
   CreatePartnerClientInput,
   IPartnerClientService,
@@ -69,13 +70,13 @@ export class PartnerClientService implements IPartnerClientService {
 
   async create(input: CreatePartnerClientInput): Promise<PartnerClientDto> {
     if (!isValidKennitala(input.nationalId)) {
-      throw new BadRequestException('nationalId is not a valid kennitala')
+      throw new BadRequestException(partnerClientMessages.invalidKennitala())
     }
 
     const name = input.name.trim()
 
     if (!name) {
-      throw new BadRequestException('name must not be blank')
+      throw new BadRequestException(partnerClientMessages.blankName())
     }
 
     const scopes = resolveApiKeyScopes(input.scopes)
@@ -161,11 +162,23 @@ export class PartnerClientService implements IPartnerClientService {
       return client.fromModel()
     }
 
-    await client.update({
-      revokedAt: new Date(),
-      revokedByUserId: input.actorUserId,
-      revokedReason: input.reason ?? null,
-    })
+    // Conditional on still being live, not just on the read above: two admins
+    // revoking at once both read a live row, and an unconditional UPDATE would
+    // let the second overwrite who revoked and when.
+    const [stamped] = await this.partnerClientModel.update(
+      {
+        revokedAt: new Date(),
+        revokedByUserId: input.actorUserId,
+        revokedReason: input.reason ?? null,
+      },
+      { where: { id: client.id, revokedAt: null } },
+    )
+
+    if (stamped === 0) {
+      return (await this.findClient(client.id)).fromModel()
+    }
+
+    await client.reload()
 
     this.logger.info(`Revoked partner client ${client.id}`, {
       context: LOGGING_CONTEXT,
@@ -185,9 +198,7 @@ export class PartnerClientService implements IPartnerClientService {
       // 409 rather than 404: the firm exists and the caller may see it. A
       // credential for it would authenticate nowhere, so minting one would
       // hand out a secret that only looks like success.
-      throw new ConflictException(
-        'This partner client has been revoked and cannot be issued keys',
-      )
+      throw new ConflictException(partnerClientMessages.clientRevoked())
     }
 
     const expiresAt = resolveApiKeyExpiry(input.expiresAt)
@@ -256,19 +267,29 @@ export class PartnerClientService implements IPartnerClientService {
     // 404 rather than 403 on another firm's key: the caller has no business
     // learning that the id exists.
     if (!key) {
-      throw new NotFoundException('Partner client key not found')
+      throw new NotFoundException(partnerClientMessages.keyNotFound())
     }
 
     if (key.revokedAt) {
       return key.fromModel()
     }
 
-    await key.update({
-      revokedAt: new Date(),
-      revokedByUserId: input.actorUserId ?? null,
-      revokedByNationalId: input.actorNationalId ?? null,
-      revokedReason: input.reason ?? null,
-    })
+    // Conditional on still being live — see `revoke`.
+    const [stamped] = await this.partnerClientKeyModel.update(
+      {
+        revokedAt: new Date(),
+        revokedByUserId: input.actorUserId ?? null,
+        revokedByNationalId: input.actorNationalId ?? null,
+        revokedReason: input.reason ?? null,
+      },
+      { where: { id: key.id, revokedAt: null } },
+    )
+
+    await key.reload()
+
+    if (stamped === 0) {
+      return key.fromModel()
+    }
 
     this.logger.info(
       `Revoked partner client key ${key.keyId} for client ${input.partnerClientId}`,
@@ -286,7 +307,7 @@ export class PartnerClientService implements IPartnerClientService {
     const client = await this.partnerClientModel.findByPk(id)
 
     if (!client) {
-      throw new NotFoundException('Partner client not found')
+      throw new NotFoundException(partnerClientMessages.clientNotFound())
     }
 
     return client
@@ -304,14 +325,12 @@ export class PartnerClientService implements IPartnerClientService {
 
     if (live >= MAX_LIVE_KEYS_PER_OWNER) {
       throw new BadRequestException(
-        `A partner client may hold at most ${MAX_LIVE_KEYS_PER_OWNER} usable keys — revoke one before issuing another`,
+        partnerClientMessages.keyCeiling(MAX_LIVE_KEYS_PER_OWNER),
       )
     }
   }
 
   private duplicateClient(): ConflictException {
-    return new ConflictException(
-      'This kennitala is already an active partner client',
-    )
+    return new ConflictException(partnerClientMessages.duplicateClient())
   }
 }

@@ -38,8 +38,10 @@ type PartnerDelegationCreateAttributes = {
  *
  * `company_national_id` is denormalised from `company` so the partner API
  * resolves the delegation from the request's `X-Company-National-Id` header in
- * one indexed read. Safe to copy because a kennitala *is* the company's
- * identity and does not change.
+ * one indexed read. A composite foreign key to `company(id, national_id)` pins
+ * it to `company_id`, so the two cannot name different companies.
+ *
+ * Live only while this row's `revoked_at` and its client's are both null.
  */
 @MutableTable({ tableName: DoeModels.PARTNER_DELEGATION })
 export class PartnerDelegationModel extends MutableModel<

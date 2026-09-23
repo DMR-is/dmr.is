@@ -44,6 +44,10 @@ export class PartnerClientGuard implements CanActivate {
       )
     }
 
+    // A firm-only route acts with the firm's own scopes: there is no
+    // delegation to narrow them by.
+    request.apiKeyContext = { ...request.apiKeyContext, scopesResolved: true }
+
     // Refused rather than ignored, for the reason PartnerCompanyGuard refuses
     // it on a company key: silently accepting it would teach an integrator it
     // filters the list, which it does not.

@@ -38,7 +38,9 @@ out-of-band onboarding step, done on the internal DoE API by one of:
 
 A **vendor client key** does not come from an employer. Jafnréttisstofa first
 approves your organisation as a provider; you then collect your own keys on the
-Jafnréttisstofa self-service web, signed in as your organisation. See section D.
+Jafnréttisstofa self-service web, signed in as your organisation — or, until that
+web ships, Jafnréttisstofa issues them. See section D, including what is not yet
+available.
 
 Practical consequences for an integration:
 
@@ -787,13 +789,21 @@ For an intermediary — an accounting firm, a payroll bureau — that files for 
 employers. One credential for your organisation, and one delegation per company
 that allows you to act for it, instead of a key from every customer.
 
+> **Availability.** The API side of this section is live. The Jafnréttisstofa
+> self-service web — where your organisation collects its keys and your
+> customers grant you permission — is still being built. Until it ships, ask
+> Jafnréttisstofa to issue your organisation's key, and note that no customer
+> can connect to you yet: every request naming a company is a `403` until that
+> web exists.
+
 ### Getting set up
 
 1. **Be approved.** Ask Jafnréttisstofa to approve your organisation as a
    provider. This is their decision; there is no route that does it.
 2. **Collect your key.** Sign in to the Jafnréttisstofa self-service web as your
-   organisation and create a key. As with company keys, it is shown exactly once
-   and you rotate by creating a new one, deploying it, and revoking the old.
+   organisation and create a key — or, until that web ships, have Jafnréttisstofa
+   issue one. As with company keys, it is shown exactly once and you rotate by
+   creating a new one, deploying it, and revoking the old.
 3. **Let your customers connect.** Put a "Tengjast Jafnréttisstofu" link in your
    own product that opens the self-service web. The customer signs in through
    island.is as their company, picks your organisation from the list of approved
@@ -807,7 +817,9 @@ request that names it is a `403`.
 
 ### `GET /partner/delegations`
 
-Vendor client keys only (a company key gets `403`). Needs `report:read`.
+Vendor client keys only (a company key gets `403`). Needs `report:read`. Takes
+no `X-Company-National-Id` — it lists every company that has delegated to you,
+and sending the header is a `400`.
 
 ```json
 {
@@ -864,7 +876,7 @@ naming it turn into `403` immediately.
 Every other route on this API takes and returns JSON.
 
 ² Vendor client keys only, and the one route that takes no
-`X-Company-National-Id`. Every other route acts for a company: with a vendor
+`X-Company-National-Id` — sending it there is a `400`. Every other route acts for a company: with a vendor
 client key, name it in that header.
 
 Scoring model (section C):
@@ -890,15 +902,15 @@ Scoring model (section C):
 
 ## Status codes
 
-| Code  | Meaning                                                                                                                                                                                                                                                                  |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId`                                                                                                               |
-| `201` | on a submission: filed — `status` says whether it is `SUBMITTED` or `POSTPONED`                                                                                                                                                                                          |
-| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx`; `X-Company-National-Id` missing or malformed with a vendor client key, or sent with a company key |
-| `401` | missing or invalid key                                                                                                                                                                                                                                                   |
-| `403` | key lacks the scope the route declares (for a vendor client key: your organisation's scopes intersected with the company's); no live delegation from the company named in `X-Company-National-Id`; a company key on `GET /partner/delegations`                           |
-| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                                                                                                                       |
-| `409` | the company is not active in the register (any route); renewal window not open; a sibling report is `IN_REVIEW`. A `POSTPONED` sibling does **not** conflict on this API — it is withdrawn and replaced                                                                  |
-| `413` | the equality document is past the 10MB limit                                                                                                                                                                                                                             |
-| `429` | rate limit — per key (headers) or per IP                                                                                                                                                                                                                                 |
-| `503` | write collision. Retry with the same `providerId`                                                                                                                                                                                                                        |
+| Code  | Meaning                                                                                                                                                                                                                                                                                                      |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId`                                                                                                                                                   |
+| `201` | on a submission: filed — `status` says whether it is `SUBMITTED` or `POSTPONED`                                                                                                                                                                                                                              |
+| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx`; `X-Company-National-Id` missing or malformed with a vendor client key, sent with a company key, or sent on `GET /partner/delegations` |
+| `401` | missing or invalid key                                                                                                                                                                                                                                                                                       |
+| `403` | key lacks the scope the route declares (for a vendor client key: your organisation's scopes intersected with the company's); no live delegation from the company named in `X-Company-National-Id`; a company key on `GET /partner/delegations`                                                               |
+| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                                                                                                                                                           |
+| `409` | the company is not active in the register (any route); renewal window not open; a sibling report is `IN_REVIEW`. A `POSTPONED` sibling does **not** conflict on this API — it is withdrawn and replaced                                                                                                      |
+| `413` | the equality document is past the 10MB limit                                                                                                                                                                                                                                                                 |
+| `429` | rate limit — per key (headers) or per IP                                                                                                                                                                                                                                                                     |
+| `503` | write collision. Retry with the same `providerId`                                                                                                                                                                                                                                                            |

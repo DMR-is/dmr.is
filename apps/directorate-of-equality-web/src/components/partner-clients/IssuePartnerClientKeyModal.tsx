@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -67,7 +67,12 @@ export const IssuePartnerClientKeyModal = ({
   )
   const [issuedKey, setIssuedKey] = useState<string | null>(null)
 
+  // Whether this modal is still showing. A key minted after the admin closed
+  // it must not be stashed in state for a dialog nobody will see.
+  const isShowingRef = useRef(isOpen)
+
   useEffect(() => {
+    isShowingRef.current = isOpen
     if (isOpen) {
       setLabel('')
       setExpiryDays(DEFAULT_EXPIRY_DAYS)
@@ -81,6 +86,10 @@ export const IssuePartnerClientKeyModal = ({
       queryClient.invalidateQueries({
         queryKey: trpc.partnerClient.listKeys.queryKey({ id: partnerClientId }),
       })
+      if (!isShowingRef.current) {
+        toast.error(t.createdAfterCloseToast, { autoClose: 8000 })
+        return
+      }
       setIssuedKey(created.key)
     },
     onError: (error) => {
@@ -93,6 +102,18 @@ export const IssuePartnerClientKeyModal = ({
       )
     },
   })
+
+  /**
+   * Every way out of the modal goes through here, so the one-time secret does
+   * not outlive it: the shared Modal keeps the dialog mounted when hidden, and
+   * the mutation cache would otherwise hold the key until the next open.
+   */
+  const close = () => {
+    isShowingRef.current = false
+    setIssuedKey(null)
+    issue.reset()
+    onClose()
+  }
 
   const copy = async () => {
     if (!issuedKey) return
@@ -111,9 +132,9 @@ export const IssuePartnerClientKeyModal = ({
       isVisible={isOpen}
       title={issuedKey ? t.createdTitle : t.title}
       onVisibilityChange={(visible) => {
-        if (!visible) onClose()
+        if (!visible) close()
       }}
-      toggleClose={onClose}
+      toggleClose={close}
       width="small"
       allowOverflow
     >
@@ -133,7 +154,7 @@ export const IssuePartnerClientKeyModal = ({
             <Button variant="ghost" size="small" onClick={copy}>
               {t.copyButton}
             </Button>
-            <Button size="small" onClick={onClose}>
+            <Button size="small" onClick={close}>
               {t.doneButton}
             </Button>
           </Inline>
@@ -165,7 +186,7 @@ export const IssuePartnerClientKeyModal = ({
           </Text>
 
           <Inline space={2} justifyContent="flexEnd">
-            <Button variant="ghost" size="small" onClick={onClose}>
+            <Button variant="ghost" size="small" onClick={close}>
               {t.cancelButton}
             </Button>
             <Button

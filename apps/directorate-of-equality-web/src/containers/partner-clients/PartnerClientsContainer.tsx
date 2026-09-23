@@ -1,5 +1,7 @@
 'use client'
 
+import { useSession } from 'next-auth/react'
+
 import { useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
@@ -33,12 +35,15 @@ const t = partnerClientsText
  * The approved firms, newest first, revoked ones included so the list is also
  * the audit view. Each firm's keys load only when opened.
  *
- * Mutations are offered to every reviewer, as on a company's key tab; the API
- * refuses anyone without the ADMIN role, and the toast says so.
+ * Approving a firm, cutting it off and minting its keys are ADMIN-only in the
+ * API, so their buttons are shown to admins only — an editor would otherwise
+ * press them and get a refusal. The list itself is for every reviewer.
  */
 export const PartnerClientsContainer = () => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === 'ADMIN'
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [openKeysFor, setOpenKeysFor] = useState<string | null>(null)
@@ -81,11 +86,13 @@ export const PartnerClientsContainer = () => {
           offset={['0', '0', '1/12']}
         >
           <Stack space={3}>
-            <Inline justifyContent="flexEnd">
-              <Button size="small" onClick={() => setIsCreateOpen(true)}>
-                {t.createButton}
-              </Button>
-            </Inline>
+            {isAdmin && (
+              <Inline justifyContent="flexEnd">
+                <Button size="small" onClick={() => setIsCreateOpen(true)}>
+                  {t.createButton}
+                </Button>
+              </Inline>
+            )}
 
             {isLoading && <SkeletonLoader repeat={3} height={96} space={2} />}
 
@@ -148,7 +155,7 @@ export const PartnerClientsContainer = () => {
                       >
                         {keysOpen ? t.hideKeys : t.showKeys}
                       </Button>
-                      {!revoked && (
+                      {isAdmin && !revoked && (
                         <Button
                           variant="text"
                           size="small"
@@ -163,7 +170,8 @@ export const PartnerClientsContainer = () => {
                     {keysOpen && (
                       <PartnerClientKeys
                         partnerClientId={client.id}
-                        canIssue={!revoked}
+                        canManage={isAdmin && !revoked}
+                        revoked={revoked}
                       />
                     )}
                   </Stack>

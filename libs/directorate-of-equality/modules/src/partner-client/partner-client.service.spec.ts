@@ -66,6 +66,7 @@ const rowFrom = (attrs: Record<string, unknown>) => {
     Object.assign(row, changes)
     return row
   })
+  row.reload = jest.fn().mockResolvedValue(row)
   row.fromModel = () => ({ ...row })
   return row
 }
@@ -77,12 +78,14 @@ describe('PartnerClientService', () => {
     findAll: jest.Mock
     findOne: jest.Mock
     findByPk: jest.Mock
+    update: jest.Mock
   }
   let keys: {
     create: jest.Mock
     findAll: jest.Mock
     findOne: jest.Mock
     count: jest.Mock
+    update: jest.Mock
   }
 
   beforeEach(async () => {
@@ -97,12 +100,14 @@ describe('PartnerClientService', () => {
       findByPk: jest
         .fn()
         .mockResolvedValue(rowFrom({ id: CLIENT_ID, name: 'Kjarni' })),
+      update: jest.fn().mockResolvedValue([1]),
     }
     keys = {
       create: jest.fn().mockImplementation(async (attrs) => rowFrom(attrs)),
       findAll: jest.fn().mockResolvedValue([]),
       findOne: jest.fn().mockResolvedValue(null),
       count: jest.fn().mockResolvedValue(0),
+      update: jest.fn().mockResolvedValue([1]),
     }
 
     const module = await Test.createTestingModule({
@@ -186,6 +191,16 @@ describe('PartnerClientService', () => {
       )
     })
 
+    it('gives the admin UI an Icelandic reason to show', async () => {
+      clients.findOne.mockResolvedValue(rowFrom({ id: CLIENT_ID }))
+
+      const error = await create().catch((e) => e)
+
+      expect(error.getResponse()).toMatchObject({
+        translatedMessage: expect.stringContaining('þjónustuaðili'),
+      })
+    })
+
     it('refuses a second live client for the same firm', async () => {
       clients.findOne.mockResolvedValue(rowFrom({ id: CLIENT_ID }))
 
@@ -255,12 +270,42 @@ describe('PartnerClientService', () => {
 
       await service.revoke({ id: CLIENT_ID, actorUserId: ADMIN_ID })
 
-      expect(client.update).toHaveBeenCalledWith(
+      expect(clients.update).toHaveBeenCalledWith(
         expect.objectContaining({
           revokedAt: expect.any(Date),
           revokedByUserId: ADMIN_ID,
         }),
+        { where: { id: CLIENT_ID, revokedAt: null } },
       )
+    })
+
+    /**
+     * Two admins revoking at once both read a live row. The update is
+     * conditional on the row still being live, so the one that loses writes
+     * nothing and answers with the winner's revocation.
+     */
+    it('lets the first of two concurrent revocations stand', async () => {
+      const first = new Date('2026-09-23T10:00:00.000Z')
+      clients.findByPk
+        .mockResolvedValueOnce(rowFrom({ id: CLIENT_ID }))
+        .mockResolvedValueOnce(
+          rowFrom({
+            id: CLIENT_ID,
+            revokedAt: first,
+            revokedByUserId: 'other',
+          }),
+        )
+      clients.update.mockResolvedValue([0])
+
+      const result = await service.revoke({
+        id: CLIENT_ID,
+        actorUserId: ADMIN_ID,
+      })
+
+      expect(result).toMatchObject({
+        revokedAt: first,
+        revokedByUserId: 'other',
+      })
     })
 
     it('leaves an existing revocation intact rather than overwriting the audit trail', async () => {
@@ -272,7 +317,7 @@ describe('PartnerClientService', () => {
 
       await service.revoke({ id: CLIENT_ID, actorUserId: ADMIN_ID })
 
-      expect(client.update).not.toHaveBeenCalled()
+      expect(clients.update).not.toHaveBeenCalled()
     })
   })
 
@@ -421,19 +466,21 @@ describe('PartnerClientService', () => {
         actorUserId: ADMIN_ID,
       })
 
-      expect(live.update).toHaveBeenCalledWith(
+      expect(keys.update).toHaveBeenCalledWith(
         expect.objectContaining({
           revokedAt: expect.any(Date),
           revokedByUserId: ADMIN_ID,
         }),
+        { where: { id: 'key-row', revokedAt: null } },
       )
 
       const revoked = rowFrom({ id: 'key-row', revokedAt: new Date() })
       keys.findOne.mockResolvedValueOnce(revoked)
 
+      keys.update.mockClear()
       await service.revokeKey({ id: 'key-row', partnerClientId: CLIENT_ID })
 
-      expect(revoked.update).not.toHaveBeenCalled()
+      expect(keys.update).not.toHaveBeenCalled()
     })
   })
 })

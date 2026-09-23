@@ -68,7 +68,13 @@ module.exports = {
 
     -- One live client per firm. Partial, so a revoked client stays as
     -- audit and a re-approved firm gets a fresh row — which also means
-    -- its companies must consent again, since revocation cut those ties.
+    -- its companies must consent again: their delegations name the old
+    -- client row.
+    --
+    -- Revoking a client does NOT stamp its keys or delegations; they keep
+    -- their own revoked_at as their own audit trail. So a key or a
+    -- delegation is live iff its own revoked_at AND its client's
+    -- revoked_at are both NULL, and every reader must check both.
     CREATE UNIQUE INDEX doe_partner_client_national_id_active_uq
       ON doe_partner_client (national_id)
       WHERE revoked_at IS NULL;
@@ -152,18 +158,26 @@ module.exports = {
     -- firm's claim that the employer consented.
     --
     -- Lasts until the company turns it off: no expiry column.
+    -- Makes (id, national_id) referenceable for the composite foreign key
+    -- on doe_partner_delegation. national_id is already UNIQUE on its own,
+    -- so this adds no rule, only a target.
+    ALTER TABLE company
+      ADD CONSTRAINT company_id_national_id_uq UNIQUE (id, national_id);
+
     CREATE TABLE doe_partner_delegation (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
       partner_client_id UUID NOT NULL REFERENCES doe_partner_client(id),
-      company_id UUID NOT NULL REFERENCES company(id),
+      company_id UUID NOT NULL,
 
-      -- Denormalised from company.national_id, as on doe_api_key, so the
-      -- partner API resolves the delegation from the request header with
-      -- one indexed read and no join. A kennitala is the company's
-      -- identity and never changes, so the two cannot drift.
+      -- Denormalised from company.national_id so the partner API resolves
+      -- the delegation from the request header with one indexed read and
+      -- no join. Pinned to company_id by the composite foreign key below,
+      -- so the column the guard looks up by and the column the consent
+      -- screens scope by cannot name two different companies — whatever
+      -- a future writer gets wrong.
       company_national_id TEXT NOT NULL,
 
       -- What this employer allowed. scoring:write is here only if the
@@ -197,7 +211,11 @@ module.exports = {
 
       CONSTRAINT doe_partner_delegation_scopes_not_empty_chk CHECK (
         cardinality(scopes) > 0
-      )
+      ),
+
+      CONSTRAINT doe_partner_delegation_company_fk
+        FOREIGN KEY (company_id, company_national_id)
+        REFERENCES company (id, national_id)
     );
 
     -- One live delegation per (firm, company), and the partner API's
@@ -222,6 +240,13 @@ module.exports = {
       ADD COLUMN partner_client_id UUID DEFAULT NULL
         REFERENCES doe_partner_client(id);
 
+    -- "Which reports did this firm file", and the FK check on a client
+    -- row. Partial, like the table's other nullable FKs would want: almost
+    -- every report has none.
+    CREATE INDEX report_partner_client_id_idx
+      ON report (partner_client_id)
+      WHERE partner_client_id IS NOT NULL;
+
     COMMIT;
     `)
   },
@@ -232,6 +257,7 @@ module.exports = {
 
     ALTER TABLE report DROP COLUMN IF EXISTS partner_client_id;
     DROP TABLE IF EXISTS doe_partner_delegation;
+    ALTER TABLE company DROP CONSTRAINT IF EXISTS company_id_national_id_uq;
     DROP TABLE IF EXISTS doe_partner_client_key;
     DROP TABLE IF EXISTS doe_partner_client;
 
