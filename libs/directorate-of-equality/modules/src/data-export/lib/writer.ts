@@ -98,8 +98,13 @@ export async function writeXlsx<TRow>(
 const csvCell = (value: ExportCellValue): string => {
   if (value === null || value === undefined) return ''
 
-  const text =
+  const raw =
     value instanceof Date ? value.toISOString().slice(0, 10) : String(value)
+
+  // Formula injection: applicant-entered text starting with = + - @ tab or CR
+  // would run as a formula in Excel. Strings only — a number stays a number.
+  const text =
+    typeof value === 'string' && /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw
 
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
