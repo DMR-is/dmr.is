@@ -91,6 +91,7 @@ type ReportAttributes = {
 
   providerType: ReportProviderEnum | null
   providerId: string | null
+  partnerClientId: string | null
   importedFromExcel: boolean
   identifier: string | null
 
@@ -132,6 +133,7 @@ type ReportCreateAttributes = {
 
   providerType?: ReportProviderEnum | null
   providerId?: string | null
+  partnerClientId?: string | null
   importedFromExcel?: boolean
   identifier?: string | null
 
@@ -372,6 +374,16 @@ export class ReportModel extends MutableModel<
 
   @Column({ type: DataType.TEXT, allowNull: true, field: 'provider_id' })
   providerId!: string | null
+
+  /**
+   * The vendor client whose credential filed this report, when one did.
+   * `providerType` / `providerId` record the channel and the caller's own id
+   * but nothing names the firm, and "who actually submitted this" is the audit
+   * question. Null for every report not filed under a client key — including
+   * all reports that predate the column, since it cannot be backfilled.
+   */
+  @Column({ type: DataType.UUID, allowNull: true, field: 'partner_client_id' })
+  partnerClientId!: string | null
 
   @Column({
     type: DataType.BOOLEAN,

@@ -439,6 +439,48 @@ A revoked row names at most one actor, and may name none: a system-initiated rev
 (company deactivated, for instance) has no human behind it, and the constraint
 deliberately allows for that rather than blocking a path that does not exist yet.
 
+## Vendor clients and delegation
+
+`doe_api_key` is one company per key, which suits an employer integrating its own payroll
+system and does not suit an accounting firm filing for a book of 100+ employers: that
+would be 100 credentials to store and rotate, and 100 employers each copying a secret into
+the firm's product. A firm instead gets three kinds of row:
+
+- **`doe_partner_client`** — the firm: _who is calling_. Created by a DoE admin only,
+  because approving an intermediary is a commercial decision by Jafnréttisstofa. Its
+  `scopes` are the ceiling on what the firm may ever do.
+- **`doe_partner_client_key`** — the firm's credentials, several per client for the same
+  zero-downtime rotation `doe_api_key` supports. Same hashing, same revocation and expiry
+  columns, same actor rules, so one verify path serves both. No scopes of its own: a key
+  _is_ the client.
+- **`doe_partner_delegation`** — a company allowing the firm to act for it: _on whose
+  behalf_. Granted by the company on the self-service web behind island.is login, so it
+  records a witnessed act rather than the firm's claim that the employer consented. It
+  carries its own `scopes`, and a request's effective permission is the **intersection**
+  with the client's, which is what lets one employer grant `scoring:write` while another
+  withholds it.
+
+**Why credential and delegation are separate objects.** So both revocations exist and each
+is one row: revoke the client and the firm is cut off everywhere; revoke a delegation and
+one employer has withdrawn. Revoking a single key leaves the client and its delegations
+alone.
+
+**Why new tables, not a nullable `doe_api_key.company_id`.** The partner API treats that
+column as absolute: a missing company there is a broken foreign key, not a new customer.
+Keeping that true of the table that authenticates every request is worth the second
+lookup path.
+
+**Lifetimes.** A delegation lasts until the company turns it off; there is no expiry
+column. Turning it back on inserts a new row, so the earlier grant stays as audit of who
+allowed it and when. A client re-approved after revocation likewise gets a fresh row, and
+its companies must consent again, since revocation cut those ties. Both rules come from
+partial unique indexes that constrain only the live row.
+
+**Provenance.** `report.partner_client_id` names the firm whose credential filed a report.
+`(provider_type, provider_id)` records the channel and the caller's id but not the firm,
+and "who actually submitted this" is the audit question. Null for every report not filed
+under a client key; it cannot be backfilled.
+
 ## Report identifier
 
 `report.identifier` is a six-uppercase-letter handle (`KTPQZW`) that exists so a report can be referred to — in a ticket, an email, a phone call — without quoting the company's kennitala. It carries no meaning and is derived from nothing about the report; that is the point. It is also what the admin report search matches on (`report/utils/filters.ts`), and it prints on the equality PDF.
@@ -736,6 +778,84 @@ the same reason: it lets the partner API resolve the tenant from one indexed rea
 table. Safe to copy because a kennitala _is_ the company's identity and does not change, so
 the two columns cannot drift.
 
+### `doe_partner_client`
+
+An intermediary firm approved to file for the companies that delegate to it. See **Vendor
+clients and delegation** above.
+
+| Column               | Type                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------- |
+| `id`                 | `uuid` PK                                                                                |
+| `national_id`        | `text` (the firm's kennitala; unique among live rows — not a `company` FK)               |
+| `name`               | `text`                                                                                   |
+| `scopes`             | `text[]` (`ApiKeyScopeEnum`; never empty — the ceiling for every delegation to the firm) |
+| `created_by_user_id` | `fk → doe_user` (the admin who approved the firm)                                        |
+| `revoked_at`         | `timestamptz` (nullable)                                                                 |
+| `revoked_by_user_id` | `fk → doe_user` (nullable)                                                               |
+| `revoked_reason`     | `text` (nullable)                                                                        |
+
+Invariants:
+
+- Unique `national_id` `WHERE revoked_at IS NULL` — one live client per firm
+- `revoked_at IS NULL` ⇒ no revocation metadata; a revoked row may name no actor (system-initiated)
+- `cardinality(scopes) > 0`
+
+`national_id` is not a `company` FK because the firm is recorded as an intermediary,
+whether or not it is also an employer in the register. A firm filing for itself does so
+through a self-delegation row, which does reference its `company`.
+
+### `doe_partner_client_key`
+
+A credential belonging to a `doe_partner_client`. The vendor-side twin of `doe_api_key`.
+
+| Column                   | Type                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| `id`                     | `uuid` PK                                                                             |
+| `partner_client_id`      | `fk → doe_partner_client`                                                             |
+| `key_id`                 | `text` (unique — public half of the credential, the lookup key)                       |
+| `secret_hash`            | `text` (HMAC-SHA256 of the secret under the same server-side pepper as `doe_api_key`) |
+| `label`                  | `text` (nullable)                                                                     |
+| `created_via`            | `doe_api_key_origin_enum` (`ApiKeyOriginEnum`)                                        |
+| `created_by_user_id`     | `fk → doe_user` (nullable — set on the `ADMIN` path)                                  |
+| `created_by_national_id` | `text` (nullable — set on the `ISLAND_IS` path, the firm signed in as itself)         |
+| `expires_at`             | `timestamptz` (nullable — null means no expiry)                                       |
+| `last_used_at`           | `timestamptz` (nullable — written at most once a minute per key)                      |
+| `revoked_at`             | `timestamptz` (nullable)                                                              |
+| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                            |
+| `revoked_by_national_id` | `text` (nullable)                                                                     |
+| `revoked_reason`         | `text` (nullable)                                                                     |
+
+Invariants: the same created-actor and revocation CHECKs as `doe_api_key`. No `scopes`
+column — the client's scopes are the ones that count.
+
+### `doe_partner_delegation`
+
+A company allowing a `doe_partner_client` to act for it.
+
+| Column                   | Type                                                                     |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `id`                     | `uuid` PK                                                                |
+| `partner_client_id`      | `fk → doe_partner_client`                                                |
+| `company_id`             | `fk → company`                                                           |
+| `company_national_id`    | `text` (denormalised from `company.national_id`, as on `doe_api_key`)    |
+| `scopes`                 | `text[]` (`ApiKeyScopeEnum`; never empty — what this employer allowed)   |
+| `granted_by_national_id` | `text` (the person who granted it; `created_at` is the grant time)       |
+| `revoked_at`             | `timestamptz` (nullable — set when the company turns the delegation off) |
+| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                               |
+| `revoked_by_national_id` | `text` (nullable)                                                        |
+
+Invariants:
+
+- Unique `(partner_client_id, company_national_id)` `WHERE revoked_at IS NULL` — one live
+  delegation per firm and company. It is also the partner API's lookup: client from the
+  credential, kennitala from the `X-Company-National-Id` header.
+- `revoked_at IS NULL` ⇒ no revocation metadata; otherwise at most one revoker column
+- `cardinality(scopes) > 0`
+
+`company_national_id` is denormalised so the delegation resolves from the request header
+in one indexed read with no join. Safe to copy because a kennitala _is_ the company's
+identity and does not change.
+
 ### `scoring_model`
 
 A company's **starfsmat**: the criteria a salary report is scored against, stored once and
@@ -979,6 +1099,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `salary_data_period`             | `date` (nullable — the payroll month, always the 1st; set only when `salary_data_basis = MONTH`)                                                                     |
 | `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                                                                 |
 | `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)                                                   |
+| `partner_client_id`              | `fk → doe_partner_client` (nullable; the vendor client whose credential filed the report — see "Vendor clients and delegation")                                      |
 | `imported_from_excel`            | `boolean` (server-set — see "Excel import transport" → "Recording how the data was entered")                                                                         |
 | `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                                                        |
 | `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")                                               |
