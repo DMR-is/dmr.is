@@ -1,6 +1,6 @@
 import { formatNationalId } from '@dmr.is/utils-server/formatting'
 
-import { PENDING_PUBLICATION_NUMBER } from '../../../core/html/advert-html'
+import { PENDING_PUBLICATION_NUMBER } from '../../../core/constants'
 
 export enum WeekdayEnum {
   Sunday = 0,

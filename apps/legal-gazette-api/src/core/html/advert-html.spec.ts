@@ -2,7 +2,8 @@ import type { AdvertModel } from '../../models/advert.model'
 import { AdvertTemplateType } from '../../models/advert.model'
 import { AdvertVersionEnum } from '../../models/advert-publication.model'
 import { formatCompanyAnnouncement } from '../../modules/external-systems/company/utils'
-import { getAdvertHtmlMarkup, PENDING_PUBLICATION_NUMBER } from './advert-html'
+import { PENDING_PUBLICATION_NUMBER } from '../constants'
+import { getAdvertHtmlMarkup } from './advert-html'
 
 const JUDGEMENT_DATE = new Date('2026-05-06T00:00:00.000Z')
 // "kl. 14:00" as the applicant typed it, anchored at the Reykjavik wall clock

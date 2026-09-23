@@ -12,12 +12,9 @@ import {
 import type { AdvertModel } from '../../models/advert.model'
 import { AdvertTemplateType } from '../../models/advert.model'
 import { AdvertVersionEnum } from '../../models/advert-publication.model'
+import { PENDING_PUBLICATION_NUMBER } from '../constants'
 
 type HTMLVersion = 'A' | 'B' | 'C'
-
-// Written into additional-announcement content at creation, before the advert
-// has a publication number. Swapped for the real number at render time.
-export const PENDING_PUBLICATION_NUMBER = '(Reiknast við útgáfu)'
 
 const resolvePendingPublicationNumber = (
   content: string,
