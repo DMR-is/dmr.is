@@ -15,6 +15,18 @@ import { AdvertVersionEnum } from '../../models/advert-publication.model'
 
 type HTMLVersion = 'A' | 'B' | 'C'
 
+// Written into additional-announcement content at creation, before the advert
+// has a publication number. Swapped for the real number at render time.
+export const PENDING_PUBLICATION_NUMBER = '(Reiknast við útgáfu)'
+
+const resolvePendingPublicationNumber = (
+  content: string,
+  publicationNumber?: string | null,
+) =>
+  publicationNumber
+    ? content.replaceAll(PENDING_PUBLICATION_NUMBER, publicationNumber)
+    : content
+
 // Resolved per call, never at module evaluation. `AdvertVersionEnum` comes from
 // `advert-publication.model`, which imports `advert.model` back, and
 // `advert.model` imports this file at module scope - so a module-level read
@@ -281,7 +293,13 @@ export function getAdvertHtmlMarkup(
     default:
       return getAdvertHTMLMarkup({
         ...baseProps,
-        content: model.content ?? '',
+        content:
+          model.templateType === AdvertTemplateType.ADDITIONAL_ANNOUNCEMENT
+            ? resolvePendingPublicationNumber(
+                model.content ?? '',
+                model.publicationNumber,
+              )
+            : (model.content ?? ''),
         templateType: LegalGazetteHTMLTemplates.COMMON,
       })
   }

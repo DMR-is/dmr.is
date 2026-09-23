@@ -166,18 +166,20 @@ export class PublishingTaskService implements IPublishingTaskService {
             inMemoryPub.publishedAt = now
           }
 
-          const html = advert.htmlMarkup(pub.versionLetter)
-
-          await pub.update(
-            { publishedAt: now, publishedHtml: html },
-            { transaction: transaction },
-          )
-
+          // Assign the number before rendering, or a first publication
+          // renders the pending placeholder instead of its number
           await advert.update(
             {
               publicationNumber,
               statusId: StatusIdEnum.PUBLISHED,
             },
+            { transaction: transaction },
+          )
+
+          const html = advert.htmlMarkup(pub.versionLetter)
+
+          await pub.update(
+            { publishedAt: now, publishedHtml: html },
             { transaction: transaction },
           )
 
