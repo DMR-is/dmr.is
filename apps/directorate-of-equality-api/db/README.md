@@ -342,7 +342,7 @@ What remains is a consequence worth understanding, because it is the reason the 
 
 A company approved in October 2029 is covered to October 2032. If it files again in April 2032 and is approved that month, its new deadline is April 2035. Had it waited until September 2032 it would have reached September 2035. The six months it still held were spent, not added — five more than if it had waited until September — and the same happens every cycle, so filing at the first opportunity each time compresses an effective 3-year cadence into something shorter.
 
-Note the direction: an early filing moves the deadline **out**, never in. The new deadline is always `today + 3 years`, which is later than any deadline derived from a past approval. The cost is the unused remainder of the current certificate, measured as `next_salary_report_due_at` minus now — not a deadline moving backwards.
+Note the direction: an early filing never moves the deadline in. The new deadline is always `today + 3 years`, which is no earlier than any deadline derived from a past approval — the same for one approved earlier today, later otherwise. The cost is the unused remainder of the current certificate, measured as `next_salary_report_due_at` minus now — not a deadline moving backwards.
 
 Anchoring the next deadline to the _previous_ deadline instead, so the cadence holds regardless of filing date, was considered and rejected (22 Sept 2026). Approval-date anchoring stands.
 

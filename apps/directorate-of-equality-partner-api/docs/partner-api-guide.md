@@ -308,7 +308,7 @@ and nothing to be exclusive with.
 
 The report is created with status `SUBMITTED` and lands in the reviewer queue.
 
-Three conflicts to expect on this route:
+Two `409`s beyond the register check, and one silent replacement:
 
 - **A prior `SUBMITTED` equality report is silently withdrawn** and replaced by
   this one. That is the "employer changed their mind before anyone looked at
@@ -409,9 +409,10 @@ to run and the company gets three years from today, not four.
 `dueAt` minus the current date is what an early filing gives up. Do not look
 for the deadline moving backwards. For any deadline an approval set, it cannot:
 that `dueAt` is three years from a past approval, and `earliestNewDueAt` is
-three years from today, so the new one is always _later_. Deadlines carried over
-from the Directorate's old register are data rather than a rule, but every one
-loaded at launch sat within three years of it, so the same holds for them. The
+three years from today, so the new one is never _earlier_ — the same, for a
+report approved earlier today, and later otherwise. Deadlines carried over from
+the Directorate's old register are data rather than a rule, but every one loaded
+at launch sat within three years of launch, so the same holds for them. The
 loss is the unused remainder.
 
 If you file on a schedule of your own — an accounting firm working through a
