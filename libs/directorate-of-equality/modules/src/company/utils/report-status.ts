@@ -200,7 +200,8 @@ export function legacyCertificationExpiringSql(interval: string): string {
  * The shared definition of "is covered" for a report type — filed here, or
  * certified under the old regime and not yet expired. Kept identical for the
  * displayed `reportStatus` column and the list status filter so the two can
- * never disagree.
+ * never disagree. Exported for the published aggregate statistics, which must
+ * count "complied" exactly as the register shows it.
  *
  * ⚠️ This used to be *wider* than the application portal's own gate, which
  * demanded a real `report` row because a salary report references its equality
@@ -218,7 +219,7 @@ export function legacyCertificationExpiringSql(interval: string): string {
  * has to be made in both. `equality_valid_until >= CURRENT_DATE` and
  * `legacyValidUntilToDate` are the two halves of that one rule.
  */
-function reportCovered(type: ReportTypeEnum): string {
+export function reportCovered(type: ReportTypeEnum): string {
   return `(${activeReportExists(type)} OR ${activeLegacyCertificationExists(
     type,
   )})`

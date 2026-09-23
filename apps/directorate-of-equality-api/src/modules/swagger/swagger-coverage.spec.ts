@@ -114,7 +114,16 @@ const PUBLIC_ROUTE_ALLOWLIST: ReadonlySet<string> = new Set([
   // browser request carries no Authorization header by design, and the module
   // does not register it once a bucket is configured.
   'ImportUploadLocalController',
+  // GET /v1/application/statistics — aggregate register figures published on
+  // jafnretti.is. Fed by island.is's Chart query, which is itself
+  // unauthenticated and so has no citizen token to pass on. Everything it
+  // returns is an aggregate and it takes no parameters, so there is nothing a
+  // caller can narrow; X-Road still authenticates the island.is member at the
+  // gateway. A filter argument or a per-company field added here would make
+  // this entry wrong — re-read it before widening that controller.
+  'AggregateStatisticsController',
 ])
+
 
 /**
  * Handlers allowed to require the ADMIN role. Everything else on the internal
