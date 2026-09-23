@@ -10,13 +10,17 @@
 # - It takes at most 10 services and gives up after 10 minutes.
 #
 # So this polls describe-services itself. A service passes once its primary
-# deployment runs an image tagged VERSION_TAG, is COMPLETED and is the only
-# deployment, with all its tasks running. A primary deployment on another tag
-# means the rollout was rolled back.
+# deployment runs an image tagged VERSION_TAG, is COMPLETED (or reports no
+# rolloutState at all, see below) and is the only deployment, with all its tasks
+# running. A primary deployment on another tag means the rollout was rolled back
+# or never applied. A rollback to another revision with the same tag, such as a
+# failed infra-only change re-applied under a live tag, still passes: telling
+# those apart needs the task definition ARN terraform applied.
 #
 # Env: CLUSTER, SERVICES (space-separated), VERSION_TAG, TIMEOUT_MINUTES
 # (default 20), POLL_SECONDS (default 15). Expects AWS credentials for the
-# cluster's account to be configured already.
+# cluster's account to be configured already. test/run.sh exercises it against a
+# fake aws.
 
 set -uo pipefail
 
@@ -24,14 +28,20 @@ set -uo pipefail
 timeout_minutes=${TIMEOUT_MINUTES:-20}
 poll_seconds=${POLL_SECONDS:-15}
 batch_size=10 # the most describe-services accepts in one call
-max_api_errors=5
+max_failed_polls=5
 
 read -r -d '' -a pending <<< "$SERVICES" || true # -d '' so newlines split too
+if [ "${#pending[@]}" -eq 0 ]; then
+  echo "::error::No services to wait for in $CLUSTER"
+  exit 1
+fi
+
 declare -A images_of # task definition ARN -> its images, comma-separated
 declare -A runs_tag  # task definition ARN -> true when an image is tagged VERSION_TAG
 declare -A last_seen # service -> its last observed rollout state
 failed=0
-api_errors=0
+poll=0
+failed_polls=0
 last_api_error=
 deadline=$(($(date +%s) + timeout_minutes * 60))
 err_file=$(mktemp)
@@ -42,12 +52,13 @@ error() {
   failed=1
 }
 
-# Throttling and brief outages are retried; a run of failures is what expired
-# or missing credentials look like, and gives up below.
+# Throttling and brief outages are retried. Counted per poll rather than per
+# call, so the limit does not depend on how many services a poll checks; a run
+# of failed polls is what expired or missing credentials look like.
 api_error() {
-  api_errors=$((api_errors + 1))
+  poll_failed=true
   last_api_error="$1: $(tr '\n' ' ' < "$err_file")"
-  echo "::warning::$last_api_error ($api_errors/$max_api_errors)"
+  echo "::warning::$last_api_error"
 }
 
 # Checks one service in $services_json, adding it to `waiting` if its rollout
@@ -71,10 +82,10 @@ check_service() {
   if [ -z "${runs_tag[$task_definition]+set}" ]; then
     if ! definition=$(aws ecs describe-task-definition --task-definition "$task_definition" --output json 2> "$err_file"); then
       api_error describe-task-definition
+      last_seen[$service]="task definition not read yet"
       waiting+=("$service")
       return
     fi
-    api_errors=0
     images_of[$task_definition]=$(jq -r '[.taskDefinition.containerDefinitions[].image] | join(", ")' <<< "$definition")
     # Sidecars (datadog, fluent-bit) carry their own tags, so one match is enough.
     runs_tag[$task_definition]=$(jq --arg tag "$VERSION_TAG" \
@@ -82,7 +93,14 @@ check_service() {
   fi
 
   if [ "${runs_tag[$task_definition]}" != true ]; then
-    error "$service runs ${images_of[$task_definition]}, not $VERSION_TAG: the rollout was rolled back or never applied"
+    # describe-services is eventually consistent after the update, so the first
+    # read may still show the previous revision. Only a repeat is conclusive.
+    if [ "$poll" -gt 1 ]; then
+      error "$service runs ${images_of[$task_definition]}, not $VERSION_TAG: the rollout was rolled back or never applied"
+      return
+    fi
+    last_seen[$service]="still on ${images_of[$task_definition]}"
+    waiting+=("$service")
     return
   fi
 
@@ -95,6 +113,9 @@ check_service() {
     # which every service here uses. Without it, fall back to steady state.
     COMPLETED | UNKNOWN)
       if [ "$deployments" = 1 ] && [ "$running" = "$desired" ]; then
+        if [ "$rollout" = UNKNOWN ]; then
+          echo "::warning::$service reports no rolloutState, so it passed on steady state alone"
+        fi
         echo "✅ $service runs $VERSION_TAG"
         return
       fi
@@ -105,7 +126,9 @@ check_service() {
   waiting+=("$service")
 }
 
-while [ "${#pending[@]}" -gt 0 ]; do
+while :; do
+  poll=$((poll + 1))
+  poll_failed=false
   waiting=()
 
   for ((i = 0; i < ${#pending[@]}; i += batch_size)); do
@@ -115,7 +138,6 @@ while [ "${#pending[@]}" -gt 0 ]; do
       waiting+=("${batch[@]}")
       continue
     fi
-    api_errors=0
     for service in "${batch[@]}"; do
       check_service "$service"
     done
@@ -124,9 +146,15 @@ while [ "${#pending[@]}" -gt 0 ]; do
   pending=("${waiting[@]}")
   [ "${#pending[@]}" -eq 0 ] && break
 
-  if [ "$api_errors" -ge "$max_api_errors" ]; then
+  if [ "$poll_failed" = true ]; then
+    failed_polls=$((failed_polls + 1))
+  else
+    failed_polls=0
+  fi
+
+  if [ "$failed_polls" -ge "$max_failed_polls" ]; then
     for service in "${pending[@]}"; do
-      error "$service could not be checked, the last $max_api_errors AWS calls failed. $last_api_error"
+      error "$service could not be checked, AWS calls failed on the last $max_failed_polls polls. $last_api_error"
     done
     break
   fi
