@@ -2,6 +2,7 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import {
+  ApiKeyKindEnum,
   ApiKeyModel,
   parseApiKey,
   verifyApiKeySecret,
@@ -41,6 +42,14 @@ export class ApiKeyVerifyService implements IApiKeyVerifyService {
       // No log line naming the input: a malformed credential is still a
       // credential, and the whole point is not to write it down.
       throw this.reject('malformed')
+    }
+
+    // Vendor client keys (`doev_…`) are minted by doe-api but not yet accepted
+    // here: the delegation guard that decides which company such a key may act
+    // for does not exist yet. Refused by kind rather than left to miss in
+    // `doe_api_key`, so the refusal does not depend on keyIds never colliding.
+    if (parsed.kind !== ApiKeyKindEnum.COMPANY) {
+      throw this.reject('unsupported key kind', parsed.keyId)
     }
 
     const key = await this.apiKeyModel.findOne({

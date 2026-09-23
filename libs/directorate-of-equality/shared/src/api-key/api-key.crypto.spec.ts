@@ -1,5 +1,7 @@
 import {
+  API_KEY_KIND_PREFIX,
   API_KEY_PREFIX,
+  ApiKeyKindEnum,
   buildApiKey,
   generateApiKey,
   hashApiKeySecret,
@@ -16,10 +18,33 @@ describe('api-key crypto', () => {
       const generated = generateApiKey('live')
 
       expect(parseApiKey(generated.key)).toEqual({
+        kind: ApiKeyKindEnum.COMPANY,
         env: 'live',
         keyId: generated.keyId,
         secret: generated.secret,
       })
+    })
+
+    it('keeps the company prefix unchanged, so no issued key changes shape', () => {
+      expect(generateApiKey('live').key.startsWith('doe_live_')).toBe(true)
+    })
+
+    it('mints a vendor client key under its own prefix that parses back to its kind', () => {
+      const generated = generateApiKey('live', ApiKeyKindEnum.PARTNER_CLIENT)
+
+      expect(generated.key.startsWith('doev_live_')).toBe(true)
+      expect(parseApiKey(generated.key)).toEqual({
+        kind: ApiKeyKindEnum.PARTNER_CLIENT,
+        env: 'live',
+        keyId: generated.keyId,
+        secret: generated.secret,
+      })
+    })
+
+    it('gives every kind a distinct prefix', () => {
+      const prefixes = Object.values(API_KEY_KIND_PREFIX)
+
+      expect(new Set(prefixes).size).toBe(prefixes.length)
     })
 
     it('produces a 16 hex character keyId and a 43 character secret', () => {
@@ -48,6 +73,26 @@ describe('api-key crypto', () => {
   })
 
   describe('parseApiKey', () => {
+    /**
+     * `doe` is a prefix of `doev`. A vendor key must not be read as a company
+     * key with a `v…` environment, or the other way round — either would send
+     * the lookup to the wrong table.
+     */
+    it('tells doe_ and doev_ apart although one prefix contains the other', () => {
+      const { env, keyId, secret } = generateApiKey('live')
+
+      expect(
+        parseApiKey(buildApiKey(env, keyId, secret, ApiKeyKindEnum.COMPANY))
+          ?.kind,
+      ).toBe(ApiKeyKindEnum.COMPANY)
+      expect(
+        parseApiKey(
+          buildApiKey(env, keyId, secret, ApiKeyKindEnum.PARTNER_CLIENT),
+        )?.kind,
+      ).toBe(ApiKeyKindEnum.PARTNER_CLIENT)
+      expect(parseApiKey(`doevx_${env}_${keyId}.${secret}`)).toBeNull()
+    })
+
     it('tolerates surrounding whitespace', () => {
       const { key, keyId } = generateApiKey('live')
 

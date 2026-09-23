@@ -5,6 +5,7 @@ import { companyEmailRouter } from './companyEmailRouter'
 import { companyRouter } from './companyRouter'
 import { configRouter } from './configRouter'
 import { locationRouter } from './locationRouter'
+import { partnerClientRouter } from './partnerClientRouter'
 import { reportCommentsRouter } from './reportCommentsRouter'
 import { reportsRouter } from './reportsRouter'
 import { reportStatisticsRouter } from './reportStatisticsRouter'
@@ -19,6 +20,7 @@ export const appRouter = router({
   user: userRouter,
   config: configRouter,
   location: locationRouter,
+  partnerClient: partnerClientRouter,
   reports: reportsRouter,
   reportComments: reportCommentsRouter,
   reportStatistics: reportStatisticsRouter,
