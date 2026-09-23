@@ -91,3 +91,13 @@ runs:
         branch: main
         skip_fetch: false
         repository: infrastructure
+
+    # After the commit, so the infrastructure repo records the tag even when the
+    # rollout fails, the same as Útgáfa.
+    # TODO: add directorate-of-equality-partner-api once its prod service exists;
+    # until then terragrunt skips doe_partner_api and there is nothing to wait for.
+    - uses: ./.github/actions/deploy/wait-for-services
+      with:
+        CLUSTER: ${{ inputs.ENV }}-dmr-jafnrettisstofa
+        SERVICES: directorate-of-equality-api directorate-of-equality-web
+        VERSION_TAG: ${{ inputs.VERSION_TAG }}

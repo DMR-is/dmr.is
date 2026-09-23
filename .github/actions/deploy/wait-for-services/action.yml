@@ -1,0 +1,72 @@
+name: '⏳ Wait for ECS services'
+description: 'Waits for ECS services to stabilise and fails if any of them is not running the deployed version'
+
+# Expects AWS credentials for the cluster's account to be configured already.
+
+inputs:
+  CLUSTER:
+    description: 'The ECS cluster the services run in'
+    required: true
+  SERVICES:
+    description: 'The ECS services to wait for, separated by a space'
+    required: true
+  VERSION_TAG:
+    description: 'The image tag every service must be running'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: ⏳ Wait for services to stabilise
+      shell: bash
+      env:
+        CLUSTER: ${{ inputs.CLUSTER }}
+        SERVICES: ${{ inputs.SERVICES }}
+      run: |
+        set -euo pipefail
+        read -ra services <<< "$SERVICES"
+
+        if ! aws ecs wait services-stable --cluster "$CLUSTER" --services "${services[@]}"; then
+          echo "::error::Services in $CLUSTER did not stabilise: one is missing, or still rolling out after the waiter's 10 minutes"
+          exit 1
+        fi
+
+    # The circuit breaker rolls a failed rollout back to the previous task
+    # definition, and the service then reports stable on the old version. So
+    # stability alone does not prove the deploy worked; the running image does.
+    - name: 🔎 Verify services run ${{ inputs.VERSION_TAG }}
+      shell: bash
+      env:
+        CLUSTER: ${{ inputs.CLUSTER }}
+        SERVICES: ${{ inputs.SERVICES }}
+        VERSION_TAG: ${{ inputs.VERSION_TAG }}
+      run: |
+        set -euo pipefail
+        read -ra services <<< "$SERVICES"
+        failed=0
+
+        for service in "${services[@]}"; do
+          task_definition=$(aws ecs describe-services --cluster "$CLUSTER" --services "$service" --output json \
+            | jq -r '.services[0].deployments[]? | select(.status == "PRIMARY") | .taskDefinition')
+
+          if [ -z "$task_definition" ]; then
+            echo "::error::$service has no primary deployment in $CLUSTER"
+            failed=1
+            continue
+          fi
+
+          # Sidecars (datadog, fluent-bit) carry their own tags, so one matching
+          # container is enough.
+          definition=$(aws ecs describe-task-definition --task-definition "$task_definition" --output json)
+
+          if jq -e --arg tag "$VERSION_TAG" \
+            'any(.taskDefinition.containerDefinitions[].image; endswith(":" + $tag))' <<< "$definition" > /dev/null; then
+            echo "✅ $service runs $VERSION_TAG"
+          else
+            images=$(jq -r '[.taskDefinition.containerDefinitions[].image] | join(", ")' <<< "$definition")
+            echo "::error::$service is not running $VERSION_TAG, the deploy was most likely rolled back. Running: $images"
+            failed=1
+          fi
+        done
+
+        exit "$failed"
