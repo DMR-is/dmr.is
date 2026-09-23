@@ -206,7 +206,7 @@ working state is not part of this contract:
 | `employeeCountCategory`                            | `SMALL` 0–24, `MEDIUM` 25–49, `LARGE` 50+, `UNKNOWN`. What the company owes follows from this                                                                                  |
 | `salaryReportRequired`                             | whether a salary report is owed                                                                                                                                                |
 | `reportStatus`                                     | what is still outstanding: `MISSING_EQUALITY_REPORT`, `MISSING_SALARY_REPORT`, `MISSING_ACTION_PLAN`, `SATISFACTORY`. Reflects reports filed on any channel, not just this one |
-| `nextEqualityReportDueAt`, `nextSalaryReportDueAt` | deadlines. The salary renewal window opens six months before its date                                                                                                          |
+| `nextEqualityReportDueAt`, `nextSalaryReportDueAt` | deadlines. Filing before one is allowed, but the time still left on it is forfeited — see B2                                                                                   |
 | `equalityReportOverdue`, `salaryReportOverdue`     | derived server-side, so they don't depend on your clock                                                                                                                        |
 
 Not returned, and not coming: internal row ids, the Directorate's fines and
@@ -364,17 +364,40 @@ _Scope: `report:read`_ — as A1.
 
 _Scope: `report:read`_
 
-Returns `{ eligible, reason, dueAt, earliestSubmissionDate }`.
+Returns `{ eligible, reason, dueAt, earliestNewDueAt }`.
 
-`reason` when not eligible:
+`reason` when not eligible — one value, and the only thing that blocks a filing:
 
-- `MISSING_EQUALITY_REPORT` — no approved, in-force equality report. Takes
-  priority over everything else.
-- `RENEWAL_WINDOW_NOT_OPEN` — the current salary report is due more than six
-  months out. `earliestSubmissionDate` is when the window opens.
+- `MISSING_EQUALITY_REPORT` — no approved, in-force equality report and no
+  unexpired legacy certificate. The two count equally.
 
-Cheaper than discovering the renewal window from a rejected submission after
-building the payload.
+Cheaper than discovering it from a rejected submission after building the
+payload.
+
+**There is no timing restriction.** A company may file whenever it likes; the
+six-month renewal window this route used to report was removed, and
+`earliestSubmissionDate` with it — `earliestNewDueAt` replaces it.
+
+**But filing early costs the employer, and they may not know it.** A report's
+three years run from the day the Directorate APPROVES it, and they do not add to
+what is already held — the new term starts at approval, so whatever was left on
+the current certificate is spent rather than carried over. File with a year still
+to run and the company gets three years from today, not four.
+
+| Field              | Meaning                                                                                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dueAt`            | the deadline they have now. Null if none is on record                                                                                           |
+| `earliestNewDueAt` | the deadline a filing now would earn, **if approved today**. Review takes days or weeks and the real date moves out with it, so this is a floor |
+
+`dueAt` minus the current date is what an early filing gives up. Note the
+new deadline is always _later_ than the old one — `earliestNewDueAt` is three
+years from today, and `dueAt` is three years from some past approval — so do not
+look for the deadline moving backwards. It never does. The loss is the unused
+remainder.
+
+If you file on a schedule of your own — an accounting firm working through a
+client list, say — put `dueAt` in front of the employer before filing for them,
+or you will quietly spend months they still had.
 
 ### B3. Build the payroll extract
 
@@ -517,9 +540,9 @@ the strict validation above:
 Resulting status: `SUBMITTED` when explanations were supplied (it lands in the
 reviewer queue), `POSTPONED` when deferred (a reviewer cannot pick it up).
 
-Two more `409`s live on this route beyond the register check above: the renewal
-window being shut, and a previous report still in review. The response says
-which.
+One more `409` lives on this route beyond the register check above: a previous
+report still in review. Filing is never refused on timing — see B2 for what
+filing early costs instead.
 
 Same sibling policy as A3: a prior `SUBMITTED` salary report is silently
 withdrawn and replaced; a prior `IN_REVIEW` **or `POSTPONED`** one gives `409`.
@@ -686,7 +709,7 @@ Scoring model (section C):
 | `401` | missing or invalid key                                                                                                                                                |
 | `403` | key lacks the scope the route declares                                                                                                                                |
 | `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                    |
-| `409` | the company is not active in the register (any route); renewal window not open; a sibling report is `IN_REVIEW` or `POSTPONED`                                        |
+| `409` | the company is not active in the register (any route); a sibling report is `IN_REVIEW` or `POSTPONED`                                                                 |
 | `413` | the equality document is past the 10MB limit                                                                                                                          |
 | `429` | rate limit — per key (headers) or per IP                                                                                                                              |
 | `503` | write collision. Retry with the same `providerId`                                                                                                                     |

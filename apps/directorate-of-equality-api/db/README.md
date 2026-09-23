@@ -158,7 +158,7 @@ State-by-state:
 - **`POSTPONED`** — applies to `SALARY` reports only. The company submitted with all outliers deferred (`outliers[]` rows persisted with null explanation columns). The report is **not pickable** by reviewers — `assign()` rejects this status, `approve()` rejects this status. The applicant resolves the postponement via `PUT /api/v1/application/reports/:providerId/outliers`, which fills in the explanation fields and transitions the row to `SUBMITTED` (emitting a `STATUS_CHANGED` + an `EDITED` event). Reviewers can read the report and its content while it sits here, but cannot act on it.
 - **`IN_REVIEW`** — a reviewer has picked up the report. (If you want reviewer-assignment tracking, stamp `reviewer_user_id` on pickup; currently it's stamped on the final decision.) In-place applicant edits are allowed in this state via the two PUT endpoints (equality body / outliers), each emitting an `EDITED` event; status is preserved so the reviewer keeps their pickup.
 - **`DENIED`** — reviewer rejected the submission. `reviewer_user_id` set on the report. Denial reason is stored on the `STATUS_CHANGED` event (`reason` column) rather than the report row — keeps the audit trail self-contained. **Terminal state.** This denied row stays as audit forever and is never mutated. The company submits afresh via the upstream application portal, which produces a new `provider_id` and a new `report` row.
-- **`APPROVED`** — reviewer accepted. `approved_at` set, `valid_until = approved_at + 3 years`. The parent company's matching next-due column is advanced to the same `valid_until` (`next_salary_report_due_at` for a `SALARY` approval, `next_equality_report_due_at` for `EQUALITY`), keeping it the live source of truth for the renewal-window check. A `public_report` row is inserted as part of this transition. `approve()` additionally gates on every outlier row having all four explanation fields filled — a belt-and-suspenders check on top of the `POSTPONED → SUBMITTED` resolution flow.
+- **`APPROVED`** — reviewer accepted. `approved_at` set, `valid_until = approved_at + 3 years`. The parent company's matching next-due column is advanced to the same `valid_until` (`next_salary_report_due_at` for a `SALARY` approval, `next_equality_report_due_at` for `EQUALITY`), keeping it the live source of truth for `overdue`, the deadline-reminder task and the register's status column. A `public_report` row is inserted as part of this transition. `approve()` additionally gates on every outlier row having all four explanation fields filled — a belt-and-suspenders check on top of the `POSTPONED → SUBMITTED` resolution flow.
 - **`SUPERSEDED`** — a newer report **of the same `type`** from the same company has been approved. Old `valid_until` gets stamped to `now()`. This does **not** touch the company's `next_*_report_due_at` — that was already advanced to the new report's `valid_until` by the approval above; the superseded row is no longer the company's current obligation. Only one `APPROVED` report per `(company, type)` pair is "current" at any time — an approved `SALARY` does **not** supersede an approved `EQUALITY` and vice versa, since every company needs both kinds active simultaneously (equality universally, salary for ≥50-employee companies).
 - **`WITHDRAWN`** — a report retired before any reviewer acted on it. **Terminal state.** Reached two ways, both before the report became live work:
   - **Auto-withdrawn on sibling resubmission.** When a company submits a new report of a given `type`, `report-create.service.ts` silently withdraws any still-`SUBMITTED` predecessor of the same type for that company (`withdrawOrRejectInflightSibling()`): the old row flips to `WITHDRAWN` and a `WITHDRAWN` `report_event` is emitted on it with `related_report_id` pointing at the new replacing report (mirroring `SUPERSEDED`). A prior report in `IN_REVIEW` or `POSTPONED` is **not** auto-withdrawn — those flows are active, so the new submission is rejected with 409 instead.
@@ -332,20 +332,30 @@ Two resubmission triggers:
 1. **Denial** — reviewer denied the current submission. The denied row stays as audit forever and is never mutated. A redo always comes through as a fresh upstream application — new `provider_id` → new `report` row → fresh review queue entry. A future PUT-edit endpoint is planned to allow targeted in-place edits to a denied row after admin/applicant communication, but that is distinct from resubmission; resubmission is always a new row.
 2. **Three-year expiry** — approved report is aging out. Companies are notified ~3 months before `valid_until`. A new report is drafted and submitted. On approval, the old report transitions to `SUPERSEDED`.
 
-### Salary renewal window (the "not too early" gate)
+### Filing early (what it costs, and why nothing stops it)
 
-Salary reports run on a 3-year cadence, but a company may only submit a **new** salary report once its current one is **due in 6 months or less** — it cannot renew arbitrarily early. The window is measured against `company.next_salary_report_due_at`:
+There is **no timing restriction** on filing a salary report. A company may file whenever it likes. The 6-month renewal window that used to block early filing (`SALARY_RENEWAL_WINDOW_MONTHS`, a 409 on submit and a `RENEWAL_WINDOW_NOT_OPEN` reason on the eligibility route) was removed at the Directorate's request (22 Sept 2026).
 
-- `next_salary_report_due_at IS NULL` (no obligation on record / first-timer) → **allowed**.
-- due date already in the past (overdue) → **allowed**.
-- due date strictly more than 6 months in the future → **blocked**.
+What remains is a consequence worth understanding, because it is the reason the endpoint reports more than a yes/no.
 
-The rule is enforced two ways, both reading the same logic so they cannot drift:
+**The three years run from approval, not from the deadline being replaced.** `approve()` writes `valid_until = approval date + 3 years` (`computeReportValidUntil`) and mirrors it onto `company.next_salary_report_due_at`. The company's previous due date is not an input, and the two periods do not add up — the new term starts at approval, so whatever was left on the old certificate is absorbed rather than carried over.
 
-- **Pre-flight:** `GET /api/v1/application/reports/salary/eligibility` returns `{ eligible, reason, dueAt, earliestSubmissionDate }`. The application portal calls it to decide whether to let a company into the salary flow at all; `reason = RENEWAL_WINDOW_NOT_OPEN` when blocked.
-- **At submit:** `POST /api/v1/application/reports/salary` throws **409 Conflict** when the window isn't open. Only the company-facing portal path is gated — admin/system-created reports are not.
+A company approved in October 2029 is covered to October 2032. If it files again in April 2032 and is approved that month, its new deadline is April 2035. Had it waited until September 2032 it would have reached September 2035. The six months it still held were spent, not added — five more than if it had waited until September — and the same happens every cycle, so filing at the first opportunity each time compresses an effective 3-year cadence into something shorter.
 
-The 6-month window is a hardcoded constant (`SALARY_RENEWAL_WINDOW_MONTHS`), matching the hardcoded 3-year validity rule.
+Note the direction: an early filing moves the deadline **out**, never in. The new deadline is always `today + 3 years`, which is later than any deadline derived from a past approval. The cost is the unused remainder of the current certificate, measured as `next_salary_report_due_at` minus now — not a deadline moving backwards.
+
+Anchoring the next deadline to the _previous_ deadline instead, so the cadence holds regardless of filing date, was considered and rejected (22 Sept 2026). Approval-date anchoring stands.
+
+**So the API reports it rather than preventing it.** `GET /api/v1/application/reports/salary/eligibility` returns `{ eligible, reason, dueAt, earliestNewDueAt }`:
+
+- `dueAt` — the current deadline (`next_salary_report_due_at`), end-of-day, null for a first-timer.
+- `earliestNewDueAt` — what a report filed now would earn _if approved today_. Review latency only pushes the real date later, hence "earliest".
+
+Read together they are the size of the trade. There is deliberately **no** "should we warn" boolean: the obvious one (`earliestNewDueAt < dueAt`) is never true, since `dueAt` is itself an approval plus three years and so can never be more than three years out. Consumers have both dates and the current date, which is all the arithmetic needs.
+
+`reason` now has one member, `MISSING_EQUALITY_REPORT` — a salary report must be filed against an APPROVED, in-force equality report or an unexpired legacy certificate. That is the only remaining refusal on the eligibility route, and a 404 on submit.
+
+`earliestNewDueAt` is computed by the same `computeReportValidUntil` that `approve()` uses, deliberately: the portal quotes the figure before submission and the approval is what makes it true, so a second copy of `+ 3 years` is how they would come to disagree.
 
 ## Provider correlation
 
@@ -539,7 +549,7 @@ The `application` module is the company-admin API surface. It reuses reviewer-si
 
 - `GET /api/v1/application/company` resolves the JWT national ID to a live `company` row.
 - `GET /api/v1/application/reports/equality/active` returns whatever currently meets the company's equality obligation, and **`source` says which of the two it is** — read it before anything else on the response. `REPORT` is a report filed here: `type = EQUALITY`, `status = APPROVED`, `valid_until > now()`, joined through `company_report.company_id`. If multiple active rows exist, the service orders by `approved_at DESC` and returns the most recently approved row. The response carries `provider_id` alongside `id` and `identifier`, because it is the only one of the three the applicant can read the report back with — `GET /application/reports/:providerId`. `id` resolves only against the admin-only `GET /reports/:id`, and `identifier` is a human-facing display code. `provider_id` is null when the report did not originate on island.is (admin- or Excel-created), in which case there is no applicant-facing content route for it. `LEGACY` is an unexpired `legacy_report.equality_valid_until` — the register load mints no `report` row for those (see "Gating rule"), so there is nothing to quote: `id`, `identifier`, `provider_id` and `approved_at` are **all** null and only `valid_until` is populated, as the end of the stated calendar day. Branch on `source`, not on a null `id`. A 404 means neither kind of coverage is in force.
-- `GET /api/v1/application/reports/salary/eligibility` returns whether the company may submit a salary report right now (the renewal-window check — see "Salary renewal window"). Always 200; `eligible = false` with `reason = RENEWAL_WINDOW_NOT_OPEN` when the due date is more than 6 months out.
+- `GET /api/v1/application/reports/salary/eligibility` returns whether the company may submit a salary report right now, plus what filing early would cost it — see "Filing early". Always 200; `eligible = false` with `reason = MISSING_EQUALITY_REPORT` when nothing covers the company's equality obligation.
 - `POST /api/v1/application/reports/equality` and `POST /api/v1/application/reports/salary` accept application-facing bodies with one explicit `company` object for the authenticated parent and an optional `subsidiaries[]` array containing subsidiary names/national IDs. Missing or empty `subsidiaries` means no subsidiaries. The application service maps that to the internal `companies[]` snapshot shape before delegating to report-create.
 - `GET /api/v1/application/reports/:providerId` is company-facing detail, not the reviewer detail DTO. Lookup is by the upstream `(provider_type, provider_id)` tuple rather than internal `report.id` (the applicant never sees the DoE-side id). The optional `providerType` query parameter defaults to `ISLAND_IS` for the island.is application portal. The resolved company must own the parent `company_report` row (`parent_company_id IS NULL`). The response includes all participating company snapshots, external comments only, salary result/outlier data for salary reports, the linked equality summary for salary reports, equality narrative content for equality reports, and the latest denial reason when the report is `DENIED`. It does not expose the reviewer event timeline or internal comments.
 - `POST /api/v1/application/reports/:providerId/comments` posts an external comment on the applicant's own report.
@@ -866,23 +876,23 @@ concern, not one the table can hold.
 
 ### `company`
 
-| Column                            | Type                                                                                                                       |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `id`                              | `uuid` PK                                                                                                                  |
-| `name`                            | `text`                                                                                                                     |
-| `employee_count_category`         | `company_size_enum` (`UNKNOWN`/`SMALL`/`MEDIUM`/`LARGE`)                                                                   |
-| `national_id`                     | `text` (unique)                                                                                                            |
-| `status`                          | `company_status_enum` (`ACTIVE`/`INACTIVE`)                                                                                |
-| `email`                           | `text` (nullable — admin-set contact email; read by the report-deadline-reminder task)                                     |
-| `address`                         | `text` (nullable)                                                                                                          |
-| `postcode_id`                     | `fk → postcode` (nullable)                                                                                                 |
-| `salary_report_required`          | `boolean`                                                                                                                  |
-| `salary_report_required_override` | `boolean`                                                                                                                  |
-| `fines_started`                   | `boolean` (default `false`)                                                                                                |
-| `quarantined`                     | `boolean` (default `false`)                                                                                                |
-| `next_equality_report_due_at`     | `timestamptz` (nullable — seeded, then advanced to `valid_until` on each EQUALITY approval)                                |
-| `next_salary_report_due_at`       | `timestamptz` (nullable — seeded, then advanced to `valid_until` on each SALARY approval; gates the salary renewal window) |
-| `isat_category_code`              | `text` `fk → isat_category(code)` (nullable)                                                                               |
+| Column                            | Type                                                                                                                                                                   |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                              | `uuid` PK                                                                                                                                                              |
+| `name`                            | `text`                                                                                                                                                                 |
+| `employee_count_category`         | `company_size_enum` (`UNKNOWN`/`SMALL`/`MEDIUM`/`LARGE`)                                                                                                               |
+| `national_id`                     | `text` (unique)                                                                                                                                                        |
+| `status`                          | `company_status_enum` (`ACTIVE`/`INACTIVE`)                                                                                                                            |
+| `email`                           | `text` (nullable — admin-set contact email; read by the report-deadline-reminder task)                                                                                 |
+| `address`                         | `text` (nullable)                                                                                                                                                      |
+| `postcode_id`                     | `fk → postcode` (nullable)                                                                                                                                             |
+| `salary_report_required`          | `boolean`                                                                                                                                                              |
+| `salary_report_required_override` | `boolean`                                                                                                                                                              |
+| `fines_started`                   | `boolean` (default `false`)                                                                                                                                            |
+| `quarantined`                     | `boolean` (default `false`)                                                                                                                                            |
+| `next_equality_report_due_at`     | `timestamptz` (nullable — seeded, then advanced to `valid_until` on each EQUALITY approval)                                                                            |
+| `next_salary_report_due_at`       | `timestamptz` (nullable — seeded, then advanced to `valid_until` on each SALARY approval; drives `overdue`, the deadline-reminder task and the register status column) |
+| `isat_category_code`              | `text` `fk → isat_category(code)` (nullable)                                                                                                                           |
 
 `status` is `ACTIVE` while a company is in the authoritative register and `INACTIVE`
 once it is not. It is set to `INACTIVE` either deliberately by an admin (bankruptcy,
