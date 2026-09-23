@@ -14,6 +14,8 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { analyzeSalaryPayload } from '../report-statistics/lib/salary-analysis'
+
 /**
  * The channel options, passed beside the body rather than in it. They are not
  * fields on `CreateReportDto` precisely so a request cannot set them — see
@@ -21,6 +23,13 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
  */
 const POSTPONE_UNEXPLAINED = { postponeUnexplainedOutliers: true }
 const WITHDRAW_POSTPONED = { withdrawPostponedSibling: true }
+
+/**
+ * The seeded threshold, named so the preview and the submission below are given
+ * the same number — comparing their verdicts under different benchmarks would
+ * compare nothing.
+ */
+const BENCHMARK_PERCENT = 3.9
 
 import { CompanySizeEnum } from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
@@ -185,7 +194,7 @@ describe('ReportCreateService', () => {
     // outlier-detected territory and fail submit-side guard checks.
     configGetByKey = jest.fn().mockResolvedValue({
       key: 'salary_difference_threshold_percent',
-      value: '3.9',
+      value: String(BENCHMARK_PERCENT),
     })
 
     const module = await Test.createTestingModule({
@@ -663,6 +672,122 @@ describe('ReportCreateService', () => {
     )
     expect(outlierGroupCreate).not.toHaveBeenCalled()
     expect(outlierBulkCreate).not.toHaveBeenCalled()
+  })
+
+  /**
+   * The cross-check the dry run rests on.
+   *
+   * `POST /partner/reports/salary-analysis` exists so a vendor can find out what
+   * a filing would say before filing it. That is worth something only if the two
+   * answer the same question — a preview that accepts what the submission
+   * refuses sends someone off to build against a payload that cannot be filed,
+   * and this codebase has been caught by that exact bug three separate times.
+   *
+   * So the guarantee under test is not "both call the same helper", which is an
+   * implementation detail a refactor can quietly undo. It is that for one
+   * payload, both reach the same verdict. These run real payloads through both
+   * paths and compare the answers.
+   */
+  describe('the dry run and the submission agree', () => {
+    type Verdict = 'accepted' | 'refused'
+
+    /**
+     * Only a payload refusal — a `BadRequestException` — is a verdict, on either
+     * side. Anything else is rethrown so it fails the row: a crash is a `500` on
+     * the route, not a refusal, and grading it as one would let a broken path
+     * pass every `refused` row (and, on the submission, the `accepted` one).
+     */
+    const verdictOf = (error: unknown): Verdict => {
+      if (error instanceof BadRequestException) {
+        return 'refused'
+      }
+      throw error
+    }
+
+    const previewVerdict = (input: CreateReportDto): Verdict => {
+      try {
+        analyzeSalaryPayload(input.parsed, BENCHMARK_PERCENT)
+        return 'accepted'
+      } catch (error) {
+        return verdictOf(error)
+      }
+    }
+
+    const submitVerdict = async (input: CreateReportDto): Promise<Verdict> => {
+      try {
+        await service.createSalary(input)
+        return 'accepted'
+      } catch (error) {
+        return verdictOf(error)
+      }
+    }
+
+    /**
+     * Each row pins the verdict it expects, not only that the two agree. Without
+     * it, weakening the shared validator moves both paths together and every
+     * row still passes on `accepted === accepted`.
+     *
+     * The last three rows are the semantics-only rules — the half
+     * `assertParsedPayloadIntegrity` does not enforce. They are the ones that
+     * fail if either path is pointed at the weaker validator; the structural
+     * rows above them survive that mutation by design.
+     */
+    it.each<[string, (input: CreateReportDto) => CreateReportDto, Verdict]>([
+      ['a payload both accept', (input) => input, 'accepted'],
+      [
+        'a step assignment that resolves to nothing',
+        (input) => {
+          input.parsed.roles[0].stepAssignments[0].stepOrder = 99
+          return input
+        },
+        'refused',
+      ],
+      [
+        'an employee whose role is not in roles[]',
+        (input) => {
+          input.parsed.employees[0].roleTitle = 'Engin slík staða'
+          return input
+        },
+        'refused',
+      ],
+      [
+        'a sub-criterion weight total that is not 100',
+        (input) => {
+          input.parsed.criteria[0].subCriteria[0].weight += 5
+          return input
+        },
+        'refused',
+      ],
+      [
+        'a mandatory criterion type that is absent',
+        (input) => {
+          // Retyped rather than removed: removing it would also orphan the
+          // role's assignments to it, a structural failure that would pass
+          // this row against the weaker validator too.
+          const strain = input.parsed.criteria.find(
+            (c) => c.type === ReportCriterionTypeEnum.STRAIN,
+          )
+          if (!strain) throw new Error('fixture has no STRAIN criterion')
+          strain.type = ReportCriterionTypeEnum.RESPONSIBILITY
+          return input
+        },
+        'refused',
+      ],
+      [
+        'an employee left unclassified on a personal sub-criterion',
+        (input) => {
+          input.parsed.employees[0].personalStepAssignments = []
+          return input
+        },
+        'refused',
+      ],
+    ])('reaches the same verdict on %s', async (_case, mutate, expected) => {
+      const preview = previewVerdict(mutate(makeInput()))
+      const submit = await submitVerdict(mutate(makeInput()))
+
+      expect(preview).toBe(expected)
+      expect(submit).toBe(expected)
+    })
   })
 
   /**

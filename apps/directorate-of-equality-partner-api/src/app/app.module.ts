@@ -16,7 +16,11 @@ import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
 import { DeclaredAccessGuard } from '../core/guards/declared-access/declared-access.guard'
 import { IpThrottlerGuard } from '../core/guards/ip-throttler/ip-throttler.guard'
-import { PER_IP_THROTTLER, PER_KEY_THROTTLER } from '../core/guards/throttlers'
+import {
+  PER_IP_THROTTLER,
+  PER_KEY_DRY_RUN_THROTTLER,
+  PER_KEY_THROTTLER,
+} from '../core/guards/throttlers'
 import { ApiKeyCoreModule } from '../modules/api-key/api-key.core.module'
 import { PartnerSwaggerModule } from '../modules/swagger/partner.swagger.module'
 import { HealthController } from './health.controller'
@@ -55,6 +59,20 @@ import { HealthController } from './health.controller'
         name: PER_KEY_THROTTLER,
         ttl: 3600000, // 1 hour
         limit: 5000,
+      },
+      {
+        // The dry run's own allowance, so rehearsing a filing cannot spend the
+        // budget the filing needs — see `PER_KEY_DRY_RUN_THROTTLER`.
+        //
+        // 500 is a starting figure, not a measured one: no vendor has integrated
+        // yet, so there is no traffic to derive it from. It is set where it is
+        // because an integrator iterating on one employer's extract works in
+        // tens of calls, and a runaway loop reaches hundreds in seconds — so
+        // this separates those two without a real caller noticing it. Revisit
+        // once there is traffic rather than treating it as settled.
+        name: PER_KEY_DRY_RUN_THROTTLER,
+        ttl: 3600000, // 1 hour
+        limit: 500,
       },
       {
         // Per client IP, counted before anything is authenticated. Set well

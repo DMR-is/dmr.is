@@ -98,13 +98,28 @@ invalid one answers `401`), the company simply cannot file.
 
 ### Rate limits
 
-- **Per key:** 5 000 requests per hour, across the whole surface. Reported in
-  the `X-RateLimit-*` response headers. It is a backstop against a runaway
-  retry loop, not a commercial quota.
-- **Per IP:** 600 requests per minute, counted before authentication (so failed
-  keys count too). No headers — the per-key bucket owns the published contract.
+Three allowances, and which one you are spending depends on the route.
 
-Both return `429` when exceeded.
+- **Per key:** 5 000 requests per hour, across every route **except the dry
+  run**. Reported in the `X-RateLimit-*` response headers. A backstop against a
+  runaway retry loop, not a commercial quota.
+- **Per key, dry run only:** 500 requests per hour for
+  `POST /partner/reports/salary-analysis`, which draws on nothing else.
+  Rehearsing a filing as often as an extract changes is what that route is for,
+  and it must not be able to use up the allowance you need for _filing_. Because
+  it is a separate bucket it reports separate headers, suffixed with its name —
+  `X-RateLimit-Limit-perKeyDryRun`, `X-RateLimit-Remaining-perKeyDryRun` and
+  `X-RateLimit-Reset-perKeyDryRun` — and the unsuffixed `X-RateLimit-*` set does
+  not appear on that route. **If you read `X-RateLimit-Remaining` generically
+  for backoff, handle its absence there rather than reading it as unlimited.**
+  A per-key `429` on that route carries both `Retry-After-perKeyDryRun` and the
+  standard `Retry-After`, with the same value, so a generic retry layer that
+  reads `Retry-After` works unchanged.
+- **Per IP:** 600 requests per minute, counted before authentication (so failed
+  keys count too). No headers, including on its `429` — a caller is not the
+  subject of that limit.
+
+All three return `429` when exceeded.
 
 ### Request/response conventions
 
@@ -336,7 +351,7 @@ before you have built a large payload.
 
 **There is no spreadsheet anywhere in this flow, by design.** Replacing the
 workbook is the reason this API exists: you build the payload from payroll data
-and validate it against B4 until it comes back clean. Nothing here reads,
+and the submission tells you whether it is accepted. Nothing here reads,
 writes, or accepts an `.xlsx` file.
 
 ### What you send, and what you do not
@@ -407,12 +422,22 @@ unusable hours fails the payload gate rather than scoring oddly.
 They live in the scoring model you named, and the server expands them. If a þrep
 description or a weight is wrong, fix the _model_ (section C) — not the filing.
 
-### B4. `POST /partner/reports/salary-analysis` — find the outliers first
+### B4. `POST /partner/reports/salary-analysis` — the dry run _(optional)_
 
 _Scope: `salary:submit`_
 
-Body: `{ "scoringModelId", "employees" }` — the same pair the submission takes.
-Nothing is stored. Returns:
+**You do not have to call this to file.** The submission detects its own
+outliers and tells you about them, so this is not a step on the way to
+anything — it is a rehearsal. Send a payload, find out whether it validates and
+what it would produce, and nothing is stored, reserved or filed.
+
+Two moments it earns its place: while you are building the integration and want
+to see the shape of a real answer without touching a customer's filing, and when
+an employer's extract has changed and you want to know what it does before
+putting it in front of them.
+
+Body: `{ "scoringModelId", "employees" }` — the same pair the submission takes,
+so a dry run is the filing minus the filing. Returns:
 
 - **`outliers[]` — the lágmarksmengi.** This is the list that matters: each
   entry has `employeeOrdinal`, `gender`, `roleTitle`, `score`,
@@ -436,12 +461,19 @@ Nothing is stored. Returns:
   `population: ALL_EMPLOYEES`; when `available` is false, show the `blockers`
   reason whatever the population.
 
-Run this before you ask the employer anything. It is how you find out which
-employees need an explanation _before_ filing rather than after.
+**It answers with the submission's rules, not a copy of them.** The payload is
+expanded and validated through the identical calls the submission makes, so a
+payload this accepts is one the submission accepts, and one it refuses is
+refused there too. That is enforced by a test comparing both verdicts on the
+same payloads rather than by the two happening to agree today.
+
+**It has its own rate-limit allowance**, separate from the one filings draw on.
+Rehearsing as often as an extract changes is what this route is for, and it
+cannot use up the budget you need for submitting.
 
 ### B5. Build the outlier groups
 
-Not a call — the modelling step between B4 and B6.
+Not a call — the modelling step before B6.
 
 **This step is optional, and that is the important change.** Explaining an
 outlier means asking the employer _why_ two equally-scored people are paid
@@ -451,7 +483,8 @@ submission open while that happens. File without groups and the report lands
 explanations later with B9. File with them and it goes straight into the
 reviewer queue. Both are one call.
 
-Partition the `employeeOrdinal`s from B4 into one or more groups. Each group is
+Partition the outlier `employeeOrdinal`s — from B6's response, or from B4 if you
+ran it — into one or more groups. Each group is
 one shared explanation (úrbótaáætlun) over the employees in it:
 
 | Field              | Notes                                                                                                                                                                    |
@@ -535,8 +568,8 @@ under the strict validation above:
 | `salaryDataBasis`                                                 | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one                                                                                                                                                                         |
 | `salaryDataPeriod`                                                | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that has already happened and no earlier than 36 months ago. **Refused when the basis is `AVERAGE`** — an average covers twelve months, so there is no single month to name |
 | `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required                                                                                                                                                                                                                                                                          |
-| `scoringModelId`                                                  | the model B4 validated against. Must be `VALID`                                                                                                                                                                                                                                   |
-| `employees`                                                       | the payroll extract from B3, unchanged since B4                                                                                                                                                                                                                                   |
+| `scoringModelId`                                                  | the company's stored starfsmat. Must be `VALID`                                                                                                                                                                                                                                   |
+| `employees`                                                       | the payroll extract from B3                                                                                                                                                                                                                                                       |
 | `outlierGroups?`                                                  | the partition from B5                                                                                                                                                                                                                                                             |
 
 Resulting status: `SUBMITTED` when explanations were supplied (it lands in the
