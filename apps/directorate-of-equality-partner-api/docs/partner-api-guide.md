@@ -308,13 +308,15 @@ and nothing to be exclusive with.
 
 The report is created with status `SUBMITTED` and lands in the reviewer queue.
 
-Two conflicts to expect on this route:
+Three conflicts to expect on this route:
 
 - **A prior `SUBMITTED` equality report is silently withdrawn** and replaced by
   this one. That is the "employer changed their mind before anyone looked at
   it" case.
 - **`409` if the prior one is `IN_REVIEW`.** A reviewer is mid-workflow on it
   and it cannot be discarded. Resolve that report first.
+- **`409` if the `providerId` was already used for a salary report.** A
+  provider id is bound to one report type for good, so use a fresh one.
 
 A `503` means the write collided — retry with the _same_ `providerId`.
 
@@ -404,12 +406,13 @@ to run and the company gets three years from today, not four.
 | `dueAt`            | the deadline they have now. Null if none is on record                                                                                           |
 | `earliestNewDueAt` | the deadline a filing now would earn, **if approved today**. Review takes days or weeks and the real date moves out with it, so this is a floor |
 
-`dueAt` minus the current date is what an early filing gives up. Note the
-new deadline is always _later_ than the old one — `earliestNewDueAt` is three
-years from today, and `dueAt` is three years from some past approval — so do not
-look for the deadline moving backwards. For any deadline an approval set, it
-cannot; every deadline carried over from the Directorate's old register sat
-within three years at launch too. The loss is the unused remainder.
+`dueAt` minus the current date is what an early filing gives up. Do not look
+for the deadline moving backwards. For any deadline an approval set, it cannot:
+that `dueAt` is three years from a past approval, and `earliestNewDueAt` is
+three years from today, so the new one is always _later_. Deadlines carried over
+from the Directorate's old register are data rather than a rule, but every one
+loaded at launch sat within three years of it, so the same holds for them. The
+loss is the unused remainder.
 
 If you file on a schedule of your own — an accounting firm working through a
 client list, say — put `dueAt` in front of the employer before filing for them,

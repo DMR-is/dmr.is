@@ -186,9 +186,9 @@ export class ApplicationService implements IApplicationService {
     // window that used to sit here was removed deliberately — what filing early
     // costs the company is reported by `getSalaryReportEligibility`, so the
     // portal can warn the applicant, rather than refused on their behalf. The
-    // remaining refusals
-    // are `createSalary`'s: a 404 when nothing covers the company's equality
-    // obligation, and a 409 when a sibling salary report cannot be replaced.
+    // remaining refusals are `createSalary`'s: a 404 when nothing covers the
+    // company's equality obligation, and a 409 when a sibling salary report
+    // cannot be replaced or the provider tuple is already bound elsewhere.
 
     const createInput = await this.createSalaryReportInput(input, company)
 
