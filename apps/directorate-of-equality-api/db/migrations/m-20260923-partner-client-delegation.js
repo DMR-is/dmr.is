@@ -152,18 +152,18 @@ module.exports = {
     CREATE INDEX doe_partner_client_key_partner_client_id_idx
       ON doe_partner_client_key (partner_client_id);
 
-    -- A company allowing a firm to act for it. Granted by the company
-    -- on the self-service web, behind island.is login with the company
-    -- chosen in IDS — so the row records a witnessed act, not the
-    -- firm's claim that the employer consented.
-    --
-    -- Lasts until the company turns it off: no expiry column.
     -- Makes (id, national_id) referenceable for the composite foreign key
     -- on doe_partner_delegation. national_id is already UNIQUE on its own,
     -- so this adds no rule, only a target.
     ALTER TABLE company
       ADD CONSTRAINT company_id_national_id_uq UNIQUE (id, national_id);
 
+    -- A company allowing a firm to act for it. Granted by the company
+    -- on the self-service web, behind island.is login with the company
+    -- chosen in IDS — so the row records a witnessed act, not the
+    -- firm's claim that the employer consented.
+    --
+    -- Lasts until the company turns it off: no expiry column.
     CREATE TABLE doe_partner_delegation (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -241,8 +241,8 @@ module.exports = {
         REFERENCES doe_partner_client(id);
 
     -- "Which reports did this firm file", and the FK check on a client
-    -- row. Partial, like the table's other nullable FKs would want: almost
-    -- every report has none.
+    -- row. Partial because almost every report has none — unlike the
+    -- table's other FK indexes, which are full.
     CREATE INDEX report_partner_client_id_idx
       ON report (partner_client_id)
       WHERE partner_client_id IS NOT NULL;
