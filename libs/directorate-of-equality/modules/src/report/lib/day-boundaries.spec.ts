@@ -1,7 +1,7 @@
+import { REPORT_VALIDITY_YEARS } from '../../constants'
 import {
   computeReportValidUntil,
   endOfUtcDay,
-  REPORT_VALIDITY_YEARS,
   startOfUtcDay,
 } from './day-boundaries'
 

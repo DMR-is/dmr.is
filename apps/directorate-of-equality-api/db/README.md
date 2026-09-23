@@ -351,7 +351,7 @@ Anchoring the next deadline to the _previous_ deadline instead, so the cadence h
 - `dueAt` — the current deadline (`next_salary_report_due_at`), end-of-day, null for a first-timer.
 - `earliestNewDueAt` — what a report filed now would earn _if approved today_. Review latency only pushes the real date later, hence "earliest".
 
-Read together they are the size of the trade. There is deliberately **no** "should we warn" boolean: the obvious one (`earliestNewDueAt < dueAt`) is never true, since `dueAt` is itself an approval plus three years and so can never be more than three years out. Consumers have both dates and the current date, which is all the arithmetic needs.
+Read together they are the size of the trade. There is deliberately **no** "should we warn" boolean: the obvious one (`earliestNewDueAt < dueAt`) is never true for a deadline an approval set, since that is itself an approval plus three years and so can never be more than three years out — and every seeded launch deadline sat inside three years too (the furthest of 531 was 2029-07-23). Consumers have both dates and the current date, which is all the arithmetic needs.
 
 `reason` now has one member, `MISSING_EQUALITY_REPORT` — a salary report must be filed against an APPROVED, in-force equality report or an unexpired legacy certificate. That is the only remaining refusal on the eligibility route, and a 404 on submit.
 

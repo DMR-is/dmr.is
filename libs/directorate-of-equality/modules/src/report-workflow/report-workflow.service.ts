@@ -530,7 +530,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
     // Keep the company's next-due date in step with the report's validity. The
     // launch seed sets these dates initially (no reports exist yet); from then
     // on every approval advances them, so `next_*_report_due_at` stays the live
-    // source of truth the salary renewal-window check reads.
+    // source of truth for `overdue`, the register's status column and the
+    // deadline-reminder task.
     await this.advanceCompanyReportDueDate(context.reportId, validUntil)
 
     await this.supersedePreviousApproved(context.reportId)

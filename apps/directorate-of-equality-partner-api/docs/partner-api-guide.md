@@ -407,8 +407,9 @@ to run and the company gets three years from today, not four.
 `dueAt` minus the current date is what an early filing gives up. Note the
 new deadline is always _later_ than the old one — `earliestNewDueAt` is three
 years from today, and `dueAt` is three years from some past approval — so do not
-look for the deadline moving backwards. It never does. The loss is the unused
-remainder.
+look for the deadline moving backwards. For any deadline an approval set, it
+cannot; every deadline carried over from the Directorate's old register sat
+within three years at launch too. The loss is the unused remainder.
 
 If you file on a schedule of your own — an accounting firm working through a
 client list, say — put `dueAt` in front of the employer before filing for them,
@@ -598,9 +599,11 @@ under the strict validation above:
 Resulting status: `SUBMITTED` when explanations were supplied (it lands in the
 reviewer queue), `POSTPONED` when deferred (a reviewer cannot pick it up).
 
-One more `409` lives on this route beyond the register check above: a sibling
-report that cannot be replaced — see the sibling policy below. Filing is never
-refused on timing — see B2 for what filing early costs instead.
+Two more `409`s live on this route beyond the register check above: a sibling
+report that cannot be replaced — see the sibling policy below — and a
+`providerId` already used for an equality report, since a provider id is bound
+to one report type for good. The response says which. Filing is never refused on
+timing — see B2 for what filing early costs instead.
 
 Sibling policy: a prior `SUBMITTED` salary report is silently withdrawn and
 replaced, **and so is a prior `POSTPONED` one you filed through this API** —
@@ -808,15 +811,15 @@ Scoring model (section C):
 
 ## Status codes
 
-| Code  | Meaning                                                                                                                                                                        |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId`                     |
-| `201` | on a submission: filed — `status` says whether it is `SUBMITTED` or `POSTPONED`                                                                                                |
-| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx`          |
-| `401` | missing or invalid key                                                                                                                                                         |
-| `403` | key lacks the scope the route declares                                                                                                                                         |
-| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                             |
-| `409` | the company is not active in the register (any route); a sibling report is `IN_REVIEW`. A `POSTPONED` sibling does **not** conflict on this API — it is withdrawn and replaced |
-| `413` | the equality document is past the 10MB limit                                                                                                                                   |
-| `429` | rate limit — per key (headers) or per IP                                                                                                                                       |
-| `503` | write collision. Retry with the same `providerId`                                                                                                                              |
+| Code  | Meaning                                                                                                                                                                                                                                       |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId`                                                                                    |
+| `201` | on a submission: filed — `status` says whether it is `SUBMITTED` or `POSTPONED`                                                                                                                                                               |
+| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx`                                                                         |
+| `401` | missing or invalid key                                                                                                                                                                                                                        |
+| `403` | key lacks the scope the route declares                                                                                                                                                                                                        |
+| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                                                                                            |
+| `409` | the company is not active in the register (any route); a sibling report is `IN_REVIEW`, or `POSTPONED` from island.is (one filed through this API is withdrawn and replaced); the `providerId` is already used for a report of the other type |
+| `413` | the equality document is past the 10MB limit                                                                                                                                                                                                  |
+| `429` | rate limit — per key (headers) or per IP                                                                                                                                                                                                      |
+| `503` | write collision. Retry with the same `providerId`                                                                                                                                                                                             |

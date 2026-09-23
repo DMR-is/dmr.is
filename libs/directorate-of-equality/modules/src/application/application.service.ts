@@ -184,8 +184,9 @@ export class ApplicationService implements IApplicationService {
 
     // No timing gate: a company may file whenever it likes. The 6-month renewal
     // window that used to sit here was removed deliberately — what filing early
-    // costs the company is reported by `getSalaryReportEligibility` and shown to
-    // the applicant, rather than refused on their behalf. The remaining refusals
+    // costs the company is reported by `getSalaryReportEligibility`, so the
+    // portal can warn the applicant, rather than refused on their behalf. The
+    // remaining refusals
     // are `createSalary`'s: a 404 when nothing covers the company's equality
     // obligation, and a 409 when a sibling salary report cannot be replaced.
 

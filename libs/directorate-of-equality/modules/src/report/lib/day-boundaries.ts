@@ -2,8 +2,8 @@
  * Day boundaries for the deadline dates the report flow writes.
  *
  * These dates are day-granular in every place a human meets them — the
- * approval email's "Samþykktin gildir til", the register's overdue column, the
- * application portal's "frá og með" — but they are stored as instants, so the
+ * approval email's "Samþykktin gildir til" and the register's overdue column —
+ * but they are stored as instants, so the
  * time of day has to be pinned deliberately. The two kinds normalise in
  * opposite directions:
  *
@@ -27,6 +27,8 @@
  * These helpers are that same rule, for the dates the approval flow writes.
  */
 
+import { REPORT_VALIDITY_YEARS } from '../../constants'
+
 /** The last instant of `date`'s UTC day. */
 export function endOfUtcDay(date: Date): Date {
   const result = new Date(date)
@@ -42,9 +44,6 @@ export function startOfUtcDay(date: Date): Date {
 
   return result
 }
-
-/** How long an approved report stays in force. */
-export const REPORT_VALIDITY_YEARS = 3
 
 /**
  * How long a report approved at `from` remains valid: three years on, to the
