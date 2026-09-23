@@ -112,11 +112,12 @@ Three allowances, and which one you are spending depends on the route.
   `X-RateLimit-Reset-perKeyDryRun` — and the unsuffixed `X-RateLimit-*` set does
   not appear on that route. **If you read `X-RateLimit-Remaining` generically
   for backoff, handle its absence there rather than reading it as unlimited.**
-  A `429` on that route carries both `Retry-After-perKeyDryRun` and the
+  A per-key `429` on that route carries both `Retry-After-perKeyDryRun` and the
   standard `Retry-After`, with the same value, so a generic retry layer that
   reads `Retry-After` works unchanged.
 - **Per IP:** 600 requests per minute, counted before authentication (so failed
-  keys count too). No headers — a caller is not the subject of that limit.
+  keys count too). No headers, including on its `429` — a caller is not the
+  subject of that limit.
 
 All three return `429` when exceeded.
 

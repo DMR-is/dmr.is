@@ -691,12 +691,25 @@ describe('ReportCreateService', () => {
   describe('the dry run and the submission agree', () => {
     type Verdict = 'accepted' | 'refused'
 
+    /**
+     * Only a payload refusal — a `BadRequestException` — is a verdict, on either
+     * side. Anything else is rethrown so it fails the row: a crash is a `500` on
+     * the route, not a refusal, and grading it as one would let a broken path
+     * pass every `refused` row (and, on the submission, the `accepted` one).
+     */
+    const verdictOf = (error: unknown): Verdict => {
+      if (error instanceof BadRequestException) {
+        return 'refused'
+      }
+      throw error
+    }
+
     const previewVerdict = (input: CreateReportDto): Verdict => {
       try {
         analyzeSalaryPayload(input.parsed, BENCHMARK_PERCENT)
         return 'accepted'
-      } catch {
-        return 'refused'
+      } catch (error) {
+        return verdictOf(error)
       }
     }
 
@@ -705,11 +718,7 @@ describe('ReportCreateService', () => {
         await service.createSalary(input)
         return 'accepted'
       } catch (error) {
-        // Only a payload refusal counts as disagreement. A conflict or a
-        // missing equality report is the submission answering a question the
-        // preview never asks, and counting those would fail this test for
-        // reasons that have nothing to do with drift.
-        return error instanceof BadRequestException ? 'refused' : 'accepted'
+        return verdictOf(error)
       }
     }
 
