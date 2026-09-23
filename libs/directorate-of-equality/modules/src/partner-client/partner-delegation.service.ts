@@ -97,17 +97,21 @@ export class PartnerDelegationService implements IPartnerDelegationService {
       return []
     }
 
+    // Live firms only. Revoking a firm leaves its delegations in place, and the
+    // partner API already refuses it — listing it would tell a company that a
+    // provider which can no longer file is still allowed to.
     const clients = await this.partnerClientModel.findAll({
       where: {
         id: delegations.map((delegation) => delegation.partnerClientId),
+        revokedAt: null,
       },
     })
     const clientById = new Map(clients.map((client) => [client.id, client]))
 
     return delegations.flatMap((delegation) => {
       const client = clientById.get(delegation.partnerClientId)
-      // A delegation's FK guarantees its client row; skipping rather than
-      // throwing keeps one bad row from hiding every other delegation.
+      // Absent means the firm was revoked (see above); its FK guarantees the
+      // row otherwise.
       return client ? [this.toCompanyDto(delegation, client)] : []
     })
   }

@@ -160,6 +160,16 @@ describe('PartnerDelegationService', () => {
     })
   })
 
+  it('leaves out delegations to a firm that has since been revoked', async () => {
+    delegations.findAll.mockResolvedValue([delegationRow()])
+    clients.findAll.mockResolvedValue([])
+
+    await expect(service.listLiveForCompany(COMPANY.id)).resolves.toEqual([])
+    expect(clients.findAll).toHaveBeenCalledWith({
+      where: { id: [FIRM.id], revokedAt: null },
+    })
+  })
+
   describe('grant', () => {
     const grant = (overrides: Record<string, unknown> = {}) =>
       service.grant({
