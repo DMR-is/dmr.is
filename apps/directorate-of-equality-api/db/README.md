@@ -473,8 +473,14 @@ lookup path.
 **Lifetimes.** A delegation lasts until the company turns it off; there is no expiry
 column. Turning it back on inserts a new row, so the earlier grant stays as audit of who
 allowed it and when. A client re-approved after revocation likewise gets a fresh row, and
-its companies must consent again, since revocation cut those ties. Both rules come from
-partial unique indexes that constrain only the live row.
+its companies must consent again, since their delegations name the old client row. Both
+rules come from partial unique indexes that constrain only the live row.
+
+**What "live" means.** Revoking a client stamps only the client row; its keys and
+delegations keep their own `revoked_at`, as their own audit trail. So a key or a
+delegation is live **iff its own `revoked_at` and its client's `revoked_at` are both
+NULL**, and every reader checks both. "Was this delegation in force at time T" is
+therefore `min(delegation.revoked_at, client.revoked_at)`.
 
 **Provenance.** `report.partner_client_id` names the firm whose credential filed a report.
 `(provider_type, provider_id)` records the channel and the caller's id but not the firm,
@@ -832,20 +838,23 @@ column — the client's scopes are the ones that count.
 
 A company allowing a `doe_partner_client` to act for it.
 
-| Column                   | Type                                                                     |
-| ------------------------ | ------------------------------------------------------------------------ |
-| `id`                     | `uuid` PK                                                                |
-| `partner_client_id`      | `fk → doe_partner_client`                                                |
-| `company_id`             | `fk → company`                                                           |
-| `company_national_id`    | `text` (denormalised from `company.national_id`, as on `doe_api_key`)    |
-| `scopes`                 | `text[]` (`ApiKeyScopeEnum`; never empty — what this employer allowed)   |
-| `granted_by_national_id` | `text` (the person who granted it; `created_at` is the grant time)       |
-| `revoked_at`             | `timestamptz` (nullable — set when the company turns the delegation off) |
-| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                               |
-| `revoked_by_national_id` | `text` (nullable)                                                        |
+| Column                   | Type                                                                                          |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| `id`                     | `uuid` PK                                                                                     |
+| `partner_client_id`      | `fk → doe_partner_client`                                                                     |
+| `company_id`             | `fk → company`                                                                                |
+| `company_national_id`    | `text` (denormalised; pinned to `company_id` by a composite FK to `company(id, national_id)`) |
+| `scopes`                 | `text[]` (`ApiKeyScopeEnum`; never empty — what this employer allowed)                        |
+| `granted_by_national_id` | `text` (the person who granted it; `created_at` is the grant time)                            |
+| `revoked_at`             | `timestamptz` (nullable — set when the company turns the delegation off)                      |
+| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                                    |
+| `revoked_by_national_id` | `text` (nullable)                                                                             |
 
 Invariants:
 
+- `(company_id, company_national_id)` references `company(id, national_id)`, via
+  `company_id_national_id_uq`, so the column the guard looks up by and the column the
+  consent screens scope by cannot name different companies
 - Unique `(partner_client_id, company_national_id)` `WHERE revoked_at IS NULL` — one live
   delegation per firm and company. It is also the partner API's lookup: client from the
   credential, kennitala from the `X-Company-National-Id` header.
