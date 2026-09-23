@@ -82,6 +82,12 @@ jobs:
   # not dependent on its result: a DoE terragrunt failure must not strand the
   # Útgáfa release. The explicit approve-prod check is what enforces the gate —
   # a rejected approval leaves it non-successful and this job skips.
+  #
+  # Re-running deploy-jafnrettisstofa re-runs this job too, whether as a single
+  # job or through "Re-run failed jobs": GitHub re-runs every dependent. After a
+  # newer release has shipped, re-running an old release's failed DoE deploy
+  # therefore redeploys all of Útgáfa at the old tag, with no approval. Cut a new
+  # release instead.
   deploy:
     name: 🚀 Deploy to Prod
     runs-on: ubuntu-latest
