@@ -28,7 +28,7 @@ import type {
  *
  * The company row carries only a bucket (`employeeCountCategory`), so this is
  * the only real number in the system — and it is what "how many people are
- * covered by a jafnlaunakerfi" has to be summed from. `reportedAt` travels
+ * covered by a skýrslugjöf" has to be summed from. `reportedAt` travels
  * with it because a headcount with no date is not a fact anyone can check.
  *
  * Absent for a company that has never had a report approved, which is not the

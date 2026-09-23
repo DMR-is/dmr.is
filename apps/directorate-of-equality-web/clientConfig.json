@@ -2649,6 +2649,41 @@
             "schema": { "type": "boolean" }
           },
           {
+            "name": "includeQuarantined",
+            "required": false,
+            "in": "query",
+            "description": "When true, also return companies under an admin quarantine (quarantined = true). HIDDEN BY DEFAULT — a quarantine halts all outbound activity, so those companies are not work an admin can act on and they crowd out the ones that are. Ignored when `quarantined` is set explicitly, which is a more specific request about the same axis.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "neverFiledEquality",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies that have never filed an equality plan THROUGH THIS SYSTEM (no report row beyond a draft). Says nothing about whether the company is obliged to file one, and nothing about the retired SharePoint register — most companies carry a legacy certification and no report row, so this matches very widely on its own. Use `neverFiledEqualityIncludingLegacy` for \"never appeared in the register at all\".",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "neverFiledSalary",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies that have never filed a salary report THROUGH THIS SYSTEM (no report row beyond a draft). The salary counterpart of `neverFiledEquality`; the same caveats apply.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "neverFiledEqualityIncludingLegacy",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies that have never filed an equality plan here AND hold no equality certification in the retired SharePoint register either — i.e. the Directorate has no record of one, ever. An expired or surrendered legacy certification still counts as having filed.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "neverFiledSalaryIncludingLegacy",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies that have never filed a salary report here AND hold no salary certification in the retired SharePoint register either. The salary counterpart of `neverFiledEqualityIncludingLegacy`.",
+            "schema": { "type": "boolean" }
+          },
+          {
             "name": "isatCategoryCode",
             "required": false,
             "in": "query",
