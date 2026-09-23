@@ -1,5 +1,9 @@
 import { ApiKeyOriginEnum } from '@dmr.is/doe-shared'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
+import { PartnerClientResourceGuard } from '../../core/guards/partner-client-resource/partner-client-resource.guard'
+import { ApplicationPartnerController } from './application-partner.controller'
 import { ApplicationPartnerClientController } from './application-partner-client.controller'
 
 const CLIENT = { id: 'client-a', nationalId: '9999999999' } as never
@@ -29,6 +33,41 @@ describe('ApplicationPartnerClientController', () => {
       revokeKey: jest.fn().mockResolvedValue({}),
     }
     controller = new ApplicationPartnerClientController(service as never)
+  })
+
+  /**
+   * The regression the move fixed: a provider with no company row was 404ed by
+   * CompanyResourceGuard before its own record was looked up. The handler
+   * tests above call methods directly and cannot see guards, so the guard
+   * chain is pinned here — re-adding CompanyResourceGuard, or moving these
+   * routes back beside the consent routes, fails this. `__guards__` is Nest's
+   * @UseGuards metadata key, as swagger-coverage.spec reads it.
+   */
+  it('is guarded by PartnerClientResourceGuard and never CompanyResourceGuard', () => {
+    const guards = Reflect.getMetadata(
+      '__guards__',
+      ApplicationPartnerClientController,
+    )
+
+    expect(guards).toEqual([TokenJwtAuthGuard, PartnerClientResourceGuard])
+    expect(guards).not.toContain(CompanyResourceGuard)
+  })
+
+  it('has no provider routes left on the consent controller', () => {
+    const prototype =
+      ApplicationPartnerController.prototype as unknown as Record<
+        string,
+        unknown
+      >
+
+    for (const handler of [
+      'getPartnerClient',
+      'getPartnerClientKeys',
+      'issuePartnerClientKey',
+      'revokePartnerClientKey',
+    ]) {
+      expect(prototype[handler]).toBeUndefined()
+    }
   })
 
   it('returns the resolved provider as is', () => {

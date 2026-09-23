@@ -10,6 +10,7 @@ import {
 import {
   IPartnerClientService,
   PartnerClientDto,
+  partnerClientMessages,
 } from '@dmr.is/doe-modules/partner-client'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -59,10 +60,7 @@ export class PartnerClientResourceGuard implements CanActivate {
       await this.partnerClientService.findLiveByNationalId(nationalId)
 
     if (!client) {
-      throw new NotFoundException({
-        message: 'This organisation is not an approved provider',
-        translatedMessage: 'Þessi aðili er ekki samþykktur þjónustuaðili',
-      })
+      throw new NotFoundException(partnerClientMessages.notAProvider())
     }
 
     request.partnerClientContext = client

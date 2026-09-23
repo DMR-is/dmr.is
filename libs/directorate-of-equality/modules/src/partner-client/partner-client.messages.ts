@@ -43,6 +43,11 @@ export const partnerClientMessages = {
     translatedMessage: `Þjónustuaðili má hafa að hámarki ${max} virka lykla — afturkallaðu einn áður en nýr er búinn til`,
   }),
 
+  notAProvider: (): ErrorMessage => ({
+    message: 'This organisation is not an approved provider',
+    translatedMessage: 'Þessi aðili er ekki samþykktur þjónustuaðili',
+  }),
+
   providerNotFound: (): ErrorMessage => ({
     message: 'Provider not found',
     translatedMessage: 'Þjónustuaðilinn fannst ekki',

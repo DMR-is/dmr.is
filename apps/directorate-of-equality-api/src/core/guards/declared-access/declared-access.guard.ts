@@ -38,6 +38,9 @@ const GUARDS_METADATA = '__guards__'
  *   row instead of throwing, which is deliberate for employer self-service:
  *   the row it creates is keyed to the caller's own national ID, so it still
  *   cannot reach another company's data.
+ * - `PartnerClientResourceGuard` — the caller's own live `doe_partner_client`
+ *   row by national ID, else 404. Needs no `company` row, since an approved
+ *   firm need not be an employer in the register, and never provisions one.
  * - `ReportResourceGuard` — reviewer or owning company for the report, else
  *   `ForbiddenException`.
  *

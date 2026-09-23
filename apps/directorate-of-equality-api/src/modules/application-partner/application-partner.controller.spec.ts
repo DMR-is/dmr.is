@@ -20,13 +20,7 @@ const USER = {
  * the handlers pass down — whose company, which person — not the guards.
  */
 describe('ApplicationPartnerController', () => {
-  let clients: {
-    listProviders: jest.Mock
-    findLiveByNationalId: jest.Mock
-    listKeys: jest.Mock
-    issueKey: jest.Mock
-    revokeKey: jest.Mock
-  }
+  let clients: { listProviders: jest.Mock }
   let delegations: {
     listLiveForCompany: jest.Mock
     grant: jest.Mock
@@ -35,13 +29,7 @@ describe('ApplicationPartnerController', () => {
   let controller: ApplicationPartnerController
 
   beforeEach(() => {
-    clients = {
-      listProviders: jest.fn().mockResolvedValue([]),
-      findLiveByNationalId: jest.fn().mockResolvedValue(null),
-      listKeys: jest.fn().mockResolvedValue([]),
-      issueKey: jest.fn().mockResolvedValue({}),
-      revokeKey: jest.fn().mockResolvedValue({}),
-    }
+    clients = { listProviders: jest.fn().mockResolvedValue([]) }
     delegations = {
       listLiveForCompany: jest.fn().mockResolvedValue([]),
       grant: jest.fn().mockResolvedValue({}),
