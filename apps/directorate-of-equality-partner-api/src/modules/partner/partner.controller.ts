@@ -26,6 +26,7 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger'
+import { SkipThrottle } from '@nestjs/throttler'
 
 import { ONE_MEGA_BYTE } from '@dmr.is/constants'
 import {
@@ -56,8 +57,12 @@ import { RequireActiveCompanyGuard } from '../../core/guards/active-company/requ
 import { ApiKeyGuard } from '../../core/guards/api-key/api-key.guard'
 import { RequireApiScope } from '../../core/guards/api-key-scope/require-api-scope.decorator'
 import { RequireApiScopeGuard } from '../../core/guards/api-key-scope/require-api-scope.guard'
-import { ApiKeyThrottlerGuard } from '../../core/guards/api-key-throttler/api-key-throttler.guard'
+import {
+  ApiKeyThrottlerGuard,
+  DryRunThrottlerGuard,
+} from '../../core/guards/api-key-throttler/api-key-throttler.guard'
 import { PartnerCompanyGuard } from '../../core/guards/partner-company/partner-company.guard'
+import { PER_KEY_THROTTLER } from '../../core/guards/throttlers'
 import { MAX_PARTNER_JSON_BYTES } from '../../request-limits'
 import {
   DOCX_MIME_TYPE,
@@ -166,12 +171,41 @@ export class PartnerController {
     return this.applicationService.getSubCriterionCatalog()
   }
 
+  /**
+   * The dry run: what a filing would say, without filing it.
+   *
+   * It used to be the first half of a two-step submission, and its own
+   * description said so — a vendor sent the whole payroll here to learn its
+   * outliers, then sent the whole payroll again to file. Detection now happens
+   * inside the submission, so that round trip is gone and this is what it should
+   * have been all along: optional, repeatable, and answering the question "would
+   * this be accepted, and what would it say" before anything is committed.
+   *
+   * **Locked exactly like the routes it rehearses.** Full guard chain, the
+   * `salary:submit` scope it already carried, and `@RequireActiveCompany` from
+   * the controller — a company off the register should not be dry-running
+   * filings it cannot make. No new scope and no public access: nothing here is
+   * less sensitive than the submission, it simply does not store the result.
+   *
+   * **It answers with the submission's own rules**, because it expands through
+   * the same `expandToParsedPayload` and validates through the same
+   * `assertParsedPayloadValid`. That is a hard requirement rather than a
+   * convenience: a preview that can answer "valid" where the submission answers
+   * `400` is the fourth occurrence of that bug in this codebase, and the spec
+   * that pins it is the one that catches the two paths drifting.
+   */
   @Post('reports/salary-analysis')
   // Nothing is created here, so the bare `@Post` default of 201 was wrong on
   // its own terms — and `PartnerResponse` documented 200 while Nest answered
   // 201, so a generated client modelled neither.
   @HttpCode(HttpStatus.OK)
   @RequireApiScope(ApiKeyScopeEnum.SALARY_SUBMIT)
+  // Its own bucket, and *only* its own: skipping the surface-wide one is what
+  // makes the separation real. Counting a dry run against both would still let
+  // an afternoon of rehearsing exhaust the allowance the filing needs, which is
+  // the failure the separate bucket exists to prevent.
+  @SkipThrottle({ [PER_KEY_THROTTLER]: true })
+  @UseGuards(DryRunThrottlerGuard)
   @PartnerResponse({
     // `scoringModelId` reaches `findOwnedModel`, so an unknown or foreign id is
     // the tenant-isolation 404 — the first refusal a vendor hits on a bad id,
@@ -180,7 +214,7 @@ export class PartnerController {
     operationId: 'analyzePartnerSalaryReport',
     type: SalaryAnalysisResponseDto,
     description:
-      'Validates a payload and runs the outlier analysis over it, without submitting anything. **This is the first half of the salary flow and is not optional in practice:** it is where a vendor learns that its payroll extract is accepted against the scoring model it names, and which employees will need an explanation — both of which the submission would otherwise refuse for the first time. It expands through the identical call the submission uses, so a payload that previews clean is the payload that gets filed. Nothing is stored, so it can be called as often as the extract changes; when the answer looks right, the same body goes to `POST /reports/salary`.',
+      'Runs a filing without filing it: validates the payload, expands it against the named scoring model, and returns the outliers and the wage-gap figures the submission would produce. **Optional.** The submission detects its own outliers, so this is not a step on the way to filing — it is for finding out what a filing would say while the extract is still changing, and for checking an integration before it touches real data. It expands and validates through the identical calls the submission uses, so a payload this accepts is a payload the submission accepts. Nothing is stored and nothing is reserved; the same body goes to `POST /reports/salary` when the answer looks right. It has its own rate-limit allowance, separate from the one filings draw on, so rehearsing cannot use up the budget for submitting.',
   })
   analyzeSalaryReport(
     @Body() input: PartnerSalaryPayloadFields,
