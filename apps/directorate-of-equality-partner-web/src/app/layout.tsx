@@ -1,0 +1,30 @@
+import { getServerSession } from 'next-auth'
+
+import { globalStyles } from '@dmr.is/ui/globalStyles'
+
+import { RootProviders } from '../components/providers/RootProviders'
+import { authOptions } from '../lib/auth/authOptions'
+
+globalStyles()
+
+export const metadata = {
+  title: 'Jafnréttisstofa – Samstarfsaðilar',
+  description:
+    'Útgáfa og umsýsla API-lykla fyrir samstarfsaðila Jafnréttisstofu',
+}
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const session = await getServerSession(authOptions)
+
+  return (
+    <html lang="is">
+      <body>
+        <RootProviders session={session}>{children}</RootProviders>
+      </body>
+    </html>
+  )
+}

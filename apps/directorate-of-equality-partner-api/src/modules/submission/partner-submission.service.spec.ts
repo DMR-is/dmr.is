@@ -105,6 +105,23 @@ describe('PartnerSubmissionService', () => {
       expect(submitSalary.mock.calls[0][1]).toBe(COMPANY)
     })
 
+    /**
+     * These two are the channel's shape, not the vendor's request, which is why
+     * they are options rather than fields the DTO publishes. A payroll system
+     * files once and never previews, so unexplained outliers postpone instead of
+     * being refused; and since POSTPONED is therefore what a submission becomes
+     * here rather than something anyone chose, a corrected re-file replaces it
+     * instead of colliding with it. island.is passes neither.
+     */
+    it('declares the channel’s outlier policy on every submission', async () => {
+      await service.submitSalary(input, COMPANY)
+
+      expect(submitSalary.mock.calls[0][2]).toEqual({
+        postponeUnexplainedOutliers: true,
+        withdrawPostponedSibling: true,
+      })
+    })
+
     it('returns the shared service’s answer unchanged', async () => {
       await expect(service.submitSalary(input, COMPANY)).resolves.toEqual({
         reportId: 'r1',

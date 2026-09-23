@@ -188,7 +188,7 @@ describe('ReportDraftService', () => {
 
       const result = await service.createDraft(draftInput())
 
-      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
+      expect(result).toMatchObject({ reportId: REPORT_ID, replayed: false })
       expect(reportCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           type: ReportTypeEnum.SALARY,

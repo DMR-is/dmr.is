@@ -224,7 +224,9 @@ export class CreateReportDto {
    * report has detected outliers and is not postponed: the union of each
    * group's `employeeOrdinals` must cover every detected outlier exactly once.
    * Ignored when `outliersPostponed` is true. Omit when no outliers were
-   * detected.
+   * detected — or, on a channel that passes `postponeUnexplainedOutliers` (see
+   * `CreateSalaryOptions`, which is not part of this body), omit to postpone
+   * them.
    */
   @ApiOptionalDtoArray(CreateReportOutlierGroupDto)
   outlierGroups?: CreateReportOutlierGroupDto[]

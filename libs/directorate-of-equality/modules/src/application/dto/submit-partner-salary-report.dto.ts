@@ -35,6 +35,19 @@ import { SubmitSalaryReportDto } from './submit-salary-report.dto'
  *   `ParsedReportDto` every other channel submits, so nothing downstream knows
  *   a scoring model exists. See [[Directorate of Equality Scoring Model]].
  *
+ * - **`outliersPostponed`** — the flag that says "file this with the
+ *   explanations deferred". It asked the caller to state something it could not
+ *   know: postponement depends on whether outliers were detected, and on this
+ *   channel detection happens inside the submission it is a field of. A vendor
+ *   setting it wrongly either had a clean payroll refused ("cannot postpone
+ *   nothing") or an outlier refused for want of groups.
+ *
+ *   **Omitting the groups when outliers exist *is* the postpone**, so a flag
+ *   saying so is redundant. Send groups and the report is `SUBMITTED`; send
+ *   none and it lands `POSTPONED` with the ordinals still owed in the response.
+ *   The old flag's other awkwardness goes with it: it was all-or-none, and it
+ *   answered `400` when no outliers had been detected.
+ *
  * `OmitType` rather than a hand-written class: the remaining twenty-odd fields
  * are the same contract island.is submits, and a copy would drift from it field
  * by field. What this surface subtracts is the whole statement here.
@@ -44,6 +57,7 @@ export class SubmitPartnerSalaryReportDto extends IntersectionType(
     'equalityReportId',
     'importedFromExcel',
     'parsed',
+    'outliersPostponed',
   ] as const),
   PartnerSalaryPayloadFields,
 ) {}
@@ -62,4 +76,37 @@ export type SubmitSalaryReportInput = Omit<
   equalityReportId?: string | null
   importedFromExcel?: boolean
   parsed: ParsedReportDto
+  /**
+   * Still here although the partner DTO no longer publishes it: island.is sends
+   * it, having previewed and asked the applicant. The partner API leaves it
+   * unset and passes `postponeUnexplainedOutliers` instead, which asks the same
+   * question of a caller that could not have previewed.
+   */
+  outliersPostponed?: boolean
+}
+
+/**
+ * How the calling channel handles outliers, as distinct from what the caller
+ * sent.
+ *
+ * Neither of these is a field on either wire contract, and that is the point.
+ * They describe the shape of the channel — whether it can preview before it
+ * submits, and what a `POSTPONED` report means on it — which is knowledge the
+ * app holds about itself, not a claim a request can make. A vendor cannot ask
+ * for its outliers to be postponed; postponement is simply what happens on a
+ * channel that files the payroll once.
+ */
+export interface SubmitSalaryOptions {
+  /**
+   * File `POSTPONED` when outliers are detected and no groups were supplied,
+   * rather than refusing. For a channel with no preview step.
+   */
+  postponeUnexplainedOutliers?: boolean
+
+  /**
+   * Let this submission withdraw and replace a `POSTPONED` sibling instead of
+   * colliding with it. For a channel where `POSTPONED` is what a submission
+   * becomes rather than something the filer chose.
+   */
+  withdrawPostponedSibling?: boolean
 }

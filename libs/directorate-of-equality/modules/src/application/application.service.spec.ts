@@ -4,6 +4,7 @@ import subMonths from 'date-fns/subMonths'
 
 import {
   BadRequestException,
+  ConflictException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
@@ -501,30 +502,33 @@ describe('ApplicationService', () => {
       const result = await service.submitSalary(input, COMPANY)
 
       expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
-      expect(createSalary).toHaveBeenCalledWith({
-        equalityReportId: input.equalityReportId,
-        // No `identifier` — the creation service mints it.
-        importedFromExcel: input.importedFromExcel,
-        providerType: ReportProviderEnum.ISLAND_IS,
-        providerId: input.providerId,
-        companyAdminName: input.companyAdminName,
-        companyAdminTitle: input.companyAdminTitle ?? null,
-        companyAdminEmail: input.companyAdminEmail,
-        companyAdminGender: input.companyAdminGender,
-        contactName: input.contactName,
-        contactTitle: input.contactTitle ?? null,
-        contactEmail: input.contactEmail,
-        contactPhone: input.contactPhone,
-        averageEmployeeMaleCount: input.averageEmployeeMaleCount,
-        averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
-        averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
-        salaryDataBasis: input.salaryDataBasis,
-        salaryDataPeriod: input.salaryDataPeriod ?? null,
-        parsed: input.parsed,
-        companies: [makeCompanySnapshot()],
-        outliersPostponed: undefined,
-        outlierGroups: undefined,
-      })
+      expect(createSalary).toHaveBeenCalledWith(
+        {
+          equalityReportId: input.equalityReportId,
+          // No `identifier` — the creation service mints it.
+          importedFromExcel: input.importedFromExcel,
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: input.providerId,
+          companyAdminName: input.companyAdminName,
+          companyAdminTitle: input.companyAdminTitle ?? null,
+          companyAdminEmail: input.companyAdminEmail,
+          companyAdminGender: input.companyAdminGender,
+          contactName: input.contactName,
+          contactTitle: input.contactTitle ?? null,
+          contactEmail: input.contactEmail,
+          contactPhone: input.contactPhone,
+          averageEmployeeMaleCount: input.averageEmployeeMaleCount,
+          averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
+          averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
+          salaryDataBasis: input.salaryDataBasis,
+          salaryDataPeriod: input.salaryDataPeriod ?? null,
+          parsed: input.parsed,
+          companies: [makeCompanySnapshot()],
+          outliersPostponed: undefined,
+          outlierGroups: undefined,
+        },
+        {},
+      )
       expect(result).toEqual({ reportId: 'report-1', replayed: false })
     })
 
@@ -543,6 +547,7 @@ describe('ApplicationService', () => {
             equalityReportId: input.equalityReportId,
             importedFromExcel: true,
           }),
+          {},
         )
       })
 
@@ -562,6 +567,7 @@ describe('ApplicationService', () => {
             equalityReportId: undefined,
             importedFromExcel: false,
           }),
+          {},
         )
       })
     })
@@ -597,6 +603,7 @@ describe('ApplicationService', () => {
             },
           ],
         }),
+        {},
       )
     })
 
@@ -618,6 +625,7 @@ describe('ApplicationService', () => {
             }),
           ]),
         }),
+        {},
       )
     })
 
@@ -1718,7 +1726,11 @@ describe('ApplicationService', () => {
       })
       expect(reportUpdate).toHaveBeenCalledWith(
         { status: ReportStatusEnum.SUBMITTED },
-        { where: { id: REPORT_ID } },
+        // Compare-and-set, not a bare id. A partner submission carrying
+        // `withdrawPostponedSibling` can now retire this report while these
+        // explanations are being written; an unconditional write would
+        // resurrect a WITHDRAWN row as SUBMITTED.
+        { where: { id: REPORT_ID, status: ReportStatusEnum.POSTPONED } },
       )
       expect(emitStatusChanged).toHaveBeenCalledWith(
         REPORT_ID,
@@ -1743,6 +1755,42 @@ describe('ApplicationService', () => {
           },
         },
       )
+    })
+
+    /**
+     * The other side of the compare-and-set, and the reason it is not
+     * paranoia: a partner submission carrying `withdrawPostponedSibling` takes
+     * the company lock and can retire this report mid-request. This path holds
+     * no lock, so it has to notice.
+     *
+     * Zero rows affected is a conflict, not a silent success — the explanations
+     * were written against a report that is no longer the one under review, and
+     * answering 200 would tell a vendor its filing was completed when it was
+     * replaced.
+     */
+    it('refuses when the report moved on while the request was in flight', async () => {
+      reportFindOne.mockResolvedValueOnce({
+        id: REPORT_ID,
+        type: ReportTypeEnum.SALARY,
+        status: ReportStatusEnum.POSTPONED,
+      })
+      companyReportFindAll
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+      getResultByReportId.mockResolvedValueOnce(detectedSnapshot([1]))
+      outlierFindAll.mockResolvedValueOnce([
+        { id: 'outlier-1', reportEmployee: { id: 'emp-1', ordinal: 1 } },
+      ])
+      outlierGroupFindAll.mockResolvedValueOnce([{ id: 'old-group-1' }])
+
+      // Somebody withdrew it between the read and the write.
+      reportUpdate.mockResolvedValueOnce([0])
+
+      await expect(
+        service.editOutliers(PROVIDER_ID, { groups: [validGroup(1)] }, COMPANY),
+      ).rejects.toThrow(ConflictException)
+
+      expect(emitStatusChanged).not.toHaveBeenCalled()
     })
 
     it('IN_REVIEW correction: replaces groups, preserves status, emits EDITED only', async () => {

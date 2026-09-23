@@ -1,0 +1,129 @@
+{
+  "name": "directorate-of-equality-partner-web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/directorate-of-equality-partner-web",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "tsc": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["codegen"],
+      "options": {
+        "commands": ["tsc -p tsconfig.json --noEmit"],
+        "cwd": "apps/directorate-of-equality-partner-web",
+        "forwardAllArgs": false
+      }
+    },
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": ["codegen"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "apps/directorate-of-equality-partner-web/dist"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/directorate-of-equality-partner-web"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/varlock-run.sh directorate-of-equality-partner-web nx run directorate-of-equality-partner-web:serve-raw"
+      }
+    },
+    "serve-raw": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "directorate-of-equality-partner-web:build",
+        "dev": true,
+        "port": 5201
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "directorate-of-equality-partner-web:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "directorate-of-equality-partner-web:build:production",
+          "dev": false
+        }
+      }
+    },
+    "update-openapi-schema": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "curl http://localhost:5100/swagger/application/json > clientConfig.json",
+          "yarn run -T prettier --write clientConfig.json"
+        ],
+        "parallel": false,
+        "cwd": "apps/directorate-of-equality-partner-web"
+      }
+    },
+    "update-client": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["update-openapi-schema"],
+      "options": {
+        "commands": [
+          "node_modules/.bin/openapi-ts -f apps/directorate-of-equality-partner-web/openapi-ts.config.ts"
+        ]
+      },
+      "outputs": ["{projectRoot}/src/gen/fetch"]
+    },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "inputs": ["{projectRoot}/clientConfig.json"],
+      "options": {
+        "commands": [
+          "node_modules/.bin/openapi-ts -f apps/directorate-of-equality-partner-web/openapi-ts.config.ts"
+        ]
+      },
+      "outputs": ["{projectRoot}/src/gen/fetch"]
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "commands": [
+          "nx format:write --projects=directorate-of-equality-partner-web",
+          "nx run directorate-of-equality-partner-web:lint --fix=true --skip-nx-cache"
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["flatten-env"],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        },
+        "file": "apps/directorate-of-equality-partner-web/Dockerfile"
+      }
+    },
+    "flatten-env": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "apps/directorate-of-equality-partner-web",
+        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env && find dist/env -type f ! -name '.env.schema' -delete"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/directorate-of-equality-partner-web/jest.config.ts"
+      }
+    }
+  }
+}
