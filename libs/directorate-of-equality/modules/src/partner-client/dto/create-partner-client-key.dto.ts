@@ -7,6 +7,7 @@ import { ApiOptionalDateTime, ApiOptionalString } from '@dmr.is/decorators'
 export class CreatePartnerClientKeyDto {
   @ApiOptionalString({
     nullable: true,
+    maxLength: 256,
     description:
       'Free-text label to tell this key apart from the others, e.g. the environment it is deployed to.',
   })

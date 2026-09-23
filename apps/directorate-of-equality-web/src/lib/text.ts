@@ -1546,7 +1546,7 @@ export const partnerClientsText = {
     nationalIdLabel: 'Kennitala',
     scopingLabel: 'Heimildir',
     scopingHint:
-      'Hámark þess sem þjónustuaðilinn má gera. Hvert fyrirtæki velur síðan hvað það leyfir honum. Starfsmatsheimildin þarf aðeins ef þjónustuaðilinn býður fyrirtækjum upp á að breyta eigin starfsmati.',
+      'Hámark þess sem þjónustuaðilinn má gera. Hvert fyrirtæki velur síðan hvað það leyfir honum. Starfsmatsheimildar er aðeins þörf ef þjónustuaðilinn býður fyrirtækjum upp á að breyta eigin starfsmati.',
     scopeFilingOnly: 'Lesa og skila skýrslum',
     scopeFilingAndScoring: 'Lesa, skila skýrslum og breyta starfsmati',
     createButton: 'Samþykkja',

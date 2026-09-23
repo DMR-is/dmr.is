@@ -3,7 +3,7 @@ import { ExecutionContext } from '@nestjs/common'
 import { ApiKeyKindEnum } from '@dmr.is/doe-shared'
 
 /**
- * The two rate-limit buckets this surface runs, and why there are two.
+ * The two surface-wide rate-limit buckets, and why there are two of them.
  *
  * They answer different questions and, critically, they run at different points
  * in the request. `PER_KEY_THROTTLER` needs to know *which tenant* is calling,

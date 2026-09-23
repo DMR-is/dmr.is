@@ -56,6 +56,9 @@ export class DelegationController {
   @RequireApiScope(ApiKeyScopeEnum.REPORT_READ)
   @PartnerResponse({
     operationId: 'getPartnerDelegations',
+    // No body, no company and no register check, so neither 400 nor 409 can
+    // come back — the default set would advertise both.
+    errors: [401, 403, 500],
     type: GetPartnerDelegationsResponseDto,
     description:
       'Vendor client keys only. The companies that currently allow your organisation to act for them, newest first, each with the scopes it granted. Send a company’s `companyNationalId` as `X-Company-National-Id` to act for it. A company that withdraws disappears from this list. A company key gets `403`.',

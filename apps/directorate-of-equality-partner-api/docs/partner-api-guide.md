@@ -243,7 +243,7 @@ this flow comes first and has a human review step in the middle of it.
 
 _Scope: `report:read`_
 
-Returns the company the key belongs to. No parameters. Use it as the first call
+Returns the company the request acts for — the one a company key belongs to, or the one named in `X-Company-National-Id` with a vendor client key. No parameters. Use it as the first call
 of any integration: it proves the key is live and points at the employer you
 expect, before you build a payload for the wrong company.
 

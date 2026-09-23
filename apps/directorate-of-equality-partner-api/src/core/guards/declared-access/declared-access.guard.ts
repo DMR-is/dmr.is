@@ -36,8 +36,10 @@ export const AUTHENTICATION_GUARD: unknown = ApiKeyGuard
 /**
  * The guard that binds a request to the company it may act for.
  *
- * `PartnerCompanyGuard` resolves `doe_api_key.company_national_id` to a company
- * row and throws when there is none. It deliberately does not auto-provision, so
+ * `PartnerCompanyGuard` resolves a company key's own
+ * `doe_api_key.company_national_id`, or a vendor client key's
+ * `X-Company-National-Id` through a live delegation, to a company row, and
+ * throws when there is none. It deliberately does not auto-provision, so
  * it cannot invent a tenant.
  *
  * Adding to this list widens what counts as secured across the whole API.

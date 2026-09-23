@@ -48,7 +48,8 @@ import { HealthController } from './health.controller'
 @Module({
   imports: [
     LoggingModule,
-    // Two buckets, because one cannot cover both halves of the traffic: the
+    // Per key and per IP, because one bucket cannot cover both halves of the
+    // traffic (the dry run's own allowance is the third, below): the
     // per-key one runs after authentication and so never sees a rejected
     // credential, and the per-IP one runs before it and so cannot know the
     // tenant. See core/guards/throttlers.ts.

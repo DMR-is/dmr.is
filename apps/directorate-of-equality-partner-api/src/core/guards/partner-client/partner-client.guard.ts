@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
@@ -11,6 +12,7 @@ import { ApiKeyKindEnum } from '@dmr.is/doe-shared'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ApiKeyRequest } from '../api-key/api-key.guard'
+import { COMPANY_NATIONAL_ID_HEADER } from '../partner-company/partner-company.guard'
 
 /**
  * Admits only vendor client keys, for the routes that are about the firm
@@ -39,6 +41,15 @@ export class PartnerClientGuard implements CanActivate {
     if (request.apiKeyContext.kind !== ApiKeyKindEnum.PARTNER_CLIENT) {
       throw new ForbiddenException(
         'This route is for vendor client keys. A company key acts for its own company only.',
+      )
+    }
+
+    // Refused rather than ignored, for the reason PartnerCompanyGuard refuses
+    // it on a company key: silently accepting it would teach an integrator it
+    // filters the list, which it does not.
+    if (request.headers[COMPANY_NATIONAL_ID_HEADER] !== undefined) {
+      throw new BadRequestException(
+        'X-Company-National-Id is not used on this route: it lists every company that has delegated to you.',
       )
     }
 
