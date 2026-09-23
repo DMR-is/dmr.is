@@ -28,6 +28,15 @@ export type CompanyKeyContext = VerifiedKey & {
 export type PartnerClientKeyContext = VerifiedKey & {
   kind: ApiKeyKindEnum.PARTNER_CLIENT
   partnerClientId: string
+  /**
+   * False until an identity guard has decided what this request may do:
+   * `PartnerCompanyGuard` narrowing `scopes` to the delegation, or
+   * `PartnerClientGuard` confirming a firm-only route. `RequireApiScopeGuard`
+   * refuses a vendor key while it is false, so a route that ran the scope check
+   * before the narrowing fails closed instead of checking the firm's full
+   * approval.
+   */
+  scopesResolved: boolean
 }
 
 /**

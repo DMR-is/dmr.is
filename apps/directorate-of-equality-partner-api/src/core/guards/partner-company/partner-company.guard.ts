@@ -99,12 +99,15 @@ export class PartnerCompanyGuard implements CanActivate {
 
     if (!delegation) {
       throw new ForbiddenException(
-        'This company has not allowed your organisation to act for it, or has withdrawn that permission. It can grant it on the Jafnréttisstofa self-service web.',
+        'This company has not allowed your organisation to act for it, or has withdrawn that permission. Only the company itself can grant it, through Jafnréttisstofa.',
       )
     }
 
-    request.companyContext = await this.companyService.getByNationalId(
-      delegation.companyNationalId,
+    // By id, the column the consent screens scope by. The composite foreign
+    // key pins company_national_id to it, so this is the same company the
+    // header named.
+    request.companyContext = await this.companyService.getById(
+      delegation.companyId,
     )
     request.partnerClientId = apiKey.partnerClientId
     request.apiKeyContext = {
@@ -112,6 +115,7 @@ export class PartnerCompanyGuard implements CanActivate {
       scopes: apiKey.scopes.filter((scope) =>
         delegation.scopes.includes(scope),
       ),
+      scopesResolved: true,
     }
 
     return true

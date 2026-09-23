@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
-import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
+import { ApiKeyKindEnum, ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ApiKeyRequest } from '../api-key/api-key.guard'
@@ -58,6 +58,21 @@ export class RequireApiScopeGuard implements CanActivate {
     if (!request.apiKeyContext) {
       this.logger.error(
         'RequireApiScopeGuard ran without ApiKeyGuard — fix the @UseGuards order',
+        { context: 'RequireApiScopeGuard' },
+      )
+      throw new InternalServerErrorException()
+    }
+
+    // A vendor key's scopes mean nothing until an identity guard has narrowed
+    // them to the company it acts for. Reaching here first is a guard-order
+    // bug on the route, so it fails closed rather than checking the firm's
+    // whole approval — see `PartnerClientKeyContext.scopesResolved`.
+    if (
+      request.apiKeyContext.kind === ApiKeyKindEnum.PARTNER_CLIENT &&
+      !request.apiKeyContext.scopesResolved
+    ) {
+      this.logger.error(
+        'RequireApiScopeGuard ran before the identity guard on a vendor key — fix the @UseGuards order',
         { context: 'RequireApiScopeGuard' },
       )
       throw new InternalServerErrorException()
