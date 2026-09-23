@@ -104,13 +104,17 @@ Three allowances, and which one you are spending depends on the route.
   run**. Reported in the `X-RateLimit-*` response headers. A backstop against a
   runaway retry loop, not a commercial quota.
 - **Per key, dry run only:** 500 requests per hour for
-  `POST /reports/salary-analysis`, which draws on nothing else. Rehearsing a
-  filing as often as an extract changes is what that route is for, and it must
-  not be able to use up the allowance you need for _filing_. Because it is a
-  separate bucket it reports separate headers, suffixed with its name —
-  `X-RateLimit-Limit-perKeyDryRun` and friends — and the unsuffixed set does not
-  appear on that route. **If you read `X-RateLimit-Remaining` generically for
-  backoff, handle its absence there rather than reading it as unlimited.**
+  `POST /partner/reports/salary-analysis`, which draws on nothing else.
+  Rehearsing a filing as often as an extract changes is what that route is for,
+  and it must not be able to use up the allowance you need for _filing_. Because
+  it is a separate bucket it reports separate headers, suffixed with its name —
+  `X-RateLimit-Limit-perKeyDryRun`, `X-RateLimit-Remaining-perKeyDryRun` and
+  `X-RateLimit-Reset-perKeyDryRun` — and the unsuffixed `X-RateLimit-*` set does
+  not appear on that route. **If you read `X-RateLimit-Remaining` generically
+  for backoff, handle its absence there rather than reading it as unlimited.**
+  A `429` on that route carries both `Retry-After-perKeyDryRun` and the
+  standard `Retry-After`, with the same value, so a generic retry layer that
+  reads `Retry-After` works unchanged.
 - **Per IP:** 600 requests per minute, counted before authentication (so failed
   keys count too). No headers — a caller is not the subject of that limit.
 

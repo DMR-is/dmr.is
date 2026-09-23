@@ -1,6 +1,6 @@
 import { GUARDS_METADATA } from '@nestjs/common/constants'
 import { Reflector } from '@nestjs/core'
-import { ThrottlerStorage } from '@nestjs/throttler'
+import { ThrottlerException, ThrottlerStorage } from '@nestjs/throttler'
 
 import {
   ApiKeyThrottlerGuard,
@@ -25,11 +25,14 @@ const OPTIONS = [
  * handler are there and are honoured. A mocked reflector would assert our own
  * stub back at us.
  */
-const contextFor = (handler: (...args: never[]) => unknown) =>
+const contextFor = (
+  handler: (...args: never[]) => unknown,
+  header: jest.Mock = jest.fn(),
+) =>
   ({
     switchToHttp: () => ({
       getRequest: () => ({ apiKeyContext: { keyId: 'key-1' } }),
-      getResponse: () => ({ header: jest.fn() }),
+      getResponse: () => ({ header }),
     }),
     getHandler: () => handler,
     getClass: () => PartnerController,
@@ -43,13 +46,22 @@ const okIncrement = () =>
     timeToBlockExpire: 0,
   })
 
+const blockedIncrement = () =>
+  jest.fn().mockResolvedValue({
+    totalHits: 501,
+    timeToExpire: 60,
+    isBlocked: true,
+    timeToBlockExpire: 42,
+  })
+
 const build = async <T>(
   Guard: new (...args: never[]) => T,
   increment: jest.Mock,
+  options: typeof OPTIONS = OPTIONS,
 ): Promise<T> => {
   const guard = new Guard(
     ...([
-      OPTIONS,
+      options,
       { increment } as unknown as ThrottlerStorage,
       new Reflector(),
     ] as never[]),
@@ -154,5 +166,42 @@ describe('the dry run spends its own allowance', () => {
     ).canActivate(contextFor(analyze))
 
     expect(shared.mock.calls[0][0]).not.toBe(dryRun.mock.calls[0][0])
+  })
+
+  /**
+   * With no throttler matching its bucket the base class allows every request,
+   * and the dry run has skipped the surface-wide bucket — so a config entry
+   * deleted as "unused" would leave the route with no per-key limit at all.
+   * The guard refuses to start instead.
+   */
+  it.each<[string, new (...args: never[]) => unknown, string]>([
+    ['DryRunThrottlerGuard', DryRunThrottlerGuard, PER_KEY_DRY_RUN_THROTTLER],
+    ['ApiKeyThrottlerGuard', ApiKeyThrottlerGuard, PER_KEY_THROTTLER],
+  ])(
+    '%s refuses to start when its bucket is not configured',
+    async (_name, Guard, bucket) => {
+      const options = OPTIONS.filter((throttler) => throttler.name !== bucket)
+
+      await expect(build(Guard, okIncrement(), options)).rejects.toThrow(bucket)
+    },
+  )
+
+  /**
+   * `@nestjs/throttler` suffixes `Retry-After` with the bucket name, which
+   * would leave a generic retry layer with no standard header to read.
+   */
+  it('sends the standard Retry-After on a dry-run 429', async () => {
+    const header = jest.fn()
+    const guard = await build(DryRunThrottlerGuard, blockedIncrement())
+
+    await expect(
+      guard.canActivate(contextFor(analyze, header)),
+    ).rejects.toBeInstanceOf(ThrottlerException)
+
+    expect(header).toHaveBeenCalledWith('Retry-After', 42)
+    expect(header).toHaveBeenCalledWith(
+      `Retry-After-${PER_KEY_DRY_RUN_THROTTLER}`,
+      42,
+    )
   })
 })

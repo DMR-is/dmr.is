@@ -689,7 +689,9 @@ describe('ReportCreateService', () => {
    * paths and compare the answers.
    */
   describe('the dry run and the submission agree', () => {
-    const previewVerdict = (input: CreateReportDto) => {
+    type Verdict = 'accepted' | 'refused'
+
+    const previewVerdict = (input: CreateReportDto): Verdict => {
       try {
         analyzeSalaryPayload(input.parsed, BENCHMARK_PERCENT)
         return 'accepted'
@@ -698,7 +700,7 @@ describe('ReportCreateService', () => {
       }
     }
 
-    const submitVerdict = async (input: CreateReportDto) => {
+    const submitVerdict = async (input: CreateReportDto): Promise<Verdict> => {
       try {
         await service.createSalary(input)
         return 'accepted'
@@ -711,34 +713,71 @@ describe('ReportCreateService', () => {
       }
     }
 
-    it.each([
-      ['a payload both accept', (input: CreateReportDto) => input],
+    /**
+     * Each row pins the verdict it expects, not only that the two agree. Without
+     * it, weakening the shared validator moves both paths together and every
+     * row still passes on `accepted === accepted`.
+     *
+     * The last three rows are the semantics-only rules — the half
+     * `assertParsedPayloadIntegrity` does not enforce. They are the ones that
+     * fail if either path is pointed at the weaker validator; the structural
+     * rows above them survive that mutation by design.
+     */
+    it.each<[string, (input: CreateReportDto) => CreateReportDto, Verdict]>([
+      ['a payload both accept', (input) => input, 'accepted'],
       [
         'a step assignment that resolves to nothing',
-        (input: CreateReportDto) => {
+        (input) => {
           input.parsed.roles[0].stepAssignments[0].stepOrder = 99
           return input
         },
+        'refused',
       ],
       [
         'an employee whose role is not in roles[]',
-        (input: CreateReportDto) => {
+        (input) => {
           input.parsed.employees[0].roleTitle = 'Engin slík staða'
           return input
         },
+        'refused',
       ],
       [
         'a sub-criterion weight total that is not 100',
-        (input: CreateReportDto) => {
+        (input) => {
           input.parsed.criteria[0].subCriteria[0].weight += 5
           return input
         },
+        'refused',
       ],
-    ])('reaches the same verdict on %s', async (_case, mutate) => {
+      [
+        'a mandatory criterion type that is absent',
+        (input) => {
+          // Retyped rather than removed: removing it would also orphan the
+          // role's assignments to it, a structural failure that would pass
+          // this row against the weaker validator too.
+          const strain = input.parsed.criteria.find(
+            (c) => c.type === ReportCriterionTypeEnum.STRAIN,
+          )
+          if (!strain) throw new Error('fixture has no STRAIN criterion')
+          strain.type = ReportCriterionTypeEnum.RESPONSIBILITY
+          return input
+        },
+        'refused',
+      ],
+      [
+        'an employee left unclassified on a personal sub-criterion',
+        (input) => {
+          input.parsed.employees[0].personalStepAssignments = []
+          return input
+        },
+        'refused',
+      ],
+    ])('reaches the same verdict on %s', async (_case, mutate, expected) => {
       const preview = previewVerdict(mutate(makeInput()))
       const submit = await submitVerdict(mutate(makeInput()))
 
-      expect(preview).toBe(submit)
+      expect(preview).toBe(expected)
+      expect(submit).toBe(expected)
     })
   })
 

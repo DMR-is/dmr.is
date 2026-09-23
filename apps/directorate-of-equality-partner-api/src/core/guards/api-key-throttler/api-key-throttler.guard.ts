@@ -3,7 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common'
-import { ThrottlerGuard } from '@nestjs/throttler'
+import { ThrottlerGuard, ThrottlerLimitDetail } from '@nestjs/throttler'
 
 import { ApiKeyRequest } from '../api-key/api-key.guard'
 import { PER_KEY_DRY_RUN_THROTTLER, PER_KEY_THROTTLER } from '../throttlers'
@@ -30,6 +30,12 @@ export abstract class PerKeyThrottlerGuard extends ThrottlerGuard {
    * See `IpThrottlerGuard.onModuleInit` — the base class enforces every
    * configured throttler, and skip metadata cannot distinguish two guards on
    * one handler, so each guard narrows the list to the bucket it owns.
+   *
+   * An empty result throws rather than passing: with no throttler to enforce,
+   * the base class allows every request. The dry run skips the surface-wide
+   * bucket, so a config entry deleted as "unused" or a renamed constant would
+   * otherwise leave that route with no per-key limit and nothing failing. A
+   * boot failure is the failure mode to want.
    */
   async onModuleInit(): Promise<void> {
     await super.onModuleInit()
@@ -37,6 +43,12 @@ export abstract class PerKeyThrottlerGuard extends ThrottlerGuard {
     this.throttlers = this.throttlers.filter(
       (throttler) => throttler.name === this.bucket,
     )
+
+    if (this.throttlers.length === 0) {
+      throw new Error(
+        `${this.constructor.name}: no throttler named "${this.bucket}" is configured in ThrottlerModule.forRoot`,
+      )
+    }
   }
 
   protected async getTracker(req: ApiKeyRequest): Promise<string> {
@@ -91,4 +103,23 @@ export class ApiKeyThrottlerGuard extends PerKeyThrottlerGuard {
 @Injectable()
 export class DryRunThrottlerGuard extends PerKeyThrottlerGuard {
   protected readonly bucket = PER_KEY_DRY_RUN_THROTTLER
+
+  /**
+   * `@nestjs/throttler` suffixes `Retry-After` with the bucket name like every
+   * other header, so a `429` here would carry only `Retry-After-perKeyDryRun`.
+   * `Retry-After` is standard HTTP rather than part of our contract, and
+   * generic retry layers (axios-retry, got) read it by name — so it is also
+   * sent unsuffixed. Safe to do: this route skips the surface-wide bucket, so no
+   * other guard sets it on the same response.
+   */
+  protected async throwThrottlingException(
+    context: ExecutionContext,
+    detail: ThrottlerLimitDetail,
+  ): Promise<void> {
+    const { res } = this.getRequestResponse(context)
+
+    res.header('Retry-After', detail.timeToBlockExpire)
+
+    return super.throwThrottlingException(context, detail)
+  }
 }
