@@ -43,11 +43,11 @@ const LOGGING_CONTEXT = 'ApiKeyService'
  * such a key "fail on shape"; that was never true.
  *
  * Reuses `API_ENV` rather than declaring a variable of its own, and falls back
- * to `dev`. Both DoE app schemas now declare `API_ENV` — the partner API gained
- * it so the salary renewal-window gate would run there — so varlock enforces it
- * in a deployed environment. That is stricter than this segment needs, since the
- * value here is advisory, and the fallback stays for local runs where the
- * variable is optional.
+ * to `dev`. Both DoE app schemas declare `API_ENV`, so varlock enforces it in a
+ * deployed environment. That is stricter than this segment needs, since the
+ * value here is advisory — and since the salary renewal window was removed, this
+ * segment is the only thing that reads it. The fallback stays for local runs
+ * where the variable is optional.
  */
 const API_KEY_ENV_VAR = 'API_ENV'
 const DEFAULT_API_KEY_ENV = 'dev'

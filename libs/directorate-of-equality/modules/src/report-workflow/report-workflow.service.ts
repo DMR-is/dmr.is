@@ -20,7 +20,7 @@ import {
   IDoeMailService,
   ReportMailAttachment,
 } from '../mail/doe-mail.service.interface'
-import { endOfUtcDay } from '../report/lib/day-boundaries'
+import { computeReportValidUntil } from '../report/lib/day-boundaries'
 import {
   CommunicationStatusEnum,
   ReportModel,
@@ -474,16 +474,15 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     const actorUserId = context.actor.userId
     const now = new Date()
-    const validUntilDay = new Date(now)
-    validUntilDay.setFullYear(validUntilDay.getFullYear() + 3)
 
     // Validity runs to the END of the day it lands on, not to the time of day
     // the reviewer happened to click approve. `advanceCompanyReportDueDate`
     // mirrors this onto `company.next_*_report_due_at`, which `overdue`
-    // (`due_at < NOW()`) and the salary renewal window are both measured
-    // against — an un-normalised instant would put a company out of compliance
-    // at 14:20 on a day it is still covered through. See `endOfUtcDay`.
-    const validUntil = endOfUtcDay(validUntilDay)
+    // (`due_at < NOW()`) is measured against — an un-normalised instant would
+    // put a company out of compliance at 14:20 on a day it is still covered
+    // through. Shared with the eligibility endpoint, which quotes the same
+    // calculation to an applicant before they file. See `computeReportValidUntil`.
+    const validUntil = computeReportValidUntil(now)
 
     /*
      * ⚠️ **Compare-and-swap: the transition itself is the gate.**
@@ -531,7 +530,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
     // Keep the company's next-due date in step with the report's validity. The
     // launch seed sets these dates initially (no reports exist yet); from then
     // on every approval advances them, so `next_*_report_due_at` stays the live
-    // source of truth the salary renewal-window check reads.
+    // source of truth for `overdue`, the register's status column and the
+    // deadline-reminder task.
     await this.advanceCompanyReportDueDate(context.reportId, validUntil)
 
     await this.supersedePreviousApproved(context.reportId)

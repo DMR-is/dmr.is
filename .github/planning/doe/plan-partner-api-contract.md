@@ -26,15 +26,14 @@ two equally-scored people are paid differently — days, not seconds. Every
 design that assumed it could happen inside one request was wrong, which is why
 detection moves _into_ the submit rather than sitting in front of it.
 
-**The six-month renewal window is dead code on this channel.**
-`application.service.ts:189` wraps the whole gate in
-`if (process.env.API_ENV === 'prod')`. `ApplicationService` is shared by both
-apps, but `API_ENV` is declared only in `directorate-of-equality-api`'s
-`.env.schema`, and `varlock-run.sh` unsets every variable an app's own schema
-does not declare — so on the partner API it is always `undefined` and the gate
-never runs. `GET /reports/salary/eligibility` therefore returns
-`RENEWAL_WINDOW_NOT_OPEN` with an `earliestSubmissionDate` while the submission
-accepts the filing anyway. **Decided 21 Sept: the window does apply here.**
+**~~The six-month renewal window is dead code on this channel.~~ OVERTAKEN
+22 Sept 2026 — the window was removed outright.** The finding held: the gate was
+wrapped in `if (process.env.API_ENV === 'prod')` and never fired on the partner
+API, so `GET /reports/salary/eligibility` reported `RENEWAL_WINDOW_NOT_OPEN`
+while the submission accepted the filing anyway. The 21 Sept decision to make the
+window apply here was reversed by the project owners a day later: the rule is
+gone from both channels, and the eligibility route now reports what filing early
+_costs_ instead of refusing it.
 
 **`POSTPONED` currently has no exit on this channel.** The only resolution route
 is `PUT /application/reports/:providerId/outliers` on the island.is surface, and
@@ -55,7 +54,7 @@ Low risk, no schema change. Ships independently of everything below.
 | 1.4 | ⏸ **Deferred.** Group the catalog with the scoring-model routes — documentation only for now; moving the _route_ needs the catalog data moved out of `ApplicationService` first, because `ScoringModelApiModule` deliberately does not boot `ApplicationCoreModule` | `sub-criterion-catalog/`, then `scoring-model.controller.ts`                                                                           |
 | 1.5 | Equality gets its own DTO via `OmitType`, dropping `equalityReportPdf` / `equalityReportPdfFilename`                                                                                                                                                                 | new `application/dto/submit-partner-equality-report.dto.ts`                                                                            |
 | 1.6 | Fix stale guide text: §A4 tells callers to carry an `equalityReportId` the contract removed in #1483; the catalog's description still says a submission carries a criteria tree                                                                                      | `docs/partner-api-guide.md`, catalog `@PartnerResponse` description                                                                    |
-| 1.7 | Declare `API_ENV` in the partner API's `.env.schema`, so the renewal-window gate fires                                                                                                                                                                               | `apps/directorate-of-equality-partner-api/.env.schema`                                                                                 |
+| 1.7 | ❌ **Obsolete.** Declared `API_ENV` so the renewal-window gate would fire — but the window was removed on 22 Sept 2026, so there is no gate to fire. The variable stays declared for `ApiKeyService`'s environment stamp                                             | `apps/directorate-of-equality-partner-api/.env.schema`                                                                                 |
 | 1.8 | Drop `company.nationalId` from the submission body                                                                                                                                                                                                                   | `application/dto/submit-report-company.dto.ts`, `application.service.ts` (the equality check at :915 goes with it), guide §A3/§B7      |
 
 **Decided 21 Sept:** `company.nationalId` goes. It is validated to equal the
@@ -346,8 +345,8 @@ postponed report could only be finished on island.is. Both fixed here.
       indistinguishable from a missing one
 - [x] `outliersPostponed` in the body → rejected by the strict whitelist, and
       so are the two channel-policy options, which are not request fields
-- [ ] Renewal window: a submission outside the window → `409` on the partner API
-      in a deployed env, and `GET …/eligibility` agrees with it
+- [x] ~~Renewal window: a submission outside the window → `409` on the partner
+      API in a deployed env~~ — moot, the window was removed 22 Sept 2026
 - [x] Dry run and submit agree: a payload the dry run calls valid is accepted by
       the submission, and one it refuses is refused there too — the assertion
       that catches the two paths drifting. Mutation-checked against pointing the

@@ -20,8 +20,8 @@ import { ApiErrorDto } from '@dmr.is/shared-dto'
  * 409 is in the default set because `RequireActiveCompanyGuard` is declared on
  * the whole controller: every route can refuse a company that has fallen off
  * Jafnréttisstofa's register. The submissions carry two more conflicts of their
- * own — the renewal window, and a previous report still in review — which the
- * routes had never declared.
+ * own — a sibling report that cannot be replaced, and a `providerId` already
+ * bound to a report of the other type — which the routes had never declared.
  */
 const DEFAULT_ERRORS = [400, 401, 403, 409, 500]
 
