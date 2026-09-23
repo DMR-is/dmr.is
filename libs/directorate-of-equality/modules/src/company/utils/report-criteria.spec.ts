@@ -94,6 +94,24 @@ describe('buildCompanyReportCriteriaWhere', () => {
     expect(sql).toContain(`"r"."approved_at" >= '2026-01-01'`)
   })
 
+  it('includes the whole "to" day on a timestamp column', () => {
+    // `approved_at <= '2026-03-31'` would stop at midnight and drop everything
+    // approved later that day.
+    const sql = sqlOf({
+      reportApprovedTo: new Date('2026-03-31T00:00:00Z'),
+    } as never)
+
+    expect(sql).toContain(`"r"."approved_at" < '2026-04-01'`)
+  })
+
+  it('keeps an inclusive "to" day on the date-only salary period', () => {
+    const sql = sqlOf({
+      reportSalaryDataPeriodTo: new Date('2026-03-31T00:00:00Z'),
+    } as never)
+
+    expect(sql).toContain(`"r"."salary_data_period" <= '2026-03-31'`)
+  })
+
   it('negates the improvement-plan criterion when asked for its absence', () => {
     expect(sqlOf({ reportHasImprovementPlan: true } as never)).toContain(
       'EXISTS (SELECT 1 FROM "report_employee"',

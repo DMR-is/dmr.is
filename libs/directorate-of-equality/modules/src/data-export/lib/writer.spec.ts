@@ -71,6 +71,16 @@ describe('writeCsv', () => {
     expect(csv.replace(/"[^"]*"/g, 'X').split('\r\n')).toHaveLength(3)
   })
 
+  it('neutralises a text cell Excel would run as a formula', () => {
+    const csv = writeCsv(
+      [{ name: '=HYPERLINK("http://x")', count: -1, due: null }],
+      columns,
+    ).toString('utf8')
+
+    // Text is prefixed with a quote; a negative number is left alone.
+    expect(csv.split('\r\n')[1]).toBe('"\'=HYPERLINK(""http://x"")",-1,')
+  })
+
   it('writes dates as ISO days, not locale strings', () => {
     const csv = writeCsv(
       [{ name: 'A', count: 1, due: new Date('2028-03-31T00:00:00Z') }],
