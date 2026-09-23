@@ -7584,7 +7584,8 @@
           "label": {
             "type": "string",
             "nullable": true,
-            "description": "Free-text label to tell this key apart from the others, e.g. the environment it is deployed to."
+            "description": "Free-text label to tell this key apart from the others, e.g. the environment it is deployed to.",
+            "maxLength": 256
           },
           "expiresAt": {
             "type": "string",

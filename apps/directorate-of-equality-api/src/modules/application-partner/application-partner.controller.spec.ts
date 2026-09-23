@@ -1,6 +1,4 @@
-import { NotFoundException } from '@nestjs/common'
-
-import { ApiKeyOriginEnum, ApiKeyScopeEnum } from '@dmr.is/doe-shared'
+import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 
 import { ApplicationPartnerController } from './application-partner.controller'
 
@@ -76,59 +74,6 @@ describe('ApplicationPartnerController', () => {
       expect(delegations.revoke).toHaveBeenCalledWith({
         id: 'd-1',
         company: COMPANY,
-        actorNationalId: '0000000000',
-      })
-    })
-  })
-
-  describe('a provider’s own keys', () => {
-    it('404s every route for a company that is not an approved provider', async () => {
-      await expect(controller.getPartnerClient(COMPANY)).rejects.toBeInstanceOf(
-        NotFoundException,
-      )
-      await expect(
-        controller.getPartnerClientKeys(COMPANY),
-      ).rejects.toBeInstanceOf(NotFoundException)
-      await expect(
-        controller.issuePartnerClientKey(COMPANY, USER, {}),
-      ).rejects.toBeInstanceOf(NotFoundException)
-      await expect(
-        controller.revokePartnerClientKey('k-1', COMPANY, USER),
-      ).rejects.toBeInstanceOf(NotFoundException)
-      expect(clients.issueKey).not.toHaveBeenCalled()
-    })
-
-    it('resolves the provider from the signed-in company’s own kennitala', async () => {
-      clients.findLiveByNationalId.mockResolvedValue({ id: 'client-a' })
-
-      await controller.getPartnerClientKeys(COMPANY)
-
-      expect(clients.findLiveByNationalId).toHaveBeenCalledWith('1111111111')
-      expect(clients.listKeys).toHaveBeenCalledWith('client-a')
-    })
-
-    it('mints on the self-service path, attributed to the person', async () => {
-      clients.findLiveByNationalId.mockResolvedValue({ id: 'client-a' })
-
-      await controller.issuePartnerClientKey(COMPANY, USER, { label: 'prod' })
-
-      expect(clients.issueKey).toHaveBeenCalledWith({
-        partnerClientId: 'client-a',
-        createdVia: ApiKeyOriginEnum.ISLAND_IS,
-        actorNationalId: '0000000000',
-        label: 'prod',
-        expiresAt: undefined,
-      })
-    })
-
-    it('revokes only among the provider’s own keys', async () => {
-      clients.findLiveByNationalId.mockResolvedValue({ id: 'client-a' })
-
-      await controller.revokePartnerClientKey('k-1', COMPANY, USER)
-
-      expect(clients.revokeKey).toHaveBeenCalledWith({
-        id: 'k-1',
-        partnerClientId: 'client-a',
         actorNationalId: '0000000000',
       })
     })

@@ -6,7 +6,6 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
-  NotFoundException,
   Param,
   ParseUUIDPipe,
   Post,
@@ -19,18 +18,12 @@ import { resolveActorNationalId } from '@dmr.is/doe-modules/api-key'
 import { CompanyDto } from '@dmr.is/doe-modules/company'
 import {
   CompanyPartnerDelegationDto,
-  CreatePartnerClientKeyDto,
   GetCompanyPartnerDelegationsResponseDto,
-  GetPartnerClientKeysResponseDto,
   GetPartnerProvidersResponseDto,
   GrantPartnerDelegationDto,
   IPartnerClientService,
   IPartnerDelegationService,
-  IssuedPartnerClientKeyDto,
-  PartnerClientDto,
-  PartnerClientKeyDto,
 } from '@dmr.is/doe-modules/partner-client'
-import { ApiKeyOriginEnum } from '@dmr.is/doe-shared'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
@@ -39,16 +32,14 @@ import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 
 /**
- * The self-service web's side of vendor clients, for two kinds of signed-in
- * company:
+ * The self-service web's consent routes: a signed-in company sees the approved
+ * providers, allows one to act for it, and withdraws that. This is the consent
+ * moment, and it happens here — behind island.is login, with the company chosen
+ * in IDS — so what is recorded is a witnessed act rather than a firm's claim
+ * that its customer agreed.
  *
- * - **Any company**: see the approved providers, allow one to act for it, and
- *   withdraw that. This is the consent moment, and it happens here — behind
- *   island.is login, with the company chosen in IDS — so what is recorded is a
- *   witnessed act rather than a firm's claim that its customer agreed.
- * - **A company that is itself an approved provider**: collect and rotate its
- *   own vendor keys, signed in as itself, instead of receiving a secret by
- *   email.
+ * A provider's own keys are in `ApplicationPartnerClientController`, behind a
+ * guard that does not need a company row.
  *
  * The company always comes from `CompanyResourceGuard`, never from a request.
  * The person acting is `resolveActorNationalId(user)` — under procuration, the
@@ -89,7 +80,7 @@ export class ApplicationPartnerController {
     operationId: 'getApplicationPartnerDelegations',
     type: GetCompanyPartnerDelegationsResponseDto,
     description:
-      'The providers the signed-in company currently allows to act for it, newest first. Answers from the same lookup the partner API enforces, so what this lists is exactly who can file.',
+      'The providers the signed-in company currently allows to act for it, newest first, revoked providers left out. Reads the same live delegation rows the partner API enforces — by company id here, by kennitala there, which a composite foreign key keeps pointing at the same company — so what this lists is exactly who can file.',
   })
   async getPartnerDelegations(
     @CurrentCompany() company: CompanyDto,
@@ -144,111 +135,5 @@ export class ApplicationPartnerController {
       company,
       actorNationalId: resolveActorNationalId(user),
     })
-  }
-
-  // ---------------------------------------------------------------------------
-  // A provider's own credentials, when the signed-in company is one.
-  // ---------------------------------------------------------------------------
-
-  @Get('partner-client')
-  @DoeResponse({
-    operationId: 'getApplicationPartnerClient',
-    type: PartnerClientDto,
-    include404: true,
-    description:
-      'The signed-in company’s own provider record, if Jafnréttisstofa has approved it as one. `404` for every other company — which is how the self-service web decides whether to show the provider screens.',
-  })
-  getPartnerClient(
-    @CurrentCompany() company: CompanyDto,
-  ): Promise<PartnerClientDto> {
-    return this.ownClient(company)
-  }
-
-  @Get('partner-client/keys')
-  @DoeResponse({
-    operationId: 'getApplicationPartnerClientKeys',
-    type: GetPartnerClientKeysResponseDto,
-    include404: true,
-    description:
-      'Every vendor key the signed-in provider holds, newest first, revoked and expired ones included. Never contains a secret.',
-  })
-  async getPartnerClientKeys(
-    @CurrentCompany() company: CompanyDto,
-  ): Promise<GetPartnerClientKeysResponseDto> {
-    const client = await this.ownClient(company)
-
-    return { keys: await this.partnerClientService.listKeys(client.id) }
-  }
-
-  @Post('partner-client/keys')
-  @HttpCode(HttpStatus.CREATED)
-  @DoeResponse({
-    operationId: 'issueApplicationPartnerClientKey',
-    status: HttpStatus.CREATED,
-    type: IssuedPartnerClientKeyDto,
-    include404: true,
-    description:
-      'Mints a vendor key (`doev_…`) for the signed-in provider. **The secret is shown exactly once.** Rotate by minting a new one, deploying it, then revoking the old one.',
-  })
-  async issuePartnerClientKey(
-    @CurrentCompany() company: CompanyDto,
-    @CurrentUser() user: DMRUser,
-    @Body() input: CreatePartnerClientKeyDto,
-  ): Promise<IssuedPartnerClientKeyDto> {
-    const client = await this.ownClient(company)
-
-    return this.partnerClientService.issueKey({
-      partnerClientId: client.id,
-      createdVia: ApiKeyOriginEnum.ISLAND_IS,
-      actorNationalId: resolveActorNationalId(user),
-      label: input.label,
-      expiresAt: input.expiresAt,
-    })
-  }
-
-  @Delete('partner-client/keys/:id')
-  @ApiParam({
-    name: 'id',
-    type: String,
-    format: 'uuid',
-    description:
-      'The key’s `id` as listed, not the `keyId` inside the credential.',
-  })
-  @DoeResponse({
-    operationId: 'revokeApplicationPartnerClientKey',
-    type: PartnerClientKeyDto,
-    include404: true,
-    description:
-      'Revokes one of the signed-in provider’s keys. Idempotent. Another provider’s key answers 404.',
-  })
-  async revokePartnerClientKey(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentCompany() company: CompanyDto,
-    @CurrentUser() user: DMRUser,
-  ): Promise<PartnerClientKeyDto> {
-    const client = await this.ownClient(company)
-
-    return this.partnerClientService.revokeKey({
-      id,
-      partnerClientId: client.id,
-      actorNationalId: resolveActorNationalId(user),
-    })
-  }
-
-  /**
-   * The signed-in company's live provider record, or 404. Resolved from the
-   * company's own kennitala on every call, so a company can only ever reach
-   * its own keys.
-   */
-  private async ownClient(company: CompanyDto): Promise<PartnerClientDto> {
-    const client = await this.partnerClientService.findLiveByNationalId(
-      company.nationalId,
-    )
-
-    if (!client) {
-      throw new NotFoundException('This company is not an approved provider')
-    }
-
-    return client
   }
 }

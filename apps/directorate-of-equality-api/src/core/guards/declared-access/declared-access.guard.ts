@@ -13,6 +13,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { PUBLIC_ROUTE_METADATA } from '../../decorators/public-route.decorator'
 import { AdminGuard } from '../admin/admin.guard'
 import { CompanyResourceGuard } from '../company-resource/company-resource.guard'
+import { PartnerClientResourceGuard } from '../partner-client-resource/partner-client-resource.guard'
 import { ReportResourceGuard } from '../report-resource/report-resource.guard'
 
 const LOGGING_CONTEXT = 'DeclaredAccessGuard'
@@ -47,6 +48,9 @@ const GUARDS_METADATA = '__guards__'
 export const IDENTITY_GUARDS: ReadonlyArray<unknown> = [
   AdminGuard,
   CompanyResourceGuard,
+  // An approved provider managing its own vendor keys, resolved from the
+  // token's kennitala — a firm need not have a company row.
+  PartnerClientResourceGuard,
   ReportResourceGuard,
 ]
 

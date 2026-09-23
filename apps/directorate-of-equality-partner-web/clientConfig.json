@@ -1524,7 +1524,7 @@
     },
     "/api/v1/application/partner-delegations": {
       "get": {
-        "description": "The providers the signed-in company currently allows to act for it, newest first. Answers from the same lookup the partner API enforces, so what this lists is exactly who can file.",
+        "description": "The providers the signed-in company currently allows to act for it, newest first, revoked providers left out. Reads the same live delegation rows the partner API enforces — by company id here, by kennitala there, which a composite foreign key keeps pointing at the same company — so what this lists is exactly who can file.",
         "operationId": "getApplicationPartnerDelegations",
         "parameters": [],
         "responses": {
@@ -1725,7 +1725,7 @@
     },
     "/api/v1/application/partner-client": {
       "get": {
-        "description": "The signed-in company’s own provider record, if Jafnréttisstofa has approved it as one. `404` for every other company — which is how the self-service web decides whether to show the provider screens.",
+        "description": "The signed-in organisation’s own provider record, if Jafnréttisstofa has approved it as one. `404` for anyone else — which is how the self-service web decides whether to show the provider screens. Needs no entry in the employer register.",
         "operationId": "getApplicationPartnerClient",
         "parameters": [],
         "responses": {
@@ -5577,7 +5577,8 @@
           "label": {
             "type": "string",
             "nullable": true,
-            "description": "Free-text label to tell this key apart from the others, e.g. the environment it is deployed to."
+            "description": "Free-text label to tell this key apart from the others, e.g. the environment it is deployed to.",
+            "maxLength": 256
           },
           "expiresAt": {
             "type": "string",

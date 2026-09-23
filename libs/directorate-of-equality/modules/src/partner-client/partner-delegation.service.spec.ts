@@ -54,6 +54,7 @@ const delegationRow = (overrides: Record<string, unknown> = {}) => {
     Object.assign(row, changes)
     return row
   })
+  row.reload = jest.fn().mockResolvedValue(row)
   return row
 }
 
@@ -62,6 +63,7 @@ describe('PartnerDelegationService', () => {
     findOne: jest.Mock
     findAll: jest.Mock
     create: jest.Mock
+    update: jest.Mock
   }
   let clients: { findByPk: jest.Mock; findAll: jest.Mock }
   let companies: { findAll: jest.Mock }
@@ -79,6 +81,7 @@ describe('PartnerDelegationService', () => {
       create: jest
         .fn()
         .mockImplementation(async (attrs) => delegationRow(attrs)),
+      update: jest.fn().mockResolvedValue([1]),
     }
     clients = {
       findByPk: jest.fn().mockResolvedValue({ ...FIRM }),
@@ -268,12 +271,26 @@ describe('PartnerDelegationService', () => {
         actorNationalId: '0000000000',
       })
 
-      expect(row.update).toHaveBeenCalledWith({
-        revokedAt: expect.any(Date),
-        revokedByNationalId: '0000000000',
-        revokedByUserId: null,
-      })
+      expect(delegations.update).toHaveBeenCalledWith(
+        {
+          revokedAt: expect.any(Date),
+          revokedByNationalId: '0000000000',
+          revokedByUserId: null,
+        },
+        { where: { id: 'd-1', revokedAt: null } },
+      )
       expect(events.emitPartnerDelegationRevoked).toHaveBeenCalled()
+    })
+
+    it('writes one timeline event for a double-clicked withdraw', async () => {
+      // Both requests read a live row; the second update matches nothing.
+      delegations.findOne.mockResolvedValue(delegationRow())
+      delegations.update.mockResolvedValueOnce([1]).mockResolvedValueOnce([0])
+
+      await service.revoke({ id: 'd-1', company: COMPANY })
+      await service.revoke({ id: 'd-1', company: COMPANY })
+
+      expect(events.emitPartnerDelegationRevoked).toHaveBeenCalledTimes(1)
     })
 
     it('leaves an existing withdrawal intact', async () => {
@@ -282,7 +299,7 @@ describe('PartnerDelegationService', () => {
 
       await service.revoke({ id: 'd-1', company: COMPANY })
 
-      expect(row.update).not.toHaveBeenCalled()
+      expect(delegations.update).not.toHaveBeenCalled()
       expect(events.emitPartnerDelegationRevoked).not.toHaveBeenCalled()
     })
   })

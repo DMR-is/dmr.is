@@ -17,6 +17,7 @@ import { CompanyPartnerDelegationDto } from './dto/company-partner-delegation.dt
 import { PartnerDelegationDto } from './dto/partner-delegation.dto'
 import { PartnerClientModel } from './models/partner-client.model'
 import { PartnerDelegationModel } from './models/partner-delegation.model'
+import { partnerClientMessages } from './partner-client.messages'
 import {
   GrantPartnerDelegationInput,
   IPartnerDelegationService,
@@ -124,7 +125,7 @@ export class PartnerDelegationService implements IPartnerDelegationService {
     // A revoked firm is not offered, so it answers as though it does not exist:
     // only active providers are listed, and only listed ones can be chosen.
     if (!client || client.revokedAt) {
-      throw new NotFoundException('Provider not found')
+      throw new NotFoundException(partnerClientMessages.providerNotFound())
     }
 
     const scopes = [...new Set(input.scopes)]
@@ -138,8 +139,8 @@ export class PartnerDelegationService implements IPartnerDelegationService {
     if (scopes.length === 0 || beyondApproval.length > 0) {
       throw new BadRequestException(
         beyondApproval.length > 0
-          ? `This provider is not approved for: ${beyondApproval.join(', ')}`
-          : 'At least one scope must be granted',
+          ? partnerClientMessages.beyondApproval(beyondApproval)
+          : partnerClientMessages.emptyGrant(),
       )
     }
 
@@ -198,7 +199,7 @@ export class PartnerDelegationService implements IPartnerDelegationService {
     // 404 rather than 403 for another company's delegation: the caller has no
     // business learning that the id exists.
     if (!delegation) {
-      throw new NotFoundException('Delegation not found')
+      throw new NotFoundException(partnerClientMessages.delegationNotFound())
     }
 
     const client = await this.partnerClientModel.findByPk(
@@ -206,7 +207,7 @@ export class PartnerDelegationService implements IPartnerDelegationService {
     )
 
     if (!client) {
-      throw new NotFoundException('Delegation not found')
+      throw new NotFoundException(partnerClientMessages.delegationNotFound())
     }
 
     if (delegation.revokedAt) {
@@ -214,11 +215,24 @@ export class PartnerDelegationService implements IPartnerDelegationService {
       return this.toCompanyDto(delegation, client)
     }
 
-    await delegation.update({
-      revokedAt: new Date(),
-      revokedByNationalId: input.actorNationalId ?? null,
-      revokedByUserId: input.actorUserId ?? null,
-    })
+    // Conditional on still being live, and the event emitted only by the
+    // request that actually withdrew it. A double-clicked Withdraw sends two
+    // requests that both read a live row; unconditional, the second would
+    // re-stamp who withdrew it and write a second timeline event.
+    const [stamped] = await this.partnerDelegationModel.update(
+      {
+        revokedAt: new Date(),
+        revokedByNationalId: input.actorNationalId ?? null,
+        revokedByUserId: input.actorUserId ?? null,
+      },
+      { where: { id: delegation.id, revokedAt: null } },
+    )
+
+    await delegation.reload()
+
+    if (stamped === 0) {
+      return this.toCompanyDto(delegation, client)
+    }
 
     this.logger.info(
       `Company ${input.company.id} withdrew its delegation to partner client ${client.id}`,
@@ -257,8 +271,6 @@ export class PartnerDelegationService implements IPartnerDelegationService {
   }
 
   private alreadyGranted(): ConflictException {
-    return new ConflictException(
-      'This provider is already allowed to act for the company. To change what it may do, withdraw the permission and grant it again.',
-    )
+    return new ConflictException(partnerClientMessages.alreadyGranted())
   }
 }
