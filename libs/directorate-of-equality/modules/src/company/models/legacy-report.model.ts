@@ -20,7 +20,7 @@ import { CompanyModel } from './company.model'
  * its 1 759 rows were certified and in force. Turning those into `report` +
  * `company_report` rows would mean minting APPROVED reports for submissions
  * that never went through the flow — no employees, no criteria, no result — and
- * every derived thing that reads `report` (the renewal window, the salary
+ * every derived thing that reads `report` (the next-due date, the salary
  * report's `equalityReportId` reference, the public register) would then answer
  * from a fiction.
  *

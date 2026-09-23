@@ -162,21 +162,28 @@
  *
  * `0` means the 0–24 band, not zero employees.
  *
- * ## The due dates are load-bearing, in both directions
+ * ## The due dates are load-bearing
  *
- * `next_salary_report_due_at` is what `salary-renewal-eligibility.ts` measures
- * the renewal window against: a company may only file a new salary report once
- * its due date is 6 months out or less, enforced as a 409 in prod. A date
- * seeded far in the future therefore locks a company out of filing, while NULL
- * leaves it free to file at any time.
+ * `next_salary_report_due_at` is the deadline everything downstream reads:
+ * `overdue` (`due_at < NOW()`), the register's status column, the expiry
+ * filters and the deadline-reminder task. A date seeded far in the future
+ * therefore tells them a company is in good standing until then — the status
+ * column excepted for surrendered certificates, below — while NULL says no
+ * obligation is on record.
+ *
+ * It no longer gates *filing*. The 6-month renewal window that used to block a
+ * company whose due date was far out was removed; a company may file whenever
+ * it likes, and a seeded date can no longer lock anyone out.
  *
  * ⚠️ 20 rows are marked `Útrunnið` while carrying a *future* certification
  * date, because the certificate was surrendered early ("Vottun sagt upp",
- * "Uppsögn á skírteini"). Seeding the stated date locks those companies out
- * until 6 months before it — Reykjavíkurborg until 2027-12-15, on a certificate
- * it gave up. That is deliberate: the product owner's call is that the renewal
- * cadence exists so the data is accurate, and it applies to a surrendered
- * certificate like any other. The dates go in as the sheet states them.
+ * "Uppsögn á skírteini"). The dates go in as the sheet states them — the
+ * product owner's call. What that used to mean was a lockout (Reykjavíkurborg
+ * could not file until 2027-12-15, on a certificate it had given up); with the
+ * window gone it now only means their stated deadline is later than their
+ * actual coverage, which the status column already contradicts. Whether those
+ * seeded dates should be corrected is still an open question for the
+ * Directorate.
  *
  * A day cell becomes 23:59:59 on that day, not midnight. `overdue` is
  * `due_at < NOW()`, so midnight would make a company late from the first second
@@ -194,8 +201,8 @@
  * ⚠️ That query does read this column, on the salary side only: a row marked
  * `Útrunnið` is not counted as coverage even when its stated date is still in
  * the future. Those are the 20 surrendered certificates above. Without the
- * guard they would read SATISFACTORY in the register while the renewal window
- * kept them from filing — locked out and flagged to nobody until 2027. The
+ * guard they would read SATISFACTORY in the register on the strength of a
+ * certificate that was given up — covered on paper and flagged to nobody. The
  * equality side stays date-only, because `Í gildi` describes the salary
  * certificate and 120 rows hold a live equality plan beside a lapsed one.
  *
@@ -236,8 +243,8 @@
  *     from then on the approval flow owns the column
  *     (`advanceCompanyReportDueDate` writes the approved report's `validUntil`
  *     there). A re-run must not roll a company back to a date an approval has
- *     since moved past — through the renewal window, that could re-lock a
- *     company that just earned the right to file.
+ *     since moved past — that would report a company as overdue, and mail it
+ *     reminders, against a deadline it has already met.
  *   - `quarantined` → `OR`ed, never cleared. The sheet can put a company in
  *     quarantine; only an admin takes it out.
  *   - `sector` → the sheet wins unless an admin has set `sector_override` by
@@ -999,9 +1006,9 @@ const COMPANY_COLUMNS = [
  *                           been approved (`advanceCompanyReportDueDate`), so
  *                           the COALESCE runs the other way and the sheet only
  *                           fills a NULL. Overwriting here would roll a company
- *                           back to its pre-approval deadline and, through
- *                           `salary-renewal-eligibility`, could re-lock one that
- *                           has just earned the right to file.
+ *                           back to its pre-approval deadline, marking it
+ *                           overdue and mailing it reminders against a deadline
+ *                           it has already met.
  *
  * `salary_report_required` is NOT emitted — the
  * `company_sync_salary_report_required_trg` trigger derives it from

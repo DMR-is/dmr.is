@@ -108,15 +108,15 @@ function legacySurrenderGuard(type: ReportTypeEnum): string {
  * it, because the load seeds `next_salary_report_due_at` from that same cell
  * and so `salaryReportOverdue` is false too. They would read SATISFACTORY.
  *
- * What the guard fixes is the *status*, and only that. Those companies are also
- * barred from filing until six months before the seeded date
- * (`evaluateSalaryRenewalEligibility`), and that lockout is neither caused nor
- * lifted here — it follows from `next_salary_report_due_at`, which the load
- * seeds from the sheet as a decision recorded in `company-register-to-sql.ts`.
- * Before this branch existed they read MISSING_EQUALITY_REPORT and were just as
- * unable to act. The guard makes the register honest about them; it does not
- * make them fixable, and whether those seeded dates should be cleared is an
- * open question for the Directorate rather than something to settle in SQL.
+ * What the guard fixes is the *status*, and only that. Those companies also
+ * carry a seeded `next_salary_report_due_at` running years past the coverage
+ * they actually hold, which this branch neither causes nor corrects — it comes
+ * from the sheet, as a decision recorded in `company-register-to-sql.ts`. They
+ * are free to file (the 6-month renewal window that used to bar them until six
+ * months before that date was removed), so the guard now flags a gap they can
+ * act on rather than one they could only wait out. Whether those seeded dates
+ * should be cleared is still an open question for the Directorate rather than
+ * something to settle in SQL.
  *
  * The guard is `IS DISTINCT FROM`, not `<>`: 914 rows have a blank `validity`
  * — the list never recorded one — and the archive keeps that as an honest NULL,
@@ -150,8 +150,8 @@ function activeLegacyCertificationExists(type: ReportTypeEnum): string {
  *   1. **The obligation.** The sheet carries a `Gildistími` for companies of
  *      every size (see the load script), so `legacy_report` holds live dates
  *      for companies below 25 that owe nothing. Without `equalityRequiredSql` /
- *      `salaryRequiredSql` the filter would put them in a renewal queue the status
- *      column simultaneously calls SATISFACTORY.
+ *      `salaryRequiredSql` the filter would put them in an expiry queue the
+ *      status column simultaneously calls SATISFACTORY.
  *   2. **The report supersedes the certificate.** Coverage is the *union* of an
  *      APPROVED report and a live legacy certificate, so it ends at the later
  *      of the two — "one of them expires" is not "coverage expires". Once a

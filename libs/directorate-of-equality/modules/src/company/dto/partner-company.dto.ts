@@ -92,7 +92,7 @@ export class PartnerCompanyDto {
   @ApiOptionalDateTime({
     nullable: true,
     description:
-      'When the next salary report is due. Null when no obligation is on record. The renewal window opens six months before this date — see the salary eligibility endpoint.',
+      'When the next salary report is due. Null when no obligation is on record. Filing before this date is allowed, but the time still left on it is forfeited rather than carried over — see the salary eligibility endpoint.',
   })
   nextSalaryReportDueAt!: Date | null
 

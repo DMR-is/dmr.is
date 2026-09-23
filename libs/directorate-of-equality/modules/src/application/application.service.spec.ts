@@ -24,6 +24,7 @@ import {
 } from '../company/models/company.enums'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
+import { computeReportValidUntil } from '../report/lib/day-boundaries'
 import {
   padToSemanticValidity,
   personalCriterion,
@@ -664,62 +665,21 @@ describe('ApplicationService', () => {
       expect(createSalary).not.toHaveBeenCalled()
     })
 
-    // The renewal window is only enforced in production — everywhere else
-    // testers need to be able to re-submit at will.
-    describe('renewal window guard', () => {
-      const originalApiEnv = process.env.API_ENV
+    // The 6-month renewal window that used to gate this call was removed: a
+    // company may file whenever it likes, however far out its current deadline
+    // is. What filing early costs it is reported by `getSalaryReportEligibility`
+    // and shown in the portal instead of being refused here.
+    it('submits however far out the current deadline is', async () => {
+      const dueAt = new Date()
+      dueAt.setFullYear(dueAt.getFullYear() + 2)
+      const input = makeSubmitSalaryInput()
 
-      const companyDueIn = (years: number, months = 0) => {
-        const dueAt = new Date()
-        dueAt.setFullYear(dueAt.getFullYear() + years)
-        dueAt.setMonth(dueAt.getMonth() + months)
-        return { ...COMPANY, nextSalaryReportDueAt: dueAt }
-      }
-
-      afterEach(() => {
-        if (originalApiEnv === undefined) {
-          delete process.env.API_ENV
-        } else {
-          process.env.API_ENV = originalApiEnv
-        }
+      await service.submitSalary(input, {
+        ...COMPANY,
+        nextSalaryReportDueAt: dueAt,
       })
 
-      it('blocks (409) when the renewal window is not open yet (due date > 6 months out)', async () => {
-        process.env.API_ENV = 'prod'
-        const input = makeSubmitSalaryInput()
-
-        await expect(
-          service.submitSalary(input, companyDueIn(2)),
-        ).rejects.toThrow(ConflictException)
-        expect(createSalary).not.toHaveBeenCalled()
-      })
-
-      it('allows submission when the due date is within 6 months', async () => {
-        process.env.API_ENV = 'prod'
-        const input = makeSubmitSalaryInput()
-
-        await service.submitSalary(input, companyDueIn(0, 3))
-
-        expect(createSalary).toHaveBeenCalled()
-      })
-
-      it('does not block outside prod even when the window is not open yet', async () => {
-        process.env.API_ENV = 'dev'
-        const input = makeSubmitSalaryInput()
-
-        await service.submitSalary(input, companyDueIn(2))
-
-        expect(createSalary).toHaveBeenCalled()
-      })
-
-      it('does not block when API_ENV is unset', async () => {
-        delete process.env.API_ENV
-        const input = makeSubmitSalaryInput()
-
-        await service.submitSalary(input, companyDueIn(2))
-
-        expect(createSalary).toHaveBeenCalled()
-      })
+      expect(createSalary).toHaveBeenCalled()
     })
   })
 
@@ -741,24 +701,8 @@ describe('ApplicationService', () => {
       expect(result.dueAt).toBeNull()
     })
 
-    it('is ineligible with a reason when the due date is more than 6 months out', async () => {
-      resolveEqualityCoverage.mockResolvedValue(activeEquality)
-      const farFuture = new Date()
-      farFuture.setFullYear(farFuture.getFullYear() + 2)
-      const company = { ...COMPANY, nextSalaryReportDueAt: farFuture }
-
-      const result = await service.getSalaryReportEligibility(company)
-
-      expect(result.eligible).toBe(false)
-      expect(result.reason).toBe('RENEWAL_WINDOW_NOT_OPEN')
-      expect(result.dueAt).toEqual(farFuture)
-      expect(result.earliestSubmissionDate).toBeInstanceOf(Date)
-    })
-
-    it('is ineligible with MISSING_EQUALITY_REPORT when nothing covers the company, taking priority over the renewal window', async () => {
+    it('is ineligible with MISSING_EQUALITY_REPORT when nothing covers the company', async () => {
       resolveEqualityCoverage.mockResolvedValue(null)
-      // Due date within the window would otherwise be eligible; the missing
-      // equality report must still block and win the reason.
       const soon = new Date()
       soon.setMonth(soon.getMonth() + 3)
       const company = { ...COMPANY, nextSalaryReportDueAt: soon }
@@ -768,7 +712,58 @@ describe('ApplicationService', () => {
       expect(result.eligible).toBe(false)
       expect(result.reason).toBe('MISSING_EQUALITY_REPORT')
       expect(result.dueAt).toEqual(soon)
-      expect(result.earliestSubmissionDate).toBeInstanceOf(Date)
+    })
+
+    // `earliestNewDueAt` is the one thing a consumer cannot work out for itself
+    // without re-implementing the 3-year rule, so it is the one thing returned.
+    // The clock is pinned so the expected dates are literals rather than the
+    // helper's own output, and so a run that straddles UTC midnight cannot flake.
+    describe('early-filing forecast', () => {
+      const NOW = new Date('2026-09-22T09:15:00.000Z')
+      const THREE_YEARS_FROM_NOW = new Date('2029-09-22T23:59:59.999Z')
+
+      beforeEach(() => {
+        jest.useFakeTimers({ now: NOW })
+      })
+
+      afterEach(() => {
+        jest.useRealTimers()
+      })
+
+      it('quotes the same date an approval would write', async () => {
+        resolveEqualityCoverage.mockResolvedValue(activeEquality)
+
+        const result = await service.getSalaryReportEligibility(COMPANY)
+
+        expect(result.earliestNewDueAt).toEqual(THREE_YEARS_FROM_NOW)
+        expect(result.earliestNewDueAt).toEqual(computeReportValidUntil(NOW))
+      })
+
+      // The trade filing early makes: three years from today, NOT the remaining
+      // year plus three. Note the new deadline is LATER than the old one — the
+      // cost is the year that went unused, not a deadline moving backwards.
+      it('offers three years from today to a company that still has time left', async () => {
+        resolveEqualityCoverage.mockResolvedValue(activeEquality)
+        const inAYear = new Date('2027-09-22T23:59:59.999Z')
+
+        const result = await service.getSalaryReportEligibility({
+          ...COMPANY,
+          nextSalaryReportDueAt: inAYear,
+        })
+
+        expect(result.eligible).toBe(true)
+        expect(result.dueAt).toEqual(inAYear)
+        expect(result.earliestNewDueAt).toEqual(THREE_YEARS_FROM_NOW)
+      })
+
+      it('reports the forecast even when the equality precondition blocks the filing', async () => {
+        resolveEqualityCoverage.mockResolvedValue(null)
+
+        const result = await service.getSalaryReportEligibility(COMPANY)
+
+        expect(result.reason).toBe('MISSING_EQUALITY_REPORT')
+        expect(result.earliestNewDueAt).toEqual(THREE_YEARS_FROM_NOW)
+      })
     })
   })
 

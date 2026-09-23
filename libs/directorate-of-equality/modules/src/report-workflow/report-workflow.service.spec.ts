@@ -1282,8 +1282,8 @@ describe('ReportWorkflowService', () => {
     })
 
     it('sets validUntil to the end of the day three years out, not the approval time of day', async () => {
-      // APPROVED_AT is 10:00. `overdue` is `due_at < NOW()` and the salary
-      // renewal window is measured off the same column, so a mid-day timestamp
+      // APPROVED_AT is 10:00. `overdue` is `due_at < NOW()` and the
+      // deadline-reminder task reads the same column, so a mid-day timestamp
       // would drop the company out of compliance at 10:00 on a day it is still
       // covered through.
       reportModel.update.mockResolvedValue([1])
