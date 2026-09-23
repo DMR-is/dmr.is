@@ -1261,6 +1261,10 @@ export const companiesText = {
         copyError:
           'Ekki var unnt að afrita lykilinn. Afritaðu hann handvirkt áður en þú lokar.',
         doneButton: 'Loka',
+        // The window was closed while the key was still being created, so its
+        // secret was never shown and cannot be recovered.
+        createdAfterCloseToast:
+          'Lykill var búinn til eftir að glugganum var lokað og verður ekki sýndur. Afturkallaðu hann og búðu til nýjan.',
       },
     },
 
