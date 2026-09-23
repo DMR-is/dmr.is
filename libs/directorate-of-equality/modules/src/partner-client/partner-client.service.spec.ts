@@ -456,6 +456,30 @@ describe('PartnerClientService', () => {
       ).rejects.toBeInstanceOf(NotFoundException)
     })
 
+    it('lets the first of two concurrent key revocations stand', async () => {
+      const first = new Date('2026-09-23T10:00:00.000Z')
+      const row = rowFrom({ id: 'key-row', keyId: 'aaaaaaaaaaaaaaa1' })
+      // Read live, then lose the race: the conditional update matches nothing
+      // and the reloaded row carries the winner's revocation.
+      row.reload = jest.fn().mockImplementation(async () => {
+        Object.assign(row, { revokedAt: first, revokedByUserId: 'other' })
+        return row
+      })
+      keys.findOne.mockResolvedValueOnce(row)
+      keys.update.mockResolvedValueOnce([0])
+
+      const result = await service.revokeKey({
+        id: 'key-row',
+        partnerClientId: CLIENT_ID,
+        actorUserId: ADMIN_ID,
+      })
+
+      expect(result).toMatchObject({
+        revokedAt: first,
+        revokedByUserId: 'other',
+      })
+    })
+
     it('stamps the revocation, and leaves an existing one intact', async () => {
       const live = rowFrom({ id: 'key-row', keyId: 'aaaaaaaaaaaaaaa1' })
       keys.findOne.mockResolvedValueOnce(live)

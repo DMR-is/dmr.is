@@ -43,7 +43,7 @@ export const buildSwaggerDocument = (
         scheme: 'bearer',
         bearerFormat: 'DoE API key',
         description:
-          'The API key issued to the employer, presented verbatim. Server-to-server only — a key cannot be kept secret in a browser.',
+          'A company key (`doe_…`) or a vendor client key (`doev_…`), presented verbatim. A vendor client key also names the company it acts for in `X-Company-National-Id`. Server-to-server only — a key cannot be kept secret in a browser.',
       },
       'apiKey',
     )

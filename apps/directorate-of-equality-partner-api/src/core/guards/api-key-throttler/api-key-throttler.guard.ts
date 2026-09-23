@@ -15,7 +15,7 @@ import { PER_KEY_DRY_RUN_THROTTLER, PER_KEY_THROTTLER } from '../throttlers'
  * over: several vendors can share an egress IP, so one busy integrator would
  * throttle the others, and a single vendor behind several IPs would get a
  * multiple of the intended allowance. The key is the unit of trust — a
- * company's own key, or a vendor client's key across its whole book — so the key
+ * company's own key, or one of a vendor client's keys across its whole book — so the key
  * is the bucket.
  *
  * Requires `ApiKeyGuard` to have run first, and only ever sees authenticated

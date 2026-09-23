@@ -479,7 +479,9 @@ rules come from partial unique indexes that constrain only the live row.
 **What "live" means.** Revoking a client stamps only the client row; its keys and
 delegations keep their own `revoked_at`, as their own audit trail. So a key or a
 delegation is live **iff its own `revoked_at` and its client's `revoked_at` are both
-NULL**, and every reader checks both. "Was this delegation in force at time T" is
+NULL**. Every reader either checks both or runs only after the client has been checked —
+`IPartnerDelegationService.findLive`, for one, assumes its caller has already refused a
+revoked client. "Was this delegation in force at time T" is
 therefore `min(delegation.revoked_at, client.revoked_at)`.
 
 **Audit.** Granting and withdrawing a delegation append `PARTNER_DELEGATION_GRANTED` /

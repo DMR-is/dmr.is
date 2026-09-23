@@ -82,6 +82,10 @@ export const IssuePartnerClientKeyModal = ({
 
   const issue = useMutation({
     ...trpc.partnerClient.issueKey.mutationOptions(),
+    // Evicted from the MutationCache as soon as nothing observes it. `reset()`
+    // on close only detaches the observer; without this the plaintext secret
+    // would sit in the cache for the default five minutes.
+    gcTime: 0,
     onSuccess: (created) => {
       queryClient.invalidateQueries({
         queryKey: trpc.partnerClient.listKeys.queryKey({ id: partnerClientId }),

@@ -59,7 +59,7 @@ import { HealthController } from './health.controller'
         // integrator submits a handful of reports a year per customer — this is
         // a backstop against a broken retry loop, not a commercial quota.
         // 5 000/h for a company key, 10 000/h for a vendor client key, which
-        // spends it across its whole book — see `perKeyLimit`.
+        // spends each key's allowance across its whole book — see `perKeyLimit`.
         name: PER_KEY_THROTTLER,
         ttl: 3600000, // 1 hour
         limit: perKeyLimit,
