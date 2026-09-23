@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 
 import { ApplicationApiModule } from '../application/application.api.module'
+import { ApplicationPartnerApiModule } from '../application-partner/application-partner.api.module'
 import { ReportDraftApiModule } from '../report-draft/report-draft.api.module'
 
 /**
@@ -21,6 +22,10 @@ import { ReportDraftApiModule } from '../report-draft/report-draft.api.module'
  * at runtime and still be missing from the document.
  */
 @Module({
-  imports: [ApplicationApiModule, ReportDraftApiModule],
+  imports: [
+    ApplicationApiModule,
+    ApplicationPartnerApiModule,
+    ReportDraftApiModule,
+  ],
 })
 export class DoeApplicationSwaggerModule {}

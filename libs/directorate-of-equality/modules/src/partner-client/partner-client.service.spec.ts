@@ -213,6 +213,41 @@ describe('PartnerClientService', () => {
     })
   })
 
+  describe('listProviders', () => {
+    /**
+     * What a company chooses from. Only live firms, so a revoked one can never
+     * be picked, and only this table, so no link can add one.
+     */
+    it('offers active firms only, by name, with their kennitala', async () => {
+      clients.findAll.mockResolvedValue([
+        rowFrom({
+          id: CLIENT_ID,
+          name: 'Kjarni',
+          nationalId: FIRM_NATIONAL_ID,
+        }),
+      ])
+
+      await expect(service.listProviders()).resolves.toEqual([
+        { id: CLIENT_ID, name: 'Kjarni', nationalId: FIRM_NATIONAL_ID },
+      ])
+      expect(clients.findAll).toHaveBeenCalledWith({
+        where: { revokedAt: null },
+        order: [['name', 'ASC']],
+      })
+    })
+  })
+
+  describe('findLiveByNationalId', () => {
+    it('recognises a firm by its live row only', async () => {
+      await expect(
+        service.findLiveByNationalId(FIRM_NATIONAL_ID),
+      ).resolves.toBeNull()
+      expect(clients.findOne).toHaveBeenCalledWith({
+        where: { nationalId: FIRM_NATIONAL_ID, revokedAt: null },
+      })
+    })
+  })
+
   describe('revoke', () => {
     it('stamps the revocation and its actor', async () => {
       const client = rowFrom({ id: CLIENT_ID })

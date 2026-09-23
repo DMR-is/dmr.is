@@ -37,6 +37,11 @@ import { CompanyModel } from './company.model'
  *                    company has no email on file, so nothing could be sent.
  *                    Same `reason`/idempotency rule as the SENT events: one row
  *                    per company per due date, not one per run.
+ *   PARTNER_DELEGATION_GRANTED / PARTNER_DELEGATION_REVOKED
+ *                  → the company allowed a vendor client to act for it, or
+ *                    withdrew that. `reason` names the firm. `actor_user_id` is
+ *                    null on the self-service path, where the person is
+ *                    recorded on the delegation row instead.
  *   CUSTOM_EMAIL_SENT / CUSTOM_EMAIL_FAILED / CUSTOM_EMAIL_SKIPPED
  *                  → an admin-authored message, one row per company per send.
  *                    `reason` holds the subject and `companyEmailId` points at
@@ -56,6 +61,8 @@ export enum CompanyEventTypeEnum {
   SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL = 'SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL',
   API_KEY_ISSUED = 'API_KEY_ISSUED',
   API_KEY_REVOKED = 'API_KEY_REVOKED',
+  PARTNER_DELEGATION_GRANTED = 'PARTNER_DELEGATION_GRANTED',
+  PARTNER_DELEGATION_REVOKED = 'PARTNER_DELEGATION_REVOKED',
   CUSTOM_EMAIL_SENT = 'CUSTOM_EMAIL_SENT',
   CUSTOM_EMAIL_FAILED = 'CUSTOM_EMAIL_FAILED',
   CUSTOM_EMAIL_SKIPPED = 'CUSTOM_EMAIL_SKIPPED',

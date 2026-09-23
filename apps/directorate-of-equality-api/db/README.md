@@ -476,6 +476,15 @@ allowed it and when. A client re-approved after revocation likewise gets a fresh
 its companies must consent again, since revocation cut those ties. Both rules come from
 partial unique indexes that constrain only the live row.
 
+**Audit.** Granting and withdrawing a delegation append `PARTNER_DELEGATION_GRANTED` /
+`PARTNER_DELEGATION_REVOKED` to `company_event`, with the firm's name and kennitala in
+`reason`, so they sit on the company's timeline beside its key events. The person who
+granted or withdrew it is on the delegation row (`granted_by_national_id`,
+`revoked_by_national_id`), for the same reason self-service keys record theirs there: a
+company's own representative has no `doe_user` row. Firm-level operations (approving,
+revoking a firm, its keys) emit no event — a firm is not a company in the register and has
+no timeline; the actor columns on those rows are the audit.
+
 **Provenance.** `report.partner_client_id` names the firm whose credential filed a report.
 `(provider_type, provider_id)` records the channel and the caller's id but not the firm,
 and "who actually submitted this" is the audit question. Null for every report not filed

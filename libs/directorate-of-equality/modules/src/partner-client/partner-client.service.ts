@@ -30,6 +30,7 @@ import {
   IssuedPartnerClientKeyDto,
   PartnerClientKeyDto,
 } from './dto/partner-client-key.dto'
+import { PartnerProviderDto } from './dto/partner-provider.dto'
 import { PartnerClientModel } from './models/partner-client.model'
 import { PartnerClientKeyModel } from './models/partner-client-key.model'
 import {
@@ -126,6 +127,29 @@ export class PartnerClientService implements IPartnerClientService {
 
   async get(id: string): Promise<PartnerClientDto> {
     return (await this.findClient(id)).fromModel()
+  }
+
+  async listProviders(): Promise<PartnerProviderDto[]> {
+    const clients = await this.partnerClientModel.findAll({
+      where: { revokedAt: null },
+      order: [['name', 'ASC']],
+    })
+
+    return clients.map((client) => ({
+      id: client.id,
+      name: client.name,
+      nationalId: client.nationalId,
+    }))
+  }
+
+  async findLiveByNationalId(
+    nationalId: string,
+  ): Promise<PartnerClientDto | null> {
+    const client = await this.partnerClientModel.findOne({
+      where: { nationalId, revokedAt: null },
+    })
+
+    return client ? client.fromModel() : null
   }
 
   async revoke(input: RevokePartnerClientInput): Promise<PartnerClientDto> {

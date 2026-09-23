@@ -782,6 +782,15 @@ export const reportText = {
     // self-service path — someone acting for the company.
     apiKeyIssuedNoActor: 'Fyrirtæki {company} bjó til aðgangslykil',
     apiKeyRevokedNoActor: 'Fyrirtæki {company} afturkallaði aðgangslykil',
+    // A delegation is granted and normally withdrawn by the company itself on
+    // the self-service web, so the no-actor wording is the usual one; the event
+    // body names the provider.
+    partnerDelegationGranted: 'veitti þjónustuaðila umboð',
+    partnerDelegationGrantedNoActor:
+      'Fyrirtæki {company} veitti þjónustuaðila umboð',
+    partnerDelegationRevoked: 'afturkallaði umboð þjónustuaðila',
+    partnerDelegationRevokedNoActor:
+      'Fyrirtæki {company} afturkallaði umboð þjónustuaðila',
     // The event stores the key's public id, which is a correlation handle and
     // not something to read: printing it put half a credential on screen for
     // no gain. It is used to look the key up instead, and these render what an
