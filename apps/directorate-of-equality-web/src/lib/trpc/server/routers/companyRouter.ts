@@ -29,7 +29,7 @@ const zGetCompaniesQuery = z.object({
   pageSize: z.number().min(1).optional(),
   q: z.string().optional(),
   employeeCountCategory: z
-    .enum(['UNKNOWN', 'SMALL', 'MEDIUM', 'LARGE'])
+    .array(z.enum(['UNKNOWN', 'SMALL', 'MEDIUM', 'LARGE']))
     .optional(),
   companyStatus: z
     .array(

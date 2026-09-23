@@ -96,6 +96,9 @@ export const DataExportContainer = () => {
   const [submitted, setSubmitted] = useState<Record<string, unknown> | null>(
     null,
   )
+  // Snapshotted with `submitted` so the workbook's "Um útdráttinn" sheet
+  // describes the filter that produced the rows, not later panel edits.
+  const [submittedSummary, setSubmittedSummary] = useState<string[]>([])
   const [page, setPage] = useState(1)
 
   // Focus lands here after a fetch: the results appear because a button was
@@ -258,6 +261,9 @@ export const DataExportContainer = () => {
   const handleSubmit = () => {
     setPage(1)
     setSubmitted(toServerQuery(draft, criteria, dates, gaps, query))
+    setSubmittedSummary(
+      buildFilterSummary(draft, criteria, dates, gaps, query),
+    )
     // Deferred to the paint after the results render, otherwise focus moves to
     // a heading that still says "choose your filters".
     requestAnimationFrame(() => resultsRef.current?.focus())
@@ -270,6 +276,7 @@ export const DataExportContainer = () => {
     setGaps(EMPTY_GAP_BOUNDS)
     setQuery('')
     setSubmitted(null)
+    setSubmittedSummary([])
     setPage(1)
   }
 
@@ -295,18 +302,12 @@ export const DataExportContainer = () => {
 
     // Reaches the workbook's "Um útdráttinn" sheet, so the file records the
     // filter in the same words the admin saw on screen.
-    for (const line of buildFilterSummary(
-      draft,
-      criteria,
-      dates,
-      gaps,
-      query,
-    )) {
+    for (const line of submittedSummary) {
       params.append('filterSummary', line)
     }
 
     return `/api/export/companies?${params.toString()}`
-  }, [submitted, draft, criteria, dates, gaps, query])
+  }, [submitted, submittedSummary])
 
   return (
     <GridContainer>

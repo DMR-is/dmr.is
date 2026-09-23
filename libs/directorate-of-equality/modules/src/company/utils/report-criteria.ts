@@ -32,6 +32,13 @@ const quoteList = (values: readonly string[]): string =>
 /** ISO day, safe to embed: built from a Date, never from caller text. */
 const isoDay = (value: Date): string => value.toISOString().slice(0, 10)
 
+/** The ISO day after `value`, for an exclusive upper bound on a timestamp. */
+const nextIsoDay = (value: Date): string => {
+  const next = new Date(value)
+  next.setUTCDate(next.getUTCDate() + 1)
+  return isoDay(next)
+}
+
 /**
  * A usable numeric bound, or nothing.
  *
@@ -121,20 +128,31 @@ export const buildCompanyReportCriteriaWhere = (
     )
   }
 
-  const dateRanges: Array<[string, Date | undefined, Date | undefined]> = [
-    ['created_at', query.reportSubmittedFrom, query.reportSubmittedTo],
-    ['approved_at', query.reportApprovedFrom, query.reportApprovedTo],
-    ['valid_until', query.reportValidUntilFrom, query.reportValidUntilTo],
+  // `isTimestamp`: a "to" day on a timestamp column has to include that whole
+  // day, so it becomes `< next day`. `salary_data_period` is DATEONLY.
+  const dateRanges: Array<
+    [string, Date | undefined, Date | undefined, boolean]
+  > = [
+    ['created_at', query.reportSubmittedFrom, query.reportSubmittedTo, true],
+    ['approved_at', query.reportApprovedFrom, query.reportApprovedTo, true],
+    ['valid_until', query.reportValidUntilFrom, query.reportValidUntilTo, true],
     [
       'salary_data_period',
       query.reportSalaryDataPeriodFrom,
       query.reportSalaryDataPeriodTo,
+      false,
     ],
   ]
 
-  for (const [column, from, to] of dateRanges) {
+  for (const [column, from, to, isTimestamp] of dateRanges) {
     if (from) predicates.push(`"r"."${column}" >= '${isoDay(from)}'`)
-    if (to) predicates.push(`"r"."${column}" <= '${isoDay(to)}'`)
+    if (to) {
+      predicates.push(
+        isTimestamp
+          ? `"r"."${column}" < '${nextIsoDay(to)}'`
+          : `"r"."${column}" <= '${isoDay(to)}'`,
+      )
+    }
   }
 
   const rawGap = gapPredicate(
