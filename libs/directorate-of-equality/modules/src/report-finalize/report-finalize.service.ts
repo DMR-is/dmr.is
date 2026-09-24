@@ -229,7 +229,7 @@ export class ReportFinalizeService implements IReportFinalizeService {
     // same reason it exists — the applicant chose to defer and should finish —
     // but a caller for whom `POSTPONED` is simply what a submission with
     // outliers becomes can ask for it to be replaced instead. See
-    // `CreateReportDto.withdrawPostponedSibling`.
+    // `CreateSalaryOptions.withdrawPostponedSibling`.
     // `withdrawPostponed` is the caller saying "on my channel, POSTPONED is what
     // a submission becomes". That is only true of siblings filed on the same
     // channel: an applicant who deliberately deferred on island.is has not asked
