@@ -196,12 +196,6 @@ export const FLAG_FILTER_OPTIONS = [
     value: 'neverFiledSalaryIncludingLegacy',
     label: companiesText.neverFiledSalaryIncludingLegacy,
   },
-  // ⚠️ Not the same question as "Vantar" in the status filter above. That one
-  // asks what is outstanding today; this asks whether the company has EVER
-  // filed, here or in the retired register. A company whose certification
-  // lapsed answers yes to the first and no to this one, and the two need
-  // different letters.
-  { value: 'neverSubmitted', label: 'Aldrei innsent' },
 ]
 
 // Ownership sector, derived server-side mostly from the RSK legal form

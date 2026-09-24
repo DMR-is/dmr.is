@@ -610,13 +610,6 @@
             }
           },
           {
-            "name": "neverSubmitted",
-            "required": false,
-            "in": "query",
-            "description": "When true, returns only companies that have never filed anything — no report in this system and no row in the retired register either. Distinct from the obligation columns: a company whose certification lapsed is missing one now but HAS filed before.",
-            "schema": { "type": "boolean" }
-          },
-          {
             "name": "finesStarted",
             "required": false,
             "in": "query",
@@ -2619,13 +2612,6 @@
                 "$ref": "#/components/schemas/CompanyExpiryFilterEnum"
               }
             }
-          },
-          {
-            "name": "neverSubmitted",
-            "required": false,
-            "in": "query",
-            "description": "When true, returns only companies that have never filed anything — no report in this system and no row in the retired register either. Distinct from the obligation columns: a company whose certification lapsed is missing one now but HAS filed before.",
-            "schema": { "type": "boolean" }
           },
           {
             "name": "finesStarted",
@@ -7437,10 +7423,6 @@
             "type": "array",
             "description": "Return only companies that have an approved report expiring within the given window. Multiple values are OR-ed; the largest window wins.",
             "items": { "$ref": "#/components/schemas/CompanyExpiryFilterEnum" }
-          },
-          "neverSubmitted": {
-            "type": "boolean",
-            "description": "When true, returns only companies that have never filed anything — no report in this system and no row in the retired register either. Distinct from the obligation columns: a company whose certification lapsed is missing one now but HAS filed before."
           },
           "finesStarted": {
             "type": "boolean",

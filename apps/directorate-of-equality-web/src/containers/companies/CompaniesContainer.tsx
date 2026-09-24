@@ -68,7 +68,6 @@ export const CompaniesContainer = () => {
       ...(filter.neverFiledSalaryIncludingLegacy
         ? ['neverFiledSalaryIncludingLegacy']
         : []),
-      ...(filter.neverSubmitted ? ['neverSubmitted'] : []),
     ],
     regionCode: filter.regionCode ?? [],
     postcode: filter.postcode ?? [],
@@ -194,7 +193,6 @@ export const CompaniesContainer = () => {
         )
           ? true
           : null,
-        neverSubmitted: val.includes('neverSubmitted') ? true : null,
         page: 1,
       })
     } else if (key === 'postcode') {
