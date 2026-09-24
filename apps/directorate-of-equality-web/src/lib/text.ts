@@ -1261,6 +1261,10 @@ export const companiesText = {
         copyError:
           'Ekki var unnt að afrita lykilinn. Afritaðu hann handvirkt áður en þú lokar.',
         doneButton: 'Loka',
+        // The window was closed while the key was still being created, so its
+        // secret was never shown and cannot be recovered.
+        createdAfterCloseToast:
+          'Lykill var búinn til eftir að glugganum var lokað og verður ekki sýndur. Afturkallaðu hann og búðu til nýjan.',
       },
     },
 
@@ -1493,4 +1497,68 @@ export const sharedText = {
       'Engin gögn fundust. Vinsamlegast hafðu samband við fyrirtækið til að fá frekari upplýsingar.',
   },
   files: 'Skjöl',
+}
+
+/**
+ * Vendor clients: accounting firms approved to file on behalf of the companies
+ * that delegate to them. "Þjónustuaðili" is the term the consent screen on the
+ * company-facing web uses too, so a firm is called the same thing on both sides.
+ */
+export const partnerClientsText = {
+  heroTitle: 'Þjónustuaðilar',
+  heroDescription:
+    'Þjónustuaðilar, t.d. bókhaldsstofur, skila skýrslum fyrir hönd fyrirtækja sem hafa veitt þeim umboð til þess. Hér eru þeir samþykktir, og hér fá þeir aðgangslykla ef þeir geta ekki sótt þá sjálfir.',
+  createButton: 'Nýr þjónustuaðili',
+  empty: 'Engir þjónustuaðilar skráðir',
+  loadError: 'Villa við að hlaða þjónustuaðila',
+
+  colNationalId: 'Kennitala',
+  colScopes: 'Heimildir',
+  colCreated: 'Samþykktur',
+  statusActive: 'Virkur',
+  statusRevoked: 'Afturkallaður',
+  showKeys: 'Sýna aðgangslykla',
+  hideKeys: 'Fela aðgangslykla',
+
+  scopeLabels: {
+    'report:read': 'Lesa skýrslur',
+    'salary:submit': 'Skila launagreiningu',
+    'equality:submit': 'Skila jafnréttisáætlun',
+    'scoring:write': 'Breyta starfsmati',
+  } as Record<string, string>,
+
+  revokeButton: 'Afturkalla þjónustuaðila',
+  revokeConfirmTitle: 'Afturkalla þjónustuaðila?',
+  revokeConfirmMessage:
+    'Þjónustuaðilinn getur samstundis ekki lengur skilað skýrslum fyrir neitt fyrirtæki, hvaða lykla og umboð sem hann hefur. Ekki er unnt að taka það til baka — samþykkja þarf hann aftur, og fyrirtækin þurfa þá að veita umboð á ný.',
+  revokeConfirmButton: 'Afturkalla',
+  revokedToast: 'Þjónustuaðili afturkallaður',
+  revokeErrorToast: 'Villa við að afturkalla þjónustuaðila',
+
+  createModal: {
+    title: 'Samþykkja þjónustuaðila',
+    nameLabel: 'Heiti',
+    nationalIdLabel: 'Kennitala',
+    scopingLabel: 'Heimildir',
+    scopingHint:
+      'Hámark þess sem þjónustuaðilinn má gera. Hvert fyrirtæki velur síðan hvað það leyfir honum. Starfsmatsheimildar er aðeins þörf ef þjónustuaðilinn býður fyrirtækjum upp á að breyta eigin starfsmati.',
+    scopeFilingOnly: 'Lesa og skila skýrslum',
+    scopeFilingAndScoring: 'Lesa, skila skýrslum og breyta starfsmati',
+    createButton: 'Samþykkja',
+    cancelButton: 'Hætta við',
+    createdToast: 'Þjónustuaðili samþykktur',
+    createErrorToast: 'Villa við að samþykkja þjónustuaðila',
+  },
+
+  keys: {
+    intro:
+      'Þjónustuaðili sækir yfirleitt sína eigin lykla á þjónustuvefnum. Þessi listi er til vara.',
+    issueButton: 'Búa til nýjan lykil',
+    empty: 'Engir aðgangslyklar skráðir',
+    loadError: 'Villa við að hlaða aðgangslykla',
+    revokedToast: 'Aðgangslykill afturkallaður',
+    revokeErrorToast: 'Villa við að afturkalla aðgangslykil',
+    revokeConfirmMessage:
+      'Lykillinn hættir samstundis að virka. Þjónustuaðilinn og aðrir lyklar hans halda sér.',
+  },
 }

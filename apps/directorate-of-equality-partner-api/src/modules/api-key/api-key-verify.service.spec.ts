@@ -3,6 +3,7 @@ import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
 import {
+  ApiKeyKindEnum,
   ApiKeyModel,
   ApiKeyScopeEnum,
   buildApiKey,
@@ -102,6 +103,18 @@ describe('ApiKeyVerifyService', () => {
   describe('rejections', () => {
     it('rejects a malformed credential without hitting the database', async () => {
       await expect(service.verify('not-a-key')).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      )
+      expect(findOne).not.toHaveBeenCalled()
+    })
+
+    it('rejects a vendor client key without looking it up, until the delegation guard exists', async () => {
+      const generated = generateApiKey('dev', ApiKeyKindEnum.PARTNER_CLIENT)
+      // Primed so a lookup WOULD succeed: the refusal must come from the kind,
+      // not from the keyId happening to be absent from doe_api_key.
+      findOne.mockResolvedValue(rowFor(generated.secret))
+
+      await expect(service.verify(generated.key)).rejects.toBeInstanceOf(
         UnauthorizedException,
       )
       expect(findOne).not.toHaveBeenCalled()

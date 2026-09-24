@@ -30,6 +30,36 @@ import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
  */
 export const API_KEY_PREFIX = 'doe'
 
+/**
+ * Which table a credential belongs to, carried in its prefix.
+ *
+ * A company key (`doe_…`) is a `doe_api_key` row; a vendor client key
+ * (`doev_…`) is a `doe_partner_client_key` row. Putting the kind in the prefix
+ * keeps verification one indexed read against the right table, rather than
+ * trying one table and then the other — two reads per request, a timing
+ * difference that tells a caller which table matched, and an ambiguity if a
+ * `keyId` ever existed in both.
+ *
+ * Like `env`, the prefix sits outside the HMAC. That is safe: rewriting it only
+ * sends the lookup to the other table, where the `keyId` is not found.
+ */
+export enum ApiKeyKindEnum {
+  COMPANY = 'COMPANY',
+  PARTNER_CLIENT = 'PARTNER_CLIENT',
+}
+
+export const API_KEY_KIND_PREFIX: Record<ApiKeyKindEnum, string> = {
+  [ApiKeyKindEnum.COMPANY]: API_KEY_PREFIX,
+  [ApiKeyKindEnum.PARTNER_CLIENT]: 'doev',
+}
+
+const KIND_BY_PREFIX = new Map<string, ApiKeyKindEnum>(
+  Object.entries(API_KEY_KIND_PREFIX).map(([kind, prefix]) => [
+    prefix,
+    kind as ApiKeyKindEnum,
+  ]),
+)
+
 /** 8 bytes → 16 hex characters. An identifier, not a secret. */
 export const API_KEY_ID_BYTES = 8
 
@@ -48,15 +78,17 @@ const API_KEY_SECRET_LENGTH = 43
 const HASH_LENGTH = 64
 
 const KEY_PATTERN = new RegExp(
-  `^${API_KEY_PREFIX}_([a-z0-9]+)_([0-9a-f]{${API_KEY_ID_LENGTH}})\\.([A-Za-z0-9_-]{${API_KEY_SECRET_LENGTH}})$`,
+  `^(${[...KIND_BY_PREFIX.keys()].join('|')})_([a-z0-9]+)_([0-9a-f]{${API_KEY_ID_LENGTH}})\\.([A-Za-z0-9_-]{${API_KEY_SECRET_LENGTH}})$`,
 )
 
 const ENV_PATTERN = /^[a-z0-9]+$/
 
 export type ParsedApiKey = {
+  /** Which table the `keyId` belongs to, from the prefix. */
+  kind: ApiKeyKindEnum
   /** Environment segment, e.g. `live` or `dev`. */
   env: string
-  /** Public half — the `doe_api_key.key_id` to look up. */
+  /** Public half — the `key_id` to look up in the table `kind` names. */
   keyId: string
   /** Secret half — hash this, never store or log it. */
   secret: string
@@ -72,14 +104,18 @@ export const buildApiKey = (
   env: string,
   keyId: string,
   secret: string,
-): string => `${API_KEY_PREFIX}_${env}_${keyId}.${secret}`
+  kind: ApiKeyKindEnum = ApiKeyKindEnum.COMPANY,
+): string => `${API_KEY_KIND_PREFIX[kind]}_${env}_${keyId}.${secret}`
 
 /**
  * Mints a new key. The caller is responsible for persisting
  * `hashApiKeySecret(secret, pepper)` and for showing `key` to the issuer once —
  * it cannot be recovered afterwards.
  */
-export const generateApiKey = (env: string): GeneratedApiKey => {
+export const generateApiKey = (
+  env: string,
+  kind: ApiKeyKindEnum = ApiKeyKindEnum.COMPANY,
+): GeneratedApiKey => {
   if (!ENV_PATTERN.test(env)) {
     throw new Error(
       `Invalid API key environment "${env}" — expected lowercase alphanumeric`,
@@ -89,7 +125,13 @@ export const generateApiKey = (env: string): GeneratedApiKey => {
   const keyId = randomBytes(API_KEY_ID_BYTES).toString('hex')
   const secret = randomBytes(API_KEY_SECRET_BYTES).toString('base64url')
 
-  return { env, keyId, secret, key: buildApiKey(env, keyId, secret) }
+  return {
+    kind,
+    env,
+    keyId,
+    secret,
+    key: buildApiKey(env, keyId, secret, kind),
+  }
 }
 
 /**
@@ -105,9 +147,11 @@ export const parseApiKey = (raw: string): ParsedApiKey | null => {
     return null
   }
 
-  const [, env, keyId, secret] = match
+  const [, prefix, env, keyId, secret] = match
+  // The pattern only matches known prefixes, so the lookup cannot miss.
+  const kind = KIND_BY_PREFIX.get(prefix) as ApiKeyKindEnum
 
-  return { env, keyId, secret }
+  return { kind, env, keyId, secret }
 }
 
 /**

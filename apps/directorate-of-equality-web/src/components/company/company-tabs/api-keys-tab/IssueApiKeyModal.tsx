@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -108,11 +108,16 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
   const [scoping, setScoping] = useState<string>('filing')
   const [issuedKey, setIssuedKey] = useState<string | null>(null)
 
+  // Whether this modal is still showing. A key minted after the admin closed
+  // it must not be stashed in state for a dialog nobody will see.
+  const isShowingRef = useRef(isOpen)
+
   // Reopening must not show the previous key, label, lifetime or scoping —
   // the last especially, since silently carrying a previous grant of
   // `scoring:write` into the next key is exactly the surprise the default set
   // was narrowed to avoid.
   useEffect(() => {
+    isShowingRef.current = isOpen
     if (isOpen) {
       setLabel('')
       setExpiryDays(DEFAULT_EXPIRY_DAYS)
@@ -123,6 +128,10 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
 
   const issue = useMutation({
     ...trpc.apiKey.issue.mutationOptions(),
+    // Evicted from the MutationCache as soon as nothing observes it. `reset()`
+    // on close only detaches the observer; without this the plaintext secret
+    // would sit in the cache for the default five minutes.
+    gcTime: 0,
     onSuccess: (created) => {
       queryClient.invalidateQueries({
         queryKey: trpc.apiKey.listForCompany.queryKey({ companyId }),
@@ -134,6 +143,10 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
       queryClient.invalidateQueries({
         queryKey: trpc.company.getTimeline.queryKey({ id: companyId }),
       })
+      if (!isShowingRef.current) {
+        toast.error(t.modal.createdAfterCloseToast, { autoClose: 8000 })
+        return
+      }
       setIssuedKey(created.key)
     },
     onError: (error) => {
@@ -146,6 +159,18 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
       )
     },
   })
+
+  /**
+   * Every way out of the modal goes through here, so the one-time secret does
+   * not outlive it: the shared Modal keeps the dialog mounted when hidden, and
+   * the mutation cache would otherwise hold the key until the next open.
+   */
+  const close = () => {
+    isShowingRef.current = false
+    setIssuedKey(null)
+    issue.reset()
+    onClose()
+  }
 
   const copy = async () => {
     if (!issuedKey) return
@@ -167,9 +192,9 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
       isVisible={isOpen}
       title={issuedKey ? t.modal.createdTitle : t.modal.title}
       onVisibilityChange={(visible) => {
-        if (!visible) onClose()
+        if (!visible) close()
       }}
-      toggleClose={onClose}
+      toggleClose={close}
       width="small"
       // The lifetime dropdown renders inline, not in a portal — island-ui's
       // Select lists every prop it forwards to react-select and menuPortalTarget
@@ -202,7 +227,7 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
             <Button variant="ghost" size="small" onClick={copy}>
               {t.modal.copyButton}
             </Button>
-            <Button size="small" onClick={onClose}>
+            <Button size="small" onClick={close}>
               {t.modal.doneButton}
             </Button>
           </Inline>
@@ -249,7 +274,7 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
           </Text>
 
           <Inline space={2} justifyContent="flexEnd">
-            <Button variant="ghost" size="small" onClick={onClose}>
+            <Button variant="ghost" size="small" onClick={close}>
               {t.modal.cancelButton}
             </Button>
             <Button

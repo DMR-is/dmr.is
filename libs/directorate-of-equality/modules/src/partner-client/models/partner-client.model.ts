@@ -5,6 +5,7 @@ import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
 import { UserModel } from '../../user/models/user.model'
+import type { PartnerClientDto } from '../dto/partner-client.dto'
 
 type PartnerClientAttributes = {
   nationalId: string
@@ -71,4 +72,22 @@ export class PartnerClientModel extends MutableModel<
 
   @Column({ type: DataType.TEXT, allowNull: true, field: 'revoked_reason' })
   revokedReason!: string | null
+
+  static fromModel(model: PartnerClientModel): PartnerClientDto {
+    return {
+      id: model.id,
+      nationalId: model.nationalId,
+      name: model.name,
+      scopes: model.scopes,
+      createdByUserId: model.createdByUserId,
+      createdAt: model.createdAt,
+      revokedAt: model.revokedAt,
+      revokedByUserId: model.revokedByUserId,
+      revokedReason: model.revokedReason,
+    }
+  }
+
+  fromModel(): PartnerClientDto {
+    return PartnerClientModel.fromModel(this)
+  }
 }
