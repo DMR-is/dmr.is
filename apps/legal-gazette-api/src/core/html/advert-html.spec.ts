@@ -1,6 +1,8 @@
 import type { AdvertModel } from '../../models/advert.model'
 import { AdvertTemplateType } from '../../models/advert.model'
 import { AdvertVersionEnum } from '../../models/advert-publication.model'
+import { formatCompanyAnnouncement } from '../../modules/external-systems/company/utils'
+import { PENDING_PUBLICATION_NUMBER } from '../constants'
 import { getAdvertHtmlMarkup } from './advert-html'
 
 const JUDGEMENT_DATE = new Date('2026-05-06T00:00:00.000Z')
@@ -77,5 +79,39 @@ describe('getAdvertHtmlMarkup, division meeting time', () => {
     )
 
     expect(recall).toContain('kl. 14:00')
+  })
+})
+
+/**
+ * Production: an aukatilkynning was published and the PDF still read
+ * "(Reiknast við útgáfu)-001". The per-company numbers are written into the
+ * content at creation, before the advert has a publication number, so the
+ * render has to fill them in.
+ */
+describe('getAdvertHtmlMarkup, additional announcement numbers', () => {
+  const buildAnnouncement = (publicationNumber: string | null) =>
+    ({
+      ...buildAdvert(AdvertTemplateType.ADDITIONAL_ANNOUNCEMENT),
+      content: formatCompanyAnnouncement({
+        index: 1,
+        name: 'A ehf.',
+        nationalId: '',
+        location: '',
+        items: [],
+      }),
+      publicationNumber,
+    }) as unknown as AdvertModel
+
+  it('replaces the placeholder with the publication number', () => {
+    const html = getAdvertHtmlMarkup(buildAnnouncement('20260922001'))
+
+    expect(html).toContain('20260922001-001')
+    expect(html).not.toContain(PENDING_PUBLICATION_NUMBER)
+  })
+
+  it('keeps the placeholder until a number is assigned', () => {
+    const html = getAdvertHtmlMarkup(buildAnnouncement(null))
+
+    expect(html).toContain(`${PENDING_PUBLICATION_NUMBER}-001`)
   })
 })

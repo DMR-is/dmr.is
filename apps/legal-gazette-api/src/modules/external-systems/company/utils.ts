@@ -1,5 +1,7 @@
 import { formatNationalId } from '@dmr.is/utils-server/formatting'
 
+import { PENDING_PUBLICATION_NUMBER } from '../../../core/constants'
+
 export enum WeekdayEnum {
   Sunday = 0,
   Monday = 1,
@@ -106,7 +108,7 @@ export const formatCompanyAnnouncement = ({
   index: number
 }) => {
   const padded = index.toString().padStart(3, '0')
-  const publicationWithIndex = `${publicationNumber ? `${publicationNumber}-${padded}` : `(Reiknast við útgáfu)-${padded}`}`
+  const publicationWithIndex = `${publicationNumber ? `${publicationNumber}-${padded}` : `${PENDING_PUBLICATION_NUMBER}-${padded}`}`
 
   return `
     <table>

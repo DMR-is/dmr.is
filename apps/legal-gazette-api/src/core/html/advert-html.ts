@@ -12,8 +12,17 @@ import {
 import type { AdvertModel } from '../../models/advert.model'
 import { AdvertTemplateType } from '../../models/advert.model'
 import { AdvertVersionEnum } from '../../models/advert-publication.model'
+import { PENDING_PUBLICATION_NUMBER } from '../constants'
 
 type HTMLVersion = 'A' | 'B' | 'C'
+
+const resolvePendingPublicationNumber = (
+  content: string,
+  publicationNumber?: string | null,
+) =>
+  publicationNumber
+    ? content.replaceAll(PENDING_PUBLICATION_NUMBER, publicationNumber)
+    : content
 
 // Resolved per call, never at module evaluation. `AdvertVersionEnum` comes from
 // `advert-publication.model`, which imports `advert.model` back, and
@@ -281,7 +290,13 @@ export function getAdvertHtmlMarkup(
     default:
       return getAdvertHTMLMarkup({
         ...baseProps,
-        content: model.content ?? '',
+        content:
+          model.templateType === AdvertTemplateType.ADDITIONAL_ANNOUNCEMENT
+            ? resolvePendingPublicationNumber(
+                model.content ?? '',
+                model.publicationNumber,
+              )
+            : (model.content ?? ''),
         templateType: LegalGazetteHTMLTemplates.COMMON,
       })
   }

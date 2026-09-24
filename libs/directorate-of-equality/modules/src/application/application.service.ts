@@ -24,6 +24,7 @@ import { IConfigService } from '../config/config.service.interface'
 import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../constants'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
+import { computeReportValidUntil } from '../report/lib/day-boundaries'
 import { resolveEqualityContent } from '../report/lib/equality-content'
 import { toLegacyEqualitySummary } from '../report/lib/legacy-equality-coverage'
 import {
@@ -71,7 +72,10 @@ import { ApplicationReportCommentDto } from './dto/application-report-comment.dt
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
 import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
 import { EditOutliersDto } from './dto/edit-outliers.dto'
-import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
+import {
+  SalaryReportEligibilityDto,
+  SalaryReportEligibilityReasonEnum,
+} from './dto/salary-report-eligibility.dto'
 import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
@@ -86,10 +90,6 @@ import type {
 } from './dto/submit-report-company.dto'
 import { EQUALITY_REPORT_TEMPLATE_BASE64 } from './equality-template/template-data'
 import { buildEqualityReportTemplateHtml } from './equality-template/template-html'
-import {
-  evaluateSalaryRenewalEligibility,
-  SalaryReportEligibilityReasonEnum,
-} from './lib/salary-renewal-eligibility'
 import {
   SUB_CRITERION_CATALOG,
   SUB_CRITERION_GENERAL_SCALE,
@@ -183,25 +183,13 @@ export class ApplicationService implements IApplicationService {
       providerId: input.providerId,
     })
 
-    // Renewal-window gate: a company may only submit a salary report once its
-    // current one is due in 6 months or less. Shares the pure renewal decision
-    // with the eligibility endpoint, so the pre-check and this block cannot
-    // drift on the window rule. The equality-report precondition is enforced
-    // separately (as a 404) by `createSalary` below, so it is not re-checked
-    // here. Only the company-facing portal path is gated — admin/system
-    // creation is not.
-
-    if (process.env.API_ENV === 'prod') {
-      const renewal = evaluateSalaryRenewalEligibility(
-        company.nextSalaryReportDueAt ?? null,
-        new Date(),
-      )
-      if (!renewal.eligible) {
-        throw new ConflictException(
-          `Salary report renewal window is not open yet; earliest submission ${renewal.earliestSubmissionDate?.toISOString() ?? 'n/a'}`,
-        )
-      }
-    }
+    // No timing gate: a company may file whenever it likes. The 6-month renewal
+    // window that used to sit here was removed deliberately — what filing early
+    // costs the company is reported by `getSalaryReportEligibility`, so the
+    // portal can warn the applicant, rather than refused on their behalf. The
+    // remaining refusals are `createSalary`'s: a 404 when nothing covers the
+    // company's equality obligation, and a 409 when a sibling salary report
+    // cannot be replaced or the provider tuple is already bound elsewhere.
 
     const createInput = await this.createSalaryReportInput(input, company)
 
@@ -212,17 +200,31 @@ export class ApplicationService implements IApplicationService {
   async getSalaryReportEligibility(
     company: CompanyDto,
   ): Promise<SalaryReportEligibilityDto> {
-    const { eligible, reason, dueAt, earliestSubmissionDate } =
-      evaluateSalaryRenewalEligibility(
-        company.nextSalaryReportDueAt ?? null,
-        new Date(),
-      )
+    const dueAt = company.nextSalaryReportDueAt ?? null
+
+    // What a report filed right now would earn if it were approved right now.
+    // Shared with `approve()`, which is what actually writes the date, so the
+    // figure quoted here cannot drift from the one the company ends up with.
+    // Review latency only ever pushes the real date later, which is why the
+    // field is named for the earliest outcome rather than the likely one.
+    //
+    // Against `dueAt` this is what filing early trades away: the three years run
+    // from APPROVAL, so whatever is left on the current certificate is absorbed
+    // rather than added, and a company with a year still to run gets three years
+    // from today instead of four.
+    //
+    // ⚠️ Deliberately NOT reduced to a "should we warn" flag. The first attempt
+    // was `earliestNewDueAt < dueAt`, which is never true — `dueAt` is itself an
+    // approval plus three years, so it can never be more than three years out —
+    // and it encoded the wrong idea besides: filing early moves the deadline
+    // OUT, not in. The loss is the unused remainder, `dueAt` minus now, which
+    // every consumer can compute from what is already here.
+    const earliestNewDueAt = computeReportValidUntil(new Date())
 
     // The company's equality obligation must be met before a salary report can
-    // be filed against it. This blocks the flow regardless of the renewal
-    // window, so it takes priority — but we still surface the (informational)
-    // due dates from the renewal decision so the portal can render them either
-    // way.
+    // be filed against it — the one remaining reason to refuse. The dates above
+    // are returned either way: an applicant who has to fix their equality plan
+    // first still benefits from seeing what filing will cost them.
     //
     // ⚠️ Deliberately the SAME notion of coverage as the admin register's
     // `companyReportStatusCaseSql` — an APPROVED report here, or an unexpired
@@ -242,11 +244,16 @@ export class ApplicationService implements IApplicationService {
         eligible: false,
         reason: SalaryReportEligibilityReasonEnum.MISSING_EQUALITY_REPORT,
         dueAt,
-        earliestSubmissionDate,
+        earliestNewDueAt,
       }
     }
 
-    return { eligible, reason, dueAt, earliestSubmissionDate }
+    return {
+      eligible: true,
+      reason: null,
+      dueAt,
+      earliestNewDueAt,
+    }
   }
 
   async submitEquality(

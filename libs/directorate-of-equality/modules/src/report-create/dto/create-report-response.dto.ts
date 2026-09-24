@@ -38,7 +38,7 @@ export class CreateReportResponseDto {
    *
    * A submission with unexplained outliers files as `POSTPONED` rather than
    * `SUBMITTED` on a channel that asked for that (see
-   * `CreateReportDto.postponeUnexplainedOutliers`), and whether that happened
+   * `CreateSalaryOptions.postponeUnexplainedOutliers`), and whether that happened
    * depends on detection the caller never ran. On a replay this is the status of
    * the report the earlier call filed, which may since have moved on.
    */
