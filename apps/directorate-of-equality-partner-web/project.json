@@ -120,6 +120,7 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
+      "dependsOn": ["codegen"],
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/directorate-of-equality-partner-web/jest.config.ts"
