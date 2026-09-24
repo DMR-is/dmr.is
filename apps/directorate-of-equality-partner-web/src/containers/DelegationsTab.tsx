@@ -103,10 +103,11 @@ export const DelegationsTab = ({ companyName }: { companyName: string }) => {
             size="small"
             icon="add"
             iconType="outline"
-            // Not before the list loads: the modal leaves out providers already
-            // delegated to, and an empty list would offer them all, each failing
-            // with a 409.
-            disabled={isLoading || isError}
+            // Not before the list has loaded once: the modal leaves out
+            // providers already delegated to, and with no list it would offer
+            // them all, each failing with a 409. A failed background refetch
+            // still has the list, so it does not disable this.
+            disabled={data === undefined}
             onClick={() => setIsGrantOpen(true)}
           >
             {t.grantButton}

@@ -39,8 +39,13 @@ export const ProviderKeysTab = ({
   const [isIssueOpen, setIsIssueOpen] = useState(false)
   // Read when a request settles: closed by then means nobody will see the
   // key, so it must not stay in the mutation observer.
+  // Kept in step by the two handlers below rather than assigned during
+  // render, which React Compiler and react-hooks v6 flag.
   const isIssueOpenRef = useRef(false)
-  isIssueOpenRef.current = isIssueOpen
+  const openIssue = () => {
+    isIssueOpenRef.current = true
+    setIsIssueOpen(true)
+  }
   const [pendingRevoke, setPendingRevoke] = useState<ListedKey | null>(null)
 
   const { data, isLoading, isError } = useQuery(
@@ -116,7 +121,7 @@ export const ProviderKeysTab = ({
             size="small"
             icon="add"
             iconType="outline"
-            onClick={() => setIsIssueOpen(true)}
+            onClick={openIssue}
           >
             {t.issueButton}
           </Button>
@@ -146,6 +151,7 @@ export const ProviderKeysTab = ({
           (await issue.mutateAsync({ label, expiresAt })).key
         }
         onClose={() => {
+          isIssueOpenRef.current = false
           setIsIssueOpen(false)
           if (!issue.isPending) issue.reset()
         }}
