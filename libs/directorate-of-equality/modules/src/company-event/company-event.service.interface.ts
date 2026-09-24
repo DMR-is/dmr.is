@@ -84,6 +84,25 @@ export interface ICompanyEventService {
   ): Promise<void>
 
   /**
+   * Records a company allowing a vendor client to act for it. `firm` — the
+   * firm's name and kennitala — goes into `reason`. The person who granted it
+   * is on the delegation row, since they have no `doe_user` row.
+   */
+  emitPartnerDelegationGranted(
+    companyId: string,
+    status: CompanyStatusEnum,
+    firm: string,
+  ): Promise<void>
+
+  /** Records a delegation being withdrawn. `firm` goes into `reason`. */
+  emitPartnerDelegationRevoked(
+    companyId: string,
+    status: CompanyStatusEnum,
+    firm: string,
+    actorUserId?: string | null,
+  ): Promise<void>
+
+  /**
    * Records one company's outcome within a custom-email batch — delivered,
    * failed, or skipped before it was ever attempted.
    *

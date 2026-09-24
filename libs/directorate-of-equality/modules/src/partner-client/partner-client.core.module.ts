@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CompanyModel } from '../company/models/company.model'
+import { CompanyEventCoreModule } from '../company-event/company-event.core.module'
 import { PartnerClientModel } from './models/partner-client.model'
 import { PartnerClientKeyModel } from './models/partner-client-key.model'
 import { PartnerDelegationModel } from './models/partner-delegation.model'
@@ -18,6 +19,7 @@ import { IPartnerDelegationService } from './partner-delegation.service.interfac
       PartnerDelegationModel,
       CompanyModel,
     ]),
+    CompanyEventCoreModule,
   ],
   providers: [
     {

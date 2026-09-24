@@ -6595,6 +6595,8 @@
           "SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL",
           "API_KEY_ISSUED",
           "API_KEY_REVOKED",
+          "PARTNER_DELEGATION_GRANTED",
+          "PARTNER_DELEGATION_REVOKED",
           "CUSTOM_EMAIL_SENT",
           "CUSTOM_EMAIL_FAILED",
           "CUSTOM_EMAIL_SKIPPED"
@@ -7582,7 +7584,8 @@
           "label": {
             "type": "string",
             "nullable": true,
-            "description": "Free-text label to tell this key apart from the others, e.g. the environment it is deployed to."
+            "description": "Free-text label to tell this key apart from the others, e.g. the environment it is deployed to.",
+            "maxLength": 256
           },
           "expiresAt": {
             "type": "string",

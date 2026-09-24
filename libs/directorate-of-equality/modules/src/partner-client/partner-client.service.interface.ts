@@ -5,6 +5,7 @@ import {
   IssuedPartnerClientKeyDto,
   PartnerClientKeyDto,
 } from './dto/partner-client-key.dto'
+import { PartnerProviderDto } from './dto/partner-provider.dto'
 
 export type CreatePartnerClientInput = {
   nationalId: string
@@ -53,6 +54,19 @@ export interface IPartnerClientService {
   list(): Promise<PartnerClientDto[]>
 
   get(id: string): Promise<PartnerClientDto>
+
+  /**
+   * The providers a company may choose from: active firms only, with name and
+   * kennitala. Built from this table and nothing else, so no link a firm hands
+   * a company can put a provider on the list.
+   */
+  listProviders(): Promise<PartnerProviderDto[]>
+
+  /**
+   * The live client for a firm's kennitala, or null — how the self-service web
+   * recognises a signed-in company as a firm and shows it its own keys.
+   */
+  findLiveByNationalId(nationalId: string): Promise<PartnerClientDto | null>
 
   /**
    * Cuts a firm off. Its keys and delegations are left as they are — the

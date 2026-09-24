@@ -193,6 +193,8 @@ erDiagram
         text_array scopes
         text granted_by_national_id
         timestamptz revoked_at "nullable"
+        uuid revoked_by_user_id FK "nullable"
+        text revoked_by_national_id "nullable"
     }
     company_event {
         uuid id PK
@@ -299,6 +301,8 @@ erDiagram
     company ||--o{ doe_partner_delegation : "company_id"
     doe_partner_client |o--o{ report : "partner_client_id"
     doe_user ||--o{ doe_partner_client : "created_by_user_id"
+    doe_user |o--o{ doe_partner_client_key : "created_by_user_id"
+    doe_user |o--o{ doe_partner_delegation : "revoked_by_user_id"
     company ||--o{ company_event : "company_id"
     doe_user |o--o{ company_event : "actor_user_id"
     company ||--o{ company_comment : "company_id"
