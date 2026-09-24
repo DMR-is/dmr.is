@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
@@ -37,6 +37,10 @@ export const ProviderKeysTab = ({
   const queryClient = useQueryClient()
 
   const [isIssueOpen, setIsIssueOpen] = useState(false)
+  // Read when a request settles: closed by then means nobody will see the
+  // key, so it must not stay in the mutation observer.
+  const isIssueOpenRef = useRef(false)
+  isIssueOpenRef.current = isIssueOpen
   const [pendingRevoke, setPendingRevoke] = useState<ListedKey | null>(null)
 
   const { data, isLoading, isError } = useQuery(
@@ -55,6 +59,11 @@ export const ProviderKeysTab = ({
     ...trpc.partnerClient.issueKey.mutationOptions(),
     gcTime: 0,
     onSuccess: invalidate,
+    onSettled: () => {
+      // The modal was closed while this was in flight, so its close skipped
+      // `reset()`. Clear the plaintext key now that the request is done.
+      if (!isIssueOpenRef.current) issue.reset()
+    },
     onError: (error) =>
       toast.error(withReason(keyText.modal.createErrorToast, error), {
         autoClose: 5000,

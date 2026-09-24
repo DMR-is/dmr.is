@@ -103,6 +103,10 @@ export const DelegationsTab = ({ companyName }: { companyName: string }) => {
             size="small"
             icon="add"
             iconType="outline"
+            // Not before the list loads: the modal leaves out providers already
+            // delegated to, and an empty list would offer them all, each failing
+            // with a 409.
+            disabled={isLoading || isError}
             onClick={() => setIsGrantOpen(true)}
           >
             {t.grantButton}
