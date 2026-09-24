@@ -153,15 +153,29 @@ export const DataExportContainer = () => {
         : {}),
       ...(filters.flags.includes('fines') ? { finesStarted: true } : {}),
       ...(filters.flags.includes('overdue') ? { overdue: true } : {}),
-      ...(filters.flags.includes('quarantined') ? { quarantined: true } : {}),
-      ...(filters.flags.includes('neverSubmitted')
-        ? { neverSubmitted: true }
+      // The four "aldrei skilað" flags AND together, matching the company
+      // list — see `buildCompanyListQuery`.
+      ...(filters.flags.includes('neverFiledEquality')
+        ? { neverFiledEquality: true }
+        : {}),
+      ...(filters.flags.includes('neverFiledEqualityIncludingLegacy')
+        ? { neverFiledEqualityIncludingLegacy: true }
+        : {}),
+      ...(filters.flags.includes('neverFiledSalary')
+        ? { neverFiledSalary: true }
+        : {}),
+      ...(filters.flags.includes('neverFiledSalaryIncludingLegacy')
+        ? { neverFiledSalaryIncludingLegacy: true }
         : {}),
       ...(filters.visibility.includes('notObliged')
         ? { includeNotObliged: true }
         : {}),
       ...(filters.visibility.includes('inactive')
         ? { includeInactive: true }
+        : {}),
+      // "Í vari" is a reveal here, not a narrowing — it moved out of `flags`.
+      ...(filters.visibility.includes('quarantined')
+        ? { includeQuarantined: true }
         : {}),
       ...(filters.isatCategoryCode.length
         ? { isatCategoryCode: filters.isatCategoryCode }
