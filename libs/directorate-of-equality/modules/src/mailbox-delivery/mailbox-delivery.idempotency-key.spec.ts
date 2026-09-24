@@ -46,8 +46,9 @@ describe('buildMailboxDeliveryIdempotencyKey', () => {
     ['empty', ''],
     ['a colon, which would let two part sets collide', 'SALARY:20270301'],
     ['whitespace', 'SALARY 20270301'],
-    ['a leading separator', '-SALARY'],
-    ['over 100 characters', 'A'.repeat(101)],
+    ['over 64 characters', 'A'.repeat(65)],
+    ['a non-ASCII letter', 'ÁRSSKÝRSLA-2027'],
+    ['a slash', 'SALARY/20270301'],
   ])('rejects a discriminator with %s', (_why, discriminator) => {
     expect(() =>
       buildMailboxDeliveryIdempotencyKey({
@@ -56,6 +57,35 @@ describe('buildMailboxDeliveryIdempotencyKey', () => {
         discriminator,
       }),
     ).toThrow(InternalServerErrorException)
+  })
+
+  it.each([
+    ['64 characters', 'A'.repeat(64)],
+    ['a leading separator', '-SALARY'],
+    ['dots and underscores', 'SALARY_2027.03.01'],
+  ])('accepts a discriminator with %s', (_why, discriminator) => {
+    expect(
+      buildMailboxDeliveryIdempotencyKey({
+        kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+        companyId: COMPANY_ID,
+        discriminator,
+      }),
+    ).toBe(`mailbox-delivery:v1:OVERDUE_NOTICE:${COMPANY_ID}:${discriminator}`)
+  })
+
+  it('upper-cases the discriminator, so its case never makes a second key', () => {
+    const key = (discriminator: string) =>
+      buildMailboxDeliveryIdempotencyKey({
+        kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+        companyId: COMPANY_ID,
+        discriminator,
+      })
+
+    expect(key('salary-20270301')).toBe(key('SALARY-20270301'))
+    expect(key('Salary-20270301')).toBe(key('SALARY-20270301'))
+    expect(key('salary-20270301')).toBe(
+      `mailbox-delivery:v1:OVERDUE_NOTICE:${COMPANY_ID}:SALARY-20270301`,
+    )
   })
 
   it('gives the same key for the company id in upper and lower case', () => {

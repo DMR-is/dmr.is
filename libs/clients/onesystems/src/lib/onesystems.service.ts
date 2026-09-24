@@ -10,6 +10,7 @@ import {
   postApiAuthLogin,
 } from '../gen/fetch'
 import {
+  ONESYSTEMS_EMPTY_BEARER_CHALLENGE_BODY,
   ONESYSTEMS_EMPTY_ERROR_BODY,
   oneSystemsActionClient,
   oneSystemsLoginClient,
@@ -17,7 +18,7 @@ import {
   resolveOneSystemsBaseUrl,
 } from './onesystems.config'
 import {
-  isLoggableCode,
+  hasNoKennitalaShape,
   isOneSystemsError,
   OneSystemsError,
   type OneSystemsNonIdempotentOperation,
@@ -182,16 +183,18 @@ export class OneSystemsService implements IOneSystemsService {
   }
 
   /**
-   * Sends one action with the current token. A 401 means the token was not
-   * accepted and the action was not handled, so the token is dropped and the
-   * action is sent once more with a fresh one. A second 401 is thrown.
+   * Sends one action with the current token. On a 401 the token is dropped
+   * and the action is sent once more with a fresh one. A second 401 is thrown.
    *
-   * CreateDocument and SendDocToIslandIs are re-sent only when the 401 has an
-   * empty body: that is how ASP.NET's JwtBearer challenge answers, before any
-   * action runs. Under `[ApiController]` a 401 returned from inside the action
-   * has a body (One's `GeneralResponse` or a `ProblemDetails`), so the action
-   * may already have filed or sent. Those are never re-sent; the 401 is thrown
-   * as it is, which `isDefinitiveOneSystemsFailure` treats as unclear.
+   * CreateCase and CloseCase are safe to repeat, so any 401 is retried.
+   * CreateDocument and SendDocToIslandIs are re-sent only on the JwtBearer
+   * challenge: an empty-bodied 401 with a `WWW-Authenticate: Bearer` header,
+   * which ASP.NET writes before any action runs. Any other 401 may come from
+   * inside the action (an in-action `Unauthorized(null)` is an empty 401
+   * without that header; one with a body is One's `GeneralResponse` or a
+   * `ProblemDetails`), which may already have filed or sent. Those are never
+   * re-sent: the 401 is thrown as it is, and `isDefinitiveOneSystemsFailure`
+   * treats it as unclear.
    *
    * Only SendDocToIslandIs may resolve without an `ItemID`.
    */
@@ -217,10 +220,10 @@ export class OneSystemsService implements IOneSystemsService {
     if (
       result.response?.status === 401 &&
       NON_IDEMPOTENT_OPERATIONS.includes(operation) &&
-      !isEmptyErrorBody(result.error)
+      !isEmptyBearerChallenge(result.error)
     ) {
       this.logger.warn(
-        `OneSystems ${operation} answered 401 with a body, which may come from its action handler, not retrying`,
+        `OneSystems ${operation} answered 401 without an empty Bearer challenge, which may come from its action handler, not retrying`,
         this.meta(operation),
       )
       // The token may still be good, but a fresh one costs only a Login.
@@ -257,6 +260,7 @@ export class OneSystemsService implements IOneSystemsService {
       const generalResponse = asGeneralResponse(error)
       const validationProblem = isValidationProblemBody(error)
       const emptyBody = isEmptyErrorBody(error)
+      const bearerChallenge = isEmptyBearerChallenge(error)
       const errorNumber = generalResponse
         ? errorCode(generalResponse.ErrorNumber)
         : null
@@ -266,6 +270,7 @@ export class OneSystemsService implements IOneSystemsService {
         hasGeneralResponseBody: generalResponse !== null,
         isValidationProblemBody: validationProblem,
         hasEmptyBody: emptyBody,
+        hasBearerChallenge: bearerChallenge,
         errorNumber: toLoggableErrorNumber(errorNumber),
         bodyLength: emptyBody ? 0 : bodyLength(error),
       })
@@ -278,6 +283,7 @@ export class OneSystemsService implements IOneSystemsService {
           hasGeneralResponseBody: generalResponse !== null,
           isValidationProblemBody: validationProblem,
           hasEmptyBody: emptyBody,
+          hasBearerChallenge: bearerChallenge,
           errorNumber,
           errorMessage: generalResponse
             ? nonEmptyString(generalResponse.ErrorMessage)
@@ -449,16 +455,24 @@ export class OneSystemsService implements IOneSystemsService {
 
   /**
    * No response means the request failed in transit or timed out. An error
-   * alongside a 2xx means the body could not be read. Either way the outcome
-   * is unknown. Only the error's name and code are logged: a parse error's
-   * message can quote the body.
+   * alongside a 2xx means the body could not be read. An `Error` alongside a
+   * non-2xx means the same: for a non-2xx the generated client hands back the
+   * body it read (JSON-parsed, or the text, or an interceptor's marker), and
+   * only a failed read of that body, mid-stream, surfaces as an `Error`. What
+   * such a response would have said is unknown, so it proves nothing about
+   * whether the action ran, for any operation. The outcome is unknown, and so
+   * is the body's length, which is not logged. Only the error's name and code
+   * are logged: a parse error's message can quote the body.
    */
   private assertResponded(
     operation: OneSystemsOperation,
     error: unknown,
     response: Response | undefined,
   ): asserts response is Response {
-    if (response && !(response.ok && error !== undefined)) {
+    const unreadable = response?.ok
+      ? error !== undefined
+      : error instanceof Error
+    if (response && !unreadable) {
       return
     }
     this.logger.error(
@@ -614,10 +628,23 @@ function isValidationProblemBody(value: unknown): boolean {
 /**
  * True when a non-2xx body was empty or whitespace only. The action client's
  * error interceptor turns exactly those bodies into
- * {@link ONESYSTEMS_EMPTY_ERROR_BODY}; see `onesystems.config.ts`.
+ * {@link ONESYSTEMS_EMPTY_ERROR_BODY} or
+ * {@link ONESYSTEMS_EMPTY_BEARER_CHALLENGE_BODY}; see `onesystems.config.ts`.
  */
 function isEmptyErrorBody(value: unknown): boolean {
-  return value === ONESYSTEMS_EMPTY_ERROR_BODY
+  return (
+    value === ONESYSTEMS_EMPTY_ERROR_BODY ||
+    value === ONESYSTEMS_EMPTY_BEARER_CHALLENGE_BODY
+  )
+}
+
+/**
+ * True for the JwtBearer challenge: a 401 whose body was empty and whose
+ * `WWW-Authenticate` names the Bearer scheme. The interceptor sets
+ * {@link ONESYSTEMS_EMPTY_BEARER_CHALLENGE_BODY} only for that.
+ */
+function isEmptyBearerChallenge(value: unknown): boolean {
+  return value === ONESYSTEMS_EMPTY_BEARER_CHALLENGE_BODY
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -628,7 +655,11 @@ function nonEmptyString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() !== '' ? value : null
 }
 
-/** `ErrorNumber` is a string in the spec; accept a number too. */
+/**
+ * `ErrorNumber` is a string in the spec; accept a number too, as its string.
+ * Either way the result is raw: it is logged or stored only through
+ * `toLoggableErrorNumber`, which withholds a kennitala-shaped number too.
+ */
 function errorCode(value: unknown): string | null {
   return typeof value === 'number' ? String(value) : nonEmptyString(value)
 }
@@ -648,11 +679,22 @@ function bodyLength(body: unknown): number | undefined {
   }
 }
 
-/** A Node network error's code (`ECONNREFUSED`, ...), from it or its cause. */
+/**
+ * Node's error codes (`ECONNREFUSED`, `UND_ERR_SOCKET`,
+ * `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`, ...) are upper-case constants, some
+ * longer than One's `ErrorNumber` filter allows.
+ */
+const NODE_ERROR_CODE = /^[A-Z0-9_]{1,64}$/
+
+/** A Node network error's code, from it or its cause. */
 function transportErrorCode(error: unknown): string | undefined {
   for (const candidate of [error, (error as { cause?: unknown })?.cause]) {
     const code = (candidate as { code?: unknown } | undefined)?.code
-    if (typeof code === 'string' && isLoggableCode(code)) {
+    if (
+      typeof code === 'string' &&
+      NODE_ERROR_CODE.test(code) &&
+      hasNoKennitalaShape(code)
+    ) {
       return code
     }
   }

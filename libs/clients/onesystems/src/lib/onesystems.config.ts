@@ -2,21 +2,22 @@ import { createClient, createConfig } from '../gen/fetch/client'
 import type { ClientOptions } from '../gen/fetch/types.gen'
 import type { OneSystemsOperation } from './onesystems.errors'
 
-/** Per-request timeout for Login and every action except SendDocToIslandIs. */
+/** Per-request timeout for Login, CreateCase and CloseCase. */
 export const ONESYSTEMS_REQUEST_TIMEOUT_MS = 30_000
 
 /**
- * Per-request timeout for SendDocToIslandIs. It is longer because One makes
- * its own round trip to island.is inside the call, and a timeout here leaves
- * the delivery's outcome unknown (a stranded UNCERTAIN row), so waiting is
- * cheaper than giving up.
+ * Per-request timeout for CreateDocument and SendDocToIslandIs, the two calls
+ * that must never repeat. A timeout on either leaves the delivery's outcome
+ * unknown (a stranded UNCERTAIN row), so waiting is cheaper than giving up.
+ * CreateDocument uploads the PDF base64-encoded and One files it; inside
+ * SendDocToIslandIs One makes its own round trip to island.is.
  */
-export const ONESYSTEMS_SEND_DOC_TIMEOUT_MS = 120_000
+export const ONESYSTEMS_DOCUMENT_TIMEOUT_MS = 120_000
 
 /** The timeout for one request of `operation`. */
 export function oneSystemsTimeoutMs(operation: OneSystemsOperation): number {
-  return operation === 'SendDocToIslandIs'
-    ? ONESYSTEMS_SEND_DOC_TIMEOUT_MS
+  return operation === 'CreateDocument' || operation === 'SendDocToIslandIs'
+    ? ONESYSTEMS_DOCUMENT_TIMEOUT_MS
     : ONESYSTEMS_REQUEST_TIMEOUT_MS
 }
 
@@ -47,6 +48,8 @@ export const oneSystemsActionClient =
 /**
  * What the action client hands back as `error` for a non-2xx response whose
  * body was empty or whitespace only. Compare by identity.
+ * {@link ONESYSTEMS_EMPTY_BEARER_CHALLENGE_BODY} is the same for an empty 401
+ * that also carried a `WWW-Authenticate: Bearer ...` challenge.
  *
  * The generated client reads an error body as text, JSON-parses it, and then
  * replaces a falsy result with `{}`. That loses the raw text in both
@@ -55,21 +58,60 @@ export const oneSystemsActionClient =
  * no body at all even though only an action handler can produce it. So
  * emptiness is decided from the raw bytes instead: the response interceptor
  * below reads a copy of every non-2xx body before the client parses it, and
- * the error interceptor swaps in this marker only for a response it recorded
- * as empty. The definitive-failure rule for CreateDocument and
- * SendDocToIslandIs, and the 401 retry, depend on it.
+ * the error interceptor swaps in a marker only for a response it recorded as
+ * empty.
+ *
+ * An empty body alone does not prove the action never ran: `NotFound(null)`
+ * and `Unauthorized(null)` from inside an action keep their status with an
+ * empty body, and `Forbid()` / `Challenge()` go through the auth handler,
+ * which writes an empty 403 / 401. What the JwtBearer challenge adds, and an
+ * in-action `Unauthorized(null)` does not, is the `WWW-Authenticate: Bearer`
+ * header, so the interceptor records that too. The definitive-failure rule for
+ * CreateDocument and SendDocToIslandIs, and their 401 retry, depend on it. An
+ * in-action `Challenge()` would still look like the pipeline's own challenge;
+ * whether One's actions ever do that is a TODO(OneSystems) question in
+ * `onesystems.errors.ts`.
+ *
+ * Both interceptors rely on the order the generated client (the fetch client
+ * bundled by `@hey-api/openapi-ts`, pinned at 0.97.3) runs them in: response interceptors before the body is read, error interceptors
+ * with the same `Response`. The spec rows in `onesystems.service.spec.ts` that
+ * drive real `Response` objects through the client guard that order.
  */
 export const ONESYSTEMS_EMPTY_ERROR_BODY: Readonly<Record<string, never>> =
   Object.freeze({})
 
-/** Non-2xx responses whose raw body was empty or whitespace only. */
-const emptyErrorBodyResponses = new WeakSet<Response>()
+/** {@link ONESYSTEMS_EMPTY_ERROR_BODY} for an empty 401 Bearer challenge. */
+export const ONESYSTEMS_EMPTY_BEARER_CHALLENGE_BODY: Readonly<
+  Record<string, never>
+> = Object.freeze({})
+
+/**
+ * True when a `WWW-Authenticate` value's first challenge uses the Bearer
+ * scheme (`Bearer`, or `Bearer error="invalid_token", ...`). Scheme names are
+ * case-insensitive. A header whose first challenge is another scheme does not
+ * count, which errs towards "not definitive".
+ */
+export function isBearerChallengeHeader(value: string | null): boolean {
+  return value !== null && /^\s*bearer(?:\s|,|$)/i.test(value)
+}
+
+/** The marker for each non-2xx response whose raw body was empty. */
+const emptyErrorBodyResponses = new WeakMap<
+  Response,
+  typeof ONESYSTEMS_EMPTY_ERROR_BODY
+>()
 
 oneSystemsActionClient.interceptors.response.use(async (response) => {
   if (!response.ok) {
     try {
       if ((await response.clone().text()).trim() === '') {
-        emptyErrorBodyResponses.add(response)
+        emptyErrorBodyResponses.set(
+          response,
+          response.status === 401 &&
+            isBearerChallengeHeader(response.headers.get('WWW-Authenticate'))
+            ? ONESYSTEMS_EMPTY_BEARER_CHALLENGE_BODY
+            : ONESYSTEMS_EMPTY_ERROR_BODY,
+        )
       }
     } catch {
       // The body could not be read. The client's own read of it fails the
@@ -79,10 +121,9 @@ oneSystemsActionClient.interceptors.response.use(async (response) => {
   return response
 })
 
-oneSystemsActionClient.interceptors.error.use((error, response) =>
-  response !== undefined && emptyErrorBodyResponses.has(response)
-    ? ONESYSTEMS_EMPTY_ERROR_BODY
-    : error,
+oneSystemsActionClient.interceptors.error.use(
+  (error, response) =>
+    (response !== undefined && emptyErrorBodyResponses.get(response)) || error,
 )
 
 /**

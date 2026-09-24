@@ -29,6 +29,13 @@ export default defineConfig({
       },
     },
   },
+  // `src/lib/onesystems.config.ts` registers interceptors on the generated
+  // fetch client that mark an empty non-2xx body and a 401's
+  // `WWW-Authenticate: Bearer` challenge. They rely on the call order of the
+  // client this version emits (pinned at 0.97.3): response interceptors run
+  // before the body is read, and error interceptors get the same `Response`.
+  // The real-`Response` rows in `onesystems.service.spec.ts` guard that order;
+  // rerun them after any upgrade.
   output: {
     path: './libs/clients/onesystems/src/gen/fetch',
     clean: true,

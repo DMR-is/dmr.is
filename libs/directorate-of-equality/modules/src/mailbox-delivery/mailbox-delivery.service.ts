@@ -27,6 +27,7 @@ import {
   MailboxDeliveryStepEnum,
 } from './models/mailbox-delivery.enums'
 import { MailboxDeliveryModel } from './models/mailbox-delivery.model'
+import { mailboxDeliveryIdempotencyKeyPrefix } from './mailbox-delivery.idempotency-key'
 import {
   MAILBOX_DELIVERY_KIND_CONFIGS,
   MailboxDeliveryKindConfig,
@@ -48,8 +49,10 @@ const MINUTE_MS = 60_000
  * timeouts. A call is a lazy Login and the action; a 401 then costs a second
  * Login and one retried action, each with its own full timeout. The 401 can
  * arrive at the very end of the first action's timeout, so the worst case is
- * 2 x (Login + action) for the slowest action, SendDocToIslandIs:
- * 2 x (30s + 120s) = 5 min. A timeout is never retried, so nothing is longer.
+ * 2 x (Login + action) for the slowest action. CreateDocument and
+ * SendDocToIslandIs both get 120s, and both still retry once on the JwtBearer
+ * challenge: 2 x (30s + 120s) = 5 min. CreateCase's is 2 x (30s + 30s).
+ * A timeout is never retried, so nothing is longer.
  */
 export const MAILBOX_DELIVERY_SLOWEST_CALL_MS =
   2 *
@@ -171,13 +174,30 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       )
     }
 
+    // UUIDs compare case-insensitively in Postgres; lowercase it so the id in
+    // the key check below is the one the DB hands back.
+    const companyId = input.companyId.toLowerCase()
     const company = await this.companyModel.findOne({
-      where: { id: input.companyId },
+      where: { id: companyId },
       attributes: ['id', 'name', 'nationalId'],
       transaction: null,
     })
     if (!company) {
-      throw new NotFoundException(`Company ${input.companyId} not found`)
+      throw new NotFoundException(`Company ${companyId} not found`)
+    }
+
+    // The key is the only guard against a second send, and it is checked
+    // only by exact match. A key that does not name this kind and company is
+    // a caller bug that would slip past that guard (or trip another
+    // delivery's), so it is refused before any row is written.
+    const prefix = mailboxDeliveryIdempotencyKeyPrefix(input.kind, company.id)
+    if (
+      !input.idempotencyKey.startsWith(prefix) ||
+      input.idempotencyKey.length === prefix.length
+    ) {
+      throw new InternalServerErrorException(
+        'A mailbox delivery idempotency key must be built with buildMailboxDeliveryIdempotencyKey for this kind and company',
+      )
     }
 
     const row = await this.findOrInsert(input, company)
@@ -243,7 +263,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       )
     }
 
-    if (row.companyId !== input.companyId || row.kind !== input.kind) {
+    if (row.companyId !== company.id || row.kind !== input.kind) {
       throw new ConflictException(
         `Idempotency key already used by delivery ${row.id} for a different company or kind`,
       )
@@ -259,7 +279,8 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
    * the send's result into a row a person has already been told to check.
    * Otherwise a row is sent when its status is SENT or `sent_at` is set;
    * `island_is_document_id` says nothing, since One may confirm a send
-   * without an id.
+   * without an id. `mailbox_delivery_sent_at_chk` already forbids `sent_at` on
+   * any other status; the `sentAt` test is kept as defence in depth.
    */
   private settledResult(
     row: MailboxDeliveryModel,
@@ -712,7 +733,11 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
           status: outcome,
           inFlightStep: null,
           lastError: describeError(error),
-          lastErrorNumber: isOneSystemsError(error) ? error.errorNumber : null,
+          // The loggable form, never the raw value: an ErrorNumber that could
+          // be a kennitala is stored withheld, like it is logged.
+          lastErrorNumber: isOneSystemsError(error)
+            ? (toLoggableErrorNumber(error.errorNumber) ?? null)
+            : null,
           leaseToken: null,
           leaseExpiresAt: null,
         },

@@ -21,7 +21,7 @@ export {
 } from './lib/onesystems.service.interface'
 export {
   ONESYSTEMS_REQUEST_TIMEOUT_MS,
-  ONESYSTEMS_SEND_DOC_TIMEOUT_MS,
+  ONESYSTEMS_DOCUMENT_TIMEOUT_MS,
   oneSystemsTimeoutMs,
 } from './lib/onesystems.config'
 export {

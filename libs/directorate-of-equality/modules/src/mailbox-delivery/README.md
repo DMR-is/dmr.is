@@ -13,21 +13,30 @@ consumer of the client must check the flag itself.
 ## For callers
 
 - Build the key with `buildMailboxDeliveryIdempotencyKey`. Its format is
-  `mailbox-delivery:v1:<kind>:<companyId>:<discriminator>`. The discriminator
-  must come from stored data, e.g. the report kind and its due date as
-  `YYYYMMDD`. The key is the only guard against sending the same notice twice.
-- Deliver **sequentially**, and **outside any transaction**, including an
-  advisory-lock transaction. Every state write takes its own pool connection
-  (`transaction: null`), so it cannot be rolled back with the caller's work.
-  A caller holding a transaction's connection, or running deliveries in
-  parallel, can exhaust the pool (`max: 5`).
+  `mailbox-delivery:v1:<kind>:<companyId>:<discriminator>`. The company id is
+  lowercased and the discriminator upper-cased (1-64 letters, digits, `.`,
+  `_` or `-`), so `salary-20270301` and `SALARY-20270301` give the same key.
+  The discriminator must come from stored data, e.g. the report kind and its
+  due date as `YYYYMMDD`. The key is the only guard against sending the same
+  notice twice. `deliverToMailbox` refuses, before writing anything, a key
+  that does not start with `mailbox-delivery:v1:<kind>:<companyId>:` for the
+  call's own kind and company.
+- Deliver **sequentially**: await one delivery before starting the next.
+  Every state write takes its own pool connection (`transaction: null`), so it
+  cannot be rolled back with the caller's work. Holding a transaction while
+  calling it, such as the cron lock (`pg_try_advisory_xact_lock` inside
+  `sequelize.transaction()`), is allowed and costs one extra pool connection.
+  Deliveries run in parallel each take one more and can exhaust the pool
+  (`max: 5`).
 - The company must already be committed.
 - A failure is recorded on the row (FAILED or UNCERTAIN) and rethrown.
 - `last_error` is cut to 500 characters and may contain One's own
   `ErrorMessage`, which can echo the recipient's kennitala, name or the
   subject. Never put it in a log or show it in a UI unfiltered.
-  `last_error_number` is One's raw `ErrorNumber`; log it only through
-  `toLoggableErrorNumber` from `@dmr.is/clients-onesystems`.
+  `last_error_number` is One's `ErrorNumber` as `toLoggableErrorNumber` from
+  `@dmr.is/clients-onesystems` returns it: the code itself, or
+  `[not a code, withheld]` when it is not code-shaped or contains anything
+  kennitala-shaped. The raw value is never stored.
 
 ## Statuses
 
@@ -180,7 +189,8 @@ the id is in the logs.
    A `FAILED` row is resumed by the next `deliverToMailbox` call with **the
    same idempotency key**. The CHECK constraints reject a status that gets
    ahead of its ids. For example, SENT needs `one_case_item_id`,
-   `one_document_item_id` and `sent_at`.
+   `one_document_item_id` and `sent_at`, and a row with `sent_at` can only be
+   SENT or UNCERTAIN, never FAILED (which would be resumed and sent again).
 
 ### Never mint a new idempotency key to "retry"
 

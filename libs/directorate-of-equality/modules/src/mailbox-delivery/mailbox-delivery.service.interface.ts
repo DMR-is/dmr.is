@@ -4,8 +4,9 @@ export interface DeliverToMailboxInput {
   /**
    * One per company per notice per period: build it with
    * `buildMailboxDeliveryIdempotencyKey`. A repeat call with the same key
-   * resumes the same delivery instead of starting a second one. Reusing a key
-   * for a different company or kind is a conflict.
+   * resumes the same delivery instead of starting a second one. A key that
+   * does not start with `mailbox-delivery:v1:<kind>:<companyId>:` for this
+   * call's own `kind` and company is refused before anything is written.
    *
    * This key is the only guard against a duplicate send. Never mint a new one
    * to "retry" an UNCERTAIN delivery: that starts a second delivery of a notice
@@ -64,11 +65,14 @@ export type DeliverToMailboxResult =
  * Because of that the company must already be committed: call it from a cron
  * or after commit, not inside the transaction that created the company.
  *
- * Callers must deliver SEQUENTIALLY (await one delivery before starting the
- * next) and OUTSIDE any transaction, including an advisory-lock
- * transaction. Every state write takes its own pool connection
- * (`transaction: null`), so a caller that holds a transaction's connection, or
- * runs deliveries in parallel, can exhaust the pool (`max: 5`) and stall.
+ * Callers must deliver SEQUENTIALLY: await one delivery before starting the
+ * next. Every state write takes its own pool connection (`transaction: null`)
+ * and returns it at once, so one delivery holds at most one connection at a
+ * time. Calling it while holding a transaction, such as the repo's cron lock
+ * (`pg_try_advisory_xact_lock` inside `sequelize.transaction()`), is allowed:
+ * it costs one extra pool connection (two in use, of `max: 5`), and none of
+ * these writes is part of that transaction or rolled back with it. Deliveries
+ * run in parallel each take one more, and can exhaust the pool.
  *
  * Gated by `ONESYSTEMS_ENABLED`: the OneSystems client itself is not, so this
  * service is where the kill switch lives.

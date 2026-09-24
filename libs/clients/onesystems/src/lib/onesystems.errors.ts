@@ -27,11 +27,14 @@ export type OneSystemsOperation =
  *   One's action handler). `isValidationProblemBody` says whether it was
  *   ASP.NET's automatic model-validation `ValidationProblemDetails` (which
  *   means it did not). `hasEmptyBody` says whether there was no body at all
- *   (or only whitespace), which is how ASP.NET's own pipeline rejects a 401,
- *   403 or 404 before the action. Any other body (plain text, HTML, a bare
- *   `ProblemDetails`) says nothing about whether the action ran.
- * - `TRANSPORT`: no response arrived at all: a network error, a DNS or TLS
- *   failure, or the request timeout. One may or may not have acted on the call.
+ *   (or only whitespace), and `hasBearerChallenge` whether an empty 401 also
+ *   carried a `WWW-Authenticate: Bearer` challenge, which is how ASP.NET's
+ *   JwtBearer handler rejects a token before the action. An empty body alone
+ *   proves nothing (see {@link isDefinitiveOneSystemsFailure}), and neither
+ *   does any other body (plain text, HTML, a bare `ProblemDetails`).
+ * - `TRANSPORT`: no usable response: a network error, a DNS or TLS failure,
+ *   the request timeout, or a response whose body could not be read (then
+ *   `upstreamStatus` is set). One may or may not have acted on the call.
  * - `UNEXPECTED_RESPONSE`: a 2xx arrived but could not be trusted: the body was
  *   not a recognisable response, `Success` was missing, or `Success: true` came
  *   without the `ItemID` the call exists to produce. One may well have acted
@@ -68,10 +71,18 @@ export interface OneSystemsErrorDetails {
   /**
    * For `HTTP`: true when the non-2xx response had no body at all, or only
    * whitespace. ASP.NET's own pipeline rejections (the JwtBearer challenge, an
-   * authorization failure, no matching route) answer that way; anything an
-   * action returns under `[ApiController]` has a body.
+   * authorization failure, no matching route) answer that way, but so can an
+   * action: `NotFound(null)` and `Unauthorized(null)` keep their status with
+   * an empty body, and `Forbid()` / `Challenge()` go through the auth handler,
+   * which writes an empty 403 / 401. On its own it proves nothing.
    */
   hasEmptyBody?: boolean
+  /**
+   * For `HTTP`: true when the response was a 401 with an empty body AND a
+   * `WWW-Authenticate` header whose scheme is Bearer. The JwtBearer challenge
+   * always sets that header; an in-action `Unauthorized(null)` does not.
+   */
+  hasBearerChallenge?: boolean
   /** One's `ErrorNumber`, when its response carried one. */
   errorNumber?: string | null
   /** One's `ErrorMessage`, when its response carried one. Never logged. */
@@ -89,6 +100,7 @@ export interface OneSystemsErrorJson {
   hasGeneralResponseBody: boolean
   isValidationProblemBody: boolean
   hasEmptyBody: boolean
+  hasBearerChallenge: boolean
   /** Passed through {@link toLoggableErrorNumber}. */
   errorNumber?: string
 }
@@ -101,9 +113,10 @@ export interface OneSystemsErrorJson {
  * of which may contain a kennitala or a name); read `errorMessage` for One's
  * text, and never log it.
  *
- * The exception filters log the whole exception object, so `errorMessage` and
- * `errorNumber` are non-enumerable: the logger's PII masking and object spread
- * skip them, `toJSON()` returns only {@link OneSystemsErrorJson}, and
+ * The exception filters log the whole exception object, so `errorMessage`,
+ * `errorNumber` and `cause` are non-enumerable (as is `HttpException`'s own
+ * `options`, which holds the cause too): the logger's PII masking and object
+ * spread skip them, `toJSON()` returns only {@link OneSystemsErrorJson}, and
  * `util.inspect` prints the same fields plus the cause's name only (a cause's
  * message, such as a parse error's, can quote a response body). They stay
  * readable as properties.
@@ -119,6 +132,7 @@ export class OneSystemsError extends BadGatewayException {
   readonly hasGeneralResponseBody: boolean
   readonly isValidationProblemBody: boolean
   readonly hasEmptyBody: boolean
+  readonly hasBearerChallenge: boolean
   /**
    * One's raw `ErrorNumber`. Non-enumerable; log it only through
    * {@link toLoggableErrorNumber}.
@@ -136,6 +150,12 @@ export class OneSystemsError extends BadGatewayException {
     this.hasGeneralResponseBody = details.hasGeneralResponseBody ?? false
     this.isValidationProblemBody = details.isValidationProblemBody ?? false
     this.hasEmptyBody = details.hasEmptyBody ?? false
+    this.hasBearerChallenge = details.hasBearerChallenge ?? false
+    // `HttpException` assigns both as ordinary (enumerable) fields, so an
+    // object spread or a logger walking own keys would reach the cause's
+    // message. Keep them readable, but hide them.
+    hideOwnProperty(this, 'cause')
+    hideOwnProperty(this, 'options')
     Object.defineProperty(this, 'errorNumber', {
       value: details.errorNumber ?? null,
       enumerable: false,
@@ -160,6 +180,7 @@ export class OneSystemsError extends BadGatewayException {
       hasGeneralResponseBody: this.hasGeneralResponseBody,
       isValidationProblemBody: this.isValidationProblemBody,
       hasEmptyBody: this.hasEmptyBody,
+      hasBearerChallenge: this.hasBearerChallenge,
       errorNumber: toLoggableErrorNumber(this.errorNumber),
     }
   }
@@ -175,6 +196,14 @@ export class OneSystemsError extends BadGatewayException {
     // The stack's first line is `name: message`, which we wrote.
     const head = this.stack ?? `${name}: ${message}`
     return `${head} ${inspect({ ...fields, causeName })}`
+  }
+}
+
+/** Makes an own property non-enumerable, keeping its value. */
+function hideOwnProperty(target: object, key: string): void {
+  const descriptor = Object.getOwnPropertyDescriptor(target, key)
+  if (descriptor) {
+    Object.defineProperty(target, key, { ...descriptor, enumerable: false })
   }
 }
 
@@ -206,15 +235,16 @@ export const ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS: Readonly<
 })
 
 /**
- * HTTP statuses that mean the request never reached a One action handler,
- * provided the response body is empty. ASP.NET's pipeline (the JwtBearer
- * challenge, authorization, routing) rejects with an empty body; under
- * `[ApiController]` a bare `Unauthorized()`, `Forbid()` or `NotFound()` returned
- * from inside the action becomes a `ProblemDetails` body, so any body at all
- * (a `GeneralResponse` or a `ProblemDetails`) means the action may have run.
+ * TODO(OneSystems): can any One action return an empty-bodied 401/403/404, or
+ * a ValidationProblem, AFTER it has filed/sent? Is the 401 challenge body
+ * empty and does it carry `WWW-Authenticate: Bearer`?
+ *
+ * The rule below assumes: no (an action never calls `Challenge()` or returns
+ * a model-validation body once it has acted), and yes (the JwtBearer
+ * challenge is an empty 401 with `WWW-Authenticate: Bearer`). If the
+ * challenge turns out not to carry the header, every expired token on
+ * CreateDocument or SendDocToIslandIs ends UNCERTAIN (never a duplicate).
  */
-const NEVER_REACHED_ACTION_STATUSES: ReadonlyArray<number> = [401, 403, 404]
-
 /**
  * True when One certainly did NOT act on the action call, so repeating it
  * cannot create a duplicate. False when the outcome is unknown, and for any
@@ -226,25 +256,35 @@ const NEVER_REACHED_ACTION_STATUSES: ReadonlyArray<number> = [401, 403, 404]
  *
  * `CreateCase` and `CloseCase` (find-or-create and a status change, so a
  * repeat is not expected to duplicate anything):
- * - definitive: `REJECTED`, and `HTTP` with a 4xx status (this includes a 401
- *   that persisted after the one token refresh);
- * - not definitive: `TRANSPORT`, `HTTP` with a 5xx (or no) status, and
- *   `UNEXPECTED_RESPONSE`.
+ * - definitive: `REJECTED`, and `HTTP` with a 4xx status, with or without a
+ *   body (this includes a 401 that persisted after the one token refresh);
+ * - not definitive: `TRANSPORT` (including a response whose body could not be
+ *   read), `HTTP` with a 5xx (or no) status, and `UNEXPECTED_RESPONSE`.
  *
  * `CreateDocument` and `SendDocToIslandIs` (not idempotent: a wrong "definitive"
- * files or delivers a statutory notice twice):
- * - definitive only when the request never reached the action: `HTTP` 401,
- *   403 or 404 with an EMPTY body (whitespace only counts as empty), or an
- *   `HTTP` 400 whose body is ASP.NET's `ValidationProblemDetails` (automatic
- *   model validation, which runs before the action). A 401, 403 or 404 with
- *   any body, a `GeneralResponse` or a `ProblemDetails`, may have come from
- *   inside the action, which may already have filed or sent, so it is not
- *   definitive. A 400 with any other body (empty, plain text, HTML, a
- *   `ProblemDetails` without `errors`) is not definitive either: an action can
- *   return `BadRequest(...)` after One has already called island.is;
- * - everything else (`REJECTED`, other 4xx, 5xx, `TRANSPORT`,
- *   `UNEXPECTED_RESPONSE`) is not definitive unless its `errorNumber` is in
- *   {@link ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS} for that operation.
+ * files or delivers a statutory notice twice), definitive only when the
+ * request never reached the action:
+ * - (a) `HTTP` 401 with an EMPTY body (whitespace only counts as empty) AND a
+ *   `WWW-Authenticate` header whose scheme is Bearer (`hasBearerChallenge`):
+ *   the JwtBearer challenge, which always sets that header. An in-action
+ *   `Unauthorized(null)` is an empty 401 without it, so an empty body alone
+ *   is not enough;
+ * - (b) `HTTP` 400 whose body is ASP.NET's `ValidationProblemDetails`
+ *   (automatic model validation, which runs before the action).
+ *
+ * Nothing else is, unless its `errorNumber` is in
+ * {@link ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS} for that operation:
+ * - an empty 403 or 404 is not: `Forbid()` from inside an action goes through
+ *   the auth handler and is an empty 403, and `NotFound(null)` is an empty
+ *   404. A wrong base URL or a missing permission is already caught,
+ *   definitively, at CreateCase, which is idempotent and runs first;
+ * - a 401, 403 or 404 with any body, a `GeneralResponse` or a
+ *   `ProblemDetails`, may have come from inside the action;
+ * - a 400 with any other body (empty, plain text, HTML, a `ProblemDetails`
+ *   without `errors`): an action can return `BadRequest(...)` after One has
+ *   already called island.is;
+ * - `REJECTED`, other 4xx, 5xx, `TRANSPORT` (including an unreadable error
+ *   body) and `UNEXPECTED_RESPONSE`.
  */
 export function isDefinitiveOneSystemsFailure(error: unknown): boolean {
   return isDefinitiveOneSystemsFailureGiven(
@@ -295,12 +335,10 @@ export function isDefinitiveOneSystemsFailureGiven(
   }
 }
 
+/** Rules (a) and (b) of {@link isDefinitiveOneSystemsFailure}. */
 function neverReachedAction(error: OneSystemsError): boolean {
-  if (error.upstreamStatus === undefined) {
-    return false
-  }
-  if (NEVER_REACHED_ACTION_STATUSES.includes(error.upstreamStatus)) {
-    return error.hasEmptyBody
+  if (error.upstreamStatus === 401) {
+    return error.hasEmptyBody && error.hasBearerChallenge
   }
   return error.upstreamStatus === 400 && error.isValidationProblemBody
 }
@@ -311,25 +349,37 @@ function isClientErrorStatus(status: number | undefined): boolean {
 
 /**
  * A One `ErrorNumber` is loggable only when it looks like a code. Anything
- * else might be free text echoing input. A bare ten-digit value, or six digits,
- * a hyphen and four digits, is withheld too: it could be a kennitala.
+ * else might be free text echoing input.
  */
-const LOGGABLE_ERROR_NUMBER = /^(?!\d{6}-?\d{4}$)[A-Za-z0-9._-]{1,32}$/
+const LOGGABLE_ERROR_NUMBER = /^[A-Za-z0-9._-]{1,32}$/
+
+/**
+ * Anything that could hold a kennitala, anywhere in the value: a run of nine
+ * or more digits, or six digits, an optional hyphen and four digits. Withheld
+ * even inside a code-shaped value (`E0101302989`, `0101302989_1`,
+ * `010130-2989x`).
+ */
+const KENNITALA_SHAPED = /\d{9,}|\d{6}-?\d{4}/
+
+/** True when `value` contains nothing that could be a kennitala. */
+export function hasNoKennitalaShape(value: string): boolean {
+  return !KENNITALA_SHAPED.test(value)
+}
 
 /** What {@link toLoggableErrorNumber} logs in place of a withheld value. */
 export const WITHHELD_ERROR_NUMBER = '[not a code, withheld]'
 
-/** True when `value` is code-shaped and cannot be a kennitala. */
+/** True when `value` is code-shaped and contains nothing kennitala-shaped. */
 export function isLoggableCode(value: string): boolean {
-  return LOGGABLE_ERROR_NUMBER.test(value)
+  return LOGGABLE_ERROR_NUMBER.test(value) && hasNoKennitalaShape(value)
 }
 
 /**
  * The form of One's `ErrorNumber` that may go in a log line: the value itself
  * when it is code-shaped, {@link WITHHELD_ERROR_NUMBER} when it is anything
- * else, and `undefined` when there is none. Every log line that carries an
- * `errorNumber`, in this client or a consumer, must pass it through here; the
- * raw value stays on the error object.
+ * else, and `undefined` when there is none. Every log line, and every stored
+ * copy, of an `errorNumber`, in this client or a consumer, must pass it
+ * through here; the raw value stays on the error object only.
  */
 export function toLoggableErrorNumber(
   value: string | null | undefined,

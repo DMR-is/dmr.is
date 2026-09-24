@@ -162,7 +162,11 @@ export class MailboxDeliveryModel extends MutableModel<
   @Column({ type: DataType.TEXT, allowNull: true, field: 'last_error' })
   lastError!: string | null
 
-  /** One's `ErrorNumber` from the most recent failure. */
+  /**
+   * One's `ErrorNumber` from the most recent failure, as
+   * `toLoggableErrorNumber` returns it: the code, or a withheld marker when it
+   * is not code-shaped or could hold a kennitala. Never the raw value.
+   */
   @Column({ type: DataType.TEXT, allowNull: true, field: 'last_error_number' })
   lastErrorNumber!: string | null
 

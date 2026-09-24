@@ -71,6 +71,10 @@ describe('isDefinitiveOneSystemsFailure', () => {
         { reason: 'HTTP', upstreamStatus: 403, hasGeneralResponseBody: true },
         true,
       ],
+      // Empty 401/403/404: still definitive for a call that is safe to repeat.
+      [{ reason: 'HTTP', upstreamStatus: 401, hasEmptyBody: true }, true],
+      [{ reason: 'HTTP', upstreamStatus: 403, hasEmptyBody: true }, true],
+      [{ reason: 'HTTP', upstreamStatus: 404, hasEmptyBody: true }, true],
       [{ reason: 'HTTP', upstreamStatus: 500 }, false],
       [{ reason: 'HTTP' }, false],
       [{ reason: 'TRANSPORT' }, false],
@@ -86,12 +90,58 @@ describe('isDefinitiveOneSystemsFailure', () => {
     '%s',
     (operation) => {
       it.each([
-        // Only an empty body proves ASP.NET's pipeline rejected it before
-        // the action ran.
-        [{ reason: 'HTTP', upstreamStatus: 401, hasEmptyBody: true }, true],
-        [{ reason: 'HTTP', upstreamStatus: 403, hasEmptyBody: true }, true],
-        [{ reason: 'HTTP', upstreamStatus: 404, hasEmptyBody: true }, true],
-        // Any body (a ProblemDetails from a bare Unauthorized() / Forbid() /
+        // (a) Only the JwtBearer challenge, an empty 401 WITH a Bearer
+        // WWW-Authenticate, proves the pipeline rejected it before the action.
+        [
+          {
+            reason: 'HTTP',
+            upstreamStatus: 401,
+            hasEmptyBody: true,
+            hasBearerChallenge: true,
+          },
+          true,
+        ],
+        // An empty 401 without the header is an in-action Unauthorized(null).
+        [{ reason: 'HTTP', upstreamStatus: 401, hasEmptyBody: true }, false],
+        // The flag alone, without an empty body, is not enough.
+        [
+          { reason: 'HTTP', upstreamStatus: 401, hasBearerChallenge: true },
+          false,
+        ],
+        // An empty 403 (Forbid() goes through the auth handler) or 404
+        // (NotFound(null)) can come from inside the action.
+        [{ reason: 'HTTP', upstreamStatus: 403, hasEmptyBody: true }, false],
+        [{ reason: 'HTTP', upstreamStatus: 404, hasEmptyBody: true }, false],
+        [
+          {
+            reason: 'HTTP',
+            upstreamStatus: 403,
+            hasEmptyBody: true,
+            hasBearerChallenge: true,
+          },
+          false,
+        ],
+        [
+          {
+            reason: 'HTTP',
+            upstreamStatus: 404,
+            hasEmptyBody: true,
+            hasBearerChallenge: true,
+          },
+          false,
+        ],
+        // A body-read failure is TRANSPORT, whatever the status.
+        [{ reason: 'TRANSPORT', upstreamStatus: 400 }, false],
+        [
+          {
+            reason: 'TRANSPORT',
+            upstreamStatus: 401,
+            hasEmptyBody: true,
+            hasBearerChallenge: true,
+          },
+          false,
+        ],
+        // Any body (a ProblemDetails from a bare Unauthorized() or
         // NotFound(), plain text, ...) may come from inside the action.
         [{ reason: 'HTTP', upstreamStatus: 401 }, false],
         [{ reason: 'HTTP', upstreamStatus: 403 }, false],
@@ -204,7 +254,7 @@ describe('isDefinitiveOneSystemsFailure', () => {
 })
 
 describe('toLoggableErrorNumber', () => {
-  it.each(['17', '42', 'E-42', 'ERR_NOT_FOUND', 'v1.2', '123456789'])(
+  it.each(['17', '42', 'E-42', 'ERR_NOT_FOUND', 'v1.2', '12345678', '12-3456'])(
     'logs the code-shaped %p as it is',
     (value) => {
       expect(toLoggableErrorNumber(value)).toBe(value)
@@ -215,6 +265,16 @@ describe('toLoggableErrorNumber', () => {
     // A kennitala, bare and hyphenated (the fake 010130 test prefix).
     '0101302989',
     '010130-2989',
+    // ... or one inside an otherwise code-shaped value.
+    'E0101302989',
+    '0101302989_1',
+    '010130-2989x',
+    'ERR-010130-2989',
+    '0101302989.1',
+    // Nine or more digits anywhere (a stringified numeric ErrorNumber too).
+    '123456789',
+    'E123456789',
+    '1234567890123',
     // Free text that may echo input.
     'Viðtakandi fannst ekki',
     'a b',
@@ -244,6 +304,11 @@ describe('OneSystemsError serialisation', () => {
     'getResponse()': JSON.stringify(e.getResponse()),
     message: e.message,
     'object spread': JSON.stringify({ ...e }),
+    'util.inspect(object spread)': inspect({ ...e }, { depth: 10 }),
+    'util.inspect(object spread, showHidden)': inspect(
+      { ...e },
+      { depth: 10, showHidden: true },
+    ),
   })
 
   const leaky = (errorNumber: string) =>
@@ -271,6 +336,39 @@ describe('OneSystemsError serialisation', () => {
       }
     },
   )
+
+  it('an object spread carries no raw ErrorNumber, ErrorMessage or cause', () => {
+    const e = leaky(KENNITALA)
+    const spread: Record<string, unknown> = { ...e }
+
+    expect(spread).not.toHaveProperty('cause')
+    expect(spread).not.toHaveProperty('options')
+    expect(spread).not.toHaveProperty('errorNumber')
+    expect(spread).not.toHaveProperty('errorMessage')
+    const text = inspect(spread, { depth: 10 })
+    expect(text).not.toContain(KENNITALA)
+    expect(text).not.toContain(ECHO)
+    expect(text).not.toContain('Unexpected token')
+    // The safe fields are still there.
+    expect(spread).toMatchObject({ operation: 'SendDocToIslandIs' })
+  })
+
+  it('keeps the cause readable, but not enumerable', () => {
+    const cause = new SyntaxError('x')
+    const e = new OneSystemsError('m', {
+      operation: 'CreateCase',
+      reason: 'TRANSPORT',
+      cause,
+    })
+
+    expect(e.cause).toBe(cause)
+    expect(Object.keys(e)).not.toContain('cause')
+    expect(Object.keys(e)).not.toContain('options')
+    expect(
+      new OneSystemsError('m', { operation: 'CreateCase', reason: 'TRANSPORT' })
+        .cause,
+    ).toBeUndefined()
+  })
 
   it('keeps the raw values readable as properties, but not enumerable or writable', () => {
     const e = leaky(KENNITALA)
@@ -307,6 +405,7 @@ describe('OneSystemsError serialisation', () => {
       hasGeneralResponseBody: false,
       isValidationProblemBody: false,
       hasEmptyBody: true,
+      hasBearerChallenge: false,
       errorNumber: 'E-17',
     })
     expect(leaky(KENNITALA).toJSON().errorNumber).toBe(WITHHELD_ERROR_NUMBER)

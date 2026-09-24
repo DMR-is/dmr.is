@@ -87,8 +87,9 @@ export interface OneSystemsCloseCaseResult {
 /**
  * The OneExternalAPI actions. Each call logs in first if there is no valid
  * token and retries once with a fresh token on a 401 (for CreateDocument and
- * SendDocToIslandIs, only on a 401 with an empty body). Every request has its
- * own timeout: 30s, except SendDocToIslandIs which gets 120s.
+ * SendDocToIslandIs, only on the JwtBearer challenge: an empty-bodied 401 with
+ * `WWW-Authenticate: Bearer`). Every request has its own timeout: 30s, except
+ * CreateDocument and SendDocToIslandIs, which get 120s.
  *
  * Every failure is thrown as a `OneSystemsError`; use
  * `isDefinitiveOneSystemsFailure()` to tell "One certainly did not act" apart

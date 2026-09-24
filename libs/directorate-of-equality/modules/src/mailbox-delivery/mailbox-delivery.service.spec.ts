@@ -9,8 +9,8 @@ import {
 
 import {
   IOneSystemsService,
+  ONESYSTEMS_DOCUMENT_TIMEOUT_MS,
   ONESYSTEMS_REQUEST_TIMEOUT_MS,
-  ONESYSTEMS_SEND_DOC_TIMEOUT_MS,
   OneSystemsError,
   type OneSystemsOperation,
   oneSystemsTimeoutMs,
@@ -21,6 +21,7 @@ import {
   MailboxDeliveryStatusEnum,
   MailboxDeliveryStepEnum,
 } from './models/mailbox-delivery.enums'
+import { buildMailboxDeliveryIdempotencyKey } from './mailbox-delivery.idempotency-key'
 import {
   MAILBOX_DELIVERY_KINDS,
   type MailboxDeliveryKindConfigs,
@@ -35,10 +36,20 @@ import { DeliverToMailboxInput } from './mailbox-delivery.service.interface'
 
 /** Placeholder kennitala: shape only, never checksum-valid. */
 const COMPANY = {
-  id: 'company-1',
+  id: '5f0c2f7e-9d2b-4c55-8f0a-2b7c8b1e4a10',
   name: 'Fyrirtæki ehf.',
   nationalId: '1111111111',
 }
+
+const OTHER_COMPANY_ID = '6a1d3f8f-0e3c-4d66-9f1b-3c8d9c2f5b21'
+
+const keyFor = (
+  discriminator: string,
+  kind = MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+  companyId = COMPANY.id,
+) => buildMailboxDeliveryIdempotencyKey({ kind, companyId, discriminator })
+
+const KEY = keyFor('SALARY-20270301')
 
 const CONFIG = {
   caseType: 'case-type',
@@ -139,7 +150,7 @@ function createStore() {
       companyId: COMPANY.id,
       nationalId: COMPANY.nationalId,
       kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
-      idempotencyKey: 'key-1',
+      idempotencyKey: KEY,
       subject: 'Áminning',
       status: MailboxDeliveryStatusEnum.PENDING,
       inFlightStep: null,
@@ -224,7 +235,11 @@ const transport = (operation: OneSystemsOperation) =>
 const http = (
   operation: OneSystemsOperation,
   upstreamStatus: number,
-  body: { isValidationProblemBody?: boolean; hasEmptyBody?: boolean } = {},
+  body: {
+    isValidationProblemBody?: boolean
+    hasEmptyBody?: boolean
+    hasBearerChallenge?: boolean
+  } = {},
 ) =>
   new OneSystemsError(`${operation} answered ${upstreamStatus}`, {
     operation,
@@ -261,7 +276,7 @@ describe('MailboxDeliveryService', () => {
   const input = (
     overrides: Partial<DeliverToMailboxInput> = {},
   ): DeliverToMailboxInput => ({
-    idempotencyKey: 'key-1',
+    idempotencyKey: KEY,
     kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
     companyId: COMPANY.id,
     subject: 'Áminning',
@@ -455,14 +470,14 @@ describe('MailboxDeliveryService', () => {
             companyId: COMPANY.id,
             nationalId: COMPANY.nationalId,
             kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
-            idempotencyKey: 'key-1',
+            idempotencyKey: KEY,
             subject: 'Áminning',
           },
         ],
         { ignoreDuplicates: true, transaction: null },
       )
       expect(store.model.findOne).toHaveBeenCalledWith({
-        where: { idempotencyKey: 'key-1' },
+        where: { idempotencyKey: KEY },
         transaction: null,
       })
       expect(store.model).not.toHaveProperty('findOrCreate')
@@ -570,7 +585,7 @@ describe('MailboxDeliveryService', () => {
     })
 
     it('rejects a key reused for another company', async () => {
-      store.seed({ companyId: 'company-2', nationalId: '2222222222' })
+      store.seed({ companyId: OTHER_COMPANY_ID, nationalId: '2222222222' })
 
       await expect(service.deliverToMailbox(input())).rejects.toThrow(
         ConflictException,
@@ -587,6 +602,67 @@ describe('MailboxDeliveryService', () => {
         ConflictException,
       )
       expect(oneCalls()).toBe(0)
+    })
+
+    it.each([
+      ['a hand-built key', 'key-1'],
+      [
+        'a key for another kind',
+        keyFor('SALARY-20270301', MailboxDeliveryKindEnum.FINES_PRECURSOR),
+      ],
+      [
+        'a key for another company',
+        keyFor(
+          'SALARY-20270301',
+          MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+          OTHER_COMPANY_ID,
+        ),
+      ],
+      [
+        'a key for an older format',
+        `mailbox-delivery:v0:OVERDUE_NOTICE:${COMPANY.id}:SALARY-20270301`,
+      ],
+      [
+        'a key with the upper-case company id',
+        `mailbox-delivery:v1:OVERDUE_NOTICE:${COMPANY.id.toUpperCase()}:SALARY-20270301`,
+      ],
+      [
+        'the prefix with no discriminator',
+        `mailbox-delivery:v1:OVERDUE_NOTICE:${COMPANY.id}:`,
+      ],
+    ])(
+      'refuses %s before writing a row or calling One',
+      async (_label, idempotencyKey) => {
+        await expect(
+          service.deliverToMailbox(input({ idempotencyKey })),
+        ).rejects.toThrow(InternalServerErrorException)
+
+        expect(store.model.bulkCreate).not.toHaveBeenCalled()
+        expect(store.model.update).not.toHaveBeenCalled()
+        expect(store.rows.size).toBe(0)
+        expect(pdf).not.toHaveBeenCalled()
+        expect(oneCalls()).toBe(0)
+      },
+    )
+
+    it('looks the company up by its lowercased id and stores the id the DB returned', async () => {
+      await service.deliverToMailbox(
+        input({ companyId: COMPANY.id.toUpperCase() }),
+      )
+
+      expect(companies.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: COMPANY.id } }),
+      )
+      expect(onlyRow()).toMatchObject({
+        companyId: COMPANY.id,
+        status: MailboxDeliveryStatusEnum.SENT,
+      })
+
+      // A repeat with the id in either case resumes the same row.
+      await expect(
+        service.deliverToMailbox(input({ companyId: COMPANY.id })),
+      ).resolves.toMatchObject({ status: 'SENT', alreadySent: true })
+      expect(oneCalls()).toBe(3)
     })
 
     it('throws NotFound for an unknown company and writes no row', async () => {
@@ -941,6 +1017,20 @@ describe('MailboxDeliveryService', () => {
         ['a 401 with a body', () => http(operation, 401)],
         ['a 403 with a body', () => http(operation, 403)],
         ['a 404 with a body', () => http(operation, 404)],
+        // An empty body alone proves nothing: Unauthorized(null),
+        // NotFound(null) and Forbid() from inside the action look like this.
+        [
+          'an empty-body 401 without a Bearer challenge',
+          () => http(operation, 401, { hasEmptyBody: true }),
+        ],
+        [
+          'an empty-body 403',
+          () => http(operation, 403, { hasEmptyBody: true }),
+        ],
+        [
+          'an empty-body 404',
+          () => http(operation, 404, { hasEmptyBody: true }),
+        ],
         ['a 409', () => http(operation, 409)],
         ['a 5xx', () => http(operation, 503)],
         ['no answer', () => transport(operation)],
@@ -974,16 +1064,12 @@ describe('MailboxDeliveryService', () => {
 
       it.each([
         [
-          'an empty-body 401',
-          () => http(operation, 401, { hasEmptyBody: true }),
-        ],
-        [
-          'an empty-body 403',
-          () => http(operation, 403, { hasEmptyBody: true }),
-        ],
-        [
-          'an empty-body 404',
-          () => http(operation, 404, { hasEmptyBody: true }),
+          'the JwtBearer challenge (an empty 401 with WWW-Authenticate: Bearer)',
+          () =>
+            http(operation, 401, {
+              hasEmptyBody: true,
+              hasBearerChallenge: true,
+            }),
         ],
         [
           'a 400 model-validation body',
@@ -1363,7 +1449,7 @@ describe('MailboxDeliveryService', () => {
         ['CreateDocument', () => one.createDocument],
         ['SendDocToIslandIs', () => one.sendDocToIslandIs],
       ] as const)(
-        'is never logged when %s fails, but is kept on the row',
+        'is never logged or stored when %s fails',
         async (operation, method) => {
           method().mockRejectedValueOnce(
             new OneSystemsError(`${operation} was rejected`, {
@@ -1385,7 +1471,8 @@ describe('MailboxDeliveryService', () => {
             }),
           )
           expect(loggerCalls()).not.toContain(kennitala)
-          expect(onlyRow().lastErrorNumber).toBe(kennitala)
+          // Stored in its loggable form too, never raw.
+          expect(onlyRow().lastErrorNumber).toBe('[not a code, withheld]')
         },
       )
     })
@@ -1429,7 +1516,11 @@ describe('MailboxDeliveryService', () => {
 
     it('reads the timeouts the client really uses', () => {
       expect(loginMs).toBe(ONESYSTEMS_REQUEST_TIMEOUT_MS)
-      expect(sendMs).toBe(ONESYSTEMS_SEND_DOC_TIMEOUT_MS)
+      expect(sendMs).toBe(ONESYSTEMS_DOCUMENT_TIMEOUT_MS)
+      // CreateDocument carries the PDF and gets the same long timeout.
+      expect(oneSystemsTimeoutMs('CreateDocument')).toBe(
+        ONESYSTEMS_DOCUMENT_TIMEOUT_MS,
+      )
       expect(sendMs).toBeGreaterThanOrEqual(
         Math.max(
           oneSystemsTimeoutMs('CreateCase'),
@@ -1478,18 +1569,22 @@ describe('MailboxDeliveryService', () => {
       await expect(service.deliverToMailbox(input())).rejects.toThrow()
 
       store.seed({
-        idempotencyKey: 'key-2',
+        idempotencyKey: keyFor('SALARY-20280301'),
         leaseToken: 'someone-else',
         leaseExpiresAt: new Date(Date.now() + MINUTE),
       })
-      await service.deliverToMailbox(input({ idempotencyKey: 'key-2' }))
+      await service.deliverToMailbox(
+        input({ idempotencyKey: keyFor('SALARY-20280301') }),
+      )
 
       store.seed({
-        idempotencyKey: 'key-3',
+        idempotencyKey: keyFor('SALARY-20290301'),
         inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
         oneCaseItemId: 'case-saved',
       })
-      await service.deliverToMailbox(input({ idempotencyKey: 'key-3' }))
+      await service.deliverToMailbox(
+        input({ idempotencyKey: keyFor('SALARY-20290301') }),
+      )
 
       expectAllOutsideTransaction()
     })

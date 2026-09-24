@@ -83,11 +83,14 @@ module.exports = {
 
       attempts INTEGER NOT NULL DEFAULT 0,
       last_attempt_at TIMESTAMPTZ DEFAULT NULL,
-      -- One's ErrorMessage (or the transport error) and ErrorNumber from
-      -- the most recent failure, the message cut to 500 characters. Never
-      -- a token or a credential, but One's text may echo the recipient's
-      -- kennitala or name: never log it or show it in a UI unfiltered.
+      -- One's ErrorMessage (or the transport error) from the most recent
+      -- failure, cut to 500 characters. Never a token or a credential, but
+      -- One's text may echo the recipient's kennitala or name: never log it
+      -- or show it in a UI unfiltered.
       last_error TEXT DEFAULT NULL,
+      -- One's ErrorNumber from the same failure, in its loggable form only
+      -- (toLoggableErrorNumber): the code, or '[not a code, withheld]' when
+      -- it is not code-shaped or could hold a kennitala.
       last_error_number TEXT DEFAULT NULL,
 
       -- A worker's claim on the row. Taken with one conditional UPDATE
@@ -131,6 +134,15 @@ module.exports = {
           AND one_document_item_id IS NOT NULL
           AND sent_at IS NOT NULL
         )
+      ),
+
+      -- sent_at says One confirmed the send, so the row is SENT, or
+      -- UNCERTAIN when a late reply landed in a row a person was already
+      -- told to check. Never FAILED or a forward state: those are resumed,
+      -- and a resume would send it again.
+      CONSTRAINT mailbox_delivery_sent_at_chk CHECK (
+        sent_at IS NULL
+        OR status IN ('SENT', 'UNCERTAIN')
       ),
 
       -- A settled row has no call in flight: every writer that sets SENT

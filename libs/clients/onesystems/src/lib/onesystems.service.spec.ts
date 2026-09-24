@@ -64,6 +64,41 @@ const problemDetails = (status = 400) =>
     { status, contentType: 'application/problem+json' },
   )
 
+/**
+ * ASP.NET's JwtBearer challenge: an empty 401 with a Bearer
+ * `WWW-Authenticate`. Written before any action runs.
+ */
+const bearerChallenge = (
+  header = 'Bearer error="invalid_token", error_description="The token expired"',
+) =>
+  new Response(null, { status: 401, headers: { 'WWW-Authenticate': header } })
+
+/** An empty 401 with no challenge: an in-action `Unauthorized(null)`. */
+const bareEmpty401 = () => new Response(null, { status: 401 })
+
+/**
+ * A non-2xx whose body starts arriving and then fails mid-stream (a reset
+ * connection). Its first chunk echoes the input, which must never be logged.
+ */
+const unreadableBody = (status: number, readError: Error) => {
+  let pulls = 0
+  return new Response(
+    new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls += 1
+        if (pulls === 1) {
+          controller.enqueue(
+            new TextEncoder().encode(`{"errors":{"IDNumber":["${NATIONAL_ID}`),
+          )
+        } else {
+          controller.error(readError)
+        }
+      },
+    }),
+    { status },
+  )
+}
+
 /** One's own body on a non-2xx: the action handler ran. */
 const generalResponse = (status: number, errorNumber = '17') =>
   json(
@@ -321,26 +356,29 @@ describe('OneSystemsService', () => {
       }
     })
 
-    it('gives SendDocToIslandIs a 120s timeout, and its Login and retry Login 30s', async () => {
-      const timeout = jest.spyOn(AbortSignal, 'timeout')
-      loginReplies = [
-        () => json({ token: TOKEN_1 }),
-        () => json({ token: TOKEN_2 }),
-      ]
-      actionReplies = [
-        () => new Response(null, { status: 401 }),
-        () => success(),
-      ]
+    it.each([
+      ['createDocument', () => createDocument()],
+      ['sendDocToIslandIs', () => sendDocToIslandIs()],
+    ])(
+      'gives %s a 120s timeout, and its Login and retry Login 30s',
+      async (_name, call) => {
+        const timeout = jest.spyOn(AbortSignal, 'timeout')
+        loginReplies = [
+          () => json({ token: TOKEN_1 }),
+          () => json({ token: TOKEN_2 }),
+        ]
+        actionReplies = [() => bearerChallenge(), () => success()]
 
-      await sendDocToIslandIs()
+        await call()
 
-      expect(timeout.mock.calls).toEqual([
-        [30_000],
-        [120_000],
-        [30_000],
-        [120_000],
-      ])
-    })
+        expect(timeout.mock.calls).toEqual([
+          [30_000],
+          [120_000],
+          [30_000],
+          [120_000],
+        ])
+      },
+    )
 
     it.each([
       ['an HTTP error', () => new Response('nope', { status: 500 }), 'HTTP'],
@@ -715,6 +753,67 @@ describe('OneSystemsService', () => {
       },
     )
 
+    it.each<[string, string, string | undefined]>([
+      ['ECONNREFUSED', 'ECONNREFUSED', 'ECONNREFUSED'],
+      ['UND_ERR_SOCKET', 'UND_ERR_SOCKET', 'UND_ERR_SOCKET'],
+      // Longer than One's ErrorNumber filter allows (33 characters).
+      [
+        'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+        'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+        'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+      ],
+      ['a 64-character code', 'E'.repeat(64), 'E'.repeat(64)],
+      ['a lower-case code', 'econnrefused', undefined],
+      ['a code with a hyphen', 'E-CONN', undefined],
+      ['a code over 64 characters', 'E'.repeat(65), undefined],
+      ['a kennitala-shaped code', `E${NATIONAL_ID}`, undefined],
+    ])(
+      'logs the transport error code %s as %p',
+      async (_label, code, logged) => {
+        actionReplies = [
+          () =>
+            Promise.reject(
+              new TypeError('fetch failed', {
+                cause: Object.assign(new Error('x'), { code }),
+              }),
+            ),
+        ]
+
+        await caught(createCase())
+
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('no usable response'),
+          expect.objectContaining({
+            errorName: 'TypeError',
+            errorCode: logged,
+          }),
+        )
+      },
+    )
+
+    it.each([
+      [42, '42', '42'],
+      [123456789, '123456789', '[not a code, withheld]'],
+      [101302989, '101302989', '[not a code, withheld]'],
+    ])(
+      'keeps a numeric ErrorNumber %p as %p and logs it through the filter as %p',
+      async (number, raw, logged) => {
+        actionReplies = [() => json({ Success: false, ErrorNumber: number })]
+
+        const error = await caught(createCase())
+
+        expect(error).toMatchObject({ reason: 'REJECTED', errorNumber: raw })
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('was rejected'),
+          expect.objectContaining({ errorNumber: logged }),
+        )
+        if (raw !== logged) {
+          expect(loggedText()).not.toContain(raw)
+          expect((error as Error).message).not.toContain(raw)
+        }
+      },
+    )
+
     it('a timeout is an unclear TRANSPORT failure', async () => {
       actionReplies = [
         () =>
@@ -751,8 +850,80 @@ describe('OneSystemsService', () => {
       },
     )
 
+    describe.each(idempotentActions)('%s over HTTP', (_name, call) => {
+      it.each<{ label: string; reply: Reply }>([
+        {
+          label: '403 with no body',
+          reply: () => new Response(null, { status: 403 }),
+        },
+        {
+          label: '404 with no body',
+          reply: () => new Response('', { status: 404 }),
+        },
+        {
+          label: '403 with a whitespace-only body',
+          reply: () => new Response(' \n', { status: 403 }),
+        },
+      ])('$label is still definitive', async ({ reply }) => {
+        actionReplies = [reply]
+
+        const error = await caught(call())
+
+        expect(error).toMatchObject({ reason: 'HTTP', hasEmptyBody: true })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(true)
+      })
+
+      it('retries an empty 401 without a Bearer challenge once, too', async () => {
+        loginReplies = [
+          () => json({ token: TOKEN_1 }),
+          () => json({ token: TOKEN_2 }),
+        ]
+        actionReplies = [bareEmpty401, () => success()]
+
+        await expect(call()).resolves.toBeDefined()
+
+        expect(loginRequests()).toHaveLength(2)
+        expect(actionRequests()).toHaveLength(2)
+      })
+    })
+
+    describe.each(actions)(
+      '%s: a non-2xx whose body fails mid-stream',
+      (_name, call) => {
+        it.each([400, 403, 404, 500])(
+          'HTTP %i is an unclear TRANSPORT failure carrying the read error',
+          async (status) => {
+            const readError = new TypeError('terminated')
+            actionReplies = [() => unreadableBody(status, readError)]
+
+            const error = await caught(call())
+
+            expect(error).toBeInstanceOf(OneSystemsError)
+            expect(error).toMatchObject({
+              reason: 'TRANSPORT',
+              upstreamStatus: status,
+              hasEmptyBody: false,
+            })
+            expect((error as { cause?: unknown }).cause).toBe(readError)
+            expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+
+            const [, meta] = logger.error.mock.calls.find(([message]) =>
+              String(message).includes('no usable response'),
+            ) ?? [undefined, undefined]
+            expect(meta).toMatchObject({ status, errorName: 'TypeError' })
+            expect(meta).not.toHaveProperty('bodyLength')
+            expect(loggedText()).not.toContain(NATIONAL_ID)
+            expect(loggedText()).not.toContain('bodyLength')
+          },
+        )
+      },
+    )
+
     describe.each(nonIdempotentActions)('%s over HTTP', (_name, call) => {
-      /** A bare `Unauthorized()` / `Forbid()` / `NotFound()` from an action. */
+      /**
+       * A bare `Unauthorized()` / `NotFound()` from an action, or a
+       * `Problem(statusCode: 403)`. (`Forbid()` is an empty 403 instead.)
+       */
       const bareProblemDetails = (status: number) =>
         json(
           {
@@ -805,26 +976,36 @@ describe('OneSystemsService', () => {
           reply: () => generalResponse(400),
           definitive: false,
         },
-        // ASP.NET's own pipeline rejects before the action with no body.
+        // An empty 403 or 404 can come from inside the action too:
+        // Forbid() goes through the auth handler, NotFound(null) keeps 404.
         {
-          label: '403 with no body',
+          label: '403 with no body (Forbid() from the action)',
           reply: () => new Response(null, { status: 403 }),
-          definitive: true,
+          definitive: false,
         },
         {
           label: '403 with a whitespace-only body',
           reply: () => new Response(' \r\n\t ', { status: 403 }),
-          definitive: true,
+          definitive: false,
         },
         {
-          label: '404 with an empty body',
+          label: '403 with no body and a Bearer challenge header',
+          reply: () =>
+            new Response(null, {
+              status: 403,
+              headers: { 'WWW-Authenticate': 'Bearer' },
+            }),
+          definitive: false,
+        },
+        {
+          label: '404 with an empty body (NotFound(null) from the action)',
           reply: () => new Response('', { status: 404 }),
-          definitive: true,
+          definitive: false,
         },
         {
           label: '404 with a whitespace-only body',
           reply: () => new Response('\n', { status: 404 }),
-          definitive: true,
+          definitive: false,
         },
         // Any body means the action may have run and may have acted.
         // A JSON "" parses to an empty string, but the raw body is not empty.
@@ -844,7 +1025,8 @@ describe('OneSystemsService', () => {
           definitive: false,
         },
         {
-          label: '403 ProblemDetails (a bare Forbid() from the action)',
+          label:
+            '403 ProblemDetails (Problem(statusCode: 403) from the action)',
           reply: () => bareProblemDetails(403),
           definitive: false,
         },
@@ -953,12 +1135,33 @@ describe('OneSystemsService', () => {
         },
       )
 
-      it('a 401 that persists after the token refresh is definitive', async () => {
+      it.each([403, 404])(
+        'records a Bearer WWW-Authenticate on an empty %i as no challenge (only a 401 is one)',
+        async (status) => {
+          actionReplies = [
+            () =>
+              new Response(null, {
+                status,
+                headers: { 'WWW-Authenticate': 'Bearer' },
+              }),
+          ]
+
+          const error = await caught(call())
+
+          expect(error).toMatchObject({
+            upstreamStatus: status,
+            hasEmptyBody: true,
+            hasBearerChallenge: false,
+          })
+        },
+      )
+
+      it('a Bearer challenge that persists after the token refresh is definitive', async () => {
         loginReplies = [
           () => json({ token: TOKEN_1 }),
           () => json({ token: TOKEN_2 }),
         ]
-        actionReplies = [() => new Response(null, { status: 401 })]
+        actionReplies = [() => bearerChallenge()]
 
         const error = await caught(call())
 
@@ -966,6 +1169,7 @@ describe('OneSystemsService', () => {
           reason: 'HTTP',
           upstreamStatus: 401,
           hasEmptyBody: true,
+          hasBearerChallenge: true,
         })
         expect(isDefinitiveOneSystemsFailure(error)).toBe(true)
         expect(loginRequests()).toHaveLength(2)
@@ -973,13 +1177,25 @@ describe('OneSystemsService', () => {
       })
 
       it.each<{ label: string; reply: Reply }>([
-        { label: 'no body', reply: () => new Response(null, { status: 401 }) },
+        { label: 'no body', reply: () => bearerChallenge() },
+        {
+          label: 'a bare Bearer header',
+          reply: () => bearerChallenge('Bearer'),
+        },
+        {
+          label: 'a lower-case scheme',
+          reply: () => bearerChallenge('bearer realm="one"'),
+        },
         {
           label: 'a whitespace-only body',
-          reply: () => new Response('  \n', { status: 401 }),
+          reply: () =>
+            new Response('  \n', {
+              status: 401,
+              headers: { 'WWW-Authenticate': 'Bearer' },
+            }),
         },
       ])(
-        'a 401 with $label still logs in again and retries once',
+        'a Bearer challenge with $label logs in again and retries once',
         async ({ reply }) => {
           loginReplies = [
             () => json({ token: TOKEN_1 }),
@@ -996,15 +1212,12 @@ describe('OneSystemsService', () => {
         },
       )
 
-      it('an empty 401 retried into a 401 with a body is not definitive', async () => {
+      it('a Bearer challenge retried into a 401 with a body is not definitive', async () => {
         loginReplies = [
           () => json({ token: TOKEN_1 }),
           () => json({ token: TOKEN_2 }),
         ]
-        actionReplies = [
-          () => new Response(null, { status: 401 }),
-          () => bareProblemDetails(401),
-        ]
+        actionReplies = [() => bearerChallenge(), () => bareProblemDetails(401)]
 
         const error = await caught(call())
 
@@ -1015,6 +1228,86 @@ describe('OneSystemsService', () => {
         expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
         expect(actionRequests()).toHaveLength(2)
       })
+
+      it('a Bearer challenge retried into an empty 401 without one is not definitive', async () => {
+        loginReplies = [
+          () => json({ token: TOKEN_1 }),
+          () => json({ token: TOKEN_2 }),
+        ]
+        actionReplies = [() => bearerChallenge(), bareEmpty401]
+
+        const error = await caught(call())
+
+        expect(error).toMatchObject({
+          upstreamStatus: 401,
+          hasEmptyBody: true,
+          hasBearerChallenge: false,
+        })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+        expect(actionRequests()).toHaveLength(2)
+      })
+
+      it.each<{
+        label: string
+        reply: Reply
+        empty: boolean
+      }>([
+        {
+          label: 'no WWW-Authenticate (Unauthorized(null) from the action)',
+          reply: bareEmpty401,
+          empty: true,
+        },
+        {
+          label: 'a whitespace-only body and no WWW-Authenticate',
+          reply: () => new Response(' \n', { status: 401 }),
+          empty: true,
+        },
+        {
+          label: 'a non-Bearer challenge',
+          reply: () => bearerChallenge('Basic realm="one"'),
+          empty: true,
+        },
+        {
+          label: 'Bearer only as a later challenge',
+          reply: () => bearerChallenge('Basic realm="one", Bearer'),
+          empty: true,
+        },
+        {
+          label: 'a scheme that merely starts with Bearer',
+          reply: () => bearerChallenge('BearerX'),
+          empty: true,
+        },
+        {
+          label: 'a Bearer challenge on a body',
+          reply: () =>
+            new Response('Unauthorized', {
+              status: 401,
+              headers: { 'WWW-Authenticate': 'Bearer' },
+            }),
+          empty: false,
+        },
+      ])(
+        'a 401 with $label is sent exactly once and is not definitive',
+        async ({ reply, empty }) => {
+          loginReplies = [
+            () => json({ token: TOKEN_1 }),
+            () => json({ token: TOKEN_2 }),
+          ]
+          actionReplies = [reply, () => success()]
+
+          const error = await caught(call())
+
+          expect(error).toMatchObject({
+            reason: 'HTTP',
+            upstreamStatus: 401,
+            hasEmptyBody: empty,
+            hasBearerChallenge: false,
+          })
+          expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+          expect(actionRequests()).toHaveLength(1)
+          expect(loginRequests()).toHaveLength(1)
+        },
+      )
 
       it.each<{ label: string; reply: Reply }>([
         { label: 'a One GeneralResponse', reply: () => generalResponse(401) },

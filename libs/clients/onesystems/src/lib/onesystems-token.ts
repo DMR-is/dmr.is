@@ -18,8 +18,15 @@ export const TOKEN_FALLBACK_LIFETIME_MS = 10 * 60_000
 /**
  * The computed expiry is clamped to at least this far from now, so a token
  * that is short-lived (or looks expired through clock skew) is still reused
- * for a moment instead of forcing a Login before every action. If One has
- * really expired it, the action's 401 retry logs in again.
+ * for a moment instead of forcing a Login before every action.
+ *
+ * If One has really expired it, the action is answered with a 401, and the
+ * one-time re-login-and-retry recovers it only where that retry fires: on
+ * every 401 for CreateCase and CloseCase, but for CreateDocument and
+ * SendDocToIslandIs only on the JwtBearer challenge (an empty-bodied 401 with
+ * `WWW-Authenticate: Bearer`). If One's challenge does not look like that,
+ * an expired token on either of those two leaves the delivery UNCERTAIN for a
+ * person to check. It never sends a duplicate: the 401 is not retried.
  */
 export const TOKEN_MIN_LIFETIME_MS = 30_000
 
