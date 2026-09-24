@@ -15,7 +15,11 @@ import { reportCovered } from '../company/utils/report-status'
 import { PostcodeModel } from '../location/models/postcode.model'
 import { RegionModel } from '../location/models/region.model'
 import { WageGapDirectionEnum } from '../report/lib/wage-gap-decomposition'
-import { ReportStatusEnum, ReportTypeEnum } from '../report/models/report.enums'
+import {
+  GenderEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import {
   AggregateStatisticsDto,
@@ -117,6 +121,10 @@ type CompanyRow = {
 type ApprovedReportRow = {
   /** Every company the report covers: the filer and any group subsidiaries. */
   companyIds: string[]
+  /** The filer — the `company_report` row with no parent. */
+  filerCompanyId: string | null
+  /** Frozen at submission: who signed off on THIS report. */
+  companyAdminGender: GenderEnum | null
   type: ReportTypeEnum
   approvedAt: Date | null
   validUntil: Date | null
@@ -145,12 +153,14 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
     const [
       companies,
       approved,
+      employeesWithEqualityReport,
       employeesWithSalaryReport,
       regions,
     ] = await Promise.all([
       this.loadCompanies(),
       this.loadApprovedReports(),
-      this.loadEmployeesWithSalaryReport(),
+      this.loadEmployeesWithReport(ReportTypeEnum.EQUALITY),
+      this.loadEmployeesWithReport(ReportTypeEnum.SALARY),
       this.loadRegionNames(),
     ])
 
@@ -177,7 +187,12 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
           regions,
         ),
         ...this.sizeSeries(companies),
-        ...this.employeeSeries(generatedAt, employeesWithSalaryReport),
+        ...this.employeeSeries(
+          generatedAt,
+          employeesWithEqualityReport,
+          employeesWithSalaryReport,
+        ),
+        ...this.adminGenderSeries(generatedAt, companies, approved, regions),
         ...this.payGapNow(generatedAt, approved),
         ...this.overTime(generatedAt, companies, approved),
       ],
@@ -361,23 +376,156 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
   }
 
   /**
-   * Headcount at companies holding a skýrslugjöf in force.
+   * Headcount at companies holding a report in force, one figure per type.
    *
-   * Tied to the skýrslugjöf rather than reported as one figure across both
-   * obligations: it is the pay-equality instrument, so its reach over employees
-   * is the meaningful number. It is also the only real headcount the register
-   * holds — a company row carries a size bucket and nothing finer.
+   * Kept per type rather than summed across both: a company holding both would
+   * be counted twice. The report is the only real headcount the register holds
+   * — a company row carries a size bucket and nothing finer.
+   *
+   * ⚠️ `equality.employees` undercounts. The headcount is optional on an
+   * equality plan, so plans filed without it contribute nothing.
    */
   private employeeSeries(
     at: Date,
-    employees: number | null,
+    equalityEmployees: number | null,
+    salaryEmployees: number | null,
   ): AggregateStatisticSeriesDto[] {
     return [
+      series(
+        'equality.employees',
+        'Starfsmenn hjá aðilum með gilda jafnréttisáætlun',
+        AggregateStatisticUnitEnum.COUNT,
+        [point(timeHeader(at), equalityEmployees)],
+      ),
       series(
         'salary.employees',
         'Starfsmenn hjá aðilum með gilda skýrslugjöf',
         AggregateStatisticUnitEnum.COUNT,
-        [point(timeHeader(at), employees)],
+        [point(timeHeader(at), salaryEmployees)],
+      ),
+    ]
+  }
+
+  /**
+   * Gender of the æðsti stjórnandi at companies holding a report in force,
+   * nationally and by sector and region.
+   *
+   * Across both report types, one chief per company: a company holding a
+   * jafnréttisáætlun and a skýrslugjöf has one chief, not two. When the two
+   * disagree, the latest approval is the more current answer. Only the FILER
+   * counts — a group report names the parent's chief, not each subsidiary's.
+   * Not restricted to the obliged population: a voluntary filer's chief is just
+   * as real, and this series says nothing about compliance.
+   *
+   * ⚠️ Reports filed here only. The retired register keeps `top_manager_gender`
+   * as free text, so legacy-certified companies are absent from every figure.
+   *
+   * ⚠️ NEUTRAL is published nationally only, and withheld under
+   * `MINIMUM_COHORT`. Cut by sector or region, a cell of one would identify the
+   * person, so the breakdowns carry male and female only.
+   */
+  private adminGenderSeries(
+    at: Date,
+    companies: CompanyRow[],
+    approved: ApprovedReportRow[],
+    regions: string[],
+  ): AggregateStatisticSeriesDto[] {
+    const header = timeHeader(at)
+    const companiesById = new Map(
+      companies.map((company) => [company.id, company]),
+    )
+
+    const latestByCompany = new Map<string, ApprovedReportRow>()
+    for (const report of approved) {
+      if (!coversMonth(report, at)) continue
+      if (!report.filerCompanyId || !report.companyAdminGender) continue
+      if (!companiesById.has(report.filerCompanyId)) continue
+
+      const held = latestByCompany.get(report.filerCompanyId)
+      if (
+        !held ||
+        (report.approvedAt?.getTime() ?? 0) > (held.approvedAt?.getTime() ?? 0)
+      ) {
+        latestByCompany.set(report.filerCompanyId, report)
+      }
+    }
+
+    const chiefs = [...latestByCompany.entries()].map(
+      ([companyId, report]) => ({
+        company: companiesById.get(companyId) as CompanyRow,
+        gender: report.companyAdminGender as GenderEnum,
+      }),
+    )
+
+    const count = (
+      gender: GenderEnum,
+      where: (company: CompanyRow) => boolean = () => true,
+    ) =>
+      chiefs.filter((chief) => chief.gender === gender && where(chief.company))
+        .length
+
+    const neutral = count(GenderEnum.NEUTRAL)
+    const sectors = Object.values(CompanySectorEnum)
+
+    const breakdown = (gender: GenderEnum) => ({
+      bySector: sectors.map((sector) =>
+        point(
+          SECTOR_LABEL[sector],
+          count(gender, (company) => company.sector === sector),
+        ),
+      ),
+      byRegion: regions.map((region) =>
+        point(
+          region,
+          count(gender, (company) => company.region === region),
+        ),
+      ),
+    })
+    const male = breakdown(GenderEnum.MALE)
+    const female = breakdown(GenderEnum.FEMALE)
+
+    return [
+      series(
+        'admin.male',
+        'Karlar sem æðstu stjórnendur',
+        AggregateStatisticUnitEnum.COUNT,
+        [point(header, count(GenderEnum.MALE))],
+      ),
+      series(
+        'admin.female',
+        'Konur sem æðstu stjórnendur',
+        AggregateStatisticUnitEnum.COUNT,
+        [point(header, count(GenderEnum.FEMALE))],
+      ),
+      series(
+        'admin.neutral',
+        'Kynsegin æðstu stjórnendur',
+        AggregateStatisticUnitEnum.COUNT,
+        [point(header, neutral < MINIMUM_COHORT ? null : neutral)],
+      ),
+      series(
+        'adminBySector.male',
+        'Karlar sem æðstu stjórnendur eftir rekstrarformi',
+        AggregateStatisticUnitEnum.COUNT,
+        male.bySector,
+      ),
+      series(
+        'adminBySector.female',
+        'Konur sem æðstu stjórnendur eftir rekstrarformi',
+        AggregateStatisticUnitEnum.COUNT,
+        female.bySector,
+      ),
+      series(
+        'adminByRegion.male',
+        'Karlar sem æðstu stjórnendur eftir landshluta',
+        AggregateStatisticUnitEnum.COUNT,
+        male.byRegion,
+      ),
+      series(
+        'adminByRegion.female',
+        'Konur sem æðstu stjórnendur eftir landshluta',
+        AggregateStatisticUnitEnum.COUNT,
+        female.byRegion,
       ),
     ]
   }
@@ -639,6 +787,7 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
         'type',
         'approvedAt',
         'validUntil',
+        'companyAdminGender',
         [snapshotField('rawGapPercent'), 'rawGapPercent'],
         [snapshotField('rawGapDirection'), 'rawGapDirection'],
         [snapshotField('oskyrtPercent'), 'oskyrtPercent'],
@@ -651,6 +800,7 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
       type: ReportTypeEnum
       approvedAt: Date | null
       validUntil: Date | null
+      companyAdminGender: GenderEnum | null
       rawGapPercent: string | number | null
       rawGapDirection: string | null
       oskyrtPercent: string | number | null
@@ -660,22 +810,32 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
     if (rows.length === 0) return []
 
     const links = ((await this.companyReportModel.findAll({
-      attributes: ['reportId', 'companyId'],
+      attributes: ['reportId', 'companyId', 'parentCompanyId'],
       where: { reportId: rows.map((row) => row.id) },
       raw: true,
-    })) as unknown) as Array<{ reportId: string; companyId: string }>
+    })) as unknown) as Array<{
+      reportId: string
+      companyId: string
+      parentCompanyId: string | null
+    }>
 
     const companiesByReport = new Map<string, string[]>()
+    const filerByReport = new Map<string, string>()
     for (const link of links) {
       const ids = companiesByReport.get(link.reportId) ?? []
       ids.push(link.companyId)
       companiesByReport.set(link.reportId, ids)
+      if (link.parentCompanyId === null) {
+        filerByReport.set(link.reportId, link.companyId)
+      }
     }
 
     return rows
       .filter((row) => companiesByReport.has(row.id))
       .map((row) => ({
         companyIds: companiesByReport.get(row.id) ?? [],
+        filerCompanyId: filerByReport.get(row.id) ?? null,
+        companyAdminGender: row.companyAdminGender,
         type: row.type,
         approvedAt: row.approvedAt ? new Date(row.approvedAt) : null,
         validUntil: row.validUntil ? new Date(row.validUntil) : null,
@@ -691,8 +851,8 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
   }
 
   /**
-   * Headcount summed across skýrslugjöf still in force, or null when none of
-   * them stated one.
+   * Headcount summed across reports of `type` still in force, or null when none
+   * of them stated one.
    *
    * ⚠️ The `Op.or` on the three count columns is what keeps a real total apart
    * from an absent one. `COALESCE(x, 0)` inside the SUM is right for a report
@@ -702,7 +862,9 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
    * the filter, a set with no figures at all matches no rows, `SUM` returns
    * NULL, and the point is suppressed rather than asserted as zero.
    */
-  private async loadEmployeesWithSalaryReport(): Promise<number | null> {
+  private async loadEmployeesWithReport(
+    type: ReportTypeEnum,
+  ): Promise<number | null> {
     const rows = ((await this.reportModel.findAll({
       attributes: [
         [
@@ -717,7 +879,7 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
       ],
       where: {
         status: ReportStatusEnum.APPROVED,
-        type: ReportTypeEnum.SALARY,
+        type,
         [Op.and]: [
           {
             [Op.or]: [
