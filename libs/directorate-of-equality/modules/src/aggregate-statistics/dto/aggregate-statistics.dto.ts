@@ -24,11 +24,13 @@ import { ApiProperty } from '@nestjs/swagger'
  *
  *   1. AS-OF   a single point keyed on `generatedAt` in ms — every snapshot
  *              figure (`*.obliged`, `*.complied`, `*.percent`, `*.voluntary`,
- *              `salary.employees`, `payGap.raw`, `payGap.oskyrt`).
+ *              `*.employees`, `admin.*`, `payGap.raw`, `payGap.oskyrt`).
  *   2. MONTHLY 60 points keyed on each UTC month start in ms — every `*OverTime`
  *              series plus `*.approvals`.
- *   3. SECTOR  five points keyed on the Icelandic sector name — `*BySector.*`.
- *   4. REGION  the landshlutar plus `Óþekkt` — `*ByRegion.*`.
+ *   3. SECTOR  five points keyed on the Icelandic sector name — `*BySector.*`
+ *              and `adminBySector.*`.
+ *   4. REGION  the landshlutar plus `Óþekkt` — `*ByRegion.*` and
+ *              `adminByRegion.*`.
  *   5. SIZE    `25–49` and `50+` — `equalityBySize.*`.
  *
  * `aggregate-statistics.alignment.spec.ts` asserts the three groups internally,

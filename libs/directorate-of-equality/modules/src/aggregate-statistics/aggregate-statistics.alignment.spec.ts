@@ -78,11 +78,15 @@ describe('aggregate statistics header alignment', () => {
     'salary.obliged',
     'salary.complied',
     'salary.percent',
+    'equality.employees',
     'salary.employees',
     'payGap.raw',
     'payGap.oskyrt',
     'equality.voluntary',
     'salary.voluntary',
+    'admin.male',
+    'admin.female',
+    'admin.neutral',
   ]
 
   const MONTHLY = [
@@ -99,6 +103,8 @@ describe('aggregate statistics header alignment', () => {
     'equalityBySector.complied',
     'salaryBySector.obliged',
     'salaryBySector.complied',
+    'adminBySector.male',
+    'adminBySector.female',
   ]
 
   const REGION = [
@@ -106,6 +112,8 @@ describe('aggregate statistics header alignment', () => {
     'equalityByRegion.complied',
     'salaryByRegion.obliged',
     'salaryByRegion.complied',
+    'adminByRegion.male',
+    'adminByRegion.female',
   ]
 
   const SIZE = ['equalityBySize.obliged', 'equalityBySize.complied']
@@ -192,6 +200,7 @@ describe('aggregate statistics header alignment', () => {
     expect(valueOf('equality.obliged')).toBe(0)
     expect(valueOf('equality.percent')).toBeNull()
     expect(valueOf('payGap.raw')).toBeNull()
+    expect(valueOf('equality.employees')).toBeNull()
     expect(valueOf('salary.employees')).toBeNull()
   })
 
