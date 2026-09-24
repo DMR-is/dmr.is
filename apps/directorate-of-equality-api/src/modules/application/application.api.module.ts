@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common'
 
-import { ApiKeyCoreModule } from '@dmr.is/doe-modules/api-key'
 import {
   ApplicationCoreModule,
   ISLAND_IS_PROVIDER_CHANNEL,
@@ -15,7 +14,6 @@ import { ApplicationController } from './application.controller'
 @Module({
   imports: [
     ApplicationCoreModule.forChannel(ISLAND_IS_PROVIDER_CHANNEL),
-    ApiKeyCoreModule,
     ReportExcelCoreModule,
     CompanyCoreModule,
     ImportUploadCoreModule,
