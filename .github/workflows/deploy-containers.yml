@@ -93,28 +93,6 @@ jobs:
           REBUILD_ALL: ${{ inputs.rebuild-all }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          # directorate-of-equality-partner-api is deliberately NOT in this list
-          # yet. Its ECS service does not exist in the DMR-Jafnrettisstofa
-          # terragrunt tree, so deploying it would fail on
-          # `aws ecs wait services-stable` and take every other container in the
-          # run down with it. Re-add it here and in on-release.yml in the same PR
-          # as the terragrunt service definition -- not before. Two things that
-          # PR needs: the partner API must sit on the PUBLIC alb, not the
-          # internal one directorate-of-equality-api uses, because payroll
-          # vendors call it from the internet; and of its thirteen required
-          # variables two are new -- DOE_API_KEY_HMAC_SECRET and API_ENV -- while
-          # the other eleven are already SSM parameters for
-          # directorate-of-equality-api and should be referenced, not duplicated,
-          # so the shared pepper cannot drift. API_ENV is @required=forEnv(deployed)
-          # and the Dockerfile CMD wraps main.js in `varlock run`, so a miss is a
-          # hard boot failure surfacing as an `aws ecs wait services-stable`
-          # timeout -- which is what this note exists to prevent.
-          #
-          # directorate-of-equality-partner-web is deliberately NOT in this list
-          # either, for the same reason: its ECS service does not exist in the
-          # DMR-Jafnrettisstofa terragrunt tree yet. Re-add it here (and in
-          # on-release.yml) in the same PR as that terragrunt service definition,
-          # once DOE_PARTNER_WEB_CLIENT_ID/_SECRET are real.
           ALL_CONTAINERS='[
             {"name":"official-journal-api",              "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"official-journal-admin-api",        "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
@@ -126,7 +104,9 @@ jobs:
             {"name":"legal-gazette-application-web",     "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"legal-gazette-public-web",          "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"directorate-of-equality-api",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"},
-            {"name":"directorate-of-equality-web",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"}
+            {"name":"directorate-of-equality-web",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"},
+            {"name":"directorate-of-equality-partner-api", "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"},
+            {"name":"directorate-of-equality-partner-web", "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"}
           ]'
 
           mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1
@@ -144,9 +124,9 @@ jobs:
           # Deliberately NOT "the first entry the API returns". The base is the
           # CLOSEST valid ancestor, chosen by counting commits, so the result
           # does not depend on the order or completeness of the response. A
-          # wrong-but-older base is not a crash, it is eleven silent rebuilds,
-          # and ordering is the one thing here we cannot verify from inside the
-          # job. 20 is slack for a run of cancelled or failed deploys.
+          # wrong-but-older base is not a crash, it is a silent rebuild of
+          # everything, and ordering is the one thing here we cannot verify from
+          # inside the job. 20 is slack for a run of cancelled or failed deploys.
           #
           # Every rejected candidate says why, so the next bad base is
           # diagnosable from the log instead of being inferred weeks later. That
