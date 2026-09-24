@@ -23,7 +23,8 @@ describe('nullOnNotFound', () => {
       failWith({
         statusCode: 404,
         name: 'NotFound',
-        message: 'Not found',
+        message: 'Resource not found.',
+        timestamp: '2026-09-24T12:00:00.000Z',
         details: ['Company with national id "0000000000" not found'],
         translatedMessage: 'Fyrirtækið fannst ekki',
       })(),
@@ -35,7 +36,8 @@ describe('nullOnNotFound', () => {
       failWith({
         statusCode: 404,
         name: 'NotFound',
-        message: 'Not found',
+        message: 'Resource not found.',
+        timestamp: '2026-09-24T12:00:00.000Z',
         details: ['This organisation is not an approved provider'],
         translatedMessage: 'Þessi aðili er ekki samþykktur þjónustuaðili',
       })(),
@@ -48,7 +50,8 @@ describe('nullOnNotFound', () => {
     const routeNotFound = {
       statusCode: 404,
       name: 'NotFound',
-      message: 'Not found',
+      message: 'Resource not found.',
+      timestamp: '2026-09-24T12:00:00.000Z',
       details: ['Cannot GET /api/v1/application/company'],
     }
 
