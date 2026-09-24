@@ -10,7 +10,7 @@ import type { CookiesOptions } from 'next-auth'
  * own `NEXTAUTH_SECRET`) and reads as a logout. The same holds for any two apps
  * ever served from one hostname.
  *
- * An app opts in by passing a short prefix, e.g. `doe-partner`, to all three
+ * An app opts in by passing a short prefix, e.g. `doe-partner-web`, to all three
  * places that name the session cookie — they must agree, or the middleware
  * refreshes a cookie NextAuth never reads:
  *
@@ -38,9 +38,13 @@ export const isSecureSessionCookie = () =>
 
 const securePrefix = (secure: boolean) => (secure ? '__Secure-' : '')
 
-/** The session cookie's name — NextAuth's default when no prefix is given. */
+/**
+ * The session cookie's name — NextAuth's default when no prefix is given. An
+ * empty prefix counts as none, matching `createAuthMiddleware`, which only
+ * hands `withAuth` a name for a non-empty one.
+ */
 export const sessionCookieName = (prefix?: string) =>
-  `${securePrefix(isSecureSessionCookie())}${prefix ?? 'next-auth'}.session-token`
+  `${securePrefix(isSecureSessionCookie())}${prefix || 'next-auth'}.session-token`
 
 /**
  * Every cookie NextAuth sets, renamed under `prefix`, with NextAuth's own
@@ -82,3 +86,20 @@ export const isAppAuthCookie = (cookieName: string, prefix: string) =>
   ['', '__Secure-', '__Host-'].some((pre) =>
     cookieName.startsWith(`${pre}${prefix}.`),
   )
+
+/**
+ * Options that expire one of this app's NextAuth cookies.
+ *
+ * ⚠️ Not `response.cookies.delete(name)`: that sends no `Secure` attribute, and
+ * browsers apply the `__Secure-` / `__Host-` prefix rules to a deletion too, so
+ * in production — where every name is prefixed — the header is dropped and the
+ * cookie survives. `path: '/'` is required by `__Host-` and is where NextAuth
+ * sets them all.
+ */
+export const expiredAuthCookieOptions = () => ({
+  path: '/',
+  maxAge: 0,
+  httpOnly: true,
+  sameSite: 'lax' as const,
+  secure: isSecureSessionCookie(),
+})

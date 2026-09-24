@@ -101,4 +101,34 @@ describe('endSessionHandler', () => {
 
     expect(url.searchParams.get('id_token_hint')).toBe('token-from-session')
   })
+
+  // An app on its own cookie prefix must be read by that name, or logout finds
+  // no session — or another app's.
+  it('reads the session from the cookie name it is given', async () => {
+    mockedGetToken.mockResolvedValue({ idToken: 'the-id-token' } as JWT)
+    const request = new NextRequest('http://localhost:3000/api/auth/logout')
+
+    await endSessionHandler(
+      request,
+      'https://web.example.is',
+      'doe-web.session-token',
+    )
+
+    expect(mockedGetToken).toHaveBeenCalledWith({
+      req: request,
+      cookieName: 'doe-web.session-token',
+    })
+  })
+
+  it('leaves the name to NextAuth when none is given', async () => {
+    mockedGetToken.mockResolvedValue(null)
+    const request = new NextRequest('http://localhost:3000/api/auth/logout')
+
+    await endSessionHandler(request, 'https://web.example.is')
+
+    expect(mockedGetToken).toHaveBeenCalledWith({
+      req: request,
+      cookieName: undefined,
+    })
+  })
 })
