@@ -9,7 +9,7 @@ module.exports = {
       VALUES
         (
           'd6882fb2-5824-4788-842f-da75b7e6c56a',
-          'Kristín Þórðardóttir'
+          'Anna Lilja Ragnarsdóttir'
         );
       `
     return await queryInterface.sequelize.query(seed)
