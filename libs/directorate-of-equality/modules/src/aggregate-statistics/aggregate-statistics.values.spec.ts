@@ -11,7 +11,7 @@ import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { RegionModel } from '../location/models/region.model'
 import { WageGapDirectionEnum } from '../report/lib/wage-gap-decomposition'
-import { ReportTypeEnum } from '../report/models/report.enums'
+import { GenderEnum, ReportTypeEnum } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import { AggregateStatisticsDto } from './dto/aggregate-statistics.dto'
 import { AggregateStatisticsService } from './aggregate-statistics.service'
@@ -31,12 +31,17 @@ type CompanyFixture = {
   size: CompanySizeEnum
   equalityCovered?: boolean
   salaryCovered?: boolean
+  sector?: CompanySectorEnum
+  region?: string
 }
 
 type ReportFixture = {
   id: string
   type: ReportTypeEnum
+  /** The first is the filer; the rest are group subsidiaries. */
   companyIds: string[]
+  adminGender?: GenderEnum | null
+  approvedAt?: Date
   rawGapPercent?: number | null
   rawGapDirection?: WageGapDirectionEnum | null
 }
@@ -47,15 +52,16 @@ const validUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
 const run = async (
   companies: CompanyFixture[],
   reports: ReportFixture[] = [],
+  regions: string[] = [],
 ) => {
   const companyFindAll = jest.fn().mockResolvedValue(
     companies.map((company) => ({
       id: company.id,
-      sector: CompanySectorEnum.FYRIRTAEKI,
+      sector: company.sector ?? CompanySectorEnum.FYRIRTAEKI,
       employeeCountCategory: company.size,
       equalityCovered: company.equalityCovered ?? false,
       salaryCovered: company.salaryCovered ?? false,
-      postcode: null,
+      postcode: company.region ? { region: { name: company.region } } : null,
     })),
   )
 
@@ -67,8 +73,9 @@ const run = async (
         ? reports.map((report) => ({
             id: report.id,
             type: report.type,
-            approvedAt,
+            approvedAt: report.approvedAt ?? approvedAt,
             validUntil,
+            companyAdminGender: report.adminGender ?? null,
             rawGapPercent: report.rawGapPercent ?? null,
             rawGapDirection: report.rawGapDirection ?? null,
             oskyrtPercent: null,
@@ -95,9 +102,10 @@ const run = async (
         useValue: {
           findAll: jest.fn().mockResolvedValue(
             reports.flatMap((report) =>
-              report.companyIds.map((companyId) => ({
+              report.companyIds.map((companyId, i) => ({
                 reportId: report.id,
                 companyId,
+                parentCompanyId: i === 0 ? null : report.companyIds[0],
               })),
             ),
           ),
@@ -105,7 +113,11 @@ const run = async (
       },
       {
         provide: getModelToken(RegionModel),
-        useValue: { findAll: jest.fn().mockResolvedValue([]) },
+        useValue: {
+          findAll: jest
+            .fn()
+            .mockResolvedValue(regions.map((name) => ({ name }))),
+        },
       },
     ],
   }).compile()
@@ -241,5 +253,134 @@ describe('aggregate statistics — filed reports', () => {
 
     // Four signed values is below the cohort of five, so nothing is published.
     expect(valueOf(statistics, 'payGap.raw')).toBeNull()
+  })
+})
+
+describe('aggregate statistics — æðsti stjórnandi', () => {
+  const report = (
+    id: string,
+    adminGender: GenderEnum | null,
+    companyIds: string[] = [id],
+  ): ReportFixture => ({
+    id,
+    type: ReportTypeEnum.EQUALITY,
+    companyIds,
+    adminGender,
+  })
+
+  const company = (
+    id: string,
+    extra: Partial<CompanyFixture> = {},
+  ): CompanyFixture => ({ id, size: CompanySizeEnum.LARGE, ...extra })
+
+  it('counts the filer of a group report once, not each subsidiary', async () => {
+    // The admin on a group report is the parent's chief. Counting it per
+    // subsidiary would multiply one person by the size of the group.
+    const { statistics } = await run(
+      [company('parent'), company('sub1'), company('sub2')],
+      [report('group', GenderEnum.FEMALE, ['parent', 'sub1', 'sub2'])],
+    )
+
+    expect(valueOf(statistics, 'admin.female')).toBe(1)
+    expect(valueOf(statistics, 'admin.male')).toBe(0)
+  })
+
+  it('counts one chief per company, from its latest approval', async () => {
+    const older = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)
+    const { statistics } = await run(
+      [company('a')],
+      [
+        { ...report('old', GenderEnum.MALE, ['a']), approvedAt: older },
+        report('new', GenderEnum.FEMALE, ['a']),
+      ],
+    )
+
+    expect(valueOf(statistics, 'admin.female')).toBe(1)
+    expect(valueOf(statistics, 'admin.male')).toBe(0)
+  })
+
+  it('counts a company holding both report types once, latest approval first', async () => {
+    // One company has one chief. The older equality plan still names the
+    // previous one; the newer skýrslugjöf is the current answer.
+    const older = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)
+    const { statistics } = await run(
+      [company('a')],
+      [
+        { ...report('plan', GenderEnum.MALE, ['a']), approvedAt: older },
+        {
+          ...report('salary', GenderEnum.FEMALE, ['a']),
+          type: ReportTypeEnum.SALARY,
+        },
+      ],
+    )
+
+    expect(valueOf(statistics, 'admin.female')).toBe(1)
+    expect(valueOf(statistics, 'admin.male')).toBe(0)
+  })
+
+  it('ignores reports with no admin gender and inactive filers', async () => {
+    // `run` only returns what the ACTIVE-company read would; `gone` is absent.
+    const { statistics } = await run(
+      [company('a')],
+      [report('a', null), report('gone', GenderEnum.MALE)],
+    )
+
+    expect(valueOf(statistics, 'admin.male')).toBe(0)
+  })
+
+  it('withholds the national kynsegin count below the minimum cohort', async () => {
+    const ids = ['a', 'b', 'c', 'd']
+    const below = await run(
+      ids.map((id) => company(id)),
+      ids.map((id) => report(id, GenderEnum.NEUTRAL)),
+    )
+    expect(valueOf(below.statistics, 'admin.neutral')).toBeNull()
+
+    const at = await run(
+      [...ids, 'e'].map((id) => company(id)),
+      [...ids, 'e'].map((id) => report(id, GenderEnum.NEUTRAL)),
+    )
+    expect(valueOf(at.statistics, 'admin.neutral')).toBe(5)
+  })
+
+  it('splits male and female chiefs by sector and region', async () => {
+    const { statistics } = await run(
+      [
+        company('a', {
+          sector: CompanySectorEnum.SVEITARFELAG,
+          region: 'Austurland',
+        }),
+        company('b', {
+          sector: CompanySectorEnum.SVEITARFELAG,
+          region: 'Austurland',
+        }),
+        company('c', { sector: CompanySectorEnum.FYRIRTAEKI }),
+      ],
+      [
+        report('a', GenderEnum.FEMALE),
+        report('b', GenderEnum.MALE),
+        report('c', GenderEnum.FEMALE),
+      ],
+      ['Austurland'],
+    )
+
+    const valueAt = (key: string, header: string) =>
+      pointsOf(statistics, key).find((p) => p.header === header)?.value
+
+    expect(valueAt('adminBySector.female', 'Sveitarfélög')).toBe(1)
+    expect(valueAt('adminBySector.male', 'Sveitarfélög')).toBe(1)
+    expect(valueAt('adminBySector.female', 'Fyrirtæki')).toBe(1)
+    expect(valueAt('adminByRegion.female', 'Austurland')).toBe(1)
+    expect(valueAt('adminByRegion.female', 'Óþekkt')).toBe(1)
+  })
+
+  it('never breaks kynsegin chiefs out by sector or region', async () => {
+    // A cell of one would identify the person.
+    const { statistics } = await run([])
+    const keys = statistics.series.map((s) => s.key)
+
+    expect(
+      keys.filter((k) => /^admin(BySector|ByRegion)\.neutral$/.test(k)),
+    ).toEqual([])
   })
 })
