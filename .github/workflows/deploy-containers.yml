@@ -124,9 +124,9 @@ jobs:
           # Deliberately NOT "the first entry the API returns". The base is the
           # CLOSEST valid ancestor, chosen by counting commits, so the result
           # does not depend on the order or completeness of the response. A
-          # wrong-but-older base is not a crash, it is a silent rebuild of
-          # everything, and ordering is the one thing here we cannot verify from
-          # inside the job. 20 is slack for a run of cancelled or failed deploys.
+          # wrong-but-older base is not a crash, it is a silently wider rebuild,
+          # and ordering is the one thing here we cannot verify from inside the
+          # job. 20 is slack for a run of cancelled or failed deploys.
           #
           # Every rejected candidate says why, so the next bad base is
           # diagnosable from the log instead of being inferred weeks later. That
