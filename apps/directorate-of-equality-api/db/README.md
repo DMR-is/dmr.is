@@ -475,7 +475,7 @@ the firm's product. A firm instead gets three kinds of row:
   with the client's. Both are all or nothing: a firm is always approved for every scope
   (`m-20260924-partner-client-full-approval` widened the live firms approved before
   that), and a delegation granted on the self-service web copies the firm's approval.
-  Delegations granted before 24 September 2026 may still be narrower and are
+  Delegations granted before that deploy may still be narrower and are
   deliberately not widened — they are the company's own grant.
 
 **Why credential and delegation are separate objects.** So both revocations exist and each

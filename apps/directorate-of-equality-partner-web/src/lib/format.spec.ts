@@ -1,4 +1,4 @@
-import { formatNationalId, issuedBy, keyState } from './format'
+import { formatNationalId, isNarrowGrant, issuedBy, keyState } from './format'
 
 describe('keyState', () => {
   const past = '2020-01-01T00:00:00.000Z'
@@ -36,5 +36,27 @@ describe('formatNationalId', () => {
   it('hyphenates ten digits and leaves anything else alone', () => {
     expect(formatNationalId('0000000000')).toBe('000000-0000')
     expect(formatNationalId('123')).toBe('123')
+  })
+})
+
+describe('isNarrowGrant', () => {
+  it('is false for the full set, in any order', () => {
+    expect(
+      isNarrowGrant([
+        'scoring:write',
+        'report:read',
+        'equality:submit',
+        'salary:submit',
+      ]),
+    ).toBe(false)
+  })
+
+  it('is true when any one scope is missing, not only scoring:write', () => {
+    expect(
+      isNarrowGrant(['report:read', 'salary:submit', 'equality:submit']),
+    ).toBe(true)
+    expect(
+      isNarrowGrant(['report:read', 'salary:submit', 'scoring:write']),
+    ).toBe(true)
   })
 })

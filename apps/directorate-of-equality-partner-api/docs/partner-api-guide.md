@@ -107,7 +107,7 @@ all four scopes, `scoring:write` included — a key issued without an explicit
 scope set gets every scope. Bear in mind that `scoring:write` carries a `DELETE`
 that cascades a whole model away.
 
-**Keys issued before 24 September 2026 may carry less.** The default then left
+**Keys issued before all-or-nothing access was deployed (September 2026) may carry less.** The default then left
 out `scoring:write`, and those keys keep the set they were issued with. A key
 that gets `403` on the section C routes is one of them: issue a new key and
 revoke the old one.
@@ -122,7 +122,7 @@ organisation is approved for every scope, and a company's delegation hands you
 everything you were approved for — there is no partial consent on the
 self-service web.
 
-A delegation granted before 24 September 2026 may be narrower, and keeps the set
+A delegation granted before that change was deployed may be narrower, and keeps the set
 it was granted with. Each delegation's `scopes` on
 [`GET /partner/delegations`](#get-partnerdelegations) says what it covers; for a
 narrower one, ask the company to withdraw and grant it again.
@@ -894,7 +894,7 @@ naming it turn into `403` immediately.
   to itself on the self-service web like any customer, and send your own
   kennitala in the header. There is no separate path.
 - **Starfsmat.** If you offer your customers a scoring-model editor, each company
-  authors its own model through it. A delegation granted from 24 September 2026
+  authors its own model through it. A delegation granted since that change
   includes `scoring:write`, so nothing further has to be granted; check `scopes`
   on an older one.
 
