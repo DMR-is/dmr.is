@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
-import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
+import { ApiKeyKindEnum, ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 
 import { RequireApiScopeGuard } from './require-api-scope.guard'
 
@@ -33,6 +33,37 @@ const keyWithScopes = (...scopes: ApiKeyScopeEnum[]) => ({
 })
 
 describe('RequireApiScopeGuard', () => {
+  /**
+   * A vendor key arrives carrying the firm's whole approval; the identity guard
+   * narrows it to what this company allowed. If a route ever ran the scope
+   * check first, it would pass against the ceiling — so the guard fails closed
+   * on a vendor key whose scopes were never resolved.
+   */
+  describe('a vendor client key', () => {
+    const vendorKey = (scopesResolved: boolean) => ({
+      apiKeyContext: {
+        kind: ApiKeyKindEnum.PARTNER_CLIENT,
+        keyId: 'k',
+        scopes: [ApiKeyScopeEnum.SALARY_SUBMIT],
+        scopesResolved,
+      },
+    })
+
+    it('fails closed when the identity guard has not narrowed its scopes', () => {
+      const guard = withRequiredScope(ApiKeyScopeEnum.SALARY_SUBMIT)
+
+      expect(() => guard.canActivate(contextFor(vendorKey(false)))).toThrow(
+        InternalServerErrorException,
+      )
+    })
+
+    it('checks the narrowed scopes once they are resolved', () => {
+      const guard = withRequiredScope(ApiKeyScopeEnum.SALARY_SUBMIT)
+
+      expect(guard.canActivate(contextFor(vendorKey(true)))).toBe(true)
+    })
+  })
+
   it('allows a handler that declares no scope', () => {
     const guard = withRequiredScope(undefined)
 

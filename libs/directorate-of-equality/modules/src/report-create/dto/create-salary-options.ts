@@ -19,7 +19,19 @@
  * nothing pinned. A separate argument makes it true by construction rather than
  * by assertion.
  */
-export interface CreateSalaryOptions {
+export interface ReportProvenanceOptions {
+  /**
+   * The vendor client whose credential filed the report, stored as
+   * `report.partner_client_id`. Set by the partner API from the verified key,
+   * never taken from a request — the same reasoning as every option here.
+   */
+  partnerClientId?: string | null
+}
+
+/** Equality filings carry provenance and nothing else channel-specific. */
+export type CreateEqualityOptions = ReportProvenanceOptions
+
+export interface CreateSalaryOptions extends ReportProvenanceOptions {
   /**
    * File `POSTPONED` when outliers are detected and no groups were supplied,
    * rather than refusing. For a channel with no preview step.

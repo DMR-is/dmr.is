@@ -32,6 +32,7 @@ import {
 } from '@dmr.is/doe-modules/scoring-model'
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 
+import { ApiCompanyHeader } from '../../core/decorators/company-header.decorator'
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { PartnerResponse } from '../../core/decorators/partner-response.decorator'
 import { RequireActiveCompany } from '../../core/guards/active-company/require-active-company.decorator'
@@ -72,6 +73,7 @@ import { PartnerCompanyGuard } from '../../core/guards/partner-company/partner-c
 })
 @ApiTags('Partner')
 @ApiSecurity('apiKey')
+@ApiCompanyHeader()
 @RequireActiveCompany()
 @UseGuards(
   ApiKeyGuard,
@@ -93,7 +95,7 @@ export class ScoringModelController {
     status: HttpStatus.CREATED,
     type: ScoringModelSummaryDto,
     description:
-      'Creates an empty scoring model for the company this key belongs to. It starts invalid — no criteria, no weights — and becomes fit to file as criteria and sub-criteria are added. Read it back, or make any write, to see what is still missing.',
+      'Creates an empty scoring model for the company this request acts for. It starts invalid — no criteria, no weights — and becomes fit to file as criteria and sub-criteria are added. Read it back, or make any write, to see what is still missing.',
   })
   createModel(
     @CurrentCompany() company: CompanyDto,
@@ -108,7 +110,7 @@ export class ScoringModelController {
     operationId: 'getScoringModels',
     type: GetScoringModelsResponseDto,
     description:
-      'Every scoring model belonging to the company this key points at. Summaries only — fetch one by id for its tree and validity.',
+      'Every scoring model belonging to the company this request acts for. Summaries only — fetch one by id for its tree and validity.',
   })
   listModels(
     @CurrentCompany() company: CompanyDto,

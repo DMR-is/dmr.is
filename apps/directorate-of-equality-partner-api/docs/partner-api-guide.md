@@ -1,8 +1,14 @@
 # Partner API — integration guide
 
 How a payroll/HR system submits **equality reports** (jafnréttisáætlun) and
-**salary reports** (launagreining) to Jafnréttisstofa on behalf of an employer,
-using an API key the employer issued.
+**salary reports** (launagreining) to Jafnréttisstofa on behalf of an employer.
+There are two kinds of credential:
+
+- a **company key**, which an employer issues for its own integration and which
+  acts for that one company; and
+- a **vendor client key**, which an approved intermediary — an accounting firm,
+  say — holds for itself and uses for every company that has allowed it to act
+  for them. See section D.
 
 - **Swagger UI:** `https://<partner-api-host>/swagger/partner`
 - **OpenAPI JSON:** `https://<partner-api-host>/swagger/partner/json`
@@ -30,6 +36,12 @@ out-of-band onboarding step, done on the internal DoE API by one of:
 - **Jafnréttisstofa**, on the employer's behalf, from the _Aðgangslyklar_ tab on
   the company view.
 
+A **vendor client key** does not come from an employer. Jafnréttisstofa first
+approves your organisation as a provider; you then collect your own keys on the
+Jafnréttisstofa self-service web, signed in as your organisation — or, until that
+web ships, Jafnréttisstofa issues them. See section D, including what is not yet
+available.
+
 Practical consequences for an integration:
 
 - The plaintext secret is shown **exactly once**, at issuance. Only a hash is
@@ -46,8 +58,11 @@ Practical consequences for an integration:
 The key travels as a bearer token, verbatim:
 
 ```http
-Authorization: Bearer doe_live_<keyId>.<secret>
+Authorization: Bearer doe_live_<keyId>.<secret>     # company key
+Authorization: Bearer doev_live_<keyId>.<secret>    # vendor client key
 ```
+
+The prefix is part of the key — `doe_` or `doev_` — and says which kind it is.
 
 Nothing else is accepted — not a custom header, not a query parameter. A key in
 a query string ends up in access logs and referrers.
@@ -55,12 +70,26 @@ a query string ends up in access logs and referrers.
 The key is server-to-server only. CORS is deliberately not enabled, so there is
 no legitimate browser caller: a key cannot be kept secret in one.
 
-### The company is never in the request
+### Which company you are acting for
 
-`PartnerCompanyGuard` resolves the company from the key
-(`doe_api_key.company_national_id`). No route takes a company id, and no payload
-field can change which employer you are acting for. One key = one employer;
-acting for ten customers means ten keys.
+**With a company key**, the company comes from the key and nothing else.
+`PartnerCompanyGuard` resolves it from `doe_api_key.company_national_id`; no
+route takes a company id, and no payload field can change which employer you
+are acting for. Do not send `X-Company-National-Id` with a company key — it is a
+`400`, because the key already names its company.
+
+**With a vendor client key**, name the company on every request:
+
+```http
+Authorization: Bearer doev_live_<keyId>.<secret>
+X-Company-National-Id: 5501234567
+```
+
+The key stays the same across all your customers; the header changes per
+request. It is accepted only while that company has a live delegation to your
+organisation, and the request then acts for that company exactly as its own key
+would — same routes, same responses. Missing or malformed header: `400`, naming
+the header. No live delegation from that company: `403`. See section D.
 
 ### Scopes
 
@@ -82,6 +111,12 @@ and it carries a `DELETE` that cascades a whole model away. If you only file,
 A call outside the key's scopes is `403`, and the scope check runs _before_ the
 rate limiter, so a refused call does not spend your allowance.
 
+A vendor client key has two sets that count: your organisation's, set when
+Jafnréttisstofa approved it, and each company's, chosen when it granted the
+delegation. What you may do for a company is **the intersection**. So one
+customer can grant you `scoring:write` while another withholds it, with the same
+key.
+
 ### A company off the register
 
 A company that is not active in Jafnréttisstofa's register **cannot use this
@@ -100,9 +135,12 @@ invalid one answers `401`), the company simply cannot file.
 
 Three allowances, and which one you are spending depends on the route.
 
-- **Per key:** 5 000 requests per hour, across every route **except the dry
-  run**. Reported in the `X-RateLimit-*` response headers. A backstop against a
-  runaway retry loop, not a commercial quota.
+- **Per key:** 5 000 requests per hour for a company key, 10 000 for a vendor
+  client key, across every route **except the dry run**. A vendor key's
+  allowance is one bucket for the key, spent across every company it acts for,
+  not one per company. Reported in the unsuffixed `X-RateLimit-*` response
+  headers for both kinds. A backstop against a runaway retry loop, not a
+  commercial quota.
 - **Per key, dry run only:** 500 requests per hour for
   `POST /partner/reports/salary-analysis`, which draws on nothing else.
   Rehearsing a filing as often as an extract changes is what that route is for,
@@ -207,7 +245,7 @@ this flow comes first and has a human review step in the middle of it.
 
 _Scope: `report:read`_
 
-Returns the company the key belongs to. No parameters. Use it as the first call
+Returns the company the request acts for — the one a company key belongs to, or the one named in `X-Company-National-Id` with a vendor client key. No parameters. Use it as the first call
 of any integration: it proves the key is live and points at the employer you
 expect, before you build a payload for the wrong company.
 
@@ -775,6 +813,80 @@ assignment rather than silently re-pointing it at a þrep you did not choose.
 filing copies the model it was scored under, so the figures on a filed report
 never move when the model changes or goes away.
 
+## D. Filing for many companies (vendor clients)
+
+For an intermediary — an accounting firm, a payroll bureau — that files for many
+employers. One credential for your organisation, and one delegation per company
+that allows you to act for it, instead of a key from every customer.
+
+> **Availability.** The API side of this section is live. The Jafnréttisstofa
+> self-service web — where your organisation collects its keys and your
+> customers grant you permission — is still being built. Until it ships, ask
+> Jafnréttisstofa to issue your organisation's key, and note that no customer
+> can connect to you yet: every request naming a company is a `403` until that
+> web exists.
+
+### Getting set up
+
+1. **Be approved.** Ask Jafnréttisstofa to approve your organisation as a
+   provider. This is their decision; there is no route that does it.
+2. **Collect your key.** Sign in to the Jafnréttisstofa self-service web as your
+   organisation and create a key — or, until that web ships, have Jafnréttisstofa
+   issue one. As with company keys, it is shown exactly once and you rotate by
+   creating a new one, deploying it, and revoking the old.
+3. **Let your customers connect.** Put a "Tengjast Jafnréttisstofu" link in your
+   own product that opens the self-service web. The customer signs in through
+   island.is as their company, picks your organisation from the list of approved
+   providers, and chooses what to allow. Nothing in the link is trusted: the
+   company comes from their sign-in, and the provider from the list.
+4. **Poll `GET /partner/delegations`** to see who has connected. There is no
+   callback — polling is how you notice a new connection, and a withdrawal.
+
+**A key alone authorises nothing.** Until a company delegates to you, every
+request that names it is a `403`.
+
+### `GET /partner/delegations`
+
+Vendor client keys only (a company key gets `403`). Needs `report:read`. Takes
+no `X-Company-National-Id` — it lists every company that has delegated to you,
+and sending the header is a `400`.
+
+```json
+{
+  "delegations": [
+    {
+      "id": "…",
+      "companyNationalId": "5501234567",
+      "companyName": "Fyrirtæki ehf.",
+      "scopes": ["report:read", "salary:submit"],
+      "grantedAt": "2026-09-23T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+Send a delegation's `companyNationalId` as `X-Company-National-Id` to act for
+that company. A company that withdraws disappears from the list, and requests
+naming it turn into `403` immediately.
+
+### What changes, and what does not
+
+- **Every other route works as documented above**, acting for the company in
+  the header. There are no vendor-only versions of the filing routes.
+- **`providerId` is per company, not per vendor.** It is namespaced with the
+  company's kennitala, so your ids never collide across your customers — but
+  within one company you share the namespace with that company's own key and
+  any provider it used before you. A reused id is a replay (`200`), not a
+  second filing.
+- **You see what the company's own key would see**, including reports filed
+  under another credential for that company.
+- **Filing for yourself.** If your organisation is also an employer, connect it
+  to itself on the self-service web like any customer, and send your own
+  kennitala in the header. There is no separate path.
+- **Starfsmat.** If you offer your customers a scoring-model editor, each company
+  authors its own model through it, and needs to have granted you
+  `scoring:write`. Your organisation's approval has to include it too.
+
 ## Quick reference
 
 | #   | Method | Path                                    | Scope             |
@@ -788,9 +900,14 @@ never move when the model changes or goes away.
 | 7   | `GET`  | `/partner/reports/:providerId/outliers` | `report:read`     |
 | 7b  | `PUT`  | `/partner/reports/:providerId/outliers` | `salary:submit`   |
 | 8   | `GET`  | `/partner/sub-criteria/catalog`         | `report:read`     |
+| 9   | `GET`  | `/partner/delegations` ²                | `report:read`     |
 
 ¹ `multipart/form-data` — a JSON `payload` part and a `.docx` `document` part.
 Every other route on this API takes and returns JSON.
+
+² Vendor client keys only, and the one route that takes no
+`X-Company-National-Id` — sending it there is a `400`. Every other route acts for a company: with a vendor
+client key, name it in that header.
 
 Scoring model (section C):
 
@@ -815,15 +932,15 @@ Scoring model (section C):
 
 ## Status codes
 
-| Code  | Meaning                                                                                                                                                                                                                                       |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId`                                                                                    |
-| `201` | on a submission: filed — `status` says whether it is `SUBMITTED` or `POSTPONED`                                                                                                                                                               |
-| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx`                                                                         |
-| `401` | missing or invalid key                                                                                                                                                                                                                        |
-| `403` | key lacks the scope the route declares                                                                                                                                                                                                        |
-| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                                                                                            |
-| `409` | the company is not active in the register (any route); a sibling report is `IN_REVIEW`, or `POSTPONED` from island.is (one filed through this API is withdrawn and replaced); the `providerId` is already used for a report of the other type |
-| `413` | the equality document is past the 10MB limit                                                                                                                                                                                                  |
-| `429` | rate limit — per key (headers) or per IP                                                                                                                                                                                                      |
-| `503` | write collision. Retry with the same `providerId`                                                                                                                                                                                             |
+| Code  | Meaning                                                                                                                                                                                                                                                                                                      |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId`                                                                                                                                                   |
+| `201` | on a submission: filed — `status` says whether it is `SUBMITTED` or `POSTPONED`                                                                                                                                                                                                                              |
+| `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx`; `X-Company-National-Id` missing or malformed with a vendor client key, sent with a company key, or sent on `GET /partner/delegations` |
+| `401` | missing or invalid key                                                                                                                                                                                                                                                                                       |
+| `403` | key lacks the scope the route declares (for a vendor client key: your organisation's scopes intersected with the company's); no live delegation from the company named in `X-Company-National-Id`; a company key on `GET /partner/delegations`                                                               |
+| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                                                                                                                                                           |
+| `409` | the company is not active in the register (any route); a sibling report is `IN_REVIEW`, or `POSTPONED` from island.is (one filed through this API is withdrawn and replaced); the `providerId` is already used for a report of the other type                                                                |
+| `413` | the equality document is past the 10MB limit                                                                                                                                                                                                                                                                 |
+| `429` | rate limit — per key (headers) or per IP                                                                                                                                                                                                                                                                     |
+| `503` | write collision. Retry with the same `providerId`                                                                                                                                                                                                                                                            |

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 
+import { DelegationApiModule } from '../delegation/delegation.api.module'
 import { PartnerApiModule } from '../partner/partner.api.module'
 import { ScoringModelApiModule } from '../scoring-model/scoring-model.api.module'
 
@@ -20,6 +21,6 @@ import { ScoringModelApiModule } from '../scoring-model/scoring-model.api.module
  * the document.
  */
 @Module({
-  imports: [PartnerApiModule, ScoringModelApiModule],
+  imports: [PartnerApiModule, ScoringModelApiModule, DelegationApiModule],
 })
 export class PartnerSwaggerModule {}

@@ -119,6 +119,15 @@ describe('PartnerSubmissionService', () => {
       expect(submitSalary.mock.calls[0][2]).toEqual({
         postponeUnexplainedOutliers: true,
         withdrawPostponedSibling: true,
+        partnerClientId: null,
+      })
+    })
+
+    it('records the vendor client acting for the company as provenance', async () => {
+      await service.submitSalary(input, COMPANY, 'client-1')
+
+      expect(submitSalary.mock.calls[0][2]).toMatchObject({
+        partnerClientId: 'client-1',
       })
     })
 
@@ -279,6 +288,7 @@ describe('PartnerSubmissionService', () => {
           equalityReportContent: '<h1>Jafnréttisáætlun</h1>',
         },
         COMPANY,
+        { partnerClientId: null },
       )
     })
 

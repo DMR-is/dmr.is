@@ -41,7 +41,10 @@ import { minimumSetOrdinals } from '../report-statistics/lib/minimum-set'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
 import { CreateReportResponseDto } from './dto/create-report-response.dto'
-import { CreateSalaryOptions } from './dto/create-salary-options'
+import {
+  CreateEqualityOptions,
+  CreateSalaryOptions,
+} from './dto/create-salary-options'
 import { IReportCreateService } from './report-create.service.interface'
 
 const LOGGING_CONTEXT = 'ReportCreateService'
@@ -104,8 +107,9 @@ export class ReportCreateService implements IReportCreateService {
 
   async createEquality(
     input: CreateEqualityReportDto,
+    options: CreateEqualityOptions = {},
   ): Promise<CreateReportResponseDto> {
-    return this.createEqualityReport(input)
+    return this.createEqualityReport(input, options)
   }
 
   private async createSalaryReport(
@@ -235,6 +239,7 @@ export class ReportCreateService implements IReportCreateService {
       importedFromExcel: input.importedFromExcel,
       providerType: input.providerType,
       providerId: input.providerId,
+      partnerClientId: options.partnerClientId ?? null,
       companyAdminName: input.companyAdminName,
       companyAdminTitle: input.companyAdminTitle ?? null,
       companyAdminEmail: input.companyAdminEmail,
@@ -375,6 +380,7 @@ export class ReportCreateService implements IReportCreateService {
    */
   private async createEqualityReport(
     input: CreateEqualityReportDto,
+    options: CreateEqualityOptions,
   ): Promise<CreateReportResponseDto> {
     const submittingCompany = this.getSubmittingCompany(input.companies)
 
@@ -401,6 +407,7 @@ export class ReportCreateService implements IReportCreateService {
       importedFromExcel: false,
       providerType: input.providerType,
       providerId: input.providerId,
+      partnerClientId: options.partnerClientId ?? null,
       companyAdminName: input.companyAdminName,
       companyAdminTitle: input.companyAdminTitle ?? null,
       companyAdminEmail: input.companyAdminEmail,
