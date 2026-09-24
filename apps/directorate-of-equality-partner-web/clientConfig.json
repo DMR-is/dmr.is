@@ -5362,9 +5362,22 @@
           "nationalId": {
             "type": "string",
             "description": "The firm’s kennitala."
+          },
+          "scopes": {
+            "type": "array",
+            "description": "What Jafnréttisstofa approved the firm to do — the most a company can allow it.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "salary:submit",
+                "equality:submit",
+                "report:read",
+                "scoring:write"
+              ]
+            }
           }
         },
-        "required": ["id", "name", "nationalId"]
+        "required": ["id", "name", "nationalId", "scopes"]
       },
       "GetPartnerProvidersResponseDto": {
         "type": "object",

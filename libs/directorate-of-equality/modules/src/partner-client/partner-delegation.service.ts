@@ -263,6 +263,7 @@ export class PartnerDelegationService implements IPartnerDelegationService {
         id: client.id,
         name: client.name,
         nationalId: client.nationalId,
+        scopes: client.scopes,
       },
       scopes: delegation.scopes,
       grantedAt: delegation.createdAt,

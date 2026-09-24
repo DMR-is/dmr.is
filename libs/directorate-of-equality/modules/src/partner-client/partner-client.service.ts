@@ -140,6 +140,7 @@ export class PartnerClientService implements IPartnerClientService {
       id: client.id,
       name: client.name,
       nationalId: client.nationalId,
+      scopes: client.scopes,
     }))
   }
 
