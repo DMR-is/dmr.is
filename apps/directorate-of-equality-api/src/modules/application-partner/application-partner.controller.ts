@@ -101,7 +101,7 @@ export class ApplicationPartnerController {
     include404: true,
     include409: true,
     description:
-      'Allows a provider to act for the signed-in company, with the scopes named. `404` for a provider that is not on the approved list; `400` for a scope it was not approved for; `409` if it is already allowed — to change the scopes, withdraw and grant again. Recorded on the company’s timeline.',
+      'Allows a provider to act for the signed-in company. Omit `scopes` to hand over everything the provider was approved for, as the self-service web does — a delegation is all or nothing. `404` for a provider that is not on the approved list; `400` for a named scope it was not approved for; `409` if it is already allowed. Recorded on the company’s timeline.',
   })
   grantPartnerDelegation(
     @CurrentCompany() company: CompanyDto,

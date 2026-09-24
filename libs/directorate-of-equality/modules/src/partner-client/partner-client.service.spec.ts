@@ -153,33 +153,16 @@ describe('PartnerClientService', () => {
     })
 
     /**
-     * Approval is all or nothing, and the admin screen sends no scopes — so
-     * what an omitted set resolves to is what every firm gets.
+     * Approval is all or nothing, and there is no way to name a subset: the
+     * consent screen promises a company that a delegation hands over
+     * everything, and a delegation copies the firm's approval.
      */
-    it('approves every scope, scoring:write included, when none is named', async () => {
+    it('approves every scope, scoring:write included', async () => {
       await create()
 
       const { scopes } = clients.create.mock.calls[0][0]
       expect(scopes).toEqual(DEFAULT_API_KEY_SCOPES)
       expect([...scopes].sort()).toEqual(Object.values(ApiKeyScopeEnum).sort())
-    })
-
-    it('still honours a narrower set named by an API caller', async () => {
-      await create({
-        scopes: [ApiKeyScopeEnum.REPORT_READ, ApiKeyScopeEnum.SALARY_SUBMIT],
-      })
-
-      expect(clients.create.mock.calls[0][0].scopes).toEqual([
-        ApiKeyScopeEnum.REPORT_READ,
-        ApiKeyScopeEnum.SALARY_SUBMIT,
-      ])
-    })
-
-    it('rejects an unrecognised scope rather than storing it', async () => {
-      await expect(
-        create({ scopes: ['reports:everything'] }),
-      ).rejects.toBeInstanceOf(BadRequestException)
-      expect(clients.create).not.toHaveBeenCalled()
     })
 
     it('rejects a kennitala that fails its checksum', async () => {

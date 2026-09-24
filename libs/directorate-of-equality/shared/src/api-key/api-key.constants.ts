@@ -28,10 +28,10 @@ export enum ApiKeyScopeEnum {
   EQUALITY_SUBMIT = 'equality:submit',
   REPORT_READ = 'report:read',
   /**
-   * Author the company's scoring model (starfsmat). Separate from the submit
-   * scopes because it is a different act by a possibly different party: a
-   * payroll vendor that only files needs `report:read` to reference a model
-   * somebody else authored, and never this.
+   * Author the company's scoring model (starfsmat), including a delete that
+   * cascades the whole model away. A scope of its own so routes can require
+   * it, but no longer something anyone chooses: it is in the default set, and
+   * every key, firm and delegation the screens create carries it.
    */
   SCORING_WRITE = 'scoring:write',
 }

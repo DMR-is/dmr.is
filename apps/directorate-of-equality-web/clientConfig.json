@@ -3129,7 +3129,7 @@
     },
     "/api/v1/partner-clients": {
       "post": {
-        "description": "Approves a firm as an intermediary. Requires the ADMIN role. `409` if the kennitala is already an active partner client. The firm can file for no one until companies delegate to it.",
+        "description": "Approves a firm as an intermediary, for every scope — approval is all or nothing. Requires the ADMIN role. `409` if the kennitala is already an active partner client. The firm can file for no one until companies delegate to it.",
         "operationId": "createPartnerClient",
         "parameters": [],
         "requestBody": {
@@ -6035,7 +6035,7 @@
           },
           "scopes": {
             "type": "array",
-            "description": "What the key may do. Omit for every scope, `scoring:write` included — access is all or nothing, and no Jafnréttisstofa screen narrows it. Name a subset only to restrict a key deliberately; note that `scoring:write` carries a delete that cascades the whole starfsmat away. An unrecognised scope is rejected rather than stored.",
+            "description": "What the key may do. Omit for every scope, `scoring:write` included — access is all or nothing, and no Jafnréttisstofa screen narrows it. Name a subset only to restrict a key deliberately; note that `scoring:write` carries a delete that cascades the whole starfsmat away. An empty array is refused rather than read as omitted, and an unrecognised scope is rejected rather than stored.",
             "items": {
               "type": "string",
               "enum": [
@@ -7500,20 +7500,7 @@
             "example": "0101901234",
             "description": "The firm’s kennitala."
           },
-          "name": { "type": "string", "minLength": 1, "maxLength": 256 },
-          "scopes": {
-            "type": "array",
-            "description": "The ceiling on what the firm may ever do. Omit for every scope, `scoring:write` included — approval is all or nothing, and the admin screen sends nothing. What the firm may do for a given company is this intersected with that company’s delegation.",
-            "items": {
-              "type": "string",
-              "enum": [
-                "salary:submit",
-                "equality:submit",
-                "report:read",
-                "scoring:write"
-              ]
-            }
-          }
+          "name": { "type": "string", "minLength": 1, "maxLength": 256 }
         },
         "required": ["nationalId", "name"]
       },

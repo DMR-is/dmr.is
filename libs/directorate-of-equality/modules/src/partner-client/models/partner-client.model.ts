@@ -38,8 +38,9 @@ type PartnerClientCreateAttributes = {
  * `revoked_at` AND this row's are both null — every reader checks both.
  *
  * `scopes` is the ceiling. What a request may do is this intersected with the
- * delegation's scopes, so one employer can withhold `scoring:write` from a firm
- * another employer grants it to.
+ * delegation's scopes. Every firm is approved for every scope and a
+ * delegation copies the firm's approval, so in practice the intersection only
+ * narrows rows written through the API with an explicit subset.
  */
 @MutableTable({ tableName: DoeModels.PARTNER_CLIENT })
 export class PartnerClientModel extends MutableModel<

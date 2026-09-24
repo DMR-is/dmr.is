@@ -1,4 +1,5 @@
 import {
+  type ApiKeyDto,
   CompanyObligationStatusEnum,
   CompanySizeEnum,
 } from '../gen/fetch/types.gen'
@@ -60,6 +61,25 @@ export const OBLIGATION_TAG_VARIANT: Record<
   [CompanyObligationStatusEnum.ACTION_PLAN_MISSING]: 'dark',
   [CompanyObligationStatusEnum.COVERED]: 'mint',
 }
+
+/** The generator inlines the scope enum on each DTO rather than exporting it. */
+type ApiScope = ApiKeyDto['scopes'][number]
+
+const ALL_SCOPES: ApiScope[] = [
+  'report:read',
+  'salary:submit',
+  'equality:submit',
+  'scoring:write',
+]
+
+/**
+ * Whether a key or delegation holds less than everything. Nothing created from
+ * the screens does any more — access is all or nothing — but keys and
+ * delegations made before that keep whatever they were given, and without a
+ * marker a vendor's starfsmat call would fail with a 403 nobody could explain.
+ */
+export const isNarrowGrant = (scopes: ApiScope[]) =>
+  ALL_SCOPES.some((scope) => !scopes.includes(scope))
 
 export type KeyState = 'active' | 'revoked' | 'expired'
 

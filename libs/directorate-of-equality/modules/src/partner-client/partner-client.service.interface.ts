@@ -1,4 +1,4 @@
-import { ApiKeyOriginEnum, ApiKeyScopeEnum } from '@dmr.is/doe-shared'
+import { ApiKeyOriginEnum } from '@dmr.is/doe-shared'
 
 import { PartnerClientDto } from './dto/partner-client.dto'
 import {
@@ -10,8 +10,6 @@ import { PartnerProviderDto } from './dto/partner-provider.dto'
 export type CreatePartnerClientInput = {
   nationalId: string
   name: string
-  /** Defaults to the standard set, without `scoring:write`, when omitted. */
-  scopes?: ApiKeyScopeEnum[]
   /** The approving admin. A firm is never created by anyone else. */
   actorUserId: string
 }
