@@ -28,11 +28,12 @@ jobs:
             legal-gazette-application-web,
             legal-gazette-public-web,
             directorate-of-equality-api,
-            # directorate-of-equality-partner-api omitted until its ECS service
-            # exists in DMR-Jafnrettisstofa; re-add with the terragrunt definition.
+            # directorate-of-equality-partner-api and -partner-web are dev-only
+            # for now: prod is held back (deploy_doe_partner: false in the infra
+            # repo's DMR-Jafnrettisstofa/config/prod.yml, no prod unit dirs).
+            # Re-add both here, and to update-terragrunt-jafnrettisstofa, in the
+            # PR that enables them in prod.
             directorate-of-equality-web,
-            # directorate-of-equality-partner-web omitted for the same reason;
-            # re-add with its terragrunt service definition.
           ]
     steps:
       - name: 📁 Checkout

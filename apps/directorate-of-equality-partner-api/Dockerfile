@@ -35,6 +35,13 @@ ENTRYPOINT ["dumb-init", "--"]
 # be whichever container happened to start first. Deploy doe-api first, always —
 # this service's models must never expect a column its sibling has not migrated.
 #
+# The pipelines do not enforce that yet. The dev deploy (deploy-containers.yml)
+# rolls affected containers out in parallel, so a commit pairing a doe-api
+# migration with a model change leaves a short window in dev where this service
+# runs ahead of the schema; its health check does not touch the database, so the
+# deploy still goes green. The prod terragrunt apply runs with --parallelism 2.
+# Sequence this service after doe-api in the PR that enables it in prod.
+#
 # No chromium either. The PDF renderer is admin-only and this surface does not
 # expose it.
 CMD ["varlock", "run", "--path", "./env", "--", "node", "main.js"]
