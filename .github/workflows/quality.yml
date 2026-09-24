@@ -180,3 +180,14 @@ jobs:
 
       - name: Check yarn constraints
         run: yarn constraints
+
+  # The prod rollout wait's rollback and credential-expiry paths only run for
+  # real during a release, so check them against the fake aws on every change.
+  # Needs only bash and jq, which the runner has.
+  deploy-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test wait-for-services
+        run: bash .github/actions/deploy/wait-for-services/test/run.sh
