@@ -44,6 +44,43 @@ describe('middleware-helpers', () => {
   function createLargeToken(size: number = CHUNK_SIZE + 1000): string {
     return 'x'.repeat(size)
   }
+  describe('custom cookie name', () => {
+    // An app on its own cookie prefix must get its refreshed session written
+    // under that name, and never under NextAuth's default, where it would
+    // overwrite another app's session on the same host.
+    it('writes the refreshed session under the name it is given', () => {
+      const request = createMockRequest()
+      const response = NextResponse.next()
+
+      const result = updateCookie(
+        smallToken,
+        request,
+        response,
+        'doe-web.session-token',
+      )
+
+      expect(result.cookies.get('doe-web.session-token')?.value).toBe(
+        smallToken,
+      )
+      expect(result.cookies.get(SESSION_COOKIE)).toBeUndefined()
+    })
+
+    it('chunks under the name it is given', () => {
+      const request = createMockRequest()
+      const response = NextResponse.next()
+
+      const result = updateCookie(
+        createLargeToken(),
+        request,
+        response,
+        'doe-web.session-token',
+      )
+
+      expect(result.cookies.get('doe-web.session-token.0')).toBeDefined()
+      expect(result.cookies.get(`${SESSION_COOKIE}.0`)).toBeUndefined()
+    })
+  })
+
   describe('updateCookie', () => {
     describe('Single cookie scenario (no delegation, small token)', () => {
       it('should set a new session cookie when small token is provided', () => {

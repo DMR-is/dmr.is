@@ -34,12 +34,18 @@ const revokeRefreshToken = async (
   }
 }
 
+/**
+ * @param cookieName the app's session cookie when it has opted into its own
+ * names (see sessionCookies.ts); omitted, NextAuth's default is read.
+ */
 export const revokeRefreshTokenHandler = async (
   req: NextRequest,
   identityServerConfig: { clientId: string; clientSecret: string },
+  cookieName?: string,
 ) => {
   const token = await getToken({
     req: req,
+    cookieName,
   })
   if (!token) {
     return Response.json({ message: 'No token found' }, { status: 401 })

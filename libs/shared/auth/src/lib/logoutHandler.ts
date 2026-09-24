@@ -4,11 +4,15 @@ import { getToken } from 'next-auth/jwt'
 // The id_token is read from the HttpOnly NextAuth cookie rather than a query
 // parameter so it never appears in one of our own URLs (access logs, browser
 // history). Only the returned IDS end-session URL carries it.
+//
+// `cookieName` is the app's session cookie when it has opted into its own
+// names (see sessionCookies.ts); omitted, NextAuth's default is read.
 export const endSessionHandler = async (
   request: NextRequest,
   postLogoutRedirectUri: string,
+  cookieName?: string,
 ) => {
-  const token = await getToken({ req: request })
+  const token = await getToken({ req: request, cookieName })
 
   if (!token) {
     return Response.json({ message: 'No token found' }, { status: 401 })

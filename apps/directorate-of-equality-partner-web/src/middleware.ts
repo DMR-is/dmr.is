@@ -1,6 +1,9 @@
 import { createAuthMiddleware } from '@dmr.is/auth/middleware-helpers'
 
-import { identityServerConfig } from './lib/auth/identityServerConfig'
+import {
+  AUTH_COOKIE_PREFIX,
+  identityServerConfig,
+} from './lib/auth/identityServerConfig'
 
 // This app authenticates to directorate-of-equality-api with
 // session.accessToken. That works only because the client requests the
@@ -23,6 +26,7 @@ export default createAuthMiddleware({
   signInPath: '/innskraning',
   checkIsActive: false,
   skipDefaultUrlCheck: true,
+  cookiePrefix: AUTH_COOKIE_PREFIX,
 })
 
 export const config = {
