@@ -235,15 +235,17 @@ export const ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS: Readonly<
 })
 
 /**
- * TODO(OneSystems): can any One action return an empty-bodied 401/403/404, or
- * a ValidationProblem, AFTER it has filed/sent? Is the 401 challenge body
- * empty and does it carry `WWW-Authenticate: Bearer`?
+ * TODO(OneSystems): can any One action, AFTER it has filed/sent, return
+ * `NotFound(null)`, `Unauthorized(null)`, `Forbid()`, `Challenge()` or
+ * `ValidationProblem()`? Is the 401 challenge body empty, and does it carry
+ * `WWW-Authenticate: Bearer`?
  *
- * The rule below assumes: no (an action never calls `Challenge()` or returns
- * a model-validation body once it has acted), and yes (the JwtBearer
- * challenge is an empty 401 with `WWW-Authenticate: Bearer`). If the
- * challenge turns out not to carry the header, every expired token on
- * CreateDocument or SendDocToIslandIs ends UNCERTAIN (never a duplicate).
+ * The rule below assumes: no, and yes. `Challenge()` from inside an action
+ * would produce exactly the empty Bearer-challenged 401 treated as definitive
+ * (and retried) here, and nothing client-side can tell it apart from a real
+ * auth failure, so only OneSystems can rule it out. If the challenge turns out
+ * not to carry the header, every expired token on CreateDocument or
+ * SendDocToIslandIs ends UNCERTAIN (never a duplicate).
  */
 /**
  * True when One certainly did NOT act on the action call, so repeating it

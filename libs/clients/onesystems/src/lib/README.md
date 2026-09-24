@@ -201,8 +201,10 @@ Each needs a live call or an answer from OneSystems before
 code.
 
 - What does Login return? The spec documents its response as `{}`.
-- Can any One action return an empty-bodied 401/403/404, or a
-  ValidationProblem, **after** it has filed/sent? Is the 401 challenge body
+- Can any One action, **after** it has filed/sent, return `NotFound(null)`,
+  `Unauthorized(null)`, `Forbid()`, `Challenge()` or `ValidationProblem()`?
+  `Challenge()` is indistinguishable client-side from a real expired-token
+  challenge, which is treated as definitive and retried. Is the 401 challenge body
   empty, and does it carry `WWW-Authenticate: Bearer`? If it does not carry
   the header, an expired token on `CreateDocument` or `SendDocToIslandIs`
   ends UNCERTAIN instead of being retried.

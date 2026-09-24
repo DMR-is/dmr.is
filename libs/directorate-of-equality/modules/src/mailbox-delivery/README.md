@@ -26,7 +26,7 @@ consumer of the client must check the flag itself.
   cannot be rolled back with the caller's work. Holding a transaction while
   calling it, such as the cron lock (`pg_try_advisory_xact_lock` inside
   `sequelize.transaction()`), is allowed and costs one extra pool connection.
-  Deliveries run in parallel each take one more and can exhaust the pool
+  Deliveries running in parallel each take one more and can exhaust the pool
   (`max: 5`).
 - The company must already be committed.
 - A failure is recorded on the row (FAILED or UNCERTAIN) and rethrown.

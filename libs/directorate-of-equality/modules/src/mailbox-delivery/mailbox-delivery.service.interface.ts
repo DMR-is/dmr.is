@@ -72,7 +72,7 @@ export type DeliverToMailboxResult =
  * (`pg_try_advisory_xact_lock` inside `sequelize.transaction()`), is allowed:
  * it costs one extra pool connection (two in use, of `max: 5`), and none of
  * these writes is part of that transaction or rolled back with it. Deliveries
- * run in parallel each take one more, and can exhaust the pool.
+ * running in parallel each take one more, and can exhaust the pool.
  *
  * Gated by `ONESYSTEMS_ENABLED`: the OneSystems client itself is not, so this
  * service is where the kill switch lives.
