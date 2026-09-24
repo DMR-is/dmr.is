@@ -119,6 +119,15 @@ export const IssueKeyModal = ({
     }
   }, [isOpen])
 
+  // Unmounted is not showing: a key that lands afterwards gets the toast, not
+  // a state update on a component that is gone.
+  useEffect(
+    () => () => {
+      isShowingRef.current = false
+    },
+    [],
+  )
+
   const close = () => {
     isShowingRef.current = false
     setIssuedKey(null)

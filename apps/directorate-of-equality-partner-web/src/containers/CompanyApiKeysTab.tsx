@@ -32,8 +32,14 @@ export const CompanyApiKeysTab = () => {
 
   const { data, isLoading, isError } = useQuery(trpc.apiKey.list.queryOptions())
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.apiKey.list.queryKey() })
+  // Fire-and-forget. Returned from `onSuccess`, the promise would be awaited
+  // before `mutateAsync` resolves, so a failing refetch would hold back — and,
+  // were the modal not mounted regardless, destroy — the one-time secret.
+  const invalidate = () => {
+    void queryClient.invalidateQueries({
+      queryKey: trpc.apiKey.list.queryKey(),
+    })
+  }
 
   const issue = useMutation({
     ...trpc.apiKey.issue.mutationOptions(),
@@ -62,9 +68,6 @@ export const CompanyApiKeysTab = () => {
     },
   })
 
-  if (isLoading) return <TabLoading />
-  if (isError) return <TabError message={t.loadError} />
-
   return (
     <Box marginTop={4}>
       <Stack space={3}>
@@ -84,11 +87,20 @@ export const CompanyApiKeysTab = () => {
           </Button>
         </Inline>
 
-        <KeyList
-          keys={data?.apiKeys ?? []}
-          emptyText={t.empty}
-          onRevoke={setPendingRevoke}
-        />
+        {/* Inline rather than an early return: the modals below must stay
+            mounted, or a failed refetch while a new key is on screen would
+            unmount the only place its secret is shown. */}
+        {isLoading ? (
+          <TabLoading />
+        ) : isError ? (
+          <TabError message={t.loadError} />
+        ) : (
+          <KeyList
+            keys={data?.apiKeys ?? []}
+            emptyText={t.empty}
+            onRevoke={setPendingRevoke}
+          />
+        )}
       </Stack>
 
       <IssueKeyModal
@@ -101,7 +113,9 @@ export const CompanyApiKeysTab = () => {
         onIssue={async (input) => (await issue.mutateAsync(input)).key}
         onClose={() => {
           setIsIssueOpen(false)
-          issue.reset()
+          // Not while in flight: resetting detaches the pending request, so a
+          // second Create could then replace a key nobody has seen yet.
+          if (!issue.isPending) issue.reset()
         }}
       />
 

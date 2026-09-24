@@ -43,10 +43,13 @@ export const ProviderKeysTab = ({
     trpc.partnerClient.listKeys.queryOptions(),
   )
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({
+  // Fire-and-forget, as in CompanyApiKeysTab: an awaited refetch would hold
+  // back the one-time secret.
+  const invalidate = () => {
+    void queryClient.invalidateQueries({
       queryKey: trpc.partnerClient.listKeys.queryKey(),
     })
+  }
 
   const issue = useMutation({
     ...trpc.partnerClient.issueKey.mutationOptions(),
@@ -135,7 +138,7 @@ export const ProviderKeysTab = ({
         }
         onClose={() => {
           setIsIssueOpen(false)
-          issue.reset()
+          if (!issue.isPending) issue.reset()
         }}
       />
 

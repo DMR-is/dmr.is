@@ -88,9 +88,6 @@ export const DelegationsTab = ({ companyName }: { companyName: string }) => {
     },
   })
 
-  if (isLoading) return <TabLoading />
-  if (isError) return <TabError message={t.loadError} />
-
   const delegations = data?.delegations ?? []
 
   return (
@@ -112,7 +109,13 @@ export const DelegationsTab = ({ companyName }: { companyName: string }) => {
           </Button>
         </Inline>
 
-        {delegations.length === 0 ? (
+        {/* Inline, so a failed refetch does not unmount a half-filled
+            consent form. */}
+        {isLoading ? (
+          <TabLoading />
+        ) : isError ? (
+          <TabError message={t.loadError} />
+        ) : delegations.length === 0 ? (
           <Text>{t.empty}</Text>
         ) : (
           <Stack space={2}>
