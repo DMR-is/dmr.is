@@ -19,6 +19,13 @@ type Props = {
   isLoading?: boolean
   /** Multi-select by default; pass false for single-value filters. */
   isMulti?: boolean
+  /**
+   * Id of an element naming the context this select belongs to. When set, the
+   * select is wrapped in a group named by that element plus `label`, so two
+   * selects both labelled "Frá" are announced apart. island-ui's Select does
+   * not forward `aria-label`, so a named group is the way to give it context.
+   */
+  groupLabelledBy?: string
   onChange: (values: string[]) => void
 }
 
@@ -35,8 +42,11 @@ export const SelectFilter = ({
   selected,
   isLoading,
   isMulti = true,
+  groupLabelledBy,
   onChange,
 }: Props) => {
+  const labelId = `${name}-label`
+
   const value = useMemo(() => {
     const resolve = (v: string) =>
       options.find((o) => o.value === v) ?? { value: v, label: v }
@@ -47,9 +57,18 @@ export const SelectFilter = ({
   }, [selected, options, isMulti])
 
   return (
-    <Box>
+    <Box
+      {...(groupLabelledBy
+        ? {
+            role: 'group',
+            'aria-labelledby': label
+              ? `${groupLabelledBy} ${labelId}`
+              : groupLabelledBy,
+          }
+        : {})}
+    >
       {label && (
-        <Text variant="eyebrow" marginBottom={1}>
+        <Text id={labelId} variant="eyebrow" marginBottom={1}>
           {label}
         </Text>
       )}

@@ -80,5 +80,8 @@ export async function GET(
   const disposition = res.headers.get('content-disposition')
   if (disposition) headers.set('Content-Disposition', disposition)
 
+  const rowCount = res.headers.get('x-export-row-count')
+  if (rowCount) headers.set('X-Export-Row-Count', rowCount)
+
   return new NextResponse(buffer, { status: 200, headers })
 }
