@@ -94,8 +94,9 @@ runs:
 
     # After the commit, so the infrastructure repo records the tag even when the
     # rollout fails, the same as Útgáfa.
-    # TODO: add directorate-of-equality-partner-api once its prod service exists;
-    # until then terragrunt skips doe_partner_api and there is nothing to wait for.
+    # directorate-of-equality-partner-api and -partner-web are dev-only for now.
+    # Add both here, with the version-tag matrix in on-release.yml and the
+    # terragrunt --service list above, in the PR that enables them in prod.
     - uses: ./.github/actions/deploy/wait-for-services
       with:
         CLUSTER: ${{ inputs.ENV }}-dmr-jafnrettisstofa
