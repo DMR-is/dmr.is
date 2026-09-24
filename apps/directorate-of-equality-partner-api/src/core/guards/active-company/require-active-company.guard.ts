@@ -30,7 +30,7 @@ const LOGGING_CONTEXT = 'RequireActiveCompanyGuard'
  * **409, not 403.** The company's registration can change — it flips back to
  * ACTIVE when it reappears in the annual import, or when an admin says so — so
  * this is a state conflict rather than a permanent refusal, and it sits beside
- * the renewal-window 409 that `submitSalary` already answers with. A 403 would
+ * the sibling-report 409 that `submitSalary` already answers with. A 403 would
  * also be indistinguishable from the scope refusal one guard earlier.
  *
  * ⚠️ **The message is the entire diagnosis.** `PartnerCompanyDto` deliberately

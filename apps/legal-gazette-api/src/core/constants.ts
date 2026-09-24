@@ -92,3 +92,7 @@ export const SYSTEM_ACTOR = {
   id: SYSTEM_ACTOR_ID,
   name: SYSTEM_ACTOR_NAME,
 }
+
+// Written into additional-announcement content at creation, before the advert
+// has a publication number. Swapped for the real number at render time.
+export const PENDING_PUBLICATION_NUMBER = '(Reiknast við útgáfu)'
