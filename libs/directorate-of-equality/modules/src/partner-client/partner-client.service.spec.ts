@@ -239,11 +239,17 @@ describe('PartnerClientService', () => {
           id: CLIENT_ID,
           name: 'Kjarni',
           nationalId: FIRM_NATIONAL_ID,
+          scopes: [ApiKeyScopeEnum.REPORT_READ, ApiKeyScopeEnum.SALARY_SUBMIT],
         }),
       ])
 
       await expect(service.listProviders()).resolves.toEqual([
-        { id: CLIENT_ID, name: 'Kjarni', nationalId: FIRM_NATIONAL_ID },
+        {
+          id: CLIENT_ID,
+          name: 'Kjarni',
+          nationalId: FIRM_NATIONAL_ID,
+          scopes: [ApiKeyScopeEnum.REPORT_READ, ApiKeyScopeEnum.SALARY_SUBMIT],
+        },
       ])
       expect(clients.findAll).toHaveBeenCalledWith({
         where: { revokedAt: null },

@@ -159,6 +159,7 @@ describe('PartnerDelegationService', () => {
         id: FIRM.id,
         name: FIRM.name,
         nationalId: FIRM.nationalId,
+        scopes: FIRM.scopes,
       })
     })
   })

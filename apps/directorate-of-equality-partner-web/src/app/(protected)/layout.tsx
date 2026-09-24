@@ -1,5 +1,7 @@
 import { Header } from '@dmr.is/ui/components/Header/Header'
 
+import { layoutText } from '../../lib/text'
+
 export default function ProtectedLayout({
   children,
 }: {
@@ -7,10 +9,7 @@ export default function ProtectedLayout({
 }) {
   return (
     <>
-      <Header
-        info={{ title: 'Samstarfsaðilar Jafnréttisstofu' }}
-        variant="white"
-      />
+      <Header info={{ title: layoutText.headerTitle }} variant="white" />
       {children}
     </>
   )
