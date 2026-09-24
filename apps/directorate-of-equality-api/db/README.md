@@ -513,6 +513,98 @@ no timeline; the actor columns on those rows are the audit.
 and "who actually submitted this" is the audit question. Null for every report not filed
 under a client key; it cannot be backfilled.
 
+## Mailbox delivery (island.is Pósthólf via OneSystems)
+
+Some notices to a company must reach its island.is Stafrænt pósthólf. We do not talk to
+island.is for that: Jafnréttisstofa's case system, One (OneSystems' OneExternalAPI), files
+the PDF under a case and delivers it to the mailbox, and One is the Skjalaveita island.is
+fetches the document from. So **no PDF is stored here**. One keeps the bytes; the row keeps
+a SHA-256 and a size, so what was sent can be recognised if it is re-rendered. One
+delivery is up to three calls to One (CreateCase, CreateDocument, SendDocToIslandIs), and
+`mailbox_delivery` is the record that lets it resume. The service and the operator
+runbook live in `libs/directorate-of-equality/modules/src/mailbox-delivery/` (its
+`README.md`).
+
+**Why its own table, not `company_event`.** A delivery is state that moves: a row is
+written, gains a case id, a document id, a send time, and may fail and resume in between.
+`company_event` is insert-only (`ImmutableModel`), so the timeline could say that a notice
+went out, but could not hold one that is halfway there. This table is a mutable resume
+record.
+
+**Why each id is saved as it arrives.** None of the three calls is documented as
+idempotent, and CreateDocument and SendDocToIslandIs really are not: repeating them files
+or sends a second copy. Each id One returns is written the moment its call returns, and a
+resume skips every step whose id (or `sent_at`) is already here, so a retry never repeats
+a non-idempotent call. Just before either of those two calls, `in_flight_step` is written;
+still set when the row is next claimed means the process died mid-call.
+
+**The lease.** `lease_token` / `lease_expires_at` stop two workers resuming one row at
+once. A claim is one conditional `UPDATE ... RETURNING` on an unsettled row with no live
+lease, compared on the database clock. Not `FOR UPDATE`, which would hold a connection
+open across the calls to One.
+
+**UNCERTAIN is terminal.** When the outcome of CreateDocument or SendDocToIslandIs is
+unknown (a timeout, a 5xx, a `Success: false`, a process that died mid-call) the row
+becomes `UNCERTAIN` and no code path moves it on. A person reconciles it by hand against
+One, following the runbook in the module README. Retrying it automatically could put the
+same statutory notice in the mailbox twice. A CreateCase failure of any kind, and a
+definitive failure of either later call, leaves the row `FAILED` and retryable instead.
+
+**The attempts cap.** A row is claimed at most `MAILBOX_DELIVERY_MAX_ATTEMPTS` (5) times;
+every claim adds one to `attempts`. After that the service makes no call and reports the
+row as `ATTEMPTS_EXHAUSTED`. CreateCase is retried on any failure on the unconfirmed
+assumption that One finds-or-creates the case (TODO(OneSystems)), so without a cap a
+permanent rejection would retry forever, and if that assumption is wrong each retry may
+leave an orphan case in One. An operator re-arms a row by resetting `attempts` after
+fixing the cause. The cap needs no schema: it is a condition in the claim, and
+`mailbox_delivery_attempts_chk` only keeps the count non-negative.
+
+**`last_error` is not for display.** It is cut to 500 characters and may hold One's own
+`ErrorMessage`, which can echo the recipient's kennitala, name or the subject. Never
+surface it unfiltered in a log, a UI or a ticket. `last_error_number` is stored only in the
+client's loggable form (`toLoggableErrorNumber`), never raw.
+
+**Company pinning.** `(company_id, national_id)` references `company(id, national_id)`,
+reusing the `company_id_national_id_uq` unique constraint added for
+`doe_partner_delegation` (#1542). The kennitala the notice went to and the company the row
+names cannot disagree. No `ON DELETE`: this records mail that reached a real mailbox, and
+deleting the company must not quietly erase it.
+
+**Naming.** Unprefixed on purpose, following `company_email` (outbound email to
+companies, also unprefixed); `doe_` is for service-level tables such as `doe_api_key` and
+`doe_partner_*`.
+
+| Column                  | Type                                                                                                     |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `id`                    | `uuid` PK                                                                                                |
+| `company_id`            | `fk → company`                                                                                           |
+| `national_id`           | `text` (the recipient's kennitala as sent; pinned to `company_id` by the composite FK)                   |
+| `kind`                  | `mailbox_delivery_kind_enum` (`OVERDUE_NOTICE`/`FINES_PRECURSOR`)                                        |
+| `idempotency_key`       | `text` (unique — the caller's key; a repeat call resumes this row)                                       |
+| `subject`               | `text` (the document's title in One and in the mailbox)                                                  |
+| `status`                | `mailbox_delivery_status_enum` (`PENDING`/`CASE_CREATED`/`DOCUMENT_CREATED`/`SENT`/`FAILED`/`UNCERTAIN`) |
+| `in_flight_step`        | `mailbox_delivery_step_enum` (nullable — `CREATE_DOCUMENT`/`SEND_DOC_TO_ISLAND_IS` while in a call)      |
+| `one_case_number`       | `text` (nullable — One's human-facing case number)                                                       |
+| `one_case_item_id`      | `text` (nullable — the case CreateDocument files under)                                                  |
+| `one_document_item_id`  | `text` (nullable — the filed document)                                                                   |
+| `island_is_document_id` | `text` (nullable — may stay NULL on a SENT row: One can confirm a send without an `ItemID`)              |
+| `pdf_sha256`            | `text` (nullable — lowercase hex; both or neither with `pdf_size_bytes`)                                 |
+| `pdf_size_bytes`        | `integer` (nullable)                                                                                     |
+| `attempts`              | `integer` (default `0`; claims so far, capped by the service)                                            |
+| `last_attempt_at`       | `timestamptz` (nullable)                                                                                 |
+| `last_error`            | `text` (nullable — may echo recipient details; never surface unfiltered)                                 |
+| `last_error_number`     | `text` (nullable — loggable form only)                                                                   |
+| `lease_token`           | `uuid` (nullable — both or neither with `lease_expires_at`)                                              |
+| `lease_expires_at`      | `timestamptz` (nullable)                                                                                 |
+| `sent_at`               | `timestamptz` (nullable — set means One confirmed the send; the row is then SENT or UNCERTAIN)           |
+
+CHECK constraints keep a forward status from outrunning its ids (`CASE_CREATED` needs the
+case, `DOCUMENT_CREATED` the case and document, `SENT` those and `sent_at`), forbid a
+marker on a settled row or a send marker without a document, and keep `sent_at` off every
+status but `SENT` and `UNCERTAIN`. Indexes: a partial `mailbox_delivery_status_idx`
+(`WHERE status <> 'SENT'`) for the retry scan and the operator's UNCERTAIN and exhausted
+lists, and `mailbox_delivery_company_id_idx`.
+
 ## Report identifier
 
 `report.identifier` is a six-uppercase-letter handle (`KTPQZW`) that exists so a report can be referred to — in a ticket, an email, a phone call — without quoting the company's kennitala. It carries no meaning and is derived from nothing about the report; that is the point. It is also what the admin report search matches on (`report/utils/filters.ts`), and it prints on the equality PDF.
@@ -1469,6 +1561,7 @@ No FKs, no relationships. Standalone bookkeeping table.
 - `report` 1:N `report_comment`; `doe_user` 1:N `report_comment` via `author_user_id` (nullable, set when `author_kind = REVIEWER`).
 - `company` 1:N `company_event`; `doe_user` 1:N `company_event` via `actor_user_id` (nullable).
 - `company` 1:N `company_comment`; `doe_user` 1:N `company_comment` via `author_user_id` (nullable).
+- `company` 1:N `mailbox_delivery` via `(company_id, national_id)` → `company(id, national_id)`.
 - `company` N:1 `postcode` N:1 `region`; `company` N:1 `isat_category` via `isat_category_code`.
 - `job_runs` standalone (no FKs).
 

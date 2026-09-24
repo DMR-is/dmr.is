@@ -41,6 +41,7 @@ import {
   DeliverToMailboxInput,
   DeliverToMailboxResult,
   IMailboxDeliveryService,
+  type MailboxDeliveryUnsettledStatus,
 } from './mailbox-delivery.service.interface'
 
 const LOGGING_CONTEXT = 'MailboxDeliveryService'
@@ -85,6 +86,24 @@ export const MAILBOX_DELIVERY_LEASE_MINUTES = Math.ceil(
 )
 
 /**
+ * How many times a row may be claimed before `deliverToMailbox` stops trying
+ * it. Every claim counts, whatever it then does.
+ *
+ * Without a cap a FAILED row is retried forever. CreateCase is repeated on any
+ * failure, on the unconfirmed assumption that One finds-or-creates the case
+ * (TODO(OneSystems)), so a permanent rejection (a bad classification, a
+ * recipient One refuses) would retry on every call, and if the assumption is
+ * wrong each claim may leave another orphan case in One. Five is enough to ride
+ * out a brief outage and few enough to bound that.
+ *
+ * An exhausted row is left as it is and reported as `ATTEMPTS_EXHAUSTED`. A
+ * person fixes the cause and re-arms it by resetting `attempts` (see the
+ * module README). A row whose last claim died mid-call is still claimed, so
+ * its marker turns it UNCERTAIN without a call to One.
+ */
+export const MAILBOX_DELIVERY_MAX_ATTEMPTS = 5
+
+/**
  * `last_error` is for a person reconciling the row. It may hold One's own
  * `ErrorMessage`, which can echo the recipient's details, so it is kept short.
  */
@@ -95,6 +114,18 @@ const NOW = literal('CURRENT_TIMESTAMP')
 const LEASE_EXPIRY = literal(
   `CURRENT_TIMESTAMP + INTERVAL '${MAILBOX_DELIVERY_LEASE_MINUTES} minutes'`,
 )
+
+/** The OR branches of "no live lease is on the row". */
+const LEASE_FREE = [
+  { leaseExpiresAt: null },
+  { leaseExpiresAt: { [Op.lt]: NOW } },
+]
+
+/** Statuses no claim ever takes. */
+const SETTLED_STATUSES = [
+  MailboxDeliveryStatusEnum.SENT,
+  MailboxDeliveryStatusEnum.UNCERTAIN,
+]
 
 /**
  * The column that says a step's result is saved. For the send it is `sentAt`,
@@ -145,6 +176,9 @@ type DeliveryCompany = Pick<CompanyModel, 'id' | 'name' | 'nationalId'>
  *   saved even after the lease lapsed and is never overwritten by a second
  *   one. The write never moves a row out of UNCERTAIN: a person has been told
  *   to check One, and the saved id is their evidence.
+ * - A row is claimed at most `MAILBOX_DELIVERY_MAX_ATTEMPTS` times. After
+ *   that it is reported as `skipped: 'ATTEMPTS_EXHAUSTED'` and makes no call
+ *   until a person resets `attempts`.
  */
 @Injectable()
 export class MailboxDeliveryService implements IMailboxDeliveryService {
@@ -200,6 +234,24 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     const leaseToken = randomUUID()
     const claimed = await this.claim(row.id, leaseToken)
     if (!claimed) {
+      const exhausted = await this.findExhausted(row.id)
+      if (exhausted) {
+        this.logger.error(
+          `Mailbox delivery ${exhausted.id} has used all ${MAILBOX_DELIVERY_MAX_ATTEMPTS} attempts; not retried`,
+          {
+            context: LOGGING_CONTEXT,
+            deliveryId: exhausted.id,
+            attempts: exhausted.attempts,
+          },
+        )
+        return {
+          status: exhausted.status as MailboxDeliveryUnsettledStatus,
+          deliveryId: exhausted.id,
+          attempts: exhausted.attempts,
+          skipped: 'ATTEMPTS_EXHAUSTED',
+        }
+      }
+
       // Someone else holds it, or it settled between the read and the claim.
       const current = await this.deliveryModel.findOne({
         where: { id: row.id },
@@ -259,6 +311,16 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       )
     }
 
+    // The saved subject is what One gets, so a caller whose subject changed
+    // for the same key is sending something other than it thinks. Only a
+    // flag: the subject may name the company or the period.
+    if (row.subject !== input.subject) {
+      this.logger.warn(
+        `Mailbox delivery ${row.id} was called again with a different subject; the saved one is used`,
+        { context: LOGGING_CONTEXT, deliveryId: row.id, subjectMismatch: true },
+      )
+    }
+
     return row
   }
 
@@ -292,8 +354,13 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
 
   /**
    * Claims the row with one conditional UPDATE ... RETURNING: it succeeds only
-   * when the row is unsettled and no live lease is on it. No `FOR UPDATE`, which
-   * would hold a connection open across the calls to One.
+   * when the row is unsettled, no live lease is on it and it has attempts left
+   * ({@link MAILBOX_DELIVERY_MAX_ATTEMPTS}). No `FOR UPDATE`, which would hold
+   * a connection open across the calls to One.
+   *
+   * A row with a marker is claimed even with no attempts left: its last claim
+   * died mid-call, and claiming it is what turns it UNCERTAIN (no call to One
+   * follows). Refusing it would leave it looking merely exhausted.
    */
   private async claim(
     id: string,
@@ -309,15 +376,15 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       {
         where: {
           id,
-          status: {
-            [Op.notIn]: [
-              MailboxDeliveryStatusEnum.SENT,
-              MailboxDeliveryStatusEnum.UNCERTAIN,
-            ],
-          },
-          [Op.or]: [
-            { leaseExpiresAt: null },
-            { leaseExpiresAt: { [Op.lt]: NOW } },
+          status: { [Op.notIn]: SETTLED_STATUSES },
+          [Op.and]: [
+            { [Op.or]: LEASE_FREE },
+            {
+              [Op.or]: [
+                { attempts: { [Op.lt]: MAILBOX_DELIVERY_MAX_ATTEMPTS } },
+                { inFlightStep: { [Op.ne]: null } },
+              ],
+            },
           ],
         },
         returning: true,
@@ -325,6 +392,27 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       },
     )
     return count > 0 && rows[0] ? rows[0] : null
+  }
+
+  /**
+   * The row, if the claim was refused only because it has no attempts left:
+   * unsettled, no live lease, no marker, and `attempts` at the cap. A row
+   * whose last attempt still holds its lease is left to report IN_PROGRESS.
+   */
+  private async findExhausted(
+    id: string,
+  ): Promise<MailboxDeliveryModel | null> {
+    return this.deliveryModel.findOne({
+      where: {
+        id,
+        status: { [Op.notIn]: SETTLED_STATUSES },
+        attempts: { [Op.gte]: MAILBOX_DELIVERY_MAX_ATTEMPTS },
+        inFlightStep: null,
+        [Op.or]: LEASE_FREE,
+      },
+      attributes: ['id', 'status', 'attempts'],
+      transaction: null,
+    })
   }
 
   /**

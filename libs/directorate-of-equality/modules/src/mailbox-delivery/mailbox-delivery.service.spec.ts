@@ -29,6 +29,7 @@ import {
 } from './mailbox-delivery.kinds'
 import {
   MAILBOX_DELIVERY_LEASE_MINUTES,
+  MAILBOX_DELIVERY_MAX_ATTEMPTS,
   MAILBOX_DELIVERY_SLOWEST_CALL_MS,
   MailboxDeliveryService,
 } from './mailbox-delivery.service'
@@ -111,6 +112,11 @@ function matches(row: Row, where: Record<string | symbol, unknown>): boolean {
         matches(row, branch),
       )
     }
+    if (key === Op.and) {
+      return (condition as Array<Record<string, unknown>>).every((branch) =>
+        matches(row, branch),
+      )
+    }
     const actual = row[key as string]
     if (condition === null) {
       return actual === null || actual === undefined
@@ -125,11 +131,23 @@ function matches(row: Row, where: Record<string | symbol, unknown>): boolean {
         return !(ops[Op.notIn] as Array<unknown>).includes(actual)
       }
       if (Op.ne in ops) {
-        return actual !== ops[Op.ne]
+        // Sequelize writes `{ [Op.ne]: null }` as IS NOT NULL.
+        return ops[Op.ne] === null
+          ? actual !== null && actual !== undefined
+          : actual !== ops[Op.ne]
       }
       if (Op.lt in ops) {
-        const bound = evaluate(ops[Op.lt], row) as Date
-        return actual instanceof Date && actual.getTime() < bound.getTime()
+        const bound = evaluate(ops[Op.lt], row)
+        if (typeof bound === 'number') {
+          return typeof actual === 'number' && actual < bound
+        }
+        return (
+          actual instanceof Date && actual.getTime() < (bound as Date).getTime()
+        )
+      }
+      if (Op.gte in ops) {
+        const bound = ops[Op.gte] as number
+        return typeof actual === 'number' && actual >= bound
       }
       throw new Error(`Unexpected operator on ${String(key)}`)
     }
@@ -639,6 +657,90 @@ describe('MailboxDeliveryService', () => {
       expect(oneCalls()).toBe(0)
     })
 
+    describe('a repeat call with a different subject', () => {
+      const SAVED_SUBJECT = 'Áminning um launagreiningu'
+      const NEW_SUBJECT = 'Önnur áminning til Fyrirtæki ehf. vegna 2027'
+
+      const allLogs = () =>
+        JSON.stringify([
+          ...logger.debug.mock.calls,
+          ...logger.info.mock.calls,
+          ...logger.warn.mock.calls,
+          ...logger.error.mock.calls,
+        ])
+
+      it('warns with a flag only, and files the saved subject', async () => {
+        const seeded = store.seed({
+          status: MailboxDeliveryStatusEnum.CASE_CREATED,
+          oneCaseItemId: 'case-saved',
+          subject: SAVED_SUBJECT,
+        })
+
+        await expect(
+          service.deliverToMailbox(input({ subject: NEW_SUBJECT })),
+        ).resolves.toMatchObject({ status: 'SENT' })
+
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(seeded.id),
+          {
+            context: 'MailboxDeliveryService',
+            deliveryId: seeded.id,
+            subjectMismatch: true,
+          },
+        )
+        expect(one.createDocument).toHaveBeenCalledWith(
+          expect.objectContaining({ subject: SAVED_SUBJECT }),
+        )
+        expect(onlyRow().subject).toBe(SAVED_SUBJECT)
+
+        const logged = allLogs()
+        expect(logged).toContain('subjectMismatch')
+        expect(logged).not.toContain(NEW_SUBJECT)
+        expect(logged).not.toContain(SAVED_SUBJECT)
+      })
+
+      it('warns for a settled row too, and still makes no call', async () => {
+        const seeded = store.seed({
+          status: MailboxDeliveryStatusEnum.UNCERTAIN,
+          oneCaseItemId: 'case-saved',
+          subject: SAVED_SUBJECT,
+        })
+
+        await expect(
+          service.deliverToMailbox(input({ subject: NEW_SUBJECT })),
+        ).resolves.toEqual({ status: 'UNCERTAIN', deliveryId: seeded.id })
+
+        expect(oneCalls()).toBe(0)
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({ subjectMismatch: true }),
+        )
+        expect(allLogs()).not.toContain(NEW_SUBJECT)
+      })
+
+      it('does not warn when the subject matches', async () => {
+        store.seed({ subject: SAVED_SUBJECT })
+
+        await service.deliverToMailbox(input({ subject: SAVED_SUBJECT }))
+
+        expect(allLogs()).not.toContain('subjectMismatch')
+      })
+
+      it('still throws the conflict, not the warning, for another company', async () => {
+        store.seed({
+          companyId: OTHER_COMPANY_ID,
+          nationalId: '2222222222',
+          subject: SAVED_SUBJECT,
+        })
+
+        await expect(
+          service.deliverToMailbox(input({ subject: NEW_SUBJECT })),
+        ).rejects.toThrow(ConflictException)
+        expect(allLogs()).not.toContain('subjectMismatch')
+        expect(oneCalls()).toBe(0)
+      })
+    })
+
     it.each([
       ['a hand-built key', 'key-1'],
       [
@@ -787,9 +889,19 @@ describe('MailboxDeliveryService', () => {
               MailboxDeliveryStatusEnum.UNCERTAIN,
             ],
           },
-          [Op.or]: [
-            { leaseExpiresAt: null },
-            { leaseExpiresAt: { [Op.lt]: { val: 'CURRENT_TIMESTAMP' } } },
+          [Op.and]: [
+            {
+              [Op.or]: [
+                { leaseExpiresAt: null },
+                { leaseExpiresAt: { [Op.lt]: { val: 'CURRENT_TIMESTAMP' } } },
+              ],
+            },
+            {
+              [Op.or]: [
+                { attempts: { [Op.lt]: MAILBOX_DELIVERY_MAX_ATTEMPTS } },
+                { inFlightStep: { [Op.ne]: null } },
+              ],
+            },
           ],
         },
         returning: true,
@@ -813,6 +925,206 @@ describe('MailboxDeliveryService', () => {
         oneCaseItemId: 'case-1',
         leaseToken: 'someone-else',
         inFlightStep: null,
+      })
+    })
+  })
+
+  describe('the attempts cap', () => {
+    const CAP = MAILBOX_DELIVERY_MAX_ATTEMPTS
+    const lastAttemptAt = new Date('2026-09-23T08:00:00.000Z')
+
+    const seedFailed = (overrides: Partial<Row> = {}) =>
+      store.seed({
+        status: MailboxDeliveryStatusEnum.FAILED,
+        oneCaseItemId: 'case-saved',
+        lastAttemptAt,
+        lastError: 'CreateDocument REJECTED: Rangt skjal',
+        ...overrides,
+      })
+
+    const expectExhaustedLog = (deliveryId: string, attempts: number) => {
+      expect(logger.error).toHaveBeenCalledTimes(1)
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(deliveryId),
+        { context: 'MailboxDeliveryService', deliveryId, attempts },
+      )
+    }
+
+    it('is five', () => {
+      expect(CAP).toBe(5)
+    })
+
+    it('still claims and runs a FAILED row one attempt short of the cap', async () => {
+      seedFailed({ attempts: CAP - 1 })
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'SENT',
+        alreadySent: false,
+      })
+
+      expect(one.createDocument).toHaveBeenCalledTimes(1)
+      expect(one.sendDocToIslandIs).toHaveBeenCalledTimes(1)
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.SENT,
+        attempts: CAP,
+      })
+    })
+
+    it.each([
+      MailboxDeliveryStatusEnum.FAILED,
+      MailboxDeliveryStatusEnum.PENDING,
+      MailboxDeliveryStatusEnum.CASE_CREATED,
+    ])(
+      'does not claim a %s row at the cap, makes no call and reports it exhausted',
+      async (status) => {
+        const seeded = seedFailed({ status, attempts: CAP })
+
+        const result = await service.deliverToMailbox(input())
+
+        expect(result).toEqual({
+          status,
+          deliveryId: seeded.id,
+          attempts: CAP,
+          skipped: 'ATTEMPTS_EXHAUSTED',
+        })
+        expect(result.status).not.toBe('IN_PROGRESS')
+        expect(oneCalls()).toBe(0)
+        expect(pdf).not.toHaveBeenCalled()
+        expect(onlyRow()).toMatchObject({
+          status,
+          attempts: CAP,
+          lastAttemptAt,
+          leaseToken: null,
+          leaseExpiresAt: null,
+        })
+        expectExhaustedLog(seeded.id, CAP)
+      },
+    )
+
+    it('reports a row past the cap as exhausted too', async () => {
+      const seeded = seedFailed({ attempts: CAP + 2 })
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        skipped: 'ATTEMPTS_EXHAUSTED',
+        attempts: CAP + 2,
+      })
+      expect(oneCalls()).toBe(0)
+      expectExhaustedLog(seeded.id, CAP + 2)
+    })
+
+    it('stops a permanently rejected delivery after the cap', async () => {
+      one.createCase.mockRejectedValue(rejected('CreateCase'))
+
+      for (let attempt = 1; attempt <= CAP; attempt++) {
+        await expect(service.deliverToMailbox(input())).rejects.toThrow(
+          OneSystemsError,
+        )
+      }
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.FAILED,
+        attempts: CAP,
+      })
+      logger.error.mockClear()
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: MailboxDeliveryStatusEnum.FAILED,
+        skipped: 'ATTEMPTS_EXHAUSTED',
+      })
+      expect(one.createCase).toHaveBeenCalledTimes(CAP)
+      expectExhaustedLog(onlyRow().id, CAP)
+    })
+
+    it('still reports a SENT row at the cap as already sent', async () => {
+      const sentAt = new Date('2026-09-20T10:00:00.000Z')
+      const seeded = store.seed({
+        status: MailboxDeliveryStatusEnum.SENT,
+        oneCaseItemId: 'case-saved',
+        oneDocumentItemId: 'doc-saved',
+        islandIsDocumentId: 'island-saved',
+        sentAt,
+        attempts: CAP,
+      })
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'SENT',
+        deliveryId: seeded.id,
+        islandIsDocumentId: 'island-saved',
+        sentAt,
+        alreadySent: true,
+      })
+      expect(oneCalls()).toBe(0)
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
+    it('still reports an UNCERTAIN row at the cap as UNCERTAIN', async () => {
+      const seeded = seedFailed({
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        attempts: CAP,
+      })
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'UNCERTAIN',
+        deliveryId: seeded.id,
+      })
+      expect(oneCalls()).toBe(0)
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
+    it('still turns a marker left by the last attempt into UNCERTAIN, without calling One', async () => {
+      const seeded = seedFailed({
+        attempts: CAP,
+        inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+        leaseToken: 'crashed-worker',
+        leaseExpiresAt: new Date(Date.now() - MINUTE),
+      })
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'UNCERTAIN',
+        deliveryId: seeded.id,
+      })
+      expect(oneCalls()).toBe(0)
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        inFlightStep: null,
+      })
+    })
+
+    it('reports IN_PROGRESS while the last attempt still holds its lease', async () => {
+      const seeded = seedFailed({
+        status: MailboxDeliveryStatusEnum.CASE_CREATED,
+        attempts: CAP,
+        leaseToken: 'someone-else',
+        leaseExpiresAt: new Date(Date.now() + 3 * MINUTE),
+      })
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'IN_PROGRESS',
+        deliveryId: seeded.id,
+      })
+      expect(oneCalls()).toBe(0)
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
+    it('runs a re-armed row once attempts is reset', async () => {
+      const seeded = seedFailed({ attempts: CAP })
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        skipped: 'ATTEMPTS_EXHAUSTED',
+      })
+
+      // The runbook's re-arm: UPDATE ... SET attempts = 0 WHERE status = 'FAILED'.
+      Object.assign(store.rows.get(seeded.id) as Row, { attempts: 0 })
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'SENT',
+        alreadySent: false,
+      })
+      expect(one.createCase).not.toHaveBeenCalled()
+      expect(one.createDocument).toHaveBeenCalledWith(
+        expect.objectContaining({ caseItemId: 'case-saved' }),
+      )
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.SENT,
+        attempts: 1,
       })
     })
   })

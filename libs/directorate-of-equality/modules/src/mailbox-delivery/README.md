@@ -45,14 +45,14 @@ consumer of the client must check the flag itself.
 
 ## Statuses
 
-| Status             | Meaning                                                                                                                                                         | What happens next                                                           |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `PENDING`          | Row written, nothing sent to One yet.                                                                                                                           | The next call starts it.                                                    |
-| `CASE_CREATED`     | One has a case (`one_case_item_id`).                                                                                                                            | The next call creates the document.                                         |
-| `DOCUMENT_CREATED` | The PDF is filed under the case (`one_document_item_id`).                                                                                                       | The next call sends it.                                                     |
-| `SENT`             | One confirmed the send (`sent_at`). `island_is_document_id` is set too, unless One confirmed without an `ItemID`.                                               | Nothing. A repeat call returns SENT with `alreadySent: true`.               |
-| `FAILED`           | One certainly did not act on the failed call: a CreateCase failure, a failed render, or a CreateDocument or send rejected before it reached One's action.       | The next call with the same key resumes from the saved ids.                 |
-| `UNCERTAIN`        | Whether One acted is unknown: a timeout, a 5xx, a `Success: false`, a response with no usable id, or a process that died mid-call (`in_flight_step` still set). | **Nothing. No code path leaves UNCERTAIN.** A person reconciles it (below). |
+| Status             | Meaning                                                                                                                                                         | What happens next                                                                                                           |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `PENDING`          | Row written, nothing sent to One yet.                                                                                                                           | The next call starts it.                                                                                                    |
+| `CASE_CREATED`     | One has a case (`one_case_item_id`).                                                                                                                            | The next call creates the document.                                                                                         |
+| `DOCUMENT_CREATED` | The PDF is filed under the case (`one_document_item_id`).                                                                                                       | The next call sends it.                                                                                                     |
+| `SENT`             | One confirmed the send (`sent_at`). `island_is_document_id` is set too, unless One confirmed without an `ItemID`.                                               | Nothing. A repeat call returns SENT with `alreadySent: true`.                                                               |
+| `FAILED`           | One certainly did not act on the failed call: a CreateCase failure, a failed render, or a CreateDocument or send rejected before it reached One's action.       | The next call with the same key resumes from the saved ids, until `attempts` reaches 5 ([Exhausted rows](#exhausted-rows)). |
+| `UNCERTAIN`        | Whether One acted is unknown: a timeout, a 5xx, a `Success: false`, a response with no usable id, or a process that died mid-call (`in_flight_step` still set). | **Nothing. No code path leaves UNCERTAIN.** A person reconciles it (below).                                                 |
 
 The saved ids and `sent_at` decide what runs next, not `status`. A `FAILED`
 row that already has `one_document_item_id` resumes at the send.
@@ -69,6 +69,73 @@ finds-or-creates the case. The spec does not document this
 (TODO(OneSystems)). If the assumption is wrong, a retry leaves an orphan case in
 One. It never causes a second send. A case id that loses the race to be saved
 is logged (`discardedCaseItemId`).
+
+A row is claimed at most `MAILBOX_DELIVERY_MAX_ATTEMPTS` (5) times. Every
+claim adds one to `attempts`. After that `deliverToMailbox` makes no call and
+returns the row's own status with `skipped: 'ATTEMPTS_EXHAUSTED'`, and logs an
+error with the `deliveryId` and `attempts`. Without the cap a permanent
+rejection would be retried on every call, and while find-or-create is
+unconfirmed each retry may leave another orphan case in One. See
+[Exhausted rows](#exhausted-rows). A row whose last claim died mid-call is still
+claimed once more, so it becomes UNCERTAIN as usual.
+
+## Before the first caller lands
+
+The PR that wires the first `deliverToMailbox` caller must also:
+
+- Add an alert or an admin read for rows with `status = 'UNCERTAIN'` and for
+  `ATTEMPTS_EXHAUSTED` rows (the query under
+  [Exhausted rows](#exhausted-rows)). Both need a person, and nothing tells
+  one today. The partial index `mailbox_delivery_status_idx`
+  (`WHERE status <> 'SENT'`) serves both queries.
+- Get OneSystems to confirm that CreateCase finds-or-creates the case
+  (TODO(OneSystems)). If it does not, every retry of a FAILED row can leave an
+  orphan case in One.
+
+## Exhausted rows
+
+An exhausted row has used all its attempts without being sent or becoming
+UNCERTAIN. It is usually FAILED, and `last_error_number` says why. A forward
+status (`PENDING`, `CASE_CREATED`, `DOCUMENT_CREATED`) means the last attempt
+ended while no call was marked (the process died, or it lost the lease), so
+no document call of that attempt is in doubt: anything it got back from One
+is saved in the row's ids. Only an unanswered CreateCase can have left
+something in One that the row does not name (see below).
+
+```sql
+SELECT id, company_id, kind, idempotency_key, status,
+       one_case_item_id, one_document_item_id,
+       last_error_number, attempts, last_attempt_at
+FROM mailbox_delivery
+WHERE status <> 'SENT'
+  AND status <> 'UNCERTAIN'
+  AND in_flight_step IS NULL
+  AND attempts >= 5
+ORDER BY last_attempt_at;
+```
+
+`5` is `MAILBOX_DELIVERY_MAX_ATTEMPTS`. As in the UNCERTAIN list, read
+`last_error` for one row at a time and do not paste it anywhere.
+
+Fix the cause first: a kind classification One rejects, a recipient One cannot
+find, an outage that lasted longer than five calls. CreateCase find-or-create
+is still TODO(OneSystems), so each attempt so far may have left a case in One;
+check One under the company for orphan cases if that matters. Then re-arm the
+row, so the next call with **the same idempotency key** resumes it from its
+saved ids:
+
+```sql
+UPDATE mailbox_delivery
+SET attempts = 0,
+    last_error = 'Re-armed by <name> on <date>: <what was fixed>'
+WHERE id = '<delivery id>'
+  AND status = 'FAILED'
+  AND in_flight_step IS NULL;
+```
+
+For a row in a forward status, put that status in place of `'FAILED'`.
+Re-arming does not send anything by itself; the next `deliverToMailbox` call
+does.
 
 ## Reconciling an UNCERTAIN row
 
@@ -176,6 +243,7 @@ the id is in the logs.
    UPDATE mailbox_delivery
    SET status = 'FAILED',
        one_document_item_id = COALESCE(one_document_item_id, '<document ItemID>'),
+       attempts = 0,
        lease_token = NULL, lease_expires_at = NULL,
        last_error = 'Reconciled by <name> on <date>: filed, not sent'
    WHERE id = '<delivery id>' AND status = 'UNCERTAIN' AND sent_at IS NULL;
@@ -186,13 +254,16 @@ the id is in the logs.
    ```sql
    UPDATE mailbox_delivery
    SET status = 'FAILED',
+       attempts = 0,
        lease_token = NULL, lease_expires_at = NULL,
        last_error = 'Reconciled by <name> on <date>: One did not act'
    WHERE id = '<delivery id>' AND status = 'UNCERTAIN' AND sent_at IS NULL;
    ```
 
    A `FAILED` row is resumed by the next `deliverToMailbox` call with **the
-   same idempotency key**. The CHECK constraints reject a status that gets
+   same idempotency key**. Both FAILED statements reset `attempts`: without
+   that, a row that went UNCERTAIN on its last attempt would come back as
+   `ATTEMPTS_EXHAUSTED` and never be sent. The CHECK constraints reject a status that gets
    ahead of its ids. For example, SENT needs `one_case_item_id`,
    `one_document_item_id` and `sent_at`, and a row with `sent_at` can only be
    SENT or UNCERTAIN, never FAILED (which would be resumed and sent again).

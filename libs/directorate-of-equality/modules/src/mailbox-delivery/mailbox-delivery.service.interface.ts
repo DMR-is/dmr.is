@@ -1,4 +1,7 @@
-import { MailboxDeliveryKindEnum } from './models/mailbox-delivery.enums'
+import {
+  MailboxDeliveryKindEnum,
+  MailboxDeliveryStatusEnum,
+} from './models/mailbox-delivery.enums'
 
 export interface DeliverToMailboxInput {
   /**
@@ -42,6 +45,12 @@ export interface DeliverToMailboxInput {
  * - `IN_PROGRESS`: another worker holds the delivery's lease, or its call
  *   finished while this one was claiming the row. Nothing was sent by this
  *   call; the next call resumes from the saved ids.
+ * - `skipped` set: this call made no call to One, and `status` is the row's
+ *   own (`FAILED`, or the forward state it stopped at). The reasons:
+ *   - `ATTEMPTS_EXHAUSTED`: the row has been claimed
+ *     `MAILBOX_DELIVERY_MAX_ATTEMPTS` times without being sent. Nothing
+ *     retries it until a person fixes the cause and resets `attempts` (see
+ *     the module README). Logged as an error on every call.
  *
  * A failure during this call is not a result: it is recorded on the row
  * (FAILED or UNCERTAIN) and the error is rethrown.
@@ -57,6 +66,21 @@ export type DeliverToMailboxResult =
     }
   | { status: 'UNCERTAIN'; deliveryId: string }
   | { status: 'IN_PROGRESS'; deliveryId: string }
+  | {
+      status: MailboxDeliveryUnsettledStatus
+      deliveryId: string
+      attempts: number
+      skipped: MailboxDeliverySkipReason
+    }
+
+/** Why a delivery was left alone without a call to One. */
+export type MailboxDeliverySkipReason = 'ATTEMPTS_EXHAUSTED'
+
+/** A row status that still has work left: neither SENT nor UNCERTAIN. */
+export type MailboxDeliveryUnsettledStatus = Exclude<
+  MailboxDeliveryStatusEnum,
+  MailboxDeliveryStatusEnum.SENT | MailboxDeliveryStatusEnum.UNCERTAIN
+>
 
 /**
  * Delivers a notice to a company's island.is Stafrænt pósthólf through One:
