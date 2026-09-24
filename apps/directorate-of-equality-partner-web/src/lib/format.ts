@@ -73,10 +73,10 @@ const ALL_SCOPES: ApiScope[] = [
 ]
 
 /**
- * Whether a key or delegation holds less than everything. Nothing created from
- * the screens does any more — access is all or nothing — but keys and
- * delegations made before that keep whatever they were given, and without a
- * marker a vendor's starfsmat call would fail with a 403 nobody could explain.
+ * Whether a key or delegation holds less than everything. Nothing the screens
+ * create does, but one made before access became all or nothing — or
+ * restricted on purpose through the API — keeps what it was given, and without
+ * a marker a call it cannot make fails with a 403 nobody can explain.
  */
 export const isNarrowGrant = (scopes: ApiScope[]) =>
   ALL_SCOPES.some((scope) => !scopes.includes(scope))

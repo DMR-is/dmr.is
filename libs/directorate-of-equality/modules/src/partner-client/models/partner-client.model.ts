@@ -39,8 +39,9 @@ type PartnerClientCreateAttributes = {
  *
  * `scopes` is the ceiling. What a request may do is this intersected with the
  * delegation's scopes. Every firm is approved for every scope and a
- * delegation copies the firm's approval, so in practice the intersection only
- * narrows rows written through the API with an explicit subset.
+ * delegation granted on the self-service web copies that, so the intersection
+ * narrows only delegations granted before access became all or nothing, and
+ * ones an API caller named a subset for.
  */
 @MutableTable({ tableName: DoeModels.PARTNER_CLIENT })
 export class PartnerClientModel extends MutableModel<

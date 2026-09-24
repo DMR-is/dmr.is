@@ -79,9 +79,11 @@ export const readApiKeyPepper = (logger: Logger, context: string): string => {
  * starfsmat delete included.
  */
 export const resolveApiKeyScopes = (
-  scopes?: ApiKeyScopeEnum[],
+  scopes?: ApiKeyScopeEnum[] | null,
 ): ApiKeyScopeEnum[] => {
-  if (scopes === undefined) {
+  // `null` too: the DTO's `@IsOptional()` lets it through, and before `[]`
+  // was refused it got the default, as it still should.
+  if (scopes === undefined || scopes === null) {
     return [...DEFAULT_API_KEY_SCOPES]
   }
 

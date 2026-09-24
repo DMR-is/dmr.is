@@ -42,9 +42,10 @@ const keyState = (key: ApiKeyDto): KeyState => {
 }
 
 /**
- * Keys issued before access became all or nothing can hold less than every
- * scope, typically no `scoring:write`. Flagged so a reviewer fielding "the
- * vendor gets 403 on starfsmat" can see why without reading the database.
+ * A key without every scope — one issued before access became all or nothing,
+ * or one an API caller restricted on purpose. Flagged, not explained: which
+ * scope is missing, and why, differs. It lets a reviewer fielding "the vendor
+ * gets 403" see the cause without reading the database.
  */
 const ALL_SCOPES = [
   'report:read',
