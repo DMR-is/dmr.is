@@ -34,7 +34,21 @@ jobs:
           AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
           VERSION_TAG: ${{ github.event.inputs.version-tag }}
           PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
+
+  wait-utgafa:
+    name: ⏳ Wait for Útgáfa rollout
+    runs-on: ubuntu-latest
+    needs: deploy-to-prod
+    steps:
+      - name: 📁 Checkout
+        uses: actions/checkout@v4
+      - name: ⏳ Wait for services
+        uses: ./.github/actions/deploy/wait-for-services
+        with:
+          AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
+          CLUSTER: ${{ env.ENV }}-dmr-utgafa
           SERVICES: official-journal-api official-journal-admin-api official-journal-application-api official-journal-web regulations-api legal-gazette-api legal-gazette-web legal-gazette-application-web legal-gazette-public-web
+          VERSION_TAG: ${{ github.event.inputs.version-tag }}
 
   deploy-jafnrettisstofa-to-prod:
     name: 🚀 Deploy Jafnréttisstofa to Prod
@@ -49,3 +63,18 @@ jobs:
           AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
           VERSION_TAG: ${{ github.event.inputs.version-tag }}
           PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
+
+  wait-jafnrettisstofa:
+    name: ⏳ Wait for Jafnréttisstofa rollout
+    runs-on: ubuntu-latest
+    needs: deploy-jafnrettisstofa-to-prod
+    steps:
+      - name: 📁 Checkout
+        uses: actions/checkout@v4
+      - name: ⏳ Wait for services
+        uses: ./.github/actions/deploy/wait-for-services
+        with:
+          AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
+          CLUSTER: ${{ env.ENV }}-dmr-jafnrettisstofa
+          SERVICES: directorate-of-equality-api directorate-of-equality-web
+          VERSION_TAG: ${{ github.event.inputs.version-tag }}

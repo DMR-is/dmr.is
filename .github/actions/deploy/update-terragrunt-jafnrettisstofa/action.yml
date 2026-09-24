@@ -73,6 +73,10 @@ runs:
 
         echo "🚀 Deploying DOE services with Terragrunt run --all..."
 
+        # directorate-of-equality-partner-api and -partner-web are dev-only for
+        # now. Enabling them in prod means adding them here, to on-release.yml's
+        # version-tag matrix and to its wait-jafnrettisstofa SERVICES, together.
+
         ../scripts/apply_services.sh \
           --environment ${{ inputs.ENV }} \
           --version ${{ inputs.VERSION_TAG }} \

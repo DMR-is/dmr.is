@@ -1,0 +1,45 @@
+name: '⏳ Wait for ECS services'
+description: 'Waits for ECS services to finish rolling out a version, and fails if any of them is rolled back or never settles'
+
+# See wait-for-services.sh for why this is not `aws ecs wait services-stable`.
+
+inputs:
+  AWS_ENV_ROLE_ARN:
+    description: 'The ARN of the github-ci role in the account the cluster runs in'
+    required: true
+  AWS_REGION:
+    description: 'The AWS region the cluster runs in'
+    required: false
+    default: 'eu-west-1'
+  CLUSTER:
+    description: 'The ECS cluster the services run in'
+    required: true
+  SERVICES:
+    description: 'The ECS services to wait for, separated by a space'
+    required: true
+  VERSION_TAG:
+    description: 'The image tag every service must be running'
+    required: true
+  TIMEOUT_MINUTES:
+    description: 'How long to wait for the rollouts to settle'
+    required: false
+    default: '20'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 🔐 Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-session-name: GitHub-Action-Role
+        aws-region: ${{ inputs.AWS_REGION }}
+        role-to-assume: ${{ inputs.AWS_ENV_ROLE_ARN }}
+
+    - name: ⏳ Wait for services to run ${{ inputs.VERSION_TAG }}
+      shell: bash
+      env:
+        CLUSTER: ${{ inputs.CLUSTER }}
+        SERVICES: ${{ inputs.SERVICES }}
+        VERSION_TAG: ${{ inputs.VERSION_TAG }}
+        TIMEOUT_MINUTES: ${{ inputs.TIMEOUT_MINUTES }}
+      run: bash "$GITHUB_ACTION_PATH/wait-for-services.sh"
