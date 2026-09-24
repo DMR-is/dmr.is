@@ -167,8 +167,17 @@ export const GrantDelegationModal = ({
       }}
       toggleClose={onClose}
       width="small"
-      // Pinned, so the confirm button stays in reach on a short screen.
-      footer={
+      // The provider Select renders its menu inline — island-ui's Select does
+      // not forward `menuPortalTarget` — so any scrolling container clips it.
+      // A pinned `footer` made the body one, and the open menu was cut off at
+      // the footer's edge. `allowOverflow` lets it spill over the modal
+      // instead; safe because the form is a select and a short summary, well
+      // under the 80vh the modal would otherwise have scrolled at.
+      allowOverflow
+    >
+      <Stack space={3}>
+        {renderBody()}
+
         <Inline space={2} justifyContent="flexEnd">
           <Button variant="ghost" size="small" onClick={onClose}>
             {sharedText.cancel}
@@ -185,9 +194,7 @@ export const GrantDelegationModal = ({
             {t.confirmButton}
           </Button>
         </Inline>
-      }
-    >
-      {renderBody()}
+      </Stack>
     </Modal>
   )
 }
