@@ -1,20 +1,16 @@
-import { ApiNationalId, ApiOptionalArray, ApiString } from '@dmr.is/decorators'
-import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
+import { ApiNationalId, ApiString } from '@dmr.is/decorators'
 
-/** Approving a firm as an intermediary. */
+/**
+ * Approving a firm as an intermediary.
+ *
+ * No `scopes`: approval is all or nothing, so every firm is approved for every
+ * scope. That is what lets the consent screen promise a company exactly what a
+ * delegation hands over — a delegation copies the firm's approval.
+ */
 export class CreatePartnerClientDto {
   @ApiNationalId({ description: 'The firm’s kennitala.' })
   nationalId!: string
 
   @ApiString({ minLength: 1, maxLength: 256 })
   name!: string
-
-  @ApiOptionalArray({
-    type: String,
-    enum: ApiKeyScopeEnum,
-    isArray: true,
-    description:
-      'The ceiling on what the firm may ever do. Omit for every scope, `scoring:write` included — approval is all or nothing, and the admin screen sends nothing. What the firm may do for a given company is this intersected with that company’s delegation.',
-  })
-  scopes?: ApiKeyScopeEnum[]
 }

@@ -213,6 +213,21 @@ describe('ApiKeyService', () => {
       ])
     })
 
+    it('refuses an empty scope set rather than reading it as the default', async () => {
+      // The default is every scope, so a caller sending [] to mean "minimal"
+      // would otherwise get the cascading starfsmat delete as well.
+      await expect(
+        service.issue({
+          company: COMPANY,
+          createdVia: ApiKeyOriginEnum.ISLAND_IS,
+          actorNationalId: '0101901234',
+          scopes: [],
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(create).not.toHaveBeenCalled()
+    })
+
     it('rejects an unrecognised scope rather than storing it', async () => {
       // scopes is text[], so the database would accept anything and the key
       // would then fail every scope check at request time.

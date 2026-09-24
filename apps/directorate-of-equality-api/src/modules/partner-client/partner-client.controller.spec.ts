@@ -1,4 +1,4 @@
-import { ApiKeyOriginEnum, ApiKeyScopeEnum } from '@dmr.is/doe-shared'
+import { ApiKeyOriginEnum } from '@dmr.is/doe-shared'
 
 import { PartnerClientController } from './partner-client.controller'
 
@@ -28,17 +28,17 @@ describe('PartnerClientController', () => {
     controller = new PartnerClientController(service as never)
   })
 
-  it('records the approving admin', async () => {
+  it('records the approving admin, and passes no scopes', async () => {
+    // Approval is all or nothing: the service always approves every scope,
+    // so there is nothing for the controller to forward.
     await controller.createPartnerClient(ADMIN, {
       nationalId: '1111111111',
       name: 'Kjarni',
-      scopes: [ApiKeyScopeEnum.REPORT_READ],
     })
 
     expect(service.create).toHaveBeenCalledWith({
       nationalId: '1111111111',
       name: 'Kjarni',
-      scopes: [ApiKeyScopeEnum.REPORT_READ],
       actorUserId: 'admin-1',
     })
   })

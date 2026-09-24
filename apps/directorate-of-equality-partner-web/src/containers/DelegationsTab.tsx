@@ -7,13 +7,14 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { ConfirmModal } from '../components/ConfirmModal'
 import { GrantDelegationModal } from '../components/delegations/GrantDelegationModal'
 import { type CompanyPartnerDelegationDto } from '../gen/fetch/types.gen'
-import { formatDateIS, formatNationalId } from '../lib/format'
+import { formatDateIS, formatNationalId, isNarrowGrant } from '../lib/format'
 import { delegationText as t } from '../lib/text'
 import { useTRPC } from '../lib/trpc/client/trpc'
 import { TabError, TabLoading, withReason } from './TabState'
@@ -30,7 +31,14 @@ const DelegationCard = ({
   <Box border="standard" borderRadius="large" padding={3}>
     <Stack space={1}>
       <Inline space={2} justifyContent="spaceBetween" alignY="center">
-        <Text variant="h5">{delegation.provider.name}</Text>
+        <Inline space={1} alignY="center">
+          <Text variant="h5">{delegation.provider.name}</Text>
+          {isNarrowGrant(delegation.scopes) && (
+            <Tag variant="purple" outlined disabled>
+              {t.narrowTag}
+            </Tag>
+          )}
+        </Inline>
         <Button
           variant="text"
           size="small"
@@ -48,6 +56,11 @@ const DelegationCard = ({
         {t.grantedAt}: {formatDateIS(delegation.grantedAt)} · {t.grantedBy}:{' '}
         {formatNationalId(delegation.grantedByNationalId)}
       </Text>
+      {isNarrowGrant(delegation.scopes) && (
+        <Text variant="small" color="purple600">
+          {t.narrowHint}
+        </Text>
+      )}
     </Stack>
   </Box>
 )

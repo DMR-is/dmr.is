@@ -12,6 +12,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import {
   ApiKeyKindEnum,
+  DEFAULT_API_KEY_SCOPES,
   generateApiKey,
   hashApiKeySecret,
 } from '@dmr.is/doe-shared'
@@ -23,7 +24,6 @@ import {
   readApiKeyPepper,
   resolveApiKeyExpiry,
   resolveApiKeyIssuer,
-  resolveApiKeyScopes,
 } from '../api-key/lib/issuance'
 import { PartnerClientDto } from './dto/partner-client.dto'
 import {
@@ -79,7 +79,9 @@ export class PartnerClientService implements IPartnerClientService {
       throw new BadRequestException(partnerClientMessages.blankName())
     }
 
-    const scopes = resolveApiKeyScopes(input.scopes)
+    // Every scope, always: approval is all or nothing (see
+    // CreatePartnerClientDto), and a delegation copies it.
+    const scopes = [...DEFAULT_API_KEY_SCOPES]
 
     const existing = await this.partnerClientModel.findOne({
       where: { nationalId: input.nationalId, revokedAt: null },

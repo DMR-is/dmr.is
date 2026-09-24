@@ -91,6 +91,9 @@ export const keyText = {
   revokeConfirmButton: 'Afturkalla lykil',
   revokedToast: 'Aðgangslykill afturkallaður',
   revokeErrorToast: 'Villa við að afturkalla aðgangslykil',
+  narrowTag: 'Takmarkaðar heimildir',
+  narrowHint:
+    'Þessi lykill var búinn til áður en aðgangur varð allt eða ekkert og getur ekki unnið starfsmat. Búðu til nýjan lykil og afturkallaðu þennan til að fá fullan aðgang.',
   showRevoked: (count: number) => `Sýna óvirka lykla (${count})`,
   hideRevoked: 'Fela óvirka lykla',
 
@@ -130,6 +133,9 @@ export const delegationText = {
   grantedAt: 'Veitt',
   grantedBy: 'Veitt af',
   providerNationalId: 'Kennitala',
+  narrowTag: 'Takmarkaðar heimildir',
+  narrowHint:
+    'Þetta umboð var veitt áður en umboð varð allt eða ekkert og nær ekki til starfsmats. Afturkallaðu það og veittu aftur til að þjónustuaðilinn fái fullan aðgang.',
 
   revokeButton: 'Afturkalla umboð',
   revokeConfirmTitle: 'Afturkalla umboð?',

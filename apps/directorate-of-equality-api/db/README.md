@@ -472,9 +472,11 @@ the firm's product. A firm instead gets three kinds of row:
   behalf_. Granted by the company on the self-service web behind island.is login, so it
   records a witnessed act rather than the firm's claim that the employer consented. It
   carries its own `scopes`, and a request's effective permission is the **intersection**
-  with the client's. The screens make both all or nothing — a firm is approved for every
-  scope and a delegation copies the firm's approval — so the intersection only narrows
-  anything for rows written through the API with an explicit subset.
+  with the client's. Both are all or nothing: a firm is always approved for every scope
+  (`m-20260924-partner-client-full-approval` widened the live firms approved before
+  that), and a delegation granted on the self-service web copies the firm's approval.
+  Delegations granted before 24 September 2026 may still be narrower and are
+  deliberately not widened — they are the company's own grant.
 
 **Why credential and delegation are separate objects.** So both revocations exist and each
 is one row: revoke the client and the firm is cut off everywhere; revoke a delegation and
@@ -924,6 +926,9 @@ Invariants:
 - Unique `national_id` `WHERE revoked_at IS NULL` — one live client per firm
 - `revoked_at IS NULL` ⇒ no revocation metadata; a revoked row may name no actor (system-initiated)
 - `cardinality(scopes) > 0`
+- Every live row holds all four scopes. Not a constraint — enforced by
+  `PartnerClientService.create`, which takes no scopes, and established for older rows
+  by `m-20260924-partner-client-full-approval`
 
 `national_id` is not a `company` FK because the firm is recorded as an intermediary,
 whether or not it is also an employer in the register. A firm filing for itself does so

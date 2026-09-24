@@ -107,6 +107,11 @@ all four scopes, `scoring:write` included — a key issued without an explicit
 scope set gets every scope. Bear in mind that `scoring:write` carries a `DELETE`
 that cascades a whole model away.
 
+**Keys issued before 24 September 2026 may carry less.** The default then left
+out `scoring:write`, and those keys keep the set they were issued with. A key
+that gets `403` on the section C routes is one of them: issue a new key and
+revoke the old one.
+
 A call outside the key's scopes is `403`, and the scope check runs _before_ the
 rate limiter, so a refused call does not spend your allowance.
 
@@ -116,6 +121,11 @@ company is **the intersection**. Both are all or nothing in practice: your
 organisation is approved for every scope, and a company's delegation hands you
 everything you were approved for — there is no partial consent on the
 self-service web.
+
+A delegation granted before 24 September 2026 may be narrower, and keeps the set
+it was granted with. Each delegation's `scopes` on
+[`GET /partner/delegations`](#get-partnerdelegations) says what it covers; for a
+narrower one, ask the company to withdraw and grant it again.
 
 ### A company off the register
 
@@ -858,7 +868,7 @@ and sending the header is a `400`.
       "id": "…",
       "companyNationalId": "5501234567",
       "companyName": "Fyrirtæki ehf.",
-      "scopes": ["report:read", "salary:submit"],
+      "scopes": ["salary:submit", "equality:submit", "report:read", "scoring:write"],
       "grantedAt": "2026-09-23T10:00:00.000Z"
     }
   ]
@@ -884,8 +894,9 @@ naming it turn into `403` immediately.
   to itself on the self-service web like any customer, and send your own
   kennitala in the header. There is no separate path.
 - **Starfsmat.** If you offer your customers a scoring-model editor, each company
-  authors its own model through it. A delegation includes `scoring:write`, so
-  nothing further has to be granted.
+  authors its own model through it. A delegation granted from 24 September 2026
+  includes `scoring:write`, so nothing further has to be granted; check `scopes`
+  on an older one.
 
 ## Quick reference
 

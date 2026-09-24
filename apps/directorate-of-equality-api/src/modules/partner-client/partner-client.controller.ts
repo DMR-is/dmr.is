@@ -68,7 +68,7 @@ export class PartnerClientController {
     type: PartnerClientDto,
     include409: true,
     description:
-      'Approves a firm as an intermediary. Requires the ADMIN role. `409` if the kennitala is already an active partner client. The firm can file for no one until companies delegate to it.',
+      'Approves a firm as an intermediary, for every scope — approval is all or nothing. Requires the ADMIN role. `409` if the kennitala is already an active partner client. The firm can file for no one until companies delegate to it.',
   })
   createPartnerClient(
     @CurrentAdminUser() adminUser: UserModel,
@@ -77,7 +77,6 @@ export class PartnerClientController {
     return this.partnerClientService.create({
       nationalId: input.nationalId,
       name: input.name,
-      scopes: input.scopes,
       actorUserId: adminUser.id,
     })
   }

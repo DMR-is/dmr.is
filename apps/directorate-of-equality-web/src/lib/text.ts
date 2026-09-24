@@ -1227,6 +1227,8 @@ export const companiesText = {
       statusActive: 'Í gildi',
       statusRevoked: 'Afturkallaður',
       statusExpired: 'Útrunninn',
+      // A key from before access became all or nothing, without every scope.
+      narrowTag: 'Takmarkaðar heimildir',
       neverUsed: 'Aldrei notaður',
       createdViaIslandIs: 'island.is',
       createdViaAdmin: 'Jafnréttisstofa',

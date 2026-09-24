@@ -9,8 +9,10 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import { type ApiKeyDto } from '../../gen/fetch/types.gen'
 import {
   formatDateIS,
+  isNarrowGrant,
   issuedBy,
   KEY_STATE_LABEL,
   KEY_STATE_VARIANT,
@@ -23,6 +25,8 @@ export type ListedKey = {
   id: string
   keyId: string
   label?: string | null
+  /** Company keys only — a provider key has no scopes of its own. */
+  scopes?: ApiKeyDto['scopes']
   createdVia: 'ISLAND_IS' | 'ADMIN'
   createdByNationalId?: string | null
   createdAt: string
@@ -45,15 +49,24 @@ const KeyCard = ({
   onRevoke: (key: ListedKey) => void
 }) => {
   const state = keyState(apiKey)
+  const narrow =
+    state === 'active' && !!apiKey.scopes && isNarrowGrant(apiKey.scopes)
 
   return (
     <Box border="standard" borderRadius="large" padding={3}>
       <Stack space={1}>
         <Inline space={2} justifyContent="spaceBetween" alignY="center">
           <Text variant="h5">{apiKey.label ?? apiKey.keyId}</Text>
-          <Tag variant={KEY_STATE_VARIANT[state]} outlined disabled>
-            {KEY_STATE_LABEL[state]}
-          </Tag>
+          <Inline space={1}>
+            {narrow && (
+              <Tag variant="purple" outlined disabled>
+                {t.narrowTag}
+              </Tag>
+            )}
+            <Tag variant={KEY_STATE_VARIANT[state]} outlined disabled>
+              {KEY_STATE_LABEL[state]}
+            </Tag>
+          </Inline>
         </Inline>
 
         {/* The public half only. There is no secret to show: the API stores a
@@ -71,6 +84,12 @@ const KeyCard = ({
           {t.colLastUsed}:{' '}
           {apiKey.lastUsedAt ? formatDateIS(apiKey.lastUsedAt) : t.neverUsed}
         </Text>
+
+        {narrow && (
+          <Text variant="small" color="purple600">
+            {t.narrowHint}
+          </Text>
+        )}
 
         {state === 'active' && (
           <Inline justifyContent="flexEnd">
