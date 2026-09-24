@@ -7,11 +7,7 @@
 
 export const sharedText = {
   unknown: 'Óþekkt',
-  none: 'Ekkert skráð',
-  yes: 'Já',
-  no: 'Nei',
   cancel: 'Hætta við',
-  close: 'Loka',
   loadErrorTitle: 'Villa kom upp',
 }
 
@@ -28,7 +24,6 @@ export const companyText = {
   nationalId: 'Kennitala',
   address: 'Heimilisfang',
   email: 'Netfang',
-  emailHint: 'Áminningar um skiladaga eru sendar á þetta netfang.',
   employeeCount: 'Fjöldi starfsmanna',
   registerStatus: 'Staða á skrá',
   statusActive: 'Virkt',
