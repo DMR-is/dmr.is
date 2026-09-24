@@ -56,8 +56,13 @@ export interface OneSystemsSendDocToIslandIsInput {
 }
 
 export interface OneSystemsSendDocToIslandIsResult {
-  /** The document's id as issued by island.is (the response `ItemID`). */
-  islandIsDocumentId: string
+  /**
+   * The response `ItemID`, assumed to be the document's id as issued by
+   * island.is (unconfirmed). `null` when One answered `Success: true` without
+   * one: the spec makes `ItemID` nullable and does not say what
+   * SendDocToIslandIs puts there, so `Success: true` alone counts as sent.
+   */
+  islandIsDocumentId: string | null
 }
 
 export interface OneSystemsCloseCaseInput {
@@ -81,15 +86,25 @@ export interface OneSystemsCloseCaseResult {
 
 /**
  * The OneExternalAPI actions. Each call logs in first if there is no valid
- * token, retries once with a fresh token on a 401, and times out after 30s.
+ * token and retries once with a fresh token on a 401 (for CreateDocument and
+ * SendDocToIslandIs, only on a 401 with an empty body). Every request has its
+ * own timeout: 30s, except SendDocToIslandIs which gets 120s.
  *
  * Every failure is thrown as a `OneSystemsError`; use
  * `isDefinitiveOneSystemsFailure()` to tell "One certainly did not act" apart
  * from "the outcome is unknown". None of these calls is documented as
  * idempotent, so an unknown outcome must not be retried blindly.
  *
- * A missing `ONESYSTEMS_USERNAME` or `ONESYSTEMS_PASSWORD` throws an
- * `InternalServerErrorException` before any request is sent.
+ * A missing `ONESYSTEMS_API_URL`, `ONESYSTEMS_USERNAME` or
+ * `ONESYSTEMS_PASSWORD` throws a `OneSystemsError` with reason `CONFIG`, and
+ * input that cannot be sent throws one with reason `INVALID_INPUT`. Both are
+ * thrown before any request (including Login) is sent, and both are
+ * definitive.
+ *
+ * NOT GATED: this client does not read `ONESYSTEMS_ENABLED`. Any call on a
+ * configured client reaches One. Deciding whether delivery is switched on is
+ * the caller's job (the DoE mailbox-delivery service does it); a new consumer
+ * must gate its own calls.
  */
 export interface IOneSystemsService {
   /**
@@ -107,7 +122,8 @@ export interface IOneSystemsService {
 
   /**
    * Publishes a document to the recipient's island.is digital mailbox. Not
-   * idempotent: a repeat may deliver the document twice.
+   * idempotent: a repeat may deliver the document twice. `Success: true`
+   * without an `ItemID` resolves with `islandIsDocumentId: null`.
    */
   sendDocToIslandIs(
     input: OneSystemsSendDocToIslandIsInput,

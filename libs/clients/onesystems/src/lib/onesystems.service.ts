@@ -1,8 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -14,12 +10,20 @@ import {
   postApiAuthLogin,
 } from '../gen/fetch'
 import {
-  ONESYSTEMS_REQUEST_TIMEOUT_MS,
+  ONESYSTEMS_EMPTY_ERROR_BODY,
   oneSystemsActionClient,
   oneSystemsLoginClient,
+  oneSystemsTimeoutMs,
   resolveOneSystemsBaseUrl,
 } from './onesystems.config'
-import { OneSystemsError, type OneSystemsOperation } from './onesystems.errors'
+import {
+  isLoggableCode,
+  isOneSystemsError,
+  OneSystemsError,
+  type OneSystemsNonIdempotentOperation,
+  type OneSystemsOperation,
+  toLoggableErrorNumber,
+} from './onesystems.errors'
 import {
   IOneSystemsService,
   OneSystemsCloseCaseInput,
@@ -43,10 +47,17 @@ const LOGGING_CATEGORY = 'onesystems-service'
 const DEFAULT_EXTENSION = 'PDF'
 const DEFAULT_CLOSE_STATUS = 'Lokið'
 
-/** How much of a non-2xx action response body to log. */
-const MAX_LOGGED_ERROR_BODY = 500
-
 type ActionOperation = Exclude<OneSystemsOperation, 'Login'>
+
+const NON_IDEMPOTENT_OPERATIONS: ReadonlyArray<ActionOperation> = [
+  'CreateDocument',
+  'SendDocToIslandIs',
+] satisfies ReadonlyArray<OneSystemsNonIdempotentOperation>
+
+type ConfigVariable =
+  | 'ONESYSTEMS_API_URL'
+  | 'ONESYSTEMS_USERNAME'
+  | 'ONESYSTEMS_PASSWORD'
 
 /** What every generated SDK function resolves to when it does not throw. */
 interface SdkResult {
@@ -55,21 +66,29 @@ interface SdkResult {
   response?: Response
 }
 
-/** A 2xx action response with `Success: true` and an `ItemID`. */
-interface ActionResponse {
-  itemId: string
+/** A 2xx action response with `Success: true`. */
+interface ActionResponse<TItemId extends string | null> {
+  itemId: TItemId
   body: Record<string, unknown>
 }
+
+type SendAction = (
+  common: ReturnType<typeof actionRequestOptions>,
+) => Promise<SdkResult>
 
 /**
  * Calls OneExternalAPI (OneSystems' API for Jafnréttisstofa's One case system).
  *
  * Environment, read when a call is made and never at import:
- * - `ONESYSTEMS_API_URL`: optional base URL override
+ * - `ONESYSTEMS_API_URL`: the base URL (required; there is no default)
  * - `ONESYSTEMS_USERNAME`, `ONESYSTEMS_PASSWORD`: Login credentials
  *
- * Neither the token nor the password is ever logged, and neither is a
- * kennitala or the document bytes.
+ * This service is NOT gated by `ONESYSTEMS_ENABLED`; see
+ * {@link IOneSystemsService}.
+ *
+ * Logs carry the operation, HTTP status, One's `ErrorNumber`, body lengths and
+ * One's ids. They never carry the token, the password, a kennitala, a name, a
+ * subject, the document bytes, a response body or One's `ErrorMessage`.
  */
 @Injectable()
 export class OneSystemsService implements IOneSystemsService {
@@ -80,41 +99,46 @@ export class OneSystemsService implements IOneSystemsService {
   async createCase(
     input: OneSystemsCreateCaseInput,
   ): Promise<OneSystemsCreateCaseResult> {
-    const { itemId, body } = await this.callAction('CreateCase', (common) =>
-      postApiActionsCreateCase({
-        ...common,
-        body: {
-          IDNumber: input.nationalId,
-          CustomerName: input.customerName,
-          CaseType: input.caseType,
-          Portal: input.portal,
-        },
-      }),
+    const operation = 'CreateCase'
+    const body = {
+      IDNumber: this.requireText(operation, 'nationalId', input.nationalId),
+      CustomerName: this.requireText(
+        operation,
+        'customerName',
+        input.customerName,
+      ),
+      CaseType: this.requireText(operation, 'caseType', input.caseType),
+      Portal: input.portal,
+    }
+    const response = await this.callAction(operation, (common) =>
+      postApiActionsCreateCase({ ...common, body }),
     )
     return {
-      caseItemId: itemId,
-      caseNumber: nonEmptyString(body.CaseNumber),
+      caseItemId: response.itemId,
+      caseNumber: nonEmptyString(response.body.CaseNumber),
     }
   }
 
   async createDocument(
     input: OneSystemsCreateDocumentInput,
   ): Promise<OneSystemsCreateDocumentResult> {
-    const { itemId } = await this.callAction('CreateDocument', (common) =>
-      postApiActionsCreateDocument({
-        ...common,
-        body: {
-          ParentID: input.caseItemId,
-          Subject: input.subject,
-          Extension: input.extension ?? DEFAULT_EXTENSION,
-          CreateDate: (input.createDate ?? new Date()).toISOString(),
-          Author: input.author,
-          DocCategory: input.docCategory,
-          DocType: input.docType,
-          File: input.file.toString('base64'),
-          Portal: input.portal,
-        },
-      }),
+    const operation = 'CreateDocument'
+    const body = {
+      ParentID: this.requireText(operation, 'caseItemId', input.caseItemId),
+      Subject: this.requireText(operation, 'subject', input.subject),
+      Extension:
+        input.extension === undefined
+          ? DEFAULT_EXTENSION
+          : this.requireText(operation, 'extension', input.extension),
+      CreateDate: this.requireDate(operation, input.createDate).toISOString(),
+      Author: input.author,
+      DocCategory: input.docCategory,
+      DocType: input.docType,
+      File: this.requireFile(operation, input.file).toString('base64'),
+      Portal: input.portal,
+    }
+    const { itemId } = await this.callAction(operation, (common) =>
+      postApiActionsCreateDocument({ ...common, body }),
     )
     return { documentItemId: itemId }
   }
@@ -122,17 +146,20 @@ export class OneSystemsService implements IOneSystemsService {
   async sendDocToIslandIs(
     input: OneSystemsSendDocToIslandIsInput,
   ): Promise<OneSystemsSendDocToIslandIsResult> {
-    const { itemId } = await this.callAction('SendDocToIslandIs', (common) =>
-      postApiActionsSendDocToIslandIs({
-        ...common,
-        body: {
-          ItemID: input.documentItemId,
-          IDNumber: input.nationalId,
-          Category: input.category,
-          Type: input.type,
-          SendNotification: input.sendNotification,
-        },
-      }),
+    const operation = 'SendDocToIslandIs'
+    const body = {
+      ItemID: this.requireText(
+        operation,
+        'documentItemId',
+        input.documentItemId,
+      ),
+      IDNumber: this.requireText(operation, 'nationalId', input.nationalId),
+      Category: input.category,
+      Type: input.type,
+      SendNotification: input.sendNotification,
+    }
+    const { itemId } = await this.callAction(operation, (common) =>
+      postApiActionsSendDocToIslandIs({ ...common, body }),
     )
     return { islandIsDocumentId: itemId }
   }
@@ -140,14 +167,16 @@ export class OneSystemsService implements IOneSystemsService {
   async closeCase(
     input: OneSystemsCloseCaseInput,
   ): Promise<OneSystemsCloseCaseResult> {
-    const { itemId } = await this.callAction('CloseCase', (common) =>
-      postApiActionsCloseCase({
-        ...common,
-        body: {
-          CaseID: input.caseId,
-          StatusName: input.statusName ?? DEFAULT_CLOSE_STATUS,
-        },
-      }),
+    const operation = 'CloseCase'
+    const body = {
+      CaseID: this.requireText(operation, 'caseId', input.caseId),
+      StatusName:
+        input.statusName === undefined
+          ? DEFAULT_CLOSE_STATUS
+          : this.requireText(operation, 'statusName', input.statusName),
+    }
+    const { itemId } = await this.callAction(operation, (common) =>
+      postApiActionsCloseCase({ ...common, body }),
     )
     return { caseItemId: itemId }
   }
@@ -156,26 +185,54 @@ export class OneSystemsService implements IOneSystemsService {
    * Sends one action with the current token. A 401 means the token was not
    * accepted and the action was not handled, so the token is dropped and the
    * action is sent once more with a fresh one. A second 401 is thrown.
+   *
+   * CreateDocument and SendDocToIslandIs are re-sent only when the 401 has an
+   * empty body: that is how ASP.NET's JwtBearer challenge answers, before any
+   * action runs. Under `[ApiController]` a 401 returned from inside the action
+   * has a body (One's `GeneralResponse` or a `ProblemDetails`), so the action
+   * may already have filed or sent. Those are never re-sent; the 401 is thrown
+   * as it is, which `isDefinitiveOneSystemsFailure` treats as unclear.
+   *
+   * Only SendDocToIslandIs may resolve without an `ItemID`.
    */
+  private callAction(
+    operation: Exclude<ActionOperation, 'SendDocToIslandIs'>,
+    send: SendAction,
+  ): Promise<ActionResponse<string>>
+  private callAction(
+    operation: 'SendDocToIslandIs',
+    send: SendAction,
+  ): Promise<ActionResponse<string | null>>
   private async callAction(
     operation: ActionOperation,
-    send: (
-      common: ReturnType<typeof actionRequestOptions>,
-    ) => Promise<SdkResult>,
-  ): Promise<ActionResponse> {
+    send: SendAction,
+  ): Promise<ActionResponse<string | null>> {
+    const baseUrl = this.requireConfig(operation, 'ONESYSTEMS_API_URL')
+
     this.logger.info(`Calling OneSystems ${operation}`, this.meta(operation))
 
     let token = await this.getToken()
-    let result = await send(actionRequestOptions(token))
+    let result = await send(actionRequestOptions(operation, baseUrl, token))
 
-    if (result.response?.status === 401) {
+    if (
+      result.response?.status === 401 &&
+      NON_IDEMPOTENT_OPERATIONS.includes(operation) &&
+      !isEmptyErrorBody(result.error)
+    ) {
+      this.logger.warn(
+        `OneSystems ${operation} answered 401 with a body, which may come from its action handler, not retrying`,
+        this.meta(operation),
+      )
+      // The token may still be good, but a fresh one costs only a Login.
+      this.tokenCache.invalidate(token)
+    } else if (result.response?.status === 401) {
       this.logger.warn(
         `OneSystems ${operation} rejected the token, logging in again and retrying once`,
         this.meta(operation),
       )
       this.tokenCache.invalidate(token)
       token = await this.getToken()
-      result = await send(actionRequestOptions(token))
+      result = await send(actionRequestOptions(operation, baseUrl, token))
     }
 
     const response = this.readActionResponse(operation, result)
@@ -191,18 +248,41 @@ export class OneSystemsService implements IOneSystemsService {
   private readActionResponse(
     operation: ActionOperation,
     { data, error, response }: SdkResult,
-  ): ActionResponse {
+  ): ActionResponse<string | null> {
     this.assertResponded(operation, error, response)
 
     if (!response.ok) {
+      // For a non-2xx the generated client hands back the body as `error`,
+      // JSON-parsed when it could be.
+      const generalResponse = asGeneralResponse(error)
+      const validationProblem = isValidationProblemBody(error)
+      const emptyBody = isEmptyErrorBody(error)
+      const errorNumber = generalResponse
+        ? errorCode(generalResponse.ErrorNumber)
+        : null
       this.logger.error(`OneSystems ${operation} returned an HTTP error`, {
         ...this.meta(operation),
         status: response.status,
-        errorBody: truncatedErrorBody(error),
+        hasGeneralResponseBody: generalResponse !== null,
+        isValidationProblemBody: validationProblem,
+        hasEmptyBody: emptyBody,
+        errorNumber: toLoggableErrorNumber(errorNumber),
+        bodyLength: emptyBody ? 0 : bodyLength(error),
       })
       throw new OneSystemsError(
         `OneSystems ${operation} failed with HTTP ${response.status}`,
-        { operation, reason: 'HTTP', upstreamStatus: response.status },
+        {
+          operation,
+          reason: 'HTTP',
+          upstreamStatus: response.status,
+          hasGeneralResponseBody: generalResponse !== null,
+          isValidationProblemBody: validationProblem,
+          hasEmptyBody: emptyBody,
+          errorNumber,
+          errorMessage: generalResponse
+            ? nonEmptyString(generalResponse.ErrorMessage)
+            : null,
+        },
       )
     }
 
@@ -210,7 +290,11 @@ export class OneSystemsService implements IOneSystemsService {
     if (!body || typeof body.Success !== 'boolean') {
       this.logger.error(
         `OneSystems ${operation} returned a response without a Success flag`,
-        { ...this.meta(operation), status: response.status },
+        {
+          ...this.meta(operation),
+          status: response.status,
+          bodyLength: bodyLength(data),
+        },
       )
       throw new OneSystemsError(
         `OneSystems ${operation} returned an unrecognisable response`,
@@ -224,26 +308,37 @@ export class OneSystemsService implements IOneSystemsService {
 
     if (!body.Success) {
       const errorNumber = errorCode(body.ErrorNumber)
-      const errorMessage = nonEmptyString(body.ErrorMessage)
+      const shownErrorNumber = toLoggableErrorNumber(errorNumber)
       this.logger.error(`OneSystems ${operation} was rejected`, {
         ...this.meta(operation),
-        errorNumber,
-        errorMessage,
+        status: response.status,
+        errorNumber: shownErrorNumber,
       })
       throw new OneSystemsError(
+        // Only a code-shaped ErrorNumber goes in the message, which callers
+        // may log or store.
         `OneSystems ${operation} was rejected` +
-          (errorNumber ? ` (ErrorNumber ${errorNumber})` : ''),
+          (shownErrorNumber ? ` (ErrorNumber ${shownErrorNumber})` : ''),
         {
           operation,
           reason: 'REJECTED',
           upstreamStatus: response.status,
           errorNumber,
-          errorMessage,
+          errorMessage: nonEmptyString(body.ErrorMessage),
         },
       )
     }
 
     const itemId = nonEmptyString(body.ItemID)
+    if (!itemId && operation === 'SendDocToIslandIs') {
+      // `ItemID` is nullable in the spec and what SendDocToIslandIs puts there
+      // is undocumented. One said the send succeeded, so it counts as sent.
+      this.logger.warn(
+        `OneSystems ${operation} reported success without an ItemID, treating it as sent`,
+        { ...this.meta(operation), status: response.status },
+      )
+      return { itemId: null, body }
+    }
     if (!itemId) {
       // One reported success, so it may well have acted, but without the id
       // the result cannot be tracked. The outcome is unknown, not rejected.
@@ -269,21 +364,45 @@ export class OneSystemsService implements IOneSystemsService {
   }
 
   /**
+   * Every Login failure is a `OneSystemsError`, so it is always definitive:
+   * the action was never sent. Anything else thrown on the way is wrapped.
+   */
+  private async login(): Promise<OneSystemsToken> {
+    try {
+      return await this.sendLogin()
+    } catch (error) {
+      if (isOneSystemsError(error)) {
+        throw error
+      }
+      this.logger.error('OneSystems Login failed unexpectedly', {
+        ...this.meta('Login'),
+        errorName: error instanceof Error ? error.name : undefined,
+      })
+      throw new OneSystemsError('OneSystems Login failed unexpectedly', {
+        operation: 'Login',
+        reason: 'TRANSPORT',
+        cause: error,
+      })
+    }
+  }
+
+  /**
    * Login runs on its own client with no `auth`, and its body is read as text
    * because the response shape is undocumented. The body is never logged: in
    * an unexpected shape it could still be the token.
    */
-  private async login(): Promise<OneSystemsToken> {
-    const userName = this.requireEnv('ONESYSTEMS_USERNAME')
-    const password = this.requireEnv('ONESYSTEMS_PASSWORD')
+  private async sendLogin(): Promise<OneSystemsToken> {
+    const baseUrl = this.requireConfig('Login', 'ONESYSTEMS_API_URL')
+    const userName = this.requireConfig('Login', 'ONESYSTEMS_USERNAME')
+    const password = this.requireConfig('Login', 'ONESYSTEMS_PASSWORD')
 
     this.logger.info('Logging in to OneSystems', this.meta('Login'))
 
     const { data, error, response }: SdkResult = await postApiAuthLogin({
       client: oneSystemsLoginClient,
-      baseUrl: resolveOneSystemsBaseUrl(),
+      baseUrl,
       parseAs: 'text',
-      signal: AbortSignal.timeout(ONESYSTEMS_REQUEST_TIMEOUT_MS),
+      signal: AbortSignal.timeout(oneSystemsTimeoutMs('Login')),
       body: { UserName: userName, Password: password },
     })
 
@@ -331,7 +450,8 @@ export class OneSystemsService implements IOneSystemsService {
   /**
    * No response means the request failed in transit or timed out. An error
    * alongside a 2xx means the body could not be read. Either way the outcome
-   * is unknown.
+   * is unknown. Only the error's name and code are logged: a parse error's
+   * message can quote the body.
    */
   private assertResponded(
     operation: OneSystemsOperation,
@@ -347,7 +467,7 @@ export class OneSystemsService implements IOneSystemsService {
         ...this.meta(operation),
         status: response?.status,
         errorName: error instanceof Error ? error.name : undefined,
-        errorMessage: error instanceof Error ? error.message : undefined,
+        errorCode: transportErrorCode(error),
       },
     )
     throw new OneSystemsError(
@@ -361,18 +481,68 @@ export class OneSystemsService implements IOneSystemsService {
     )
   }
 
-  private requireEnv(name: string): string {
-    const value = process.env[name]
-    if (!value) {
-      this.logger.error(`Missing required environment variable: ${name}`, {
-        category: LOGGING_CATEGORY,
-        context: LOGGING_CONTEXT,
-      })
-      throw new InternalServerErrorException(
-        `Missing required environment variable: ${name}`,
-      )
+  private requireConfig(
+    operation: OneSystemsOperation,
+    name: ConfigVariable,
+  ): string {
+    const value =
+      name === 'ONESYSTEMS_API_URL'
+        ? resolveOneSystemsBaseUrl()
+        : process.env[name]
+    if (value) {
+      return value
     }
-    return value
+    this.logger.error(
+      `OneSystems is not configured: ${name} is not set`,
+      this.meta(operation),
+    )
+    throw new OneSystemsError(
+      `OneSystems is not configured: ${name} is not set`,
+      { operation, reason: 'CONFIG' },
+    )
+  }
+
+  /** The value is never put in the message or the log, only the field name. */
+  private requireText(
+    operation: ActionOperation,
+    field: string,
+    value: unknown,
+  ): string {
+    if (typeof value === 'string' && value.trim() !== '') {
+      return value
+    }
+    throw this.invalidInput(operation, `${field} must be a non-empty string`)
+  }
+
+  private requireFile(operation: ActionOperation, file: unknown): Buffer {
+    if (Buffer.isBuffer(file) && file.length > 0) {
+      return file
+    }
+    throw this.invalidInput(operation, 'file must be a non-empty Buffer')
+  }
+
+  private requireDate(operation: ActionOperation, date: unknown): Date {
+    if (date === undefined) {
+      return new Date()
+    }
+    if (date instanceof Date && Number.isFinite(date.getTime())) {
+      return date
+    }
+    throw this.invalidInput(operation, 'createDate must be a valid Date')
+  }
+
+  private invalidInput(
+    operation: ActionOperation,
+    problem: string,
+  ): OneSystemsError {
+    this.logger.error(
+      `OneSystems ${operation} input is invalid: ${problem}`,
+      this.meta(operation),
+    )
+    return new OneSystemsError(
+      `OneSystems ${operation} input is invalid: ${problem}`,
+      { operation, reason: 'INVALID_INPUT' },
+    )
   }
 
   private meta(operation: OneSystemsOperation) {
@@ -386,17 +556,21 @@ export class OneSystemsService implements IOneSystemsService {
 
 /**
  * Options shared by every action request. A new timeout signal is made per
- * request, so the retry after a 401 gets its own 30s.
+ * request, so the retry after a 401 gets its own full timeout.
  */
-function actionRequestOptions(token: string) {
+function actionRequestOptions(
+  operation: ActionOperation,
+  baseUrl: string,
+  token: string,
+) {
   return {
     client: oneSystemsActionClient,
-    baseUrl: resolveOneSystemsBaseUrl(),
+    baseUrl,
     auth: token,
     // Read as text and parse here: One may answer with `text/plain` or no
     // Content-Type at all, which `auto` would not parse as JSON.
     parseAs: 'text' as const,
-    signal: AbortSignal.timeout(ONESYSTEMS_REQUEST_TIMEOUT_MS),
+    signal: AbortSignal.timeout(oneSystemsTimeoutMs(operation)),
   }
 }
 
@@ -409,9 +583,45 @@ function parseActionBody(data: unknown): Record<string, unknown> | null {
       return null
     }
   }
+  return isRecord(value) ? value : null
+}
+
+/**
+ * One's `GeneralResponse` is recognised by a boolean `Success`. ASP.NET's
+ * model-validation `ProblemDetails` (`type`, `title`, `status`, `errors`)
+ * has none.
+ */
+function asGeneralResponse(value: unknown): Record<string, unknown> | null {
+  const body = parseActionBody(value)
+  return body && typeof body.Success === 'boolean' ? body : null
+}
+
+/**
+ * ASP.NET's automatic model-validation response, `ValidationProblemDetails`,
+ * is recognised by an `errors` object (ASP.NET always serialises the
+ * `ProblemDetails` members in camelCase). A plain `ProblemDetails` has no
+ * `errors`: under `[ApiController]` that is what a bare `BadRequest()` from
+ * inside an action becomes, so it must not be taken as "never reached the
+ * action".
+ */
+function isValidationProblemBody(value: unknown): boolean {
+  const body = parseActionBody(value)
+  return (
+    body !== null && typeof body.Success !== 'boolean' && isRecord(body.errors)
+  )
+}
+
+/**
+ * True when a non-2xx body was empty or whitespace only. The action client's
+ * error interceptor turns exactly those bodies into
+ * {@link ONESYSTEMS_EMPTY_ERROR_BODY}; see `onesystems.config.ts`.
+ */
+function isEmptyErrorBody(value: unknown): boolean {
+  return value === ONESYSTEMS_EMPTY_ERROR_BODY
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null
 }
 
 function nonEmptyString(value: unknown): string | null {
@@ -423,12 +633,28 @@ function errorCode(value: unknown): string | null {
   return typeof value === 'number' ? String(value) : nonEmptyString(value)
 }
 
-function truncatedErrorBody(error: unknown): string | undefined {
-  if (error === undefined) {
+/** The length of a body as the generated client handed it back. */
+function bodyLength(body: unknown): number | undefined {
+  if (body === undefined || body === null) {
     return undefined
   }
-  const text = typeof error === 'string' ? error : JSON.stringify(error)
-  return text.length > MAX_LOGGED_ERROR_BODY
-    ? `${text.slice(0, MAX_LOGGED_ERROR_BODY)}...`
-    : text
+  if (typeof body === 'string') {
+    return body.length
+  }
+  try {
+    return JSON.stringify(body).length
+  } catch {
+    return undefined
+  }
+}
+
+/** A Node network error's code (`ECONNREFUSED`, ...), from it or its cause. */
+function transportErrorCode(error: unknown): string | undefined {
+  for (const candidate of [error, (error as { cause?: unknown })?.cause]) {
+    const code = (candidate as { code?: unknown } | undefined)?.code
+    if (typeof code === 'string' && isLoggableCode(code)) {
+      return code
+    }
+  }
+  return undefined
 }

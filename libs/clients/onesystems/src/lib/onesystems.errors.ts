@@ -1,3 +1,5 @@
+import { inspect } from 'node:util'
+
 import { BadGatewayException } from '@nestjs/common'
 
 /** The OneExternalAPI call that failed. */
@@ -11,13 +13,25 @@ export type OneSystemsOperation =
 /**
  * Why a OneExternalAPI call failed.
  *
+ * - `CONFIG`: `ONESYSTEMS_API_URL`, `ONESYSTEMS_USERNAME` or
+ *   `ONESYSTEMS_PASSWORD` is not set. Thrown before any request is sent.
+ * - `INVALID_INPUT`: the caller's input cannot be sent (an empty required
+ *   field, an empty file, an invalid `createDate`). Thrown before any request
+ *   is sent, including Login.
  * - `REJECTED`: One answered 200 with `Success: false`. `errorNumber` and
- *   `errorMessage` carry One's own explanation. One did not act on the call.
+ *   `errorMessage` carry One's own explanation. What One did before rejecting
+ *   is undocumented; see {@link isDefinitiveOneSystemsFailure}.
  * - `HTTP`: One (or something in front of it) answered with a non-2xx status,
- *   carried in `upstreamStatus`. A 4xx means the request was refused before
- *   it was handled; a 5xx leaves the outcome unknown.
+ *   carried in `upstreamStatus`. `hasGeneralResponseBody` says whether the
+ *   body was One's own `GeneralResponse` (which means the request reached
+ *   One's action handler). `isValidationProblemBody` says whether it was
+ *   ASP.NET's automatic model-validation `ValidationProblemDetails` (which
+ *   means it did not). `hasEmptyBody` says whether there was no body at all
+ *   (or only whitespace), which is how ASP.NET's own pipeline rejects a 401,
+ *   403 or 404 before the action. Any other body (plain text, HTML, a bare
+ *   `ProblemDetails`) says nothing about whether the action ran.
  * - `TRANSPORT`: no response arrived at all: a network error, a DNS or TLS
- *   failure, or the 30s timeout. One may or may not have acted on the call.
+ *   failure, or the request timeout. One may or may not have acted on the call.
  * - `UNEXPECTED_RESPONSE`: a 2xx arrived but could not be trusted: the body was
  *   not a recognisable response, `Success` was missing, or `Success: true` came
  *   without the `ItemID` the call exists to produce. One may well have acted
@@ -26,6 +40,8 @@ export type OneSystemsOperation =
  *   response.
  */
 export type OneSystemsErrorReason =
+  | 'CONFIG'
+  | 'INVALID_INPUT'
   | 'REJECTED'
   | 'HTTP'
   | 'TRANSPORT'
@@ -36,18 +52,61 @@ export interface OneSystemsErrorDetails {
   reason: OneSystemsErrorReason
   /** One's HTTP status, when a response arrived. */
   upstreamStatus?: number
-  /** One's `ErrorNumber`, when it rejected the call. */
+  /**
+   * For `HTTP`: true when the non-2xx body was a One `GeneralResponse` (an
+   * object with a boolean `Success`).
+   */
+  hasGeneralResponseBody?: boolean
+  /**
+   * For `HTTP`: true when the non-2xx body was ASP.NET's
+   * `ValidationProblemDetails`: a JSON object with an `errors` object and no
+   * boolean `Success`. Only automatic model validation, which runs before the
+   * action, produces it; a bare `BadRequest()` returned from inside an action
+   * becomes a `ProblemDetails` WITHOUT `errors`.
+   */
+  isValidationProblemBody?: boolean
+  /**
+   * For `HTTP`: true when the non-2xx response had no body at all, or only
+   * whitespace. ASP.NET's own pipeline rejections (the JwtBearer challenge, an
+   * authorization failure, no matching route) answer that way; anything an
+   * action returns under `[ApiController]` has a body.
+   */
+  hasEmptyBody?: boolean
+  /** One's `ErrorNumber`, when its response carried one. */
   errorNumber?: string | null
-  /** One's `ErrorMessage`, when it rejected the call. */
+  /** One's `ErrorMessage`, when its response carried one. Never logged. */
   errorMessage?: string | null
   cause?: unknown
+}
+
+/** What {@link OneSystemsError.toJSON} returns: only fields safe to log. */
+export interface OneSystemsErrorJson {
+  name: string
+  message: string
+  operation: OneSystemsOperation
+  reason: OneSystemsErrorReason
+  upstreamStatus?: number
+  hasGeneralResponseBody: boolean
+  isValidationProblemBody: boolean
+  hasEmptyBody: boolean
+  /** Passed through {@link toLoggableErrorNumber}. */
+  errorNumber?: string
 }
 
 /**
  * Thrown by the OneSystems client for every failed OneExternalAPI call. It is a
  * 502 so an uncaught one surfaces as an upstream failure. The exception message
- * is written by us and never includes One's `ErrorMessage` (which may echo
- * input); read `errorMessage` for that.
+ * (and so `getResponse()`) is written by us and never includes One's
+ * `ErrorMessage`, a response body, any input value or a raw `ErrorNumber` (all
+ * of which may contain a kennitala or a name); read `errorMessage` for One's
+ * text, and never log it.
+ *
+ * The exception filters log the whole exception object, so `errorMessage` and
+ * `errorNumber` are non-enumerable: the logger's PII masking and object spread
+ * skip them, `toJSON()` returns only {@link OneSystemsErrorJson}, and
+ * `util.inspect` prints the same fields plus the cause's name only (a cause's
+ * message, such as a parse error's, can quote a response body). They stay
+ * readable as properties.
  */
 export class OneSystemsError extends BadGatewayException {
   readonly operation: OneSystemsOperation
@@ -57,8 +116,16 @@ export class OneSystemsError extends BadGatewayException {
    * `HttpException`'s own private field and is always 502 here.)
    */
   readonly upstreamStatus?: number
-  readonly errorNumber: string | null
-  readonly errorMessage: string | null
+  readonly hasGeneralResponseBody: boolean
+  readonly isValidationProblemBody: boolean
+  readonly hasEmptyBody: boolean
+  /**
+   * One's raw `ErrorNumber`. Non-enumerable; log it only through
+   * {@link toLoggableErrorNumber}.
+   */
+  declare readonly errorNumber: string | null
+  /** One's raw `ErrorMessage`. Non-enumerable; never log it. */
+  declare readonly errorMessage: string | null
 
   constructor(message: string, details: OneSystemsErrorDetails) {
     super(message, { cause: details.cause })
@@ -66,8 +133,48 @@ export class OneSystemsError extends BadGatewayException {
     this.operation = details.operation
     this.reason = details.reason
     this.upstreamStatus = details.upstreamStatus
-    this.errorNumber = details.errorNumber ?? null
-    this.errorMessage = details.errorMessage ?? null
+    this.hasGeneralResponseBody = details.hasGeneralResponseBody ?? false
+    this.isValidationProblemBody = details.isValidationProblemBody ?? false
+    this.hasEmptyBody = details.hasEmptyBody ?? false
+    Object.defineProperty(this, 'errorNumber', {
+      value: details.errorNumber ?? null,
+      enumerable: false,
+      writable: false,
+      configurable: false,
+    })
+    Object.defineProperty(this, 'errorMessage', {
+      value: details.errorMessage ?? null,
+      enumerable: false,
+      writable: false,
+      configurable: false,
+    })
+  }
+
+  toJSON(): OneSystemsErrorJson {
+    return {
+      name: this.name,
+      message: this.message,
+      operation: this.operation,
+      reason: this.reason,
+      upstreamStatus: this.upstreamStatus,
+      hasGeneralResponseBody: this.hasGeneralResponseBody,
+      isValidationProblemBody: this.isValidationProblemBody,
+      hasEmptyBody: this.hasEmptyBody,
+      errorNumber: toLoggableErrorNumber(this.errorNumber),
+    }
+  }
+
+  [inspect.custom](): string {
+    const { name, message, ...fields } = this.toJSON()
+    const causeName =
+      this.cause instanceof Error
+        ? this.cause.name
+        : this.cause === undefined
+          ? undefined
+          : typeof this.cause
+    // The stack's first line is `name: message`, which we wrote.
+    const head = this.stack ?? `${name}: ${message}`
+    return `${head} ${inspect({ ...fields, causeName })}`
   }
 }
 
@@ -75,37 +182,160 @@ export function isOneSystemsError(error: unknown): error is OneSystemsError {
   return error instanceof OneSystemsError
 }
 
+/** The operations that file or deliver a document and must never repeat. */
+export type OneSystemsNonIdempotentOperation =
+  | 'CreateDocument'
+  | 'SendDocToIslandIs'
+
+/**
+ * One `ErrorNumber`s that are known to be raised BEFORE a document is filed
+ * (CreateDocument) or sent to island.is (SendDocToIslandIs). An error carrying
+ * one of these is definitive for that operation whatever its reason or status.
+ *
+ * TODO(OneSystems): empty on purpose. The spec has no `ErrorNumber` catalogue,
+ * and One calls island.is itself inside SendDocToIslandIs, so a
+ * `Success: false` may come back after island.is registered the document.
+ * OneSystems must confirm which error numbers are raised before a document is
+ * filed or sent; add only those, per operation.
+ */
+export const ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS: Readonly<
+  Record<OneSystemsNonIdempotentOperation, ReadonlyArray<string>>
+> = Object.freeze({
+  CreateDocument: Object.freeze([]),
+  SendDocToIslandIs: Object.freeze([]),
+})
+
+/**
+ * HTTP statuses that mean the request never reached a One action handler,
+ * provided the response body is empty. ASP.NET's pipeline (the JwtBearer
+ * challenge, authorization, routing) rejects with an empty body; under
+ * `[ApiController]` a bare `Unauthorized()`, `Forbid()` or `NotFound()` returned
+ * from inside the action becomes a `ProblemDetails` body, so any body at all
+ * (a `GeneralResponse` or a `ProblemDetails`) means the action may have run.
+ */
+const NEVER_REACHED_ACTION_STATUSES: ReadonlyArray<number> = [401, 403, 404]
+
 /**
  * True when One certainly did NOT act on the action call, so repeating it
  * cannot create a duplicate. False when the outcome is unknown, and for any
  * error that is not a `OneSystemsError`.
  *
- * Definitive:
- * - `REJECTED`: One said `Success: false`.
- * - `HTTP` with a 4xx status: refused before being handled (this includes a
- *   401 that persisted after the one token refresh).
+ * Always definitive:
+ * - `CONFIG` and `INVALID_INPUT`: nothing was sent.
  * - any failure of `Login`: the action call was never sent.
  *
- * Not definitive: `TRANSPORT`, `HTTP` with a 5xx (or no) status, and
- * `UNEXPECTED_RESPONSE`.
+ * `CreateCase` and `CloseCase` (find-or-create and a status change, so a
+ * repeat is not expected to duplicate anything):
+ * - definitive: `REJECTED`, and `HTTP` with a 4xx status (this includes a 401
+ *   that persisted after the one token refresh);
+ * - not definitive: `TRANSPORT`, `HTTP` with a 5xx (or no) status, and
+ *   `UNEXPECTED_RESPONSE`.
+ *
+ * `CreateDocument` and `SendDocToIslandIs` (not idempotent: a wrong "definitive"
+ * files or delivers a statutory notice twice):
+ * - definitive only when the request never reached the action: `HTTP` 401,
+ *   403 or 404 with an EMPTY body (whitespace only counts as empty), or an
+ *   `HTTP` 400 whose body is ASP.NET's `ValidationProblemDetails` (automatic
+ *   model validation, which runs before the action). A 401, 403 or 404 with
+ *   any body, a `GeneralResponse` or a `ProblemDetails`, may have come from
+ *   inside the action, which may already have filed or sent, so it is not
+ *   definitive. A 400 with any other body (empty, plain text, HTML, a
+ *   `ProblemDetails` without `errors`) is not definitive either: an action can
+ *   return `BadRequest(...)` after One has already called island.is;
+ * - everything else (`REJECTED`, other 4xx, 5xx, `TRANSPORT`,
+ *   `UNEXPECTED_RESPONSE`) is not definitive unless its `errorNumber` is in
+ *   {@link ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS} for that operation.
  */
 export function isDefinitiveOneSystemsFailure(error: unknown): boolean {
+  return isDefinitiveOneSystemsFailureGiven(
+    error,
+    ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS,
+  )
+}
+
+/**
+ * {@link isDefinitiveOneSystemsFailure} with the pre-flight allowlist passed
+ * in. Exists so the allowlist rule can be tested while the real list is
+ * empty; not exported from the package.
+ */
+export function isDefinitiveOneSystemsFailureGiven(
+  error: unknown,
+  preflightErrorNumbers: Readonly<
+    Record<OneSystemsNonIdempotentOperation, ReadonlyArray<string>>
+  >,
+): boolean {
   if (!isOneSystemsError(error)) {
     return false
   }
-  if (error.operation === 'Login') {
+  if (error.reason === 'CONFIG' || error.reason === 'INVALID_INPUT') {
     return true
   }
-  switch (error.reason) {
-    case 'REJECTED':
+
+  switch (error.operation) {
+    case 'Login':
       return true
-    case 'HTTP':
+    case 'CreateCase':
+    case 'CloseCase':
       return (
-        error.upstreamStatus !== undefined &&
-        error.upstreamStatus >= 400 &&
-        error.upstreamStatus < 500
+        error.reason === 'REJECTED' ||
+        (error.reason === 'HTTP' && isClientErrorStatus(error.upstreamStatus))
       )
+    case 'CreateDocument':
+    case 'SendDocToIslandIs': {
+      if (error.reason === 'HTTP' && neverReachedAction(error)) {
+        return true
+      }
+      return (
+        error.errorNumber !== null &&
+        preflightErrorNumbers[error.operation].includes(error.errorNumber)
+      )
+    }
     default:
       return false
   }
+}
+
+function neverReachedAction(error: OneSystemsError): boolean {
+  if (error.upstreamStatus === undefined) {
+    return false
+  }
+  if (NEVER_REACHED_ACTION_STATUSES.includes(error.upstreamStatus)) {
+    return error.hasEmptyBody
+  }
+  return error.upstreamStatus === 400 && error.isValidationProblemBody
+}
+
+function isClientErrorStatus(status: number | undefined): boolean {
+  return status !== undefined && status >= 400 && status < 500
+}
+
+/**
+ * A One `ErrorNumber` is loggable only when it looks like a code. Anything
+ * else might be free text echoing input. A bare ten-digit value, or six digits,
+ * a hyphen and four digits, is withheld too: it could be a kennitala.
+ */
+const LOGGABLE_ERROR_NUMBER = /^(?!\d{6}-?\d{4}$)[A-Za-z0-9._-]{1,32}$/
+
+/** What {@link toLoggableErrorNumber} logs in place of a withheld value. */
+export const WITHHELD_ERROR_NUMBER = '[not a code, withheld]'
+
+/** True when `value` is code-shaped and cannot be a kennitala. */
+export function isLoggableCode(value: string): boolean {
+  return LOGGABLE_ERROR_NUMBER.test(value)
+}
+
+/**
+ * The form of One's `ErrorNumber` that may go in a log line: the value itself
+ * when it is code-shaped, {@link WITHHELD_ERROR_NUMBER} when it is anything
+ * else, and `undefined` when there is none. Every log line that carries an
+ * `errorNumber`, in this client or a consumer, must pass it through here; the
+ * raw value stays on the error object.
+ */
+export function toLoggableErrorNumber(
+  value: string | null | undefined,
+): string | undefined {
+  if (value === null || value === undefined) {
+    return undefined
+  }
+  return isLoggableCode(value) ? value : WITHHELD_ERROR_NUMBER
 }

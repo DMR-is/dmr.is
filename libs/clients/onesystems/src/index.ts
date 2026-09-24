@@ -20,9 +20,18 @@ export {
   type OneSystemsSendDocToIslandIsResult,
 } from './lib/onesystems.service.interface'
 export {
+  ONESYSTEMS_REQUEST_TIMEOUT_MS,
+  ONESYSTEMS_SEND_DOC_TIMEOUT_MS,
+  oneSystemsTimeoutMs,
+} from './lib/onesystems.config'
+export {
   isDefinitiveOneSystemsFailure,
   isOneSystemsError,
+  ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS,
   OneSystemsError,
+  type OneSystemsErrorJson,
   type OneSystemsErrorReason,
+  type OneSystemsNonIdempotentOperation,
   type OneSystemsOperation,
+  toLoggableErrorNumber,
 } from './lib/onesystems.errors'

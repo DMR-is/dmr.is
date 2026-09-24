@@ -1,18 +1,35 @@
-import { InternalServerErrorException } from '@nestjs/common'
+import { inspect } from 'node:util'
 
-import { ONESYSTEMS_DEFAULT_BASE_URL } from './onesystems.config'
 import {
   isDefinitiveOneSystemsFailure,
   OneSystemsError,
 } from './onesystems.errors'
 import { OneSystemsService } from './onesystems.service'
 
+const BASE_URL = 'https://one.test/OneExternalAPI'
 const USERNAME = 'dmr-integration-user'
 const PASSWORD = 'pa55-w0rd-that-must-never-be-logged'
 const TOKEN_1 = 'token-one-that-must-never-be-logged'
 const TOKEN_2 = 'token-two-that-must-never-be-logged'
 const NATIONAL_ID = '1234567890'
 const PDF = Buffer.from('%PDF-1.7 notice body')
+
+/**
+ * Company-shaped (day 55, so the logger's `maskNationalId` would not mask it)
+ * and all one digit, so it is nobody's real kennitala and passes
+ * `disallow-kennitalas`. The service must never hand it to the logger in the
+ * first place.
+ */
+const COMPANY_NATIONAL_ID = '5555555555'
+const COMPANY_NATIONAL_ID_HYPHENATED = '555555-5555'
+const CUSTOMER_NAME = 'Leyndarmál Fyrirtækis ehf.'
+const SUBJECT = 'Áminning um jafnlaunavottun'
+
+const ENV_KEYS = [
+  'ONESYSTEMS_API_URL',
+  'ONESYSTEMS_USERNAME',
+  'ONESYSTEMS_PASSWORD',
+] as const
 
 const LOGIN_PATH = '/OneExternalAPI/api/auth/Login'
 
@@ -35,6 +52,25 @@ const json = (
 const success = (extra: Record<string, unknown> = {}) =>
   json({ Success: true, ItemID: 'item-1', ErrorMessage: null, ...extra })
 
+/** ASP.NET's model-validation body: rejected before the action ran. */
+const problemDetails = (status = 400) =>
+  json(
+    {
+      type: 'https://tools.ietf.org/html/rfc9110#section-15.5.1',
+      title: 'One or more validation errors occurred.',
+      status,
+      errors: { IDNumber: ['The IDNumber field is required.'] },
+    },
+    { status, contentType: 'application/problem+json' },
+  )
+
+/** One's own body on a non-2xx: the action handler ran. */
+const generalResponse = (status: number, errorNumber = '17') =>
+  json(
+    { Success: false, ErrorNumber: errorNumber, ErrorMessage: 'Villa' },
+    { status },
+  )
+
 describe('OneSystemsService', () => {
   const logger = {
     debug: jest.fn(),
@@ -43,7 +79,9 @@ describe('OneSystemsService', () => {
     error: jest.fn(),
   }
 
-  const originalEnv = { ...process.env }
+  const originalEnv = Object.fromEntries(
+    ENV_KEYS.map((key) => [key, process.env[key]]),
+  )
   const originalFetch = global.fetch
 
   let service: OneSystemsService
@@ -71,6 +109,14 @@ describe('OneSystemsService', () => {
       customerName: 'Fyrirtæki ehf.',
       caseType: 'JAFN-OVERDUE',
     })
+  const createDocument = () =>
+    service.createDocument({ caseItemId: 'case-1', subject: 's', file: PDF })
+  const sendDocToIslandIs = () =>
+    service.sendDocToIslandIs({
+      documentItemId: 'doc-1',
+      nationalId: NATIONAL_ID,
+    })
+  const closeCase = () => service.closeCase({ caseId: 'case-1' })
 
   const caught = async (promise: Promise<unknown>): Promise<unknown> => {
     try {
@@ -85,8 +131,7 @@ describe('OneSystemsService', () => {
     jest.clearAllMocks()
     jest.restoreAllMocks()
 
-    process.env = { ...originalEnv }
-    delete process.env.ONESYSTEMS_API_URL
+    process.env.ONESYSTEMS_API_URL = BASE_URL
     process.env.ONESYSTEMS_USERNAME = USERNAME
     process.env.ONESYSTEMS_PASSWORD = PASSWORD
 
@@ -110,12 +155,21 @@ describe('OneSystemsService', () => {
   })
 
   afterAll(() => {
-    process.env = originalEnv
+    // Key by key: reassigning `process.env` replaces Node's special object and
+    // loses its string coercion for every later test in the worker.
+    for (const key of ENV_KEYS) {
+      const value = originalEnv[key]
+      if (value === undefined) {
+        delete process.env[key]
+      } else {
+        process.env[key] = value
+      }
+    }
     global.fetch = originalFetch
   })
 
   describe('Login and the bearer token', () => {
-    it('logs in on the default base URL without a bearer token, then calls the action with one', async () => {
+    it('logs in on ONESYSTEMS_API_URL without a bearer token, then calls the action with one', async () => {
       actionReplies = [
         () => success({ ItemID: 'case-1', CaseNumber: '2026-9' }),
       ]
@@ -126,7 +180,7 @@ describe('OneSystemsService', () => {
       })
 
       const [login, action] = requests()
-      expect(login.url).toBe(`${ONESYSTEMS_DEFAULT_BASE_URL}/api/auth/Login`)
+      expect(login.url).toBe(`${BASE_URL}/api/auth/Login`)
       expect(login.method).toBe('POST')
       expect(login.headers.get('Authorization')).toBeNull()
       await expect(bodyOf(login)).resolves.toEqual({
@@ -134,21 +188,19 @@ describe('OneSystemsService', () => {
         Password: PASSWORD,
       })
 
-      expect(action.url).toBe(
-        `${ONESYSTEMS_DEFAULT_BASE_URL}/api/actions/CreateCase`,
-      )
+      expect(action.url).toBe(`${BASE_URL}/api/actions/CreateCase`)
       expect(action.headers.get('Authorization')).toBe(`Bearer ${TOKEN_1}`)
     })
 
     it('reads ONESYSTEMS_API_URL at call time and tolerates a trailing slash', async () => {
-      process.env.ONESYSTEMS_API_URL = 'https://one.test/OneExternalAPI/'
+      process.env.ONESYSTEMS_API_URL = 'https://other.test/OneExternalAPI/'
       actionReplies = [() => success()]
 
       await createCase()
 
       expect(requests().map((r) => r.url)).toEqual([
-        'https://one.test/OneExternalAPI/api/auth/Login',
-        'https://one.test/OneExternalAPI/api/actions/CreateCase',
+        'https://other.test/OneExternalAPI/api/auth/Login',
+        'https://other.test/OneExternalAPI/api/actions/CreateCase',
       ])
     })
 
@@ -205,6 +257,25 @@ describe('OneSystemsService', () => {
       ).toEqual([`Bearer ${TOKEN_1}`, `Bearer ${TOKEN_2}`])
     })
 
+    it.each([
+      ['createCase', () => createCase()],
+      ['closeCase', () => closeCase()],
+    ])(
+      '%s still retries a 401 with a One GeneralResponse (safe to repeat)',
+      async (_name, call) => {
+        loginReplies = [
+          () => json({ token: TOKEN_1 }),
+          () => json({ token: TOKEN_2 }),
+        ]
+        actionReplies = [() => generalResponse(401), () => success()]
+
+        await expect(call()).resolves.toBeDefined()
+
+        expect(loginRequests()).toHaveLength(2)
+        expect(actionRequests()).toHaveLength(2)
+      },
+    )
+
     it('retries only once: a second 401 is thrown as a definitive HTTP failure', async () => {
       loginReplies = [
         () => json({ token: TOKEN_1 }),
@@ -250,6 +321,27 @@ describe('OneSystemsService', () => {
       }
     })
 
+    it('gives SendDocToIslandIs a 120s timeout, and its Login and retry Login 30s', async () => {
+      const timeout = jest.spyOn(AbortSignal, 'timeout')
+      loginReplies = [
+        () => json({ token: TOKEN_1 }),
+        () => json({ token: TOKEN_2 }),
+      ]
+      actionReplies = [
+        () => new Response(null, { status: 401 }),
+        () => success(),
+      ]
+
+      await sendDocToIslandIs()
+
+      expect(timeout.mock.calls).toEqual([
+        [30_000],
+        [120_000],
+        [30_000],
+        [120_000],
+      ])
+    })
+
     it.each([
       ['an HTTP error', () => new Response('nope', { status: 500 }), 'HTTP'],
       [
@@ -268,7 +360,7 @@ describe('OneSystemsService', () => {
         loginReplies = [reply]
         actionReplies = [() => success()]
 
-        const error = await caught(createCase())
+        const error = await caught(sendDocToIslandIs())
 
         expect(error).toMatchObject({ operation: 'Login', reason })
         expect(isDefinitiveOneSystemsFailure(error)).toBe(true)
@@ -276,12 +368,155 @@ describe('OneSystemsService', () => {
       },
     )
 
+    it('wraps anything else thrown inside Login as a definitive Login failure', async () => {
+      const cause = new RangeError(
+        `something unexpected ${COMPANY_NATIONAL_ID}`,
+      )
+      jest.spyOn(AbortSignal, 'timeout').mockImplementationOnce(() => {
+        throw cause
+      })
+      actionReplies = [() => success()]
+
+      const error = await caught(sendDocToIslandIs())
+
+      expect(error).toBeInstanceOf(OneSystemsError)
+      expect(error).toMatchObject({ operation: 'Login' })
+      expect((error as { cause?: unknown }).cause).toBe(cause)
+      expect(isDefinitiveOneSystemsFailure(error)).toBe(true)
+      expect(fetchMock).not.toHaveBeenCalled()
+      expect(loggedText()).not.toContain('something unexpected')
+      expect(loggedText()).not.toContain(COMPANY_NATIONAL_ID)
+    })
+  })
+
+  describe('configuration', () => {
+    const allActions = [
+      ['createCase', 'CreateCase', createCase],
+      ['createDocument', 'CreateDocument', createDocument],
+      ['sendDocToIslandIs', 'SendDocToIslandIs', sendDocToIslandIs],
+      ['closeCase', 'CloseCase', closeCase],
+    ] as const
+
+    it.each(allActions)(
+      '%s: an unset ONESYSTEMS_API_URL is a definitive CONFIG failure, with no request and no default URL',
+      async (_name, operation, call) => {
+        delete process.env.ONESYSTEMS_API_URL
+
+        const error = await caught(call())
+
+        expect(error).toBeInstanceOf(OneSystemsError)
+        expect(error).toMatchObject({ operation, reason: 'CONFIG' })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(true)
+        expect(fetchMock).not.toHaveBeenCalled()
+      },
+    )
+
+    it('a blank ONESYSTEMS_API_URL counts as unset', async () => {
+      process.env.ONESYSTEMS_API_URL = '   '
+
+      const error = await caught(createDocument())
+
+      expect(error).toMatchObject({ reason: 'CONFIG' })
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+
     it.each(['ONESYSTEMS_USERNAME', 'ONESYSTEMS_PASSWORD'])(
-      'throws before any request when %s is missing',
+      'a missing %s is a definitive CONFIG failure of Login, before any request',
       async (name) => {
         delete process.env[name]
 
-        await expect(createCase()).rejects.toThrow(InternalServerErrorException)
+        const error = await caught(sendDocToIslandIs())
+
+        expect(error).toBeInstanceOf(OneSystemsError)
+        expect(error).toMatchObject({ operation: 'Login', reason: 'CONFIG' })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(true)
+        expect(fetchMock).not.toHaveBeenCalled()
+      },
+    )
+  })
+
+  describe('input validation', () => {
+    it.each([
+      [
+        'createDocument with an invalid createDate',
+        'CreateDocument',
+        () =>
+          service.createDocument({
+            caseItemId: 'case-1',
+            subject: 's',
+            file: PDF,
+            createDate: new Date('not a date'),
+          }),
+      ],
+      [
+        'createDocument with an empty file',
+        'CreateDocument',
+        () =>
+          service.createDocument({
+            caseItemId: 'case-1',
+            subject: 's',
+            file: Buffer.alloc(0),
+          }),
+      ],
+      [
+        'createDocument with an empty caseItemId',
+        'CreateDocument',
+        () =>
+          service.createDocument({ caseItemId: '', subject: 's', file: PDF }),
+      ],
+      [
+        'createDocument with a blank subject',
+        'CreateDocument',
+        () =>
+          service.createDocument({
+            caseItemId: 'case-1',
+            subject: '  ',
+            file: PDF,
+          }),
+      ],
+      [
+        'sendDocToIslandIs with an empty documentItemId',
+        'SendDocToIslandIs',
+        () =>
+          service.sendDocToIslandIs({
+            documentItemId: '',
+            nationalId: NATIONAL_ID,
+          }),
+      ],
+      [
+        'sendDocToIslandIs with an empty nationalId',
+        'SendDocToIslandIs',
+        () =>
+          service.sendDocToIslandIs({
+            documentItemId: 'doc-1',
+            nationalId: '',
+          }),
+      ],
+      [
+        'createCase with an empty caseType',
+        'CreateCase',
+        () =>
+          service.createCase({
+            nationalId: NATIONAL_ID,
+            customerName: 'n',
+            caseType: '',
+          }),
+      ],
+      [
+        'closeCase with an empty caseId',
+        'CloseCase',
+        () => service.closeCase({ caseId: '' }),
+      ],
+    ] as const)(
+      '%s is a definitive INVALID_INPUT failure before any request, even Login',
+      async (_label, operation, call) => {
+        actionReplies = [() => success()]
+
+        const error = await caught(call())
+
+        expect(error).toBeInstanceOf(OneSystemsError)
+        expect(error).toMatchObject({ operation, reason: 'INVALID_INPUT' })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(true)
         expect(fetchMock).not.toHaveBeenCalled()
       },
     )
@@ -372,40 +607,28 @@ describe('OneSystemsService', () => {
   })
 
   describe('response handling', () => {
-    const actions = [
-      ['createCase', () => createCase()],
-      [
-        'createDocument',
-        () =>
-          service.createDocument({
-            caseItemId: 'case-1',
-            subject: 's',
-            file: PDF,
-          }),
-      ],
-      [
-        'sendDocToIslandIs',
-        () =>
-          service.sendDocToIslandIs({
-            documentItemId: 'doc-1',
-            nationalId: NATIONAL_ID,
-          }),
-      ],
-      ['closeCase', () => service.closeCase({ caseId: 'case-1' })],
+    const idempotentActions = [
+      ['createCase', createCase],
+      ['closeCase', closeCase],
     ] as const
+    const nonIdempotentActions = [
+      ['createDocument', createDocument],
+      ['sendDocToIslandIs', sendDocToIslandIs],
+    ] as const
+    const actions = [...idempotentActions, ...nonIdempotentActions]
 
-    it.each(actions)(
+    const rejected = () =>
+      json({
+        Success: false,
+        ErrorNumber: '42',
+        ErrorMessage: 'Málasniðmát fannst ekki',
+        ItemID: null,
+      })
+
+    it.each(idempotentActions)(
       '%s: a 200 with Success:false is a definitive REJECTED failure carrying One’s error',
       async (_name, call) => {
-        actionReplies = [
-          () =>
-            json({
-              Success: false,
-              ErrorNumber: '42',
-              ErrorMessage: 'Málasniðmát fannst ekki',
-              ItemID: null,
-            }),
-        ]
+        actionReplies = [rejected]
 
         const error = await caught(call())
 
@@ -422,7 +645,27 @@ describe('OneSystemsService', () => {
       },
     )
 
-    it.each(actions)(
+    it.each(nonIdempotentActions)(
+      '%s: a 200 with Success:false is REJECTED but NOT definitive (One may have filed or sent it)',
+      async (_name, call) => {
+        actionReplies = [rejected]
+
+        const error = await caught(call())
+
+        expect(error).toMatchObject({
+          reason: 'REJECTED',
+          errorNumber: '42',
+          errorMessage: 'Málasniðmát fannst ekki',
+        })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+      },
+    )
+
+    it.each([
+      ['createCase', createCase],
+      ['createDocument', createDocument],
+      ['closeCase', closeCase],
+    ] as const)(
       '%s: Success:true without an ItemID is an unclear failure',
       async (_name, call) => {
         actionReplies = [() => json({ Success: true, ItemID: '' })]
@@ -434,6 +677,25 @@ describe('OneSystemsService', () => {
           upstreamStatus: 200,
         })
         expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+      },
+    )
+
+    it.each([
+      ['an empty ItemID', { Success: true, ItemID: '' }],
+      ['a null ItemID', { Success: true, ItemID: null }],
+      ['no ItemID', { Success: true, ResultText: 'Sent' }],
+    ])(
+      'sendDocToIslandIs: Success:true with %s is sent, with a null id and a warning',
+      async (_label, body) => {
+        actionReplies = [() => json(body)]
+
+        await expect(sendDocToIslandIs()).resolves.toEqual({
+          islandIsDocumentId: null,
+        })
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('without an ItemID'),
+          expect.objectContaining({ operation: 'SendDocToIslandIs' }),
+        )
       },
     )
 
@@ -478,7 +740,7 @@ describe('OneSystemsService', () => {
       [502, false],
       [504, false],
     ])(
-      'HTTP %i is an HTTP failure, definitive=%s',
+      'createCase: HTTP %i is an HTTP failure, definitive=%s',
       async (status, definitive) => {
         actionReplies = [() => json({ title: 'error' }, { status })]
 
@@ -488,6 +750,330 @@ describe('OneSystemsService', () => {
         expect(isDefinitiveOneSystemsFailure(error)).toBe(definitive)
       },
     )
+
+    describe.each(nonIdempotentActions)('%s over HTTP', (_name, call) => {
+      /** A bare `Unauthorized()` / `Forbid()` / `NotFound()` from an action. */
+      const bareProblemDetails = (status: number) =>
+        json(
+          {
+            type: 'https://tools.ietf.org/html/rfc9110#section-15.5.2',
+            title: 'Unauthorized',
+            status,
+            traceId: '00-abc-def-00',
+          },
+          { status, contentType: 'application/problem+json' },
+        )
+
+      it.each<{ label: string; reply: Reply; definitive: boolean }>([
+        {
+          label: '400 ValidationProblemDetails (model validation)',
+          reply: problemDetails,
+          definitive: true,
+        },
+        {
+          label: '400 with an empty body',
+          reply: () => new Response('', { status: 400 }),
+          definitive: false,
+        },
+        {
+          label:
+            '400 with a plain-text body (a BadRequest("...") from the action)',
+          reply: () =>
+            new Response('island.is failed', {
+              status: 400,
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+            }),
+          definitive: false,
+        },
+        {
+          label:
+            '400 ProblemDetails without errors (a bare BadRequest() from the action)',
+          reply: () => bareProblemDetails(400),
+          definitive: false,
+        },
+        {
+          label: '400 HTML',
+          reply: () =>
+            new Response('<html><body>Bad Request</body></html>', {
+              status: 400,
+              headers: { 'Content-Type': 'text/html' },
+            }),
+          definitive: false,
+        },
+        {
+          label: '400 with a One GeneralResponse',
+          reply: () => generalResponse(400),
+          definitive: false,
+        },
+        // ASP.NET's own pipeline rejects before the action with no body.
+        {
+          label: '403 with no body',
+          reply: () => new Response(null, { status: 403 }),
+          definitive: true,
+        },
+        {
+          label: '403 with a whitespace-only body',
+          reply: () => new Response(' \r\n\t ', { status: 403 }),
+          definitive: true,
+        },
+        {
+          label: '404 with an empty body',
+          reply: () => new Response('', { status: 404 }),
+          definitive: true,
+        },
+        {
+          label: '404 with a whitespace-only body',
+          reply: () => new Response('\n', { status: 404 }),
+          definitive: true,
+        },
+        // Any body means the action may have run and may have acted.
+        // A JSON "" parses to an empty string, but the raw body is not empty.
+        {
+          label: '403 with a JSON "" body',
+          reply: () => json('', { status: 403 }),
+          definitive: false,
+        },
+        {
+          label: '404 with a JSON "" body',
+          reply: () => json('', { status: 404 }),
+          definitive: false,
+        },
+        {
+          label: '404 with a JSON "   " body',
+          reply: () => json('   ', { status: 404 }),
+          definitive: false,
+        },
+        {
+          label: '403 ProblemDetails (a bare Forbid() from the action)',
+          reply: () => bareProblemDetails(403),
+          definitive: false,
+        },
+        {
+          label: '404 ProblemDetails (a bare NotFound() from the action)',
+          reply: () => bareProblemDetails(404),
+          definitive: false,
+        },
+        {
+          label: '404 with a plain-text body',
+          reply: () => new Response('Not Found', { status: 404 }),
+          definitive: false,
+        },
+        {
+          label: '403 with a literal {} body',
+          reply: () => new Response('{}', { status: 403 }),
+          definitive: false,
+        },
+        {
+          label: '403 with a One GeneralResponse',
+          reply: () => generalResponse(403),
+          definitive: false,
+        },
+        {
+          label: '404 with a One GeneralResponse',
+          reply: () => generalResponse(404),
+          definitive: false,
+        },
+        {
+          label: '409',
+          reply: () => json({ title: 'conflict' }, { status: 409 }),
+          definitive: false,
+        },
+        {
+          label: '429',
+          reply: () => new Response(null, { status: 429 }),
+          definitive: false,
+        },
+        {
+          label: '500',
+          reply: () => new Response('boom', { status: 500 }),
+          definitive: false,
+        },
+        {
+          label: '500 with a One GeneralResponse',
+          reply: () => generalResponse(500),
+          definitive: false,
+        },
+      ])('$label: definitive=$definitive', async ({ reply, definitive }) => {
+        actionReplies = [reply]
+
+        const error = await caught(call())
+
+        expect(error).toMatchObject({ reason: 'HTTP' })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(definitive)
+      })
+
+      it.each<{
+        label: string
+        body: string | null
+        contentType?: string
+        empty: boolean
+      }>([
+        { label: 'no body', body: null, empty: true },
+        { label: 'an empty body', body: '', empty: true },
+        { label: 'a whitespace-only body', body: ' \r\n\t ', empty: true },
+        {
+          label: 'an empty application/json body',
+          body: '',
+          contentType: 'application/json',
+          empty: true,
+        },
+        { label: 'a literal {} body', body: '{}', empty: false },
+        { label: 'a JSON null body', body: 'null', empty: false },
+        {
+          label: 'a JSON "" body',
+          body: '""',
+          contentType: 'application/json',
+          empty: false,
+        },
+        {
+          label: 'a JSON "   " body',
+          body: '"   "',
+          contentType: 'application/json',
+          empty: false,
+        },
+        { label: 'a plain-text body', body: 'x', empty: false },
+      ])(
+        'records $label as hasEmptyBody=$empty',
+        async ({ body, contentType, empty }) => {
+          actionReplies = [
+            () =>
+              new Response(body, {
+                status: 403,
+                headers: contentType ? { 'Content-Type': contentType } : {},
+              }),
+          ]
+
+          const error = await caught(call())
+
+          expect(error).toMatchObject({
+            reason: 'HTTP',
+            upstreamStatus: 403,
+            hasEmptyBody: empty,
+          })
+        },
+      )
+
+      it('a 401 that persists after the token refresh is definitive', async () => {
+        loginReplies = [
+          () => json({ token: TOKEN_1 }),
+          () => json({ token: TOKEN_2 }),
+        ]
+        actionReplies = [() => new Response(null, { status: 401 })]
+
+        const error = await caught(call())
+
+        expect(error).toMatchObject({
+          reason: 'HTTP',
+          upstreamStatus: 401,
+          hasEmptyBody: true,
+        })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(true)
+        expect(loginRequests()).toHaveLength(2)
+        expect(actionRequests()).toHaveLength(2)
+      })
+
+      it.each<{ label: string; reply: Reply }>([
+        { label: 'no body', reply: () => new Response(null, { status: 401 }) },
+        {
+          label: 'a whitespace-only body',
+          reply: () => new Response('  \n', { status: 401 }),
+        },
+      ])(
+        'a 401 with $label still logs in again and retries once',
+        async ({ reply }) => {
+          loginReplies = [
+            () => json({ token: TOKEN_1 }),
+            () => json({ token: TOKEN_2 }),
+          ]
+          actionReplies = [reply, () => success()]
+
+          await expect(call()).resolves.toBeDefined()
+
+          expect(loginRequests()).toHaveLength(2)
+          expect(
+            actionRequests().map((r) => r.headers.get('Authorization')),
+          ).toEqual([`Bearer ${TOKEN_1}`, `Bearer ${TOKEN_2}`])
+        },
+      )
+
+      it('an empty 401 retried into a 401 with a body is not definitive', async () => {
+        loginReplies = [
+          () => json({ token: TOKEN_1 }),
+          () => json({ token: TOKEN_2 }),
+        ]
+        actionReplies = [
+          () => new Response(null, { status: 401 }),
+          () => bareProblemDetails(401),
+        ]
+
+        const error = await caught(call())
+
+        expect(error).toMatchObject({
+          upstreamStatus: 401,
+          hasEmptyBody: false,
+        })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+        expect(actionRequests()).toHaveLength(2)
+      })
+
+      it.each<{ label: string; reply: Reply }>([
+        { label: 'a One GeneralResponse', reply: () => generalResponse(401) },
+        {
+          label: 'a ProblemDetails (a bare Unauthorized() from the action)',
+          reply: () => bareProblemDetails(401),
+        },
+        {
+          label: 'a plain-text body',
+          reply: () => new Response('Unauthorized', { status: 401 }),
+        },
+        {
+          label: 'a literal {} body',
+          reply: () => new Response('{}', { status: 401 }),
+        },
+        {
+          label: 'a JSON "" body (Unauthorized(string.Empty) from the action)',
+          reply: () => json('', { status: 401 }),
+        },
+        {
+          label: 'a JSON "   " body',
+          reply: () => json('   ', { status: 401 }),
+        },
+      ])(
+        'a 401 with $label is sent exactly once and is not definitive',
+        async ({ reply }) => {
+          loginReplies = [
+            () => json({ token: TOKEN_1 }),
+            () => json({ token: TOKEN_2 }),
+          ]
+          actionReplies = [reply, () => success()]
+
+          const error = await caught(call())
+
+          expect(error).toMatchObject({
+            reason: 'HTTP',
+            upstreamStatus: 401,
+            hasEmptyBody: false,
+          })
+          expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+          expect(actionRequests()).toHaveLength(1)
+          expect(loginRequests()).toHaveLength(1)
+        },
+      )
+
+      it('reads ErrorNumber and ErrorMessage off a non-2xx GeneralResponse', async () => {
+        actionReplies = [() => generalResponse(400, '99')]
+
+        const error = await caught(call())
+
+        expect(error).toMatchObject({
+          upstreamStatus: 400,
+          hasGeneralResponseBody: true,
+          isValidationProblemBody: false,
+          errorNumber: '99',
+          errorMessage: 'Villa',
+        })
+      })
+    })
 
     it.each([
       ['text/plain', 'text/plain; charset=utf-8'],
@@ -546,12 +1132,7 @@ describe('OneSystemsService', () => {
       await caught(
         service.createDocument({ caseItemId: 'c', subject: 's', file: PDF }),
       )
-      await caught(
-        service.sendDocToIslandIs({
-          documentItemId: 'd',
-          nationalId: NATIONAL_ID,
-        }),
-      )
+      await caught(sendDocToIslandIs())
 
       // Force a fresh Login whose body is an unrecognised shape.
       service = new OneSystemsService(logger as never)
@@ -569,6 +1150,113 @@ describe('OneSystemsService', () => {
         PDF.toString('base64'),
       ]) {
         expect(logged).not.toContain(secret)
+      }
+    })
+
+    it('never logs a response body or One’s ErrorMessage, even when they echo the kennitala, name and subject', async () => {
+      const echo = `IDNumber ${COMPANY_NATIONAL_ID} (${CUSTOMER_NAME}), Subject "${SUBJECT}"`
+      const echoingReplies: Array<Reply> = [
+        // ASP.NET validation echoing the input.
+        () =>
+          json(
+            {
+              title: 'One or more validation errors occurred.',
+              status: 400,
+              errors: { IDNumber: [echo], CustomerName: [CUSTOMER_NAME] },
+            },
+            { status: 400 },
+          ),
+        // A plain-text 500 echoing it.
+        () => new Response(`Server error: ${echo}`, { status: 500 }),
+        // One's own GeneralResponse on a 400 echoing it.
+        () =>
+          json(
+            { Success: false, ErrorNumber: '7', ErrorMessage: echo },
+            { status: 400 },
+          ),
+        // Success:false echoing it, with an ErrorNumber that is not a code.
+        () => json({ Success: false, ErrorNumber: echo, ErrorMessage: echo }),
+        // Code-shaped, but a bare or hyphenated kennitala.
+        () => json({ Success: false, ErrorNumber: COMPANY_NATIONAL_ID }),
+        () =>
+          json({ Success: false, ErrorNumber: COMPANY_NATIONAL_ID_HYPHENATED }),
+        () =>
+          json(
+            { Success: false, ErrorNumber: COMPANY_NATIONAL_ID_HYPHENATED },
+            { status: 500 },
+          ),
+        // A transport error whose message quotes the body.
+        () => Promise.reject(new SyntaxError(`Unexpected token in "${echo}"`)),
+      ]
+
+      // Every echoing reply is sent to both operations.
+      const errors: Array<unknown> = []
+      for (const reply of echoingReplies) {
+        actionReplies = [reply]
+        errors.push(
+          await caught(
+            service.createCase({
+              nationalId: COMPANY_NATIONAL_ID,
+              customerName: CUSTOMER_NAME,
+              caseType: 'JAFN-OVERDUE',
+            }),
+          ),
+        )
+        actionReplies = [reply]
+        errors.push(
+          await caught(
+            service.createDocument({
+              caseItemId: 'case-1',
+              subject: SUBJECT,
+              file: PDF,
+            }),
+          ),
+        )
+      }
+
+      expect(errors).toHaveLength(echoingReplies.length * 2)
+      expect(logger.error).toHaveBeenCalled()
+      const logged = loggedText()
+      for (const pii of [
+        COMPANY_NATIONAL_ID,
+        COMPANY_NATIONAL_ID_HYPHENATED,
+        CUSTOMER_NAME,
+        SUBJECT,
+      ]) {
+        expect(logged).not.toContain(pii)
+      }
+      // What is logged instead.
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          operation: 'CreateCase',
+          status: 400,
+          bodyLength: expect.any(Number),
+        }),
+      )
+      // One's text is still available to the caller, on the error only.
+      expect(errors).toContainEqual(
+        expect.objectContaining({ reason: 'HTTP', errorMessage: echo }),
+      )
+      for (const error of errors) {
+        // What the exception filters and the logger see of a thrown error.
+        const serialised = [
+          (error as Error).message,
+          JSON.stringify(error),
+          JSON.stringify({ exception: error }),
+          inspect(error, { depth: 10 }),
+          JSON.stringify((error as OneSystemsError).getResponse()),
+        ]
+        for (const text of serialised) {
+          for (const pii of [
+            COMPANY_NATIONAL_ID,
+            COMPANY_NATIONAL_ID_HYPHENATED,
+            CUSTOMER_NAME,
+            SUBJECT,
+          ]) {
+            expect(text).not.toContain(pii)
+          }
+        }
       }
     })
   })

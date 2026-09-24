@@ -15,6 +15,26 @@ export const TOKEN_EXPIRY_SKEW_MS = 60_000
 /** Lifetime assumed when the response gives no expiry at all. */
 export const TOKEN_FALLBACK_LIFETIME_MS = 10 * 60_000
 
+/**
+ * The computed expiry is clamped to at least this far from now, so a token
+ * that is short-lived (or looks expired through clock skew) is still reused
+ * for a moment instead of forcing a Login before every action. If One has
+ * really expired it, the action's 401 retry logs in again.
+ */
+export const TOKEN_MIN_LIFETIME_MS = 30_000
+
+/**
+ * The computed expiry is clamped to at most this far from now, so a
+ * nonsensical `exp` or `expires_in` cannot cache a token until a 401.
+ */
+export const TOKEN_MAX_LIFETIME_MS = 24 * 60 * 60_000
+
+/**
+ * A JWT `exp` above this is read as epoch milliseconds, not seconds. As
+ * seconds it would be past the year 33000; as milliseconds it is 2001.
+ */
+const EXP_MILLISECONDS_THRESHOLD = 1e12
+
 /** Object keys checked for the token, in order. */
 const TOKEN_KEYS = ['token', 'access_token', 'Token', 'accessToken'] as const
 
@@ -43,9 +63,12 @@ export interface OneSystemsToken {
  * contains whitespace (which is far more likely an error message than a
  * token), returns `null`.
  *
- * Expiry is the JWT `exp` minus {@link TOKEN_EXPIRY_SKEW_MS}. Without a
- * readable `exp` it is `expires_in` minus the same skew, and without either it
- * is {@link TOKEN_FALLBACK_LIFETIME_MS} from `now`.
+ * Expiry is the JWT `exp` minus {@link TOKEN_EXPIRY_SKEW_MS} (an `exp` above
+ * 1e12 is taken to be in milliseconds). Without a readable `exp` it is
+ * `expires_in` minus the same skew, and without either it is
+ * {@link TOKEN_FALLBACK_LIFETIME_MS} from `now`. The result is then clamped to
+ * between {@link TOKEN_MIN_LIFETIME_MS} and {@link TOKEN_MAX_LIFETIME_MS} from
+ * `now`.
  */
 export function parseLoginResponse(
   body: string,
@@ -97,9 +120,24 @@ function computeExpiresAt(
   expiresInSeconds: number | null,
   now: number,
 ): number {
+  return Math.min(
+    Math.max(
+      unclampedExpiresAt(value, expiresInSeconds, now),
+      now + TOKEN_MIN_LIFETIME_MS,
+    ),
+    now + TOKEN_MAX_LIFETIME_MS,
+  )
+}
+
+function unclampedExpiresAt(
+  value: string,
+  expiresInSeconds: number | null,
+  now: number,
+): number {
   const exp = readJwtExp(value)
   if (exp !== null) {
-    return exp * 1_000 - TOKEN_EXPIRY_SKEW_MS
+    const expMs = exp > EXP_MILLISECONDS_THRESHOLD ? exp : exp * 1_000
+    return expMs - TOKEN_EXPIRY_SKEW_MS
   }
   if (expiresInSeconds !== null) {
     return now + expiresInSeconds * 1_000 - TOKEN_EXPIRY_SKEW_MS
@@ -107,7 +145,10 @@ function computeExpiresAt(
   return now + TOKEN_FALLBACK_LIFETIME_MS
 }
 
-/** The JWT `exp` claim in epoch seconds, or `null` if it cannot be read. */
+/**
+ * The JWT `exp` claim as sent (epoch seconds, or milliseconds from a
+ * non-conforming issuer), or `null` if it cannot be read.
+ */
 function readJwtExp(value: string): number | null {
   if (!JWT_PATTERN.test(value)) {
     return null

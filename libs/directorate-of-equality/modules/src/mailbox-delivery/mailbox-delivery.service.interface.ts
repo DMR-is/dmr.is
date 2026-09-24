@@ -2,9 +2,14 @@ import { MailboxDeliveryKindEnum } from './models/mailbox-delivery.enums'
 
 export interface DeliverToMailboxInput {
   /**
-   * Chosen by the caller, e.g. one per company per notice per period. A repeat
-   * call with the same key resumes the same delivery instead of starting a
-   * second one. Reusing a key for a different company or kind is a conflict.
+   * One per company per notice per period: build it with
+   * `buildMailboxDeliveryIdempotencyKey`. A repeat call with the same key
+   * resumes the same delivery instead of starting a second one. Reusing a key
+   * for a different company or kind is a conflict.
+   *
+   * This key is the only guard against a duplicate send. Never mint a new one
+   * to "retry" an UNCERTAIN delivery: that starts a second delivery of a notice
+   * that may already be in the mailbox (see the module README).
    */
   idempotencyKey: string
   kind: MailboxDeliveryKindEnum
@@ -24,10 +29,14 @@ export interface DeliverToMailboxInput {
  * - `DISABLED`: `ONESYSTEMS_ENABLED` is not `'true'`. Nothing was written,
  *   rendered or sent.
  * - `SENT`: One confirmed the send. `alreadySent` is true when an earlier call
- *   had done it and this one made no call to One.
- * - `UNCERTAIN`: an earlier call's outcome is unknown (or a crash mid-call was
- *   found just now). Needs a person to check One before anything is repeated.
- * - `IN_PROGRESS`: another worker holds the delivery's lease. Nothing was done.
+ *   had done it and this one made no call to One. `islandIsDocumentId` is null
+ *   when One confirmed the send without an `ItemID` (the spec allows it).
+ * - `UNCERTAIN`: a call's outcome is unknown (an earlier one, a crash mid-call
+ *   found just now, or a late reply saved into a row already UNCERTAIN). Needs
+ *   a person to check One before anything is repeated; see the module README.
+ * - `IN_PROGRESS`: another worker holds the delivery's lease, or its call
+ *   finished while this one was claiming the row. Nothing was sent by this
+ *   call; the next call resumes from the saved ids.
  *
  * A failure during this call is not a result: it is recorded on the row
  * (FAILED or UNCERTAIN) and the error is rethrown.
@@ -37,7 +46,7 @@ export type DeliverToMailboxResult =
   | {
       status: 'SENT'
       deliveryId: string
-      islandIsDocumentId: string
+      islandIsDocumentId: string | null
       sentAt: Date | null
       alreadySent: boolean
     }
@@ -49,11 +58,25 @@ export type DeliverToMailboxResult =
  * CreateCase, CreateDocument, SendDocToIslandIs.
  *
  * Resumable and safe to call again with the same `idempotencyKey`: each id One
- * returns is saved as it arrives, and a repeat skips every step whose id is
- * saved. State is written outside any ambient transaction, so a caller's
- * rollback cannot erase a record of something One has already done. Because of
- * that the company must already be committed: call it from a cron or after
- * commit, not inside the transaction that created the company.
+ * returns is logged and saved as it arrives, and a repeat skips every step
+ * whose result is saved. State is written outside any ambient transaction, so
+ * a caller's rollback cannot erase a record of something One has already done.
+ * Because of that the company must already be committed: call it from a cron
+ * or after commit, not inside the transaction that created the company.
+ *
+ * Callers must deliver SEQUENTIALLY (await one delivery before starting the
+ * next) and OUTSIDE any transaction, including an advisory-lock
+ * transaction. Every state write takes its own pool connection
+ * (`transaction: null`), so a caller that holds a transaction's connection, or
+ * runs deliveries in parallel, can exhaust the pool (`max: 5`) and stall.
+ *
+ * Gated by `ONESYSTEMS_ENABLED`: the OneSystems client itself is not, so this
+ * service is where the kill switch lives.
+ *
+ * CreateCase is repeated after any failure on the assumption that One
+ * finds-or-creates the case (TODO(OneSystems): unconfirmed). If it does not, a
+ * retry leaves an orphan case in One, never a second send; a case id that
+ * loses the race to be saved is logged.
  */
 export interface IMailboxDeliveryService {
   deliverToMailbox(

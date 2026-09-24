@@ -8,6 +8,10 @@
  */
 
 export * from './mailbox-delivery.core.module'
+export {
+  buildMailboxDeliveryIdempotencyKey,
+  type MailboxDeliveryIdempotencyKeyParts,
+} from './mailbox-delivery.idempotency-key'
 export type { MailboxDeliveryKindConfig } from './mailbox-delivery.kinds'
 export * from './mailbox-delivery.service.interface'
 export * from './models/mailbox-delivery.enums'

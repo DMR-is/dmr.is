@@ -4,6 +4,8 @@ import {
   parseLoginResponse,
   TOKEN_EXPIRY_SKEW_MS,
   TOKEN_FALLBACK_LIFETIME_MS,
+  TOKEN_MAX_LIFETIME_MS,
+  TOKEN_MIN_LIFETIME_MS,
 } from './onesystems-token'
 
 const NOW = Date.UTC(2026, 8, 24, 12, 0, 0)
@@ -144,6 +146,51 @@ describe('parseLoginResponse', () => {
     it('pins the 60s skew and the 10 minute fallback', () => {
       expect(TOKEN_FALLBACK_LIFETIME_MS).toBe(600_000)
       expect(TOKEN_EXPIRY_SKEW_MS).toBe(60_000)
+    })
+  })
+
+  describe('expiry clamping', () => {
+    const expiresAt = (body: string) => parseLoginResponse(body, NOW)?.expiresAt
+
+    it('pins the clamp to between 30s and 24h from now', () => {
+      expect(TOKEN_MIN_LIFETIME_MS).toBe(30_000)
+      expect(TOKEN_MAX_LIFETIME_MS).toBe(86_400_000)
+    })
+
+    it('reads an exp above 1e12 as milliseconds', () => {
+      const expMs = NOW + 3_600_000
+
+      expect(expiresAt(makeJwt({ exp: expMs }))).toBe(
+        expMs - TOKEN_EXPIRY_SKEW_MS,
+      )
+    })
+
+    it.each([
+      [
+        'a JWT that expires within the skew',
+        makeJwt({ exp: NOW / 1_000 + 30 }),
+      ],
+      ['a JWT already expired', makeJwt({ exp: NOW / 1_000 - 3_600 })],
+      [
+        'an expires_in shorter than the skew',
+        JSON.stringify({ token: 'opaque', expires_in: 45 }),
+      ],
+    ])('keeps %s for at least 30s', (_label, body) => {
+      expect(expiresAt(body)).toBe(NOW + TOKEN_MIN_LIFETIME_MS)
+    })
+
+    it.each([
+      ['a JWT exp a year out', makeJwt({ exp: NOW / 1_000 + 365 * 86_400 })],
+      [
+        'a JWT exp in milliseconds a year out',
+        makeJwt({ exp: NOW + 365 * 86_400_000 }),
+      ],
+      [
+        'an expires_in of a year',
+        JSON.stringify({ token: 'opaque', expires_in: 365 * 86_400 }),
+      ],
+    ])('caps %s at 24h', (_label, body) => {
+      expect(expiresAt(body)).toBe(NOW + TOKEN_MAX_LIFETIME_MS)
     })
   })
 })

@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'crypto'
-import { literal, Op } from 'sequelize'
+import { literal, Op, WhereOptions } from 'sequelize'
 
 import {
   ConflictException,
@@ -15,6 +15,9 @@ import {
   isDefinitiveOneSystemsFailure,
   isOneSystemsError,
   OneSystemsCreateCaseResult,
+  type OneSystemsOperation,
+  oneSystemsTimeoutMs,
+  toLoggableErrorNumber,
 } from '@dmr.is/clients-onesystems'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -38,22 +41,73 @@ import {
 
 const LOGGING_CONTEXT = 'MailboxDeliveryService'
 
-/**
- * How long a claim on a row lasts. It must outlast the work done under it: a
- * PDF render plus the 30s timeout of each call to One. Renewed each time a
- * marker is written, so it only has to cover one render and one call.
- */
-const LEASE_MINUTES = 5
+const MINUTE_MS = 60_000
 
-const MAX_ERROR_LENGTH = 2_000
+/**
+ * The longest one call to One can hold a row, derived from the client's own
+ * timeouts. A call is a lazy Login and the action; a 401 then costs a second
+ * Login and one retried action, each with its own full timeout. The 401 can
+ * arrive at the very end of the first action's timeout, so the worst case is
+ * 2 x (Login + action) for the slowest action, SendDocToIslandIs:
+ * 2 x (30s + 120s) = 5 min. A timeout is never retried, so nothing is longer.
+ */
+export const MAILBOX_DELIVERY_SLOWEST_CALL_MS =
+  2 *
+  (oneSystemsTimeoutMs('Login') +
+    Math.max(
+      oneSystemsTimeoutMs('CreateCase'),
+      oneSystemsTimeoutMs('CreateDocument'),
+      oneSystemsTimeoutMs('SendDocToIslandIs'),
+    ))
+
+/**
+ * Headroom over {@link MAILBOX_DELIVERY_SLOWEST_CALL_MS} for the work between
+ * two marker writes that is not a call to One: the PDF render and the state
+ * writes around it.
+ */
+const LEASE_MARGIN_MS = 2 * MINUTE_MS
+
+/**
+ * How long a claim on a row lasts: the slowest call plus the margin, rounded
+ * up to whole minutes (7 with today's timeouts). It is renewed each time a
+ * marker is written, so it only has to cover one call to One, or the claim's
+ * CreateCase and the render before the first marker. A lease shorter than a
+ * call lets another worker take the row mid-call and mark it UNCERTAIN.
+ */
+export const MAILBOX_DELIVERY_LEASE_MINUTES = Math.ceil(
+  (MAILBOX_DELIVERY_SLOWEST_CALL_MS + LEASE_MARGIN_MS) / MINUTE_MS,
+)
+
+/**
+ * `last_error` is for a person reconciling the row. It may hold One's own
+ * `ErrorMessage`, which can echo the recipient's details, so it is kept short.
+ */
+const MAX_ERROR_LENGTH = 500
 
 /** Evaluated by Postgres, so every worker compares leases on one clock. */
 const NOW = literal('CURRENT_TIMESTAMP')
 const LEASE_EXPIRY = literal(
-  `CURRENT_TIMESTAMP + INTERVAL '${LEASE_MINUTES} minutes'`,
+  `CURRENT_TIMESTAMP + INTERVAL '${MAILBOX_DELIVERY_LEASE_MINUTES} minutes'`,
 )
 
-type IdColumn = 'oneDocumentItemId' | 'islandIsDocumentId'
+/**
+ * The column that says a step's result is saved. For the send it is `sentAt`,
+ * never `islandIsDocumentId`: One may confirm a send without an `ItemID`, so a
+ * SENT row can have a NULL `island_is_document_id`.
+ */
+const SAVED_WHEN_SET = {
+  [MailboxDeliveryStepEnum.CREATE_DOCUMENT]: 'oneDocumentItemId',
+  [MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS]: 'sentAt',
+} as const satisfies Record<MailboxDeliveryStepEnum, keyof MailboxDeliveryModel>
+
+const STEP_OPERATION = {
+  [MailboxDeliveryStepEnum.CREATE_DOCUMENT]: 'CreateDocument',
+  [MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS]: 'SendDocToIslandIs',
+} as const satisfies Record<MailboxDeliveryStepEnum, OneSystemsOperation>
+
+type StepResult =
+  | { oneDocumentItemId: string }
+  | { islandIsDocumentId: string | null; sentAt: Date }
 
 type DeliveryCompany = Pick<CompanyModel, 'id' | 'name' | 'nationalId'>
 
@@ -67,17 +121,24 @@ type DeliveryCompany = Pick<CompanyModel, 'id' | 'name' | 'nationalId'>
  * this in `sequelize.transaction()`: under CLS that is a second connection with
  * a real COMMIT, not a nested savepoint.
  *
- * Resume is driven by the saved ids, not by `status`:
- * - CreateCase finds-or-creates, so repeating it is harmless and it has no
- *   marker. Any failure of it leaves the row FAILED (retryable).
+ * Resume is driven by the saved ids and `sent_at`, not by `status`:
+ * - CreateCase is assumed to find-or-create, so repeating it is taken to be
+ *   harmless and it has no marker. Any failure of it leaves the row FAILED
+ *   (retryable). TODO(OneSystems): the spec does not document find-or-create;
+ *   if it is not, a retry leaves an orphan case in One (never a second send).
+ *   A case id that loses the race to be saved is logged for that reason.
  * - CreateDocument and SendDocToIslandIs are not safe to repeat. Each is
- *   preceded by an `in_flight_step` marker. A clear rejection leaves the row
- *   FAILED; an unclear outcome leaves it UNCERTAIN, which nothing retries. A
+ *   preceded by an `in_flight_step` marker. A failure that
+ *   `isDefinitiveOneSystemsFailure` says never reached the action leaves the
+ *   row FAILED; anything else leaves it UNCERTAIN, which nothing retries. A
  *   marker still set when the row is next claimed means the process died
  *   mid-call, and the row becomes UNCERTAIN then.
- * - Each id is written with `WHERE <column> IS NULL`, and without requiring the
- *   lease, so an id One returned is saved even after the lease lapsed and is
- *   never overwritten by a second one.
+ * - Each id One returns is logged the moment the call returns, then written
+ *   only while the step's result is unsaved (`one_document_item_id` /
+ *   `sent_at` IS NULL), without requiring the lease, so an id One returned is
+ *   saved even after the lease lapsed and is never overwritten by a second
+ *   one. The write never moves a row out of UNCERTAIN: a person has been told
+ *   to check One, and the saved id is their evidence.
  */
 @Injectable()
 export class MailboxDeliveryService implements IMailboxDeliveryService {
@@ -143,8 +204,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     }
 
     if (claimed.inFlightStep) {
-      await this.markInterrupted(claimed, leaseToken)
-      return { status: 'UNCERTAIN', deliveryId: claimed.id }
+      return this.markInterrupted(claimed, claimed.inFlightStep, leaseToken)
     }
 
     return this.run(claimed, leaseToken, input, company, config)
@@ -192,24 +252,29 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     return row
   }
 
-  /** The result for a row that needs no work, or null if it needs some. */
+  /**
+   * The result for a row that needs no work, or null if it needs some.
+   *
+   * UNCERTAIN wins, even over a saved `sent_at`: a late reply may have saved
+   * the send's result into a row a person has already been told to check.
+   * Otherwise a row is sent when its status is SENT or `sent_at` is set;
+   * `island_is_document_id` says nothing, since One may confirm a send
+   * without an id.
+   */
   private settledResult(
     row: MailboxDeliveryModel,
   ): DeliverToMailboxResult | null {
-    if (
-      row.status === MailboxDeliveryStatusEnum.SENT &&
-      row.islandIsDocumentId
-    ) {
+    if (row.status === MailboxDeliveryStatusEnum.UNCERTAIN) {
+      return { status: 'UNCERTAIN', deliveryId: row.id }
+    }
+    if (row.status === MailboxDeliveryStatusEnum.SENT || row.sentAt) {
       return {
         status: 'SENT',
         deliveryId: row.id,
-        islandIsDocumentId: row.islandIsDocumentId,
+        islandIsDocumentId: row.islandIsDocumentId ?? null,
         sentAt: row.sentAt,
         alreadySent: true,
       }
-    }
-    if (row.status === MailboxDeliveryStatusEnum.UNCERTAIN) {
-      return { status: 'UNCERTAIN', deliveryId: row.id }
     }
     return null
   }
@@ -251,17 +316,21 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     return count > 0 && rows[0] ? rows[0] : null
   }
 
-  /** A marker left by a process that died mid-call: the outcome is unknown. */
+  /**
+   * A marker left by a process that died mid-call: the outcome is unknown.
+   *
+   * Matches the marker as well as the lease. If that call was merely slow and
+   * its late save cleared the marker between the claim and this write, nothing
+   * is uncertain: the lease is handed back and the row's current result is
+   * returned (IN_PROGRESS if it still has work left, which the next call
+   * resumes from the saved ids).
+   */
   private async markInterrupted(
     row: MailboxDeliveryModel,
+    step: MailboxDeliveryStepEnum,
     leaseToken: string,
-  ): Promise<void> {
-    const step = row.inFlightStep
-    this.logger.error(
-      `Mailbox delivery ${row.id} was interrupted during ${step}; marking it UNCERTAIN`,
-      { context: LOGGING_CONTEXT, deliveryId: row.id, step },
-    )
-    await this.deliveryModel.update(
+  ): Promise<DeliverToMailboxResult> {
+    const [count] = await this.deliveryModel.update(
       {
         status: MailboxDeliveryStatusEnum.UNCERTAIN,
         inFlightStep: null,
@@ -270,7 +339,34 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         leaseToken: null,
         leaseExpiresAt: null,
       },
-      { where: { id: row.id, leaseToken }, transaction: null },
+      {
+        where: { id: row.id, leaseToken, inFlightStep: step },
+        transaction: null,
+      },
+    )
+
+    if (count > 0) {
+      this.logger.error(
+        `Mailbox delivery ${row.id} was interrupted during ${step}; marked UNCERTAIN`,
+        { context: LOGGING_CONTEXT, deliveryId: row.id, step },
+      )
+      return { status: 'UNCERTAIN', deliveryId: row.id }
+    }
+
+    this.logger.warn(
+      `Mailbox delivery ${row.id}'s ${step} marker cleared before it could be marked UNCERTAIN`,
+      { context: LOGGING_CONTEXT, deliveryId: row.id, step },
+    )
+    await this.release(row.id, leaseToken)
+    const current = await this.deliveryModel.findOne({
+      where: { id: row.id },
+      transaction: null,
+    })
+    return (
+      (current && this.settledResult(current)) ?? {
+        status: 'IN_PROGRESS',
+        deliveryId: row.id,
+      }
     )
   }
 
@@ -292,6 +388,10 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
           customerName: company.name,
           caseType: config.caseType,
           portal: config.portal,
+        })
+        this.logReturnedId(row.id, 'CreateCase', {
+          caseItemId: created.caseItemId,
+          caseNumber: created.caseNumber,
         })
         caseItemId = await this.saveCase(row.id, created)
       }
@@ -326,18 +426,25 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
           docType: config.docType,
           portal: config.portal,
         })
-        documentItemId = await this.saveId(
+        this.logReturnedId(row.id, 'CreateDocument', {
+          documentItemId: document.documentItemId,
+        })
+        const saved = await this.saveResult(
           row.id,
-          'oneDocumentItemId',
-          document.documentItemId,
-          { status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED },
+          MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+          { oneDocumentItemId: document.documentItemId },
+          MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
         )
         inFlight = null
+        if (saved === 'KEPT_UNCERTAIN') {
+          return { status: 'UNCERTAIN', deliveryId: row.id }
+        }
+        documentItemId = document.documentItemId
       }
 
       let islandIsDocumentId = row.islandIsDocumentId
       let sentAt = row.sentAt
-      if (!islandIsDocumentId) {
+      if (!sentAt) {
         await this.setMarker(
           row.id,
           leaseToken,
@@ -353,13 +460,20 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
           sendNotification: config.sendNotification,
         })
         sentAt = new Date()
-        islandIsDocumentId = await this.saveId(
+        islandIsDocumentId = sent.islandIsDocumentId
+        this.logReturnedId(row.id, 'SendDocToIslandIs', {
+          islandIsDocumentId,
+        })
+        const saved = await this.saveResult(
           row.id,
-          'islandIsDocumentId',
-          sent.islandIsDocumentId,
-          { status: MailboxDeliveryStatusEnum.SENT, sentAt },
+          MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+          { islandIsDocumentId, sentAt },
+          MailboxDeliveryStatusEnum.SENT,
         )
         inFlight = null
+        if (saved === 'KEPT_UNCERTAIN') {
+          return { status: 'UNCERTAIN', deliveryId: row.id }
+        }
       }
 
       await this.release(row.id, leaseToken)
@@ -382,7 +496,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       // Only a non-idempotent call whose outcome is unclear is UNCERTAIN.
       // Anything before its marker (a render, CreateCase) left One untouched.
       const outcome =
-        inFlight && !isDefinitiveOneSystemsFailure(error)
+        inFlight && !isDefinitiveFor(inFlight, error)
           ? MailboxDeliveryStatusEnum.UNCERTAIN
           : MailboxDeliveryStatusEnum.FAILED
       await this.recordFailure(row.id, leaseToken, outcome, inFlight, error)
@@ -391,8 +505,27 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
   }
 
   /**
+   * Logs what One returned before anything tries to save it, so an id is on
+   * record even if the save fails or the process dies. These are One's and
+   * island.is's own ids, not personal data.
+   */
+  private logReturnedId(
+    deliveryId: string,
+    operation: OneSystemsOperation,
+    ids: Record<string, string | null>,
+  ): void {
+    this.logger.info(`Mailbox delivery ${deliveryId}: ${operation} returned`, {
+      context: LOGGING_CONTEXT,
+      deliveryId,
+      operation,
+      ...ids,
+    })
+  }
+
+  /**
    * Saves the case. If another worker saved one first, its case is kept and
-   * used: CreateCase finds-or-creates, so both name the same case.
+   * used. That assumes CreateCase finds-or-creates, so both name the same case
+   * (unconfirmed, TODO(OneSystems)); ours is logged in case it does not.
    */
   private async saveCase(
     id: string,
@@ -420,34 +553,80 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         `Could not save the One case for mailbox delivery ${id}`,
       )
     }
+    if (current.oneCaseItemId !== created.caseItemId) {
+      this.logger.warn(
+        `Mailbox delivery ${id} already had case ${current.oneCaseItemId}; One returned ${created.caseItemId}, which is not used`,
+        {
+          context: LOGGING_CONTEXT,
+          deliveryId: id,
+          savedCaseItemId: current.oneCaseItemId,
+          discardedCaseItemId: created.caseItemId,
+        },
+      )
+    }
     return current.oneCaseItemId
   }
 
   /**
-   * Writes the id One returned, only into an empty column. An id already there
-   * means another worker's call got there first; ours is then a duplicate in
-   * One, which is logged with its id for reconciliation and thrown.
+   * Writes a step's result, only while the step is unsaved (`SAVED_WHEN_SET`
+   * IS NULL), and clears the marker. Not lease-gated, so a result One returned
+   * is kept even after the lease lapsed.
+   *
+   * Never moves a row out of UNCERTAIN: another worker found this call's marker
+   * after the lease lapsed and told its caller a person must check One. The
+   * result is still saved there as that person's evidence, and
+   * `KEPT_UNCERTAIN` is returned.
+   *
+   * A step already saved means another worker's call got there first; ours is
+   * then a duplicate in One, which is logged with its id and thrown.
    */
-  private async saveId(
+  private async saveResult(
     id: string,
-    column: IdColumn,
-    value: string,
-    changes: { status: MailboxDeliveryStatusEnum; sentAt?: Date },
-  ): Promise<string> {
+    step: MailboxDeliveryStepEnum,
+    result: StepResult,
+    status: MailboxDeliveryStatusEnum,
+  ): Promise<'SAVED' | 'KEPT_UNCERTAIN'> {
+    const unsaved = { id, [SAVED_WHEN_SET[step]]: null }
+
     const [count] = await this.deliveryModel.update(
-      { [column]: value, ...changes, inFlightStep: null },
-      { where: { id, [column]: null }, transaction: null },
+      { ...result, status, inFlightStep: null },
+      {
+        where: {
+          ...unsaved,
+          status: { [Op.ne]: MailboxDeliveryStatusEnum.UNCERTAIN },
+        } as WhereOptions<MailboxDeliveryModel>,
+        transaction: null,
+      },
     )
     if (count > 0) {
-      return value
+      return 'SAVED'
+    }
+
+    // Nothing moves a row out of UNCERTAIN, so no race between the two writes.
+    const [kept] = await this.deliveryModel.update(
+      { ...result, inFlightStep: null },
+      {
+        where: {
+          ...unsaved,
+          status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        } as WhereOptions<MailboxDeliveryModel>,
+        transaction: null,
+      },
+    )
+    if (kept > 0) {
+      this.logger.warn(
+        `Mailbox delivery ${id} is UNCERTAIN; saved ${STEP_OPERATION[step]}'s result and kept the status`,
+        { context: LOGGING_CONTEXT, deliveryId: id, step, ...result },
+      )
+      return 'KEPT_UNCERTAIN'
     }
 
     this.logger.error(
-      `Mailbox delivery ${id} already had ${column} when One returned ${value}; ${value} is a duplicate in One`,
-      { context: LOGGING_CONTEXT, deliveryId: id, column, duplicateId: value },
+      `Mailbox delivery ${id} already had ${STEP_OPERATION[step]}'s result; what One just returned is a duplicate in One`,
+      { context: LOGGING_CONTEXT, deliveryId: id, step, duplicate: result },
     )
     throw new InternalServerErrorException(
-      `Mailbox delivery ${id} already had ${column}; One returned a duplicate`,
+      `Mailbox delivery ${id} already had ${STEP_OPERATION[step]}'s result; One returned a duplicate`,
     )
   }
 
@@ -496,6 +675,11 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
    * Records FAILED or UNCERTAIN, clears the marker and releases the lease in one
    * write. If this write itself fails, the marker (if any) stays in the row, so
    * the next claim still finds the row UNCERTAIN.
+   *
+   * Skipped when the step's result is already saved (`SAVED_WHEN_SET`): the
+   * save committed but its reply was lost, or another worker's save won. The
+   * row then already says what happened, and a SENT row must never become
+   * UNCERTAIN. The lease is still released.
    */
   private async recordFailure(
     id: string,
@@ -516,7 +700,9 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         upstreamStatus: isOneSystemsError(error)
           ? error.upstreamStatus
           : undefined,
-        errorNumber: isOneSystemsError(error) ? error.errorNumber : undefined,
+        errorNumber: isOneSystemsError(error)
+          ? toLoggableErrorNumber(error.errorNumber)
+          : undefined,
       },
     )
 
@@ -530,13 +716,19 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
           leaseToken: null,
           leaseExpiresAt: null,
         },
-        { where: { id, leaseToken }, transaction: null },
+        {
+          where: step
+            ? { id, leaseToken, [SAVED_WHEN_SET[step]]: null }
+            : { id, leaseToken },
+          transaction: null,
+        },
       )
       if (count === 0) {
         this.logger.warn(
-          `Lost the lease on mailbox delivery ${id}; its ${outcome} was not recorded`,
-          { context: LOGGING_CONTEXT, deliveryId: id },
+          `Mailbox delivery ${id}'s ${outcome} was not recorded: the lease was lost or ${step ?? 'the step'}'s result is already saved`,
+          { context: LOGGING_CONTEXT, deliveryId: id, step },
         )
+        await this.release(id, leaseToken)
       }
     } catch (writeError) {
       this.logger.error(
@@ -555,8 +747,27 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
 }
 
 /**
- * The text kept in `last_error`. `OneSystemsError` messages are written by the
- * client and never carry a token or password.
+ * True when One certainly did not act on `step`'s call. Defers to the
+ * client's operation-aware `isDefinitiveOneSystemsFailure`, and also requires
+ * the error to come from that call (or the Login in front of it), so an error
+ * labelled with some other operation is never taken as proof about this one.
+ */
+function isDefinitiveFor(
+  step: MailboxDeliveryStepEnum,
+  error: unknown,
+): boolean {
+  return (
+    isOneSystemsError(error) &&
+    (error.operation === 'Login' || error.operation === STEP_OPERATION[step]) &&
+    isDefinitiveOneSystemsFailure(error)
+  )
+}
+
+/**
+ * The text kept in `last_error` (never logged), cut to `MAX_ERROR_LENGTH`.
+ * `OneSystemsError` messages are written by the client and never carry a token
+ * or password; One's `errorMessage` may echo input, which this row already
+ * holds. It must never be shown in a log or a UI unfiltered.
  */
 function describeError(error: unknown): string {
   let text: string

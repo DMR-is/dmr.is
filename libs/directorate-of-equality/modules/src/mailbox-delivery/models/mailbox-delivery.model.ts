@@ -47,11 +47,12 @@ type MailboxDeliveryCreateAttributes = {
  * Jafnréttisstofa's case system, One: CreateCase, then CreateDocument, then
  * SendDocToIslandIs.
  *
- * Each id One returns is saved as soon as it arrives and never overwritten, and
- * a resume skips every step whose id is already saved. That is what makes a
- * retry safe for the two calls that are not idempotent. `status` is the summary
- * for humans and queues. The CHECK constraints stop a forward status from
- * getting ahead of its ids, and the saved ids decide what runs next.
+ * Each id One returns is saved as soon as it arrives and never overwritten,
+ * and a resume skips every step whose result is already saved (for the send:
+ * `sentAt`). That is what makes a retry safe for the two calls that are not
+ * idempotent. `status` is the summary for humans and queues. The CHECK
+ * constraints stop a forward status from getting ahead of its ids, and the
+ * saved ids decide what runs next.
  *
  * `nationalId` is the recipient's kennitala as sent to One, which makes it the
  * mailbox the notice lands in. A composite foreign key to
@@ -135,6 +136,8 @@ export class MailboxDeliveryModel extends MutableModel<
   /**
    * SendDocToIslandIs's `ItemID`. The spec does not say what it identifies;
    * taken to be the delivered mailbox document until OneSystems confirms.
+   * NULL on a SENT row when One confirmed the send without one, so "sent" is
+   * `sentAt`, never this column.
    */
   @Column({
     type: DataType.TEXT,

@@ -7,7 +7,14 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
-import { OneSystemsError } from '@dmr.is/clients-onesystems'
+import {
+  IOneSystemsService,
+  ONESYSTEMS_REQUEST_TIMEOUT_MS,
+  ONESYSTEMS_SEND_DOC_TIMEOUT_MS,
+  OneSystemsError,
+  type OneSystemsOperation,
+  oneSystemsTimeoutMs,
+} from '@dmr.is/clients-onesystems'
 
 import {
   MailboxDeliveryKindEnum,
@@ -19,7 +26,11 @@ import {
   type MailboxDeliveryKindConfigs,
   resolveKindConfig,
 } from './mailbox-delivery.kinds'
-import { MailboxDeliveryService } from './mailbox-delivery.service'
+import {
+  MAILBOX_DELIVERY_LEASE_MINUTES,
+  MAILBOX_DELIVERY_SLOWEST_CALL_MS,
+  MailboxDeliveryService,
+} from './mailbox-delivery.service'
 import { DeliverToMailboxInput } from './mailbox-delivery.service.interface'
 
 /** Placeholder kennitala: shape only, never checksum-valid. */
@@ -50,6 +61,8 @@ const MINUTE = 60_000
 
 type Row = Record<string, unknown> & { id: string }
 
+type StoreUpdate = ReturnType<typeof createStore>['model']['update']
+
 const isLiteral = (value: unknown): value is { val: string } =>
   typeof value === 'object' &&
   value !== null &&
@@ -65,8 +78,10 @@ function evaluate(value: unknown, row: Row): unknown {
     return (row.attempts as number) + 1
   }
   if (value.val.includes('INTERVAL')) {
-    expect(value.val).toBe("CURRENT_TIMESTAMP + INTERVAL '5 minutes'")
-    return new Date(Date.now() + 5 * MINUTE)
+    expect(value.val).toBe(
+      `CURRENT_TIMESTAMP + INTERVAL '${MAILBOX_DELIVERY_LEASE_MINUTES} minutes'`,
+    )
+    return new Date(Date.now() + MAILBOX_DELIVERY_LEASE_MINUTES * MINUTE)
   }
   if (value.val === 'CURRENT_TIMESTAMP') {
     return new Date()
@@ -95,6 +110,9 @@ function matches(row: Row, where: Record<string | symbol, unknown>): boolean {
       const ops = condition as Record<symbol, unknown>
       if (Op.notIn in ops) {
         return !(ops[Op.notIn] as Array<unknown>).includes(actual)
+      }
+      if (Op.ne in ops) {
+        return actual !== ops[Op.ne]
       }
       if (Op.lt in ops) {
         const bound = evaluate(ops[Op.lt], row) as Date
@@ -189,9 +207,7 @@ function createStore() {
   return { rows, seed, model }
 }
 
-const rejected = (
-  operation: 'CreateCase' | 'CreateDocument' | 'SendDocToIslandIs',
-) =>
+const rejected = (operation: OneSystemsOperation) =>
   new OneSystemsError(`${operation} was rejected`, {
     operation,
     reason: 'REJECTED',
@@ -199,12 +215,22 @@ const rejected = (
     errorMessage: 'Rangt skjal',
   })
 
-const transport = (
-  operation: 'CreateCase' | 'CreateDocument' | 'SendDocToIslandIs',
-) =>
+const transport = (operation: OneSystemsOperation) =>
   new OneSystemsError(`${operation} did not answer`, {
     operation,
     reason: 'TRANSPORT',
+  })
+
+const http = (
+  operation: OneSystemsOperation,
+  upstreamStatus: number,
+  body: { isValidationProblemBody?: boolean; hasEmptyBody?: boolean } = {},
+) =>
+  new OneSystemsError(`${operation} answered ${upstreamStatus}`, {
+    operation,
+    reason: 'HTTP',
+    upstreamStatus,
+    ...body,
   })
 
 describe('MailboxDeliveryService', () => {
@@ -219,12 +245,7 @@ describe('MailboxDeliveryService', () => {
 
   let store: ReturnType<typeof createStore>
   let companies: { findOne: jest.Mock }
-  let one: {
-    createCase: jest.Mock
-    createDocument: jest.Mock
-    sendDocToIslandIs: jest.Mock
-    closeCase: jest.Mock
-  }
+  let one: jest.Mocked<IOneSystemsService>
   let pdf: jest.Mock<Promise<Buffer>, []>
   let service: MailboxDeliveryService
 
@@ -265,15 +286,17 @@ describe('MailboxDeliveryService', () => {
     store = createStore()
     companies = { findOne: jest.fn().mockResolvedValue({ ...COMPANY }) }
     one = {
-      createCase: jest
-        .fn()
-        .mockResolvedValue({ caseItemId: 'case-1', caseNumber: 'JAF-2026-1' }),
-      createDocument: jest.fn().mockResolvedValue({ documentItemId: 'doc-1' }),
-      sendDocToIslandIs: jest
-        .fn()
-        .mockResolvedValue({ islandIsDocumentId: 'island-1' }),
+      createCase: jest.fn(),
+      createDocument: jest.fn(),
+      sendDocToIslandIs: jest.fn(),
       closeCase: jest.fn(),
     }
+    one.createCase.mockResolvedValue({
+      caseItemId: 'case-1',
+      caseNumber: 'JAF-2026-1',
+    })
+    one.createDocument.mockResolvedValue({ documentItemId: 'doc-1' })
+    one.sendDocToIslandIs.mockResolvedValue({ islandIsDocumentId: 'island-1' })
     pdf = jest.fn().mockResolvedValue(PDF)
     service = build()
   })
@@ -614,7 +637,7 @@ describe('MailboxDeliveryService', () => {
       expect(onlyRow().leaseToken).toBeNull()
     })
 
-    it('claims with one conditional UPDATE ... RETURNING on a 5 minute lease', async () => {
+    it('claims with one conditional UPDATE ... RETURNING on a 7 minute lease', async () => {
       const seeded = store.seed()
 
       await service.deliverToMailbox(input())
@@ -623,7 +646,7 @@ describe('MailboxDeliveryService', () => {
       expect(values).toMatchObject({
         leaseToken: expect.any(String),
         leaseExpiresAt: {
-          val: "CURRENT_TIMESTAMP + INTERVAL '5 minutes'",
+          val: "CURRENT_TIMESTAMP + INTERVAL '7 minutes'",
         },
         attempts: { val: 'attempts + 1' },
       })
@@ -676,6 +699,10 @@ describe('MailboxDeliveryService', () => {
         const seeded = store.seed({
           status: MailboxDeliveryStatusEnum.CASE_CREATED,
           oneCaseItemId: 'case-saved',
+          oneDocumentItemId:
+            step === MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS
+              ? 'doc-saved'
+              : null,
           inFlightStep: step,
           leaseToken: 'crashed-worker',
           leaseExpiresAt: new Date(Date.now() - MINUTE),
@@ -700,8 +727,15 @@ describe('MailboxDeliveryService', () => {
   })
 
   describe('failures', () => {
-    it('records a REJECTED CreateDocument as FAILED, and a retry creates it again', async () => {
-      const error = rejected('CreateDocument')
+    it('records a CreateDocument that never reached the action as FAILED, and a retry creates it again', async () => {
+      const error = new OneSystemsError('CreateDocument answered 400', {
+        operation: 'CreateDocument',
+        reason: 'HTTP',
+        upstreamStatus: 400,
+        isValidationProblemBody: true,
+        errorNumber: '42',
+        errorMessage: 'Rangt skjal',
+      })
       one.createDocument.mockRejectedValueOnce(error)
 
       await expect(service.deliverToMailbox(input())).rejects.toBe(error)
@@ -712,7 +746,7 @@ describe('MailboxDeliveryService', () => {
         oneCaseItemId: 'case-1',
         oneDocumentItemId: null,
         inFlightStep: null,
-        lastError: 'CreateDocument REJECTED: Rangt skjal',
+        lastError: 'CreateDocument HTTP 400: Rangt skjal',
         lastErrorNumber: '42',
         leaseToken: null,
         leaseExpiresAt: null,
@@ -760,21 +794,6 @@ describe('MailboxDeliveryService', () => {
         inFlightStep: null,
         leaseToken: null,
       })
-    })
-
-    it('records a 4xx send as FAILED', async () => {
-      one.sendDocToIslandIs.mockRejectedValueOnce(
-        new OneSystemsError('SendDocToIslandIs refused', {
-          operation: 'SendDocToIslandIs',
-          reason: 'HTTP',
-          upstreamStatus: 400,
-        }),
-      )
-
-      await expect(service.deliverToMailbox(input())).rejects.toThrow(
-        OneSystemsError,
-      )
-      expect(onlyRow().status).toBe(MailboxDeliveryStatusEnum.FAILED)
     })
 
     it('records a 5xx send as UNCERTAIN', async () => {
@@ -842,10 +861,19 @@ describe('MailboxDeliveryService', () => {
       )
 
       expect(one.sendDocToIslandIs).not.toHaveBeenCalled()
-      expect(onlyRow()).toMatchObject({
+      const row = onlyRow()
+      expect(row).toMatchObject({
         status: MailboxDeliveryStatusEnum.UNCERTAIN,
         oneDocumentItemId: null,
       })
+      // The id exists only in the log now, which is what reconciles the row.
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining('CreateDocument returned'),
+        expect.objectContaining({
+          deliveryId: row.id,
+          documentItemId: 'doc-1',
+        }),
+      )
     })
 
     it('never overwrites a document id another worker saved first', async () => {
@@ -864,9 +892,561 @@ describe('MailboxDeliveryService', () => {
       expect(onlyRow().oneDocumentItemId).toBe('doc-other')
       expect(one.sendDocToIslandIs).not.toHaveBeenCalled()
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('doc-1 is a duplicate'),
-        expect.objectContaining({ duplicateId: 'doc-1' }),
+        expect.stringContaining('is a duplicate in One'),
+        expect.objectContaining({
+          duplicate: { oneDocumentItemId: 'doc-1' },
+        }),
       )
+    })
+  })
+
+  /** Runs `hook` around the store's own update, to inject a race or a lost reply. */
+  const interceptUpdate = (
+    hook: (
+      values: Parameters<StoreUpdate>[0],
+      apply: () => ReturnType<StoreUpdate>,
+    ) => ReturnType<StoreUpdate>,
+  ) => {
+    const update = store.model.update.getMockImplementation()
+    if (!update) {
+      throw new Error('The store has no update implementation')
+    }
+    store.model.update.mockImplementation((values, options) =>
+      hook(values, () => update(values, options)),
+    )
+  }
+
+  describe('whether a failure is definitive depends on the operation', () => {
+    const steps = [
+      {
+        operation: 'CreateDocument' as const,
+        fail: (error: unknown) =>
+          one.createDocument.mockRejectedValueOnce(error),
+      },
+      {
+        operation: 'SendDocToIslandIs' as const,
+        fail: (error: unknown) =>
+          one.sendDocToIslandIs.mockRejectedValueOnce(error),
+      },
+    ]
+
+    describe.each(steps)('$operation', ({ operation, fail }) => {
+      it.each([
+        [
+          'Success: false (One may have acted first)',
+          () => rejected(operation),
+        ],
+        ['a 400 that is not model validation', () => http(operation, 400)],
+        // A 401/403/404 with a body may come from inside One's action.
+        ['a 401 with a body', () => http(operation, 401)],
+        ['a 403 with a body', () => http(operation, 403)],
+        ['a 404 with a body', () => http(operation, 404)],
+        ['a 409', () => http(operation, 409)],
+        ['a 5xx', () => http(operation, 503)],
+        ['no answer', () => transport(operation)],
+        [
+          'a 2xx without a usable body',
+          () =>
+            new OneSystemsError(`${operation} answered oddly`, {
+              operation,
+              reason: 'UNEXPECTED_RESPONSE',
+            }),
+        ],
+        [
+          'a 400 model-validation body labelled with another operation',
+          () => http('CreateCase', 400, { isValidationProblemBody: true }),
+        ],
+        ['an error that is not a OneSystemsError', () => new Error('boom')],
+      ])('records %s as UNCERTAIN', async (_why, makeError) => {
+        fail(makeError())
+
+        await expect(service.deliverToMailbox(input())).rejects.toThrow()
+
+        expect(onlyRow()).toMatchObject({
+          status: MailboxDeliveryStatusEnum.UNCERTAIN,
+          inFlightStep: null,
+          leaseToken: null,
+        })
+        await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+          status: 'UNCERTAIN',
+        })
+      })
+
+      it.each([
+        [
+          'an empty-body 401',
+          () => http(operation, 401, { hasEmptyBody: true }),
+        ],
+        [
+          'an empty-body 403',
+          () => http(operation, 403, { hasEmptyBody: true }),
+        ],
+        [
+          'an empty-body 404',
+          () => http(operation, 404, { hasEmptyBody: true }),
+        ],
+        [
+          'a 400 model-validation body',
+          () => http(operation, 400, { isValidationProblemBody: true }),
+        ],
+        ['a failed Login in front of it', () => transport('Login')],
+        [
+          'missing configuration',
+          () =>
+            new OneSystemsError('OneSystems is not configured', {
+              operation: 'Login',
+              reason: 'CONFIG',
+            }),
+        ],
+        [
+          'input that cannot be sent',
+          () =>
+            new OneSystemsError(`${operation} input is invalid`, {
+              operation,
+              reason: 'INVALID_INPUT',
+            }),
+        ],
+      ])(
+        'records %s as FAILED, since One never acted',
+        async (_why, makeError) => {
+          fail(makeError())
+
+          await expect(service.deliverToMailbox(input())).rejects.toThrow()
+
+          expect(onlyRow()).toMatchObject({
+            status: MailboxDeliveryStatusEnum.FAILED,
+            inFlightStep: null,
+            leaseToken: null,
+          })
+        },
+      )
+    })
+  })
+
+  describe('a send confirmed without an ItemID', () => {
+    it('is SENT, with a null island.is id', async () => {
+      one.sendDocToIslandIs.mockResolvedValueOnce({ islandIsDocumentId: null })
+
+      const result = await service.deliverToMailbox(input())
+
+      const row = onlyRow()
+      expect(result).toEqual({
+        status: 'SENT',
+        deliveryId: row.id,
+        islandIsDocumentId: null,
+        sentAt: expect.any(Date),
+        alreadySent: false,
+      })
+      expect(row).toMatchObject({
+        status: MailboxDeliveryStatusEnum.SENT,
+        islandIsDocumentId: null,
+        sentAt: expect.any(Date),
+        inFlightStep: null,
+        leaseToken: null,
+      })
+    })
+
+    it('is reported as sent from sent_at alone, and never sent again', async () => {
+      const sentAt = new Date('2026-09-20T10:00:00.000Z')
+      const seeded = store.seed({
+        status: MailboxDeliveryStatusEnum.SENT,
+        oneCaseItemId: 'case-saved',
+        oneDocumentItemId: 'doc-saved',
+        islandIsDocumentId: null,
+        sentAt,
+      })
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'SENT',
+        deliveryId: seeded.id,
+        islandIsDocumentId: null,
+        sentAt,
+        alreadySent: true,
+      })
+      expect(oneCalls()).toBe(0)
+      expect(store.model.update).not.toHaveBeenCalled()
+    })
+
+    it('stays SENT when the save committed but its reply was lost', async () => {
+      one.sendDocToIslandIs.mockResolvedValueOnce({ islandIsDocumentId: null })
+      interceptUpdate(async (values, apply) => {
+        if (values.status === MailboxDeliveryStatusEnum.SENT) {
+          await apply()
+          throw new Error('connection terminated')
+        }
+        return apply()
+      })
+
+      await expect(service.deliverToMailbox(input())).rejects.toThrow(
+        'connection terminated',
+      )
+
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.SENT,
+        islandIsDocumentId: null,
+        sentAt: expect.any(Date),
+        inFlightStep: null,
+        lastError: null,
+        leaseToken: null,
+        leaseExpiresAt: null,
+      })
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'SENT',
+        alreadySent: true,
+      })
+      expect(one.sendDocToIslandIs).toHaveBeenCalledTimes(1)
+    })
+
+    it('lets exactly one of two late saves win, and logs the other as a duplicate', async () => {
+      const winnerSentAt = new Date('2026-09-24T09:00:00.000Z')
+      one.sendDocToIslandIs.mockImplementation(async () => {
+        // The other worker's save lands while this call is out.
+        Object.assign(onlyRow(), {
+          status: MailboxDeliveryStatusEnum.SENT,
+          sentAt: winnerSentAt,
+          islandIsDocumentId: null,
+          inFlightStep: null,
+        })
+        return { islandIsDocumentId: null }
+      })
+
+      await expect(service.deliverToMailbox(input())).rejects.toThrow(
+        InternalServerErrorException,
+      )
+
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.SENT,
+        sentAt: winnerSentAt,
+        islandIsDocumentId: null,
+      })
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('is a duplicate in One'),
+        expect.objectContaining({
+          step: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+          duplicate: { islandIsDocumentId: null, sentAt: expect.any(Date) },
+        }),
+      )
+    })
+  })
+
+  describe('late results never undo a settled row', () => {
+    const markUncertainByAnotherWorker = () =>
+      Object.assign(onlyRow(), {
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        inFlightStep: null,
+        leaseToken: null,
+        leaseExpiresAt: null,
+      })
+
+    it('saves a late document id into an UNCERTAIN row but keeps it UNCERTAIN', async () => {
+      one.createDocument.mockImplementation(async () => {
+        markUncertainByAnotherWorker()
+        return { documentItemId: 'doc-1' }
+      })
+
+      const result = await service.deliverToMailbox(input())
+
+      const row = onlyRow()
+      expect(result).toEqual({ status: 'UNCERTAIN', deliveryId: row.id })
+      expect(row).toMatchObject({
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        oneDocumentItemId: 'doc-1',
+        inFlightStep: null,
+      })
+      expect(one.sendDocToIslandIs).not.toHaveBeenCalled()
+    })
+
+    it('saves a late send into an UNCERTAIN row but keeps it UNCERTAIN', async () => {
+      one.sendDocToIslandIs.mockImplementation(async () => {
+        markUncertainByAnotherWorker()
+        return { islandIsDocumentId: 'island-1' }
+      })
+
+      const result = await service.deliverToMailbox(input())
+
+      const row = onlyRow()
+      expect(result).toEqual({ status: 'UNCERTAIN', deliveryId: row.id })
+      expect(row).toMatchObject({
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        islandIsDocumentId: 'island-1',
+        sentAt: expect.any(Date),
+      })
+      // UNCERTAIN wins over a saved sent_at: a person decides.
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'UNCERTAIN',
+        deliveryId: row.id,
+      })
+      expect(one.sendDocToIslandIs).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps DOCUMENT_CREATED when the document save committed but its reply was lost', async () => {
+      interceptUpdate(async (values, apply) => {
+        if ('oneDocumentItemId' in values) {
+          await apply()
+          throw new Error('connection terminated')
+        }
+        return apply()
+      })
+
+      await expect(service.deliverToMailbox(input())).rejects.toThrow(
+        'connection terminated',
+      )
+
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        oneDocumentItemId: 'doc-1',
+        inFlightStep: null,
+        leaseToken: null,
+      })
+    })
+
+    it.each([
+      {
+        step: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+        lateSave: {
+          status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+          oneDocumentItemId: 'doc-late',
+        },
+        expected: { status: 'IN_PROGRESS' },
+      },
+      {
+        step: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        lateSave: {
+          status: MailboxDeliveryStatusEnum.SENT,
+          sentAt: new Date('2026-09-24T09:00:00.000Z'),
+          islandIsDocumentId: null,
+        },
+        expected: {
+          status: 'SENT',
+          alreadySent: true,
+          islandIsDocumentId: null,
+        },
+      },
+    ])(
+      'does not mark UNCERTAIN when a late $step save clears the marker first',
+      async ({ step, lateSave, expected }) => {
+        store.seed({
+          status: MailboxDeliveryStatusEnum.CASE_CREATED,
+          oneCaseItemId: 'case-saved',
+          oneDocumentItemId:
+            step === MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS
+              ? 'doc-saved'
+              : null,
+          inFlightStep: step,
+          leaseToken: 'slow-worker',
+          leaseExpiresAt: new Date(Date.now() - MINUTE),
+        })
+        interceptUpdate(async (values, apply) => {
+          const result = await apply()
+          if ('attempts' in values) {
+            // The slow worker's reply is saved right after our claim.
+            Object.assign(onlyRow(), { ...lateSave, inFlightStep: null })
+          }
+          return result
+        })
+
+        await expect(service.deliverToMailbox(input())).resolves.toMatchObject(
+          expected,
+        )
+
+        expect(oneCalls()).toBe(0)
+        expect(onlyRow()).toMatchObject({
+          ...lateSave,
+          lastError: null,
+          leaseToken: null,
+          leaseExpiresAt: null,
+        })
+      },
+    )
+  })
+
+  describe('the ids One returns', () => {
+    it('logs each id before saving it', async () => {
+      await service.deliverToMailbox(input())
+
+      const row = onlyRow()
+      const logged = (operation: string, ids: Record<string, unknown>) => {
+        const index = logger.info.mock.calls.findIndex(
+          ([message]) =>
+            message === `Mailbox delivery ${row.id}: ${operation} returned`,
+        )
+        expect(index).toBeGreaterThanOrEqual(0)
+        expect(logger.info.mock.calls[index][1]).toMatchObject({
+          deliveryId: row.id,
+          ...ids,
+        })
+        return logger.info.mock.invocationCallOrder[index]
+      }
+      const savedAt = (column: string) => {
+        const index = store.model.update.mock.calls.findIndex(
+          ([values]) => column in values,
+        )
+        return store.model.update.mock.invocationCallOrder[index]
+      }
+
+      expect(
+        logged('CreateCase', {
+          caseItemId: 'case-1',
+          caseNumber: 'JAF-2026-1',
+        }),
+      ).toBeLessThan(savedAt('oneCaseItemId'))
+      expect(
+        logged('CreateDocument', { documentItemId: 'doc-1' }),
+      ).toBeLessThan(savedAt('oneDocumentItemId'))
+      expect(
+        logged('SendDocToIslandIs', { islandIsDocumentId: 'island-1' }),
+      ).toBeLessThan(savedAt('islandIsDocumentId'))
+    })
+
+    it('logs a case id that lost the race to be saved', async () => {
+      one.createCase.mockImplementation(async () => {
+        Object.assign(onlyRow(), {
+          status: MailboxDeliveryStatusEnum.CASE_CREATED,
+          oneCaseItemId: 'case-other',
+        })
+        return { caseItemId: 'case-1', caseNumber: null }
+      })
+
+      await service.deliverToMailbox(input())
+
+      expect(one.createDocument).toHaveBeenCalledWith(
+        expect.objectContaining({ caseItemId: 'case-other' }),
+      )
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('case-1'),
+        expect.objectContaining({
+          savedCaseItemId: 'case-other',
+          discardedCaseItemId: 'case-1',
+        }),
+      )
+    })
+
+    it("never logs the recipient's kennitala, name or One's error text", async () => {
+      one.sendDocToIslandIs.mockRejectedValueOnce(
+        new OneSystemsError('SendDocToIslandIs was rejected', {
+          operation: 'SendDocToIslandIs',
+          reason: 'REJECTED',
+          errorNumber: '7',
+          errorMessage: `Viðtakandi ${COMPANY.nationalId} ${COMPANY.name} fannst ekki`,
+        }),
+      )
+
+      await expect(service.deliverToMailbox(input())).rejects.toThrow()
+
+      const logged = JSON.stringify([
+        ...logger.debug.mock.calls,
+        ...logger.info.mock.calls,
+        ...logger.warn.mock.calls,
+        ...logger.error.mock.calls,
+      ])
+      expect(logged.length).toBeGreaterThan(100)
+      expect(logged).toContain('errorNumber')
+      expect(logged).not.toContain(COMPANY.nationalId)
+      expect(logged).not.toContain(COMPANY.name)
+      expect(logged).not.toContain('fannst ekki')
+    })
+
+    describe.each([
+      ['bare', '0101302989'],
+      ['hyphenated', '010130-2989'],
+    ])('an ErrorNumber that is a %s kennitala', (_shape, kennitala) => {
+      const loggerCalls = () =>
+        JSON.stringify([
+          ...logger.debug.mock.calls,
+          ...logger.info.mock.calls,
+          ...logger.warn.mock.calls,
+          ...logger.error.mock.calls,
+        ])
+
+      it.each([
+        ['CreateCase', () => one.createCase],
+        ['CreateDocument', () => one.createDocument],
+        ['SendDocToIslandIs', () => one.sendDocToIslandIs],
+      ] as const)(
+        'is never logged when %s fails, but is kept on the row',
+        async (operation, method) => {
+          method().mockRejectedValueOnce(
+            new OneSystemsError(`${operation} was rejected`, {
+              operation,
+              reason: 'REJECTED',
+              errorNumber: kennitala,
+            }),
+          )
+
+          await expect(service.deliverToMailbox(input())).rejects.toThrow(
+            OneSystemsError,
+          )
+
+          expect(logger.error).toHaveBeenCalledWith(
+            expect.any(String),
+            expect.objectContaining({
+              reason: 'REJECTED',
+              errorNumber: '[not a code, withheld]',
+            }),
+          )
+          expect(loggerCalls()).not.toContain(kennitala)
+          expect(onlyRow().lastErrorNumber).toBe(kennitala)
+        },
+      )
+    })
+
+    it('logs a code-shaped ErrorNumber as it is', async () => {
+      one.sendDocToIslandIs.mockRejectedValueOnce(rejected('SendDocToIslandIs'))
+
+      await expect(service.deliverToMailbox(input())).rejects.toThrow()
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ errorNumber: '42' }),
+      )
+    })
+
+    it('cuts last_error to 500 characters', async () => {
+      one.sendDocToIslandIs.mockRejectedValueOnce(
+        new OneSystemsError('SendDocToIslandIs was rejected', {
+          operation: 'SendDocToIslandIs',
+          reason: 'REJECTED',
+          errorMessage: 'x'.repeat(5_000),
+        }),
+      )
+
+      await expect(service.deliverToMailbox(input())).rejects.toThrow()
+
+      const lastError = onlyRow().lastError as string
+      expect(lastError).toHaveLength(500)
+      expect(lastError.startsWith('SendDocToIslandIs REJECTED: xxx')).toBe(true)
+    })
+  })
+
+  describe('the lease length', () => {
+    // Worked out here from the client's exported timeouts, independently of
+    // the service's own derivation. A lazy Login and the send, then after a
+    // 401 (which can arrive only as the first send's timeout runs out) a
+    // second Login and the retried send, each with its own full timeout.
+    const loginMs = oneSystemsTimeoutMs('Login')
+    const sendMs = oneSystemsTimeoutMs('SendDocToIslandIs')
+    const worstCaseMs = loginMs + sendMs + loginMs + sendMs
+
+    it('reads the timeouts the client really uses', () => {
+      expect(loginMs).toBe(ONESYSTEMS_REQUEST_TIMEOUT_MS)
+      expect(sendMs).toBe(ONESYSTEMS_SEND_DOC_TIMEOUT_MS)
+      expect(sendMs).toBeGreaterThanOrEqual(
+        Math.max(
+          oneSystemsTimeoutMs('CreateCase'),
+          oneSystemsTimeoutMs('CreateDocument'),
+        ),
+      )
+      expect(MAILBOX_DELIVERY_SLOWEST_CALL_MS).toBe(worstCaseMs)
+    })
+
+    it('outlasts the slowest call to One, slow 401 included, with room for a render', () => {
+      expect(MAILBOX_DELIVERY_LEASE_MINUTES * MINUTE).toBeGreaterThan(
+        worstCaseMs,
+      )
+      expect(MAILBOX_DELIVERY_LEASE_MINUTES * MINUTE).toBeGreaterThanOrEqual(
+        worstCaseMs + 2 * MINUTE,
+      )
+      expect(Number.isInteger(MAILBOX_DELIVERY_LEASE_MINUTES)).toBe(true)
     })
   })
 

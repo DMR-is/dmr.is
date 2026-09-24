@@ -84,7 +84,9 @@ module.exports = {
       attempts INTEGER NOT NULL DEFAULT 0,
       last_attempt_at TIMESTAMPTZ DEFAULT NULL,
       -- One's ErrorMessage (or the transport error) and ErrorNumber from
-      -- the most recent failure. Never a token or a credential.
+      -- the most recent failure, the message cut to 500 characters. Never
+      -- a token or a credential, but One's text may echo the recipient's
+      -- kennitala or name: never log it or show it in a UI unfiltered.
       last_error TEXT DEFAULT NULL,
       last_error_number TEXT DEFAULT NULL,
 
@@ -119,14 +121,29 @@ module.exports = {
           AND one_document_item_id IS NOT NULL
         )
       ),
+      -- island_is_document_id is not required: the spec makes the
+      -- response ItemID nullable, and One may confirm a send without
+      -- one. sent_at is what says a row was sent.
       CONSTRAINT mailbox_delivery_sent_chk CHECK (
         status <> 'SENT'
         OR (
           one_case_item_id IS NOT NULL
           AND one_document_item_id IS NOT NULL
-          AND island_is_document_id IS NOT NULL
           AND sent_at IS NOT NULL
         )
+      ),
+
+      -- A settled row has no call in flight: every writer that sets SENT
+      -- or UNCERTAIN clears the marker in the same statement.
+      CONSTRAINT mailbox_delivery_in_flight_settled_chk CHECK (
+        in_flight_step IS NULL
+        OR status NOT IN ('SENT', 'UNCERTAIN')
+      ),
+
+      -- A send cannot be in flight without the document it sends.
+      CONSTRAINT mailbox_delivery_in_flight_send_chk CHECK (
+        in_flight_step IS DISTINCT FROM 'SEND_DOC_TO_ISLAND_IS'
+        OR one_document_item_id IS NOT NULL
       ),
 
       -- Both or neither. The IS NOT NULLs are load-bearing: without them
@@ -149,8 +166,10 @@ module.exports = {
       CONSTRAINT mailbox_delivery_attempts_chk CHECK (attempts >= 0)
     );
 
-    -- The work queue and the reconciliation list: everything not yet
-    -- delivered. Partial because SENT is where almost every row ends up.
+    -- Nothing reads this yet. It is for the first queue query: the
+    -- retry scan over rows not yet SENT (FAILED and the unfinished
+    -- forward states), and the operator's list of UNCERTAIN rows.
+    -- Partial because SENT is where almost every row ends up.
     CREATE INDEX mailbox_delivery_status_idx
       ON mailbox_delivery (status)
       WHERE status <> 'SENT';
