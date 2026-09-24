@@ -1,10 +1,11 @@
 /**
  * OneExternalAPI Login token parsing and caching.
  *
- * The spec documents Login's response as an empty object, so its real shape is
- * unknown until the first live call. The parser therefore accepts every shape a
- * .NET token endpoint commonly returns and rejects anything else, rather than
- * guessing. Once a live Login has shown the real shape, narrow this.
+ * TODO(OneSystems): what does Login return? The spec documents its response as
+ * an empty object, so its real shape is unknown until the first live call. The
+ * parser therefore accepts every shape a .NET token endpoint commonly returns
+ * and rejects anything else, rather than guessing. Once a live Login has shown
+ * the real shape, narrow this.
  *
  * Nothing in this file logs. Callers must never log a token value.
  */

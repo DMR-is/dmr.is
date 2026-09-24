@@ -14,13 +14,18 @@ consumer of the client must check the flag itself.
 
 - Build the key with `buildMailboxDeliveryIdempotencyKey`. Its format is
   `mailbox-delivery:v1:<kind>:<companyId>:<discriminator>`. The company id is
-  lowercased and the discriminator upper-cased (1-64 letters, digits, `.`,
-  `_` or `-`), so `salary-20270301` and `SALARY-20270301` give the same key.
-  The discriminator must come from stored data, e.g. the report kind and its
-  due date as `YYYYMMDD`. The key is the only guard against sending the same
-  notice twice. `deliverToMailbox` refuses, before writing anything, a key
-  that does not start with `mailbox-delivery:v1:<kind>:<companyId>:` for the
-  call's own kind and company.
+  lowercased. The discriminator is checked as given (1-64 ASCII letters,
+  digits, `.`, `_` or `-`) and then upper-cased, so `salary-20270301` and
+  `SALARY-20270301` give the same key. The discriminator must come from
+  stored data, e.g. the report kind and its due date as `YYYYMMDD`. Never use
+  a case-sensitive id (e.g. base62) as a discriminator: upper-casing folds
+  `aB1` and `Ab1` into one key, so the second notice would never be sent.
+- The key is the only guard against sending the same notice twice.
+  `deliverToMailbox` throws, before writing anything and even while
+  `ONESYSTEMS_ENABLED` is off, on a key that is not exactly what
+  `buildMailboxDeliveryIdempotencyKey` returns for the call's own kind and
+  company. A key that only starts with the right prefix, such as one with a
+  lower-case discriminator, is refused too.
 - Deliver **sequentially**: await one delivery before starting the next.
   Every state write takes its own pool connection (`transaction: null`), so it
   cannot be rolled back with the caller's work. Holding a transaction while

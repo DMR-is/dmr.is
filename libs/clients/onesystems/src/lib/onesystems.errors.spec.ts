@@ -254,12 +254,20 @@ describe('isDefinitiveOneSystemsFailure', () => {
 })
 
 describe('toLoggableErrorNumber', () => {
-  it.each(['17', '42', 'E-42', 'ERR_NOT_FOUND', 'v1.2', '12345678', '12-3456'])(
-    'logs the code-shaped %p as it is',
-    (value) => {
-      expect(toLoggableErrorNumber(value)).toBe(value)
-    },
-  )
+  it.each([
+    '17',
+    '42',
+    'E-42',
+    'ERR_123',
+    'ERR_NOT_FOUND',
+    'v1.2',
+    '12345678',
+    '12-3456',
+    // Eight digits in total, one short of the kennitala rule.
+    'E-12345678',
+  ])('logs the code-shaped %p as it is', (value) => {
+    expect(toLoggableErrorNumber(value)).toBe(value)
+  })
 
   it.each([
     // A kennitala, bare and hyphenated (the fake 010130 test prefix).
@@ -275,6 +283,14 @@ describe('toLoggableErrorNumber', () => {
     '123456789',
     'E123456789',
     '1234567890123',
+    // Nine digits in total, whatever separates or prefixes them.
+    '010130.2989',
+    '010130_2989',
+    '010130--2989',
+    '0101-30-2989',
+    '01.01.30-2989',
+    '10130-2989',
+    '1.0.1.3.0.2.9.8.9',
     // Free text that may echo input.
     'Viðtakandi fannst ekki',
     'a b',

@@ -5,8 +5,11 @@ export interface DeliverToMailboxInput {
    * One per company per notice per period: build it with
    * `buildMailboxDeliveryIdempotencyKey`. A repeat call with the same key
    * resumes the same delivery instead of starting a second one. A key that
-   * does not start with `mailbox-delivery:v1:<kind>:<companyId>:` for this
-   * call's own `kind` and company is refused before anything is written.
+   * is not exactly what `buildMailboxDeliveryIdempotencyKey` returns for this
+   * call's own `kind` and company is refused with a throw before anything is
+   * written, even while delivery is switched off. A key that merely starts
+   * with the right prefix, such as `${prefix}salary-20270301` with a
+   * lower-case discriminator, is refused too.
    *
    * This key is the only guard against a duplicate send. Never mint a new one
    * to "retry" an UNCERTAIN delivery: that starts a second delivery of a notice
@@ -28,7 +31,8 @@ export interface DeliverToMailboxInput {
 
 /**
  * - `DISABLED`: `ONESYSTEMS_ENABLED` is not `'true'`. Nothing was written,
- *   rendered or sent.
+ *   rendered or sent. The key is checked first, so a malformed key throws
+ *   rather than returning DISABLED.
  * - `SENT`: One confirmed the send. `alreadySent` is true when an earlier call
  *   had done it and this one made no call to One. `islandIsDocumentId` is null
  *   when One confirmed the send without an `ItemID` (the spec allows it).

@@ -49,6 +49,12 @@ describe('buildMailboxDeliveryIdempotencyKey', () => {
     ['over 64 characters', 'A'.repeat(65)],
     ['a non-ASCII letter', 'ÁRSSKÝRSLA-2027'],
     ['a slash', 'SALARY/20270301'],
+    // Each upper-cases to plain ASCII, so only a check on the raw value
+    // catches them.
+    ['a sharp s, which upper-cases to SS', 'straße-1'],
+    ['a dotless i, which upper-cases to I', 'ı-1'],
+    ['a long s, which upper-cases to S', 'ſ-1'],
+    ['an fi ligature, which upper-cases to FI', 'ﬁ-1'],
   ])('rejects a discriminator with %s', (_why, discriminator) => {
     expect(() =>
       buildMailboxDeliveryIdempotencyKey({

@@ -246,6 +246,11 @@ export const ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS: Readonly<
  * auth failure, so only OneSystems can rule it out. If the challenge turns out
  * not to carry the header, every expired token on CreateDocument or
  * SendDocToIslandIs ends UNCERTAIN (never a duplicate).
+ *
+ * Also: do CreateCase, CreateDocument and SendDocToIslandIs need the same One
+ * permission? The empty-403 rule below counts on a missing permission failing
+ * at CreateCase first; if the permissions differ, it fails at the later call
+ * instead and that row ends UNCERTAIN.
  */
 /**
  * True when One certainly did NOT act on the action call, so repeating it
@@ -278,8 +283,11 @@ export const ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS: Readonly<
  * {@link ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS} for that operation:
  * - an empty 403 or 404 is not: `Forbid()` from inside an action goes through
  *   the auth handler and is an empty 403, and `NotFound(null)` is an empty
- *   404. A wrong base URL or a missing permission is already caught,
- *   definitively, at CreateCase, which is idempotent and runs first;
+ *   404. A wrong base URL is already caught, definitively, at CreateCase,
+ *   which is idempotent and runs first. A missing permission is caught there
+ *   only if CreateCase needs the same One permission as CreateDocument and
+ *   SendDocToIslandIs, which is unconfirmed (see the TODO above); if it does
+ *   not, a missing permission on either ends UNCERTAIN, never a duplicate;
  * - a 401, 403 or 404 with any body, a `GeneralResponse` or a
  *   `ProblemDetails`, may have come from inside the action;
  * - a 400 with any other body (empty, plain text, HTML, a `ProblemDetails`
@@ -356,16 +364,20 @@ function isClientErrorStatus(status: number | undefined): boolean {
 const LOGGABLE_ERROR_NUMBER = /^[A-Za-z0-9._-]{1,32}$/
 
 /**
- * Anything that could hold a kennitala, anywhere in the value: a run of nine
- * or more digits, or six digits, an optional hyphen and four digits. Withheld
- * even inside a code-shaped value (`E0101302989`, `0101302989_1`,
- * `010130-2989x`).
+ * Anything that could hold a kennitala: nine or more digits in total, however
+ * they are separated or prefixed (`010130.2989`, `0101-30-2989`,
+ * `1.0.1.3.0.2.9.8.9`, `E0101302989`). Nine, not ten, so a kennitala with a
+ * digit dropped is withheld too. Counting digits rather than matching a
+ * layout means no separator slips through; the cost is that a legitimate code
+ * with nine or more digits is withheld as well. Counted with a linear strip
+ * rather than a `(?:\D*\d){9}` regex, which backtracks quadratically on long
+ * input.
  */
-const KENNITALA_SHAPED = /\d{9,}|\d{6}-?\d{4}/
+const KENNITALA_MIN_DIGITS = 9
 
 /** True when `value` contains nothing that could be a kennitala. */
 export function hasNoKennitalaShape(value: string): boolean {
-  return !KENNITALA_SHAPED.test(value)
+  return value.replace(/\D/g, '').length < KENNITALA_MIN_DIGITS
 }
 
 /** What {@link toLoggableErrorNumber} logs in place of a withheld value. */

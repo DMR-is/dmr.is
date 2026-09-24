@@ -116,8 +116,9 @@ anything here, and any new consumer must do the same.
   object spread and the logger's PII masking. `toJSON()` returns only the safe
   fields (`name`, `message`, `operation`, `reason`, `upstreamStatus`, the four
   body flags, and `errorNumber` passed through `toLoggableErrorNumber`), and
-  `util.inspect` prints the same plus the cause's name only. The message, and so `getResponse()`, never holds
-  One's `ErrorMessage` or a raw `ErrorNumber`.
+  `util.inspect` prints the same plus the cause's name only. The message, and
+  so `getResponse()`, never holds One's `ErrorMessage` or a raw
+  `ErrorNumber`.
 
 ## Errors
 
@@ -163,9 +164,12 @@ or 401. So a 401 counts as "never reached the action" only when its body is
 empty or whitespace only (`hasEmptyBody`) **and** its `WWW-Authenticate` header
 names the Bearer scheme (`hasBearerChallenge`). The JwtBearer challenge always
 sets that header, and an in-action `Unauthorized(null)` does not. An empty 403
-or 404 never counts for these two calls. That costs nothing: a wrong base URL
-or a missing permission already fails at `CreateCase`, which runs first, is
-idempotent, and treats any 4xx as definitive. A 401, 403 or 404 with any body
+or 404 never counts for these two calls. A wrong base URL already fails at
+`CreateCase`, which runs first, is idempotent, and treats any 4xx as
+definitive. A missing permission fails there too only if `CreateCase` needs the
+same One permission as `CreateDocument` and `SendDocToIslandIs`, which is
+unconfirmed; if it does not, that call's empty 403 leaves the delivery
+UNCERTAIN (never a duplicate). A 401, 403 or 404 with any body
 (One's `GeneralResponse`, a `ProblemDetails`, plain text or even `{}`) never
 counts either.
 
@@ -204,8 +208,8 @@ code.
 - Can any One action, **after** it has filed/sent, return `NotFound(null)`,
   `Unauthorized(null)`, `Forbid()`, `Challenge()` or `ValidationProblem()`?
   `Challenge()` is indistinguishable client-side from a real expired-token
-  challenge, which is treated as definitive and retried. Is the 401 challenge body
-  empty, and does it carry `WWW-Authenticate: Bearer`? If it does not carry
+  challenge, which is treated as definitive and retried. Is the 401 challenge
+  body empty, and does it carry `WWW-Authenticate: Bearer`? If it does not carry
   the header, an expired token on `CreateDocument` or `SendDocToIslandIs`
   ends UNCERTAIN instead of being retried.
 - Which `ErrorNumber`s are raised before a document is filed or sent
@@ -213,6 +217,9 @@ code.
 - Does `CreateCase` find-or-create? Is `CloseCase`'s `CaseID` the
   `CaseNumber` or the case `ItemID`?
 - What does `SendDocToIslandIs` put in `ItemID`?
+- Do `CreateCase`, `CreateDocument` and `SendDocToIslandIs` need the same One
+  permission? An empty 403 on the later two is treated as not definitive on
+  the assumption that a missing permission already failed at `CreateCase`.
 
 ## Usage
 

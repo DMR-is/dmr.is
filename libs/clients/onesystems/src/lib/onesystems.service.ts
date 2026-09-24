@@ -339,6 +339,7 @@ export class OneSystemsService implements IOneSystemsService {
     if (!itemId && operation === 'SendDocToIslandIs') {
       // `ItemID` is nullable in the spec and what SendDocToIslandIs puts there
       // is undocumented. One said the send succeeded, so it counts as sent.
+      // TODO(OneSystems): what does SendDocToIslandIs put in `ItemID`?
       this.logger.warn(
         `OneSystems ${operation} reported success without an ItemID, treating it as sent`,
         { ...this.meta(operation), status: response.status },

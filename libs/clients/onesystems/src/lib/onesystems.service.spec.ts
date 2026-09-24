@@ -73,6 +73,9 @@ const bearerChallenge = (
 ) =>
   new Response(null, { status: 401, headers: { 'WWW-Authenticate': header } })
 
+/** A server with several auth handlers lists each scheme's challenge. */
+const LATER_BEARER = 'Negotiate, Bearer error="invalid_token"'
+
 /** An empty 401 with no challenge: an in-action `Unauthorized(null)`. */
 const bareEmpty401 = () => new Response(null, { status: 401 })
 
@@ -1176,6 +1179,26 @@ describe('OneSystemsService', () => {
         expect(actionRequests()).toHaveLength(2)
       })
 
+      it('a Bearer challenge after another scheme is definitive and retried once', async () => {
+        loginReplies = [
+          () => json({ token: TOKEN_1 }),
+          () => json({ token: TOKEN_2 }),
+        ]
+        actionReplies = [() => bearerChallenge(LATER_BEARER)]
+
+        const error = await caught(call())
+
+        expect(error).toMatchObject({
+          reason: 'HTTP',
+          upstreamStatus: 401,
+          hasEmptyBody: true,
+          hasBearerChallenge: true,
+        })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(true)
+        expect(loginRequests()).toHaveLength(2)
+        expect(actionRequests()).toHaveLength(2)
+      })
+
       it.each<{ label: string; reply: Reply }>([
         { label: 'no body', reply: () => bearerChallenge() },
         {
@@ -1185,6 +1208,10 @@ describe('OneSystemsService', () => {
         {
           label: 'a lower-case scheme',
           reply: () => bearerChallenge('bearer realm="one"'),
+        },
+        {
+          label: 'Bearer as a later challenge',
+          reply: () => bearerChallenge(LATER_BEARER),
         },
         {
           label: 'a whitespace-only body',
@@ -1268,13 +1295,23 @@ describe('OneSystemsService', () => {
           empty: true,
         },
         {
-          label: 'Bearer only as a later challenge',
-          reply: () => bearerChallenge('Basic realm="one", Bearer'),
+          label: 'a scheme that merely starts with Bearer',
+          reply: () => bearerChallenge('BearerX'),
           empty: true,
         },
         {
-          label: 'a scheme that merely starts with Bearer',
-          reply: () => bearerChallenge('BearerX'),
+          label: 'a later scheme that merely starts with Bearer',
+          reply: () => bearerChallenge('Negotiate, BearerX'),
+          empty: true,
+        },
+        {
+          label: 'a scheme that merely ends with Bearer',
+          reply: () => bearerChallenge('XBearer realm="one"'),
+          empty: true,
+        },
+        {
+          label: 'a later scheme that merely ends with Bearer',
+          reply: () => bearerChallenge('Negotiate, XBearer x'),
           empty: true,
         },
         {

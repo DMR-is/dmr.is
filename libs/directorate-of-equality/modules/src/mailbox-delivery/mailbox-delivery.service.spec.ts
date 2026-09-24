@@ -51,6 +51,8 @@ const keyFor = (
 
 const KEY = keyFor('SALARY-20270301')
 
+const PREFIX = `mailbox-delivery:v1:OVERDUE_NOTICE:${COMPANY.id}:`
+
 const CONFIG = {
   caseType: 'case-type',
   docCategory: 'doc-category',
@@ -346,6 +348,39 @@ describe('MailboxDeliveryService', () => {
         expect(oneCalls()).toBe(0)
       },
     )
+
+    it('still refuses a malformed key while switched off', async () => {
+      delete process.env.ONESYSTEMS_ENABLED
+
+      await expect(
+        service.deliverToMailbox(
+          input({ idempotencyKey: `${PREFIX}salary-20270301` }),
+        ),
+      ).rejects.toThrow(InternalServerErrorException)
+
+      expect(companies.findOne).not.toHaveBeenCalled()
+      expect(store.model.bulkCreate).not.toHaveBeenCalled()
+      expect(store.rows.size).toBe(0)
+      expect(oneCalls()).toBe(0)
+    })
+
+    it('returns DISABLED for a valid key while switched off, with no row', async () => {
+      delete process.env.ONESYSTEMS_ENABLED
+
+      await expect(
+        service.deliverToMailbox(
+          input({
+            idempotencyKey: KEY,
+            companyId: COMPANY.id.toUpperCase(),
+          }),
+        ),
+      ).resolves.toEqual({ status: 'DISABLED' })
+
+      expect(companies.findOne).not.toHaveBeenCalled()
+      expect(store.model.bulkCreate).not.toHaveBeenCalled()
+      expect(store.rows.size).toBe(0)
+      expect(oneCalls()).toBe(0)
+    })
   })
 
   describe('kind config', () => {
@@ -630,6 +665,13 @@ describe('MailboxDeliveryService', () => {
         'the prefix with no discriminator',
         `mailbox-delivery:v1:OVERDUE_NOTICE:${COMPANY.id}:`,
       ],
+      // The builder upper-cases this, so the key it gives is a different
+      // string: two spellings would be two deliveries.
+      ['a lower-case discriminator', `${PREFIX}salary-20270301`],
+      ['a trailing space', `${KEY} `],
+      ['a colon in the discriminator', `${PREFIX}SALARY:20270301`],
+      ['a non-ASCII discriminator', `${PREFIX}ÁRSSKÝRSLA-2027`],
+      ['a discriminator over 64 characters', `${PREFIX}${'A'.repeat(65)}`],
     ])(
       'refuses %s before writing a row or calling One',
       async (_label, idempotencyKey) => {
@@ -644,6 +686,16 @@ describe('MailboxDeliveryService', () => {
         expect(oneCalls()).toBe(0)
       },
     )
+
+    it("accepts the builder's own key, however its parts were cased", async () => {
+      const key = keyFor('salary-20270301', undefined, COMPANY.id.toUpperCase())
+      expect(key).toBe(`${PREFIX}SALARY-20270301`)
+
+      await expect(
+        service.deliverToMailbox(input({ idempotencyKey: key })),
+      ).resolves.toMatchObject({ status: 'SENT' })
+      expect(onlyRow()).toMatchObject({ idempotencyKey: key })
+    })
 
     it('looks the company up by its lowercased id and stores the id the DB returned', async () => {
       await service.deliverToMailbox(

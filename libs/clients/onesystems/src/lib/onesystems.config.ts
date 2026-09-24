@@ -73,8 +73,9 @@ export const oneSystemsActionClient =
  * `onesystems.errors.ts`.
  *
  * Both interceptors rely on the order the generated client (the fetch client
- * bundled by `@hey-api/openapi-ts`, pinned at 0.97.3) runs them in: response interceptors before the body is read, error interceptors
- * with the same `Response`. The spec rows in `onesystems.service.spec.ts` that
+ * bundled by `@hey-api/openapi-ts`, pinned at 0.97.3) runs them in: response
+ * interceptors before the body is read, error interceptors with the same
+ * `Response`. The spec rows in `onesystems.service.spec.ts` that
  * drive real `Response` objects through the client guard that order.
  */
 export const ONESYSTEMS_EMPTY_ERROR_BODY: Readonly<Record<string, never>> =
@@ -86,13 +87,18 @@ export const ONESYSTEMS_EMPTY_BEARER_CHALLENGE_BODY: Readonly<
 > = Object.freeze({})
 
 /**
- * True when a `WWW-Authenticate` value's first challenge uses the Bearer
- * scheme (`Bearer`, or `Bearer error="invalid_token", ...`). Scheme names are
- * case-insensitive. A header whose first challenge is another scheme does not
- * count, which errs towards "not definitive".
+ * True when a `WWW-Authenticate` value names the Bearer scheme in any of its
+ * challenges (`Bearer`, `Bearer error="invalid_token", ...`, or
+ * `Negotiate, Bearer ...` from a server with several auth handlers). Scheme
+ * names are case-insensitive; a longer name such as `BearerX` is not Bearer.
+ *
+ * A scheme is recognised only at the start of the value or after a comma, so
+ * a quoted parameter such as `Basic realm="x, bearer y"` would also match.
+ * One's JwtBearer handler never writes such a value, and the in-action
+ * `Unauthorized(null)` this separates from sets no header at all.
  */
 export function isBearerChallengeHeader(value: string | null): boolean {
-  return value !== null && /^\s*bearer(?:\s|,|$)/i.test(value)
+  return value !== null && /(?:^|,)\s*bearer(?:\s|,|$)/i.test(value)
 }
 
 /** The marker for each non-2xx response whose raw body was empty. */

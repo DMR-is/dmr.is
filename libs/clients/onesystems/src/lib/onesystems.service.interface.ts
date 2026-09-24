@@ -58,9 +58,12 @@ export interface OneSystemsSendDocToIslandIsInput {
 export interface OneSystemsSendDocToIslandIsResult {
   /**
    * The response `ItemID`, assumed to be the document's id as issued by
-   * island.is (unconfirmed). `null` when One answered `Success: true` without
-   * one: the spec makes `ItemID` nullable and does not say what
-   * SendDocToIslandIs puts there, so `Success: true` alone counts as sent.
+   * island.is. `null` when One answered `Success: true` without one: the spec
+   * makes `ItemID` nullable, so `Success: true` alone counts as sent.
+   *
+   * TODO(OneSystems): what does SendDocToIslandIs put in `ItemID`? The spec
+   * does not say, so neither the assumption above nor when it is null is
+   * confirmed.
    */
   islandIsDocumentId: string | null
 }
@@ -69,10 +72,11 @@ export interface OneSystemsCloseCaseInput {
   /**
    * `CaseID`.
    *
-   * WARNING: the connection guide calls this the "málanúmer (from CreateCase)",
-   * which could mean either the `CaseNumber` or the case `ItemID` that
-   * `createCase` returns. OneSystems has not confirmed which. Do not rely on
-   * this call until they have.
+   * TODO(OneSystems): is `CaseID` the `CaseNumber` or the case `ItemID`? The
+   * connection guide calls it the "málanúmer (from CreateCase)", which could
+   * mean either of the two that `createCase` returns.
+   *
+   * WARNING: do not rely on this call until OneSystems has answered.
    */
   caseId: string
   /** `StatusName`: the status to put the case in. Defaults to `Lokið`. */
@@ -111,6 +115,9 @@ export interface IOneSystemsService {
   /**
    * Finds the party's case that uses `caseType`, or creates one from the
    * template. Repeating it with the same input returns the same case.
+   *
+   * TODO(OneSystems): does CreateCase find-or-create? The connection guide
+   * says so; the spec does not. If it does not, a repeat makes a second case.
    */
   createCase(
     input: OneSystemsCreateCaseInput,

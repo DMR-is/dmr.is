@@ -9,10 +9,14 @@ export interface MailboxDeliveryIdempotencyKeyParts {
   /**
    * What makes this notice different from the company's other notices of the
    * same kind, e.g. the report kind and its due date as `YYYYMMDD`
-   * (`SALARY-20270301`). Upper-cased, so `salary-20270301` gives the same
-   * key; then 1-64 letters, digits, `.`, `_` or `-`. Must be derived from
-   * stored data, never from the clock at send time, or a rerun makes a new key
-   * and sends again.
+   * (`SALARY-20270301`). 1-64 ASCII letters, digits, `.`, `_` or `-`, checked
+   * as given, then upper-cased, so `salary-20270301` gives the same key. Must
+   * be derived from stored data, never from the clock at send time, or a rerun
+   * makes a new key and sends again.
+   *
+   * Never use a case-sensitive id (e.g. base62) as a discriminator:
+   * upper-casing folds `aB1` and `Ab1` into one key, so two different notices
+   * would share it and the second would never be sent.
    */
   discriminator: string
 }
@@ -20,14 +24,20 @@ export interface MailboxDeliveryIdempotencyKeyParts {
 /** Bumped only if the format changes, so old and new keys can never collide. */
 const KEY_VERSION = 'v1'
 
-const DISCRIMINATOR = /^[A-Z0-9._-]{1,64}$/
+/**
+ * Tested on the discriminator as given, before upper-casing: `toUpperCase` maps
+ * some non-ASCII letters to ASCII (`ß` to `SS`, `ı` and `ſ` to `I` and `S`,
+ * `ﬁ` to `FI`), so testing its result would let them through as other keys.
+ */
+const DISCRIMINATOR = /^[A-Za-z0-9._-]{1,64}$/
 const COMPANY_ID_UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /**
  * `mailbox-delivery:v1:<kind>:<companyId>:`, the part of a key that names the
- * kind and company. `deliverToMailbox` refuses a key that does not start with
- * it for the delivery's own kind and company.
+ * kind and company. Starting with it is not enough: `deliverToMailbox` refuses
+ * any key that is not exactly what `buildMailboxDeliveryIdempotencyKey`
+ * returns for the delivery's own kind and company.
  */
 export function mailboxDeliveryIdempotencyKeyPrefix(
   kind: MailboxDeliveryKindEnum,
@@ -67,11 +77,11 @@ export function buildMailboxDeliveryIdempotencyKey({
       'A mailbox delivery key needs the company id as a UUID',
     )
   }
-  const normalised = discriminator.toUpperCase()
-  if (!DISCRIMINATOR.test(normalised)) {
+  if (!DISCRIMINATOR.test(discriminator)) {
     throw new InternalServerErrorException(
-      'A mailbox delivery key discriminator must be 1-64 letters, digits, ., _ or -',
+      'A mailbox delivery key discriminator must be 1-64 ASCII letters, digits, ., _ or -',
     )
   }
+  const normalised = discriminator.toUpperCase()
   return `${mailboxDeliveryIdempotencyKeyPrefix(kind, companyId)}${normalised}`
 }

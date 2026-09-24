@@ -27,7 +27,10 @@ import {
   MailboxDeliveryStepEnum,
 } from './models/mailbox-delivery.enums'
 import { MailboxDeliveryModel } from './models/mailbox-delivery.model'
-import { mailboxDeliveryIdempotencyKeyPrefix } from './mailbox-delivery.idempotency-key'
+import {
+  buildMailboxDeliveryIdempotencyKey,
+  mailboxDeliveryIdempotencyKeyPrefix,
+} from './mailbox-delivery.idempotency-key'
 import {
   MAILBOX_DELIVERY_KIND_CONFIGS,
   MailboxDeliveryKindConfig,
@@ -120,9 +123,9 @@ type DeliveryCompany = Pick<CompanyModel, 'id' | 'name' | 'nationalId'>
  * ⚠️ Every query passes `transaction: null`. That takes it out of the ambient
  * CLS transaction and makes it an autocommitted statement of its own. A
  * caller's rollback must not erase the record of a case, document or send One
- * has already made, or the next attempt would make it again. Do not wrap any of
- * this in `sequelize.transaction()`: under CLS that is a second connection with
- * a real COMMIT, not a nested savepoint.
+ * has already made, or the next attempt would make it again. Do not put these
+ * writes in a `sequelize.transaction()` of their own either: under CLS that is
+ * a second connection with a real COMMIT, not a nested savepoint.
  *
  * Resume is driven by the saved ids and `sent_at`, not by `status`:
  * - CreateCase is assumed to find-or-create, so repeating it is taken to be
@@ -160,6 +163,10 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
   async deliverToMailbox(
     input: DeliverToMailboxInput,
   ): Promise<DeliverToMailboxResult> {
+    // Before the kill switch too, so a caller's malformed key fails in every
+    // environment, not first on the day delivery is switched on.
+    assertCanonicalKey(input, input.companyId.toLowerCase())
+
     if (process.env.ONESYSTEMS_ENABLED !== 'true') {
       return { status: 'DISABLED' }
     }
@@ -168,14 +175,8 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     // half-started delivery behind.
     const config = resolveKindConfig(input.kind, this.kindConfigs)
 
-    if (!input.idempotencyKey.trim()) {
-      throw new InternalServerErrorException(
-        'A mailbox delivery needs a non-empty idempotency key',
-      )
-    }
-
-    // UUIDs compare case-insensitively in Postgres; lowercase it so the id in
-    // the key check below is the one the DB hands back.
+    // UUIDs compare case-insensitively in Postgres; lowercase it to match the
+    // id the key was checked against above.
     const companyId = input.companyId.toLowerCase()
     const company = await this.companyModel.findOne({
       where: { id: companyId },
@@ -186,19 +187,8 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       throw new NotFoundException(`Company ${companyId} not found`)
     }
 
-    // The key is the only guard against a second send, and it is checked
-    // only by exact match. A key that does not name this kind and company is
-    // a caller bug that would slip past that guard (or trip another
-    // delivery's), so it is refused before any row is written.
-    const prefix = mailboxDeliveryIdempotencyKeyPrefix(input.kind, company.id)
-    if (
-      !input.idempotencyKey.startsWith(prefix) ||
-      input.idempotencyKey.length === prefix.length
-    ) {
-      throw new InternalServerErrorException(
-        'A mailbox delivery idempotency key must be built with buildMailboxDeliveryIdempotencyKey for this kind and company',
-      )
-    }
+    // Again against the id the DB handed back, which is the one stored.
+    assertCanonicalKey(input, company.id)
 
     const row = await this.findOrInsert(input, company)
 
@@ -768,6 +758,37 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         },
       )
     }
+  }
+}
+
+/**
+ * Refuses a key that is not exactly the one
+ * `buildMailboxDeliveryIdempotencyKey` gives for this kind, company and the
+ * key's own discriminator. The key is the only guard against a second send,
+ * and it is checked only by exact match, so a key in any other spelling
+ * (another kind or company, a lower-case or padded discriminator, a
+ * hand-built format) is a caller bug that would slip past that guard or trip
+ * another delivery's. A part the builder refuses is the same bug.
+ */
+function assertCanonicalKey(
+  input: Pick<DeliverToMailboxInput, 'idempotencyKey' | 'kind'>,
+  companyId: string,
+): void {
+  const prefix = mailboxDeliveryIdempotencyKeyPrefix(input.kind, companyId)
+  let canonical: string | null
+  try {
+    canonical = buildMailboxDeliveryIdempotencyKey({
+      kind: input.kind,
+      companyId,
+      discriminator: input.idempotencyKey.slice(prefix.length),
+    })
+  } catch {
+    canonical = null
+  }
+  if (input.idempotencyKey !== canonical) {
+    throw new InternalServerErrorException(
+      'A mailbox delivery idempotency key must be built with buildMailboxDeliveryIdempotencyKey for this kind and company',
+    )
   }
 }
 
