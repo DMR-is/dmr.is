@@ -1,12 +1,8 @@
 import {
-  type ApiKeyDto,
   CompanyObligationStatusEnum,
   CompanySizeEnum,
 } from '../gen/fetch/types.gen'
-import { companyText, keyText, scopeText } from './text'
-
-/** The generator inlines the scope enum on each DTO rather than exporting it. */
-export type ApiScope = ApiKeyDto['scopes'][number]
+import { companyText, keyText } from './text'
 
 const IS_MONTHS = [
   'janúar',
@@ -64,30 +60,6 @@ export const OBLIGATION_TAG_VARIANT: Record<
   [CompanyObligationStatusEnum.ACTION_PLAN_MISSING]: 'dark',
   [CompanyObligationStatusEnum.COVERED]: 'mint',
 }
-
-/**
- * Display order for scopes, reading first and the destructive one last, so a
- * list of tags or checkboxes is in the same order wherever it appears.
- */
-export const SCOPE_ORDER: ApiScope[] = [
-  'report:read',
-  'salary:submit',
-  'equality:submit',
-  'scoring:write',
-]
-
-/** The three filing scopes travel together: a key that cannot read cannot
- *  usefully submit. */
-export const FILING_SCOPES: ApiScope[] = [
-  'report:read',
-  'salary:submit',
-  'equality:submit',
-]
-
-export const sortScopes = (scopes: ApiScope[]) =>
-  SCOPE_ORDER.filter((scope) => scopes.includes(scope))
-
-export const scopeLabel = (scope: ApiScope) => scopeText.labels[scope]
 
 export type KeyState = 'active' | 'revoked' | 'expired'
 

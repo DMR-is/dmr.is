@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
-import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
@@ -13,38 +12,36 @@ import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { partnerClientsText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { FILING_AND_SCORING_SCOPES, FILING_SCOPES } from './scopes'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const t = partnerClientsText.createModal
-
-const SCOPE_OPTIONS: { label: string; value: string }[] = [
-  { label: t.scopeFilingOnly, value: 'filing' },
-  { label: t.scopeFilingAndScoring, value: 'filing+scoring' },
-]
 
 type Props = {
   isOpen: boolean
   onClose: () => void
 }
 
-/** Approving a firm. The kennitala is checked by the API, which answers 409 for a firm already approved. */
+/**
+ * Approving a firm. The kennitala is checked by the API, which answers 409 for
+ * a firm already approved.
+ *
+ * No scopes are offered or sent: approval is all or nothing, and the API
+ * approves every scope when none is named. A per-scope choice here was a
+ * decision few reviewers could make well, and a firm approved without
+ * `scoring:write` could file for no company whose starfsmat it maintains.
+ */
 export const CreatePartnerClientModal = ({ isOpen, onClose }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
   const [name, setName] = useState('')
   const [nationalId, setNationalId] = useState('')
-  const [scoping, setScoping] = useState<string>('filing')
 
-  // Reopening starts clean. Carrying a previous grant of scoring:write into
-  // the next firm is the surprise to avoid.
   useEffect(() => {
     if (isOpen) {
       setName('')
       setNationalId('')
-      setScoping('filing')
     }
   }, [isOpen])
 
@@ -80,7 +77,6 @@ export const CreatePartnerClientModal = ({ isOpen, onClose }: Props) => {
       }}
       toggleClose={onClose}
       width="small"
-      allowOverflow
     >
       <Stack space={3}>
         <TextInput
@@ -95,19 +91,8 @@ export const CreatePartnerClientModal = ({ isOpen, onClose }: Props) => {
           value={nationalId}
           onChange={(event) => setNationalId(event.target.value)}
         />
-
-        <Select
-          name="partner-client-scoping"
-          size="xs"
-          label={t.scopingLabel}
-          options={SCOPE_OPTIONS}
-          value={SCOPE_OPTIONS.find((o) => o.value === scoping) ?? null}
-          onChange={(opt) => {
-            if (opt) setScoping(opt.value)
-          }}
-        />
         <Text variant="small" color="dark400">
-          {t.scopingHint}
+          {t.accessHint}
         </Text>
 
         <Inline space={2} justifyContent="flexEnd">
@@ -122,12 +107,6 @@ export const CreatePartnerClientModal = ({ isOpen, onClose }: Props) => {
               create.mutate({
                 name: name.trim(),
                 nationalId: nationalId.trim(),
-                // Sent explicitly in both cases, so what the admin picked is
-                // what is stored rather than whatever the server defaults to.
-                scopes:
-                  scoping === 'filing+scoring'
-                    ? [...FILING_AND_SCORING_SCOPES]
-                    : [...FILING_SCOPES],
               })
             }
           >

@@ -15,7 +15,6 @@ import { ConfirmModal } from '../components/ConfirmModal'
 import { InfoItems } from '../components/InfoItems'
 import { IssueKeyModal } from '../components/keys/IssueKeyModal'
 import { KeyList, type ListedKey } from '../components/keys/KeyList'
-import { ScopeTags } from '../components/scopes/ScopeTags'
 import { type PartnerClientDto } from '../gen/fetch/types.gen'
 import { formatDateIS } from '../lib/format'
 import { keyText, providerText as t } from '../lib/text'
@@ -101,10 +100,6 @@ export const ProviderKeysTab = ({
         <InfoItems
           items={[
             {
-              label: t.approvedScopes,
-              children: <ScopeTags scopes={partnerClient.scopes} />,
-            },
-            {
               label: t.approvedAt,
               children: formatDateIS(partnerClient.createdAt),
             },
@@ -144,7 +139,6 @@ export const ProviderKeysTab = ({
         baseId="issue-provider-key"
         title={t.modal.title}
         labelPlaceholder={t.modal.labelPlaceholder}
-        withScopes={false}
         isOpen={isIssueOpen}
         isPending={issue.isPending}
         onIssue={async ({ label, expiresAt }) =>

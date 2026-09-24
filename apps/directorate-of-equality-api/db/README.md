@@ -472,8 +472,9 @@ the firm's product. A firm instead gets three kinds of row:
   behalf_. Granted by the company on the self-service web behind island.is login, so it
   records a witnessed act rather than the firm's claim that the employer consented. It
   carries its own `scopes`, and a request's effective permission is the **intersection**
-  with the client's, which is what lets one employer grant `scoring:write` while another
-  withholds it.
+  with the client's. The screens make both all or nothing — a firm is approved for every
+  scope and a delegation copies the firm's approval — so the intersection only narrows
+  anything for rows written through the API with an explicit subset.
 
 **Why credential and delegation are separate objects.** So both revocations exist and each
 is one row: revoke the client and the firm is cut off everywhere; revoke a delegation and
@@ -867,24 +868,24 @@ Machine credential for the third-party integration API. See **API keys** above f
 exists and what is stored. Prefixed `doe_` for the same reason `doe_user` is — it is not a
 domain entity of the equality register but a service-level concern.
 
-| Column                   | Type                                                                                                                                                                                             |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                     | `uuid` PK                                                                                                                                                                                        |
-| `company_id`             | `fk → company`                                                                                                                                                                                   |
-| `company_national_id`    | `text` (denormalised from `company.national_id` — see below)                                                                                                                                     |
-| `key_id`                 | `text` (unique — public half of the credential, the lookup key)                                                                                                                                  |
-| `secret_hash`            | `text` (HMAC-SHA256 of the secret under a server-side pepper)                                                                                                                                    |
-| `label`                  | `text` (nullable — free text set by the issuer)                                                                                                                                                  |
-| `scopes`                 | `text[]` (`ApiKeyScopeEnum`: `report:read`, `salary:submit`, `equality:submit`, `scoring:write`; never empty. The first three are the default set — `scoring:write` is never granted implicitly) |
-| `created_via`            | `doe_api_key_origin_enum` (`ApiKeyOriginEnum`)                                                                                                                                                   |
-| `created_by_user_id`     | `fk → doe_user` (nullable — set on the `ADMIN` path)                                                                                                                                             |
-| `created_by_national_id` | `text` (nullable — set on the `ISLAND_IS` path)                                                                                                                                                  |
-| `expires_at`             | `timestamptz` (nullable — null means no expiry)                                                                                                                                                  |
-| `last_used_at`           | `timestamptz` (nullable — activity indicator, written at most once a minute per key)                                                                                                             |
-| `revoked_at`             | `timestamptz` (nullable)                                                                                                                                                                         |
-| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                                                                                                                                       |
-| `revoked_by_national_id` | `text` (nullable)                                                                                                                                                                                |
-| `revoked_reason`         | `text` (nullable)                                                                                                                                                                                |
+| Column                   | Type                                                                                                                                                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                     | `uuid` PK                                                                                                                                                                                            |
+| `company_id`             | `fk → company`                                                                                                                                                                                       |
+| `company_national_id`    | `text` (denormalised from `company.national_id` — see below)                                                                                                                                         |
+| `key_id`                 | `text` (unique — public half of the credential, the lookup key)                                                                                                                                      |
+| `secret_hash`            | `text` (HMAC-SHA256 of the secret under a server-side pepper)                                                                                                                                        |
+| `label`                  | `text` (nullable — free text set by the issuer)                                                                                                                                                      |
+| `scopes`                 | `text[]` (`ApiKeyScopeEnum`: `report:read`, `salary:submit`, `equality:submit`, `scoring:write`; never empty. All four are the default set — access is all or nothing, and no screen names a subset) |
+| `created_via`            | `doe_api_key_origin_enum` (`ApiKeyOriginEnum`)                                                                                                                                                       |
+| `created_by_user_id`     | `fk → doe_user` (nullable — set on the `ADMIN` path)                                                                                                                                                 |
+| `created_by_national_id` | `text` (nullable — set on the `ISLAND_IS` path)                                                                                                                                                      |
+| `expires_at`             | `timestamptz` (nullable — null means no expiry)                                                                                                                                                      |
+| `last_used_at`           | `timestamptz` (nullable — activity indicator, written at most once a minute per key)                                                                                                                 |
+| `revoked_at`             | `timestamptz` (nullable)                                                                                                                                                                             |
+| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                                                                                                                                           |
+| `revoked_by_national_id` | `text` (nullable)                                                                                                                                                                                    |
+| `revoked_reason`         | `text` (nullable)                                                                                                                                                                                    |
 
 Invariants (enforced via CHECK):
 

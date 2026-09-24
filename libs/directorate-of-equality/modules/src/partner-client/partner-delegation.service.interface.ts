@@ -19,7 +19,11 @@ export type DelegatingCompany = {
 export type GrantPartnerDelegationInput = {
   company: DelegatingCompany
   partnerClientId: string
-  scopes: ApiKeyScopeEnum[]
+  /**
+   * Omitted: everything the provider was approved for. That is what the
+   * self-service web sends — a delegation is all or nothing.
+   */
+  scopes?: ApiKeyScopeEnum[]
   /** The person granting it: `user.actor.nationalId` under procuration. */
   actorNationalId: string
 }

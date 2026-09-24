@@ -194,6 +194,10 @@ describe('ApiKeyService', () => {
       })
 
       expect(create.mock.calls[0][0].scopes).toEqual(DEFAULT_API_KEY_SCOPES)
+      // All or nothing: the default is every scope, scoring:write included.
+      expect(create.mock.calls[0][0].scopes).toContain(
+        ApiKeyScopeEnum.SCORING_WRITE,
+      )
     })
 
     it('honours a narrower scope set and de-duplicates it', async () => {

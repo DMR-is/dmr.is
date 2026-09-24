@@ -159,7 +159,6 @@ describe('PartnerDelegationService', () => {
         id: FIRM.id,
         name: FIRM.name,
         nationalId: FIRM.nationalId,
-        scopes: FIRM.scopes,
       })
     })
   })
@@ -203,6 +202,18 @@ describe('PartnerDelegationService', () => {
         COMPANY.id,
         COMPANY.status,
         `${FIRM.name} (${FIRM.nationalId})`,
+      )
+    })
+
+    /**
+     * The self-service web grants without naming scopes: a delegation hands
+     * the firm its whole approval, never a slice of it.
+     */
+    it('hands over the firm’s whole approval when no scopes are named', async () => {
+      await grant({ scopes: undefined })
+
+      expect(delegations.create).toHaveBeenCalledWith(
+        expect.objectContaining({ scopes: FIRM.scopes }),
       )
     })
 

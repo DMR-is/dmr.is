@@ -74,32 +74,12 @@ export const tabsText = {
   providerKeys: 'Lyklar þjónustuaðila',
 }
 
-export const scopeText = {
-  labels: {
-    'report:read': 'Lesa skýrslur',
-    'salary:submit': 'Skila launagreiningu',
-    'equality:submit': 'Skila jafnréttisáætlun',
-    'scoring:write': 'Breyta starfsmati',
-  },
-  descriptions: {
-    'report:read':
-      'Sjá stöðu og efni skýrslna sem fyrirtækið hefur skilað, og athugasemdir Jafnréttisstofu.',
-    'salary:submit': 'Skila launagreiningu fyrir hönd fyrirtækisins.',
-    'equality:submit': 'Skila jafnréttisáætlun fyrir hönd fyrirtækisins.',
-    'scoring:write':
-      'Skrá, breyta og eyða starfsmati fyrirtækisins. Veittu þessa heimild aðeins ef starfsmatið er unnið í kerfi þjónustuaðilans — eyðing starfsmats verður ekki afturkölluð.',
-  },
-  notApproved:
-    'Jafnréttisstofa hefur ekki veitt þjónustuaðilanum þessa heimild.',
-}
-
 export const keyText = {
   colKeyId: 'Lyklanúmer',
   colCreated: 'Búinn til',
   colCreatedBy: 'Búinn til af',
   colExpires: 'Gildir til',
   colLastUsed: 'Síðast notaður',
-  colScopes: 'Heimildir',
   neverUsed: 'Aldrei notaður',
   noExpiry: 'Ótímabundinn',
   statusActive: 'Í gildi',
@@ -143,16 +123,13 @@ export const keyText = {
 export const delegationText = {
   heading: 'Þjónustuaðilar með umboð',
   intro:
-    'Þjónustuaðili getur aðeins skilað fyrir hönd fyrirtækisins á meðan það hefur veitt honum umboð, og aðeins það sem umboðið nær til. Umboð má afturkalla hvenær sem er og það tekur gildi samstundis.',
+    'Þjónustuaðili, til dæmis launakerfi eða bókhaldsstofa, getur aðeins skilað fyrir hönd fyrirtækisins á meðan það hefur veitt honum umboð. Umboð nær til allra skila og starfsmats fyrirtækisins. Það má afturkalla hvenær sem er og það tekur gildi samstundis.',
   grantButton: 'Veita umboð',
   empty: 'Enginn þjónustuaðili hefur umboð til að skila fyrir fyrirtækið.',
   loadError: 'Villa við að sækja umboð',
   grantedAt: 'Veitt',
   grantedBy: 'Veitt af',
   providerNationalId: 'Kennitala',
-  permissions: 'Heimildir',
-  changeHint:
-    'Til að breyta heimildum þarf að afturkalla umboðið og veita það aftur.',
 
   revokeButton: 'Afturkalla umboð',
   revokeConfirmTitle: 'Afturkalla umboð?',
@@ -165,16 +142,20 @@ export const delegationText = {
   modal: {
     title: 'Veita þjónustuaðila umboð',
     intro:
-      'Veldu þjónustuaðila af lista Jafnréttisstofu yfir samþykkta þjónustuaðila og hvað hann má gera fyrir hönd fyrirtækisins.',
+      'Veldu þjónustuaðila af lista Jafnréttisstofu yfir samþykkta þjónustuaðila.',
     providerLabel: 'Þjónustuaðili',
     providerPlaceholder: 'Veldu þjónustuaðila',
     noProviders:
       'Engir aðrir samþykktir þjónustuaðilar eru í boði. Þjónustuaðili sem fyrirtækið hefur þegar veitt umboð birtist ekki hér.',
     providersLoadError: 'Villa við að sækja lista yfir þjónustuaðila',
-    scopesLabel: 'Heimildir',
-    scopesRequired: 'Veldu að minnsta kosti eina heimild.',
+    handoverTitle: (provider: string) => `${provider} fær að:`,
+    handoverItems: [
+      'skila launagreiningu og jafnréttisáætlun fyrir hönd fyrirtækisins,',
+      'lesa skýrslur fyrirtækisins og athugasemdir Jafnréttisstofu,',
+      'skrá, breyta og eyða starfsmati fyrirtækisins.',
+    ],
     summary: (provider: string, company: string) =>
-      `Með því að staðfesta veitir þú ${provider} umboð til að gera ofangreint fyrir hönd ${company} þar til umboðið er afturkallað.`,
+      `Með því að staðfesta veitir þú ${provider} umboð til þessa fyrir hönd ${company} þar til umboðið er afturkallað.`,
     confirmButton: 'Staðfesta umboð',
     grantedToast: 'Umboð veitt',
     grantErrorToast: 'Villa við að veita umboð',
@@ -184,7 +165,7 @@ export const delegationText = {
 export const apiKeyText = {
   heading: 'Aðgangslyklar fyrirtækisins',
   intro:
-    'Aðgangslykill leyfir hugbúnaði fyrirtækisins sjálfs að skila skýrslum beint til Jafnréttisstofu, án þjónustuaðila. Ef þjónustuaðili sér um skilin þarf fyrirtækið ekki lykil — veittu honum umboð í staðinn.',
+    'Aðgangslykill leyfir hugbúnaði fyrirtækisins sjálfs að skila skýrslum og vinna starfsmat beint hjá Jafnréttisstofu, án þjónustuaðila. Ef þjónustuaðili sér um skilin þarf fyrirtækið ekki lykil — veittu honum umboð í staðinn.',
   issueButton: 'Búa til aðgangslykil',
   empty: 'Fyrirtækið hefur engan aðgangslykil.',
   loadError: 'Villa við að sækja aðgangslykla',
@@ -195,19 +176,13 @@ export const apiKeyText = {
   modal: {
     title: 'Búa til aðgangslykil',
     labelPlaceholder: 'T.d. nafn launakerfisins',
-    scopingLabel: 'Heimildir',
-    scopingHint:
-      'Lykill til að lesa og skila skýrslum er allt sem launakerfi þarf. Starfsmatsheimildin er til viðbótar og leyfir lyklinum einnig að breyta og eyða starfsmati fyrirtækisins.',
-    scopeFilingOnly: 'Lesa og skila skýrslum',
-    scopeFilingAndScoring: 'Lesa, skila skýrslum og breyta starfsmati',
   },
 }
 
 export const providerText = {
   heading: 'Lyklar þjónustuaðila',
   intro:
-    'Jafnréttisstofa hefur samþykkt þetta fyrirtæki sem þjónustuaðila. Með lykli þjónustuaðila getur það skilað fyrir hönd þeirra fyrirtækja sem hafa veitt því umboð, innan þeirra heimilda sem hvert þeirra veitti.',
-  approvedScopes: 'Samþykktar heimildir',
+    'Jafnréttisstofa hefur samþykkt þetta fyrirtæki sem þjónustuaðila. Með lykli þjónustuaðila getur það skilað fyrir hönd þeirra fyrirtækja sem hafa veitt því umboð.',
   approvedAt: 'Samþykkt',
   rotationHint:
     'Til að skipta um lykil án rofs: búðu til nýjan, settu hann upp og afturkallaðu þann gamla.',

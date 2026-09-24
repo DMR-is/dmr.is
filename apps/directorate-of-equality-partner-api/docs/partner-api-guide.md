@@ -102,20 +102,20 @@ A key carries some subset of:
 | `equality:submit` | the equality submission                              |
 | `scoring:write`   | authoring a scoring model — section C                |
 
-A key issued without an explicit scope set gets the first three. **`scoring:write`
-is never granted by default** and has to be asked for: authoring a starfsmat is a
-different act from filing against one, a vendor that only files never needs it,
-and it carries a `DELETE` that cascades a whole model away. If you only file,
-`report:read` plus a submit scope is the whole set.
+**Access is all or nothing.** Keys issued through Jafnréttisstofa's screens carry
+all four scopes, `scoring:write` included — a key issued without an explicit
+scope set gets every scope. Bear in mind that `scoring:write` carries a `DELETE`
+that cascades a whole model away.
 
 A call outside the key's scopes is `403`, and the scope check runs _before_ the
 rate limiter, so a refused call does not spend your allowance.
 
 A vendor client key has two sets that count: your organisation's, set when
-Jafnréttisstofa approved it, and each company's, chosen when it granted the
-delegation. What you may do for a company is **the intersection**. So one
-customer can grant you `scoring:write` while another withholds it, with the same
-key.
+Jafnréttisstofa approved it, and each company's delegation. What you may do for a
+company is **the intersection**. Both are all or nothing in practice: your
+organisation is approved for every scope, and a company's delegation hands you
+everything you were approved for — there is no partial consent on the
+self-service web.
 
 ### A company off the register
 
@@ -884,8 +884,8 @@ naming it turn into `403` immediately.
   to itself on the self-service web like any customer, and send your own
   kennitala in the header. There is no separate path.
 - **Starfsmat.** If you offer your customers a scoring-model editor, each company
-  authors its own model through it, and needs to have granted you
-  `scoring:write`. Your organisation's approval has to include it too.
+  authors its own model through it. A delegation includes `scoring:write`, so
+  nothing further has to be granted.
 
 ## Quick reference
 

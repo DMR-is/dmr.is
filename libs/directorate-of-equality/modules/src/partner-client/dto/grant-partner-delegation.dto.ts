@@ -1,6 +1,6 @@
 import { ArrayMinSize, ArrayUnique, IsEnum } from 'class-validator'
 
-import { ApiArray, ApiUUId } from '@dmr.is/decorators'
+import { ApiOptionalArray, ApiUUId } from '@dmr.is/decorators'
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 
 /**
@@ -11,15 +11,15 @@ export class GrantPartnerDelegationDto {
   @ApiUUId({ description: 'The provider’s `id`, as listed.' })
   partnerClientId!: string
 
-  @ApiArray({
+  @ApiOptionalArray({
     type: String,
     enum: ApiKeyScopeEnum,
     isArray: true,
     description:
-      'What to allow, named explicitly — there is no default. Must be within what the provider was approved for. `scoring:write` lets the provider author and delete this company’s starfsmat.',
+      'Omit to hand the provider everything it was approved for — the self-service web always does: a delegation is all or nothing. Named, it must be within that approval. `scoring:write` lets the provider author and delete this company’s starfsmat.',
   })
   @ArrayMinSize(1)
   @ArrayUnique()
   @IsEnum(ApiKeyScopeEnum, { each: true })
-  scopes!: ApiKeyScopeEnum[]
+  scopes?: ApiKeyScopeEnum[]
 }

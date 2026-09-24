@@ -12,7 +12,6 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { ConfirmModal } from '../components/ConfirmModal'
 import { GrantDelegationModal } from '../components/delegations/GrantDelegationModal'
-import { ScopeTags } from '../components/scopes/ScopeTags'
 import { type CompanyPartnerDelegationDto } from '../gen/fetch/types.gen'
 import { formatDateIS, formatNationalId } from '../lib/format'
 import { delegationText as t } from '../lib/text'
@@ -49,9 +48,6 @@ const DelegationCard = ({
         {t.grantedAt}: {formatDateIS(delegation.grantedAt)} · {t.grantedBy}:{' '}
         {formatNationalId(delegation.grantedByNationalId)}
       </Text>
-      <Box marginTop={1}>
-        <ScopeTags scopes={delegation.scopes} />
-      </Box>
     </Stack>
   </Box>
 )
@@ -131,9 +127,6 @@ export const DelegationsTab = ({ companyName }: { companyName: string }) => {
                 onRevoke={() => setPendingRevoke(delegation)}
               />
             ))}
-            <Text variant="small" color="dark400">
-              {t.changeHint}
-            </Text>
           </Stack>
         )}
       </Stack>

@@ -30,28 +30,6 @@ const t = companiesText.detailView.apiKeys
  * now". It also removes the whole class of typo — a key expiring in 2025, or in
  * 2125 — that a free date field invites.
  */
-/**
- * `scoring:write` stopped being part of the default scope set once it became
- * clear a default key could delete a company's whole starfsmat by cascade — but
- * this modal had no scopes control at all, so every admin-issued key silently
- * lost the ability to author one. An admin issuing a replacement key for a
- * company that authors through the API had no way to mint a working one.
- *
- * Two choices rather than four checkboxes: the three filing scopes always travel
- * together (a key that cannot read cannot usefully submit), so the only real
- * decision is whether this key may also author.
- */
-const SCOPE_OPTIONS: { label: string; value: string }[] = [
-  { label: t.modal.scopeFilingOnly, value: 'filing' },
-  { label: t.modal.scopeFilingAndScoring, value: 'filing+scoring' },
-]
-
-const FILING_SCOPES = [
-  'report:read',
-  'salary:submit',
-  'equality:submit',
-] as const
-
 const EXPIRY_OPTIONS: { label: string; value: number | null }[] = [
   { label: t.modal.expires90Days, value: 90 },
   { label: t.modal.expires1Year, value: 365 },
@@ -105,23 +83,18 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
   const [expiryDays, setExpiryDays] = useState<number | null>(
     DEFAULT_EXPIRY_DAYS,
   )
-  const [scoping, setScoping] = useState<string>('filing')
   const [issuedKey, setIssuedKey] = useState<string | null>(null)
 
   // Whether this modal is still showing. A key minted after the admin closed
   // it must not be stashed in state for a dialog nobody will see.
   const isShowingRef = useRef(isOpen)
 
-  // Reopening must not show the previous key, label, lifetime or scoping —
-  // the last especially, since silently carrying a previous grant of
-  // `scoring:write` into the next key is exactly the surprise the default set
-  // was narrowed to avoid.
+  // Reopening must not show the previous key, label or lifetime.
   useEffect(() => {
     isShowingRef.current = isOpen
     if (isOpen) {
       setLabel('')
       setExpiryDays(DEFAULT_EXPIRY_DAYS)
-      setScoping('filing')
       setIssuedKey(null)
     }
   }, [isOpen])
@@ -246,20 +219,6 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
           </Text>
 
           <Select
-            name="api-key-scoping"
-            size="xs"
-            label={t.modal.scopingLabel}
-            options={SCOPE_OPTIONS}
-            value={SCOPE_OPTIONS.find((o) => o.value === scoping) ?? null}
-            onChange={(opt) => {
-              if (opt) setScoping(opt.value)
-            }}
-          />
-          <Text variant="small" color="dark400">
-            {t.modal.scopingHint}
-          </Text>
-
-          <Select
             name="api-key-expiry"
             size="xs"
             label={t.modal.expiresLabel}
@@ -285,12 +244,8 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
                   companyId,
                   label: label.trim() === '' ? undefined : label.trim(),
                   expiresAt: expiryToIso(expiryDays),
-                  // Sent explicitly in both cases rather than relying on the
-                  // server default, so what the admin picked is what is stored.
-                  scopes:
-                    scoping === 'filing+scoring'
-                      ? [...FILING_SCOPES, 'scoring:write' as const]
-                      : [...FILING_SCOPES],
+                  // No scopes: a key is all or nothing, and the API grants
+                  // every scope, scoring:write included, when none is named.
                 })
               }
             >
