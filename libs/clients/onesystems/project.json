@@ -1,0 +1,68 @@
+{
+  "name": "clients-onesystems",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/clients/onesystems/src",
+  "projectType": "library",
+  "tags": [],
+  "generators": {},
+  "targets": {
+    "tsc": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["codegen"],
+      "options": {
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"],
+        "cwd": "libs/clients/onesystems",
+        "forwardAllArgs": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/clients/onesystems/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "dependsOn": ["codegen"],
+      "options": {
+        "jestConfig": "libs/clients/onesystems/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/libs/clients/onesystems"]
+    },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/clientConfig.json",
+        "{projectRoot}/openapi-ts.config.ts"
+      ],
+      "options": {
+        "commands": [
+          "node_modules/.bin/openapi-ts -f libs/clients/onesystems/openapi-ts.config.ts"
+        ]
+      },
+      "outputs": ["{projectRoot}/src/gen/fetch"]
+    },
+    "update-openapi-schema": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "node libs/clients/onesystems/scripts/update-openapi-spec.mjs",
+          "yarn run -T prettier --write libs/clients/onesystems/clientConfig.json"
+        ],
+        "parallel": false
+      },
+      "outputs": ["{projectRoot}/clientConfig.json"]
+    },
+    "update-client": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["update-openapi-schema"],
+      "options": {
+        "commands": [
+          "node_modules/.bin/openapi-ts -f libs/clients/onesystems/openapi-ts.config.ts"
+        ]
+      },
+      "outputs": ["{projectRoot}/src/gen/fetch"]
+    }
+  }
+}

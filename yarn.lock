@@ -3924,6 +3924,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dmr.is/clients-onesystems@npm:*, @dmr.is/clients-onesystems@workspace:libs/clients/onesystems":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/clients-onesystems@workspace:libs/clients/onesystems"
+  dependencies:
+    "@dmr.is/logging": "npm:*"
+    zod: "npm:4.1.11"
+  peerDependencies:
+    "@nestjs/common": ^11.1.29
+  languageName: unknown
+  linkType: soft
+
 "@dmr.is/clients-rsk-client@npm:*, @dmr.is/clients-rsk-client@workspace:libs/clients/rsk-client":
   version: 0.0.0-use.local
   resolution: "@dmr.is/clients-rsk-client@workspace:libs/clients/rsk-client"
@@ -4091,6 +4102,7 @@ __metadata:
   resolution: "@dmr.is/doe-modules@workspace:libs/directorate-of-equality/modules"
   dependencies:
     "@dmr.is/clients-national-registry": "npm:*"
+    "@dmr.is/clients-onesystems": "npm:*"
     "@dmr.is/clients-rsk-client": "npm:*"
     "@dmr.is/constants": "npm:*"
     "@dmr.is/decorators": "npm:*"

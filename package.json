@@ -12,6 +12,7 @@
       "libs/mocks",
       "libs/nx-open-next",
       "libs/clients/national-registry",
+      "libs/clients/onesystems",
       "libs/clients/rsk-client",
       "libs/directorate-of-equality/modules",
       "libs/directorate-of-equality/shared",

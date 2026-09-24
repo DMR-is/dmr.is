@@ -214,6 +214,21 @@ erDiagram
         text body
         timestamp deleted_at "nullable, soft delete"
     }
+    mailbox_delivery {
+        uuid id PK
+        uuid company_id FK
+        text national_id "FK with company_id"
+        MailboxDeliveryKindEnum kind
+        text idempotency_key "unique"
+        MailboxDeliveryStatusEnum status
+        MailboxDeliveryStepEnum in_flight_step "nullable, set during a call"
+        text one_case_item_id "nullable"
+        text one_document_item_id "nullable"
+        text island_is_document_id "nullable"
+        int attempts "capped by the service"
+        uuid lease_token "nullable"
+        timestamptz sent_at "nullable"
+    }
     job_runs {
         int job_key PK
         timestamp last_run_at
@@ -307,6 +322,7 @@ erDiagram
     doe_user |o--o{ company_event : "actor_user_id"
     company ||--o{ company_comment : "company_id"
     doe_user |o--o{ company_comment : "author_user_id"
+    company ||--o{ mailbox_delivery : "(company_id, national_id)"
 
     company ||--o{ scoring_model : "company_id"
     scoring_model ||--o{ scoring_criterion : "scoring_model_id"

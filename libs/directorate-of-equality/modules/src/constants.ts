@@ -56,6 +56,12 @@ export enum DoeModels {
   PARTNER_CLIENT = 'doe_partner_client',
   PARTNER_CLIENT_KEY = 'doe_partner_client_key',
   PARTNER_DELEGATION = 'doe_partner_delegation',
+
+  /**
+   * Notices delivered to a company's island.is mailbox through One
+   * (OneExternalAPI), with the ids One returned so a delivery can resume.
+   */
+  MAILBOX_DELIVERY = 'mailbox_delivery',
 }
 
 /**

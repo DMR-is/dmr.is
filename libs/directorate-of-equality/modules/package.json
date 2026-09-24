@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@dmr.is/clients-national-registry": "*",
+    "@dmr.is/clients-onesystems": "*",
     "@dmr.is/clients-rsk-client": "*",
     "@dmr.is/constants": "*",
     "@dmr.is/decorators": "*",
