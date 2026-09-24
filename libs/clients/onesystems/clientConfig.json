@@ -1,0 +1,270 @@
+{
+  "openapi": "3.0.1",
+  "info": { "title": "OneExternalAPI", "version": "v1" },
+  "servers": [{ "url": "/OneExternalAPI" }],
+  "paths": {
+    "/api/actions/CreateCase": {
+      "post": {
+        "tags": ["Actions"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCaseModel" }
+            },
+            "text/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCaseModel" }
+            },
+            "application/*+json": {
+              "schema": { "$ref": "#/components/schemas/CreateCaseModel" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": { "$ref": "#/components/schemas/CaseResponse" }
+              },
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CaseResponse" }
+              },
+              "text/json": {
+                "schema": { "$ref": "#/components/schemas/CaseResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/actions/CreateDocument": {
+      "post": {
+        "tags": ["Actions"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateDocumentModel" }
+            },
+            "text/json": {
+              "schema": { "$ref": "#/components/schemas/CreateDocumentModel" }
+            },
+            "application/*+json": {
+              "schema": { "$ref": "#/components/schemas/CreateDocumentModel" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": { "$ref": "#/components/schemas/GeneralResponse" }
+              },
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GeneralResponse" }
+              },
+              "text/json": {
+                "schema": { "$ref": "#/components/schemas/GeneralResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/actions/SendDocToIslandIs": {
+      "post": {
+        "tags": ["Actions"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SendToIslandIsModel" }
+            },
+            "text/json": {
+              "schema": { "$ref": "#/components/schemas/SendToIslandIsModel" }
+            },
+            "application/*+json": {
+              "schema": { "$ref": "#/components/schemas/SendToIslandIsModel" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": { "$ref": "#/components/schemas/GeneralResponse" }
+              },
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GeneralResponse" }
+              },
+              "text/json": {
+                "schema": { "$ref": "#/components/schemas/GeneralResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/actions/CloseCase": {
+      "post": {
+        "tags": ["Actions"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CloseCaseModel" }
+            },
+            "text/json": {
+              "schema": { "$ref": "#/components/schemas/CloseCaseModel" }
+            },
+            "application/*+json": {
+              "schema": { "$ref": "#/components/schemas/CloseCaseModel" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": { "$ref": "#/components/schemas/GeneralResponse" }
+              },
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GeneralResponse" }
+              },
+              "text/json": {
+                "schema": { "$ref": "#/components/schemas/GeneralResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/Login": {
+      "post": {
+        "tags": ["Auth"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AuthModel" }
+            },
+            "text/json": {
+              "schema": { "$ref": "#/components/schemas/AuthModel" }
+            },
+            "application/*+json": {
+              "schema": { "$ref": "#/components/schemas/AuthModel" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": { "$ref": "#/components/schemas/TokenRequest" }
+              },
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenRequest" }
+              },
+              "text/json": {
+                "schema": { "$ref": "#/components/schemas/TokenRequest" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuthModel": {
+        "required": ["Password", "UserName"],
+        "type": "object",
+        "properties": {
+          "UserName": { "minLength": 1, "type": "string" },
+          "Password": { "minLength": 1, "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "CaseResponse": {
+        "type": "object",
+        "properties": {
+          "Success": { "type": "boolean" },
+          "ErrorMessage": { "type": "string", "nullable": true },
+          "ErrorNumber": { "type": "string", "nullable": true },
+          "ItemID": { "type": "string", "nullable": true },
+          "ResultText": { "type": "string", "nullable": true },
+          "CaseNumber": { "type": "string", "nullable": true }
+        },
+        "additionalProperties": false
+      },
+      "CloseCaseModel": {
+        "required": ["CaseID", "StatusName"],
+        "type": "object",
+        "properties": {
+          "CaseID": { "minLength": 1, "type": "string" },
+          "StatusName": { "minLength": 1, "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "CreateCaseModel": {
+        "required": ["CaseType", "CustomerName", "IDNumber"],
+        "type": "object",
+        "properties": {
+          "IDNumber": { "minLength": 1, "type": "string" },
+          "CustomerName": { "minLength": 1, "type": "string" },
+          "CaseType": { "minLength": 1, "type": "string" },
+          "Portal": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      },
+      "CreateDocumentModel": {
+        "type": "object",
+        "properties": {
+          "Subject": { "type": "string", "nullable": true },
+          "Extension": { "type": "string", "nullable": true },
+          "ParentID": { "type": "string", "nullable": true },
+          "CreateDate": { "type": "string", "format": "date-time" },
+          "Author": { "type": "string", "nullable": true },
+          "DocCategory": { "type": "string", "nullable": true },
+          "DocType": { "type": "string", "nullable": true },
+          "File": { "type": "string", "format": "byte", "nullable": true },
+          "Portal": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      },
+      "GeneralResponse": {
+        "type": "object",
+        "properties": {
+          "Success": { "type": "boolean" },
+          "ErrorMessage": { "type": "string", "nullable": true },
+          "ErrorNumber": { "type": "string", "nullable": true },
+          "ItemID": { "type": "string", "nullable": true },
+          "ResultText": { "type": "string", "nullable": true }
+        },
+        "additionalProperties": false
+      },
+      "SendToIslandIsModel": {
+        "required": ["IDNumber", "ItemID"],
+        "type": "object",
+        "properties": {
+          "ItemID": { "minLength": 1, "type": "string" },
+          "IDNumber": { "minLength": 1, "type": "string" },
+          "Category": { "type": "string", "nullable": true },
+          "Type": { "type": "string", "nullable": true },
+          "SendNotification": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      },
+      "TokenRequest": { "type": "object", "additionalProperties": false }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Please enter token",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [{ "Bearer": [] }]
+}
