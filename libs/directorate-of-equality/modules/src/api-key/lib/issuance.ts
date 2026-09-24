@@ -73,7 +73,7 @@ export const readApiKeyPepper = (logger: Logger, context: string): string => {
  * any string. Validate here so an unrecognised scope cannot be stored and then
  * silently fail every scope check at request time.
  *
- * Only an omitted set means the default — which is every scope. `[]` is
+ * Only an omitted (or `null`) set means the default — which is every scope. `[]` is
  * refused rather than read as "omitted": a caller sending it to mean "as
  * little as possible" would otherwise be handed everything, the cascading
  * starfsmat delete included.

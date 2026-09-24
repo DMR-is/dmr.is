@@ -219,7 +219,7 @@ describe('ApiKeyService', () => {
         company: COMPANY,
         createdVia: ApiKeyOriginEnum.ISLAND_IS,
         actorNationalId: '0101901234',
-        scopes: null as unknown as ApiKeyScopeEnum[],
+        scopes: null,
       })
 
       expect(create.mock.calls[0][0].scopes).toEqual(DEFAULT_API_KEY_SCOPES)

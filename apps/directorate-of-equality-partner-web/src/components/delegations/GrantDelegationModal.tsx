@@ -9,7 +9,7 @@ import { Bullet } from '@dmr.is/ui/components/island-is/Bullet'
 import { BulletList } from '@dmr.is/ui/components/island-is/BulletList'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
-import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { RadioButton } from '@dmr.is/ui/components/island-is/RadioButton'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
@@ -96,11 +96,6 @@ export const GrantDelegationModal = ({
     },
   })
 
-  const options = providers.map((p) => ({
-    value: p.id,
-    label: `${p.name} (${formatNationalId(p.nationalId)})`,
-  }))
-
   const renderBody = () => {
     if (isLoading) {
       return <SkeletonLoader repeat={2} height={40} space={2} />
@@ -124,17 +119,29 @@ export const GrantDelegationModal = ({
       <Stack space={3}>
         <Text>{t.intro}</Text>
 
-        <Select
-          name="grant-delegation-provider"
-          size="sm"
-          label={t.providerLabel}
-          placeholder={t.providerPlaceholder}
-          options={options}
-          value={options.find((o) => o.value === providerId) ?? null}
-          onChange={(opt) => {
-            if (opt) setProviderId(opt.value)
-          }}
-        />
+        {/* Radio buttons, not a Select: island-ui's Select renders its menu
+            inline, so inside a scrolling modal it is clipped, and letting it
+            overflow instead pushed the confirm button off the card on a phone.
+            The approved list is short, and a list scrolls where a menu cannot. */}
+        <Stack space={2}>
+          <Text variant="h5" as="h3">
+            {t.providerLabel}
+          </Text>
+          {providers.map((p) => (
+            <RadioButton
+              key={p.id}
+              id={`grant-delegation-provider-${p.id}`}
+              name="grant-delegation-provider"
+              value={p.id}
+              label={p.name}
+              subLabel={formatNationalId(p.nationalId)}
+              checked={providerId === p.id}
+              onChange={() => setProviderId(p.id)}
+              large
+              backgroundColor="blue"
+            />
+          ))}
+        </Stack>
 
         {provider && (
           <Box background="blue100" borderRadius="large" padding={3}>
@@ -167,17 +174,9 @@ export const GrantDelegationModal = ({
       }}
       toggleClose={onClose}
       width="small"
-      // The provider Select renders its menu inline — island-ui's Select does
-      // not forward `menuPortalTarget` — so any scrolling container clips it.
-      // A pinned `footer` made the body one, and the open menu was cut off at
-      // the footer's edge. `allowOverflow` lets it spill over the modal
-      // instead; safe because the form is a select and a short summary, well
-      // under the 80vh the modal would otherwise have scrolled at.
-      allowOverflow
-    >
-      <Stack space={3}>
-        {renderBody()}
-
+      // Pinned, so the confirm button stays in reach while the body scrolls on
+      // a phone. Safe now there is no Select menu for the scroll area to clip.
+      footer={
         <Inline space={2} justifyContent="flexEnd">
           <Button variant="ghost" size="small" onClick={onClose}>
             {sharedText.cancel}
@@ -194,7 +193,9 @@ export const GrantDelegationModal = ({
             {t.confirmButton}
           </Button>
         </Inline>
-      </Stack>
+      }
+    >
+      {renderBody()}
     </Modal>
   )
 }

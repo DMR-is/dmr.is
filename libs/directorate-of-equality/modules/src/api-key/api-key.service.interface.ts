@@ -31,7 +31,7 @@ export type IssueApiKeyInput = {
   actorNationalId?: string | null
   label?: string | null
   /** Defaults to the full set when omitted. */
-  scopes?: ApiKeyScopeEnum[]
+  scopes?: ApiKeyScopeEnum[] | null
   expiresAt?: Date | null
 }
 
