@@ -93,7 +93,7 @@ export const keyText = {
   revokeErrorToast: 'Villa við að afturkalla aðgangslykil',
   narrowTag: 'Takmarkaðar heimildir',
   narrowHint:
-    'Þessi lykill hefur ekki allar heimildir og getur því ekki gert allt sem lykill getur, til dæmis unnið starfsmat. Ef hann á að hafa fullan aðgang skaltu búa til nýjan lykil og afturkalla þennan.',
+    'Þessi lykill hefur ekki allar heimildir og getur því ekki gert allt sem lykill getur. Ef hann á að hafa fullan aðgang skaltu búa til nýjan lykil og afturkalla þennan.',
   showRevoked: (count: number) => `Sýna óvirka lykla (${count})`,
   hideRevoked: 'Fela óvirka lykla',
 
@@ -150,7 +150,6 @@ export const delegationText = {
     intro:
       'Veldu þjónustuaðila af lista Jafnréttisstofu yfir samþykkta þjónustuaðila.',
     providerLabel: 'Þjónustuaðili',
-    providerPlaceholder: 'Veldu þjónustuaðila',
     noProviders:
       'Engir aðrir samþykktir þjónustuaðilar eru í boði. Þjónustuaðili sem fyrirtækið hefur þegar veitt umboð birtist ekki hér.',
     providersLoadError: 'Villa við að sækja lista yfir þjónustuaðila',

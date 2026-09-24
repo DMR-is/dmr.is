@@ -58,5 +58,15 @@ describe('isNarrowGrant', () => {
     expect(
       isNarrowGrant(['report:read', 'salary:submit', 'scoring:write']),
     ).toBe(true)
+    expect(
+      isNarrowGrant(['salary:submit', 'equality:submit', 'scoring:write']),
+    ).toBe(true)
+    expect(
+      isNarrowGrant(['report:read', 'equality:submit', 'scoring:write']),
+    ).toBe(true)
+  })
+
+  it('is true for an empty set', () => {
+    expect(isNarrowGrant([])).toBe(true)
   })
 })
