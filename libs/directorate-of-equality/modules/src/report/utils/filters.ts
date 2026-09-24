@@ -97,7 +97,7 @@ export type ReportCompanyFilters = {
  * but these land inside a `literal()`, which is the one place in this file
  * where a bad value would reach the statement verbatim.
  */
-const quoteList = (values: readonly string[]): string =>
+export const quoteList = (values: readonly string[]): string =>
   values.map((value) => `'${value.replace(/'/g, "''")}'`).join(', ')
 
 /**
@@ -224,6 +224,26 @@ export const buildWageGapRangeWhere = (
     if (bound !== undefined && !Number.isFinite(bound)) return undefined
   }
 
+  return {
+    [Op.and]: [
+      literal(wageGapExistsSql(field, from, to, `"${ReportModel.name}"."id"`)),
+    ],
+  }
+}
+
+/**
+ * The correlated EXISTS behind a pay-gap bound, as SQL text. Shared by the
+ * report list and the company list's report criteria, which differ only in
+ * what `report_result.report_id` is correlated against.
+ *
+ * ⚠️ Emits `from`/`to` verbatim — callers must pass finite numbers only.
+ */
+export const wageGapExistsSql = (
+  field: WageGapField,
+  from: number | undefined,
+  to: number | undefined,
+  reportIdRef: string,
+): string => {
   const value = `("rr"."wage_gap_decomposition_snapshot"->>'${field}')::numeric`
   const bounds = [
     `${value} IS NOT NULL`,
@@ -231,15 +251,10 @@ export const buildWageGapRangeWhere = (
     ...(to !== undefined ? [`${value} <= ${to}`] : []),
   ]
 
-  return {
-    [Op.and]: [
-      literal(
-        `EXISTS (SELECT 1 FROM "${DoeModels.REPORT_RESULT}" "rr" ` +
-          `WHERE "rr"."report_id" = "${ReportModel.name}"."id" ` +
-          `AND ${bounds.join(' AND ')})`,
-      ),
-    ],
-  }
+  return (
+    `EXISTS (SELECT 1 FROM "${DoeModels.REPORT_RESULT}" "rr" ` +
+    `WHERE "rr"."report_id" = ${reportIdRef} AND ${bounds.join(' AND ')})`
+  )
 }
 
 /**

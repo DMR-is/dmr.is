@@ -42,6 +42,19 @@ import { buildFilterSummary } from './filterSummary'
 
 const PAGE_SIZE = 25
 
+/** Each lower bound's paired upper bound. */
+const DATE_TO_KEY: Partial<Record<ReportDateKey, ReportDateKey>> = {
+  reportSubmittedFrom: 'reportSubmittedTo',
+  reportApprovedFrom: 'reportApprovedTo',
+  reportValidUntilFrom: 'reportValidUntilTo',
+  reportSalaryDataPeriodFrom: 'reportSalaryDataPeriodTo',
+}
+
+const GAP_TO_KEY: Partial<Record<ReportGapKey, ReportGapKey>> = {
+  reportRawGapPercentFrom: 'reportRawGapPercentTo',
+  reportOskyrtPercentFrom: 'reportOskyrtPercentTo',
+}
+
 const EMPTY_FILTERS: CompanyFilters = {
   employees: [],
   status: [],
@@ -251,21 +264,32 @@ export const DataExportContainer = () => {
   }
 
   const handleDateChange = (key: ReportDateKey, value: Date | undefined) => {
-    setDates((prev) => ({ ...prev, [key]: value }))
+    setDates((prev) => {
+      const next = { ...prev, [key]: value }
+
+      // A "from" moved past its "to" would describe an empty range, so the
+      // stale upper bound is dropped rather than sent.
+      const toKey = DATE_TO_KEY[key]
+      const to = toKey ? next[toKey] : undefined
+      if (toKey && value && to && value > to) next[toKey] = undefined
+
+      return next
+    })
   }
 
   const handleGapChange = (key: ReportGapKey, value: string | undefined) => {
     setGaps((prev) => {
       const next = { ...prev, [key]: value }
+      const toKey = GAP_TO_KEY[key]
+      if (!toKey) return next
 
       // Clearing a lower bound clears its upper one too: "up to 4%" with no
       // floor is a different question from the range that was being built, and
-      // silently keeping half of it would answer it without being asked.
-      if (key === 'reportRawGapPercentFrom' && !value) {
-        next.reportRawGapPercentTo = undefined
-      }
-      if (key === 'reportOskyrtPercentFrom' && !value) {
-        next.reportOskyrtPercentTo = undefined
+      // silently keeping half of it would answer it without being asked. A
+      // lower bound raised past the upper one drops it for the same reason.
+      const to = next[toKey]
+      if (!value || (to !== undefined && Number(value) > Number(to))) {
+        next[toKey] = undefined
       }
 
       return next

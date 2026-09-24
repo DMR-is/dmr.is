@@ -50,15 +50,10 @@ export const dataExportText = {
   heroDescription:
     'Veldu síur, sæktu listann og keyrðu hann út í Excel. Hægt er að sía bæði eftir fyrirtækjunum sjálfum og eftir því sem þau hafa skilað inn — listinn skilar alltaf fyrirtækjum. Útdrátturinn nær til allra sem síurnar skila, ekki bara þeirra sem sjást á skjánum.',
   imageAlt: 'Keyra út lista',
-  datasetLabel: 'Gagnasett',
-  datasetCompanies: 'Fyrirtæki',
-  datasetReports: 'Skýrslur',
   submit: 'Sækja lista',
   export: 'Sækja Excel',
-  // Announced only — the table prints its own visible count. Worded as
-  // "fyrirtæki" to match it, since a screen-reader user hears this one and
-  // reads that one, and two different nouns for the same number would read as
-  // two different numbers.
+  // The only count on the screen (the table's own is suppressed) and the
+  // `aria-live` text, so what is drawn and what is announced are the same.
   resultCount: (count: number) =>
     count === 1 ? '1 fyrirtæki fannst' : `${count} fyrirtæki fundust`,
   // Announced, not just rendered: the results appear because a button was
@@ -69,19 +64,12 @@ export const dataExportText = {
   initialHeading: 'Veldu síur og sæktu listann',
   initialDescription:
     'Ekkert er sótt fyrr en þú ýtir á „Sækja lista“ — listarnir eru stórir og síurnar eiga að þrengja þá fyrst.',
-  errorHeading: 'Ekki tókst að sækja listann',
-  errorDescription: 'Eitthvað fór úrskeiðis. Reyndu aftur.',
 
-  // --- Skýrslur dataset ---
-  reportSearchPlaceholder: 'Fyrirtæki, kennitala eða auðkenni',
+  // --- Report criteria ---
   cardReport: 'Skýrslur fyrirtækisins',
   cardDates: 'Dagsetningar',
   typeLabel: 'Tegund',
   typePlaceholder: 'Veldu tegund',
-  statusLabel: 'Staða',
-  statusPlaceholder: 'Veldu stöðu',
-  communicationLabel: 'Samskiptastaða',
-  communicationPlaceholder: 'Veldu samskiptastöðu',
   equalitySourceLabel: 'Grundvöllur jafnréttisáætlunar',
   equalitySourcePlaceholder: 'Veldu grundvöll',
   dateFrom: 'Frá',
@@ -109,13 +97,6 @@ export const dataExportText = {
   gapTo: 'Til',
   gapPlaceholder: 'Ekki valið',
   gapNoUpperBound: 'Ekkert efra mark',
-
-  columnIdentifier: 'Auðkenni',
-  columnType: 'Tegund',
-  columnStatus: 'Staða',
-  columnCompany: 'Fyrirtæki',
-  columnCreated: 'Innsent',
-  columnValidUntil: 'Gildir til',
 }
 
 export const overviewText = {

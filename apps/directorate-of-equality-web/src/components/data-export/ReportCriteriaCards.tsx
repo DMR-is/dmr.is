@@ -3,6 +3,7 @@
 import type { ReactElement } from 'react'
 
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { MultiSelectFilter } from '@dmr.is/ui/components/island-is/MultiSelectFilter'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
@@ -109,35 +110,41 @@ export const reportCriteriaCards = ({
     fromKey: ReportDateKey,
     toKey: ReportDateKey,
   ) => (
-    <Stack space={1}>
-      <Text variant="eyebrow">{label}</Text>
-      <DatePicker
-        name={fromKey}
-        label={dataExportText.dateFrom}
-        placeholderText={dataExportText.datePlaceholder}
-        size="sm"
-        locale="is"
-        selected={dates[fromKey]}
-        handleChange={(date) => onDateChange(fromKey, date ?? undefined)}
-        backgroundColor="white"
-        required={false}
-      />
-      <DatePicker
-        name={toKey}
-        label={dataExportText.dateTo}
-        placeholderText={dataExportText.datePlaceholder}
-        size="sm"
-        locale="is"
-        selected={dates[toKey]}
-        // The lower bound is the floor: a "to" before the "from" describes an
-        // empty range, and the picker refusing it is clearer than an empty
-        // result table that looks like a data problem.
-        minDate={dates[fromKey]}
-        handleChange={(date) => onDateChange(toKey, date ?? undefined)}
-        backgroundColor="white"
-        required={false}
-      />
-    </Stack>
+    // A named group, so each of the eight "Frá"/"Til" pickers is announced
+    // with the date it bounds.
+    <Box role="group" aria-labelledby={`${fromKey}-range`}>
+      <Stack space={1}>
+        <Text id={`${fromKey}-range`} variant="eyebrow">
+          {label}
+        </Text>
+        <DatePicker
+          name={fromKey}
+          label={dataExportText.dateFrom}
+          placeholderText={dataExportText.datePlaceholder}
+          size="sm"
+          locale="is"
+          selected={dates[fromKey]}
+          handleChange={(date) => onDateChange(fromKey, date ?? undefined)}
+          backgroundColor="white"
+          required={false}
+        />
+        <DatePicker
+          name={toKey}
+          label={dataExportText.dateTo}
+          placeholderText={dataExportText.datePlaceholder}
+          size="sm"
+          locale="is"
+          selected={dates[toKey]}
+          // The lower bound is the floor: a "to" before the "from" describes an
+          // empty range, and the picker refusing it is clearer than an empty
+          // result table that looks like a data problem.
+          minDate={dates[fromKey]}
+          handleChange={(date) => onDateChange(toKey, date ?? undefined)}
+          backgroundColor="white"
+          required={false}
+        />
+      </Stack>
+    </Box>
   )
 
   /**
@@ -158,9 +165,12 @@ export const reportCriteriaCards = ({
 
     return (
       <Stack space={1}>
-        <Text variant="eyebrow">{label}</Text>
+        <Text id={`${fromKey}-range`} variant="eyebrow">
+          {label}
+        </Text>
         <SelectFilter
           name={fromKey}
+          groupLabelledBy={`${fromKey}-range`}
           label={dataExportText.gapFrom}
           placeholder={dataExportText.gapPlaceholder}
           noOptionsMessage={companiesText.filterNoResults}
@@ -171,6 +181,7 @@ export const reportCriteriaCards = ({
         />
         <SelectFilter
           name={toKey}
+          groupLabelledBy={`${fromKey}-range`}
           label={dataExportText.gapTo}
           placeholder={dataExportText.gapNoUpperBound}
           noOptionsMessage={companiesText.filterNoResults}
