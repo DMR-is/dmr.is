@@ -15,3 +15,9 @@ export const identityServerConfig = {
   clientId: process.env.DOE_PARTNER_WEB_CLIENT_ID!,
   clientSecret: process.env.DOE_PARTNER_WEB_CLIENT_SECRET ?? '',
 }
+
+// This app's NextAuth cookie prefix. Every place that names the session
+// cookie reads it from here — authOptions, the middleware and the auth route
+// handlers — because they must agree. Why it exists: sessionCookies.ts in
+// @dmr.is/auth.
+export const AUTH_COOKIE_PREFIX = 'doe-partner-web'

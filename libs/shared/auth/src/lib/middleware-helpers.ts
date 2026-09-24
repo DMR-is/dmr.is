@@ -5,16 +5,12 @@ import { withAuth } from 'next-auth/middleware'
 import { getLogger } from '@dmr.is/logging-next'
 
 import { refreshAccessTokenOnce } from './refresh-single-flight'
+import { isSecureSessionCookie, sessionCookieName } from './sessionCookies'
 import { isExpired, isTransientRefreshError } from './token-service'
 
 const LOGGING_CATEGORY = 'refreshAccessToken'
 
-const SESSION_SECURE =
-  process.env.NODE_ENV === 'production' &&
-  process.env.NEXTAUTH_COOKIE_SECURE !== 'false'
-const SESSION_COOKIE = SESSION_SECURE
-  ? '__Secure-next-auth.session-token'
-  : 'next-auth.session-token'
+const SESSION_SECURE = isSecureSessionCookie()
 
 // This session timeout will be used to set the maxAge of the session cookie
 // IDS has a max timeout on refresh tokens, so we set our session timeout to be slightly more
@@ -71,10 +67,16 @@ function hasChunkedCookies(request: NextRequest, baseName: string): boolean {
     .some((cookie) => cookie.name.startsWith(`${baseName}.`))
 }
 
+/**
+ * @param cookieName the app's session cookie — see `sessionCookies.ts`. Must be
+ * the name NextAuth reads, or the refreshed session is written where nothing
+ * looks for it.
+ */
 export function updateCookie(
   sessionToken: string | null,
   request: NextRequest,
   response: NextResponse,
+  cookieName: string = sessionCookieName(),
 ): NextResponse<unknown> {
   /*
    * BASIC IDEA:
@@ -106,13 +108,13 @@ export function updateCookie(
      */
     if (sessionToken.length <= CHUNK_SIZE) {
       // Single cookie - no chunking needed
-      request.cookies.set(SESSION_COOKIE, sessionToken)
-      response.cookies.set(SESSION_COOKIE, sessionToken, cookieOptions)
+      request.cookies.set(cookieName, sessionToken)
+      response.cookies.set(cookieName, sessionToken, cookieOptions)
     } else {
       // Split into chunks
       const chunkCount = Math.ceil(sessionToken.length / CHUNK_SIZE)
       for (let i = 0; i < chunkCount; i++) {
-        const chunkName = `${SESSION_COOKIE}.${i}`
+        const chunkName = `${cookieName}.${i}`
         const chunkValue = sessionToken.substring(
           i * CHUNK_SIZE,
           (i + 1) * CHUNK_SIZE,
@@ -122,14 +124,14 @@ export function updateCookie(
       }
     }
   } else {
-    if (hasChunkedCookies(request, SESSION_COOKIE)) {
-      const deletedCookies = deleteExistingChunks(request, SESSION_COOKIE)
+    if (hasChunkedCookies(request, cookieName)) {
+      const deletedCookies = deleteExistingChunks(request, cookieName)
       // Also delete from response
-      for (const cookieName of deletedCookies) {
-        response.cookies.delete(cookieName)
+      for (const deleted of deletedCookies) {
+        response.cookies.delete(deleted)
       }
     } else {
-      response.cookies.delete(SESSION_COOKIE)
+      response.cookies.delete(cookieName)
     }
   }
 
@@ -143,6 +145,7 @@ export async function tryToUpdateCookie(
   token: JWT,
   response: NextResponse,
   redirectUri: string,
+  cookieName: string = sessionCookieName(),
 ): Promise<{ response: NextResponse; newSessionToken?: string }> {
   try {
     const newToken = await refreshAccessTokenOnce(
@@ -159,7 +162,7 @@ export async function tryToUpdateCookie(
     })
 
     return {
-      response: updateCookie(newSessionToken, req, response),
+      response: updateCookie(newSessionToken, req, response, cookieName),
       newSessionToken,
     }
   } catch (error) {
@@ -202,6 +205,11 @@ export interface CreateAuthMiddlewareConfig {
   signInPath: string
   checkIsActive?: boolean
   skipDefaultUrlCheck?: boolean
+  /**
+   * The app's NextAuth cookie prefix, matching `appAuthCookies(prefix)` in its
+   * `authOptions`. Omit to keep NextAuth's default names.
+   */
+  cookiePrefix?: string
 }
 
 export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
@@ -213,7 +221,10 @@ export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
     signInPath,
     checkIsActive = false,
     skipDefaultUrlCheck = false,
+    cookiePrefix,
   } = config
+
+  const cookieName = sessionCookieName(cookiePrefix)
 
   const middleware = withAuth(
     async function middleware(req: NextRequestWithAuth) {
@@ -230,6 +241,7 @@ export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
           token,
           response,
           redirectUri,
+          cookieName,
         )
         response = result.response
 
@@ -237,12 +249,19 @@ export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
         // This ensures the cookie update propagates to route handlers
         if (result.newSessionToken) {
           // Re-apply cookie updates to the new response
-          return updateCookie(result.newSessionToken, req, response)
+          return updateCookie(result.newSessionToken, req, response, cookieName)
         }
       }
       return response
     },
     {
+      // Only for an app on its own prefix: without it `withAuth` looks for
+      // NextAuth's default name and sees no session. Left unset otherwise, so
+      // an app that has not opted in reads exactly what it read before —
+      // `withAuth` picks `__Secure-` from NEXTAUTH_URL, not from NODE_ENV.
+      ...(cookiePrefix
+        ? { cookies: { sessionToken: { name: cookieName } } }
+        : {}),
       pages: {
         signIn: signInPath,
       },
