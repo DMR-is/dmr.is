@@ -153,7 +153,7 @@ export const delegationText = {
     noProviders:
       'Engir aðrir samþykktir þjónustuaðilar eru í boði. Þjónustuaðili sem fyrirtækið hefur þegar veitt umboð birtist ekki hér.',
     providersLoadError: 'Villa við að sækja lista yfir þjónustuaðila',
-    handoverTitle: (provider: string) => `${provider} fær að:`,
+    handoverTitle: 'Þjónustuaðilinn sem þú velur fær að:',
     handoverItems: [
       'skila launagreiningu og jafnréttisáætlun fyrir hönd fyrirtækisins,',
       'lesa skýrslur fyrirtækisins og athugasemdir Jafnréttisstofu,',

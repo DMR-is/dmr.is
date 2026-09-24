@@ -24,6 +24,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const t = delegationText.modal
 
+const PROVIDER_GROUP_LABEL_ID = 'grant-delegation-provider-label'
+
 type Props = {
   isOpen: boolean
   onClose: () => void
@@ -119,47 +121,49 @@ export const GrantDelegationModal = ({
       <Stack space={3}>
         <Text>{t.intro}</Text>
 
+        {/* Above the choice, not below it: on a phone a box under the list is
+            out of view while the pinned Confirm button is already enabled, so
+            full access — the starfsmat delete included — could be granted
+            without it ever being on screen. It reads the same for every
+            provider, so it needs no selection to show. */}
+        <Box background="blue100" borderRadius="large" padding={3}>
+          <Stack space={2}>
+            <Text fontWeight="semiBold">{t.handoverTitle}</Text>
+            <BulletList type="ul">
+              {t.handoverItems.map((item) => (
+                <Bullet key={item}>{item}</Bullet>
+              ))}
+            </BulletList>
+          </Stack>
+        </Box>
+
         {/* Radio buttons, not a Select: island-ui's Select renders its menu
             inline, so inside a scrolling modal it is clipped, and letting it
             overflow instead pushed the confirm button off the card on a phone.
-            The approved list is short, and a list scrolls where a menu cannot. */}
-        <Stack space={2}>
-          <Text variant="h5" as="h3">
-            {t.providerLabel}
-          </Text>
-          {providers.map((p) => (
-            <RadioButton
-              key={p.id}
-              id={`grant-delegation-provider-${p.id}`}
-              name="grant-delegation-provider"
-              value={p.id}
-              label={p.name}
-              subLabel={formatNationalId(p.nationalId)}
-              checked={providerId === p.id}
-              onChange={() => setProviderId(p.id)}
-              large
-              backgroundColor="blue"
-            />
-          ))}
-        </Stack>
-
-        {provider && (
-          <Box background="blue100" borderRadius="large" padding={3}>
-            <Stack space={2}>
-              <Text fontWeight="semiBold">
-                {t.handoverTitle(provider.name)}
-              </Text>
-              <BulletList type="ul">
-                {t.handoverItems.map((item) => (
-                  <Bullet key={item}>{item}</Bullet>
-                ))}
-              </BulletList>
-              <Text variant="small">
-                {t.summary(provider.name, companyName)}
-              </Text>
-            </Stack>
-          </Box>
-        )}
+            The approved list is short, and a list scrolls where a menu cannot.
+            The group is labelled so a screen reader announces the question
+            with each option. */}
+        <div role="radiogroup" aria-labelledby={PROVIDER_GROUP_LABEL_ID}>
+          <Stack space={2}>
+            <Text variant="h5" as="h3" id={PROVIDER_GROUP_LABEL_ID}>
+              {t.providerLabel}
+            </Text>
+            {providers.map((p) => (
+              <RadioButton
+                key={p.id}
+                id={`grant-delegation-provider-${p.id}`}
+                name="grant-delegation-provider"
+                value={p.id}
+                label={p.name}
+                subLabel={formatNationalId(p.nationalId)}
+                checked={providerId === p.id}
+                onChange={() => setProviderId(p.id)}
+                large
+                backgroundColor="blue"
+              />
+            ))}
+          </Stack>
+        </div>
       </Stack>
     )
   }
@@ -177,22 +181,29 @@ export const GrantDelegationModal = ({
       // Pinned, so the confirm button stays in reach while the body scrolls on
       // a phone. Safe now there is no Select menu for the scroll area to clip.
       footer={
-        <Inline space={2} justifyContent="flexEnd">
-          <Button variant="ghost" size="small" onClick={onClose}>
-            {sharedText.cancel}
-          </Button>
-          <Button
-            size="small"
-            disabled={!provider}
-            loading={grant.isPending}
-            onClick={() => {
-              if (!provider) return
-              grant.mutate({ partnerClientId: provider.id })
-            }}
-          >
-            {t.confirmButton}
-          </Button>
-        </Inline>
+        <Stack space={2}>
+          {/* Beside the button that acts on it, so the sentence naming the
+              provider is on screen whenever Confirm can be pressed. */}
+          {provider && (
+            <Text variant="small">{t.summary(provider.name, companyName)}</Text>
+          )}
+          <Inline space={2} justifyContent="flexEnd">
+            <Button variant="ghost" size="small" onClick={onClose}>
+              {sharedText.cancel}
+            </Button>
+            <Button
+              size="small"
+              disabled={!provider}
+              loading={grant.isPending}
+              onClick={() => {
+                if (!provider) return
+                grant.mutate({ partnerClientId: provider.id })
+              }}
+            >
+              {t.confirmButton}
+            </Button>
+          </Inline>
+        </Stack>
       }
     >
       {renderBody()}
