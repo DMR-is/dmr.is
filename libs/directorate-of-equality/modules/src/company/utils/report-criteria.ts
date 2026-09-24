@@ -1,6 +1,11 @@
 import { literal, Op, WhereOptions } from 'sequelize'
 
 import { DoeModels } from '../../constants'
+import {
+  quoteList,
+  wageGapExistsSql,
+  type WageGapField,
+} from '../../report/utils/filters'
 import type { GetCompaniesQueryDto } from '../dto/get-companies-query.dto'
 import { COMPANY_QUERY_ALIAS } from './report-status'
 
@@ -25,9 +30,6 @@ import { COMPANY_QUERY_ALIAS } from './report-status'
  * approved in 2026 with a 10–15% gap finds companies with one filing that is
  * all three, not companies with three filings that are each one of them.
  */
-
-const quoteList = (values: readonly string[]): string =>
-  values.map((value) => `'${value.replace(/'/g, "''")}'`).join(', ')
 
 /** ISO day, safe to embed: built from a Date, never from caller text. */
 const isoDay = (value: Date): string => value.toISOString().slice(0, 10)
@@ -60,7 +62,7 @@ const finiteBound = (value: number | undefined): number | undefined =>
  * lower bound of 0.
  */
 const gapPredicate = (
-  field: 'rawGapPercent' | 'oskyrtPercent',
+  field: WageGapField,
   rawFrom: number | undefined,
   rawTo: number | undefined,
 ): string | null => {
@@ -68,17 +70,7 @@ const gapPredicate = (
   const to = finiteBound(rawTo)
   if (from === undefined && to === undefined) return null
 
-  const value = `("rr"."wage_gap_decomposition_snapshot"->>'${field}')::numeric`
-  const bounds = [
-    `${value} IS NOT NULL`,
-    ...(from !== undefined ? [`${value} >= ${from}`] : []),
-    ...(to !== undefined ? [`${value} <= ${to}`] : []),
-  ]
-
-  return (
-    `EXISTS (SELECT 1 FROM "${DoeModels.REPORT_RESULT}" "rr" ` +
-    `WHERE "rr"."report_id" = "r"."id" AND ${bounds.join(' AND ')})`
-  )
+  return wageGapExistsSql(field, from, to, '"r"."id"')
 }
 
 /** True when the query carries any report criterion at all. */

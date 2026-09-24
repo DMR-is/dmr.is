@@ -46,8 +46,9 @@ export const ADMIN_GENDER_OPTIONS: ReportFilterOption[] = [
  * common questions the awkward ones. Picking the same value in both gives a
  * single band.
  *
- * The top option has no upper bound — 15 is where the scale stops, not where
- * the data does.
+ * 15 is where the scale stops, not where the data does: "Til 15%" is an
+ * inclusive cap, and leaving "Til" empty ("Ekkert efra mark") is the only
+ * unbounded choice.
  */
 export const GAP_BOUND_OPTIONS: ReportFilterOption[] = [
   { value: '0', label: 'Enginn launamunur (0%)' },
