@@ -52,6 +52,7 @@ erDiagram
         text company_national_id "nullable"
         uuid reviewer_user_id FK "nullable"
         uuid equality_report_id FK "nullable, SALARY to EQUALITY"
+        uuid partner_client_id FK "nullable, vendor provenance"
         timestamp approved_at
         timestamp valid_until
         text equality_report_content
@@ -165,6 +166,34 @@ erDiagram
         timestamptz last_used_at "nullable"
         timestamptz revoked_at "nullable"
     }
+    doe_partner_client {
+        uuid id PK
+        text national_id "unique among live rows"
+        text name
+        text_array scopes "ceiling"
+        uuid created_by_user_id FK
+        timestamptz revoked_at "nullable"
+    }
+    doe_partner_client_key {
+        uuid id PK
+        uuid partner_client_id FK
+        text key_id "unique, public half"
+        text secret_hash
+        ApiKeyOriginEnum created_via
+        uuid created_by_user_id FK "nullable, ADMIN path"
+        text created_by_national_id "nullable, ISLAND_IS path"
+        timestamptz last_used_at "nullable"
+        timestamptz revoked_at "nullable"
+    }
+    doe_partner_delegation {
+        uuid id PK
+        uuid partner_client_id FK
+        uuid company_id FK
+        text company_national_id "denormalised"
+        text_array scopes
+        text granted_by_national_id
+        timestamptz revoked_at "nullable"
+    }
     company_event {
         uuid id PK
         uuid company_id FK
@@ -265,6 +294,11 @@ erDiagram
     company ||--o{ doe_api_key : "company_id"
     doe_user |o--o{ doe_api_key : "created_by_user_id"
     doe_user |o--o{ doe_api_key : "revoked_by_user_id"
+    doe_partner_client ||--o{ doe_partner_client_key : "partner_client_id"
+    doe_partner_client ||--o{ doe_partner_delegation : "partner_client_id"
+    company ||--o{ doe_partner_delegation : "company_id"
+    doe_partner_client |o--o{ report : "partner_client_id"
+    doe_user ||--o{ doe_partner_client : "created_by_user_id"
     company ||--o{ company_event : "company_id"
     doe_user |o--o{ company_event : "actor_user_id"
     company ||--o{ company_comment : "company_id"
