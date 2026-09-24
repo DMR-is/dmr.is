@@ -31,8 +31,8 @@ jobs:
             # directorate-of-equality-partner-api and -partner-web are dev-only
             # for now: prod is held back (deploy_doe_partner: false in the infra
             # repo's DMR-Jafnrettisstofa/config/prod.yml, no prod unit dirs).
-            # Re-add both here, and to update-terragrunt-jafnrettisstofa, in the
-            # PR that enables them in prod.
+            # Re-add both here, to update-terragrunt-jafnrettisstofa and to
+            # wait-jafnrettisstofa's SERVICES, in the PR that enables them in prod.
             directorate-of-equality-web,
           ]
     steps:
@@ -78,6 +78,25 @@ jobs:
           VERSION_TAG: ${{ github.ref_name }}
           PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
 
+  # The rollout waits are separate jobs that nothing depends on, so a DoE
+  # rollout never holds up the Útgáfa deploy, and re-running a red wait only
+  # re-checks the rollout: it redeploys nothing.
+  wait-jafnrettisstofa:
+    name: ⏳ Wait for Jafnréttisstofa rollout
+    runs-on: ubuntu-latest
+    needs: deploy-jafnrettisstofa
+    steps:
+      - name: 📁 Checkout
+        uses: actions/checkout@v4
+      - name: ⏳ Wait for services
+        uses: ./.github/actions/deploy/wait-for-services
+        with:
+          AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
+          CLUSTER: ${{ env.ENV }}-dmr-jafnrettisstofa
+          # The partner api and web are dev-only for now; see the version-tag matrix.
+          SERVICES: directorate-of-equality-api directorate-of-equality-web
+          VERSION_TAG: ${{ github.ref_name }}
+
   # Ordered after Jafnréttisstofa to keep the infrastructure push sequential, but
   # not dependent on its result: a DoE terragrunt failure must not strand the
   # Útgáfa release. The explicit approve-prod check is what enforces the gate —
@@ -87,7 +106,7 @@ jobs:
   # job or through "Re-run failed jobs": GitHub re-runs every dependent. After a
   # newer release has shipped, re-running an old release's failed DoE deploy
   # therefore redeploys all of Útgáfa at the old tag, with no approval. Cut a new
-  # release instead.
+  # release instead. A red wait job below is safe to re-run on its own.
   deploy:
     name: 🚀 Deploy to Prod
     runs-on: ubuntu-latest
@@ -103,4 +122,18 @@ jobs:
           AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
           VERSION_TAG: ${{ github.ref_name }}
           PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
+
+  wait-utgafa:
+    name: ⏳ Wait for Útgáfa rollout
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: 📁 Checkout
+        uses: actions/checkout@v4
+      - name: ⏳ Wait for services
+        uses: ./.github/actions/deploy/wait-for-services
+        with:
+          AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
+          CLUSTER: ${{ env.ENV }}-dmr-utgafa
           SERVICES: official-journal-api official-journal-admin-api official-journal-application-api official-journal-web regulations-api legal-gazette-api legal-gazette-web legal-gazette-application-web legal-gazette-public-web
+          VERSION_TAG: ${{ github.ref_name }}

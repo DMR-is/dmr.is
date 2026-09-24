@@ -19,9 +19,6 @@ inputs:
   PAT:
     description: 'The personal access token to use'
     required: true
-  SERVICES:
-    description: 'The services to deploy sperated by a space'
-    required: true
 
 runs:
   using: 'composite'
@@ -37,10 +34,4 @@ runs:
       with:
         ENV: ${{ inputs.ENV }}
         PAT: ${{ inputs.PAT }}
-        VERSION_TAG: ${{ inputs.VERSION_TAG }}
-
-    - uses: ./.github/actions/deploy/wait-for-services
-      with:
-        CLUSTER: ${{ inputs.ENV }}-dmr-utgafa
-        SERVICES: ${{ inputs.SERVICES }}
         VERSION_TAG: ${{ inputs.VERSION_TAG }}
