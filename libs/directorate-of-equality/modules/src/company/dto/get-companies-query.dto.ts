@@ -127,19 +127,6 @@ export class GetCompaniesQueryDto extends PagingQuery {
 
   @ApiOptionalBoolean({
     description:
-      'When true, returns only companies that have never filed anything — no report in this system and no row in the retired register either. Distinct from the obligation columns: a company whose certification lapsed is missing one now but HAS filed before.',
-  })
-  @Transform(({ value }) => {
-    if (value === 'true' || value === true) return true
-    if (value === 'false' || value === false) return false
-    return undefined
-  })
-  @IsOptional()
-  @IsBoolean()
-  neverSubmitted?: boolean
-
-  @ApiOptionalBoolean({
-    description:
       'When true, return only companies in the daily-fines process (finesStarted = true).',
   })
   @Transform(({ value }) => value === 'true' || value === true)
