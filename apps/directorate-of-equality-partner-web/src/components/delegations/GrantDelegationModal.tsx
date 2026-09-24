@@ -5,8 +5,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Bullet } from '@dmr.is/ui/components/island-is/Bullet'
+import { BulletList } from '@dmr.is/ui/components/island-is/BulletList'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
-import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
@@ -15,13 +16,8 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
-import {
-  type ApiScope,
-  FILING_SCOPES,
-  formatNationalId,
-  SCOPE_ORDER,
-} from '../../lib/format'
-import { delegationText, scopeText, sharedText } from '../../lib/text'
+import { formatNationalId } from '../../lib/format'
+import { delegationText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -38,17 +34,15 @@ type Props = {
 }
 
 /**
- * The consent moment. A company names a provider from Jafnréttisstofa's
- * approved list and says, scope by scope, what it may do.
+ * The consent moment: the company names a provider from Jafnréttisstofa's
+ * approved list and hands it the job.
  *
- * Checkboxes rather than the key modal's two-way choice: this is the company
- * agreeing to let someone else act, and each thing agreed to should be read.
- *
- * Only the provider's approved scopes can be ticked. The API refuses a grant
- * beyond them with a 400, and a company should learn that from a disabled box
- * with a reason, not from an error after confirming. The filing scopes are
- * ticked by default; `scoring:write` never is, since it can delete the
- * company's starfsmat.
+ * All or nothing. No scopes are offered or sent, and the API then grants
+ * everything the provider was approved for. Scope-by-scope consent asked
+ * employers a question few could answer — and a provider allowed to file but
+ * not to author the starfsmat cannot file for a company whose starfsmat it
+ * maintains. What is handed over is spelled out instead, so the one choice
+ * left is made knowingly.
  */
 export const GrantDelegationModal = ({
   isOpen,
@@ -60,7 +54,6 @@ export const GrantDelegationModal = ({
   const queryClient = useQueryClient()
 
   const [providerId, setProviderId] = useState<string | null>(null)
-  const [scopes, setScopes] = useState<ApiScope[]>([])
 
   const {
     data: providersData,
@@ -82,10 +75,7 @@ export const GrantDelegationModal = ({
   const provider = providers.find((p) => p.id === providerId) ?? null
 
   useEffect(() => {
-    if (isOpen) {
-      setProviderId(null)
-      setScopes([])
-    }
+    if (isOpen) setProviderId(null)
   }, [isOpen])
 
   const grant = useMutation({
@@ -105,19 +95,6 @@ export const GrantDelegationModal = ({
       )
     },
   })
-
-  const selectProvider = (id: string) => {
-    setProviderId(id)
-    const approved = providers.find((p) => p.id === id)?.scopes ?? []
-    setScopes(FILING_SCOPES.filter((scope) => approved.includes(scope)))
-  }
-
-  const toggle = (scope: ApiScope, checked: boolean) =>
-    setScopes((current) =>
-      checked
-        ? [...current, scope]
-        : current.filter((existing) => existing !== scope),
-    )
 
   const options = providers.map((p) => ({
     value: p.id,
@@ -155,49 +132,26 @@ export const GrantDelegationModal = ({
           options={options}
           value={options.find((o) => o.value === providerId) ?? null}
           onChange={(opt) => {
-            if (opt) selectProvider(opt.value)
+            if (opt) setProviderId(opt.value)
           }}
         />
 
         {provider && (
-          <>
+          <Box background="blue100" borderRadius="large" padding={3}>
             <Stack space={2}>
-              <Text variant="h5" as="h3">
-                {t.scopesLabel}
+              <Text fontWeight="semiBold">
+                {t.handoverTitle(provider.name)}
               </Text>
-              {SCOPE_ORDER.map((scope) => {
-                const approved = provider.scopes.includes(scope)
-
-                return (
-                  <Checkbox
-                    key={scope}
-                    name={`grant-scope-${scope}`}
-                    label={scopeText.labels[scope]}
-                    subLabel={
-                      approved
-                        ? scopeText.descriptions[scope]
-                        : scopeText.notApproved
-                    }
-                    checked={scopes.includes(scope)}
-                    disabled={!approved}
-                    onChange={(event) => toggle(scope, event.target.checked)}
-                  />
-                )
-              })}
+              <BulletList type="ul">
+                {t.handoverItems.map((item) => (
+                  <Bullet key={item}>{item}</Bullet>
+                ))}
+              </BulletList>
+              <Text variant="small">
+                {t.summary(provider.name, companyName)}
+              </Text>
             </Stack>
-
-            {scopes.length === 0 ? (
-              <Text variant="small" color="red600">
-                {t.scopesRequired}
-              </Text>
-            ) : (
-              <Box background="blue100" borderRadius="large" padding={2}>
-                <Text variant="small">
-                  {t.summary(provider.name, companyName)}
-                </Text>
-              </Box>
-            )}
-          </>
+          </Box>
         )}
       </Stack>
     )
@@ -213,8 +167,7 @@ export const GrantDelegationModal = ({
       }}
       toggleClose={onClose}
       width="small"
-      // Pinned, so the confirm button stays in reach while the scope list
-      // scrolls on a short screen. `allowOverflow` would stop that scrolling.
+      // Pinned, so the confirm button stays in reach on a short screen.
       footer={
         <Inline space={2} justifyContent="flexEnd">
           <Button variant="ghost" size="small" onClick={onClose}>
@@ -222,11 +175,11 @@ export const GrantDelegationModal = ({
           </Button>
           <Button
             size="small"
-            disabled={!provider || scopes.length === 0}
+            disabled={!provider}
             loading={grant.isPending}
             onClick={() => {
-              if (!provider || scopes.length === 0) return
-              grant.mutate({ partnerClientId: provider.id, scopes })
+              if (!provider) return
+              grant.mutate({ partnerClientId: provider.id })
             }}
           >
             {t.confirmButton}

@@ -10,7 +10,6 @@ import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import {
-  type ApiScope,
   formatDateIS,
   issuedBy,
   KEY_STATE_LABEL,
@@ -18,14 +17,12 @@ import {
   keyState,
 } from '../../lib/format'
 import { keyText as t } from '../../lib/text'
-import { ScopeTags } from '../scopes/ScopeTags'
 
 /** The fields a company key and a provider key have in common. */
 export type ListedKey = {
   id: string
   keyId: string
   label?: string | null
-  scopes?: ApiScope[]
   createdVia: 'ISLAND_IS' | 'ADMIN'
   createdByNationalId?: string | null
   createdAt: string
@@ -74,12 +71,6 @@ const KeyCard = ({
           {t.colLastUsed}:{' '}
           {apiKey.lastUsedAt ? formatDateIS(apiKey.lastUsedAt) : t.neverUsed}
         </Text>
-
-        {apiKey.scopes && apiKey.scopes.length > 0 && (
-          <Box marginTop={1}>
-            <ScopeTags scopes={apiKey.scopes} />
-          </Box>
-        )}
 
         {state === 'active' && (
           <Inline justifyContent="flexEnd">

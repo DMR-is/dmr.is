@@ -152,22 +152,26 @@ describe('PartnerClientService', () => {
       )
     })
 
-    it('grants the default set — without scoring:write — when none is asked for', async () => {
+    /**
+     * Approval is all or nothing, and the admin screen sends no scopes — so
+     * what an omitted set resolves to is what every firm gets.
+     */
+    it('approves every scope, scoring:write included, when none is named', async () => {
       await create()
 
       const { scopes } = clients.create.mock.calls[0][0]
       expect(scopes).toEqual(DEFAULT_API_KEY_SCOPES)
-      expect(scopes).not.toContain(ApiKeyScopeEnum.SCORING_WRITE)
+      expect([...scopes].sort()).toEqual(Object.values(ApiKeyScopeEnum).sort())
     })
 
-    it('grants scoring:write only when it is named', async () => {
+    it('still honours a narrower set named by an API caller', async () => {
       await create({
-        scopes: [ApiKeyScopeEnum.REPORT_READ, ApiKeyScopeEnum.SCORING_WRITE],
+        scopes: [ApiKeyScopeEnum.REPORT_READ, ApiKeyScopeEnum.SALARY_SUBMIT],
       })
 
       expect(clients.create.mock.calls[0][0].scopes).toEqual([
         ApiKeyScopeEnum.REPORT_READ,
-        ApiKeyScopeEnum.SCORING_WRITE,
+        ApiKeyScopeEnum.SALARY_SUBMIT,
       ])
     })
 
@@ -239,17 +243,11 @@ describe('PartnerClientService', () => {
           id: CLIENT_ID,
           name: 'Kjarni',
           nationalId: FIRM_NATIONAL_ID,
-          scopes: [ApiKeyScopeEnum.REPORT_READ, ApiKeyScopeEnum.SALARY_SUBMIT],
         }),
       ])
 
       await expect(service.listProviders()).resolves.toEqual([
-        {
-          id: CLIENT_ID,
-          name: 'Kjarni',
-          nationalId: FIRM_NATIONAL_ID,
-          scopes: [ApiKeyScopeEnum.REPORT_READ, ApiKeyScopeEnum.SALARY_SUBMIT],
-        },
+        { id: CLIENT_ID, name: 'Kjarni', nationalId: FIRM_NATIONAL_ID },
       ])
       expect(clients.findAll).toHaveBeenCalledWith({
         where: { revokedAt: null },

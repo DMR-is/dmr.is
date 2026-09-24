@@ -1252,11 +1252,6 @@ export const companiesText = {
         expires1Year: '1 ár',
         expires2Years: '2 ár',
         expiresNever: 'Ótímabundinn',
-        scopingLabel: 'Heimildir',
-        scopingHint:
-          'Sjálfgefið fær lykillinn að lesa og skila skýrslum, sem er allt sem launakerfi þarf. Starfsmatsheimildin er til viðbótar og felur í sér að eyða starfsmati fyrirtækisins.',
-        scopeFilingOnly: 'Lesa og skila skýrslum',
-        scopeFilingAndScoring: 'Lesa, skila skýrslum og breyta starfsmati',
         createButton: 'Búa til lykil',
         cancelButton: 'Hætta við',
         createErrorToast: 'Villa við að búa til aðgangslykil',
@@ -1522,19 +1517,11 @@ export const partnerClientsText = {
   loadError: 'Villa við að hlaða þjónustuaðila',
 
   colNationalId: 'Kennitala',
-  colScopes: 'Heimildir',
   colCreated: 'Samþykktur',
   statusActive: 'Virkur',
   statusRevoked: 'Afturkallaður',
   showKeys: 'Sýna aðgangslykla',
   hideKeys: 'Fela aðgangslykla',
-
-  scopeLabels: {
-    'report:read': 'Lesa skýrslur',
-    'salary:submit': 'Skila launagreiningu',
-    'equality:submit': 'Skila jafnréttisáætlun',
-    'scoring:write': 'Breyta starfsmati',
-  } as Record<string, string>,
 
   revokeButton: 'Afturkalla þjónustuaðila',
   revokeConfirmTitle: 'Afturkalla þjónustuaðila?',
@@ -1548,11 +1535,8 @@ export const partnerClientsText = {
     title: 'Samþykkja þjónustuaðila',
     nameLabel: 'Heiti',
     nationalIdLabel: 'Kennitala',
-    scopingLabel: 'Heimildir',
-    scopingHint:
-      'Hámark þess sem þjónustuaðilinn má gera. Hvert fyrirtæki velur síðan hvað það leyfir honum. Starfsmatsheimildar er aðeins þörf ef þjónustuaðilinn býður fyrirtækjum upp á að breyta eigin starfsmati.',
-    scopeFilingOnly: 'Lesa og skila skýrslum',
-    scopeFilingAndScoring: 'Lesa, skila skýrslum og breyta starfsmati',
+    accessHint:
+      'Þjónustuaðilinn fær fullan aðgang: að lesa og skila skýrslum og að vinna starfsmat. Hvert fyrirtæki ræður svo hvort það veitir honum umboð.',
     createButton: 'Samþykkja',
     cancelButton: 'Hætta við',
     createdToast: 'Þjónustuaðili samþykktur',

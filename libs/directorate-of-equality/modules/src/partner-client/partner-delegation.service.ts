@@ -128,7 +128,9 @@ export class PartnerDelegationService implements IPartnerDelegationService {
       throw new NotFoundException(partnerClientMessages.providerNotFound())
     }
 
-    const scopes = [...new Set(input.scopes)]
+    // No scopes named hands over the firm's whole approval: the self-service
+    // web offers no per-scope choice. Named ones are still held to it below.
+    const scopes = [...new Set(input.scopes ?? client.scopes)]
     const beyondApproval = scopes.filter(
       (scope) => !client.scopes.includes(scope),
     )
@@ -263,7 +265,6 @@ export class PartnerDelegationService implements IPartnerDelegationService {
         id: client.id,
         name: client.name,
         nationalId: client.nationalId,
-        scopes: client.scopes,
       },
       scopes: delegation.scopes,
       grantedAt: delegation.createdAt,

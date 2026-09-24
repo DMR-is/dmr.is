@@ -121,7 +121,6 @@ export const CompanyApiKeysTab = () => {
         baseId="issue-company-api-key"
         title={t.modal.title}
         labelPlaceholder={t.modal.labelPlaceholder}
-        withScopes
         isOpen={isIssueOpen}
         isPending={issue.isPending}
         onIssue={async (input) => (await issue.mutateAsync(input)).key}

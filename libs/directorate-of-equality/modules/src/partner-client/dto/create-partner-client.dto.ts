@@ -14,7 +14,7 @@ export class CreatePartnerClientDto {
     enum: ApiKeyScopeEnum,
     isArray: true,
     description:
-      'The ceiling on what the firm may ever do. Omit for `report:read`, `salary:submit` and `equality:submit`. `scoring:write` is never granted implicitly: a firm that offers its customers a starfsmat editor needs it named here, and each company still has to grant it in its own delegation.',
+      'The ceiling on what the firm may ever do. Omit for every scope, `scoring:write` included — approval is all or nothing, and the admin screen sends nothing. What the firm may do for a given company is this intersected with that company’s delegation.',
   })
   scopes?: ApiKeyScopeEnum[]
 }

@@ -13,8 +13,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
-import { type ApiScope, FILING_SCOPES } from '../../lib/format'
-import { apiKeyText, keyText, sharedText } from '../../lib/text'
+import { keyText, sharedText } from '../../lib/text'
 
 const t = keyText.modal
 
@@ -41,32 +40,15 @@ const expiryToIso = (days: number | null): string | undefined => {
   return date.toISOString()
 }
 
-type Scoping = 'filing' | 'filing+scoring'
-
-/**
- * Two choices rather than four checkboxes: the filing scopes travel together,
- * so the only real decision is whether the key may also author the starfsmat.
- */
-const SCOPE_OPTIONS: { label: string; value: Scoping }[] = [
-  { label: apiKeyText.modal.scopeFilingOnly, value: 'filing' },
-  { label: apiKeyText.modal.scopeFilingAndScoring, value: 'filing+scoring' },
-]
-
 export type IssueKeyInput = {
   label?: string
   expiresAt?: string
-  scopes?: ApiScope[]
 }
 
 type Props = {
   baseId: string
   title: string
   labelPlaceholder: string
-  /**
-   * Offer the scoping choice. Company keys carry scopes; a provider key does
-   * not — what it may do is set per company by that company's delegation.
-   */
-  withScopes: boolean
   isOpen: boolean
   isPending: boolean
   /** Resolves to the plaintext key. Rejections are reported by the caller. */
@@ -85,12 +67,15 @@ type Props = {
  * as directorate-of-equality-web's `IssueApiKeyModal`.
  *
  * The secret lives in component state only, never in the query cache.
+ *
+ * No scope choice: a key is all or nothing. A company key gets every scope
+ * because none is named; a provider key has none of its own — what it may do
+ * for a company is that company's delegation.
  */
 export const IssueKeyModal = ({
   baseId,
   title,
   labelPlaceholder,
-  withScopes,
   isOpen,
   isPending,
   onIssue,
@@ -100,21 +85,18 @@ export const IssueKeyModal = ({
   const [expiryDays, setExpiryDays] = useState<number | null>(
     DEFAULT_EXPIRY_DAYS,
   )
-  const [scoping, setScoping] = useState<Scoping>('filing')
   const [issuedKey, setIssuedKey] = useState<string | null>(null)
 
   // Whether the modal is still showing. A key minted after it was closed must
   // not be stashed for a dialog nobody will see.
   const isShowingRef = useRef(isOpen)
 
-  // Reopening starts from the defaults — carrying a previous grant of
-  // `scoring:write` into the next key is exactly the surprise to avoid.
+  // Reopening starts from the defaults.
   useEffect(() => {
     isShowingRef.current = isOpen
     if (isOpen) {
       setLabel('')
       setExpiryDays(DEFAULT_EXPIRY_DAYS)
-      setScoping('filing')
       setIssuedKey(null)
     }
   }, [isOpen])
@@ -139,13 +121,6 @@ export const IssueKeyModal = ({
       const key = await onIssue({
         label: label.trim() === '' ? undefined : label.trim(),
         expiresAt: expiryToIso(expiryDays),
-        // Sent explicitly rather than relying on the server default, so what
-        // was picked is what is stored.
-        scopes: withScopes
-          ? scoping === 'filing+scoring'
-            ? [...FILING_SCOPES, 'scoring:write']
-            : [...FILING_SCOPES]
-          : undefined,
       })
 
       if (!isShowingRef.current) {
@@ -231,24 +206,6 @@ export const IssueKeyModal = ({
               {t.labelHint}
             </Text>
           </Stack>
-
-          {withScopes && (
-            <Stack space={1}>
-              <Select
-                name={`${baseId}-scoping`}
-                size="xs"
-                label={apiKeyText.modal.scopingLabel}
-                options={SCOPE_OPTIONS}
-                value={SCOPE_OPTIONS.find((o) => o.value === scoping) ?? null}
-                onChange={(opt) => {
-                  if (opt) setScoping(opt.value)
-                }}
-              />
-              <Text variant="small" color="dark400">
-                {apiKeyText.modal.scopingHint}
-              </Text>
-            </Stack>
-          )}
 
           <Stack space={1}>
             <Select

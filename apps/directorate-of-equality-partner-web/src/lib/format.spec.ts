@@ -1,4 +1,4 @@
-import { formatNationalId, issuedBy, keyState, sortScopes } from './format'
+import { formatNationalId, issuedBy, keyState } from './format'
 
 describe('keyState', () => {
   const past = '2020-01-01T00:00:00.000Z'
@@ -15,14 +15,6 @@ describe('keyState', () => {
 
   it('reads revoked before expired when a key is both', () => {
     expect(keyState({ revokedAt: past, expiresAt: past })).toBe('revoked')
-  })
-})
-
-describe('sortScopes', () => {
-  it('puts reading first and scoring:write last, whatever the input order', () => {
-    expect(
-      sortScopes(['scoring:write', 'equality:submit', 'report:read']),
-    ).toEqual(['report:read', 'equality:submit', 'scoring:write'])
   })
 })
 

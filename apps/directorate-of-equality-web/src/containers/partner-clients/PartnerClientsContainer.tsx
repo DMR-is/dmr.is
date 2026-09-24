@@ -137,14 +137,6 @@ export const PartnerClientsContainer = () => {
                       {t.colCreated}: {formatDateIS(client.createdAt)}
                     </Text>
 
-                    <Inline space={1}>
-                      {client.scopes.map((scope) => (
-                        <Tag key={scope} variant="blueberry" outlined disabled>
-                          {t.scopeLabels[scope] ?? scope}
-                        </Tag>
-                      ))}
-                    </Inline>
-
                     <Inline space={2} justifyContent="flexEnd">
                       <Button
                         variant="text"
