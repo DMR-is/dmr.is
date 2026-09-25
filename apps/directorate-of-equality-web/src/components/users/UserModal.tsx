@@ -100,8 +100,15 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
     enabled: isNew && isOpen && !!lookupNationalId,
     retry: false,
     // A point-in-time check, not a cacheable read: the shared 30s staleTime
-    // would serve `alreadyUser: false` for a user created a moment ago.
+    // would serve `alreadyUser: false` for a user created a moment ago, and a
+    // kept cache entry would show that answer before a refetch corrected it.
     staleTime: 0,
+    gcTime: 0,
+    // Only on "Fletta upp". With staleTime 0 the defaults would ask the
+    // registry about the person on every return to the tab, and a failed
+    // background refetch would put an error alert over a form still filled in.
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   })
 
   const lookup = lookupQuery.data
