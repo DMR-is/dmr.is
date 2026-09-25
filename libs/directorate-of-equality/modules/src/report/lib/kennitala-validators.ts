@@ -14,6 +14,20 @@ export const stripKennitalaDash = (value: unknown): unknown =>
     : value
 
 /**
+ * Whether a value is a checksum-valid kennitala, dashed or not. The one test
+ * both the DTO decorator and the payload rules use, so a handle one refuses the
+ * other cannot accept.
+ */
+export const isKennitalaLike = (value: unknown): boolean => {
+  const digits = stripKennitalaDash(value)
+  return (
+    typeof digits === 'string' &&
+    TEN_DIGITS.test(digits) &&
+    isValidKennitala(digits)
+  )
+}
+
+/**
  * A kennitala as it is stored: ten digits, no dash, with a valid checksum.
  * Strip the dash first with `stripKennitalaDash`.
  *
@@ -59,13 +73,7 @@ export function IsNotKennitala(validationOptions?: ValidationOptions) {
         ...validationOptions,
       },
       validator: {
-        validate: (value: unknown) => {
-          if (typeof value !== 'string') {
-            return true
-          }
-          const digits = stripKennitalaDash(value) as string
-          return !(TEN_DIGITS.test(digits) && isValidKennitala(digits))
-        },
+        validate: (value: unknown) => !isKennitalaLike(value),
       },
     })
 }

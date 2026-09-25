@@ -20,6 +20,7 @@ import {
   MAX_TOTAL_SUB_CRITERIA,
   MIN_STEPS,
 } from '../../report-excel/workbook.schema'
+import { collectEmployeeFieldIssues } from './employee-field-rules'
 import {
   employeeLabel,
   PayloadIssueBag,
@@ -318,6 +319,8 @@ export function collectParsedPayloadIntegrity(
       )
     }
     employeeOrdinals.add(employee.ordinal)
+
+    collectEmployeeFieldIssues(employee, issues)
 
     // Two guards where there was one, because reglulegt tímakaup has two ways
     // to be undefined: no denominator, or nothing in the numerator. Both would

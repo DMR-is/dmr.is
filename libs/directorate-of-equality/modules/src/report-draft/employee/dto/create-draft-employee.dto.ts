@@ -13,6 +13,7 @@ import {
   MAX_PAID_HOURS_PER_MONTH,
   MIN_PAID_HOURS_PER_MONTH,
 } from '../../../constants'
+import { IsStartDate } from '../../../report/lib/employee-field-rules'
 import { GenderEnum } from '../../../report/models/report.enums'
 
 /**
@@ -35,6 +36,7 @@ export class CreateDraftEmployeeDto {
   department?: string | null
 
   @ApiString({ description: 'Employment start date (YYYY-MM-DD).' })
+  @IsStartDate()
   startDate!: string
 
   @ApiNumber({
@@ -48,26 +50,33 @@ export class CreateDraftEmployeeDto {
   paidHours!: number
 
   @ApiNumber()
+  @Min(0)
   baseSalary!: number
 
   // ── Viðbótarlaun — fastar greiðslur aðrar en grunnlaun (Launagögn J–L) ──
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   additionalFixedOvertime?: number | null
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   additionalFixedCarAllowance?: number | null
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   additionalFixedOther?: number | null
 
   // ── Aukagreiðslur — tilfallandi greiðslur (Launagögn M–O). Reported
   //    on their own; NOT part of regluleg laun or reglulegt tímakaup. ──
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   bonusOccasionalOvertime?: number | null
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   bonusOccasionalCarAllowance?: number | null
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   bonusOther?: number | null
 }
