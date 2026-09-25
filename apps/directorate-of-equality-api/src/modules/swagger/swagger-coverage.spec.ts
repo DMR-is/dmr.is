@@ -151,6 +151,10 @@ const ADMIN_ONLY_HANDLERS: readonly string[] = [
   'PartnerClientController.revokePartnerClientKey',
   'UserController.createUser',
   'UserController.deleteUser',
+  // A read, but ADMIN-only: it exists only to create a user, and it queries
+  // the national registry for a person's name, which a reviewer has no
+  // other reason to do.
+  'UserController.lookupNationalRegistry',
   'UserController.updateUser',
 ]
 

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
@@ -29,17 +31,33 @@ const ROLE_OPTIONS: { label: string; value: Role }[] = [
   { label: u.roleEditor, value: 'EDITOR' },
 ]
 
+/** Digits only, so "010101-2345" and "0101012345" look up the same person. */
+const sanitizeNationalId = (value: string) => value.replace(/\D/g, '')
+
 type Props = {
   user: UserDto | null
   isOpen: boolean
   onClose: () => void
 }
 
+/**
+ * Create or edit a reviewer.
+ *
+ * Creating starts from a kennitala alone. "Fletta upp" asks the national
+ * registry for the person, and only then do the other fields open: the name
+ * comes from the registry and is shown read-only, while email and phone — which
+ * the registry does not hold — are typed in. A kennitala that is already a user
+ * stops there with a warning, rather than failing with a 409 on save.
+ *
+ * Editing has no lookup: the kennitala cannot change, and the name stays
+ * editable as before.
+ */
 export const UserModal = ({ user, isOpen, onClose }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
   const [nationalId, setNationalId] = useState('')
+  const [lookupNationalId, setLookupNationalId] = useState<string | null>(null)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -47,9 +65,20 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
   const [isActive, setIsActive] = useState(true)
   const [role, setRole] = useState<Role>('ADMIN')
 
+  const isNew = !user
+
+  // Reset on every open, not only when `user` changes. The shared Modal stays
+  // mounted while hidden, so its fields keep what was last typed, and creating
+  // two users in a row passes `null` both times — keyed on `[user]` alone the
+  // effect never re-ran, and the second form opened pre-filled with the first
+  // user. The same held for reopening a user after cancelling an edit.
   useEffect(() => {
+    if (!isOpen) return
+
+    setNationalId('')
+    setLookupNationalId(null)
+
     if (user) {
-      setNationalId('')
       setFirstName(user.firstName)
       setLastName(user.lastName)
       setEmail(user.email)
@@ -57,7 +86,6 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
       setIsActive(user.isActive)
       setRole(user.role)
     } else {
-      setNationalId('')
       setFirstName('')
       setLastName('')
       setEmail('')
@@ -65,7 +93,22 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
       setIsActive(true)
       setRole('ADMIN')
     }
-  }, [user])
+  }, [user, isOpen])
+
+  const lookupQuery = useQuery({
+    ...trpc.user.lookup.queryOptions({ nationalId: lookupNationalId ?? '' }),
+    enabled: isNew && isOpen && !!lookupNationalId,
+    retry: false,
+  })
+
+  const lookup = lookupQuery.data
+  // Names come from the registry. A single-word registry name leaves the last
+  // name empty, and that one stays editable so the admin is not stuck.
+  useEffect(() => {
+    if (!lookup) return
+    setFirstName(lookup.firstName)
+    setLastName(lookup.lastName)
+  }, [lookup])
 
   const { mutate: createUser, isPending: isCreating } = useMutation(
     trpc.user.create.mutationOptions({
@@ -105,13 +148,30 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
     }),
   )
 
-  const isNew = !user
   const isSaving = isCreating || isUpdating
+
+  const lookedUp = isNew && !!lookup && lookup.nationalId === lookupNationalId
+  const alreadyUser = lookedUp && lookup.alreadyUser
+  // On create, nothing but the kennitala is open until the registry has
+  // answered for a kennitala that is not already a user.
+  const detailsOpen = !isNew || (lookedUp && !alreadyUser)
+  const nameFromRegistry = isNew && lookedUp
+
+  const lookupReason = lookupQuery.error?.data?.translatedMessage
+  const lookupNotFound =
+    lookupQuery.error?.data?.code === 'NOT_FOUND' ||
+    lookupQuery.error?.data?.code === 'BAD_REQUEST'
+
+  const handleLookup = () => {
+    const sanitized = sanitizeNationalId(nationalId)
+    if (sanitized.length === 10) setLookupNationalId(sanitized)
+  }
 
   const handleSave = () => {
     if (isNew) {
+      if (!lookedUp) return
       createUser({
-        nationalId,
+        nationalId: lookup.nationalId,
         firstName,
         lastName,
         email,
@@ -144,35 +204,96 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
     >
       <Stack space={3}>
         {isNew && (
-          <TextInput
-            name="nationalId"
-            label={u.nationalIdLabel}
-            size="xs"
-            value={nationalId}
-            onChange={(e) => setNationalId(e.target.value)}
-          />
+          <Stack space={1}>
+            <Box display="flex" alignItems="flexEnd" columnGap={2}>
+              <Box flexGrow={1}>
+                <TextInput
+                  name="nationalId"
+                  label={u.nationalIdLabel}
+                  size="xs"
+                  value={nationalId}
+                  onChange={(e) => {
+                    setNationalId(e.target.value)
+                    // A new kennitala invalidates the previous lookup, and
+                    // with it the names that came from it.
+                    if (lookupNationalId) {
+                      setLookupNationalId(null)
+                      setFirstName('')
+                      setLastName('')
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleLookup()
+                  }}
+                />
+              </Box>
+              <Button
+                variant="ghost"
+                size="small"
+                loading={lookupQuery.isFetching}
+                disabled={sanitizeNationalId(nationalId).length !== 10}
+                onClick={handleLookup}
+              >
+                {u.lookupButton}
+              </Button>
+            </Box>
+
+            {!lookedUp && !lookupQuery.isError && (
+              <Text variant="small" color="dark400">
+                {u.lookupHint}
+              </Text>
+            )}
+
+            {lookupQuery.isError && (
+              <AlertMessage
+                type={lookupNotFound ? 'warning' : 'error'}
+                title={lookupNotFound ? u.notFoundTitle : u.lookupErrorTitle}
+                message={lookupReason ?? u.lookupError}
+              />
+            )}
+
+            {alreadyUser && (
+              <AlertMessage
+                type="warning"
+                title={u.alreadyUserTitle}
+                message={u.userAlreadyExists}
+              />
+            )}
+
+            {nameFromRegistry && !alreadyUser && (
+              <Text variant="small" color="dark400">
+                {u.nameFromRegistryHint}
+              </Text>
+            )}
+          </Stack>
         )}
 
-        <Inline space={2}>
-          <Box flexGrow={1}>
+        {/* Two equal columns across the full width. `Inline` sized each box to
+            its content, so the pair stopped just past halfway. */}
+        <Box display="flex" columnGap={2}>
+          <Box flexGrow={1} style={{ flexBasis: 0, minWidth: 0 }}>
             <TextInput
               name="firstName"
               label={u.firstNameLabel}
               size="xs"
               value={firstName}
+              disabled={!detailsOpen}
+              readOnly={nameFromRegistry && !!lookup?.firstName}
               onChange={(e) => setFirstName(e.target.value)}
             />
           </Box>
-          <Box flexGrow={1}>
+          <Box flexGrow={1} style={{ flexBasis: 0, minWidth: 0 }}>
             <TextInput
               name="lastName"
               label={u.lastNameLabel}
               size="xs"
               value={lastName}
+              disabled={!detailsOpen}
+              readOnly={nameFromRegistry && !!lookup?.lastName}
               onChange={(e) => setLastName(e.target.value)}
             />
           </Box>
-        </Inline>
+        </Box>
 
         <TextInput
           name="email"
@@ -180,6 +301,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
           type="email"
           size="xs"
           value={email}
+          disabled={!detailsOpen}
           onChange={(e) => setEmail(e.target.value)}
         />
 
@@ -188,6 +310,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
           label={f.phoneShortLabel}
           size="xs"
           value={phone}
+          disabled={!detailsOpen}
           onChange={(e) => setPhone(e.target.value)}
         />
 
@@ -197,6 +320,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
           label={u.roleLabel}
           options={ROLE_OPTIONS}
           value={ROLE_OPTIONS.find((o) => o.value === role) ?? null}
+          isDisabled={!detailsOpen}
           onChange={(opt) => {
             if (opt) setRole(opt.value)
           }}
@@ -228,10 +352,10 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
             loading={isSaving}
             disabled={
               isSaving ||
+              !detailsOpen ||
               !firstName.trim() ||
               !lastName.trim() ||
-              !email.trim() ||
-              (isNew && !nationalId.trim())
+              !email.trim()
             }
             onClick={handleSave}
           >

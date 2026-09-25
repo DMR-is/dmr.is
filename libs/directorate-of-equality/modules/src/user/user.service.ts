@@ -1,3 +1,4 @@
+import { isPersonKennitala } from 'kennitala'
 import { Op } from 'sequelize'
 
 import {
@@ -5,26 +6,52 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { INationalRegistryService } from '@dmr.is/clients-national-registry'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CreateUserBodyDto } from './dto/create-user.body.dto'
 import { GetUsersQueryDto } from './dto/get-users.query.dto'
 import { UpdateUserBodyDto } from './dto/update-user.body.dto'
 import { UserDto } from './dto/user.dto'
+import { UserLookupDto } from './dto/user-lookup.dto'
 import { UserModel } from './models/user.model'
 import { DoeUserRole } from './types/user-role'
+import { userMessages } from './user.messages'
 import { IUserService } from './user.service.interface'
 
 const LOGGING_CONTEXT = 'UserService'
+
+/**
+ * The registry's one full name, split at its last space: "Jón Bjarni
+ * Ólafsson" → "Jón Bjarni" / "Ólafsson". A single word is all first name, with
+ * an empty last name for the admin to fill in.
+ */
+export const splitRegistryName = (
+  fullName: string,
+): { firstName: string; lastName: string } => {
+  const words = fullName.trim().split(/\s+/).filter(Boolean)
+
+  if (words.length <= 1) {
+    return { firstName: words[0] ?? '', lastName: '' }
+  }
+
+  return {
+    firstName: words.slice(0, -1).join(' '),
+    lastName: words[words.length - 1],
+  }
+}
 
 @Injectable()
 export class UserService implements IUserService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(UserModel) private readonly userModel: typeof UserModel,
+    @Inject(INationalRegistryService)
+    private readonly nationalRegistryService: INationalRegistryService,
   ) {}
 
   async getMyUser(nationalId: string): Promise<UserDto> {
@@ -54,6 +81,38 @@ export class UserService implements IUserService {
     })
 
     return users.map((user) => user.fromModel())
+  }
+
+  async lookupNationalRegistry(nationalId: string): Promise<UserLookupDto> {
+    this.logger.debug(
+      `Looking up person in national registry by national id "${nationalId}"`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    // Users are people signing in with their own rafræn skilríki. A company's
+    // kennitala could never sign in as one, so refuse it here rather than
+    // pre-fill a user from a company name.
+    if (!isPersonKennitala(nationalId)) {
+      throw new BadRequestException(userMessages.notAPerson())
+    }
+
+    const [result, existing] = await Promise.all([
+      this.nationalRegistryService.getEntityByNationalId(nationalId),
+      this.userModel.findOne({ where: { nationalId } }),
+    ])
+
+    if (!result.entity) {
+      throw new NotFoundException(
+        userMessages.registryPersonNotFound(nationalId),
+      )
+    }
+
+    return {
+      nationalId: result.entity.kennitala,
+      name: result.entity.nafn,
+      ...splitRegistryName(result.entity.nafn),
+      alreadyUser: existing !== null,
+    }
   }
 
   async createUser(input: CreateUserBodyDto): Promise<UserDto> {
