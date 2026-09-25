@@ -25,7 +25,7 @@ import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { contentDisposition } from '../../core/http/content-disposition'
 
 /**
- * "Keyra út lista" — the admin data export.
+ * "Gagnaútdráttur" — the admin data export.
  *
  * Both routes take the SAME query DTO as the list endpoint they mirror, so a
  * filter the admin built on screen is handed straight through. Whatever

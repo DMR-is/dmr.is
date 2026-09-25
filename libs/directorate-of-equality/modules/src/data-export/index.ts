@@ -1,6 +1,6 @@
 /**
  * Public surface of the `data-export` module — the files behind
- * "Keyra út lista".
+ * "Gagnaútdráttur".
  *
  * As elsewhere, the concrete service class is deliberately absent: consumers
  * inject `IDataExportService` and import `DataExportCoreModule`, which is what

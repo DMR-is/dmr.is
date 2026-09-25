@@ -38,7 +38,7 @@ export const frontPageText = {
     linkText: 'Lesa meira',
   },
   panelExport: {
-    title: 'Keyra út lista',
+    title: 'Gagnaútráttur',
     description:
       'Sækja skýrslur og tölfræðileg gögn um starfsemi stofnunarinnar.',
     linkText: 'Sækja skýrslu',
@@ -46,10 +46,10 @@ export const frontPageText = {
 }
 
 export const dataExportText = {
-  heading: 'Keyra út lista',
+  heading: 'Gagnaútdráttur',
   heroDescription:
     'Veldu síur, sæktu listann og keyrðu hann út í Excel. Hægt er að sía bæði eftir fyrirtækjunum sjálfum og eftir því sem þau hafa skilað inn — listinn skilar alltaf fyrirtækjum. Útdrátturinn nær til allra sem síurnar skila, ekki bara þeirra sem sjást á skjánum.',
-  imageAlt: 'Keyra út lista',
+  imageAlt: 'Gagnaútdráttur',
   submit: 'Sækja lista',
   export: 'Sækja Excel',
   // The only count on the screen (the table's own is suppressed) and the
