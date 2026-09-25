@@ -1,14 +1,24 @@
 import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
-import { generateCompany, generatePerson } from 'kennitala'
+import { isValid } from 'kennitala'
 
 import { SubmitReportSubsidiaryDto } from '../../application/dto/submit-report-company.dto'
 import { IsNotKennitala } from './kennitala-validators'
 
-// Generated rather than written out: `disallow-kennitalas` forbids a
-// checksum-valid kennitala in source.
-const COMPANY = generateCompany(new Date(2001, 0, 15)) as string
-const PERSON = generatePerson(new Date(1985, 5, 3)) as string
+// Built rather than written out: `disallow-kennitalas` forbids a checksum-valid
+// kennitala in source. Deterministic, unlike the package's generators, which
+// pick a random serial and so made this spec flaky.
+const withCheckDigit = (firstEight: string): string => {
+  for (let check = 0; check <= 9; check++) {
+    const candidate = `${firstEight}${check}9`
+    if (isValid(candidate)) {
+      return candidate
+    }
+  }
+  throw new Error(`no check digit completes ${firstEight}`)
+}
+const COMPANY = withCheckDigit('55012320')
+const PERSON = withCheckDigit('03068523')
 const dashed = (kt: string) => `${kt.slice(0, 6)}-${kt.slice(6)}`
 
 class Pseudonymous {
