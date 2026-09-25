@@ -119,8 +119,11 @@ export class UserService implements IUserService {
       }
     }
 
+    // `find…`, not `get…`: the registry answers a kennitala it does not hold
+    // with a 404, which `get…` turns into a 502 — "the registry failed, try
+    // again" for what is really "not in the registry".
     const result =
-      await this.nationalRegistryService.getEntityByNationalId(nationalId)
+      await this.nationalRegistryService.findEntityByNationalId(nationalId)
 
     if (!result.entity) {
       throw new NotFoundException(
