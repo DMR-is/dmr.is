@@ -14,6 +14,7 @@ import {
   CompanyStatusEnum,
 } from '../models/company.enums'
 import { IsatCategoryModel } from '../models/isat-category.model'
+import { buildCompanyReportCriteriaWhere } from './report-criteria'
 import {
   actionPlanMissingSql,
   COMPANY_QUERY_ALIAS,
@@ -272,8 +273,10 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
     })
   }
 
-  if (query.employeeCountCategory !== undefined) {
-    conditions.push({ employeeCountCategory: query.employeeCountCategory })
+  if (query.employeeCountCategory?.length) {
+    conditions.push({
+      employeeCountCategory: { [Op.in]: query.employeeCountCategory },
+    })
   }
 
   if (query.companyStatus?.length) {
@@ -299,6 +302,9 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   if (query.overdue) {
     conditions.push(buildCompanyOverdueWhere())
   }
+
+  const reportCriteria = buildCompanyReportCriteriaWhere(query)
+  if (reportCriteria) conditions.push(reportCriteria)
 
   // The four "aldrei skilað" filters, AND-ed like the other flags beside them
   // in the same control: selecting both types asks for companies that have
@@ -331,7 +337,7 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   //
   // Ordered after the explicit filters purely for readability; `conditions`
   // is AND-ed, so position carries no meaning.
-  if (!query.includeNotObliged && query.employeeCountCategory === undefined) {
+  if (!query.includeNotObliged && !query.employeeCountCategory?.length) {
     conditions.push(literal(`NOT ${hiddenFromDefaultRegisterSql()}`))
   }
 

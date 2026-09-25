@@ -56,6 +56,15 @@ export type CompanyFilters = {
 type Props = {
   query: string
   onQueryChange: (val: string) => void
+  /**
+   * Extra accordion cards, rendered after the three the register always shows.
+   *
+   * A slot rather than more props: the data-export screen adds a whole group of
+   * report criteria that the register has no use for, and threading each of
+   * them through here would make this component's signature the union of every
+   * screen that uses it.
+   */
+  children?: React.ReactNode
   filters: CompanyFilters
   onFiltersChange: (key: keyof CompanyFilters, val: string[]) => void
   onReset: () => void
@@ -66,6 +75,7 @@ type Props = {
 export const CompanyFilter = ({
   query,
   onQueryChange,
+  children,
   filters,
   onFiltersChange,
   onReset,
@@ -135,7 +145,9 @@ export const CompanyFilter = ({
                   noOptionsMessage={companiesText.filterNoResults}
                   options={EMPLOYEE_RANGES}
                   selected={filters.employees}
-                  isMulti={false}
+                  // Multi since the API took a list: the register's own
+                  // default question is "everyone the law reaches", which is
+                  // 25–49 AND 50+ and was unaskable as a single value.
                   onChange={(val) => onFiltersChange('employees', val)}
                 />
                 <MultiSelectFilter
@@ -258,6 +270,7 @@ export const CompanyFilter = ({
                 />
               </Stack>
             </AccordionItem>
+            {children}
           </Accordion>
         </Box>
       </Filter>

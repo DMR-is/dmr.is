@@ -1,10 +1,12 @@
-import { Transform } from 'class-transformer'
+import { Transform, Type } from 'class-transformer'
 import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsNumber,
   IsOptional,
   IsString,
+  Min,
 } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
@@ -12,11 +14,18 @@ import { ApiProperty } from '@nestjs/swagger'
 import {
   ApiOptionalArray,
   ApiOptionalBoolean,
+  ApiOptionalDateTime,
   ApiOptionalEnum,
+  ApiOptionalNumber,
   ApiOptionalString,
 } from '@dmr.is/decorators'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
+import {
+  EqualityCoverageSourceEnum,
+  GenderEnum,
+  ReportTypeEnum,
+} from '../../report/models/report.enums'
 import {
   CompanyReportStatusEnum,
   CompanySectorEnum,
@@ -46,13 +55,24 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsString()
   q?: string
 
-  @ApiOptionalEnum(CompanySizeEnum, {
+  @ApiProperty({
+    enum: CompanySizeEnum,
     enumName: 'CompanySizeEnum',
-    description: 'Return only companies whose employee-count bucket matches.',
+    isArray: true,
+    required: false,
+    description:
+      'Return only companies whose employee-count bucket is one of the given values. The two obliged buckets are MEDIUM (25–49) and LARGE (50+); asking for both is the ordinary "everyone the law reaches" view, which is why this is a list rather than a single value.',
+  })
+  // Accepts a bare value as well as a list: this was a single-value param, and
+  // every caller that still sends `?employeeCountCategory=LARGE` keeps working.
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
   })
   @IsOptional()
-  @IsEnum(CompanySizeEnum)
-  employeeCountCategory?: CompanySizeEnum
+  @IsArray()
+  @IsEnum(CompanySizeEnum, { each: true })
+  employeeCountCategory?: CompanySizeEnum[]
 
   @ApiProperty({
     enum: CompanyReportStatusEnum,
@@ -270,6 +290,152 @@ export class GetCompaniesQueryDto extends PagingQuery {
   })
   @IsString({ each: true })
   postcode?: string[]
+
+
+  // ---------------------------------------------------------------------
+  // Report criteria
+  //
+  // These describe a FILING, not a company, and they narrow the company list
+  // rather than changing what a row is: a company comes back when at least one
+  // of its APPROVED reports satisfies all of them. Prefixed `report*` so they
+  // cannot be confused with the company's own fields — `status` on this DTO
+  // already means the register lifecycle, and `sector` already means the
+  // company's.
+  //
+  // Report status is deliberately absent: only approved filings are considered,
+  // so there is one status these can have. See `buildCompanyReportCriteriaWhere`.
+  // ---------------------------------------------------------------------
+
+  @ApiProperty({
+    enum: ReportTypeEnum,
+    enumName: 'ReportTypeEnum',
+    isArray: true,
+    required: false,
+    description:
+      'Return only companies with an approved filing of one of the given kinds — EQUALITY (jafnréttisáætlun) or SALARY (skýrslugjöf).',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(ReportTypeEnum, { each: true })
+  reportType?: ReportTypeEnum[]
+
+  @ApiProperty({
+    enum: GenderEnum,
+    enumName: 'GenderEnum',
+    isArray: true,
+    required: false,
+    description:
+      'Return only companies whose approved filing names an executive (æðsti stjórnandi) of one of the given genders, as stated on that filing.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(GenderEnum, { each: true })
+  reportCompanyAdminGender?: GenderEnum[]
+
+  @ApiProperty({
+    enum: EqualityCoverageSourceEnum,
+    enumName: 'EqualityCoverageSourceEnum',
+    isArray: true,
+    required: false,
+    description:
+      'Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here) or LEGACY (carried over from the retired register).',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(EqualityCoverageSourceEnum, { each: true })
+  reportEqualitySource?: EqualityCoverageSourceEnum[]
+
+  @ApiOptionalDateTime({ description: 'Filing submitted on or after this date.' })
+  reportSubmittedFrom?: Date
+
+  @ApiOptionalDateTime({ description: 'Filing submitted on or before this date.' })
+  reportSubmittedTo?: Date
+
+  @ApiOptionalDateTime({ description: 'Filing approved on or after this date.' })
+  reportApprovedFrom?: Date
+
+  @ApiOptionalDateTime({ description: 'Filing approved on or before this date.' })
+  reportApprovedTo?: Date
+
+  @ApiOptionalDateTime({ description: 'Filing valid until on or after this date.' })
+  reportValidUntilFrom?: Date
+
+  @ApiOptionalDateTime({ description: 'Filing valid until on or before this date.' })
+  reportValidUntilTo?: Date
+
+  @ApiOptionalDateTime({
+    description:
+      'Salary data period (the month the pay figures describe) on or after this date. Skýrslugjöf only — a jafnréttisáætlun has no period.',
+  })
+  reportSalaryDataPeriodFrom?: Date
+
+  @ApiOptionalDateTime({
+    description: 'Upper bound on the salary data period.',
+  })
+  reportSalaryDataPeriodTo?: Date
+
+  @ApiOptionalNumber({
+    description:
+      'Lower bound (inclusive, %) on the ÓLEIÐRÉTTUR pay gap of an approved filing — the headline figure, routinely 5–15%. Not interchangeable with the óskýrður bound below.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  reportRawGapPercentFrom?: number
+
+  @ApiOptionalNumber({
+    description: 'Upper bound (inclusive, %) on the óleiðréttur pay gap.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  reportRawGapPercentTo?: number
+
+  @ApiOptionalNumber({
+    description:
+      'Lower bound (inclusive, %) on the ÓSKÝRÐUR (leiðréttur) pay gap of an approved filing — the regulated figure, tested against the benchmark and usually well under 5%.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  reportOskyrtPercentFrom?: number
+
+  @ApiOptionalNumber({
+    description: 'Upper bound (inclusive, %) on the óskýrður pay gap.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  reportOskyrtPercentTo?: number
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, only companies whose approved filing carries an úrbótaáætlun (has at least one pay-gap outlier). When false, only those whose filing has none.',
+  })
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true
+    if (value === 'false' || value === false) return false
+    return undefined
+  })
+  @IsOptional()
+  @IsBoolean()
+  reportHasImprovementPlan?: boolean
 
   @ApiOptionalEnum(CompanySortByEnum, { enumName: 'CompanySortByEnum' })
   @IsOptional()

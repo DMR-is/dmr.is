@@ -38,11 +38,65 @@ export const frontPageText = {
     linkText: 'Lesa meira',
   },
   panelExport: {
-    title: 'Keyra út lista',
+    title: 'Gagnaútráttur',
     description:
       'Sækja skýrslur og tölfræðileg gögn um starfsemi stofnunarinnar.',
     linkText: 'Sækja skýrslu',
   },
+}
+
+export const dataExportText = {
+  heading: 'Gagnaútdráttur',
+  heroDescription:
+    'Veldu síur, sæktu listann og keyrðu hann út í Excel. Hægt er að sía bæði eftir fyrirtækjunum sjálfum og eftir því sem þau hafa skilað inn — listinn skilar alltaf fyrirtækjum. Útdrátturinn nær til allra sem síurnar skila, ekki bara þeirra sem sjást á skjánum.',
+  imageAlt: 'Gagnaútdráttur',
+  submit: 'Sækja lista',
+  export: 'Sækja Excel',
+  // The only count on the screen (the table's own is suppressed) and the
+  // `aria-live` text, so what is drawn and what is announced are the same.
+  resultCount: (count: number) =>
+    count === 1 ? '1 fyrirtæki fannst' : `${count} fyrirtæki fundust`,
+  // Announced, not just rendered: the results appear because a button was
+  // pressed, so a screen reader has to be told the page changed.
+  searching: 'Sæki lista…',
+  emptyHeading: 'Engar færslur',
+  emptyDescription: 'Engin færsla passar við síurnar. Prófaðu að víkka þær.',
+  initialHeading: 'Veldu síur og sæktu listann',
+  initialDescription:
+    'Ekkert er sótt fyrr en þú ýtir á „Sækja lista“ — listarnir eru stórir og síurnar eiga að þrengja þá fyrst.',
+
+  // --- Report criteria ---
+  cardReport: 'Skýrslur fyrirtækisins',
+  cardDates: 'Dagsetningar',
+  typeLabel: 'Tegund',
+  typePlaceholder: 'Veldu tegund',
+  equalitySourceLabel: 'Grundvöllur jafnréttisáætlunar',
+  equalitySourcePlaceholder: 'Veldu grundvöll',
+  dateFrom: 'Frá',
+  dateTo: 'Til',
+  datePlaceholder: 'dd.mm.áááá',
+  createdRange: 'Innsent',
+  approvedRange: 'Samþykkt',
+  validUntilRange: 'Gildir til',
+  // Salary reports only — an equality plan has no period, so a bound here
+  // excludes them. Worth saying in the label rather than leaving an admin to
+  // work out why their jafnréttisáætlanir vanished.
+  salaryPeriodRange: 'Launatímabil (aðeins skýrslugjöf)',
+
+  adminGenderLabel: 'Kyn æðsta stjórnanda',
+  adminGenderPlaceholder: 'Veldu kyn',
+  cardGap: 'Launamunur',
+  improvementPlanLabel: 'Úrbótaáætlun',
+  improvementPlanPlaceholder: 'Veldu',
+  // Named in full on BOTH controls. "Launamunur" alone would let an admin pick
+  // whichever one they landed on first, and the two answer different questions:
+  // the regulated figure sits under ~4%, the headline one routinely at 5–15%.
+  rawGapRange: 'Óleiðréttur launamunur',
+  oskyrtGapRange: 'Óskýrður (leiðréttur) launamunur',
+  gapFrom: 'Frá',
+  gapTo: 'Til',
+  gapPlaceholder: 'Ekki valið',
+  gapNoUpperBound: 'Ekkert efra mark',
 }
 
 export const overviewText = {

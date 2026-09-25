@@ -569,8 +569,11 @@
             "name": "employeeCountCategory",
             "required": false,
             "in": "query",
-            "description": "Return only companies whose employee-count bucket matches.",
-            "schema": { "$ref": "#/components/schemas/CompanySizeEnum" }
+            "description": "Return only companies whose employee-count bucket is one of the given values. The two obliged buckets are MEDIUM (25–49) and LARGE (50+); asking for both is the ordinary \"everyone the law reaches\" view, which is why this is a list rather than a single value.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/CompanySizeEnum" }
+            }
           },
           {
             "name": "companyStatus",
@@ -713,6 +716,161 @@
             "in": "query",
             "description": "Return only companies with one of the given postcodes (póstnúmer, e.g. \"101\").",
             "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "reportType",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies with an approved filing of one of the given kinds — EQUALITY (jafnréttisáætlun) or SALARY (skýrslugjöf).",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ReportTypeEnum" }
+            }
+          },
+          {
+            "name": "reportCompanyAdminGender",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose approved filing names an executive (æðsti stjórnandi) of one of the given genders, as stated on that filing.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/GenderEnum" }
+            }
+          },
+          {
+            "name": "reportEqualitySource",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here) or LEGACY (carried over from the retired register).",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/EqualityCoverageSourceEnum"
+              }
+            }
+          },
+          {
+            "name": "reportSubmittedFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing submitted on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSubmittedTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing submitted on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportApprovedFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing approved on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportApprovedTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing approved on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportValidUntilFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing valid until on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportValidUntilTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing valid until on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSalaryDataPeriodFrom",
+            "required": false,
+            "in": "query",
+            "description": "Salary data period (the month the pay figures describe) on or after this date. Skýrslugjöf only — a jafnréttisáætlun has no period.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSalaryDataPeriodTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound on the salary data period.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportRawGapPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓLEIÐRÉTTUR pay gap of an approved filing — the headline figure, routinely 5–15%. Not interchangeable with the óskýrður bound below.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportRawGapPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óleiðréttur pay gap.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportOskyrtPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓSKÝRÐUR (leiðréttur) pay gap of an approved filing — the regulated figure, tested against the benchmark and usually well under 5%.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportOskyrtPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óskýrður pay gap.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportHasImprovementPlan",
+            "required": false,
+            "in": "query",
+            "description": "When true, only companies whose approved filing carries an úrbótaáætlun (has at least one pay-gap outlier). When false, only those whose filing has none.",
+            "schema": { "type": "boolean" }
           },
           {
             "name": "sortBy",
@@ -2388,6 +2546,699 @@
         "tags": ["Company Import"]
       }
     },
+    "/api/v1/export/companies": {
+      "get": {
+        "operationId": "exportCompanies",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Free-text search on company name or national ID.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "employeeCountCategory",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose employee-count bucket is one of the given values. The two obliged buckets are MEDIUM (25–49) and LARGE (50+); asking for both is the ordinary \"everyone the law reaches\" view, which is why this is a list rather than a single value.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/CompanySizeEnum" }
+            }
+          },
+          {
+            "name": "companyStatus",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose report status is one of the provided values (same status shown on each company). Omit for no constraint.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CompanyReportStatusEnum"
+              }
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose register lifecycle status is one of the provided values. Omit for no constraint, i.e. both ACTIVE and INACTIVE. ⚠️ Not to be confused with `companyStatus` above, which is the compliance axis (what the company still owes): this one is whether the company is in the authoritative register at all.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/CompanyStatusEnum" }
+            }
+          },
+          {
+            "name": "expiresWithin",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies that have an approved report expiring within the given window. Multiple values are OR-ed; the largest window wins.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CompanyExpiryFilterEnum"
+              }
+            }
+          },
+          {
+            "name": "finesStarted",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies in the daily-fines process (finesStarted = true).",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "quarantined",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only quarantined companies (quarantined = true).",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "overdue",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies whose next equality or salary report due date has passed.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "includeNotObliged",
+            "required": false,
+            "in": "query",
+            "description": "When true, also return companies that owe no report at all (\"ekki lagaskylt\": under 25 employees with no salary-report override). These are HIDDEN BY DEFAULT — the admin register is a list of who owes what, and ~250 companies that owe nothing crowd it out. Companies of UNKNOWN size are never hidden: an unestablished size is an open question, not a settled \"owes nothing\". Ignored when `employeeCountCategory` is set, which is a more specific request about the same axis.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "description": "When true, also return companies that are off the register (status = INACTIVE). HIDDEN BY DEFAULT. Ignored when `status` is set — filtering explicitly to INACTIVE must not return an empty page.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "isatCategoryCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. \"01110\").",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "isatSection",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose ÍSAT2008 section (bálkur) is one of the given letters, e.g. \"O\" for public administration. Case-insensitive. The premade industry filter — resolved via the company ÍSAT category, so companies with no ÍSAT code are excluded.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "sector",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies in one of the given ownership sectors — the premade Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög filter (FYRIRTAEKI, RADUNEYTI, RIKISADILI, SVEITARFELAG). UNKNOWN is filterable on its own and is never included in any of the classified sectors.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/CompanySectorEnum" }
+            }
+          },
+          {
+            "name": "regionCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies located in one of the given regions (landshluti), by region code (e.g. \"CAPITAL\"). Resolved via the company postcode.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "postcode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies with one of the given postcodes (póstnúmer, e.g. \"101\").",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "reportType",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies with an approved filing of one of the given kinds — EQUALITY (jafnréttisáætlun) or SALARY (skýrslugjöf).",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ReportTypeEnum" }
+            }
+          },
+          {
+            "name": "reportCompanyAdminGender",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose approved filing names an executive (æðsti stjórnandi) of one of the given genders, as stated on that filing.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/GenderEnum" }
+            }
+          },
+          {
+            "name": "reportEqualitySource",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here) or LEGACY (carried over from the retired register).",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/EqualityCoverageSourceEnum"
+              }
+            }
+          },
+          {
+            "name": "reportSubmittedFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing submitted on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSubmittedTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing submitted on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportApprovedFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing approved on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportApprovedTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing approved on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportValidUntilFrom",
+            "required": false,
+            "in": "query",
+            "description": "Filing valid until on or after this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportValidUntilTo",
+            "required": false,
+            "in": "query",
+            "description": "Filing valid until on or before this date.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSalaryDataPeriodFrom",
+            "required": false,
+            "in": "query",
+            "description": "Salary data period (the month the pay figures describe) on or after this date. Skýrslugjöf only — a jafnréttisáætlun has no period.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportSalaryDataPeriodTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound on the salary data period.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportRawGapPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓLEIÐRÉTTUR pay gap of an approved filing — the headline figure, routinely 5–15%. Not interchangeable with the óskýrður bound below.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportRawGapPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óleiðréttur pay gap.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportOskyrtPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓSKÝRÐUR (leiðréttur) pay gap of an approved filing — the regulated figure, tested against the benchmark and usually well under 5%.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportOskyrtPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óskýrður pay gap.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "reportHasImprovementPlan",
+            "required": false,
+            "in": "query",
+            "description": "When true, only companies whose approved filing carries an úrbótaáætlun (has at least one pay-gap outlier). When false, only those whose filing has none.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/CompanySortByEnum" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/CompanySortDirectionEnum"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The company register matching the filter, as a spreadsheet.",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Data export"]
+      }
+    },
+    "/api/v1/export/reports": {
+      "get": {
+        "operationId": "exportReports",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ReportTypeEnum" }
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ReportStatusEnum" }
+            }
+          },
+          {
+            "name": "reviewerUserId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "type": "string", "format": "uuid" }
+            }
+          },
+          {
+            "name": "unassignedReviewer",
+            "required": false,
+            "in": "query",
+            "description": "When true, returns only reports with no reviewer assigned. Overrides `reviewerUserId` if both are set.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "hasImprovementPlan",
+            "required": false,
+            "in": "query",
+            "description": "When true, returns only reports that have at least one employee outlier (i.e. an improvement plan applies). When false, returns only reports with no outliers. Omit for no constraint.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "createdFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "createdTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "approvedFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "approvedTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "validUntilFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "validUntilTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "correctionDeadlineFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "correctionDeadlineTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "salaryDataPeriodFrom",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports whose salary data period (`salaryDataPeriod`, the month the pay figures describe) starts on or after this date. Salary reports only — an equality report has no period, so any bound here excludes them.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "salaryDataPeriodTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound on the salary data period. See `salaryDataPeriodFrom`.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "communicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports in one of the given communication states (samskiptastaða).",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CommunicationStatusEnum"
+              }
+            }
+          },
+          {
+            "name": "equalitySource",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports whose equality coverage came from the given source — REPORT (filed in this system) or LEGACY (an unexpired certification carried over from the retired register).",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/EqualityCoverageSourceEnum"
+              }
+            }
+          },
+          {
+            "name": "companyAdminGender",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports whose company executive (æðsti stjórnandi) has one of the given genders, as stated on the report. Frozen at submission like the rest of the report — this is who signed off on THAT filing, not who holds the post today.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/GenderEnum" }
+            }
+          },
+          {
+            "name": "rawGapPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓLEIÐRÉTTUR pay gap — the headline figure, computed on arithmetic mean hourly wages. Magnitude, so it is never negative.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "rawGapPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óleiðréttur pay gap. See `rawGapPercentFrom`.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "oskyrtPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓSKÝRÐUR (leiðréttur) pay gap — the regulated figure the benchmark is tested against. Magnitude, so it is never negative.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "oskyrtPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óskýrður pay gap. See `oskyrtPercentFrom`.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "employeeCountCategory",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company in one of the given employee-count buckets. Reads the company's CURRENT bucket, not the one snapshotted on the report.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/CompanySizeEnum" }
+            }
+          },
+          {
+            "name": "sector",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company in one of the given ownership sectors (FYRIRTAEKI, RADUNEYTI, RIKISADILI, SVEITARFELAG). UNKNOWN is filterable on its own and is never folded into a classified sector.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/CompanySectorEnum" }
+            }
+          },
+          {
+            "name": "isatCategoryCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company in one of the given ÍSAT2008 leaf categories, by code (e.g. \"01110\"). Reads the admin-owned `company.isatCategoryCode`, not the free-text snapshot on `company_report`.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "isatSection",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company in one of the given ÍSAT2008 sections (bálkur), by letter (e.g. \"A\"). Upper-cased server-side.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "regionCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company located in one of the given regions (landshluti), by region code. Resolved via the company postcode.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "postcode",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company with one of the given postcodes (póstnúmer, e.g. \"101\").",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Free-text search across company name, kennitala, and report identifier. Case-insensitive partial match. Person fields (contacts and company admin/CEO) are not searched.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/ReportSortByEnum" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/SortDirectionEnum" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The reports matching the filter, as a spreadsheet.",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Data export"]
+      }
+    },
     "/api/v1/imports/presign": {
       "post": {
         "operationId": "presignAdminImportUpload",
@@ -3848,6 +4699,138 @@
               "example": "2026-02-19T10:30:00.000Z",
               "type": "string"
             }
+          },
+          {
+            "name": "salaryDataPeriodFrom",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports whose salary data period (`salaryDataPeriod`, the month the pay figures describe) starts on or after this date. Salary reports only — an equality report has no period, so any bound here excludes them.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "salaryDataPeriodTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound on the salary data period. See `salaryDataPeriodFrom`.",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "communicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports in one of the given communication states (samskiptastaða).",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CommunicationStatusEnum"
+              }
+            }
+          },
+          {
+            "name": "equalitySource",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports whose equality coverage came from the given source — REPORT (filed in this system) or LEGACY (an unexpired certification carried over from the retired register).",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/EqualityCoverageSourceEnum"
+              }
+            }
+          },
+          {
+            "name": "companyAdminGender",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports whose company executive (æðsti stjórnandi) has one of the given genders, as stated on the report. Frozen at submission like the rest of the report — this is who signed off on THAT filing, not who holds the post today.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/GenderEnum" }
+            }
+          },
+          {
+            "name": "rawGapPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓLEIÐRÉTTUR pay gap — the headline figure, computed on arithmetic mean hourly wages. Magnitude, so it is never negative.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "rawGapPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óleiðréttur pay gap. See `rawGapPercentFrom`.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "oskyrtPercentFrom",
+            "required": false,
+            "in": "query",
+            "description": "Lower bound (inclusive, %) on the ÓSKÝRÐUR (leiðréttur) pay gap — the regulated figure the benchmark is tested against. Magnitude, so it is never negative.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "oskyrtPercentTo",
+            "required": false,
+            "in": "query",
+            "description": "Upper bound (inclusive, %) on the óskýrður pay gap. See `oskyrtPercentFrom`.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "employeeCountCategory",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company in one of the given employee-count buckets. Reads the company's CURRENT bucket, not the one snapshotted on the report.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/CompanySizeEnum" }
+            }
+          },
+          {
+            "name": "sector",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company in one of the given ownership sectors (FYRIRTAEKI, RADUNEYTI, RIKISADILI, SVEITARFELAG). UNKNOWN is filterable on its own and is never folded into a classified sector.",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/CompanySectorEnum" }
+            }
+          },
+          {
+            "name": "isatCategoryCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company in one of the given ÍSAT2008 leaf categories, by code (e.g. \"01110\"). Reads the admin-owned `company.isatCategoryCode`, not the free-text snapshot on `company_report`.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "isatSection",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company in one of the given ÍSAT2008 sections (bálkur), by letter (e.g. \"A\"). Upper-cased server-side.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "regionCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company located in one of the given regions (landshluti), by region code. Resolved via the company postcode.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "postcode",
+            "required": false,
+            "in": "query",
+            "description": "Return only reports filed by a company with one of the given postcodes (póstnúmer, e.g. \"101\").",
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "q",
@@ -6213,6 +7196,12 @@
           "SVEITARFELAG"
         ]
       },
+      "ReportTypeEnum": { "type": "string", "enum": ["SALARY", "EQUALITY"] },
+      "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+      "EqualityCoverageSourceEnum": {
+        "type": "string",
+        "enum": ["REPORT", "LEGACY"]
+      },
       "CompanySortByEnum": {
         "type": "string",
         "enum": ["name", "employeeCount", "nextReportDue"]
@@ -6918,8 +7907,9 @@
             "description": "Free-text search on company name or national ID."
           },
           "employeeCountCategory": {
-            "description": "Return only companies whose employee-count bucket matches.",
-            "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
+            "type": "array",
+            "description": "Return only companies whose employee-count bucket is one of the given values. The two obliged buckets are MEDIUM (25–49) and LARGE (50+); asking for both is the ordinary \"everyone the law reaches\" view, which is why this is a list rather than a single value.",
+            "items": { "$ref": "#/components/schemas/CompanySizeEnum" }
           },
           "companyStatus": {
             "type": "array",
@@ -7000,6 +7990,91 @@
             "description": "Return only companies with one of the given postcodes (póstnúmer, e.g. \"101\").",
             "type": "array",
             "items": { "type": "string" }
+          },
+          "reportType": {
+            "type": "array",
+            "description": "Return only companies with an approved filing of one of the given kinds — EQUALITY (jafnréttisáætlun) or SALARY (skýrslugjöf).",
+            "items": { "$ref": "#/components/schemas/ReportTypeEnum" }
+          },
+          "reportCompanyAdminGender": {
+            "type": "array",
+            "description": "Return only companies whose approved filing names an executive (æðsti stjórnandi) of one of the given genders, as stated on that filing.",
+            "items": { "$ref": "#/components/schemas/GenderEnum" }
+          },
+          "reportEqualitySource": {
+            "type": "array",
+            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here) or LEGACY (carried over from the retired register).",
+            "items": {
+              "$ref": "#/components/schemas/EqualityCoverageSourceEnum"
+            }
+          },
+          "reportSubmittedFrom": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing submitted on or after this date."
+          },
+          "reportSubmittedTo": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing submitted on or before this date."
+          },
+          "reportApprovedFrom": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing approved on or after this date."
+          },
+          "reportApprovedTo": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing approved on or before this date."
+          },
+          "reportValidUntilFrom": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing valid until on or after this date."
+          },
+          "reportValidUntilTo": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Filing valid until on or before this date."
+          },
+          "reportSalaryDataPeriodFrom": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Salary data period (the month the pay figures describe) on or after this date. Skýrslugjöf only — a jafnréttisáætlun has no period."
+          },
+          "reportSalaryDataPeriodTo": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "Upper bound on the salary data period."
+          },
+          "reportRawGapPercentFrom": {
+            "type": "number",
+            "description": "Lower bound (inclusive, %) on the ÓLEIÐRÉTTUR pay gap of an approved filing — the headline figure, routinely 5–15%. Not interchangeable with the óskýrður bound below."
+          },
+          "reportRawGapPercentTo": {
+            "type": "number",
+            "description": "Upper bound (inclusive, %) on the óleiðréttur pay gap."
+          },
+          "reportOskyrtPercentFrom": {
+            "type": "number",
+            "description": "Lower bound (inclusive, %) on the ÓSKÝRÐUR (leiðréttur) pay gap of an approved filing — the regulated figure, tested against the benchmark and usually well under 5%."
+          },
+          "reportOskyrtPercentTo": {
+            "type": "number",
+            "description": "Upper bound (inclusive, %) on the óskýrður pay gap."
+          },
+          "reportHasImprovementPlan": {
+            "type": "boolean",
+            "description": "When true, only companies whose approved filing carries an úrbótaáætlun (has at least one pay-gap outlier). When false, only those whose filing has none."
           },
           "sortBy": {
             "allOf": [{ "$ref": "#/components/schemas/CompanySortByEnum" }]
@@ -7386,6 +8461,40 @@
           "invalid"
         ]
       },
+      "ReportStatusEnum": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "SUBMITTED",
+          "POSTPONED",
+          "IN_REVIEW",
+          "DENIED",
+          "APPROVED",
+          "SUPERSEDED",
+          "WITHDRAWN"
+        ]
+      },
+      "CommunicationStatusEnum": {
+        "type": "string",
+        "enum": [
+          "NOT_STARTED",
+          "AWAITING_RESPONSE",
+          "RESPONSE_RECEIVED",
+          "CLOSED"
+        ]
+      },
+      "ReportSortByEnum": {
+        "type": "string",
+        "enum": [
+          "createdAt",
+          "updatedAt",
+          "approvedAt",
+          "validUntil",
+          "correctionDeadline",
+          "identifier"
+        ]
+      },
+      "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
       "UserDto": {
         "type": "object",
         "properties": {
@@ -7761,42 +8870,6 @@
         },
         "required": ["last30Days", "currentYear", "allTime"]
       },
-      "ReportTypeEnum": { "type": "string", "enum": ["SALARY", "EQUALITY"] },
-      "ReportStatusEnum": {
-        "type": "string",
-        "enum": [
-          "DRAFT",
-          "SUBMITTED",
-          "POSTPONED",
-          "IN_REVIEW",
-          "DENIED",
-          "APPROVED",
-          "SUPERSEDED",
-          "WITHDRAWN"
-        ]
-      },
-      "ReportSortByEnum": {
-        "type": "string",
-        "enum": [
-          "createdAt",
-          "updatedAt",
-          "approvedAt",
-          "validUntil",
-          "correctionDeadline",
-          "identifier"
-        ]
-      },
-      "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
-      "CommunicationStatusEnum": {
-        "type": "string",
-        "enum": [
-          "NOT_STARTED",
-          "AWAITING_RESPONSE",
-          "RESPONSE_RECEIVED",
-          "CLOSED"
-        ]
-      },
-      "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
       "ReportListItemDto": {
         "type": "object",
         "properties": {
@@ -7915,11 +8988,6 @@
       "ReportProviderEnum": {
         "type": "string",
         "enum": ["SYSTEM", "ISLAND_IS", "OTHER"]
-      },
-      "EqualityCoverageSourceEnum": {
-        "type": "string",
-        "enum": ["REPORT", "LEGACY"],
-        "description": "What met the equality obligation this report was filed under: `REPORT` (linked via `equalityReportId`) or `LEGACY` (an unexpired certificate from the retired register, which has no report row to link). Always `REPORT` on equality reports and on everything filed before the legacy basis was accepted."
       },
       "EqualityContentTypeEnum": { "type": "string", "enum": ["HTML", "PDF"] },
       "CompanyReportDto": {

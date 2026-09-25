@@ -16,6 +16,31 @@ type Options = {
   menuZIndex?: number
 }
 
+/** `theme.breakpoints.md`, as a media query — react-select takes plain CSS. */
+const MD = `@media (min-width: ${theme.breakpoints.md}px)`
+
+/**
+ * `Input.mixins.inputSizes.sm`: 16 on mobile, 18 from md up.
+ *
+ * The island-ui Select applies this responsively, so matching it with one fixed
+ * size would only ever agree at one of the two breakpoints.
+ */
+export const selectTypography = {
+  fontFamily: theme.typography.fontFamily,
+  fontSize: 16,
+  lineHeight: 1.25,
+  [MD]: { fontSize: 18, lineHeight: 1.555556 },
+}
+
+/** `Input.mixins.input` — the weight island-ui gives a chosen value. */
+export const selectValueWeight = theme.typography.medium
+
+/** `Input.mixins.placeholder` — lighter and greyer than a chosen value. */
+export const selectPlaceholderStyle = {
+  color: theme.color.dark300,
+  fontWeight: theme.typography.light,
+}
+
 /**
  * The parts of a `react-select` appearance that make it look like the island-ui
  * `Select`, shared by the bespoke selects in this folder — [InlineSelect] and
@@ -26,6 +51,12 @@ type Options = {
  * Only the keys that were identical between the two live here. Padding, the
  * indicators and the value container stay with each component, which is where
  * they genuinely differ.
+ *
+ * ⚠️ Typography has to be restated, not inherited. `react-select` sets no font
+ * of its own, so an unstyled control picks up whatever the surrounding Box
+ * carries — which rendered these at a different size and weight from a real
+ * island-ui `Select` sitting in the same filter card. The values above come
+ * from `Input.mixins` rather than being eyeballed, so the two agree.
  */
 export const islandSelectStyles = <Option, IsMulti extends boolean>({
   controlMinHeight,
@@ -34,6 +65,7 @@ export const islandSelectStyles = <Option, IsMulti extends boolean>({
 }: Options): Pick<StylesConfig<Option, IsMulti>, SharedKeys> => ({
   control: (base, state) => ({
     ...base,
+    ...selectTypography,
     minHeight: controlMinHeight,
     backgroundColor: theme.color.white,
     // Flatten the bottom corners when open so the menu connects flush.
@@ -70,10 +102,13 @@ export const islandSelectStyles = <Option, IsMulti extends boolean>({
     ...(menuZIndex === undefined ? {} : { zIndex: menuZIndex }),
   }),
   menuList: (base) => ({ ...base, padding: 0 }),
+  // `light`, like the island-ui Select's own options — the menu is a list to
+  // scan, so it is deliberately lighter than the value shown in the control.
   option: (base, state) => ({
     ...base,
+    ...selectTypography,
+    fontWeight: theme.typography.light,
     padding: optionPadding,
-    fontSize: 14,
     color: theme.color.dark400,
     backgroundColor: state.isFocused ? theme.color.blue100 : theme.color.white,
     borderBottom: `1px solid ${theme.color.blue200}`,

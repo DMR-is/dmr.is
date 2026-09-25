@@ -64,6 +64,7 @@ import {
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
 } from './dto/report-timeline-item.dto'
+import { computeIncludesImprovementPlan } from './lib/improvement-plan'
 import { isLegacyEqualityCoverageActive } from './lib/legacy-equality-coverage'
 import {
   EqualityContentTypeEnum,
@@ -74,11 +75,7 @@ import {
 import { ReportModel } from './models/report.model'
 import { ReportEventModel } from './models/report-event.model'
 import { EqualityCoverage } from './types/equality-coverage'
-import {
-  buildFreeTextWhere,
-  buildImprovementPlanWhere,
-  dateRangeFilter,
-} from './utils/filters'
+import { buildReportListWhere } from './utils/filters'
 import { EqualityContentPdf, IReportService } from './report.service.interface'
 
 const LOGGING_CONTEXT = 'ReportService'
@@ -322,30 +319,13 @@ export class ReportService implements IReportService {
    * via `ReportEmployeeModel.reportId`. One grouped query scoped to the
    * page's report IDs — bounded by pageSize, no N+1.
    */
-  private async computeIncludesImprovementPlan(
+  private computeIncludesImprovementPlan(
     reportIds: string[],
   ): Promise<Map<string, boolean>> {
-    const result = new Map<string, boolean>()
-    if (reportIds.length === 0) return result
-    for (const id of reportIds) result.set(id, false)
-
-    const rows = (await this.reportEmployeeOutlierModel.findAll({
-      include: [
-        {
-          model: ReportEmployeeModel,
-          as: 'reportEmployee',
-          attributes: [],
-          where: { reportId: { [Op.in]: reportIds } },
-          required: true,
-        },
-      ],
-      attributes: [[col('reportEmployee.report_id'), 'reportId']],
-      group: [col('reportEmployee.report_id')],
-      raw: true,
-    })) as unknown as { reportId: string }[]
-
-    for (const row of rows) result.set(row.reportId, true)
-    return result
+    return computeIncludesImprovementPlan(
+      this.reportEmployeeOutlierModel,
+      reportIds,
+    )
   }
 
   /**
@@ -841,64 +821,7 @@ export class ReportService implements IReportService {
    * dimension is independent — they compose with implicit AND.
    */
   private buildWhere(query: GetReportsQueryDto): WhereOptions {
-    const where: WhereOptions = {}
-
-    if (query.type?.length) {
-      Object.assign(where, { type: { [Op.in]: query.type } })
-    }
-    if (query.status?.length) {
-      // Drafts belong to the applicant and are never surfaced to reviewers,
-      // even when a status filter explicitly asks for them — so they are
-      // filtered out of the requested set rather than honoured.
-      const requested = query.status.filter(
-        (status) => status !== ReportStatusEnum.DRAFT,
-      )
-      Object.assign(where, { status: { [Op.in]: requested } })
-    } else {
-      // Drafts (applicant still editing) and withdrawn reports are not surfaced
-      // in admin list views by default. Withdrawn can still be requested
-      // explicitly via `query.status`; drafts cannot.
-      Object.assign(where, {
-        status: {
-          [Op.notIn]: [ReportStatusEnum.DRAFT, ReportStatusEnum.WITHDRAWN],
-        },
-      })
-    }
-
-    // `unassignedReviewer` deliberately overrides `reviewerUserId` — the
-    // workflow question "what needs me to pick up" is the more common one.
-    if (query.unassignedReviewer) {
-      Object.assign(where, { reviewerUserId: { [Op.is]: null } })
-    } else if (query.reviewerUserId?.length) {
-      Object.assign(where, {
-        reviewerUserId: { [Op.in]: query.reviewerUserId },
-      })
-    }
-
-    const created = dateRangeFilter(query.createdFrom, query.createdTo)
-    if (created) Object.assign(where, { createdAt: created })
-
-    const approved = dateRangeFilter(query.approvedFrom, query.approvedTo)
-    if (approved) Object.assign(where, { approvedAt: approved })
-
-    const validUntil = dateRangeFilter(query.validUntilFrom, query.validUntilTo)
-    if (validUntil) Object.assign(where, { validUntil })
-
-    const correction = dateRangeFilter(
-      query.correctionDeadlineFrom,
-      query.correctionDeadlineTo,
-    )
-    if (correction) Object.assign(where, { correctionDeadline: correction })
-
-    if (query.q?.trim()) {
-      Object.assign(where, buildFreeTextWhere(query.q))
-    }
-
-    if (query.hasImprovementPlan !== undefined) {
-      Object.assign(where, buildImprovementPlanWhere(query.hasImprovementPlan))
-    }
-
-    return where
+    return buildReportListWhere(query)
   }
 
   /**
