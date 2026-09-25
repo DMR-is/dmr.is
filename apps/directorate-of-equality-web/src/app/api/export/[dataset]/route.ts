@@ -11,7 +11,7 @@ const logger = getLogger('data-export')
 const DATASETS = new Set(['companies', 'reports'])
 
 /**
- * Proxies "Keyra út lista" to the bearer-guarded export endpoint.
+ * Proxies "Gagnaútdráttur" to the bearer-guarded export endpoint.
  *
  * Same shape and same reason as `api/salary-template/route.ts`: a plain
  * `<a href>` from the browser carries no bearer token, so this same-origin
