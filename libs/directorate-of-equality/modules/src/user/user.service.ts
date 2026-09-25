@@ -89,10 +89,9 @@ export class UserService implements IUserService {
       { context: LOGGING_CONTEXT },
     )
 
-    // Checked here rather than by the route's pipe, which accepts any ten
-    // digits: a mistyped kennitala would otherwise reach the registry, whose
-    // client answers anything but a 2xx with a 502 — so a typo read as "the
-    // registry is down, try again".
+    // Checked first, and on its own. The route's pipe accepts any ten digits,
+    // and `isPersonKennitala` below also fails on a bad checksum — so without
+    // this a mistyped kennitala would be reported as a company's.
     if (!isValidKennitala(nationalId)) {
       throw new BadRequestException(userMessages.invalidKennitala())
     }
@@ -113,7 +112,7 @@ export class UserService implements IUserService {
     if (existing) {
       return {
         nationalId,
-        name: `${existing.firstName} ${existing.lastName}`,
+        name: `${existing.firstName} ${existing.lastName}`.trim(),
         firstName: existing.firstName,
         lastName: existing.lastName,
         alreadyUser: true,

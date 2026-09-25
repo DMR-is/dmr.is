@@ -14,6 +14,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { UserModel } from './models/user.model'
 import { DoeUserRole } from './types/user-role'
 import { splitRegistryName, UserService } from './user.service'
+import { userMessages } from './user.messages'
 
 // The person/company switch is decided by the mock, so one fixture can exercise
 // both branches — `0101302399` is a person's kennitala on the lint rule's
@@ -196,9 +197,17 @@ describe('UserService', () => {
     it('refuses a kennitala that fails its checksum, before anything else', async () => {
       // The ninth digit is the checksum; changing it breaks the number. (The
       // tenth is the century, so a changed last digit would still be valid.)
+      // With the typo's own message. In production `isPersonKennitala` also
+      // fails on a bad checksum, so without this check a typo would be reported
+      // as a company kennitala (here that function is mocked, so the test
+      // pins the message rather than reproducing the mix-up).
       await expect(
         service.lookupNationalRegistry('0101302389'),
-      ).rejects.toBeInstanceOf(BadRequestException)
+      ).rejects.toMatchObject({
+        response: {
+          translatedMessage: userMessages.invalidKennitala().translatedMessage,
+        },
+      })
       expect(getEntityByNationalId).not.toHaveBeenCalled()
       expect(findOne).not.toHaveBeenCalled()
     })
