@@ -2619,6 +2619,73 @@
         "tags": ["Users"]
       }
     },
+    "/api/v1/users/lookup/{nationalId}": {
+      "get": {
+        "description": "The person the national registry has for a kennitala, to pre-fill a new user. Requires the ADMIN role, as creating one does. `400` for a company kennitala, `404` when the registry has no one. `alreadyUser` flags a kennitala that is already a user.",
+        "operationId": "lookupUserNationalRegistry",
+        "parameters": [
+          {
+            "name": "nationalId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserLookupDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Users"]
+      }
+    },
     "/api/v1/users/{id}": {
       "patch": {
         "operationId": "updateUser",
@@ -7406,6 +7473,32 @@
           "email",
           "isActive",
           "role"
+        ]
+      },
+      "UserLookupDto": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "name": {
+            "type": "string",
+            "description": "Full name as the national registry records it."
+          },
+          "firstName": { "type": "string" },
+          "lastName": {
+            "type": "string",
+            "description": "Empty when the registry name is a single word."
+          },
+          "alreadyUser": {
+            "type": "boolean",
+            "description": "A user with this kennitala already exists (active or not), so creating another would be refused with a 409."
+          }
+        },
+        "required": [
+          "nationalId",
+          "name",
+          "firstName",
+          "lastName",
+          "alreadyUser"
         ]
       },
       "CreateUserBodyDto": {

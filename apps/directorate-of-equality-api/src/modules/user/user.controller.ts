@@ -13,7 +13,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import {
@@ -22,6 +22,7 @@ import {
   IUserService,
   UpdateUserBodyDto,
   UserDto,
+  UserLookupDto,
   UserModel,
 } from '@dmr.is/doe-modules/user'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
@@ -30,6 +31,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'
+import { ParseNationalIdPipe } from '../../core/pipes/parse-national-id.pipe'
 
 type RequestWithAdminUser = { adminUser: UserModel }
 
@@ -55,6 +57,22 @@ export class UserController {
   @DoeResponse({ operationId: 'getUsers', type: [UserDto] })
   async getUsers(@Query() query: GetUsersQueryDto): Promise<UserDto[]> {
     return this.userService.getUsers(query)
+  }
+
+  @Get('lookup/:nationalId')
+  @UseGuards(RequireAdminRoleGuard)
+  @ApiParam({ name: 'nationalId', type: String })
+  @DoeResponse({
+    operationId: 'lookupUserNationalRegistry',
+    type: UserLookupDto,
+    include404: true,
+    description:
+      'The person the national registry has for a kennitala, to pre-fill a new user. Requires the ADMIN role, as creating one does. `400` for a company kennitala, `404` when the registry has no one. `alreadyUser` flags a kennitala that is already a user.',
+  })
+  async lookupNationalRegistry(
+    @Param('nationalId', ParseNationalIdPipe) nationalId: string,
+  ): Promise<UserLookupDto> {
+    return this.userService.lookupNationalRegistry(nationalId)
   }
 
   @Post()

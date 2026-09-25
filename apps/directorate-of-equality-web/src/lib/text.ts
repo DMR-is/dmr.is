@@ -1320,6 +1320,16 @@ export const usersText = {
     createTitle: 'Nýr notandi',
     editTitle: 'Breyta notanda',
     nationalIdLabel: 'Kennitala',
+    lookupButton: 'Fletta upp',
+    lookupHint:
+      'Sláðu inn kennitölu og flettu upp í þjóðskrá. Nafn er sótt þaðan, en netfang og síma þarf að skrá.',
+    nameFromRegistryHint:
+      'Nafn er sótt úr þjóðskrá. Skráðu netfang og síma og veldu hlutverk.',
+    notFoundTitle: 'Kennitala fannst ekki',
+    lookupErrorTitle: 'Villa við uppflettingu',
+    lookupError:
+      'Ekki tókst að fletta kennitölunni upp í þjóðskrá. Reyndu aftur.',
+    alreadyUserTitle: 'Notandi er þegar til',
     firstNameLabel: 'Fornafn',
     lastNameLabel: 'Eftirnafn',
     roleLabel: 'Hlutverk',

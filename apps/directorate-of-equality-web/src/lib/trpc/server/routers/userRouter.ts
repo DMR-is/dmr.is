@@ -9,6 +9,14 @@ export const userRouter = router({
     .query(({ ctx, input }) =>
       ctx.api.getUsers({ query: { showInactive: input?.showInactive } }),
     ),
+  // The national registry's person for a kennitala, to pre-fill a new user.
+  lookup: protectedProcedure
+    .input(z.object({ nationalId: z.string() }))
+    .query(({ ctx, input }) =>
+      ctx.api.lookupUserNationalRegistry({
+        path: { nationalId: input.nationalId },
+      }),
+    ),
   create: protectedProcedure
     .input(
       z.object({

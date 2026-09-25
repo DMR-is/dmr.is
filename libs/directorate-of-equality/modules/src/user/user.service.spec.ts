@@ -1,3 +1,5 @@
+import { isPersonKennitala } from 'kennitala'
+
 import {
   BadRequestException,
   ConflictException,
@@ -6,11 +8,22 @@ import {
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
+import { INationalRegistryService } from '@dmr.is/clients-national-registry'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { UserModel } from './models/user.model'
 import { DoeUserRole } from './types/user-role'
-import { UserService } from './user.service'
+import { splitRegistryName, UserService } from './user.service'
+
+// The disallow-kennitalas lint rule keeps valid kennitölur out of source, so
+// whether a kennitala is a person's is decided by the mock, not a real number.
+jest.mock('kennitala', () => ({
+  ...jest.requireActual('kennitala'),
+  isPersonKennitala: jest.fn(() => true),
+}))
+const mockedIsPerson = isPersonKennitala as jest.MockedFunction<
+  typeof isPersonKennitala
+>
 
 const mockLogger = {
   debug: jest.fn(),
@@ -48,8 +61,11 @@ describe('UserService', () => {
   let findAll: jest.Mock
   let create: jest.Mock
   let count: jest.Mock
+  let getEntityByNationalId: jest.Mock
 
   beforeEach(async () => {
+    getEntityByNationalId = jest.fn()
+    mockedIsPerson.mockReturnValue(true)
     findOne = jest.fn()
     findByPkOrThrow = jest.fn()
     findOneOrThrow = jest.fn()
@@ -61,6 +77,10 @@ describe('UserService', () => {
       providers: [
         UserService,
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
+        {
+          provide: INationalRegistryService,
+          useValue: { getEntityByNationalId },
+        },
         {
           provide: getModelToken(UserModel),
           useValue: {
@@ -76,6 +96,93 @@ describe('UserService', () => {
     }).compile()
 
     service = module.get(UserService)
+  })
+
+  // ── lookupNationalRegistry ───────────────────────────────────
+
+  describe('lookupNationalRegistry', () => {
+    const NATIONAL_ID = '0101302399'
+    const entity = (nafn: string) => ({
+      entity: {
+        kennitala: NATIONAL_ID,
+        nafn,
+        stada: '',
+        loghHusk: '',
+        heimili: '',
+        postaritun: '',
+        sveitarfelag: '',
+        svfNr: '',
+        kynkodi: 1,
+      },
+    })
+
+    it('returns the registry name, split, for a kennitala with no user', async () => {
+      getEntityByNationalId.mockResolvedValue(entity('Gervi Jón Maðurson'))
+      findOne.mockResolvedValue(null)
+
+      await expect(
+        service.lookupNationalRegistry(NATIONAL_ID),
+      ).resolves.toEqual({
+        nationalId: NATIONAL_ID,
+        name: 'Gervi Jón Maðurson',
+        firstName: 'Gervi Jón',
+        lastName: 'Maðurson',
+        alreadyUser: false,
+      })
+      expect(findOne).toHaveBeenCalledWith({
+        where: { nationalId: NATIONAL_ID },
+      })
+    })
+
+    it('flags a kennitala that is already a user', async () => {
+      getEntityByNationalId.mockResolvedValue(entity('Gervi Maður'))
+      findOne.mockResolvedValue(baseUser({ isActive: false }))
+
+      const result = await service.lookupNationalRegistry(NATIONAL_ID)
+
+      expect(result.alreadyUser).toBe(true)
+    })
+
+    it('answers 404 when the registry has no one', async () => {
+      getEntityByNationalId.mockResolvedValue({ entity: null })
+      findOne.mockResolvedValue(null)
+
+      await expect(
+        service.lookupNationalRegistry(NATIONAL_ID),
+      ).rejects.toBeInstanceOf(NotFoundException)
+    })
+
+    it('refuses a company kennitala without asking the registry', async () => {
+      mockedIsPerson.mockReturnValue(false)
+
+      await expect(
+        service.lookupNationalRegistry(NATIONAL_ID),
+      ).rejects.toBeInstanceOf(BadRequestException)
+      expect(getEntityByNationalId).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('splitRegistryName', () => {
+    it('splits at the last space', () => {
+      expect(splitRegistryName('Jón Bjarni Ólafsson')).toEqual({
+        firstName: 'Jón Bjarni',
+        lastName: 'Ólafsson',
+      })
+    })
+
+    it('collapses stray whitespace', () => {
+      expect(splitRegistryName('  Anna   Jónsdóttir ')).toEqual({
+        firstName: 'Anna',
+        lastName: 'Jónsdóttir',
+      })
+    })
+
+    it('leaves the last name empty for a single word', () => {
+      expect(splitRegistryName('Anna')).toEqual({
+        firstName: 'Anna',
+        lastName: '',
+      })
+    })
   })
 
   // ── createUser ───────────────────────────────────────────────
