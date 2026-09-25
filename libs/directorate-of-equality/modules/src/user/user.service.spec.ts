@@ -13,8 +13,8 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { UserModel } from './models/user.model'
 import { DoeUserRole } from './types/user-role'
-import { splitRegistryName, UserService } from './user.service'
 import { userMessages } from './user.messages'
+import { splitRegistryName, UserService } from './user.service'
 
 // The person/company switch is decided by the mock, so one fixture can exercise
 // both branches — `0101302399` is a person's kennitala on the lint rule's
