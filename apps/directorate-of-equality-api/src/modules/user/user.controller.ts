@@ -67,7 +67,7 @@ export class UserController {
     type: UserLookupDto,
     include404: true,
     description:
-      'The person the national registry has for a kennitala, to pre-fill a new user. Requires the ADMIN role, as creating one does. `400` for a company kennitala, `404` when the registry has no one. `alreadyUser` flags a kennitala that is already a user.',
+      'The person the national registry has for a kennitala, to pre-fill a new user. Requires the ADMIN role, as creating one does. `400` for a kennitala that fails its checksum or belongs to a company, `404` when the registry has no one. An existing user is answered from the users table with `alreadyUser: true`, and the registry is not asked.',
   })
   async lookupNationalRegistry(
     @Param('nationalId', ParseNationalIdPipe) nationalId: string,

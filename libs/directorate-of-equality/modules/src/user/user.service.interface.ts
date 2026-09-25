@@ -9,7 +9,9 @@ export interface IUserService {
   getUsers(query: GetUsersQueryDto): Promise<UserDto[]>
   /**
    * The person the national registry has for a kennitala, to pre-fill a new
-   * user. `400` for a company kennitala, `404` when the registry has no one.
+   * user. `400` for an invalid or a company kennitala, `404` when the
+   * registry has no one. An existing user is answered from our own table,
+   * without asking the registry.
    */
   lookupNationalRegistry(nationalId: string): Promise<UserLookupDto>
   createUser(input: CreateUserBodyDto): Promise<UserDto>

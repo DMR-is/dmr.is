@@ -5,8 +5,11 @@ import { ApiBoolean, ApiString } from '@dmr.is/decorators'
  *
  * The registry holds one full name; `firstName` / `lastName` are that name
  * split at its last space — for Icelandic names the patronymic or family name
- * is last, so this is right for all but unusual cases. `name` is returned too
- * so the web can show what the split was made from.
+ * is last, so this is right for all but unusual cases. `name` is returned too,
+ * and the web shows it beside the locked fields so a wrong split is visible.
+ *
+ * For a kennitala that is already a user, the names are that user's own and
+ * the registry is not asked.
  *
  * No email or phone: the registry holds neither, so an admin always types them.
  */

@@ -99,6 +99,9 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
     ...trpc.user.lookup.queryOptions({ nationalId: lookupNationalId ?? '' }),
     enabled: isNew && isOpen && !!lookupNationalId,
     retry: false,
+    // A point-in-time check, not a cacheable read: the shared 30s staleTime
+    // would serve `alreadyUser: false` for a user created a moment ago.
+    staleTime: 0,
   })
 
   const lookup = lookupQuery.data
@@ -114,6 +117,9 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
     trpc.user.create.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
+        // The kennitala just created is now a user; a cached lookup would
+        // still say it is not, and let the next create run into a 409.
+        queryClient.invalidateQueries({ queryKey: trpc.user.lookup.queryKey() })
         toast.success(u.createSuccess)
         onClose()
       },
@@ -158,13 +164,28 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
   const nameFromRegistry = isNew && lookedUp
 
   const lookupReason = lookupQuery.error?.data?.translatedMessage
-  const lookupNotFound =
-    lookupQuery.error?.data?.code === 'NOT_FOUND' ||
-    lookupQuery.error?.data?.code === 'BAD_REQUEST'
+  const lookupErrorCode = lookupQuery.error?.data?.code
+  // Each answer gets its own title, so it never contradicts its message. A
+  // 400 is an invalid or a company kennitala, and its message says which.
+  const lookupAlert =
+    lookupErrorCode === 'NOT_FOUND'
+      ? { type: 'warning' as const, title: u.notFoundTitle }
+      : lookupErrorCode === 'BAD_REQUEST'
+        ? { type: 'warning' as const, title: u.unusableKennitalaTitle }
+        : { type: 'error' as const, title: u.lookupErrorTitle }
 
   const handleLookup = () => {
     const sanitized = sanitizeNationalId(nationalId)
-    if (sanitized.length === 10) setLookupNationalId(sanitized)
+    if (sanitized.length !== 10) return
+
+    // The same kennitala again would set the same state, keep the same query
+    // key, and — with `retry: false` — send nothing, though the error says
+    // "Reyndu aftur". Refetch instead.
+    if (sanitized === lookupNationalId) {
+      void lookupQuery.refetch()
+    } else {
+      setLookupNationalId(sanitized)
+    }
   }
 
   const handleSave = () => {
@@ -246,8 +267,8 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
 
             {lookupQuery.isError && (
               <AlertMessage
-                type={lookupNotFound ? 'warning' : 'error'}
-                title={lookupNotFound ? u.notFoundTitle : u.lookupErrorTitle}
+                type={lookupAlert.type}
+                title={lookupAlert.title}
                 message={lookupReason ?? u.lookupError}
               />
             )}
@@ -262,7 +283,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
 
             {nameFromRegistry && !alreadyUser && (
               <Text variant="small" color="dark400">
-                {u.nameFromRegistryHint}
+                {u.nameFromRegistryHint(lookup.name)}
               </Text>
             )}
           </Stack>
