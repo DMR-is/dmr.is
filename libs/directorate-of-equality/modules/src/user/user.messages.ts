@@ -6,6 +6,11 @@ import type { ErrorMessage } from '../company/company.messages'
  * `translatedMessage` the web shows as is.
  */
 export const userMessages = {
+  invalidKennitala: (): ErrorMessage => ({
+    message: 'Kennitala fails its checksum',
+    translatedMessage:
+      'Kennitalan er ekki gild. Athugaðu hvort tölustafur hafi misritast.',
+  }),
   notAPerson: (): ErrorMessage => ({
     message: 'Users are people; this kennitala belongs to a legal entity',
     translatedMessage:

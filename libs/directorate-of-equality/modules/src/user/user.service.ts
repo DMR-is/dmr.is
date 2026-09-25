@@ -1,4 +1,4 @@
-import { isPersonKennitala } from 'kennitala'
+import { isPersonKennitala, isValid as isValidKennitala } from 'kennitala'
 import { Op } from 'sequelize'
 
 import {
@@ -89,6 +89,14 @@ export class UserService implements IUserService {
       { context: LOGGING_CONTEXT },
     )
 
+    // Checked here rather than by the route's pipe, which accepts any ten
+    // digits: a mistyped kennitala would otherwise reach the registry, whose
+    // client answers anything but a 2xx with a 502 — so a typo read as "the
+    // registry is down, try again".
+    if (!isValidKennitala(nationalId)) {
+      throw new BadRequestException(userMessages.invalidKennitala())
+    }
+
     // Users are people signing in with their own rafræn skilríki. A company's
     // kennitala could never sign in as one, so refuse it here rather than
     // pre-fill a user from a company name.
@@ -96,10 +104,24 @@ export class UserService implements IUserService {
       throw new BadRequestException(userMessages.notAPerson())
     }
 
-    const [result, existing] = await Promise.all([
-      this.nationalRegistryService.getEntityByNationalId(nationalId),
-      this.userModel.findOne({ where: { nationalId } }),
-    ])
+    // Our own table first. An existing user cannot be created again, so the
+    // registry's copy of their details would be fetched only to be discarded —
+    // and a user the registry no longer lists would read as "not found"
+    // instead of "already a user".
+    const existing = await this.userModel.findOne({ where: { nationalId } })
+
+    if (existing) {
+      return {
+        nationalId,
+        name: `${existing.firstName} ${existing.lastName}`,
+        firstName: existing.firstName,
+        lastName: existing.lastName,
+        alreadyUser: true,
+      }
+    }
+
+    const result =
+      await this.nationalRegistryService.getEntityByNationalId(nationalId)
 
     if (!result.entity) {
       throw new NotFoundException(
@@ -107,11 +129,14 @@ export class UserService implements IUserService {
       )
     }
 
+    // The validated input, not the registry's echo of it: the web matches the
+    // response against what was typed, and a formatting difference in the
+    // registry's copy would leave the form locked with no error.
     return {
-      nationalId: result.entity.kennitala,
+      nationalId,
       name: result.entity.nafn,
       ...splitRegistryName(result.entity.nafn),
-      alreadyUser: existing !== null,
+      alreadyUser: false,
     }
   }
 

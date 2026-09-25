@@ -15,8 +15,10 @@ import { UserModel } from './models/user.model'
 import { DoeUserRole } from './types/user-role'
 import { splitRegistryName, UserService } from './user.service'
 
-// The disallow-kennitalas lint rule keeps valid kennitölur out of source, so
-// whether a kennitala is a person's is decided by the mock, not a real number.
+// The person/company switch is decided by the mock, so one fixture can exercise
+// both branches — `0101302399` is a person's kennitala on the lint rule's
+// allowed fake prefix, and a company fixture would need its own number.
+// `isValid` stays real, so the checksum branch runs against actual digits.
 jest.mock('kennitala', () => ({
   ...jest.requireActual('kennitala'),
   isPersonKennitala: jest.fn(() => true),
@@ -134,13 +136,42 @@ describe('UserService', () => {
       })
     })
 
-    it('flags a kennitala that is already a user', async () => {
-      getEntityByNationalId.mockResolvedValue(entity('Gervi Maður'))
+    it('answers an existing user from our own table, without the registry', async () => {
       findOne.mockResolvedValue(baseUser({ isActive: false }))
+
+      await expect(
+        service.lookupNationalRegistry(NATIONAL_ID),
+      ).resolves.toEqual({
+        nationalId: NATIONAL_ID,
+        name: 'Gervi Maður',
+        firstName: 'Gervi',
+        lastName: 'Maður',
+        alreadyUser: true,
+      })
+      // Including one the registry no longer lists: it must read as "already a
+      // user", not "not found".
+      expect(getEntityByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('returns the validated input, not the registry echo of it', async () => {
+      getEntityByNationalId.mockResolvedValue({
+        entity: { ...entity('Gervi Maður').entity, kennitala: '010130-2399' },
+      })
+      findOne.mockResolvedValue(null)
 
       const result = await service.lookupNationalRegistry(NATIONAL_ID)
 
-      expect(result.alreadyUser).toBe(true)
+      expect(result.nationalId).toBe(NATIONAL_ID)
+    })
+
+    it('lets a registry failure through rather than reading it as not found', async () => {
+      const failure = new Error('registry down')
+      getEntityByNationalId.mockRejectedValue(failure)
+      findOne.mockResolvedValue(null)
+
+      await expect(service.lookupNationalRegistry(NATIONAL_ID)).rejects.toBe(
+        failure,
+      )
     })
 
     it('answers 404 when the registry has no one', async () => {
@@ -152,13 +183,24 @@ describe('UserService', () => {
       ).rejects.toBeInstanceOf(NotFoundException)
     })
 
-    it('refuses a company kennitala without asking the registry', async () => {
+    it('refuses a company kennitala without asking the registry or the table', async () => {
       mockedIsPerson.mockReturnValue(false)
 
       await expect(
         service.lookupNationalRegistry(NATIONAL_ID),
       ).rejects.toBeInstanceOf(BadRequestException)
       expect(getEntityByNationalId).not.toHaveBeenCalled()
+      expect(findOne).not.toHaveBeenCalled()
+    })
+
+    it('refuses a kennitala that fails its checksum, before anything else', async () => {
+      // The ninth digit is the checksum; changing it breaks the number. (The
+      // tenth is the century, so a changed last digit would still be valid.)
+      await expect(
+        service.lookupNationalRegistry('0101302389'),
+      ).rejects.toBeInstanceOf(BadRequestException)
+      expect(getEntityByNationalId).not.toHaveBeenCalled()
+      expect(findOne).not.toHaveBeenCalled()
     })
   })
 

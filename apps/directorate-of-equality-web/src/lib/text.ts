@@ -1323,9 +1323,12 @@ export const usersText = {
     lookupButton: 'Fletta upp',
     lookupHint:
       'Sláðu inn kennitölu og flettu upp í þjóðskrá. Nafn er sótt þaðan, en netfang og síma þarf að skrá.',
-    nameFromRegistryHint:
-      'Nafn er sótt úr þjóðskrá. Skráðu netfang og síma og veldu hlutverk.',
+    // The registry's full name, shown because the two locked fields are that
+    // name split at its last space — so a wrong split is visible here.
+    nameFromRegistryHint: (name: string) =>
+      `Nafn í þjóðskrá: ${name}. Skráðu netfang og síma og veldu hlutverk.`,
     notFoundTitle: 'Kennitala fannst ekki',
+    unusableKennitalaTitle: 'Ekki hægt að nota þessa kennitölu',
     lookupErrorTitle: 'Villa við uppflettingu',
     lookupError:
       'Ekki tókst að fletta kennitölunni upp í þjóðskrá. Reyndu aftur.',
