@@ -1111,7 +1111,10 @@ export class ApplicationService implements IApplicationService {
           {
             model: ReportEmployeeModel,
             as: 'reportEmployee',
-            attributes: ['id', 'ordinal', 'gender'],
+            // `score` is read by ReportEmployeeOutlierModel.fromModel; left out,
+            // every filed outlier row reads `score: null` although the column
+            // is populated at submit. Same list as the admin ReportService.
+            attributes: ['id', 'ordinal', 'gender', 'score'],
             where: { reportId: report.id },
             required: true,
             include: [

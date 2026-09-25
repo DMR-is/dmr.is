@@ -1,5 +1,5 @@
 import { Expose, Transform } from 'class-transformer'
-import { IsNumber, IsOptional } from 'class-validator'
+import { IsNumber, IsOptional, Min } from 'class-validator'
 import * as z from 'zod'
 
 import { ApiProperty } from '@nestjs/swagger'
@@ -16,6 +16,9 @@ export class PagingQuery {
   })
   @IsOptional()
   @IsNumber()
+  // A page before the first is an offset below zero. Refused rather than
+  // clamped, so a caller's off-by-one surfaces instead of quietly reading page 1.
+  @Min(1)
   @Expose()
   @Transform(({ value }) => {
     const val = value ? parseInt(value) : DEFAULT_PAGE_NUMBER
@@ -36,6 +39,11 @@ export class PagingQuery {
   })
   @IsOptional()
   @IsNumber()
+  // pageSize=0 answered an empty page with `totalPages: null` and a `nextPage`
+  // that led nowhere. No upper bound here: several admin screens read whole
+  // registers through this DTO (see useAllCompanies in directorate-of-equality-web),
+  // so a ceiling belongs on the routes that want one.
+  @Min(1)
   @Expose()
   @Transform(({ value }) => {
     const val = value ? parseInt(value) : DEFAULT_PAGE_SIZE

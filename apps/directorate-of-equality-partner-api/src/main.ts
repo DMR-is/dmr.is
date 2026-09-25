@@ -1,7 +1,6 @@
-import { json, urlencoded } from 'express'
 import { WinstonModule } from 'nest-winston'
 
-import { Logger, ValidationPipe } from '@nestjs/common'
+import { Logger } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestExpressApplication } from '@nestjs/platform-express'
 
@@ -9,11 +8,10 @@ import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
-import { API_VERSION, applyApiRouting, GLOBAL_PREFIX } from './api-routing'
-import { MAX_PARTNER_JSON_BYTES } from './request-limits'
+import { API_VERSION, GLOBAL_PREFIX } from './api-routing'
+import { configureApp } from './configure-app'
 import { setupSwaggerDocument } from './setupSwaggerDocument'
 import { SWAGGER_CONFIG } from './swagger.config'
-import { PARTNER_VALIDATION_OPTIONS } from './validation-options'
 
 async function bootstrap() {
   // Typed as the Express application because `trust proxy` below is an Express
@@ -22,32 +20,7 @@ async function bootstrap() {
     logger: WinstonModule.createLogger({ instance: logger }),
   })
 
-  // One proxy in front: the ALB. Without this, `req.ip` is the socket peer --
-  // the ALB itself -- so the per-IP throttler would collapse every caller in
-  // the world into a single bucket, and one flood would throttle everyone.
-  //
-  // The count must be exact rather than `true`. Trusting the whole chain would
-  // let a caller prepend its own X-Forwarded-For and rotate a fake address per
-  // request, which defeats the limit silently. At 1, Express takes the entry the
-  // ALB appended, which is the real peer and not client-supplied. If a CDN is
-  // ever put in front of this service, this number changes with it.
-  app.set('trust proxy', 1)
-
-  // A submitted salary report carries the whole scoring payload inline — every
-  // employee row, every criterion — and a large employer's runs to megabytes.
-  // There is no upload route to take it off the request path: this surface
-  // replaces the workbook rather than transporting one, so the payload arrives
-  // as JSON on the submission itself. 8mb rather than the sibling app's 6mb
-  // because there is no island.is payload cap in front of this one — a vendor
-  // posts the report whole.
-  app.use(json({ limit: MAX_PARTNER_JSON_BYTES }))
-  app.use(urlencoded({ extended: true, limit: MAX_PARTNER_JSON_BYTES }))
-
-  // Shared with the multipart equality route's own pipe — see
-  // `PARTNER_VALIDATION_OPTIONS`. One definition, so the two paths cannot drift.
-  app.useGlobalPipes(new ValidationPipe(PARTNER_VALIDATION_OPTIONS))
-
-  applyApiRouting(app)
+  configureApp(app)
 
   // No enableCors(), deliberately. An API key must never be used from a browser
   // — it cannot be kept secret there — so there is no legitimate cross-origin

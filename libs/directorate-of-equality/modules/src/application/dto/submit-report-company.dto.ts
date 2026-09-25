@@ -1,4 +1,11 @@
+import { Transform } from 'class-transformer'
+
 import { ApiString } from '@dmr.is/decorators'
+
+import {
+  IsKennitala,
+  stripKennitalaDash,
+} from '../../report/lib/kennitala-validators'
 
 /**
  * The reporting company, frozen onto the report as a snapshot rather than
@@ -33,6 +40,8 @@ export class SubmitReportSubsidiaryDto {
   @ApiString()
   name!: string
 
-  @ApiString()
+  @ApiString({ example: '5501234567' })
+  @Transform(({ value }) => stripKennitalaDash(value))
+  @IsKennitala()
   nationalId!: string
 }

@@ -22,8 +22,8 @@ const META: ArgumentMetadata = { type: 'body' }
  * of a multipart submission is validated by the SAME rules as a JSON request
  * body on every other route here.
  *
- * That matters because the global `ValidationPipe` sees this part as a
- * `String`. Without the pipe, a multipart submission would accept bodies the
+ * That matters because the global `ValidationPipe` does not reach this part:
+ * it is read with `@FormPart`, which global pipes skip. Without the pipe, a multipart submission would accept bodies the
  * JSON routes reject — "previews clean, rejected at submit" for a fourth time,
  * in the phase whose plan called that out as the thing not to add. The pipe
  * therefore owns no validation of its own; it delegates to a real

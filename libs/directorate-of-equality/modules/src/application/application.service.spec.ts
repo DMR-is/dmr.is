@@ -1225,6 +1225,33 @@ describe('ApplicationService', () => {
       expect(order[1][1]).toBe('ordinal')
       expect(order[1][2]).toBe('ASC')
     })
+
+    // ReportEmployeeOutlierModel.fromModel reads `reportEmployee.score`. An
+    // attribute list without it returns `score: null` on every row, silently,
+    // while the column is populated.
+    it('loads the employee score the outlier row reports', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({ id: REPORT_ID, providerId: PROVIDER_ID }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await service.getReportOutliers(PROVIDER_ID, COMPANY, {
+        page: 1,
+        pageSize: 10,
+      })
+
+      const include = outlierFindAndCountAll.mock.calls[0][0].include as Array<{
+        as: string
+        attributes: Array<string>
+      }>
+      const employee = include.find((i) => i.as === 'reportEmployee')
+
+      expect(employee?.attributes).toEqual(
+        expect.arrayContaining(['id', 'ordinal', 'gender', 'score']),
+      )
+    })
   })
 
   describe('getReportComments', () => {

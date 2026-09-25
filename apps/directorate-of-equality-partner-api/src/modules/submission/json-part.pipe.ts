@@ -12,11 +12,13 @@ import { PARTNER_VALIDATION_OPTIONS } from '../../validation-options'
 /**
  * Parses and validates the JSON part of a `multipart/form-data` submission.
  *
- * A multipart part is a string. The global `ValidationPipe` sees `payload` as
- * `String` and would pass any text straight through, so without this the
+ * A multipart part is a string, and the global `ValidationPipe` cannot be the
+ * one to check it: it runs before any param pipe, takes its metatype from the
+ * parameter's DTO annotation, and would validate the unparsed string against
+ * the DTO — refusing every submission. So the part is read with `@FormPart`,
+ * which the global pipe skips, and this pipe does the whole job. Without it the
  * document route would accept bodies the JSON routes reject — the fourth
- * occurrence of "previews clean, rejected at submit" in this codebase, and the
- * one the plan for this phase explicitly set out not to add.
+ * occurrence of "previews clean, rejected at submit" in this codebase.
  *
  * It therefore does not implement any validation of its own. It parses, then
  * hands the object to a real `ValidationPipe` built from
