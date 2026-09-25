@@ -3,7 +3,7 @@ import { GetReportsQueryDto } from '../report/dto/get-reports.query.dto'
 import { DataExportFileDto, DataExportFormatEnum } from './dto/data-export.dto'
 
 /**
- * Builds the files behind "Keyra út lista".
+ * Builds the files behind "Gagnaútdráttur".
  *
  * Both methods take the SAME query DTO the corresponding list endpoint takes,
  * and resolve it through the same `where` builder — an export whose filter

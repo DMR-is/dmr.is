@@ -70,7 +70,7 @@ const EMPTY_FILTERS: CompanyFilters = {
 }
 
 /**
- * "Keyra út lista" — filter first, then fetch, then export.
+ * "Gagnaútdráttur" — filter first, then fetch, then export.
  *
  * ONE dataset: companies. The report criteria in the panel NARROW that list
  * rather than switching it — a company comes back when at least one of its
