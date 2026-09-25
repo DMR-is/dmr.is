@@ -9,7 +9,8 @@ import {
 
 // The reporting window is relative to "now", so the clock is frozen mid-month
 // to keep the literal dates below readable. With the current month at 2026-06,
-// the window runs 2023-07-01 … 2026-06-01 (36 months, current one included).
+// the window runs 2023-07-01 … 2026-05-01: back 36 months counting the current
+// one, which is itself excluded until it is over.
 const NOW = new Date('2026-06-15T12:00:00Z')
 
 beforeAll(() => {
@@ -53,8 +54,17 @@ describe('normalizeSalaryDataPeriod', () => {
     )
   })
 
-  it('accepts the current month — the month need only have started', () => {
-    expect(normalizeSalaryDataPeriod('2026-06-15')).toBe('2026-06-01')
+  it('accepts last month', () => {
+    expect(normalizeSalaryDataPeriod('2026-05-31')).toBe('2026-05-01')
+  })
+
+  it('rejects the current month — its payroll is not all paid yet', () => {
+    expect(() => normalizeSalaryDataPeriod('2026-06-01')).toThrow(
+      BadRequestException,
+    )
+    expect(() => normalizeSalaryDataPeriod('2026-06-15')).toThrow(
+      BadRequestException,
+    )
   })
 
   it('rejects a month in the future', () => {

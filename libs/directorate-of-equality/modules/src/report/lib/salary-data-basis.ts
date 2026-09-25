@@ -58,9 +58,13 @@ const PERIOD_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
 
 /**
  * The window a declared payroll month must fall in, as canonical `YYYY-MM-01`
- * strings: the current month back through `SALARY_DATA_PERIOD_MONTHS_BACK`
- * months, counting the current one as the first. Both bounds are in canonical
- * form, so they compare correctly as strings.
+ * strings: last month back to `SALARY_DATA_PERIOD_MONTHS_BACK` months ago,
+ * counting the current month as the first. Both bounds are in canonical form,
+ * so they compare correctly as strings.
+ *
+ * The current month is outside it: until the month is over its payroll has not
+ * all been paid, so figures declared for it describe a month that has not
+ * happened. It once counted as soon as it had started.
  *
  * Computed per call rather than at module load — the API is long-running, and a
  * bound frozen at boot would drift out of date after a month of uptime.
@@ -73,7 +77,7 @@ function salaryDataPeriodWindow(): { earliest: string; latest: string } {
       subMonths(currentMonth, SALARY_DATA_PERIOD_MONTHS_BACK - 1),
       'yyyy-MM',
     )}-01`,
-    latest: `${format(currentMonth, 'yyyy-MM')}-01`,
+    latest: `${format(subMonths(currentMonth, 1), 'yyyy-MM')}-01`,
   }
 }
 
@@ -111,7 +115,7 @@ export function normalizeSalaryDataPeriod(period: string): string {
 
   if (normalized > latest) {
     throw new BadRequestException(
-      `salaryDataPeriod "${period}" is in the future — the payroll month must have happened (latest is ${latest})`,
+      `salaryDataPeriod "${period}" is not a finished month — the payroll month must be over (latest is ${latest})`,
     )
   }
 

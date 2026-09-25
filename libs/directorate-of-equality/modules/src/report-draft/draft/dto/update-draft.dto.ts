@@ -69,7 +69,7 @@ export class UpdateDraftDto {
   @ApiOptionalString({
     nullable: true,
     description:
-      'The payroll month the salary data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Must name a month that has already happened, no earlier than 36 months ago. Required alongside `salaryDataBasis: MONTH` by submit time; ignored while the stored basis is `AVERAGE`.',
+      'The payroll month the salary data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Must name a month that is over — last month at the latest — and no earlier than 36 months ago. Required alongside `salaryDataBasis: MONTH` by submit time; ignored while the stored basis is `AVERAGE`.',
   })
   salaryDataPeriod?: string | null
 
