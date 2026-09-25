@@ -13,6 +13,7 @@ import { PUBLIC_ROUTE_METADATA } from '../../decorators/public-route.decorator'
 import { RequireActiveCompanyGuard } from '../active-company/require-active-company.guard'
 import { ApiKeyGuard } from '../api-key/api-key.guard'
 import { RequireApiScopeGuard } from '../api-key-scope/require-api-scope.guard'
+import { PartnerClientGuard } from '../partner-client/partner-client.guard'
 import { PartnerCompanyGuard } from '../partner-company/partner-company.guard'
 
 const LOGGING_CONTEXT = 'DeclaredAccessGuard'
@@ -35,8 +36,10 @@ export const AUTHENTICATION_GUARD: unknown = ApiKeyGuard
 /**
  * The guard that binds a request to the company it may act for.
  *
- * `PartnerCompanyGuard` resolves `doe_api_key.company_national_id` to a company
- * row and throws when there is none. It deliberately does not auto-provision, so
+ * `PartnerCompanyGuard` resolves a company key's own
+ * `doe_api_key.company_national_id`, or a vendor client key's
+ * `X-Company-National-Id` through a live delegation, to a company row, and
+ * throws when there is none. It deliberately does not auto-provision, so
  * it cannot invent a tenant.
  *
  * Adding to this list widens what counts as secured across the whole API.
@@ -44,6 +47,15 @@ export const AUTHENTICATION_GUARD: unknown = ApiKeyGuard
  * company the presented key is entitled to.
  */
 export const IDENTITY_GUARDS: ReadonlyArray<unknown> = [PartnerCompanyGuard]
+
+/**
+ * The identity guard for routes about the calling firm itself rather than a
+ * company — `GET /partner/delegations`. Such a route has no tenant, so it
+ * declares access without `ACTIVE_COMPANY_ENFORCEMENT_GUARD`: there is no
+ * company whose register status could apply. Kept apart from `IDENTITY_GUARDS`
+ * so that relaxation reaches this one guard and nothing else.
+ */
+export const FIRM_IDENTITY_GUARD: unknown = PartnerClientGuard
 
 /**
  * The guard that enforces `@RequireApiScope`.
@@ -83,8 +95,9 @@ const guardType = (guard: unknown): unknown =>
   typeof guard === 'function' ? guard : guard?.constructor
 
 /**
- * Whether a guard chain states who may call the route: a verified credential
- * plus a company resolved against the database.
+ * Whether a guard chain states who may call the route: a verified credential,
+ * a scope, and either a company resolved against the database and checked
+ * against the register, or — for a firm-only route — a vendor client key.
  *
  * Exported so the coverage spec asserts with the identical predicate the runtime
  * enforces — a spec that re-implemented this could pass while the guard denies,
@@ -93,12 +106,23 @@ const guardType = (guard: unknown): unknown =>
 export const declaresAccess = (guards: ReadonlyArray<unknown>): boolean => {
   const types = guards.map(guardType)
 
-  return (
-    types.includes(AUTHENTICATION_GUARD) &&
+  if (
+    !types.includes(AUTHENTICATION_GUARD) ||
+    !types.includes(SCOPE_ENFORCEMENT_GUARD)
+  ) {
+    return false
+  }
+
+  // A route acting for a company: the tenant is resolved and must be on the
+  // register.
+  const actsForCompany =
     types.some((type) => IDENTITY_GUARDS.includes(type)) &&
-    types.includes(SCOPE_ENFORCEMENT_GUARD) &&
     types.includes(ACTIVE_COMPANY_ENFORCEMENT_GUARD)
-  )
+
+  // A route about the firm itself: no tenant, so no register check to make.
+  const actsAsFirm = types.includes(FIRM_IDENTITY_GUARD)
+
+  return actsForCompany || actsAsFirm
 }
 
 /**

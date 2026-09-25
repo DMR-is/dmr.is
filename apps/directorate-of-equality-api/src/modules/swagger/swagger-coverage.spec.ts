@@ -142,6 +142,13 @@ const ADMIN_ONLY_HANDLERS: readonly string[] = [
   'ApiKeyController.issueApiKey',
   'ApiKeyController.revokeApiKey',
   'ConfigController.updateByKey',
+  // Approving a firm to file for other companies, cutting it off, and minting
+  // or revoking its credentials: the same reasoning as company keys, one level
+  // up. Listing firms and their keys stays reviewer-readable.
+  'PartnerClientController.createPartnerClient',
+  'PartnerClientController.issuePartnerClientKey',
+  'PartnerClientController.revokePartnerClient',
+  'PartnerClientController.revokePartnerClientKey',
   'UserController.createUser',
   'UserController.deleteUser',
   'UserController.updateUser',
@@ -695,7 +702,7 @@ describe('swagger document coverage', () => {
       expect(unlisted).toEqual([])
     })
 
-    it('restricts the ADMIN role requirement to user management, config and API keys', () => {
+    it('restricts the ADMIN role requirement to user management, config, API keys and partner clients', () => {
       const adminOnly = routedHandlers(app)
         .filter(([controller, method]) =>
           guardsForHandler(controller, method).includes(RequireAdminRoleGuard),

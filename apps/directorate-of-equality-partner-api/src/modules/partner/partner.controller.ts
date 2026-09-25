@@ -50,7 +50,9 @@ import { PartnerSalaryPayloadFields } from '@dmr.is/doe-modules/scoring-model'
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
+import { ApiCompanyHeader } from '../../core/decorators/company-header.decorator'
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
+import { CurrentPartnerClientId } from '../../core/decorators/current-partner-client.decorator'
 import { PartnerResponse } from '../../core/decorators/partner-response.decorator'
 import { RequireActiveCompany } from '../../core/guards/active-company/require-active-company.decorator'
 import { RequireActiveCompanyGuard } from '../../core/guards/active-company/require-active-company.guard'
@@ -86,7 +88,7 @@ import 'multer'
  * Guard order matters and is not arbitrary:
  *
  *   ApiKeyGuard                who is calling
- *   PartnerCompanyGuard        which company that key belongs to
+ *   PartnerCompanyGuard        which company the request acts for
  *   RequireApiScopeGuard       whether the key may do this
  *   RequireActiveCompanyGuard  whether that company may use this API at all
  *   ApiKeyThrottlerGuard       how often, bucketed per key
@@ -109,6 +111,7 @@ import 'multer'
 })
 @ApiTags('Partner')
 @ApiSecurity('apiKey')
+@ApiCompanyHeader()
 @RequireActiveCompany()
 @UseGuards(
   ApiKeyGuard,
@@ -130,7 +133,7 @@ export class PartnerController {
     operationId: 'getPartnerCompany',
     type: PartnerCompanyDto,
     description:
-      'The company this API key belongs to. Useful as a first call to confirm a key is live and points where the integrator expects — the company is never taken from a request, only from the key. A narrow projection: the Directorate’s own working state (fines, quarantine, admin overrides, RSK bookkeeping, internal keys) is not part of this contract — see `PartnerCompanyDto`.',
+      'The company this request acts for: the one a company key belongs to, or — with a vendor client key — the one named in `X-Company-National-Id`, if it has delegated to you. Useful as a first call to confirm a key is live and points where the integrator expects. A narrow projection: the Directorate’s own working state (fines, quarantine, admin overrides, RSK bookkeeping, internal keys) is not part of this contract — see `PartnerCompanyDto`.',
   })
   getCompany(@CurrentCompany() company: CompanyDto): PartnerCompanyDto {
     // Projected, never returned whole. `CompanyDto` is the back office's view
@@ -240,14 +243,19 @@ export class PartnerController {
         'Replayed. The `providerId` had already been used, so nothing was filed and `reportId` names the report that submission created earlier — the body just sent was not read. A corrected re-file needs a NEW `providerId`; see `replayed`.',
     },
     description:
-      'Files a salary report. What it is audited against is resolved server-side — the company’s approved, in-force equality report, or the unexpired legacy certificate covering it — so it is not part of this body, and the filed report records which of the two it was; a **404** means either there is none, or the `scoringModelId` names a model this key’s company does not own. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, or a previous report cannot be replaced (see the guide’s sibling policy); a 409 also comes back when the `providerId` was already used for an equality report, since a provider id is bound to one report type. The response says which. Timing is not among them: the 6-month renewal window was removed and a company may file whenever it likes, though `GET reports/salary/eligibility` will tell you what filing early costs it.',
+      'Files a salary report. What it is audited against is resolved server-side — the company’s approved, in-force equality report, or the unexpired legacy certificate covering it — so it is not part of this body, and the filed report records which of the two it was; a **404** means either there is none, or the `scoringModelId` names a model the company does not own. `providerId` is the caller’s own id for the submission and is stored namespaced by the company, so ids never collide across companies — but everyone filing for one company (its own key and any vendor client it has delegated to) shares that company’s namespace. Idempotent: re-sending a `providerId` already used for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, or a previous report cannot be replaced (see the guide’s sibling policy); a 409 also comes back when the `providerId` was already used for an equality report, since a provider id is bound to one report type. The response says which. Timing is not among them: the 6-month renewal window was removed and a company may file whenever it likes, though `GET reports/salary/eligibility` will tell you what filing early costs it.',
   })
   async submitSalaryReport(
     @Body() input: SubmitPartnerSalaryReportDto,
     @CurrentCompany() company: CompanyDto,
+    @CurrentPartnerClientId() partnerClientId: string | null,
     @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {
-    const result = await this.submissionService.submitSalary(input, company)
+    const result = await this.submissionService.submitSalary(
+      input,
+      company,
+      partnerClientId,
+    )
 
     return this.answerCreated(res, result)
   }
@@ -367,12 +375,14 @@ export class PartnerController {
     input: SubmitPartnerEqualityReportDto,
     @UploadedFile() document: Express.Multer.File | undefined,
     @CurrentCompany() company: CompanyDto,
+    @CurrentPartnerClientId() partnerClientId: string | null,
     @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {
     const result = await this.submissionService.submitEquality(
       input,
       document,
       company,
+      partnerClientId,
     )
 
     return this.answerCreated(res, result)

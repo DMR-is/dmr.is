@@ -4,7 +4,6 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -12,9 +11,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import {
   ApiKeyDto,
   ApiKeyModel,
-  ApiKeyOriginEnum,
-  ApiKeyScopeEnum,
-  DEFAULT_API_KEY_SCOPES,
   generateApiKey,
   hashApiKeySecret,
   IssuedApiKeyDto,
@@ -23,43 +19,20 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
 import {
+  apiKeyEnv,
+  MAX_LIVE_KEYS_PER_OWNER,
+  readApiKeyPepper,
+  resolveApiKeyExpiry,
+  resolveApiKeyIssuer,
+  resolveApiKeyScopes,
+} from './lib/issuance'
+import {
   IApiKeyService,
   IssueApiKeyInput,
   RevokeApiKeyInput,
 } from './api-key.service.interface'
 
 const LOGGING_CONTEXT = 'ApiKeyService'
-
-/**
- * Environment segment baked into every issued key (`doe_<env>_...`), so a dev
- * credential pasted into production is rejected on shape rather than after a
- * hash miss — a far clearer error to hand an integrator.
- *
- * ⚠️ The segment is a DIAGNOSTIC, not a control. Nothing compares it on the
- * verifying side and it sits outside the HMAC, so a caller can edit it freely
- * and the key still verifies. It exists so a human reading a key, a log line or
- * a support ticket can tell which environment minted it — not to stop a staging
- * key working in production. An earlier version of this docblock claimed it made
- * such a key "fail on shape"; that was never true.
- *
- * Reuses `API_ENV` rather than declaring a variable of its own, and falls back
- * to `dev`. Both DoE app schemas declare `API_ENV`, so varlock enforces it in a
- * deployed environment. That is stricter than this segment needs, since the
- * value here is advisory — and since the salary renewal window was removed, this
- * segment is the only thing that reads it. The fallback stays for local runs
- * where the variable is optional.
- */
-const API_KEY_ENV_VAR = 'API_ENV'
-const DEFAULT_API_KEY_ENV = 'dev'
-
-/**
- * Ceiling on usable keys per company. Generous enough that rotation and a
- * second integrator are never blocked, low enough that a runaway loop stops.
- */
-const MAX_LIVE_KEYS_PER_COMPANY = 10
-
-/** Server-side HMAC key. Absent means the API cannot issue or verify at all. */
-const API_KEY_HMAC_SECRET_VAR = 'DOE_API_KEY_HMAC_SECRET'
 
 @Injectable()
 export class ApiKeyService implements IApiKeyService {
@@ -72,13 +45,16 @@ export class ApiKeyService implements IApiKeyService {
   ) {}
 
   async issue(input: IssueApiKeyInput): Promise<IssuedApiKeyDto> {
-    const scopes = this.resolveScopes(input.scopes)
-    const expiresAt = this.resolveExpiry(input.expiresAt)
+    const scopes = resolveApiKeyScopes(input.scopes)
+    const expiresAt = resolveApiKeyExpiry(input.expiresAt)
     await this.assertLiveKeyBudget(input.company.id)
-    const { actorUserId, actorNationalId } = this.resolveIssuer(input)
+    const { actorUserId, actorNationalId } = resolveApiKeyIssuer(input)
 
-    const generated = generateApiKey(this.env())
-    const secretHash = hashApiKeySecret(generated.secret, this.hmacSecret())
+    const generated = generateApiKey(apiKeyEnv())
+    const secretHash = hashApiKeySecret(
+      generated.secret,
+      readApiKeyPepper(this.logger, LOGGING_CONTEXT),
+    )
 
     const created = await this.apiKeyModel.create({
       companyId: input.company.id,
@@ -188,29 +164,6 @@ export class ApiKeyService implements IApiKeyService {
   }
 
   /**
-   * Rejects an expiry that is already past.
-   *
-   * Without this the caller gets 201 and a plaintext secret that no verifier will
-   * ever accept — the worst possible answer, because it looks like success and
-   * the failure only appears when the integrator tries to use it. Null stays
-   * meaningful: no expiry is a documented choice, offered as "ótímabundinn" in
-   * the admin UI.
-   */
-  private resolveExpiry(expiresAt?: Date | null): Date | null {
-    if (!expiresAt) {
-      return null
-    }
-
-    if (expiresAt.getTime() <= Date.now()) {
-      throw new BadRequestException(
-        'expiresAt must be in the future — a key that has already expired cannot be used',
-      )
-    }
-
-    return expiresAt
-  }
-
-  /**
    * Caps how many usable keys one company may hold at once.
    *
    * Rotation needs two keys, not two thousand. Nothing counted before, so a
@@ -228,93 +181,10 @@ export class ApiKeyService implements IApiKeyService {
       },
     })
 
-    if (live >= MAX_LIVE_KEYS_PER_COMPANY) {
+    if (live >= MAX_LIVE_KEYS_PER_OWNER) {
       throw new BadRequestException(
-        `A company may hold at most ${MAX_LIVE_KEYS_PER_COMPANY} usable API keys — revoke one before issuing another`,
+        `A company may hold at most ${MAX_LIVE_KEYS_PER_OWNER} usable API keys — revoke one before issuing another`,
       )
     }
-  }
-
-  /**
-   * Which actor column to populate, derived from the issuance path rather than
-   * taken on trust. `doe_api_key_created_actor_chk` enforces the same pairing in
-   * the database; failing here first turns what would be a 500 from a constraint
-   * violation into a clear 400.
-   */
-  private resolveIssuer(input: IssueApiKeyInput): {
-    actorUserId: string | null
-    actorNationalId: string | null
-  } {
-    if (input.createdVia === ApiKeyOriginEnum.ADMIN) {
-      if (!input.actorUserId) {
-        throw new BadRequestException(
-          'An admin-issued API key must record the issuing reviewer',
-        )
-      }
-
-      return { actorUserId: input.actorUserId, actorNationalId: null }
-    }
-
-    if (!input.actorNationalId) {
-      throw new BadRequestException(
-        'A self-service API key must record the issuing national ID',
-      )
-    }
-
-    return { actorUserId: null, actorNationalId: input.actorNationalId }
-  }
-
-  /**
-   * `scopes` is a text[] rather than an enum array, so the database will accept
-   * any string. Validate here so an unrecognised scope cannot be stored and then
-   * silently fail every scope check at request time.
-   */
-  private resolveScopes(scopes?: ApiKeyScopeEnum[]): ApiKeyScopeEnum[] {
-    if (!scopes || scopes.length === 0) {
-      return [...DEFAULT_API_KEY_SCOPES]
-    }
-
-    const known = new Set<string>(Object.values(ApiKeyScopeEnum))
-    const unknown = scopes.filter((scope) => !known.has(scope))
-
-    if (unknown.length > 0) {
-      throw new BadRequestException(
-        `Unknown API key scopes: ${unknown.join(', ')}`,
-      )
-    }
-
-    return [...new Set(scopes)]
-  }
-
-  private env(): string {
-    return process.env[API_KEY_ENV_VAR] || DEFAULT_API_KEY_ENV
-  }
-
-  /**
-   * The server-side secret mixed into every key digest.
-   *
-   * `api-key.crypto.ts` calls this a pepper, which is the precise term for a
-   * server-wide secret added to a hash — as opposed to a salt, which is
-   * per-record and stored beside the digest. The distinction matters here
-   * because it is why rotating this value invalidates every issued key. The
-   * name follows the environment variable rather than the crypto term so that
-   * what is configured and what is read are searchably the same string.
-   */
-  private hmacSecret(): string {
-    const secret = process.env[API_KEY_HMAC_SECRET_VAR]
-
-    if (!secret) {
-      this.logger.error(
-        `Missing required environment variable: ${API_KEY_HMAC_SECRET_VAR}`,
-        { context: LOGGING_CONTEXT },
-      )
-      // Logged, not returned. HttpExceptionFilter genericises `message` but
-      // copies the exception's own message into `details`, which IS sent — so
-      // naming the variable here publishes a piece of our deployment
-      // configuration to whoever provoked the 500.
-      throw new InternalServerErrorException()
-    }
-
-    return secret
   }
 }

@@ -1,0 +1,15 @@
+{
+  "name": "@dmr.is/clients-onesystems",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.29"
+  },
+  "dependencies": {
+    "@dmr.is/logging": "*",
+    "zod": "4.1.11"
+  }
+}

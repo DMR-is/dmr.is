@@ -41,6 +41,22 @@ const keyState = (key: ApiKeyDto): KeyState => {
   return 'active'
 }
 
+/**
+ * A key without every scope — one issued before access became all or nothing,
+ * or one an API caller restricted on purpose. Flagged, not explained: which
+ * scope is missing, and why, differs. It lets a reviewer fielding "the vendor
+ * gets 403" see the cause without reading the database.
+ */
+const ALL_SCOPES = [
+  'report:read',
+  'salary:submit',
+  'equality:submit',
+  'scoring:write',
+] as const
+
+const isNarrow = (key: ApiKeyDto) =>
+  ALL_SCOPES.some((scope) => !key.scopes.includes(scope))
+
 const STATE_LABEL: Record<KeyState, string> = {
   active: t.statusActive,
   revoked: t.statusRevoked,
@@ -157,9 +173,16 @@ export const CompanyApiKeysTab = ({ companyId }: Props) => {
                       alignY="center"
                     >
                       <Text variant="h5">{key.label ?? key.keyId}</Text>
-                      <Tag variant={STATE_VARIANT[state]} disabled>
-                        {STATE_LABEL[state]}
-                      </Tag>
+                      <Inline space={1}>
+                        {state === 'active' && isNarrow(key) && (
+                          <Tag variant="purple" outlined disabled>
+                            {t.narrowTag}
+                          </Tag>
+                        )}
+                        <Tag variant={STATE_VARIANT[state]} disabled>
+                          {STATE_LABEL[state]}
+                        </Tag>
+                      </Inline>
                     </Inline>
 
                     {/* The public half only. There is no secret to show — the

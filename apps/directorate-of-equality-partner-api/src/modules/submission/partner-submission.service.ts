@@ -50,6 +50,7 @@ export class PartnerSubmissionService {
   async submitSalary(
     input: SubmitPartnerSalaryReportDto,
     company: CompanyDto,
+    partnerClientId: string | null = null,
   ): Promise<CreateReportResponseDto> {
     this.assertSalaryDataPeriodMatchesBasis(input)
 
@@ -70,6 +71,7 @@ export class PartnerSubmissionService {
     return this.applicationService.submitSalary({ ...rest, parsed }, company, {
       postponeUnexplainedOutliers: true,
       withdrawPostponedSibling: true,
+      partnerClientId,
     })
   }
 
@@ -91,6 +93,7 @@ export class PartnerSubmissionService {
     input: SubmitPartnerEqualityReportDto,
     document: Express.Multer.File | undefined,
     company: CompanyDto,
+    partnerClientId: string | null = null,
   ): Promise<CreateReportResponseDto> {
     const { html, warnings } = await convertEqualityDocumentToHtml(
       document?.buffer,
@@ -114,6 +117,7 @@ export class PartnerSubmissionService {
     return this.applicationService.submitEquality(
       { ...input, equalityReportContent: html },
       company,
+      { partnerClientId },
     )
   }
 

@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import {
+  expiredAuthCookieOptions,
+  isAppAuthCookie,
+} from '@dmr.is/auth/sessionCookies'
+
+import { AUTH_COOKIE_PREFIX } from '../../../../lib/auth/identityServerConfig'
+import {
   LOGOUT_HINT_COOKIE,
   LOGOUT_HINT_COOKIE_PATH,
 } from '../../../../lib/auth/logoutHint'
 
 export const dynamic = 'force-dynamic'
-
-const NEXT_AUTH_COOKIE_PREFIXES = [
-  'next-auth.',
-  '__Secure-next-auth.',
-  '__Host-next-auth.',
-]
 
 function handler(request: NextRequest) {
   const idToken = request.cookies.get(LOGOUT_HINT_COOKIE)?.value
@@ -32,8 +32,13 @@ function handler(request: NextRequest) {
   )
 
   for (const cookie of request.cookies.getAll()) {
-    if (NEXT_AUTH_COOKIE_PREFIXES.some((p) => cookie.name.startsWith(p))) {
-      response.cookies.delete(cookie.name)
+    // This app's NextAuth cookies only. Matching every `next-auth.*` cookie
+    // here once signed the user out of any other app on the same host.
+    if (isAppAuthCookie(cookie.name, AUTH_COOKIE_PREFIX)) {
+      // Expired with `Secure`, not deleted: a bare delete of a `__Secure-` or
+      // `__Host-` cookie is rejected by the browser, so in production it
+      // cleared nothing.
+      response.cookies.set(cookie.name, '', expiredAuthCookieOptions())
     }
   }
 

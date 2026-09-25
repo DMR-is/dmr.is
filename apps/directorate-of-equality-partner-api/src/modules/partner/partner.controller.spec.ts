@@ -59,6 +59,7 @@ describe('PartnerController — the replay status split', () => {
       const body = await controller.submitSalaryReport(
         {} as never,
         COMPANY,
+        null,
         res,
       )
 
@@ -76,6 +77,7 @@ describe('PartnerController — the replay status split', () => {
       const body = await controller.submitSalaryReport(
         {} as never,
         COMPANY,
+        null,
         res,
       )
 
@@ -89,8 +91,41 @@ describe('PartnerController — the replay status split', () => {
       const { res } = responseDouble()
 
       await expect(
-        controller.submitSalaryReport({} as never, COMPANY, res),
+        controller.submitSalaryReport({} as never, COMPANY, null, res),
       ).resolves.toBe(result)
+    })
+  })
+
+  /**
+   * Provenance: the firm `PartnerCompanyGuard` resolved reaches the submission,
+   * which records it as `report.partner_client_id`. A company key passes null.
+   */
+  describe('provenance', () => {
+    it('hands the acting vendor client to both submissions', async () => {
+      submitSalary.mockResolvedValue({ reportId: 'r1', replayed: false })
+      submitEquality.mockResolvedValue({ reportId: 'e1', replayed: false })
+
+      await controller.submitSalaryReport(
+        {} as never,
+        COMPANY,
+        'client-1',
+        responseDouble().res,
+      )
+      await controller.submitEqualityReport(
+        {} as never,
+        DOCUMENT,
+        COMPANY,
+        'client-1',
+        responseDouble().res,
+      )
+
+      expect(submitSalary).toHaveBeenCalledWith({}, COMPANY, 'client-1')
+      expect(submitEquality).toHaveBeenCalledWith(
+        {},
+        DOCUMENT,
+        COMPANY,
+        'client-1',
+      )
     })
   })
 
@@ -99,7 +134,13 @@ describe('PartnerController — the replay status split', () => {
       submitEquality.mockResolvedValue({ reportId: 'e1', replayed: false })
       const { res, status } = responseDouble()
 
-      await controller.submitEqualityReport({} as never, DOCUMENT, COMPANY, res)
+      await controller.submitEqualityReport(
+        {} as never,
+        DOCUMENT,
+        COMPANY,
+        null,
+        res,
+      )
 
       expect(status).toHaveBeenCalledWith(HttpStatus.CREATED)
     })
@@ -108,7 +149,13 @@ describe('PartnerController — the replay status split', () => {
       submitEquality.mockResolvedValue({ reportId: 'e1', replayed: true })
       const { res, status } = responseDouble()
 
-      await controller.submitEqualityReport({} as never, DOCUMENT, COMPANY, res)
+      await controller.submitEqualityReport(
+        {} as never,
+        DOCUMENT,
+        COMPANY,
+        null,
+        res,
+      )
 
       expect(status).toHaveBeenCalledWith(HttpStatus.OK)
     })

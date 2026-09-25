@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -30,28 +30,6 @@ const t = companiesText.detailView.apiKeys
  * now". It also removes the whole class of typo — a key expiring in 2025, or in
  * 2125 — that a free date field invites.
  */
-/**
- * `scoring:write` stopped being part of the default scope set once it became
- * clear a default key could delete a company's whole starfsmat by cascade — but
- * this modal had no scopes control at all, so every admin-issued key silently
- * lost the ability to author one. An admin issuing a replacement key for a
- * company that authors through the API had no way to mint a working one.
- *
- * Two choices rather than four checkboxes: the three filing scopes always travel
- * together (a key that cannot read cannot usefully submit), so the only real
- * decision is whether this key may also author.
- */
-const SCOPE_OPTIONS: { label: string; value: string }[] = [
-  { label: t.modal.scopeFilingOnly, value: 'filing' },
-  { label: t.modal.scopeFilingAndScoring, value: 'filing+scoring' },
-]
-
-const FILING_SCOPES = [
-  'report:read',
-  'salary:submit',
-  'equality:submit',
-] as const
-
 const EXPIRY_OPTIONS: { label: string; value: number | null }[] = [
   { label: t.modal.expires90Days, value: 90 },
   { label: t.modal.expires1Year, value: 365 },
@@ -105,24 +83,28 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
   const [expiryDays, setExpiryDays] = useState<number | null>(
     DEFAULT_EXPIRY_DAYS,
   )
-  const [scoping, setScoping] = useState<string>('filing')
   const [issuedKey, setIssuedKey] = useState<string | null>(null)
 
-  // Reopening must not show the previous key, label, lifetime or scoping —
-  // the last especially, since silently carrying a previous grant of
-  // `scoring:write` into the next key is exactly the surprise the default set
-  // was narrowed to avoid.
+  // Whether this modal is still showing. A key minted after the admin closed
+  // it must not be stashed in state for a dialog nobody will see.
+  const isShowingRef = useRef(isOpen)
+
+  // Reopening must not show the previous key, label or lifetime.
   useEffect(() => {
+    isShowingRef.current = isOpen
     if (isOpen) {
       setLabel('')
       setExpiryDays(DEFAULT_EXPIRY_DAYS)
-      setScoping('filing')
       setIssuedKey(null)
     }
   }, [isOpen])
 
   const issue = useMutation({
     ...trpc.apiKey.issue.mutationOptions(),
+    // Evicted from the MutationCache as soon as nothing observes it. `reset()`
+    // on close only detaches the observer; without this the plaintext secret
+    // would sit in the cache for the default five minutes.
+    gcTime: 0,
     onSuccess: (created) => {
       queryClient.invalidateQueries({
         queryKey: trpc.apiKey.listForCompany.queryKey({ companyId }),
@@ -134,6 +116,10 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
       queryClient.invalidateQueries({
         queryKey: trpc.company.getTimeline.queryKey({ id: companyId }),
       })
+      if (!isShowingRef.current) {
+        toast.error(t.modal.createdAfterCloseToast, { autoClose: 8000 })
+        return
+      }
       setIssuedKey(created.key)
     },
     onError: (error) => {
@@ -146,6 +132,18 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
       )
     },
   })
+
+  /**
+   * Every way out of the modal goes through here, so the one-time secret does
+   * not outlive it: the shared Modal keeps the dialog mounted when hidden, and
+   * the mutation cache would otherwise hold the key until the next open.
+   */
+  const close = () => {
+    isShowingRef.current = false
+    setIssuedKey(null)
+    issue.reset()
+    onClose()
+  }
 
   const copy = async () => {
     if (!issuedKey) return
@@ -167,9 +165,9 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
       isVisible={isOpen}
       title={issuedKey ? t.modal.createdTitle : t.modal.title}
       onVisibilityChange={(visible) => {
-        if (!visible) onClose()
+        if (!visible) close()
       }}
-      toggleClose={onClose}
+      toggleClose={close}
       width="small"
       // The lifetime dropdown renders inline, not in a portal — island-ui's
       // Select lists every prop it forwards to react-select and menuPortalTarget
@@ -202,7 +200,7 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
             <Button variant="ghost" size="small" onClick={copy}>
               {t.modal.copyButton}
             </Button>
-            <Button size="small" onClick={onClose}>
+            <Button size="small" onClick={close}>
               {t.modal.doneButton}
             </Button>
           </Inline>
@@ -221,20 +219,6 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
           </Text>
 
           <Select
-            name="api-key-scoping"
-            size="xs"
-            label={t.modal.scopingLabel}
-            options={SCOPE_OPTIONS}
-            value={SCOPE_OPTIONS.find((o) => o.value === scoping) ?? null}
-            onChange={(opt) => {
-              if (opt) setScoping(opt.value)
-            }}
-          />
-          <Text variant="small" color="dark400">
-            {t.modal.scopingHint}
-          </Text>
-
-          <Select
             name="api-key-expiry"
             size="xs"
             label={t.modal.expiresLabel}
@@ -249,7 +233,7 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
           </Text>
 
           <Inline space={2} justifyContent="flexEnd">
-            <Button variant="ghost" size="small" onClick={onClose}>
+            <Button variant="ghost" size="small" onClick={close}>
               {t.modal.cancelButton}
             </Button>
             <Button
@@ -260,12 +244,8 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
                   companyId,
                   label: label.trim() === '' ? undefined : label.trim(),
                   expiresAt: expiryToIso(expiryDays),
-                  // Sent explicitly in both cases rather than relying on the
-                  // server default, so what the admin picked is what is stored.
-                  scopes:
-                    scoping === 'filing+scoring'
-                      ? [...FILING_SCOPES, 'scoring:write' as const]
-                      : [...FILING_SCOPES],
+                  // No scopes: a key is all or nothing, and the API grants
+                  // every scope, scoring:write included, when none is named.
                 })
               }
             >

@@ -13,6 +13,10 @@ import { CompanyEmailRecipientModel } from './company-email/models/company-email
 import { ConfigModel } from './config/models/config.model'
 import { PostcodeModel } from './location/models/postcode.model'
 import { RegionModel } from './location/models/region.model'
+import { MailboxDeliveryModel } from './mailbox-delivery/models/mailbox-delivery.model'
+import { PartnerClientModel } from './partner-client/models/partner-client.model'
+import { PartnerClientKeyModel } from './partner-client/models/partner-client-key.model'
+import { PartnerDelegationModel } from './partner-client/models/partner-delegation.model'
 import { PublicReportModel } from './public-report/models/public-report.model'
 import { ReportModel } from './report/models/report.model'
 import { ReportEventModel } from './report/models/report-event.model'
@@ -130,4 +134,13 @@ export const DOE_MODELS = [
   ScoringSubCriterionStepModel,
   ScoringRoleModel,
   ScoringRoleStepModel,
+
+  // Vendor clients and delegation. After CompanyModel and UserModel, which the
+  // delegation and actor columns reference.
+  PartnerClientModel,
+  PartnerClientKeyModel,
+  PartnerDelegationModel,
+
+  // Mailbox delivery through One. After CompanyModel, which it references.
+  MailboxDeliveryModel,
 ]

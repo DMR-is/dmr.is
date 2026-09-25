@@ -194,6 +194,10 @@ describe('ApiKeyService', () => {
       })
 
       expect(create.mock.calls[0][0].scopes).toEqual(DEFAULT_API_KEY_SCOPES)
+      // All or nothing: the default is every scope, scoring:write included.
+      expect(create.mock.calls[0][0].scopes).toContain(
+        ApiKeyScopeEnum.SCORING_WRITE,
+      )
     })
 
     it('honours a narrower scope set and de-duplicates it', async () => {
@@ -207,6 +211,33 @@ describe('ApiKeyService', () => {
       expect(create.mock.calls[0][0].scopes).toEqual([
         ApiKeyScopeEnum.SALARY_SUBMIT,
       ])
+    })
+
+    it('gives an explicit null the default, as it did before [] was refused', async () => {
+      // @IsOptional() lets null past validation; it must not reach `.length`.
+      await service.issue({
+        company: COMPANY,
+        createdVia: ApiKeyOriginEnum.ISLAND_IS,
+        actorNationalId: '0101901234',
+        scopes: null,
+      })
+
+      expect(create.mock.calls[0][0].scopes).toEqual(DEFAULT_API_KEY_SCOPES)
+    })
+
+    it('refuses an empty scope set rather than reading it as the default', async () => {
+      // The default is every scope, so a caller sending [] to mean "minimal"
+      // would otherwise get the cascading starfsmat delete as well.
+      await expect(
+        service.issue({
+          company: COMPANY,
+          createdVia: ApiKeyOriginEnum.ISLAND_IS,
+          actorNationalId: '0101901234',
+          scopes: [],
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(create).not.toHaveBeenCalled()
     })
 
     it('rejects an unrecognised scope rather than storing it', async () => {

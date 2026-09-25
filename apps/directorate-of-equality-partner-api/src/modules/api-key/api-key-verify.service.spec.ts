@@ -3,6 +3,11 @@ import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
 import {
+  PartnerClientKeyModel,
+  PartnerClientModel,
+} from '@dmr.is/doe-modules/partner-client'
+import {
+  ApiKeyKindEnum,
   ApiKeyModel,
   ApiKeyScopeEnum,
   buildApiKey,
@@ -25,6 +30,8 @@ const mockLogger = {
 describe('ApiKeyVerifyService', () => {
   let service: ApiKeyVerifyService
   let findOne: jest.Mock
+  let clientKeyFindOne: jest.Mock
+  let clientFindByPk: jest.Mock
   let update: jest.Mock
 
   /** A persisted row for `key`, with whatever lifecycle state the test needs. */
@@ -49,12 +56,22 @@ describe('ApiKeyVerifyService', () => {
     process.env.DOE_API_KEY_HMAC_SECRET = HMAC
 
     findOne = jest.fn()
+    clientKeyFindOne = jest.fn()
+    clientFindByPk = jest.fn()
 
     const module = await Test.createTestingModule({
       providers: [
         ApiKeyVerifyService,
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         { provide: getModelToken(ApiKeyModel), useValue: { findOne } },
+        {
+          provide: getModelToken(PartnerClientKeyModel),
+          useValue: { findOne: clientKeyFindOne },
+        },
+        {
+          provide: getModelToken(PartnerClientModel),
+          useValue: { findByPk: clientFindByPk },
+        },
       ],
     }).compile()
 
@@ -70,6 +87,7 @@ describe('ApiKeyVerifyService', () => {
     findOne.mockResolvedValue(rowFor(generated.secret))
 
     await expect(service.verify(generated.key)).resolves.toEqual({
+      kind: ApiKeyKindEnum.COMPANY,
       id: 'row-1',
       keyId: 'aaaaaaaaaaaaaaa1',
       companyId: 'company-1',
@@ -237,5 +255,109 @@ describe('ApiKeyVerifyService', () => {
     findOne.mockResolvedValue(rowFor(secret, { keyId: 'b'.repeat(16) }))
 
     await expect(service.verify(raw)).resolves.toBeDefined()
+  })
+
+  /**
+   * A `doev_` key is looked up in the client key table only, checked the same
+   * way, and then refused if its firm has been revoked — revoking a firm leaves
+   * its keys as they are, so a live key under a revoked firm is the case that
+   * matters.
+   */
+  describe('vendor client keys', () => {
+    const clientKeyRow = (
+      secret: string,
+      overrides: Record<string, unknown> = {},
+    ) => {
+      update = jest.fn().mockResolvedValue(undefined)
+      return {
+        id: 'client-key-1',
+        keyId: 'bbbbbbbbbbbbbbb1',
+        partnerClientId: 'client-1',
+        secretHash: hashApiKeySecret(secret, HMAC),
+        revokedAt: null,
+        expiresAt: null,
+        update,
+        ...overrides,
+      }
+    }
+
+    const liveClient = {
+      id: 'client-1',
+      scopes: [ApiKeyScopeEnum.REPORT_READ, ApiKeyScopeEnum.SALARY_SUBMIT],
+      revokedAt: null,
+    }
+
+    it('resolves to the firm and its scopes, looking only in the client key table', async () => {
+      const generated = generateApiKey('dev', ApiKeyKindEnum.PARTNER_CLIENT)
+      clientKeyFindOne.mockResolvedValue(clientKeyRow(generated.secret))
+      clientFindByPk.mockResolvedValue(liveClient)
+
+      await expect(service.verify(generated.key)).resolves.toEqual({
+        kind: ApiKeyKindEnum.PARTNER_CLIENT,
+        id: 'client-key-1',
+        keyId: 'bbbbbbbbbbbbbbb1',
+        partnerClientId: 'client-1',
+        scopes: liveClient.scopes,
+        // The firm's ceiling until PartnerCompanyGuard narrows it.
+        scopesResolved: false,
+      })
+      expect(clientKeyFindOne).toHaveBeenCalledWith({
+        where: { keyId: generated.keyId },
+      })
+      expect(findOne).not.toHaveBeenCalled()
+    })
+
+    it('never looks a company key up in the client key table', async () => {
+      const generated = generateApiKey('dev')
+      findOne.mockResolvedValue(rowFor(generated.secret))
+
+      await service.verify(generated.key)
+
+      expect(clientKeyFindOne).not.toHaveBeenCalled()
+    })
+
+    it('refuses a live key whose firm has been revoked', async () => {
+      const generated = generateApiKey('dev', ApiKeyKindEnum.PARTNER_CLIENT)
+      clientKeyFindOne.mockResolvedValue(clientKeyRow(generated.secret))
+      clientFindByPk.mockResolvedValue({ ...liveClient, revokedAt: new Date() })
+
+      await expect(service.verify(generated.key)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      )
+    })
+
+    it('refuses a revoked key under a live firm', async () => {
+      const generated = generateApiKey('dev', ApiKeyKindEnum.PARTNER_CLIENT)
+      clientKeyFindOne.mockResolvedValue(
+        clientKeyRow(generated.secret, { revokedAt: new Date() }),
+      )
+      clientFindByPk.mockResolvedValue(liveClient)
+
+      await expect(service.verify(generated.key)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      )
+    })
+
+    it('refuses the wrong secret with the same message as every other failure', async () => {
+      const generated = generateApiKey('dev', ApiKeyKindEnum.PARTNER_CLIENT)
+      clientKeyFindOne.mockResolvedValue(clientKeyRow('some-other-secret'))
+      clientFindByPk.mockResolvedValue(liveClient)
+
+      await expect(service.verify(generated.key)).rejects.toThrow(
+        'Invalid API key',
+      )
+    })
+
+    it('refuses a doe_ key whose keyId exists only in the client table', async () => {
+      // The prefix, not the keyId, decides the table: a company-prefixed key
+      // cannot reach a client row by guessing its keyId.
+      const generated = generateApiKey('dev')
+      findOne.mockResolvedValue(null)
+      clientKeyFindOne.mockResolvedValue(clientKeyRow(generated.secret))
+
+      await expect(service.verify(generated.key)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      )
+    })
   })
 })

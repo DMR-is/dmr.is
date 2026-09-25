@@ -14,8 +14,9 @@ import { PER_KEY_DRY_RUN_THROTTLER, PER_KEY_THROTTLER } from '../throttlers'
  * The default `ThrottlerGuard` tracks by IP, which is the wrong unit here twice
  * over: several vendors can share an egress IP, so one busy integrator would
  * throttle the others, and a single vendor behind several IPs would get a
- * multiple of the intended allowance. The key is the tenant, so the key is the
- * bucket.
+ * multiple of the intended allowance. The key is the unit of trust — a
+ * company's own key, or one of a vendor client's keys across its whole book — so the key
+ * is the bucket.
  *
  * Requires `ApiKeyGuard` to have run first, and only ever sees authenticated
  * requests as a consequence. It is therefore NOT what bounds a stream of bad
@@ -52,10 +53,12 @@ export abstract class PerKeyThrottlerGuard extends ThrottlerGuard {
   }
 
   protected async getTracker(req: ApiKeyRequest): Promise<string> {
-    const keyId = req.apiKeyContext?.keyId
+    const apiKey = req.apiKeyContext
 
-    if (keyId) {
-      return `key:${keyId}`
+    // Kind as well as keyId: keyIds are unique per table, not across the two
+    // key tables, so two credentials must not be able to share a bucket.
+    if (apiKey) {
+      return `key:${apiKey.kind}:${apiKey.keyId}`
     }
 
     // Unreachable while ApiKeyGuard precedes this guard, and deliberately not
@@ -74,7 +77,7 @@ export abstract class PerKeyThrottlerGuard extends ThrottlerGuard {
    * The allowance is per key across the whole surface, not per key per route.
    * The base class hashes the controller and handler name into the storage key,
    * which would silently multiply the documented limit by the number of
-   * operations — thirteen of them here.
+   * operations on this surface.
    */
   protected generateKey(
     _context: ExecutionContext,

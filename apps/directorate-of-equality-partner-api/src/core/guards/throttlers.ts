@@ -1,5 +1,9 @@
+import { ExecutionContext } from '@nestjs/common'
+
+import { ApiKeyKindEnum } from '@dmr.is/doe-shared'
+
 /**
- * The two rate-limit buckets this surface runs, and why there are two.
+ * The two surface-wide rate-limit buckets, and why there are two of them.
  *
  * They answer different questions and, critically, they run at different points
  * in the request. `PER_KEY_THROTTLER` needs to know *which tenant* is calling,
@@ -35,3 +39,31 @@ export const PER_IP_THROTTLER = 'perIp'
  * rehearse; the ceiling is against a loop, not against use.
  */
 export const PER_KEY_DRY_RUN_THROTTLER = 'perKeyDryRun'
+
+/** The surface-wide per-key allowance for a company key, per hour. */
+export const COMPANY_KEY_LIMIT_PER_HOUR = 5000
+
+/**
+ * The same allowance for a vendor client key, which spends it across every
+ * company the firm acts for. Higher because one firm's key carries its whole
+ * book; one bucket per key rather than per company, because the firm manages
+ * its own customers' traffic and needs no isolation between them from us.
+ */
+export const PARTNER_CLIENT_KEY_LIMIT_PER_HOUR = 10000
+
+/**
+ * `PER_KEY_THROTTLER`'s limit, resolved per request from the key's kind.
+ *
+ * A function on the one bucket rather than a second named bucket, because
+ * `@nestjs/throttler` suffixes every header with the bucket name for any name
+ * but `default` — a separate vendor bucket would move every vendor response's
+ * `X-RateLimit-*` headers to suffixed names, the problem the dry run has.
+ *
+ * Runs after `ApiKeyGuard`, so the context is set; a request without one is
+ * refused by the throttler's own tracker before this value could matter.
+ */
+export const perKeyLimit = (context: ExecutionContext): number =>
+  context.switchToHttp().getRequest()?.apiKeyContext?.kind ===
+  ApiKeyKindEnum.PARTNER_CLIENT
+    ? PARTNER_CLIENT_KEY_LIMIT_PER_HOUR
+    : COMPANY_KEY_LIMIT_PER_HOUR

@@ -328,7 +328,7 @@
     },
     "/api/v1/companies/{companyId}/api-keys": {
       "post": {
-        "description": "Issues an API key on a company’s behalf. Requires the ADMIN role. **The secret is shown exactly once** — it is stored only as a hash, cannot be retrieved again, and has to be delivered to the company from this response. Intended as the fallback when a company has lost its key and has no open island.is application to mint a new one from.",
+        "description": "Issues an API key on a company’s behalf. Requires the ADMIN role. **The secret is shown exactly once** — it is stored only as a hash, cannot be retrieved again, and has to be delivered to the company from this response. Intended as the fallback for a company that cannot sign in to the self-service web to mint its own.",
         "operationId": "issueCompanyApiKey",
         "parameters": [
           {
@@ -3978,6 +3978,487 @@
         "tags": ["Location"]
       }
     },
+    "/api/v1/partner-clients": {
+      "post": {
+        "description": "Approves a firm as an intermediary, for every scope — approval is all or nothing. Requires the ADMIN role. `409` if the kennitala is already an active partner client. The firm can file for no one until companies delegate to it.",
+        "operationId": "createPartnerClient",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartnerClientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PartnerClientDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Partner clients"]
+      },
+      "get": {
+        "description": "Every firm ever approved, newest first. Revoked firms are included so the list doubles as an audit view.",
+        "operationId": "getPartnerClients",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPartnerClientsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Partner clients"]
+      }
+    },
+    "/api/v1/partner-clients/{id}": {
+      "get": {
+        "operationId": "getPartnerClient",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PartnerClientDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Partner clients"]
+      },
+      "delete": {
+        "description": "Cuts a firm off. Requires the ADMIN role. It then authenticates nowhere, whatever keys or delegations it still holds; those are left as they are, as their own audit trail. Idempotent.",
+        "operationId": "revokePartnerClient",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PartnerClientDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Partner clients"]
+      }
+    },
+    "/api/v1/partner-clients/{id}/keys": {
+      "post": {
+        "description": "Issues a key on a firm’s behalf. Requires the ADMIN role. **The secret is shown exactly once.** The fallback to the firm collecting its own key on the self-service web. `409` if the firm has been revoked.",
+        "operationId": "issuePartnerClientKey",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartnerClientKeyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedPartnerClientKeyDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Partner clients"]
+      },
+      "get": {
+        "description": "Every key a firm holds, newest first, revoked and expired ones included. Never contains a secret.",
+        "operationId": "getPartnerClientKeys",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPartnerClientKeysResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Partner clients"]
+      }
+    },
+    "/api/v1/partner-clients/{id}/keys/{keyId}": {
+      "delete": {
+        "description": "Revokes one of a firm’s keys. Requires the ADMIN role. The firm and its other keys are untouched. Idempotent.",
+        "operationId": "revokePartnerClientKey",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          },
+          {
+            "name": "keyId",
+            "required": true,
+            "in": "path",
+            "description": "The key’s `id` as listed, not the `keyId` inside the credential.",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PartnerClientKeyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Partner clients"]
+      }
+    },
     "/api/v1/reports/overview": {
       "get": {
         "operationId": "getReportOverview",
@@ -6451,9 +6932,28 @@
           "replayed": {
             "type": "boolean",
             "description": "True when the providerId had already been used and this call filed nothing — the report named here is the earlier one, and the body just sent was not read. A corrected re-file needs a new providerId."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "SUBMITTED",
+              "POSTPONED",
+              "IN_REVIEW",
+              "DENIED",
+              "APPROVED",
+              "SUPERSEDED",
+              "WITHDRAWN"
+            ],
+            "description": "Status of the report this call refers to. SUBMITTED means it is in the reviewer queue; POSTPONED means outliers were detected and left unexplained, and it cannot be reviewed until they are."
+          },
+          "unexplainedOutlierOrdinals": {
+            "description": "Employee ordinals whose pay difference is unexplained, present only when status is POSTPONED. Every one of them must be covered by a group sent to PUT …/outliers before the report can be reviewed.",
+            "type": "array",
+            "items": { "type": "number" }
           }
         },
-        "required": ["reportId", "replayed"]
+        "required": ["reportId", "replayed", "status"]
       },
       "AdminEqualityReportDto": {
         "type": "object",
@@ -6518,7 +7018,7 @@
           },
           "scopes": {
             "type": "array",
-            "description": "What the key may do. Omit for the default set — `report:read`, `salary:submit` and `equality:submit`, which is everything a vendor needs to file. `scoring:write` is never granted implicitly and must be named here: it authors the company’s starfsmat, which is a different act from filing against one, and it carries a delete that cascades the whole model away. An unrecognised scope is rejected rather than stored.",
+            "description": "What the key may do. Omit for every scope, `scoring:write` included — access is all or nothing, and no Jafnréttisstofa screen narrows it. Name a subset only to restrict a key deliberately; note that `scoring:write` carries a delete that cascades the whole starfsmat away. An empty array is refused rather than read as omitted, and an unrecognised scope is rejected rather than stored.",
             "items": {
               "type": "string",
               "enum": [
@@ -7084,6 +7584,8 @@
           "SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL",
           "API_KEY_ISSUED",
           "API_KEY_REVOKED",
+          "PARTNER_DELEGATION_GRANTED",
+          "PARTNER_DELEGATION_REVOKED",
           "CUSTOM_EMAIL_SENT",
           "CUSTOM_EMAIL_FAILED",
           "CUSTOM_EMAIL_SKIPPED"
@@ -8097,6 +8599,194 @@
           "regionId": { "type": "string", "format": "uuid" }
         },
         "required": ["id", "code", "place", "regionId"]
+      },
+      "CreatePartnerClientDto": {
+        "type": "object",
+        "properties": {
+          "nationalId": {
+            "type": "string",
+            "pattern": "^\\d{6}[- ]?\\d{4}$",
+            "example": "0101901234",
+            "description": "The firm’s kennitala."
+          },
+          "name": { "type": "string", "minLength": 1, "maxLength": 256 }
+        },
+        "required": ["nationalId", "name"]
+      },
+      "PartnerClientDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "nationalId": {
+            "type": "string",
+            "description": "The firm’s kennitala."
+          },
+          "name": { "type": "string" },
+          "scopes": {
+            "type": "array",
+            "description": "The ceiling on what the firm may ever do. What it may do for a given company is this intersected with that company’s delegation.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "salary:submit",
+                "equality:submit",
+                "report:read",
+                "scoring:write"
+              ]
+            }
+          },
+          "createdByUserId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The DoE admin who approved the firm."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "revokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "Set once the firm is cut off. A revoked firm authenticates nowhere, whatever keys or delegations it still holds."
+          },
+          "revokedByUserId": { "type": "string", "nullable": true },
+          "revokedReason": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "nationalId",
+          "name",
+          "scopes",
+          "createdByUserId",
+          "createdAt"
+        ]
+      },
+      "GetPartnerClientsResponseDto": {
+        "type": "object",
+        "properties": {
+          "partnerClients": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PartnerClientDto" }
+          }
+        },
+        "required": ["partnerClients"]
+      },
+      "CreatePartnerClientKeyDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "nullable": true,
+            "description": "Free-text label to tell this key apart from the others, e.g. the environment it is deployed to.",
+            "maxLength": 256
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the key stops being accepted. Omit for no expiry."
+          }
+        }
+      },
+      "IssuedPartnerClientKeyDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The full plaintext key, `doev_<env>_<keyId>.<secret>`. Shown exactly once — it cannot be retrieved again, only replaced."
+          },
+          "id": { "type": "string", "format": "uuid" },
+          "partnerClientId": { "type": "string", "format": "uuid" },
+          "keyId": { "type": "string" },
+          "label": { "type": "string", "nullable": true },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": ["key", "id", "partnerClientId", "keyId", "createdAt"]
+      },
+      "PartnerClientKeyDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "partnerClientId": { "type": "string", "format": "uuid" },
+          "keyId": {
+            "type": "string",
+            "description": "Public half of the key, as it appears in the issued credential. Not a secret."
+          },
+          "label": { "type": "string", "nullable": true },
+          "createdVia": {
+            "description": "Which issuance path minted the key — the firm itself on the self-service web, or a DoE reviewer.",
+            "allOf": [{ "$ref": "#/components/schemas/ApiKeyOriginEnum" }]
+          },
+          "createdByNationalId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Kennitala of the person who minted the key on the self-service path. Null on the admin path."
+          },
+          "createdByUserId": {
+            "type": "string",
+            "nullable": true,
+            "description": "DoE reviewer who minted the key. Null on the self-service path."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the key stops being accepted. Null means no expiry."
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "Last time the key authenticated a request. Written at most once a minute per key."
+          },
+          "revokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "revokedByNationalId": { "type": "string", "nullable": true },
+          "revokedByUserId": { "type": "string", "nullable": true },
+          "revokedReason": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "partnerClientId",
+          "keyId",
+          "createdVia",
+          "createdAt"
+        ]
+      },
+      "GetPartnerClientKeysResponseDto": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PartnerClientKeyDto" }
+          }
+        },
+        "required": ["keys"]
       },
       "ReportOverviewGeneralDto": {
         "type": "object",

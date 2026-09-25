@@ -14,8 +14,15 @@ export const NAV_PATHS = {
   heildarlisti: { title: 'Vinnslusvæði', href: '/yfirlit', adminOnly: false },
   fyrirtaeki: { title: 'Fyrirtæki', href: '/fyrirtaeki', adminOnly: false },
   gagnautdrattur: {
-    title: 'Keyra út lista',
+    title: 'Gagnaútdráttur',
     href: '/gagnautdrattur',
+    adminOnly: false,
+  },
+  // Readable by every reviewer, like a company's key list; approving a firm and
+  // minting its credentials are ADMIN-only in the API itself.
+  thjonustuadilar: {
+    title: 'Þjónustuaðilar',
+    href: '/thjonustuadilar',
     adminOnly: false,
   },
   ritstjorn: { title: 'Ritstjórar', href: '/ritstjorar', adminOnly: true },

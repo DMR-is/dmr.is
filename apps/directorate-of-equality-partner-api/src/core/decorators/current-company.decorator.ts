@@ -7,8 +7,9 @@ import {
 import { CompanyDto } from '@dmr.is/doe-modules/company'
 
 /**
- * The company the verified key belongs to, as resolved by
- * `PartnerCompanyGuard`. Throws rather than returning undefined so a handler
+ * The company the request acts for, as resolved by
+ * `PartnerCompanyGuard` — a company key's own company, or the company a vendor
+ * client key named in `X-Company-National-Id` and holds a delegation from. Throws rather than returning undefined so a handler
  * cannot silently operate without a tenant.
  */
 export const CurrentCompany = createParamDecorator(

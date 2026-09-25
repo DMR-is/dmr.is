@@ -166,6 +166,45 @@ export class CompanyEventService implements ICompanyEventService {
     })
   }
 
+  async emitPartnerDelegationGranted(
+    companyId: string,
+    status: CompanyStatusEnum,
+    firm: string,
+  ): Promise<void> {
+    this.logger.info(
+      `Emitting PARTNER_DELEGATION_GRANTED event for company ${companyId}`,
+      { context: LOGGING_CONTEXT, companyId },
+    )
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType: CompanyEventTypeEnum.PARTNER_DELEGATION_GRANTED,
+      actorUserId: null,
+      status,
+      reason: firm,
+    })
+  }
+
+  async emitPartnerDelegationRevoked(
+    companyId: string,
+    status: CompanyStatusEnum,
+    firm: string,
+    actorUserId?: string | null,
+  ): Promise<void> {
+    this.logger.info(
+      `Emitting PARTNER_DELEGATION_REVOKED event for company ${companyId}`,
+      { context: LOGGING_CONTEXT, companyId },
+    )
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType: CompanyEventTypeEnum.PARTNER_DELEGATION_REVOKED,
+      actorUserId: actorUserId ?? null,
+      status,
+      reason: firm,
+    })
+  }
+
   async emitApiKeyRevoked(
     companyId: string,
     status: CompanyStatusEnum,

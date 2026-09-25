@@ -1,3 +1,5 @@
+import { ArrayMinSize, ArrayUnique, IsEnum } from 'class-validator'
+
 import {
   ApiOptionalArray,
   ApiOptionalDateTime,
@@ -23,8 +25,11 @@ export class CreateApiKeyDto {
     enum: ApiKeyScopeEnum,
     isArray: true,
     description:
-      'What the key may do. Omit for the default set — `report:read`, `salary:submit` and `equality:submit`, which is everything a vendor needs to file. `scoring:write` is never granted implicitly and must be named here: it authors the company’s starfsmat, which is a different act from filing against one, and it carries a delete that cascades the whole model away. An unrecognised scope is rejected rather than stored.',
+      'What the key may do. Omit for every scope, `scoring:write` included — access is all or nothing, and no Jafnréttisstofa screen narrows it. Name a subset only to restrict a key deliberately; note that `scoring:write` carries a delete that cascades the whole starfsmat away. An empty array is refused rather than read as omitted, and an unrecognised scope is rejected rather than stored.',
   })
+  @ArrayMinSize(1)
+  @ArrayUnique()
+  @IsEnum(ApiKeyScopeEnum, { each: true })
   scopes?: ApiKeyScopeEnum[]
 
   @ApiOptionalDateTime({

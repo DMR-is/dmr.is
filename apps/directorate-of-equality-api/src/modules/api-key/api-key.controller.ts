@@ -76,7 +76,7 @@ export class ApiKeyController {
     type: IssuedApiKeyDto,
     include404: true,
     description:
-      'Issues an API key on a company’s behalf. Requires the ADMIN role. **The secret is shown exactly once** — it is stored only as a hash, cannot be retrieved again, and has to be delivered to the company from this response. Intended as the fallback when a company has lost its key and has no open island.is application to mint a new one from.',
+      'Issues an API key on a company’s behalf. Requires the ADMIN role. **The secret is shown exactly once** — it is stored only as a hash, cannot be retrieved again, and has to be delivered to the company from this response. Intended as the fallback for a company that cannot sign in to the self-service web to mint its own.',
   })
   async issueApiKey(
     @Param('companyId', ParseUUIDPipe) companyId: string,

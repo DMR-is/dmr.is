@@ -4,11 +4,15 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 
 import { decodeJwt } from 'jose'
 
+import { appAuthCookies } from '@dmr.is/auth/sessionCookies'
 import { getLogger } from '@dmr.is/logging-next'
 
 import { getMyUser } from '../../gen/fetch/sdk.gen'
 import { getDoEClient } from '../api/createClient'
-import { identityServerConfig } from './identityServerConfig'
+import {
+  AUTH_COOKIE_PREFIX,
+  identityServerConfig,
+} from './identityServerConfig'
 import { setLogoutHint } from './logoutHint'
 
 const SESSION_TIMEOUT = 60 * 60 * 8 + 30
@@ -66,6 +70,7 @@ export const authOptions: AuthOptions = {
     strategy: 'jwt',
     maxAge: SESSION_TIMEOUT,
   },
+  cookies: appAuthCookies(AUTH_COOKIE_PREFIX),
   callbacks: {
     jwt: async ({ token, user, account }) => {
       if (user && account) {

@@ -47,6 +47,21 @@ export enum DoeModels {
   SCORING_SUB_CRITERION_STEP = 'scoring_sub_criterion_step',
   SCORING_ROLE = 'scoring_role',
   SCORING_ROLE_STEP = 'scoring_role_step',
+
+  /**
+   * Vendor clients: an intermediary firm, its credentials, and the companies
+   * that allowed it to act for them. Prefixed `doe_` like `doe_api_key`, as a
+   * service-level concern rather than a domain entity of the register.
+   */
+  PARTNER_CLIENT = 'doe_partner_client',
+  PARTNER_CLIENT_KEY = 'doe_partner_client_key',
+  PARTNER_DELEGATION = 'doe_partner_delegation',
+
+  /**
+   * Notices delivered to a company's island.is mailbox through One
+   * (OneExternalAPI), with the ids One returned so a delivery can resume.
+   */
+  MAILBOX_DELIVERY = 'mailbox_delivery',
 }
 
 /**

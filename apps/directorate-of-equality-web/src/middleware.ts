@@ -6,9 +6,15 @@ import {
   tryToUpdateCookie,
   updateCookie,
 } from '@dmr.is/auth/middleware-helpers'
+import { sessionCookieName } from '@dmr.is/auth/sessionCookies'
 import { isExpired } from '@dmr.is/auth/token-service'
 
-import { identityServerConfig } from './lib/auth/identityServerConfig'
+import {
+  AUTH_COOKIE_PREFIX,
+  identityServerConfig,
+} from './lib/auth/identityServerConfig'
+
+const SESSION_COOKIE = sessionCookieName(AUTH_COOKIE_PREFIX)
 
 export default withAuth(
   async function middleware(req: NextRequestWithAuth) {
@@ -35,17 +41,26 @@ export default withAuth(
         token,
         response,
         redirectUri,
+        SESSION_COOKIE,
       )
       response = result.response
 
       if (result.newSessionToken) {
-        return updateCookie(result.newSessionToken, req, response)
+        return updateCookie(
+          result.newSessionToken,
+          req,
+          response,
+          SESSION_COOKIE,
+        )
       }
     }
 
     return response
   },
   {
+    // Must match authOptions.cookies, or withAuth reads NextAuth's default
+    // name and sees no session.
+    cookies: { sessionToken: { name: SESSION_COOKIE } },
     pages: {
       signIn: '/innskraning',
     },

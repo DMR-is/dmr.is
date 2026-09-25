@@ -454,6 +454,160 @@ A revoked row names at most one actor, and may name none: a system-initiated rev
 (company deactivated, for instance) has no human behind it, and the constraint
 deliberately allows for that rather than blocking a path that does not exist yet.
 
+## Vendor clients and delegation
+
+`doe_api_key` is one company per key, which suits an employer integrating its own payroll
+system and does not suit an accounting firm filing for a book of 100+ employers: that
+would be 100 credentials to store and rotate, and 100 employers each copying a secret into
+the firm's product. A firm instead gets three kinds of row:
+
+- **`doe_partner_client`** — the firm: _who is calling_. Created by a DoE admin only,
+  because approving an intermediary is a commercial decision by Jafnréttisstofa. Its
+  `scopes` are the ceiling on what the firm may ever do.
+- **`doe_partner_client_key`** — the firm's credentials, several per client for the same
+  zero-downtime rotation `doe_api_key` supports. Same hashing, same revocation and expiry
+  columns, same actor rules, so one verify path serves both. No scopes of its own: a key
+  _is_ the client.
+- **`doe_partner_delegation`** — a company allowing the firm to act for it: _on whose
+  behalf_. Granted by the company on the self-service web behind island.is login, so it
+  records a witnessed act rather than the firm's claim that the employer consented. It
+  carries its own `scopes`, and a request's effective permission is the **intersection**
+  with the client's. Both are all or nothing: a firm is always approved for every scope
+  (`m-20260924-partner-client-full-approval` widened the live firms approved before
+  that), and a delegation granted on the self-service web copies the firm's approval.
+  Delegations granted before that deploy may still be narrower and are
+  deliberately not widened — they are the company's own grant.
+
+**Why credential and delegation are separate objects.** So both revocations exist and each
+is one row: revoke the client and the firm is cut off everywhere; revoke a delegation and
+one employer has withdrawn. Revoking a single key leaves the client and its delegations
+alone.
+
+**Why new tables, not a nullable `doe_api_key.company_id`.** The partner API treats that
+column as absolute: a missing company there is a broken foreign key, not a new customer.
+Keeping that true of the table that authenticates every request is worth the second
+lookup path.
+
+**Lifetimes.** A delegation lasts until the company turns it off; there is no expiry
+column. Turning it back on inserts a new row, so the earlier grant stays as audit of who
+allowed it and when. A client re-approved after revocation likewise gets a fresh row, and
+its companies must consent again, since their delegations name the old client row. Both
+rules come from partial unique indexes that constrain only the live row.
+
+**What "live" means.** Revoking a client stamps only the client row; its keys and
+delegations keep their own `revoked_at`, as their own audit trail. So a key or a
+delegation is live **iff its own `revoked_at` and its client's `revoked_at` are both
+NULL**. Every reader either checks both or runs only after the client has been checked —
+`IPartnerDelegationService.findLive`, for one, assumes its caller has already refused a
+revoked client. "Was this delegation in force at time T" is
+therefore `min(delegation.revoked_at, client.revoked_at)`.
+
+**Audit.** Granting and withdrawing a delegation append `PARTNER_DELEGATION_GRANTED` /
+`PARTNER_DELEGATION_REVOKED` to `company_event`, with the firm's name and kennitala in
+`reason`, so they sit on the company's timeline beside its key events. The person who
+granted or withdrew it is on the delegation row (`granted_by_national_id`,
+`revoked_by_national_id`), for the same reason self-service keys record theirs there: a
+company's own representative has no `doe_user` row. Firm-level operations (approving,
+revoking a firm, its keys) emit no event — a firm is not a company in the register and has
+no timeline; the actor columns on those rows are the audit.
+
+**Provenance.** `report.partner_client_id` names the firm whose credential filed a report.
+`(provider_type, provider_id)` records the channel and the caller's id but not the firm,
+and "who actually submitted this" is the audit question. Null for every report not filed
+under a client key; it cannot be backfilled.
+
+## Mailbox delivery (island.is Pósthólf via OneSystems)
+
+Some notices to a company must reach its island.is Stafrænt pósthólf. We do not talk to
+island.is for that: Jafnréttisstofa's case system, One (OneSystems' OneExternalAPI), files
+the PDF under a case and delivers it to the mailbox, and One is the Skjalaveita island.is
+fetches the document from. So **no PDF is stored here**. One keeps the bytes; the row keeps
+a SHA-256 and a size, so what was sent can be recognised if it is re-rendered. One
+delivery is up to three calls to One (CreateCase, CreateDocument, SendDocToIslandIs), and
+`mailbox_delivery` is the record that lets it resume. The service and the operator
+runbook live in `libs/directorate-of-equality/modules/src/mailbox-delivery/` (its
+`README.md`).
+
+**Why its own table, not `company_event`.** A delivery is state that moves: a row is
+written, gains a case id, a document id, a send time, and may fail and resume in between.
+`company_event` is insert-only (`ImmutableModel`), so the timeline could say that a notice
+went out, but could not hold one that is halfway there. This table is a mutable resume
+record.
+
+**Why each id is saved as it arrives.** None of the three calls is documented as
+idempotent, and CreateDocument and SendDocToIslandIs really are not: repeating them files
+or sends a second copy. Each id One returns is written the moment its call returns, and a
+resume skips every step whose id (or `sent_at`) is already here, so a retry never repeats
+a non-idempotent call. Just before either of those two calls, `in_flight_step` is written;
+still set when the row is next claimed means the process died mid-call.
+
+**The lease.** `lease_token` / `lease_expires_at` stop two workers resuming one row at
+once. A claim is one conditional `UPDATE ... RETURNING` on an unsettled row with no live
+lease, compared on the database clock. Not `FOR UPDATE`, which would hold a connection
+open across the calls to One.
+
+**UNCERTAIN is terminal.** When the outcome of CreateDocument or SendDocToIslandIs is
+unknown (a timeout, a 5xx, a `Success: false`, a process that died mid-call) the row
+becomes `UNCERTAIN` and no code path moves it on. A person reconciles it by hand against
+One, following the runbook in the module README. Retrying it automatically could put the
+same statutory notice in the mailbox twice. A CreateCase failure of any kind, and a
+definitive failure of either later call, leaves the row `FAILED` and retryable instead.
+
+**The attempts cap.** A row is claimed at most `MAILBOX_DELIVERY_MAX_ATTEMPTS` (5) times;
+every claim adds one to `attempts`. After that the service makes no call and reports the
+row as `ATTEMPTS_EXHAUSTED`. CreateCase is retried on any failure on the unconfirmed
+assumption that One finds-or-creates the case (TODO(OneSystems)), so without a cap a
+permanent rejection would retry forever, and if that assumption is wrong each retry may
+leave an orphan case in One. An operator re-arms a row by resetting `attempts` after
+fixing the cause. The cap needs no schema: it is a condition in the claim, and
+`mailbox_delivery_attempts_chk` only keeps the count non-negative.
+
+**`last_error` is not for display.** It is cut to 500 characters and may hold One's own
+`ErrorMessage`, which can echo the recipient's kennitala, name or the subject. Never
+surface it unfiltered in a log, a UI or a ticket. `last_error_number` is stored only in the
+client's loggable form (`toLoggableErrorNumber`), never raw.
+
+**Company pinning.** `(company_id, national_id)` references `company(id, national_id)`,
+reusing the `company_id_national_id_uq` unique constraint added for
+`doe_partner_delegation` (#1542). The kennitala the notice went to and the company the row
+names cannot disagree. No `ON DELETE`: this records mail that reached a real mailbox, and
+deleting the company must not quietly erase it.
+
+**Naming.** Unprefixed on purpose, following `company_email` (outbound email to
+companies, also unprefixed); `doe_` is for service-level tables such as `doe_api_key` and
+`doe_partner_*`.
+
+| Column                  | Type                                                                                                     |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `id`                    | `uuid` PK                                                                                                |
+| `company_id`            | `fk → company`                                                                                           |
+| `national_id`           | `text` (the recipient's kennitala as sent; pinned to `company_id` by the composite FK)                   |
+| `kind`                  | `mailbox_delivery_kind_enum` (`OVERDUE_NOTICE`/`FINES_PRECURSOR`)                                        |
+| `idempotency_key`       | `text` (unique — the caller's key; a repeat call resumes this row)                                       |
+| `subject`               | `text` (the document's title in One and in the mailbox)                                                  |
+| `status`                | `mailbox_delivery_status_enum` (`PENDING`/`CASE_CREATED`/`DOCUMENT_CREATED`/`SENT`/`FAILED`/`UNCERTAIN`) |
+| `in_flight_step`        | `mailbox_delivery_step_enum` (nullable — `CREATE_DOCUMENT`/`SEND_DOC_TO_ISLAND_IS` while in a call)      |
+| `one_case_number`       | `text` (nullable — One's human-facing case number)                                                       |
+| `one_case_item_id`      | `text` (nullable — the case CreateDocument files under)                                                  |
+| `one_document_item_id`  | `text` (nullable — the filed document)                                                                   |
+| `island_is_document_id` | `text` (nullable — may stay NULL on a SENT row: One can confirm a send without an `ItemID`)              |
+| `pdf_sha256`            | `text` (nullable — lowercase hex; both or neither with `pdf_size_bytes`)                                 |
+| `pdf_size_bytes`        | `integer` (nullable)                                                                                     |
+| `attempts`              | `integer` (default `0`; claims so far, capped by the service)                                            |
+| `last_attempt_at`       | `timestamptz` (nullable)                                                                                 |
+| `last_error`            | `text` (nullable — may echo recipient details; never surface unfiltered)                                 |
+| `last_error_number`     | `text` (nullable — loggable form only)                                                                   |
+| `lease_token`           | `uuid` (nullable — both or neither with `lease_expires_at`)                                              |
+| `lease_expires_at`      | `timestamptz` (nullable)                                                                                 |
+| `sent_at`               | `timestamptz` (nullable — set means One confirmed the send; the row is then SENT or UNCERTAIN)           |
+
+CHECK constraints keep a forward status from outrunning its ids (`CASE_CREATED` needs the
+case, `DOCUMENT_CREATED` the case and document, `SENT` those and `sent_at`), forbid a
+marker on a settled row or a send marker without a document, and keep `sent_at` off every
+status but `SENT` and `UNCERTAIN`. Indexes: a partial `mailbox_delivery_status_idx`
+(`WHERE status <> 'SENT'`) for the retry scan and the operator's UNCERTAIN and exhausted
+lists, and `mailbox_delivery_company_id_idx`.
+
 ## Report identifier
 
 `report.identifier` is a six-uppercase-letter handle (`KTPQZW`) that exists so a report can be referred to — in a ticket, an email, a phone call — without quoting the company's kennitala. It carries no meaning and is derived from nothing about the report; that is the point. It is also what the admin report search matches on (`report/utils/filters.ts`), and it prints on the equality PDF.
@@ -646,24 +800,24 @@ Bucket placement is informational only, and always was. Compliance is decided by
 
 ## Enums
 
-| Enum                      | Values                                                                                                                                                                                                                                                                                                         |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GenderEnum`              | `MALE`, `FEMALE`, `NEUTRAL`                                                                                                                                                                                                                                                                                    |
-| `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                                                                                                                                                                                                                                 |
-| `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                                                                                                                                                                                                                              |
-| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`, `WITHDRAWN`                                                                                                                                                                                                                |
-| `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                                                                                                                                                                                                                                           |
-| `SalaryDataBasisEnum`     | `MONTH`, `AVERAGE`                                                                                                                                                                                                                                                                                             |
-| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`, `WITHDRAWN`, `SYSTEM_AUTO_REVIEW`                                                                                                                                                                                             |
-| `AutoReviewDecisionEnum`  | `AUTO_APPROVE`, `NEEDS_REVIEW`                                                                                                                                                                                                                                                                                 |
-| `CompanyStatusEnum`       | `ACTIVE`, `INACTIVE`                                                                                                                                                                                                                                                                                           |
-| `CompanySizeEnum`         | `UNKNOWN`, `SMALL`, `MEDIUM`, `LARGE`                                                                                                                                                                                                                                                                          |
-| `CompanyEventTypeEnum`    | `CREATED`, `STATUS_CHANGED`, `FINES_STARTED`, `FINES_STOPPED`, `QUARANTINED`, `UNQUARANTINED`, `EQUALITY_REPORT_DEADLINE_REMINDER_SENT`, `SALARY_REPORT_DEADLINE_REMINDER_SENT`, `EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `API_KEY_ISSUED`, `API_KEY_REVOKED` |
-| `ApiKeyOriginEnum`        | `ISLAND_IS`, `ADMIN`                                                                                                                                                                                                                                                                                           |
-| `ApiKeyScopeEnum`         | `salary:submit`, `equality:submit`, `report:read`, `scoring:write`                                                                                                                                                                                                                                             |
-| `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                                                                                                                                                                                                                                 |
-| `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                                                                                                                                                                                                                                         |
-| `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                                                                                                                                                                                                                                          |
+| Enum                      | Values                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GenderEnum`              | `MALE`, `FEMALE`, `NEUTRAL`                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                                                                                                                                                                                                                                                                                                                                                              |
+| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`, `WITHDRAWN`                                                                                                                                                                                                                                                                                                                                                |
+| `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `SalaryDataBasisEnum`     | `MONTH`, `AVERAGE`                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`, `WITHDRAWN`, `SYSTEM_AUTO_REVIEW`                                                                                                                                                                                                                                                                                                                             |
+| `AutoReviewDecisionEnum`  | `AUTO_APPROVE`, `NEEDS_REVIEW`                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `CompanyStatusEnum`       | `ACTIVE`, `INACTIVE`                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `CompanySizeEnum`         | `UNKNOWN`, `SMALL`, `MEDIUM`, `LARGE`                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `CompanyEventTypeEnum`    | `CREATED`, `STATUS_CHANGED`, `FINES_STARTED`, `FINES_STOPPED`, `QUARANTINED`, `UNQUARANTINED`, `EQUALITY_REPORT_DEADLINE_REMINDER_SENT`, `SALARY_REPORT_DEADLINE_REMINDER_SENT`, `EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `API_KEY_ISSUED`, `API_KEY_REVOKED`, `PARTNER_DELEGATION_GRANTED`, `PARTNER_DELEGATION_REVOKED`, `CUSTOM_EMAIL_SENT`, `CUSTOM_EMAIL_FAILED`, `CUSTOM_EMAIL_SKIPPED` |
+| `ApiKeyOriginEnum`        | `ISLAND_IS`, `ADMIN`                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `ApiKeyScopeEnum`         | `salary:submit`, `equality:submit`, `report:read`, `scoring:write`                                                                                                                                                                                                                                                                                                                                                                             |
+| `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ## Naming conventions
 
@@ -716,24 +870,24 @@ Machine credential for the third-party integration API. See **API keys** above f
 exists and what is stored. Prefixed `doe_` for the same reason `doe_user` is — it is not a
 domain entity of the equality register but a service-level concern.
 
-| Column                   | Type                                                                                                                                                                                             |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                     | `uuid` PK                                                                                                                                                                                        |
-| `company_id`             | `fk → company`                                                                                                                                                                                   |
-| `company_national_id`    | `text` (denormalised from `company.national_id` — see below)                                                                                                                                     |
-| `key_id`                 | `text` (unique — public half of the credential, the lookup key)                                                                                                                                  |
-| `secret_hash`            | `text` (HMAC-SHA256 of the secret under a server-side pepper)                                                                                                                                    |
-| `label`                  | `text` (nullable — free text set by the issuer)                                                                                                                                                  |
-| `scopes`                 | `text[]` (`ApiKeyScopeEnum`: `report:read`, `salary:submit`, `equality:submit`, `scoring:write`; never empty. The first three are the default set — `scoring:write` is never granted implicitly) |
-| `created_via`            | `doe_api_key_origin_enum` (`ApiKeyOriginEnum`)                                                                                                                                                   |
-| `created_by_user_id`     | `fk → doe_user` (nullable — set on the `ADMIN` path)                                                                                                                                             |
-| `created_by_national_id` | `text` (nullable — set on the `ISLAND_IS` path)                                                                                                                                                  |
-| `expires_at`             | `timestamptz` (nullable — null means no expiry)                                                                                                                                                  |
-| `last_used_at`           | `timestamptz` (nullable — activity indicator, written at most once a minute per key)                                                                                                             |
-| `revoked_at`             | `timestamptz` (nullable)                                                                                                                                                                         |
-| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                                                                                                                                       |
-| `revoked_by_national_id` | `text` (nullable)                                                                                                                                                                                |
-| `revoked_reason`         | `text` (nullable)                                                                                                                                                                                |
+| Column                   | Type                                                                                                                                                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                     | `uuid` PK                                                                                                                                                                                            |
+| `company_id`             | `fk → company`                                                                                                                                                                                       |
+| `company_national_id`    | `text` (denormalised from `company.national_id` — see below)                                                                                                                                         |
+| `key_id`                 | `text` (unique — public half of the credential, the lookup key)                                                                                                                                      |
+| `secret_hash`            | `text` (HMAC-SHA256 of the secret under a server-side pepper)                                                                                                                                        |
+| `label`                  | `text` (nullable — free text set by the issuer)                                                                                                                                                      |
+| `scopes`                 | `text[]` (`ApiKeyScopeEnum`: `report:read`, `salary:submit`, `equality:submit`, `scoring:write`; never empty. All four are the default set — access is all or nothing, and no screen names a subset) |
+| `created_via`            | `doe_api_key_origin_enum` (`ApiKeyOriginEnum`)                                                                                                                                                       |
+| `created_by_user_id`     | `fk → doe_user` (nullable — set on the `ADMIN` path)                                                                                                                                                 |
+| `created_by_national_id` | `text` (nullable — set on the `ISLAND_IS` path)                                                                                                                                                      |
+| `expires_at`             | `timestamptz` (nullable — null means no expiry)                                                                                                                                                      |
+| `last_used_at`           | `timestamptz` (nullable — activity indicator, written at most once a minute per key)                                                                                                                 |
+| `revoked_at`             | `timestamptz` (nullable)                                                                                                                                                                             |
+| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                                                                                                                                           |
+| `revoked_by_national_id` | `text` (nullable)                                                                                                                                                                                    |
+| `revoked_reason`         | `text` (nullable)                                                                                                                                                                                    |
 
 Invariants (enforced via CHECK):
 
@@ -750,6 +904,90 @@ an FK constraint does not require an association. `company_national_id` is denor
 the same reason: it lets the partner API resolve the tenant from one indexed read on this
 table. Safe to copy because a kennitala _is_ the company's identity and does not change, so
 the two columns cannot drift.
+
+### `doe_partner_client`
+
+An intermediary firm approved to file for the companies that delegate to it. See **Vendor
+clients and delegation** above.
+
+| Column               | Type                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------- |
+| `id`                 | `uuid` PK                                                                                |
+| `national_id`        | `text` (the firm's kennitala; unique among live rows — not a `company` FK)               |
+| `name`               | `text`                                                                                   |
+| `scopes`             | `text[]` (`ApiKeyScopeEnum`; never empty — the ceiling for every delegation to the firm) |
+| `created_by_user_id` | `fk → doe_user` (the admin who approved the firm)                                        |
+| `revoked_at`         | `timestamptz` (nullable)                                                                 |
+| `revoked_by_user_id` | `fk → doe_user` (nullable)                                                               |
+| `revoked_reason`     | `text` (nullable)                                                                        |
+
+Invariants:
+
+- Unique `national_id` `WHERE revoked_at IS NULL` — one live client per firm
+- `revoked_at IS NULL` ⇒ no revocation metadata; a revoked row may name no actor (system-initiated)
+- `cardinality(scopes) > 0`
+- Every live row holds all four scopes. Not a constraint — enforced by
+  `PartnerClientService.create`, which takes no scopes, and established for older rows
+  by `m-20260924-partner-client-full-approval`
+
+`national_id` is not a `company` FK because the firm is recorded as an intermediary,
+whether or not it is also an employer in the register. A firm filing for itself does so
+through a self-delegation row, which does reference its `company`.
+
+### `doe_partner_client_key`
+
+A credential belonging to a `doe_partner_client`. The vendor-side twin of `doe_api_key`.
+
+| Column                   | Type                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| `id`                     | `uuid` PK                                                                             |
+| `partner_client_id`      | `fk → doe_partner_client`                                                             |
+| `key_id`                 | `text` (unique — public half of the credential, the lookup key)                       |
+| `secret_hash`            | `text` (HMAC-SHA256 of the secret under the same server-side pepper as `doe_api_key`) |
+| `label`                  | `text` (nullable)                                                                     |
+| `created_via`            | `doe_api_key_origin_enum` (`ApiKeyOriginEnum`)                                        |
+| `created_by_user_id`     | `fk → doe_user` (nullable — set on the `ADMIN` path)                                  |
+| `created_by_national_id` | `text` (nullable — set on the `ISLAND_IS` path, the firm signed in as itself)         |
+| `expires_at`             | `timestamptz` (nullable — null means no expiry)                                       |
+| `last_used_at`           | `timestamptz` (nullable — written at most once a minute per key)                      |
+| `revoked_at`             | `timestamptz` (nullable)                                                              |
+| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                            |
+| `revoked_by_national_id` | `text` (nullable)                                                                     |
+| `revoked_reason`         | `text` (nullable)                                                                     |
+
+Invariants: the same created-actor and revocation CHECKs as `doe_api_key`. No `scopes`
+column — the client's scopes are the ones that count.
+
+### `doe_partner_delegation`
+
+A company allowing a `doe_partner_client` to act for it.
+
+| Column                   | Type                                                                                          |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| `id`                     | `uuid` PK                                                                                     |
+| `partner_client_id`      | `fk → doe_partner_client`                                                                     |
+| `company_id`             | `fk → company`                                                                                |
+| `company_national_id`    | `text` (denormalised; pinned to `company_id` by a composite FK to `company(id, national_id)`) |
+| `scopes`                 | `text[]` (`ApiKeyScopeEnum`; never empty — what this employer allowed)                        |
+| `granted_by_national_id` | `text` (the person who granted it; `created_at` is the grant time)                            |
+| `revoked_at`             | `timestamptz` (nullable — set when the company turns the delegation off)                      |
+| `revoked_by_user_id`     | `fk → doe_user` (nullable)                                                                    |
+| `revoked_by_national_id` | `text` (nullable)                                                                             |
+
+Invariants:
+
+- `(company_id, company_national_id)` references `company(id, national_id)`, via
+  `company_id_national_id_uq`, so the column the guard looks up by and the column the
+  consent screens scope by cannot name different companies
+- Unique `(partner_client_id, company_national_id)` `WHERE revoked_at IS NULL` — one live
+  delegation per firm and company. It is also the partner API's lookup: client from the
+  credential, kennitala from the `X-Company-National-Id` header.
+- `revoked_at IS NULL` ⇒ no revocation metadata; otherwise at most one revoker column
+- `cardinality(scopes) > 0`
+
+`company_national_id` is denormalised so the delegation resolves from the request header
+in one indexed read with no join. Safe to copy because a kennitala _is_ the company's
+identity and does not change.
 
 ### `scoring_model`
 
@@ -913,7 +1151,7 @@ next due dates; admins act on them via the derived `equalityReportOverdue` /
 
 ### `company_event`
 
-Immutable, append-only timeline of company-lifecycle events. Mirrors `report_event` but scoped to the company. Insert-only (`created_at` only). Carries `CREATED` (registration), `STATUS_CHANGED` (`ACTIVE`/`INACTIVE` move, with `from_status`/`to_status`), the fines/quarantine toggles (`FINES_STARTED`/`FINES_STOPPED`/`QUARANTINED`/`UNQUARANTINED`, each with an optional `reason` and no status move), the four deadline-reminder outcomes emitted by the report-deadline-reminder task, and `API_KEY_ISSUED`/`API_KEY_REVOKED` for the third-party integration credentials. For reminder events, `reason` holds the ISO due date being reminded about and `reminder_tier` records which milestone fired — together they form the idempotency key (one row per company per report-kind per tier per due date).
+Immutable, append-only timeline of company-lifecycle events. Mirrors `report_event` but scoped to the company. Insert-only (`created_at` only). Carries `CREATED` (registration), `STATUS_CHANGED` (`ACTIVE`/`INACTIVE` move, with `from_status`/`to_status`), the fines/quarantine toggles (`FINES_STARTED`/`FINES_STOPPED`/`QUARANTINED`/`UNQUARANTINED`, each with an optional `reason` and no status move), the four deadline-reminder outcomes emitted by the report-deadline-reminder task, `API_KEY_ISSUED`/`API_KEY_REVOKED` for the third-party integration credentials, and `PARTNER_DELEGATION_GRANTED`/`PARTNER_DELEGATION_REVOKED` when the company allows a vendor client to act for it or withdraws that (the firm named in `reason`). For reminder events, `reason` holds the ISO due date being reminded about and `reminder_tier` records which milestone fired — together they form the idempotency key (one row per company per report-kind per tier per due date).
 
 | Column          | Type                                                                                                      |
 | --------------- | --------------------------------------------------------------------------------------------------------- |
@@ -994,6 +1232,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `salary_data_period`             | `date` (nullable — the payroll month, always the 1st; set only when `salary_data_basis = MONTH`)                                                                     |
 | `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                                                                 |
 | `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)                                                   |
+| `partner_client_id`              | `fk → doe_partner_client` (nullable; the vendor client whose credential filed the report — see "Vendor clients and delegation")                                      |
 | `imported_from_excel`            | `boolean` (server-set — see "Excel import transport" → "Recording how the data was entered")                                                                         |
 | `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                                                        |
 | `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")                                               |
@@ -1328,6 +1567,7 @@ No FKs, no relationships. Standalone bookkeeping table.
 - `report` 1:N `report_comment`; `doe_user` 1:N `report_comment` via `author_user_id` (nullable, set when `author_kind = REVIEWER`).
 - `company` 1:N `company_event`; `doe_user` 1:N `company_event` via `actor_user_id` (nullable).
 - `company` 1:N `company_comment`; `doe_user` 1:N `company_comment` via `author_user_id` (nullable).
+- `company` 1:N `mailbox_delivery` via `(company_id, national_id)` → `company(id, national_id)`.
 - `company` N:1 `postcode` N:1 `region`; `company` N:1 `isat_category` via `isat_category_code`.
 - `job_runs` standalone (no FKs).
 

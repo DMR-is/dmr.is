@@ -2,6 +2,9 @@ name: '🚀 Deploy'
 description: 'Deploys the application to the specified environment'
 
 inputs:
+  ENV:
+    description: 'The environment to deploy to'
+    required: true
   AWS_REGION:
     description: 'The AWS region to use'
     required: true
@@ -15,9 +18,6 @@ inputs:
     default: ${{ github.sha }}
   PAT:
     description: 'The personal access token to use'
-    required: true
-  SERVICES:
-    description: 'The services to deploy sperated by a space'
     required: true
 
 runs:
@@ -35,10 +35,3 @@ runs:
         ENV: ${{ inputs.ENV }}
         PAT: ${{ inputs.PAT }}
         VERSION_TAG: ${{ inputs.VERSION_TAG }}
-
-    - name: ⏳ Wait for service to stabilize
-      shell: bash
-      run: |
-        aws ecs wait services-stable \
-          --cluster ${{ inputs.ENV }}-dmr-utgafa \
-          --services ${{ inputs.SERVICES }}

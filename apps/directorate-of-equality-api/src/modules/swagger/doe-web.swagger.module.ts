@@ -9,6 +9,7 @@ import { ConfigApiModule } from '../config/config.api.module'
 import { DataExportApiModule } from '../data-export/data-export.api.module'
 import { ImportUploadApiModule } from '../import-upload/import-upload.api.module'
 import { LocationApiModule } from '../location/location.api.module'
+import { PartnerClientApiModule } from '../partner-client/partner-client.api.module'
 import { ReportApiModule } from '../report/report.api.module'
 import { ReportCommentApiModule } from '../report-comment/report-comment.api.module'
 import { ReportPdfApiModule } from '../report-pdf/report-pdf.api.module'
@@ -28,6 +29,7 @@ import { UserApiModule } from '../user/user.api.module'
     UserApiModule,
     ConfigApiModule,
     LocationApiModule,
+    PartnerClientApiModule,
     ReportApiModule,
     ReportCommentApiModule,
     ReportWorkflowApiModule,

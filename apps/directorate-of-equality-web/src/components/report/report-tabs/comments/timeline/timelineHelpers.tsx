@@ -387,6 +387,14 @@ export function timelineEntryText(
       reportText.timeline.apiKeyRevoked,
       reportText.timeline.apiKeyRevokedNoActor,
     ],
+    PARTNER_DELEGATION_GRANTED: [
+      reportText.timeline.partnerDelegationGranted,
+      reportText.timeline.partnerDelegationGrantedNoActor,
+    ],
+    PARTNER_DELEGATION_REVOKED: [
+      reportText.timeline.partnerDelegationRevoked,
+      reportText.timeline.partnerDelegationRevokedNoActor,
+    ],
     CREATED: [
       reportText.timeline.companyCreated,
       reportText.timeline.companyCreatedNoActor,
