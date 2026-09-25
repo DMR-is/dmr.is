@@ -48,7 +48,6 @@ import { GetReportOutliersResponseDto } from '@dmr.is/doe-modules/report-employe
 import { SalaryAnalysisResponseDto } from '@dmr.is/doe-modules/report-statistics'
 import { PartnerSalaryPayloadFields } from '@dmr.is/doe-modules/scoring-model'
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
-import { PagingQuery } from '@dmr.is/shared-dto'
 
 import { ApiCompanyHeader } from '../../core/decorators/company-header.decorator'
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
@@ -73,6 +72,7 @@ import {
 } from '../submission/equality-document'
 import { JsonPartPipe } from '../submission/json-part.pipe'
 import { PartnerSubmissionService } from '../submission/partner-submission.service'
+import { PartnerPagingQuery } from './dto/partner-paging.query'
 import { ProviderIdParamPipe } from './provider-id-param.pipe'
 
 import 'multer'
@@ -443,7 +443,7 @@ export class PartnerController {
   })
   getReportOutliers(
     @Param('providerId', ProviderIdParamPipe) providerId: string,
-    @Query() query: PagingQuery,
+    @Query() query: PartnerPagingQuery,
     @CurrentCompany() company: CompanyDto,
   ): Promise<GetReportOutliersResponseDto> {
     return this.applicationService.getReportOutliers(providerId, company, query)

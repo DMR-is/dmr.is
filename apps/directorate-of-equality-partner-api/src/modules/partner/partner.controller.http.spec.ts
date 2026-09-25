@@ -73,12 +73,13 @@ describe('PartnerController over HTTP', () => {
   let app: NestExpressApplication
   const submitEquality = jest.fn()
   const submitSalary = jest.fn()
+  const getReportOutliers = jest.fn()
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       controllers: [PartnerController],
       providers: [
-        { provide: IApplicationService, useValue: {} },
+        { provide: IApplicationService, useValue: { getReportOutliers } },
         {
           provide: PartnerSubmissionService,
           useValue: { submitEquality, submitSalary },
@@ -116,6 +117,7 @@ describe('PartnerController over HTTP', () => {
   beforeEach(() => {
     submitEquality.mockReset()
     submitSalary.mockReset()
+    getReportOutliers.mockReset()
   })
 
   describe('POST /partner/reports/equality', () => {
@@ -217,6 +219,35 @@ describe('PartnerController over HTTP', () => {
 
       expect(res.status).toBe(400)
       expect(res.body.name).toBe('BadRequest')
+    })
+  })
+
+  describe('GET /partner/reports/:providerId/outliers paging', () => {
+    const get = (qs: string) =>
+      request(app.getHttpServer()).get(
+        `/api/v1/partner/reports/p-1/outliers?${qs}`,
+      )
+
+    it.each(['pageSize=0', 'pageSize=101', 'page=0', 'page=-1'])(
+      'refuses %s',
+      async (qs) => {
+        const res = await get(qs)
+
+        expect(res.status).toBe(400)
+        expect(getReportOutliers).not.toHaveBeenCalled()
+      },
+    )
+
+    it('accepts the ceiling', async () => {
+      getReportOutliers.mockResolvedValue({ outliers: [], paging: {} })
+
+      const res = await get('page=1&pageSize=100')
+
+      expect(res.status).toBe(200)
+      expect(getReportOutliers.mock.calls[0][2]).toMatchObject({
+        page: 1,
+        pageSize: 100,
+      })
     })
   })
 })
