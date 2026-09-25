@@ -8,7 +8,7 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
-import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { RadioButton } from '@dmr.is/ui/components/island-is/RadioButton'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
@@ -30,6 +30,8 @@ const ROLE_OPTIONS: { label: string; value: Role }[] = [
   { label: u.roleAdmin, value: 'ADMIN' },
   { label: u.roleEditor, value: 'EDITOR' },
 ]
+
+const ROLE_GROUP_LABEL_ID = 'user-role-label'
 
 /** Digits only, so "010101-2345" and "0101012345" look up the same person. */
 const sanitizeNationalId = (value: string) => value.replace(/\D/g, '')
@@ -342,17 +344,44 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
           onChange={(e) => setPhone(e.target.value)}
         />
 
-        <Select
-          name="role"
-          size="xs"
-          label={u.roleLabel}
-          options={ROLE_OPTIONS}
-          value={ROLE_OPTIONS.find((o) => o.value === role) ?? null}
-          isDisabled={!detailsOpen}
-          onChange={(opt) => {
-            if (opt) setRole(opt.value)
-          }}
-        />
+        {/* Radio buttons, not a Select: island-ui's Select renders its menu
+            inline, so the modal's scrolling body clipped it at the bottom edge
+            and on a short screen it could barely be opened. Two roles fit side
+            by side, and `allowOverflow` is not an option here — this modal is
+            tall enough that the form itself would then spill off the card. */}
+        <div role="radiogroup" aria-labelledby={ROLE_GROUP_LABEL_ID}>
+          <Stack space={1}>
+            <Text
+              id={ROLE_GROUP_LABEL_ID}
+              variant="small"
+              fontWeight="semiBold"
+              color={detailsOpen ? 'blue400' : 'dark300'}
+            >
+              {u.roleLabel}
+            </Text>
+            <Box display="flex" columnGap={2}>
+              {ROLE_OPTIONS.map((option) => (
+                <Box
+                  key={option.value}
+                  flexGrow={1}
+                  style={{ flexBasis: 0, minWidth: 0 }}
+                >
+                  <RadioButton
+                    id={`user-role-${option.value}`}
+                    name="role"
+                    value={option.value}
+                    label={option.label}
+                    checked={role === option.value}
+                    disabled={!detailsOpen}
+                    onChange={() => setRole(option.value)}
+                    large
+                    backgroundColor="blue"
+                  />
+                </Box>
+              ))}
+            </Box>
+          </Stack>
+        </div>
 
         {!isNew && (
           <Box>
