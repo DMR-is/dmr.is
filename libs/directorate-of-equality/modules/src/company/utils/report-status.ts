@@ -24,7 +24,7 @@ export const COMPANY_QUERY_ALIAS = 'CompanyModel'
  * Whether the company has a *valid* approved report of the given type, filed
  * through this system. "Valid" = APPROVED and not past its `valid_until`.
  */
-function activeReportExists(type: ReportTypeEnum): string {
+export function activeReportExists(type: ReportTypeEnum): string {
   return `EXISTS (
     SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" cr
     JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
@@ -129,14 +129,22 @@ function legacySurrenderGuard(type: ReportTypeEnum): string {
  * valid through today, and `> NOW()` would expire it at midnight — the same
  * reasoning that makes the load write 23:59:59 into the timestamp columns.
  */
-function activeLegacyCertificationExists(type: ReportTypeEnum): string {
+export function activeLegacyCertificationExists(type: ReportTypeEnum): string {
   return `EXISTS (
     SELECT 1 FROM "${DoeModels.LEGACY_REPORT}" lr
     WHERE lr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
-    AND lr.${LEGACY_VALID_UNTIL_COLUMN[type]} IS NOT NULL
-    AND lr.${LEGACY_VALID_UNTIL_COLUMN[type]} >= CURRENT_DATE
-    ${legacySurrenderGuard(type)}
+    AND ${legacyCertificationInForceSql(type)}
   )`
+}
+
+/**
+ * The in-force test on one `legacy_report lr` row, shared by the coverage
+ * predicate above and the public statistics, which read columns off that row.
+ */
+export function legacyCertificationInForceSql(type: ReportTypeEnum): string {
+  return `lr.${LEGACY_VALID_UNTIL_COLUMN[type]} IS NOT NULL
+    AND lr.${LEGACY_VALID_UNTIL_COLUMN[type]} >= CURRENT_DATE
+    ${legacySurrenderGuard(type)}`
 }
 
 /**
@@ -200,7 +208,8 @@ export function legacyCertificationExpiringSql(interval: string): string {
  * The shared definition of "is covered" for a report type — filed here, or
  * certified under the old regime and not yet expired. Kept identical for the
  * displayed `reportStatus` column and the list status filter so the two can
- * never disagree.
+ * never disagree. Exported for the published aggregate statistics, which must
+ * count "complied" exactly as the register shows it.
  *
  * ⚠️ This used to be *wider* than the application portal's own gate, which
  * demanded a real `report` row because a salary report references its equality
@@ -218,7 +227,7 @@ export function legacyCertificationExpiringSql(interval: string): string {
  * has to be made in both. `equality_valid_until >= CURRENT_DATE` and
  * `legacyValidUntilToDate` are the two halves of that one rule.
  */
-function reportCovered(type: ReportTypeEnum): string {
+export function reportCovered(type: ReportTypeEnum): string {
   return `(${activeReportExists(type)} OR ${activeLegacyCertificationExists(
     type,
   )})`
@@ -337,14 +346,14 @@ export function salaryReportMissingSql(): string {
 export function companyReportStatusCaseSql(): string {
   return `(CASE
     WHEN ${equalityReportMissingSql()} THEN '${
-      CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
-    }'
+    CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
+  }'
     WHEN ${actionPlanMissingSql()} THEN '${
-      CompanyReportStatusEnum.MISSING_ACTION_PLAN
-    }'
+    CompanyReportStatusEnum.MISSING_ACTION_PLAN
+  }'
     WHEN ${salaryReportMissingSql()} THEN '${
-      CompanyReportStatusEnum.MISSING_SALARY_REPORT
-    }'
+    CompanyReportStatusEnum.MISSING_SALARY_REPORT
+  }'
     ELSE '${CompanyReportStatusEnum.SATISFACTORY}'
   END)`
 }
@@ -363,11 +372,11 @@ export function companyReportStatusLiteral() {
 export function equalityObligationStatusCaseSql(): string {
   return `(CASE
     WHEN NOT ${equalityRequiredSql} THEN '${
-      CompanyObligationStatusEnum.NOT_REQUIRED
-    }'
+    CompanyObligationStatusEnum.NOT_REQUIRED
+  }'
     WHEN ${equalityReportMissingSql()} THEN '${
-      CompanyObligationStatusEnum.MISSING
-    }'
+    CompanyObligationStatusEnum.MISSING
+  }'
     ELSE '${CompanyObligationStatusEnum.COVERED}'
   END)`
 }
@@ -397,14 +406,14 @@ export function equalityObligationStatusCaseSql(): string {
 export function salaryObligationStatusCaseSql(): string {
   return `(CASE
     WHEN ${actionPlanMissingSql()} THEN '${
-      CompanyObligationStatusEnum.ACTION_PLAN_MISSING
-    }'
+    CompanyObligationStatusEnum.ACTION_PLAN_MISSING
+  }'
     WHEN NOT ${salaryRequiredSql} THEN '${
-      CompanyObligationStatusEnum.NOT_REQUIRED
-    }'
+    CompanyObligationStatusEnum.NOT_REQUIRED
+  }'
     WHEN ${salaryReportMissingSql()} THEN '${
-      CompanyObligationStatusEnum.MISSING
-    }'
+    CompanyObligationStatusEnum.MISSING
+  }'
     ELSE '${CompanyObligationStatusEnum.COVERED}'
   END)`
 }

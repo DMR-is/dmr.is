@@ -114,6 +114,14 @@ const PUBLIC_ROUTE_ALLOWLIST: ReadonlySet<string> = new Set([
   // browser request carries no Authorization header by design, and the module
   // does not register it once a bucket is configured.
   'ImportUploadLocalController',
+  // GET /v1/statistics — aggregate register counts for the Jafnlaunakerfi
+  // dashboard on island.is, fetched by an unauthenticated island.is query.
+  // Everything it returns is a count and it takes no parameters, so there is
+  // nothing a caller can narrow. The boundary is the internal ALB (X-Road VPC
+  // and DoE private subnets), not X-Road headers. A filter argument or a
+  // per-company field added here would make this entry wrong — re-read it
+  // before widening that controller.
+  'AggregateStatisticsController',
 ])
 
 /**
@@ -191,6 +199,12 @@ const DRAFT_LIFECYCLE: Readonly<Record<OperationKey, string>> = {
 
 const APPLICATION_DOC = 'swagger/application'
 const INTERNAL_DOC = 'swagger/internal'
+const STATISTICS_DOC = 'swagger/statistics'
+
+/** The unauthenticated statistics surface, and nothing else. */
+const STATISTICS_OPERATIONS: Readonly<Record<OperationKey, string>> = {
+  [`GET /${GLOBAL_PREFIX}/${API_VERSION}/statistics`]: 'getStatistics',
+}
 
 /**
  * The applicant aggregate root, as a slash-or-end boundary rather than a literal
@@ -278,12 +292,10 @@ const swaggerExclusions = (controller: Function): string[] => {
     .filter((method) => method !== 'constructor')
     .filter(
       (method) =>
-        (
-          Reflect.getMetadata(
-            API_EXCLUDE_ENDPOINT,
-            controller.prototype[method],
-          ) as { disable?: boolean } | undefined
-        )?.disable,
+        (Reflect.getMetadata(
+          API_EXCLUDE_ENDPOINT,
+          controller.prototype[method],
+        ) as { disable?: boolean } | undefined)?.disable,
     )
     .map((method) => `${controller.name}.${method}`)
 }
@@ -307,11 +319,9 @@ const documentableHandlers = (app: INestApplication): string[] =>
   [...new Set<Function>(routedControllers(app))]
     .filter(
       (controller) =>
-        !(
-          Reflect.getMetadata(API_EXCLUDE_CONTROLLER, controller) as
-            | [boolean]
-            | undefined
-        )?.[0],
+        !(Reflect.getMetadata(API_EXCLUDE_CONTROLLER, controller) as
+          | [boolean]
+          | undefined)?.[0],
     )
     .flatMap((controller) => {
       const excluded = new Set(swaggerExclusions(controller))
@@ -652,6 +662,52 @@ describe('swagger document coverage', () => {
     // `routed` is the no-`include` document, i.e. the whole container, which is
     // what makes this comparable to the container-side count.
     expect(routed.length).toBe(documentableHandlers(app).length)
+  })
+
+  it('publishes exactly the statistics operation in the statistics document', () => {
+    // Pinned in both directions: anything else in this document is served to
+    // a consumer that holds no credential.
+    expect(Object.fromEntries(documentFor(STATISTICS_DOC))).toEqual(
+      STATISTICS_OPERATIONS,
+    )
+  })
+
+  it('gives the statistics operations no parameters', () => {
+    // No parameter is the safety property of the unauthenticated surface: a
+    // filter could narrow a count until it describes one company.
+    const config = SWAGGER_CONFIG.find(
+      (entry) => entry.swaggerPath === STATISTICS_DOC,
+    )
+    if (!config) {
+      throw new Error(`SWAGGER_CONFIG no longer publishes "${STATISTICS_DOC}"`)
+    }
+    const document = buildSwaggerDocument(app, config)
+    const withParameters = Object.entries(document.paths).flatMap(
+      ([path, item]) =>
+        Object.entries(item)
+          .filter(
+            ([, operation]) =>
+              ((operation as { parameters?: unknown[] }).parameters ?? [])
+                .length > 0 ||
+              (operation as { requestBody?: unknown }).requestBody !==
+                undefined,
+          )
+          .map(([method]) => `${method.toUpperCase()} ${path}`),
+    )
+
+    expect(withParameters).toEqual([])
+  })
+
+  it('keeps the statistics surface out of the applicant and admin documents', () => {
+    const statistics = [...documentFor(STATISTICS_DOC).keys()]
+
+    expect(
+      statistics.filter(
+        (key) =>
+          documentFor(APPLICATION_DOC).has(key) ||
+          documentFor(INTERNAL_DOC).has(key),
+      ),
+    ).toEqual([])
   })
 
   it('keeps the applicant and admin surfaces disjoint', () => {
