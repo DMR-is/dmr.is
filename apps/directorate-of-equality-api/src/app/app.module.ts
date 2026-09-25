@@ -16,6 +16,7 @@ import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
 import { DeclaredAccessGuard } from '../core/guards/declared-access/declared-access.guard'
 import { DoeApplicationSwaggerModule } from '../modules/swagger/doe-application.swagger.module'
+import { DoeStatisticsSwaggerModule } from '../modules/swagger/doe-statistics.swagger.module'
 import { DoeWebSwaggerModule } from '../modules/swagger/doe-web.swagger.module'
 import { TasksModule } from '../tasks/tasks.module'
 import { HealthController } from './health.controller'
@@ -46,10 +47,11 @@ import { HealthController } from './health.controller'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    // The two swagger aggregates are also the runtime registration points, so
-    // a controller can never be routed without appearing in a published
+    // The swagger aggregates are also the runtime registration points, so a
+    // controller can never be routed without appearing in a published
     // document (enforced by swagger-coverage.spec.ts).
     DoeApplicationSwaggerModule,
+    DoeStatisticsSwaggerModule,
     DoeWebSwaggerModule,
     TasksModule,
   ],

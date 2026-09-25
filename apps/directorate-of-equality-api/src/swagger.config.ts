@@ -1,4 +1,5 @@
 import { DoeApplicationSwaggerModule } from './modules/swagger/doe-application.swagger.module'
+import { DoeStatisticsSwaggerModule } from './modules/swagger/doe-statistics.swagger.module'
 import { DoeWebSwaggerModule } from './modules/swagger/doe-web.swagger.module'
 import { SetupSwaggerOptions } from './setupSwaggerDocument'
 
@@ -28,6 +29,18 @@ export const SWAGGER_CONFIG: SetupSwaggerOptions[] = [
       'Consumed by the island.is application system on behalf of employers.',
     tag: 'Application API',
     modules: [DoeApplicationSwaggerModule],
+    autoTagControllers: true,
+  },
+  {
+    swaggerPath: 'swagger/statistics',
+    swaggerTitle: 'Directorate of Equality — Statistics API',
+    swaggerDescription:
+      'Aggregate register counts for the Jafnlaunakerfi dashboard on island.is: ' +
+      'companies by region, size, sector and certification status, validity rounds ' +
+      'and national headcounts. Read without a credential, takes no parameters, ' +
+      'and is recomputed once a day.',
+    tag: 'Statistics API',
+    modules: [DoeStatisticsSwaggerModule],
     autoTagControllers: true,
   },
 ]
