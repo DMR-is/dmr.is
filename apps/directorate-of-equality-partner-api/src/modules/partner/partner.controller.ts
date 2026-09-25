@@ -53,6 +53,7 @@ import { PagingQuery } from '@dmr.is/shared-dto'
 import { ApiCompanyHeader } from '../../core/decorators/company-header.decorator'
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { CurrentPartnerClientId } from '../../core/decorators/current-partner-client.decorator'
+import { FormPart } from '../../core/decorators/form-part.decorator'
 import { PartnerResponse } from '../../core/decorators/partner-response.decorator'
 import { RequireActiveCompany } from '../../core/guards/active-company/require-active-company.decorator'
 import { RequireActiveCompanyGuard } from '../../core/guards/active-company/require-active-company.guard'
@@ -368,7 +369,7 @@ export class PartnerController {
       'Files an equality report — the narrative plan that must be approved before any salary report can reference it. Sent as `multipart/form-data`: a JSON `payload` part and the plan itself as a `.docx` in a `document` part. Same `providerId` and idempotency rules as the salary submission. A **400** means the payload was rejected or the document could not be used — the message says which, and for a document it says what to send instead. A **413** means the file is past the size limit. A **409** means the company’s own state prevents filing: it is not active in the register, or a previous equality report is still in review. A 409 also comes back when the `providerId` was already used for a salary report, since a provider id is bound to one report type.',
   })
   async submitEqualityReport(
-    @Body(
+    @FormPart(
       'payload',
       new JsonPartPipe(SubmitPartnerEqualityReportDto, 'payload'),
     )
