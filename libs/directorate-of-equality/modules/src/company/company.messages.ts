@@ -37,6 +37,10 @@ export const companyMessages = {
     message: `No entity found in national registry for "${nationalId}"`,
     translatedMessage: 'Engin skráning fannst í þjóðskrá fyrir þessa kennitölu',
   }),
+  subsidiaryNotInRegistry: (nationalId: string): ErrorMessage => ({
+    message: `Subsidiary "${nationalId}" is not in the national registry — check the kennitala`,
+    translatedMessage: `Dótturfélag með kennitöluna ${nationalId} fannst ekki í þjóðskrá`,
+  }),
   registryEntityNotFoundNoFallback: (nationalId: string): ErrorMessage => ({
     message: `No entity found in national registry for "${nationalId}" and no fallback name provided`,
     translatedMessage: 'Engin skráning fannst í þjóðskrá fyrir þessa kennitölu',

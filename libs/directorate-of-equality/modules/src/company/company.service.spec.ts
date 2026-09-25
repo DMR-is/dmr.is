@@ -46,6 +46,7 @@ describe('CompanyService', () => {
   let findOne: jest.Mock
   let create: jest.Mock
   let getEntityByNationalId: jest.Mock
+  let findEntityByNationalId: jest.Mock
   let getLegalEntityByNationalId: jest.Mock
   let emitCreated: jest.Mock
   let emitStatusChanged: jest.Mock
@@ -71,6 +72,7 @@ describe('CompanyService', () => {
     postcodeFindOne = jest.fn()
     legacyReportFindAll = jest.fn().mockResolvedValue([])
     getEntityByNationalId = jest.fn()
+    findEntityByNationalId = jest.fn()
     getLegalEntityByNationalId = jest.fn()
     emitCreated = jest.fn()
     emitStatusChanged = jest.fn()
@@ -98,7 +100,7 @@ describe('CompanyService', () => {
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
           provide: INationalRegistryService,
-          useValue: { getEntityByNationalId },
+          useValue: { getEntityByNationalId, findEntityByNationalId },
         },
         {
           provide: IRskCompanyRegistryService,
@@ -366,7 +368,7 @@ describe('CompanyService', () => {
 
   describe('getOrCreateSubsidiaryReportSnapshotSource', () => {
     it('returns existing company data with address fields seeded from the national registry', async () => {
-      getEntityByNationalId.mockResolvedValue({
+      findEntityByNationalId.mockResolvedValue({
         entity: makeRegistryEntity({
           kennitala: SUBSIDIARY_ID,
           nafn: 'Acme ehf.',
@@ -389,7 +391,7 @@ describe('CompanyService', () => {
         nationalId: SUBSIDIARY_ID,
       })
 
-      expect(getEntityByNationalId).toHaveBeenCalledWith(SUBSIDIARY_ID)
+      expect(findEntityByNationalId).toHaveBeenCalledWith(SUBSIDIARY_ID)
       expect(findOne).toHaveBeenCalledWith({
         where: { nationalId: SUBSIDIARY_ID },
       })
@@ -406,7 +408,7 @@ describe('CompanyService', () => {
     })
 
     it('creates a live company row from the national registry name when no match exists', async () => {
-      getEntityByNationalId.mockResolvedValue({
+      findEntityByNationalId.mockResolvedValue({
         entity: makeRegistryEntity({
           kennitala: NEW_SUBSIDIARY_ID,
           nafn: 'Subsidiary ehf.',
@@ -449,16 +451,21 @@ describe('CompanyService', () => {
       })
     })
 
-    it('throws NotFoundException when the national registry has no matching entity', async () => {
-      getEntityByNationalId.mockResolvedValue({ entity: null })
+    // The registry answers a kennitala it does not hold with a 404, which only
+    // findEntityByNationalId reports as `{ entity: null }` — getEntityByNationalId
+    // throws a 502 for it, which is how a filer's bad subsidiary once read as
+    // our failure. So the lookup must be the find variant.
+    it('throws BadRequestException when the national registry has no matching entity', async () => {
+      findEntityByNationalId.mockResolvedValue({ entity: null })
 
       await expect(
         service.getOrCreateSubsidiaryReportSnapshotSource({
           name: 'Anything',
           nationalId: UNREGISTERED_ID,
         }),
-      ).rejects.toThrow(NotFoundException)
+      ).rejects.toThrow(BadRequestException)
 
+      expect(getEntityByNationalId).not.toHaveBeenCalled()
       expect(findOne).not.toHaveBeenCalled()
       expect(create).not.toHaveBeenCalled()
     })
@@ -473,7 +480,7 @@ describe('CompanyService', () => {
         new BadRequestException(companyMessages.notALegalEntity('0101302989')),
       )
 
-      expect(getEntityByNationalId).not.toHaveBeenCalled()
+      expect(findEntityByNationalId).not.toHaveBeenCalled()
       expect(create).not.toHaveBeenCalled()
     })
 
@@ -487,7 +494,7 @@ describe('CompanyService', () => {
         new BadRequestException(companyMessages.invalidKennitala(TYPO_ID)),
       )
 
-      expect(getEntityByNationalId).not.toHaveBeenCalled()
+      expect(findEntityByNationalId).not.toHaveBeenCalled()
     })
   })
 
@@ -511,7 +518,7 @@ describe('CompanyService', () => {
         new BadRequestException(companyMessages.notALegalEntity('0101302989')),
       )
 
-      expect(getEntityByNationalId).not.toHaveBeenCalled()
+      expect(findEntityByNationalId).not.toHaveBeenCalled()
     })
   })
 
