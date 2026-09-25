@@ -15,6 +15,7 @@ import {
   ApiUUID,
 } from '@dmr.is/decorators'
 
+import { TrimString } from '../../report/lib/trim-string'
 import {
   GenderEnum,
   ReportProviderEnum,
@@ -45,15 +46,19 @@ export class CreateReportOutlierGroupDto {
   name?: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   reason!: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   action!: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   signatureName!: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   signatureRole!: string
 
   @ApiString({
