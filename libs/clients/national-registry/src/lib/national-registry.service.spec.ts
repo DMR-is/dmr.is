@@ -289,6 +289,52 @@ describe('NationalRegistryService', () => {
         expect.objectContaining({ context: 'NationalRegistryClientService' }),
       )
     })
+    // What the live registry sends for a kennitala it does not hold: a 404
+    // with a `skilabod` body.
+    const registryNotFound = () =>
+      ({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: jest
+          .fn()
+          .mockResolvedValue(
+            JSON.stringify({ skilabod: 'Kennitala fannst ekki' }),
+          ),
+        headers: { get: () => 'application/json' },
+      }) as unknown as Response
+
+    it('findEntityByNationalId answers a registry 404 with a null entity', async () => {
+      mockFetchWithTimeout.mockResolvedValueOnce(registryNotFound())
+
+      await expect(
+        service.findEntityByNationalId('9999999999'),
+      ).resolves.toEqual({ entity: null })
+      expect(mockLogger.error).not.toHaveBeenCalled()
+    })
+
+    it('getEntityByNationalId still treats that 404 as a failure', async () => {
+      mockFetchWithTimeout.mockResolvedValueOnce(registryNotFound())
+
+      await expect(service.getEntityByNationalId('9999999999')).rejects.toThrow(
+        BadGatewayException,
+      )
+    })
+
+    it('findEntityByNationalId still throws BadGatewayException for any other failure', async () => {
+      mockFetchWithTimeout.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: jest.fn().mockResolvedValue('boom'),
+        headers: { get: () => 'text/plain' },
+      } as unknown as Response)
+
+      await expect(
+        service.findEntityByNationalId('9999999999'),
+      ).rejects.toThrow(BadGatewayException)
+    })
+
     it('should reset tokens and throw BadGatewayException on 401 error', async () => {
       mockFetchWithTimeout.mockResolvedValueOnce({
         ok: false,

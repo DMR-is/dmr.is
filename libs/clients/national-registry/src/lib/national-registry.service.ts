@@ -196,6 +196,26 @@ export class NationalRegistryService implements INationalRegistryService {
   async getEntityByNationalId(
     nationalId: string,
   ): Promise<GetNationalRegistryEntityDto> {
+    return this.lookupEntity(nationalId, { notFoundAsNull: false })
+  }
+
+  async findEntityByNationalId(
+    nationalId: string,
+  ): Promise<GetNationalRegistryEntityDto> {
+    return this.lookupEntity(nationalId, { notFoundAsNull: true })
+  }
+
+  /**
+   * The one lookup both public methods run. `notFoundAsNull` is the only
+   * difference: the registry answers a kennitala it does not hold with a `404`
+   * and a `skilabod` body (confirmed against the live registry), and
+   * `findEntityByNationalId` reports that as `{ entity: null }` rather than a
+   * 502. `getEntityByNationalId` keeps the 502 its existing callers rely on.
+   */
+  private async lookupEntity(
+    nationalId: string,
+    { notFoundAsNull }: { notFoundAsNull: boolean },
+  ): Promise<GetNationalRegistryEntityDto> {
     try {
       await this.authenticate()
 
@@ -227,6 +247,14 @@ export class NationalRegistryService implements INationalRegistryService {
         contentType: response.headers.get('content-type'),
         bodyLength: responseText.length,
       })
+
+      if (!response.ok && notFoundAsNull && response.status === 404) {
+        this.logger.info('National registry holds no entity for kennitala', {
+          context: LOGGING_CONTEXT,
+        })
+
+        return { entity: null }
+      }
 
       if (!response.ok) {
         this.logger.warn('Failed to fetch entity from national registry', {

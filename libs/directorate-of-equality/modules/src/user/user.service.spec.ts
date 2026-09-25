@@ -64,10 +64,10 @@ describe('UserService', () => {
   let findAll: jest.Mock
   let create: jest.Mock
   let count: jest.Mock
-  let getEntityByNationalId: jest.Mock
+  let findEntityByNationalId: jest.Mock
 
   beforeEach(async () => {
-    getEntityByNationalId = jest.fn()
+    findEntityByNationalId = jest.fn()
     mockedIsPerson.mockReturnValue(true)
     findOne = jest.fn()
     findByPkOrThrow = jest.fn()
@@ -82,7 +82,7 @@ describe('UserService', () => {
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
           provide: INationalRegistryService,
-          useValue: { getEntityByNationalId },
+          useValue: { findEntityByNationalId },
         },
         {
           provide: getModelToken(UserModel),
@@ -120,7 +120,7 @@ describe('UserService', () => {
     })
 
     it('returns the registry name, split, for a kennitala with no user', async () => {
-      getEntityByNationalId.mockResolvedValue(entity('Gervi Jón Maðurson'))
+      findEntityByNationalId.mockResolvedValue(entity('Gervi Jón Maðurson'))
       findOne.mockResolvedValue(null)
 
       await expect(
@@ -151,11 +151,11 @@ describe('UserService', () => {
       })
       // Including one the registry no longer lists: it must read as "already a
       // user", not "not found".
-      expect(getEntityByNationalId).not.toHaveBeenCalled()
+      expect(findEntityByNationalId).not.toHaveBeenCalled()
     })
 
     it('returns the validated input, not the registry echo of it', async () => {
-      getEntityByNationalId.mockResolvedValue({
+      findEntityByNationalId.mockResolvedValue({
         entity: { ...entity('Gervi Maður').entity, kennitala: '010130-2399' },
       })
       findOne.mockResolvedValue(null)
@@ -167,7 +167,7 @@ describe('UserService', () => {
 
     it('lets a registry failure through rather than reading it as not found', async () => {
       const failure = new Error('registry down')
-      getEntityByNationalId.mockRejectedValue(failure)
+      findEntityByNationalId.mockRejectedValue(failure)
       findOne.mockResolvedValue(null)
 
       await expect(service.lookupNationalRegistry(NATIONAL_ID)).rejects.toBe(
@@ -176,7 +176,7 @@ describe('UserService', () => {
     })
 
     it('answers 404 when the registry has no one', async () => {
-      getEntityByNationalId.mockResolvedValue({ entity: null })
+      findEntityByNationalId.mockResolvedValue({ entity: null })
       findOne.mockResolvedValue(null)
 
       await expect(
@@ -190,7 +190,7 @@ describe('UserService', () => {
       await expect(
         service.lookupNationalRegistry(NATIONAL_ID),
       ).rejects.toBeInstanceOf(BadRequestException)
-      expect(getEntityByNationalId).not.toHaveBeenCalled()
+      expect(findEntityByNationalId).not.toHaveBeenCalled()
       expect(findOne).not.toHaveBeenCalled()
     })
 
@@ -209,7 +209,7 @@ describe('UserService', () => {
           translatedMessage: userMessages.invalidKennitala().translatedMessage,
         },
       })
-      expect(getEntityByNationalId).not.toHaveBeenCalled()
+      expect(findEntityByNationalId).not.toHaveBeenCalled()
       expect(findOne).not.toHaveBeenCalled()
     })
   })
