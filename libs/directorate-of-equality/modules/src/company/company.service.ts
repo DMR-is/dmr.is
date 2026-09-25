@@ -606,13 +606,17 @@ export class CompanyService implements ICompanyService {
       { context: LOGGING_CONTEXT },
     )
 
-    const registry = await this.nationalRegistryService.getEntityByNationalId(
+    // find, not get: the registry answers a kennitala it does not hold with a
+    // 404, which getEntityByNationalId turns into a 502 — telling a filer our
+    // side failed when their subsidiary list named a company that does not
+    // exist. A 400, because the fault is in the submitted payload.
+    const registry = await this.nationalRegistryService.findEntityByNationalId(
       input.nationalId,
     )
 
     if (!registry.entity) {
-      throw new NotFoundException(
-        companyMessages.registryEntityNotFound(input.nationalId),
+      throw new BadRequestException(
+        companyMessages.subsidiaryNotInRegistry(input.nationalId),
       )
     }
 
