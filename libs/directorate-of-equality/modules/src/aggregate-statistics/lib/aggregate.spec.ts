@@ -1,174 +1,278 @@
 import {
-  coversMonth,
+  CompanySectorEnum,
+  CompanySizeEnum,
+} from '../../company/models/company.enums'
+import {
+  StatisticsCertificationStatusEnum as Status,
+  StatisticsSectorEnum,
+} from '../dto/aggregate-statistics.dto'
+import {
+  certificationStatus,
+  companyCells,
+  CompanyStatisticsRow,
+  employeesByStatus,
   MINIMUM_COHORT,
-  monthsBetween,
-  pointsToFraction,
-  shareOf,
-  suppressedMean,
-  timeHeader,
+  nextUtcMidnight,
+  parseRound,
+  roundCells,
+  toStatisticsSector,
+  validityRound,
 } from './aggregate'
 
-describe('suppressedMean', () => {
-  const five = [1, 2, 3, 4, 5]
-
-  it('withholds a mean over too small a cohort', () => {
-    // The whole point of the rule: a pay gap averaged over two companies is
-    // close to publishing each of them.
-    expect(suppressedMean([10, 12])).toBeNull()
-    expect(suppressedMean(five.slice(0, MINIMUM_COHORT - 1))).toBeNull()
-  })
-
-  it('publishes at exactly the threshold', () => {
-    expect(suppressedMean(five)).toBe(3)
-  })
-
-  it('returns null for an empty cohort, never 0', () => {
-    // `0` would read as "no pay gap", which is the opposite claim from "we may
-    // not say". The contract makes `value` nullable for exactly this.
-    expect(suppressedMean([])).toBeNull()
-  })
-
-  it('does not treat a genuine zero mean as absent', () => {
-    expect(suppressedMean([0, 0, 0, 0, 0])).toBe(0)
-  })
-
-  it('rounds to two decimals', () => {
-    expect(suppressedMean([1, 1, 1, 1, 1.004])).toBe(1)
-    expect(suppressedMean([3.456, 3.456, 3.456, 3.456, 3.456])).toBe(3.46)
-  })
+const row = (
+  overrides: Partial<CompanyStatisticsRow> = {},
+): CompanyStatisticsRow => ({
+  region: 'Höfuðborgarsvæðið',
+  size: CompanySizeEnum.LARGE,
+  sector: CompanySectorEnum.FYRIRTAEKI,
+  salaryReportActive: false,
+  legacySalaryInForce: false,
+  legacyCertificationType: null,
+  legacyRound: null,
+  approvedSalaryReports: 0,
+  reportHeadcount: null,
+  legacyHeadcount: null,
+  ...overrides,
 })
 
-describe('shareOf', () => {
-  it('returns null rather than dividing by zero', () => {
-    // An empty denominator means "nothing was obliged", which is not 0%.
-    expect(shareOf(0, 0)).toBeNull()
+const vottun = (overrides: Partial<CompanyStatisticsRow> = {}) =>
+  row({
+    legacySalaryInForce: true,
+    legacyCertificationType: 'Vottun',
+    ...overrides,
   })
 
-  it('returns a fraction, not percent points', () => {
-    expect(shareOf(1, 3)).toBe(0.333)
-    expect(shareOf(3, 3)).toBe(1)
+describe('certificationStatus', () => {
+  it('reads the legacy certificate type, ignoring case and whitespace', () => {
+    expect(certificationStatus(vottun())).toBe(Status.VOTTUN)
+    expect(
+      certificationStatus(vottun({ legacyCertificationType: ' STAÐFESTING ' })),
+    ).toBe(Status.STADFESTING)
   })
 
-  it('keeps a real zero', () => {
-    expect(shareOf(0, 10)).toBe(0)
-  })
-})
-
-describe('pointsToFraction', () => {
-  it('converts percent points to a fraction without losing precision', () => {
-    expect(pointsToFraction(4.25)).toBe(0.0425)
-    expect(pointsToFraction(1.1)).toBe(0.011)
-  })
-
-  it('keeps a suppressed value suppressed', () => {
-    expect(pointsToFraction(null)).toBeNull()
-  })
-})
-
-describe('monthsBetween', () => {
-  it('includes both ends', () => {
-    const months = monthsBetween(
-      new Date('2026-01-15T00:00:00Z'),
-      new Date('2026-03-02T00:00:00Z'),
+  it('marks an in-force certificate with no recorded type as unclassified', () => {
+    expect(certificationStatus(vottun({ legacyCertificationType: null }))).toBe(
+      Status.UNCLASSIFIED,
     )
+    expect(
+      certificationStatus(vottun({ legacyCertificationType: 'eitthvað' })),
+    ).toBe(Status.UNCLASSIFIED)
+  })
 
-    expect(months.map((m) => m.toISOString())).toEqual([
-      '2026-01-01T00:00:00.000Z',
-      '2026-02-01T00:00:00.000Z',
-      '2026-03-01T00:00:00.000Z',
+  it('lets an approved report filed here take precedence over a legacy certificate', () => {
+    expect(certificationStatus(vottun({ salaryReportActive: true }))).toBe(
+      Status.SKYRSLUGJOF,
+    )
+  })
+
+  it('ignores the type of a certificate that is not in force', () => {
+    expect(
+      certificationStatus(row({ legacyCertificationType: 'Vottun' })),
+    ).toBe(Status.NONE)
+  })
+})
+
+describe('parseRound', () => {
+  it.each([
+    ['1.', 1],
+    [' 4. ', 4],
+    ['2', 2],
+  ])('reads %p as %p', (input, expected) => {
+    expect(parseRound(input)).toBe(expected)
+  })
+
+  it.each([null, '', 'fyrsta', '0.', '1.5'])('rejects %p', (input) => {
+    expect(parseRound(input)).toBeNull()
+  })
+})
+
+describe('validityRound', () => {
+  it('adds one round per approved skýrslugjöf to the legacy round', () => {
+    expect(validityRound({ legacyRound: '2.', approvedSalaryReports: 1 })).toBe(
+      3,
+    )
+  })
+
+  it('counts approved reports alone when the legacy register has no round', () => {
+    expect(validityRound({ legacyRound: null, approvedSalaryReports: 2 })).toBe(
+      2,
+    )
+  })
+
+  it('is null when neither source has a round', () => {
+    expect(
+      validityRound({ legacyRound: null, approvedSalaryReports: 0 }),
+    ).toBeNull()
+  })
+})
+
+describe('toStatisticsSector', () => {
+  it('folds ráðuneyti into ríkisaðilar', () => {
+    expect(toStatisticsSector(CompanySectorEnum.RADUNEYTI)).toBe(
+      StatisticsSectorEnum.RIKISADILI,
+    )
+  })
+
+  it('keeps unknown separate', () => {
+    expect(toStatisticsSector(CompanySectorEnum.UNKNOWN)).toBe(
+      StatisticsSectorEnum.UNKNOWN,
+    )
+  })
+})
+
+describe('companyCells', () => {
+  it('counts every company once, in the cell of its dimensions and status', () => {
+    const cells = companyCells([
+      vottun(),
+      vottun(),
+      row(),
+      vottun({ size: CompanySizeEnum.MEDIUM }),
     ])
-  })
 
-  it('emits a single month when both ends fall in it', () => {
-    expect(
-      monthsBetween(
-        new Date('2026-05-02T00:00:00Z'),
-        new Date('2026-05-29T00:00:00Z'),
-      ),
-    ).toHaveLength(1)
-  })
-
-  it('crosses a year boundary', () => {
-    const months = monthsBetween(
-      new Date('2025-11-01T00:00:00Z'),
-      new Date('2026-02-01T00:00:00Z'),
+    expect(cells).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          size: CompanySizeEnum.LARGE,
+          status: Status.VOTTUN,
+          companies: 2,
+        }),
+        expect.objectContaining({
+          size: CompanySizeEnum.LARGE,
+          status: Status.NONE,
+          companies: 1,
+        }),
+        expect.objectContaining({
+          size: CompanySizeEnum.MEDIUM,
+          status: Status.VOTTUN,
+          companies: 1,
+        }),
+      ]),
     )
-
-    expect(months).toHaveLength(4)
-  })
-})
-
-describe('coversMonth', () => {
-  const march = new Date(Date.UTC(2026, 2, 1))
-
-  it('covers a month inside the validity interval', () => {
-    // Coverage is an interval, not an event — a report approved years earlier
-    // still covers this month if it has not expired.
-    expect(
-      coversMonth(
-        {
-          approvedAt: new Date('2024-03-10T00:00:00Z'),
-          validUntil: new Date('2027-03-10T00:00:00Z'),
-        },
-        march,
-      ),
-    ).toBe(true)
+    expect(cells.reduce((sum, cell) => sum + cell.companies, 0)).toBe(4)
   })
 
-  it('does not cover a month before it was approved', () => {
-    expect(
-      coversMonth(
-        {
-          approvedAt: new Date('2026-04-01T00:00:00Z'),
-          validUntil: new Date('2029-04-01T00:00:00Z'),
-        },
-        march,
-      ),
-    ).toBe(false)
+  it('merges ráðuneyti and ríkisaðilar into one cell', () => {
+    const cells = companyCells([
+      row({ sector: CompanySectorEnum.RADUNEYTI }),
+      row({ sector: CompanySectorEnum.RIKISADILI }),
+    ])
+
+    expect(cells).toHaveLength(1)
+    expect(cells[0]).toMatchObject({
+      sector: StatisticsSectorEnum.RIKISADILI,
+      companies: 2,
+    })
   })
 
-  it('covers the month it was approved in, even late in the month', () => {
-    expect(
-      coversMonth(
-        {
-          approvedAt: new Date('2026-03-31T23:00:00Z'),
-          validUntil: null,
-        },
-        march,
-      ),
-    ).toBe(true)
+  it('lets a filter be answered by summing cells', () => {
+    const rows = [
+      vottun({ region: 'Vesturland' }),
+      vottun({ region: 'Austurland' }),
+      row({ region: 'Vesturland', size: CompanySizeEnum.SMALL }),
+    ]
+    const vesturland = companyCells(rows)
+      .filter((cell) => cell.region === 'Vesturland')
+      .reduce((sum, cell) => sum + cell.companies, 0)
+
+    expect(vesturland).toBe(
+      rows.filter((company) => company.region === 'Vesturland').length,
+    )
   })
 
-  it('does not cover a month after it expired', () => {
-    expect(
-      coversMonth(
-        {
-          approvedAt: new Date('2020-01-01T00:00:00Z'),
-          validUntil: new Date('2026-02-28T00:00:00Z'),
-        },
-        march,
-      ),
-    ).toBe(false)
-  })
+  it('carries no company-identifying field', () => {
+    const [cell] = companyCells([vottun({ legacyHeadcount: 120 })])
 
-  it('treats a missing validUntil as still in force', () => {
-    expect(
-      coversMonth(
-        { approvedAt: new Date('2024-01-01T00:00:00Z'), validUntil: null },
-        march,
-      ),
-    ).toBe(true)
-  })
-
-  it('never counts an unapproved report', () => {
-    expect(coversMonth({ approvedAt: null, validUntil: null }, march)).toBe(
-      false,
+    expect(Object.keys(cell).sort()).toEqual(
+      ['companies', 'region', 'sector', 'size', 'status'].sort(),
     )
   })
 })
 
-describe('timeHeader', () => {
-  it('is ms-epoch as a string, matching the chart pipeline', () => {
-    expect(timeHeader(new Date('2026-03-01T00:00:00Z'))).toBe('1772323200000')
+describe('roundCells', () => {
+  it('counts only companies with something in force, without their status', () => {
+    const cells = roundCells([
+      vottun({ legacyRound: '2.' }),
+      row({ legacyRound: '3.' }),
+      row({ salaryReportActive: true, approvedSalaryReports: 1 }),
+      vottun({ legacyRound: null }),
+    ])
+
+    expect(cells).toHaveLength(3)
+    expect(cells).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ round: 2, companies: 1 }),
+        expect.objectContaining({ round: 1, companies: 1 }),
+        expect.objectContaining({ round: null, companies: 1 }),
+      ]),
+    )
+    expect(cells.every((cell) => !('status' in cell))).toBe(true)
+  })
+})
+
+describe('employeesByStatus', () => {
+  const cohort = (count: number, overrides: Partial<CompanyStatisticsRow>) =>
+    Array.from({ length: count }, () => vottun(overrides))
+
+  it('sums headcounts once the cohort floor is met', () => {
+    const [entry] = employeesByStatus(
+      cohort(MINIMUM_COHORT, { legacyHeadcount: 10 }),
+    ).filter((e) => e.status === Status.VOTTUN)
+
+    expect(entry.employees).toBe(MINIMUM_COHORT * 10)
+  })
+
+  it('withholds a sum over fewer companies than the floor, rather than publishing it', () => {
+    const [entry] = employeesByStatus(
+      cohort(MINIMUM_COHORT - 1, { legacyHeadcount: 10 }),
+    ).filter((e) => e.status === Status.VOTTUN)
+
+    expect(entry.employees).toBeNull()
+  })
+
+  it('counts only companies that stated a headcount toward the floor', () => {
+    const rows = [
+      ...cohort(MINIMUM_COHORT - 1, { legacyHeadcount: 10 }),
+      ...cohort(3, { legacyHeadcount: null }),
+    ]
+    const [entry] = employeesByStatus(rows).filter(
+      (e) => e.status === Status.VOTTUN,
+    )
+
+    expect(entry.employees).toBeNull()
+  })
+
+  it('uses the report headcount for companies covered by a report filed here', () => {
+    const rows = cohort(MINIMUM_COHORT, {
+      salaryReportActive: true,
+      reportHeadcount: 7,
+      legacyHeadcount: 1000,
+    })
+    const [entry] = employeesByStatus(rows).filter(
+      (e) => e.status === Status.SKYRSLUGJOF,
+    )
+
+    expect(entry.employees).toBe(MINIMUM_COHORT * 7)
+  })
+
+  it('publishes no headcount for companies with nothing in force', () => {
+    const statuses = employeesByStatus([row({ legacyHeadcount: 50 })]).map(
+      (e) => e.status,
+    )
+
+    expect(statuses).not.toContain(Status.NONE)
+  })
+})
+
+describe('nextUtcMidnight', () => {
+  it('returns the start of the next UTC day', () => {
+    expect(nextUtcMidnight(new Date('2026-09-25T13:45:00Z'))).toEqual(
+      new Date('2026-09-26T00:00:00Z'),
+    )
+  })
+
+  it('moves a full day forward from exactly midnight', () => {
+    expect(nextUtcMidnight(new Date('2026-12-31T00:00:00Z'))).toEqual(
+      new Date('2027-01-01T00:00:00Z'),
+    )
   })
 })
