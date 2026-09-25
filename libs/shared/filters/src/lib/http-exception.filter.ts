@@ -5,6 +5,7 @@ import {
   ExceptionFilter,
   ForbiddenException,
   HttpException,
+  HttpStatus,
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
@@ -86,7 +87,25 @@ export class HttpExceptionFilter implements ExceptionFilter {
         err.message = 'An unexpected error occurred.'
         break
       default:
-        err.message = 'An unexpected error occurred.'
+        // Matched by status rather than class: ThrottlerException lives in
+        // @nestjs/throttler, and a subclass of ConflictException would miss a
+        // constructor match. Anything unlisted keeps the generic body.
+        switch (status) {
+          case HttpStatus.CONFLICT:
+            err.name = ApiErrorName.Conflict
+            err.message = 'Conflict.'
+            break
+          case HttpStatus.PAYLOAD_TOO_LARGE:
+            err.name = ApiErrorName.PayloadTooLarge
+            err.message = 'Payload too large.'
+            break
+          case HttpStatus.TOO_MANY_REQUESTS:
+            err.name = ApiErrorName.TooManyRequests
+            err.message = 'Too many requests.'
+            break
+          default:
+            err.message = 'An unexpected error occurred.'
+        }
     }
 
     response.status(err.statusCode).json(err)
