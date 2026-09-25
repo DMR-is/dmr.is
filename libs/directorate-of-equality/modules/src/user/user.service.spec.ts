@@ -201,9 +201,10 @@ describe('UserService', () => {
       // fails on a bad checksum, so without this check a typo would be reported
       // as a company kennitala (here that function is mocked, so the test
       // pins the message rather than reproducing the mix-up).
-      await expect(
-        service.lookupNationalRegistry('0101302389'),
-      ).rejects.toMatchObject({
+      const lookup = service.lookupNationalRegistry('0101302389')
+
+      await expect(lookup).rejects.toBeInstanceOf(BadRequestException)
+      await expect(lookup).rejects.toMatchObject({
         response: {
           translatedMessage: userMessages.invalidKennitala().translatedMessage,
         },
