@@ -44,6 +44,11 @@ const clientKey: ApiKeyContext = {
     ApiKeyScopeEnum.SALARY_SUBMIT,
     ApiKeyScopeEnum.SCORING_WRITE,
   ],
+  firmScopes: [
+    ApiKeyScopeEnum.REPORT_READ,
+    ApiKeyScopeEnum.SALARY_SUBMIT,
+    ApiKeyScopeEnum.SCORING_WRITE,
+  ],
 }
 
 /**

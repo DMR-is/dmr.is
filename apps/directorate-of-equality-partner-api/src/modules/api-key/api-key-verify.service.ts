@@ -121,6 +121,7 @@ export class ApiKeyVerifyService implements IApiKeyVerifyService {
       scopes: client.scopes,
       // The firm's ceiling, not yet what this request may do.
       scopesResolved: false,
+      firmScopes: client.scopes,
     }
   }
 

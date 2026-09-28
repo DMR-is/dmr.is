@@ -300,6 +300,7 @@ describe('ApiKeyVerifyService', () => {
         scopes: liveClient.scopes,
         // The firm's ceiling until PartnerCompanyGuard narrows it.
         scopesResolved: false,
+        firmScopes: liveClient.scopes,
       })
       expect(clientKeyFindOne).toHaveBeenCalledWith({
         where: { keyId: generated.keyId },
