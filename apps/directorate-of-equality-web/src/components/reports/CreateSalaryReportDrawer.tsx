@@ -62,8 +62,8 @@ const GENDER_OPTIONS = [
  * `SALARY_DATA_PERIOD_MONTHS_BACK` in the API's `salary-data-basis.ts`, which is
  * the authoritative bound and 400s anything outside it — offering more here just
  * produces a rejected submit, so the two must be changed together. That window
- * counts back from the current month but leaves it out until it is over, so the
- * picker starts at last month.
+ * leaves the current month out until it is over, so the picker offers the 36
+ * months starting at last month.
  */
 const MONTH_OPTION_COUNT = 36
 const FIRST_MONTH_OFFSET = 1
@@ -202,17 +202,14 @@ export const CreateSalaryReportDrawer = () => {
   const monthOptions = useMemo(() => {
     const now = new Date()
 
-    return Array.from(
-      { length: MONTH_OPTION_COUNT - FIRST_MONTH_OFFSET },
-      (_, index) => {
-        const value = format(
-          subMonths(now, index + FIRST_MONTH_OFFSET),
-          'yyyy-MM',
-        )
+    return Array.from({ length: MONTH_OPTION_COUNT }, (_, index) => {
+      const value = format(
+        subMonths(now, index + FIRST_MONTH_OFFSET),
+        'yyyy-MM',
+      )
 
-        return { label: formatMonthYearIS(`${value}-01`), value }
-      },
-    )
+      return { label: formatMonthYearIS(`${value}-01`), value }
+    })
   }, [])
 
   const {
