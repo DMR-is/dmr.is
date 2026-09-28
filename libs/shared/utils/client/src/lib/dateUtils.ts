@@ -1,5 +1,9 @@
 import { getHolidays, Holiday } from 'fridagar'
 
+// Mirrors SAME_DAY_PUBLISHING_CUTOFF_HOUR in @dmr.is/legal-gazette-schemas, which
+// validates the same rule; this lib cannot depend on it, so keep the two in step.
+const SAME_DAY_PUBLISHING_CUTOFF_HOUR = 12
+
 // The pattern is, if now is before noon, then you can choose today as publishing date else you have to choose at least tomorrow
 // We have to exclude weeknds as publishing dates are only on weekdays and we must account for holidays as well
 // There are two different types (atleast for legal gazette) of adverts that will have to use this and the logic might differ slightly
@@ -41,8 +45,9 @@ export const getNextValidPublishingDate = (
     fromDate.getMonth() === today.getMonth() &&
     fromDate.getFullYear() === today.getFullYear()
 
-  // If it's today and time is after 12:00, start checking from the next day
-  if (isToday && fromDate.getHours() >= 12) {
+  // If it's today and time is after 12:00, start checking from the next day.
+  // Local time, unlike getEarliestPublishingDate; see SAME_DAY_PUBLISHING_CUTOFF_HOUR.
+  if (isToday && fromDate.getHours() >= SAME_DAY_PUBLISHING_CUTOFF_HOUR) {
     nextDate.setDate(nextDate.getDate() + 1)
   }
 
@@ -52,6 +57,47 @@ export const getNextValidPublishingDate = (
   }
 
   return nextDate
+}
+
+// The Reykjavik calendar day of an instant, as the local-midnight Date a picker
+// expects. Reykjavik is UTC+0 all year, so its day is the UTC day. Same
+// operation as fromCalendarDateIso in @dmr.is/utils-shared.
+const toReykjavikPickerDay = (date: Date) =>
+  new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+
+/**
+ * The first day a date picker may offer: today before noon Reykjavik time,
+ * otherwise the next day, never earlier than `minDate`, and skipping weekends and
+ * holidays. Returned as local midnight of that Reykjavik day, so a browser
+ * outside Iceland is offered the same days the schema accepts.
+ *
+ * Unlike {@link getNextValidPublishingDate}, this clamps to `now`. That helper
+ * only applies the noon rule when `fromDate` is today, so a `minDate` in the past
+ * came back unchanged and the picker offered today at any hour.
+ */
+export const getEarliestPublishingDate = (
+  minDate?: Date,
+  now: Date = new Date(),
+) => {
+  const earliest = toReykjavikPickerDay(now)
+
+  if (now.getUTCHours() >= SAME_DAY_PUBLISHING_CUTOFF_HOUR) {
+    earliest.setDate(earliest.getDate() + 1)
+  }
+
+  if (minDate) {
+    const minDay = toReykjavikPickerDay(minDate)
+
+    if (minDay.getTime() > earliest.getTime()) {
+      earliest.setTime(minDay.getTime())
+    }
+  }
+
+  while (isDateOnWeekendOrHoliday(earliest)) {
+    earliest.setDate(earliest.getDate() + 1)
+  }
+
+  return earliest
 }
 
 /**

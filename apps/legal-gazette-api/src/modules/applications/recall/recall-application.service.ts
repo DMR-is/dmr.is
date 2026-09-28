@@ -8,6 +8,8 @@ import { InjectModel } from '@nestjs/sequelize'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import {
   ApplicationTypeEnum,
+  isOnOrAfterEarliestPublishingDay,
+  PUBLISHING_DATE_CUTOFF_MESSAGE,
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
   SettlementType,
@@ -86,6 +88,32 @@ export class RecallApplicationService implements IRecallApplicationService {
     )
 
     throw new BadRequestException('Estate already has a division ending advert')
+  }
+
+  /**
+   * Same-day publishing closes at noon. The date pickers only enforce that when
+   * they render, so a form left open past noon, or a direct API call, could
+   * otherwise still book the same day.
+   */
+  private assertPublishingDateOpen(
+    applicationId: string,
+    publishingDate: Date,
+    advertKind: string,
+  ): void {
+    if (isOnOrAfterEarliestPublishingDay(publishingDate)) {
+      return
+    }
+
+    this.logger.warn(
+      `Rejected ${advertKind} scheduled before the earliest publishing day`,
+      {
+        context: LOGGING_CONTEXT,
+        applicationId: applicationId,
+        publishingDate: String(publishingDate),
+      },
+    )
+
+    throw new BadRequestException(PUBLISHING_DATE_CUTOFF_MESSAGE)
   }
 
   private cloneSettlement(
@@ -250,6 +278,13 @@ export class RecallApplicationService implements IRecallApplicationService {
     body: CreateDivisionMeetingDto,
     user: DMRUser,
   ): Promise<void> {
+    // The meeting date doubles as the publishing date (scheduledAt below).
+    this.assertPublishingDateOpen(
+      applicationId,
+      body.meetingDate,
+      'division meeting',
+    )
+
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
@@ -313,6 +348,12 @@ export class RecallApplicationService implements IRecallApplicationService {
       context: LOGGING_CONTEXT,
       applicationId: applicationId,
     })
+
+    this.assertPublishingDateOpen(
+      applicationId,
+      body.scheduledAt,
+      'division ending',
+    )
 
     // The Skiptalok inherits its urskurdardagur from the Innkollun, so it has to
     // come from the Innkollun that actually ran: without an order and a status

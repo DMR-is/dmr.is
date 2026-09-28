@@ -19,6 +19,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import {
+  getEarliestPublishingDate,
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
 } from '@dmr.is/utils-client/dateUtils'
@@ -87,8 +88,8 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
     'fields.courtAndJudgmentFields',
   ) as unknown as { courtDistrict?: { title?: string }; judgmentDate?: string }
 
-  const minDate = getNextValidPublishingDate(
-    dateData?.minDate ? new Date(dateData.minDate) : new Date(),
+  const minDate = getEarliestPublishingDate(
+    dateData?.minDate ? new Date(dateData.minDate) : undefined,
   )
   const maxDate = getNextValidPublishingDate(addYears(new Date(), 3))
   const invalidPublishingDates = getInvalidPublishingDatesInRange(
@@ -194,7 +195,9 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
             hasError={!!errors?.properties?.scheduledAt?.errors.length}
             errorMessage={errors?.properties?.scheduledAt?.errors[0]}
             onChange={(date) => {
-              handleSetState('scheduledAt', date)
+              // The picked day, as for endingDate above: local midnight from a
+              // browser east of UTC would otherwise publish a day early.
+              handleSetState('scheduledAt', toCalendarDate(date))
               setErrors((prev) =>
                 prev?.properties
                   ? {

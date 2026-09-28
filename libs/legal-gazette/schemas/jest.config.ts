@@ -1,0 +1,12 @@
+export default {
+  displayName: 'legal-gazette-schemas',
+  preset: '../../../jest.preset.js',
+  testEnvironment: 'node',
+  // Bare on purpose: inline options REPLACE the root `.swcrc` instead of
+  // merging with it. See the header in `.swcrc`.
+  transform: {
+    '^.+\\.[tj]s$': ['@swc/jest'],
+  },
+  moduleFileExtensions: ['ts', 'js'],
+  coverageDirectory: '../../../coverage/libs/legal-gazette/schemas',
+}
