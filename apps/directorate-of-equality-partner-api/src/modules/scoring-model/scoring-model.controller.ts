@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Inject,
   Param,
@@ -135,11 +136,15 @@ export class ScoringModelController {
     return this.scoringModelService.getModel(company, modelId)
   }
 
+  // 204: nothing is left to return. The other DELETEs here answer 200 with the
+  // model, since removing a part of it leaves the rest to show.
   @Delete(':modelId')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @RequireApiScope(ApiKeyScopeEnum.SCORING_WRITE)
   @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
   @PartnerResponse({
     include404: true,
+    status: HttpStatus.NO_CONTENT,
     operationId: 'deleteScoringModel',
     successDescription:
       'Deleted, along with its criteria, sub-criteria, steps and roles. Reports already filed against it are unaffected — a filing snapshots the model it was scored under.',

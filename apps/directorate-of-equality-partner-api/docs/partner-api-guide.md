@@ -818,8 +818,8 @@ assignment rather than silently re-pointing it at a þrep you did not choose.
 
 ### Deleting
 
-`DELETE /partner/scoring-models/{modelId}` takes its criteria, sub-criteria,
-þrep and jobs with it. **Reports already filed against it are unaffected** — a
+`DELETE /partner/scoring-models/{modelId}` answers `204` with no body and
+takes its criteria, sub-criteria, þrep and jobs with it. **Reports already filed against it are unaffected** — a
 filing copies the model it was scored under, so the figures on a filed report
 never move when the model changes or goes away.
 
@@ -947,6 +947,7 @@ Scoring model (section C):
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId`                                                                                                                                                   |
 | `201` | on a submission: filed — `status` says whether it is `SUBMITTED` or `POSTPONED`                                                                                                                                                                                                                              |
+| `204` | `DELETE` of a whole scoring model: deleted, no body                                                                                                                                                                                                                                                          |
 | `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx`; `X-Company-National-Id` missing or malformed with a vendor client key, sent with a company key, or sent on `GET /partner/delegations` |
 | `401` | missing or invalid key                                                                                                                                                                                                                                                                                       |
 | `403` | key lacks the scope the route declares (for a vendor client key: your organisation's scopes intersected with the company's, and the message says which of the two lacks it); no live delegation from the company named in `X-Company-National-Id`; a company key on `GET /partner/delegations`               |
