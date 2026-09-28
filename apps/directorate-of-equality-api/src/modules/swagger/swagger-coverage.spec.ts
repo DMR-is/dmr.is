@@ -296,10 +296,12 @@ const swaggerExclusions = (controller: Function): string[] => {
     .filter((method) => method !== 'constructor')
     .filter(
       (method) =>
-        (Reflect.getMetadata(
-          API_EXCLUDE_ENDPOINT,
-          controller.prototype[method],
-        ) as { disable?: boolean } | undefined)?.disable,
+        (
+          Reflect.getMetadata(
+            API_EXCLUDE_ENDPOINT,
+            controller.prototype[method],
+          ) as { disable?: boolean } | undefined
+        )?.disable,
     )
     .map((method) => `${controller.name}.${method}`)
 }
@@ -323,9 +325,11 @@ const documentableHandlers = (app: INestApplication): string[] =>
   [...new Set<Function>(routedControllers(app))]
     .filter(
       (controller) =>
-        !(Reflect.getMetadata(API_EXCLUDE_CONTROLLER, controller) as
-          | [boolean]
-          | undefined)?.[0],
+        !(
+          Reflect.getMetadata(API_EXCLUDE_CONTROLLER, controller) as
+            | [boolean]
+            | undefined
+        )?.[0],
     )
     .flatMap((controller) => {
       const excluded = new Set(swaggerExclusions(controller))

@@ -10,6 +10,7 @@ import {
 } from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
 import { RegionModel } from '../location/models/region.model'
+import { ReportStatusEnum } from '../report/models/report.enums'
 import { StatisticsCertificationStatusEnum as Status } from './dto/aggregate-statistics.dto'
 import { UNKNOWN_REGION } from './lib/aggregate'
 import { AggregateStatisticsService } from './aggregate-statistics.service'
@@ -34,16 +35,18 @@ type QueryRow = {
 
 const setup = async (rows: QueryRow[], regions: string[] = []) => {
   const companyFindAll = jest.fn().mockResolvedValue(
-    rows.map((row) => ({
-      sector: row.sector ?? CompanySectorEnum.FYRIRTAEKI,
-      employeeCountCategory: row.employeeCountCategory ?? CompanySizeEnum.LARGE,
-      salaryReportActive: row.salaryReportActive ?? false,
-      legacySalaryInForce: row.legacySalaryInForce ?? false,
-      legacyCertificationType: row.legacyCertificationType ?? null,
-      legacyRound: row.legacyRound ?? null,
-      reportHeadcount: row.reportHeadcount ?? null,
-      legacyHeadcount: row.legacyHeadcount ?? null,
-      postcode: row.region ? { region: { name: row.region } } : null,
+    // Spread rather than `??`, so a row can pass through the NULLs SQL returns.
+    rows.map(({ region, ...row }) => ({
+      sector: CompanySectorEnum.FYRIRTAEKI,
+      employeeCountCategory: CompanySizeEnum.LARGE,
+      salaryReportActive: false,
+      legacySalaryInForce: false,
+      legacyCertificationType: null,
+      legacyRound: null,
+      reportHeadcount: null,
+      legacyHeadcount: null,
+      ...row,
+      postcode: region ? { region: { name: region } } : null,
     })),
   )
   const regionFindAll = jest
@@ -90,6 +93,16 @@ describe('AggregateStatisticsService', () => {
 
     const sql = JSON.stringify(companyFindAll.mock.calls[0][0].attributes)
     expect(sql).toContain('parent_company_id IS NULL')
+  })
+
+  it('counts superseded salary reports toward the validity round', async () => {
+    const { service, companyFindAll } = await setup([])
+    await service.getStatistics()
+
+    const sql = JSON.stringify(companyFindAll.mock.calls[0][0].attributes)
+    expect(sql).toContain(
+      `r.status IN ('${ReportStatusEnum.APPROVED}', '${ReportStatusEnum.SUPERSEDED}')`,
+    )
   })
 
   it('puts a company with no postcode in the unknown region, and lists it on the axis', async () => {

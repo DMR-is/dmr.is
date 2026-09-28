@@ -38,9 +38,9 @@ export type CompanyStatisticsRow = {
   legacySalaryInForce: boolean
   /** `certification_type` of the in-force legacy certificate, verbatim. */
   legacyCertificationType: string | null
-  /** `round` of the company's latest legacy row, verbatim ("1." … "4."). */
+  /** `round` of the in-force legacy row, else the latest one, verbatim ("1." … "4."). */
   legacyRound: string | null
-  /** APPROVED SALARY reports filed here, in force or expired. */
+  /** SALARY reports approved here, including ones since superseded. */
   approvedSalaryReports: number
   /** Headcount from the in-force report (filer only). */
   reportHeadcount: number | null

@@ -147,7 +147,7 @@ export class AggregateStatisticsDto {
   @ApiProperty({
     type: [StatisticsEmployeesDto],
     description:
-      'National headcount per status, excluding NONE. Not broken down by region, size or sector: per-cell sums could be subtracted from the total to recover one company.',
+      'National headcount per status, excluding NONE. Not broken down by region, size or sector: per-cell sums could be subtracted from the total to recover one company. Totals are exact, so when a single company changes status between two days, the change in each total is its headcount.',
   })
   employees!: StatisticsEmployeesDto[]
 }
