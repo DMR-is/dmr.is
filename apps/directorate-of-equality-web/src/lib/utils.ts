@@ -44,6 +44,33 @@ export const formatSalary = (v: number) =>
   new Intl.NumberFormat('is-IS').format(Math.round(v)).replaceAll(',', '.')
 
 /**
+ * A declared average headcount, e.g. `1.234,5`. Up to the column's two
+ * decimals, trailing zeros dropped, so a whole number reads as one.
+ *
+ * Built by hand rather than with `Intl.NumberFormat('is-IS')` for the reason
+ * `formatTimestampDate` gives: without Icelandic locale data the runtime falls
+ * back to en-US and would print `1,234.5`.
+ */
+export const formatEmployeeCount = (v: number | null | undefined): string => {
+  if (v === null || v === undefined) return '—'
+  const [whole, fraction] = (Math.round(Math.abs(v) * 100) / 100)
+    .toString()
+    .split('.')
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  const sign = v < 0 ? '−' : ''
+  return fraction ? `${sign}${grouped},${fraction}` : `${sign}${grouped}`
+}
+
+/** A change in headcount with its sign always shown: `+2`, `−0,5`, `0`. */
+export const formatEmployeeDelta = (v: number): string => {
+  const rounded = Math.round(v * 100) / 100
+  if (rounded === 0) return '0'
+  return rounded > 0
+    ? `+${formatEmployeeCount(rounded)}`
+    : formatEmployeeCount(rounded)
+}
+
+/**
  * A `DATEONLY` field off the API (`YYYY-MM-DD`) as `dd.mm.yyyy`.
  *
  * ⚠️ Splits the string rather than going through `new Date(...)`. An ISO

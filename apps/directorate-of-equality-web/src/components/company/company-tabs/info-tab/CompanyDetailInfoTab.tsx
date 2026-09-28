@@ -14,6 +14,7 @@ import { CompanyTimeline } from '../../company-timeline/CompanyTimeline'
 import { CompanyEmailField } from './CompanyEmailField'
 import { CompanyRegisterStatusField } from './CompanyRegisterStatusField'
 import { CompanySectorField } from './CompanySectorField'
+import { EmployeeCountHistory } from './EmployeeCountHistory'
 
 const f = sharedText.form
 const d = reportText.detailFields
@@ -95,6 +96,12 @@ export const CompanyDetailInfoTab = ({ company }: Props) => {
           },
         ]}
       />
+
+      {/* Above the timeline rather than below it: the timeline grows without
+          bound, and a collapsed section under it would be out of sight. Owns
+          its top margin, since it renders nothing for a company with no
+          declared headcount. */}
+      <EmployeeCountHistory companyId={company.id} />
 
       <Box marginTop={6}>
         <CompanyTimeline companyId={company.id} companyName={company.name} />

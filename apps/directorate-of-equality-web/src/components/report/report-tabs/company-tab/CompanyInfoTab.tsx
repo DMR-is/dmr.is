@@ -5,13 +5,23 @@ import { useMemo } from 'react'
 import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
-import { type CompanySizeEnum } from '../../../../gen/fetch'
+import {
+  type CompanySizeEnum,
+  type EmployeeCountHistoryEntryDto,
+  ReportTypeEnum,
+} from '../../../../gen/fetch'
 import { reportText, sharedText } from '../../../../lib/text'
 import {
   COMPANY_SIZE_LABEL,
+  formatEmployeeCount,
+  formatEmployeeDelta,
   formatNationalId,
+  formatTimestampDate,
   mapGender,
 } from '../../../../lib/utils'
 import { InfoItems } from './InfoItems'
@@ -43,6 +53,32 @@ const subsidariesColumns: ColumnDef<Subsidary>[] = [
   },
 ]
 
+/**
+ * A figure with its change since the previous submission beside it. Without a
+ * previous figure to compare against it is just the figure.
+ */
+const CountWithChange = ({
+  current,
+  previous,
+}: {
+  current?: number
+  previous?: number | null
+}) => {
+  // InfoItems renders an element as-is, so the unknown fallback is ours.
+  if (current === undefined) return <Text>{sharedText.unknown}</Text>
+  return (
+    <Text>
+      {formatEmployeeCount(current)}
+      {previous !== undefined && previous !== null && (
+        <Text as="span" variant="small" color="dark300">
+          {' '}
+          ({formatEmployeeDelta(current - previous)} {c.sincePrevious})
+        </Text>
+      )}
+    </Text>
+  )
+}
+
 interface CompanyInfoTabProps {
   company?: {
     name?: string
@@ -70,6 +106,12 @@ interface CompanyInfoTabProps {
     otherCount?: number
   }
   subsidaries?: Subsidary[]
+  /**
+   * The company's submission before this one. `undefined` while it loads,
+   * `null` when there is none.
+   */
+  previousEmployeeCount?: EmployeeCountHistoryEntryDto | null
+  employeeCountHistoryHref?: string
 }
 
 export const CompanyInfoTab = ({
@@ -78,8 +120,21 @@ export const CompanyInfoTab = ({
   contactPerson,
   employees,
   subsidaries,
+  previousEmployeeCount,
+  employeeCountHistoryHref,
 }: CompanyInfoTabProps) => {
   const subsidariesData = useMemo(() => subsidaries ?? [], [subsidaries])
+
+  const hasCounts =
+    employees?.womenCount !== undefined ||
+    employees?.menCount !== undefined ||
+    employees?.otherCount !== undefined
+  const totalCount = hasCounts
+    ? (employees?.womenCount ?? 0) +
+      (employees?.menCount ?? 0) +
+      (employees?.otherCount ?? 0)
+    : undefined
+  const previous = previousEmployeeCount ?? undefined
 
   return (
     <Box marginBottom={6} marginTop={4}>
@@ -136,22 +191,77 @@ export const CompanyInfoTab = ({
           label={c.averageEmployeesHeading}
         >
           <InfoItems
-            colCount={3}
+            colCount={4}
             items={[
               {
                 label: sharedText.genders.femaleCount,
-                children: employees?.womenCount,
+                children: (
+                  <CountWithChange
+                    current={employees?.womenCount}
+                    previous={previous?.femaleCount}
+                  />
+                ),
               },
               {
                 label: sharedText.genders.maleCount,
-                children: employees?.menCount,
+                children: (
+                  <CountWithChange
+                    current={employees?.menCount}
+                    previous={previous?.maleCount}
+                  />
+                ),
               },
               {
                 label: c.genderNeutralRegistry,
-                children: employees?.otherCount,
+                children: (
+                  <CountWithChange
+                    current={employees?.otherCount}
+                    previous={previous?.neutralCount}
+                  />
+                ),
+              },
+              {
+                label: c.totalCount,
+                children: (
+                  <CountWithChange
+                    current={totalCount}
+                    previous={previous?.totalCount}
+                  />
+                ),
               },
             ]}
           />
+          {previousEmployeeCount !== undefined && (
+            <Box marginTop={1}>
+              <Text variant="small">
+                {previousEmployeeCount
+                  ? c.comparedWith(
+                      previousEmployeeCount.type === ReportTypeEnum.SALARY
+                        ? sharedText.typeLabels.SALARY
+                        : sharedText.typeLabels.EQUALITY,
+                      formatTimestampDate(previousEmployeeCount.submittedAt),
+                    )
+                  : c.noPrevious}
+              </Text>
+              {employeeCountHistoryHref && (
+                <Box marginTop={2}>
+                  {/* The anchor navigates and takes focus; the button is only
+                      the app's text-link styling, so it stays out of the tab
+                      order rather than being a second stop. */}
+                  <LinkV2 href={employeeCountHistoryHref}>
+                    <Button
+                      variant="text"
+                      size="small"
+                      icon="arrowForward"
+                      unfocusable
+                    >
+                      {c.viewHistory}
+                    </Button>
+                  </LinkV2>
+                </Box>
+              )}
+            </Box>
+          )}
         </AccordionItem>
         {subsidariesData.length > 0 && (
           <AccordionItem id="company-subsidaries" label={c.subsidaries}>

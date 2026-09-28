@@ -12,8 +12,10 @@ import {
   ReportTypeEnum,
   SalaryByGenderAndScoreDto,
 } from '../../../gen/fetch'
+import { NAV_PATHS } from '../../../lib/constants'
 import { reportText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
+import { EMPLOYEE_COUNT_HISTORY_ANCHOR } from '../../company/company-tabs/info-tab/EmployeeCountHistory'
 import { CompanyInfoTab } from './company-tab/CompanyInfoTab'
 import { EqualityReportTab } from './equality-tab/EqualityReportTab'
 import { SalaryReportTab } from './salary-tab/SalaryReportTab'
@@ -44,6 +46,23 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
     }),
     enabled: isSalary,
   })
+
+  // The same endpoint the company page's history table reads, so "the
+  // submission before this one" cannot differ between the two screens.
+  // Compared by date rather than taking the newest entry, so an older report
+  // is set against its own predecessor.
+  const { data: employeeCountHistory } = useQuery(
+    trpc.reports.employeeCountHistory.queryOptions({
+      companyId: report.company.companyId,
+    }),
+  )
+  const previousEmployeeCount = employeeCountHistory
+    ? (employeeCountHistory.entries.find(
+        (entry) =>
+          entry.reportId !== report.id &&
+          new Date(entry.submittedAt) < new Date(report.createdAt),
+      ) ?? null)
+    : undefined
 
   const jafnrettisaetlun = {
     id: 'jafnrettisaetlun',
@@ -81,6 +100,13 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
           menCount: report.averageEmployeeMaleCount ?? undefined,
           otherCount: report.averageEmployeeNeutralCount ?? undefined,
         }}
+        previousEmployeeCount={previousEmployeeCount}
+        // Only when the company page will actually show the section.
+        employeeCountHistoryHref={
+          employeeCountHistory?.entries.length
+            ? `${NAV_PATHS.fyrirtaeki.href}/${report.company.companyId}#${EMPLOYEE_COUNT_HISTORY_ANCHOR}`
+            : undefined
+        }
         subsidaries={report.subsidiaries?.map((dc) => ({
           name: dc.name ?? undefined,
           nationalId: dc.nationalId ?? undefined,

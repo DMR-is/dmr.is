@@ -4058,6 +4058,67 @@
         "tags": ["Reports"]
       }
     },
+    "/api/v1/reports/company/{companyId}/employee-count-history": {
+      "get": {
+        "description": "The average headcount (by gender) the company declared on each report it filed itself, newest first. Excludes drafts, withdrawn predecessors of a resubmission, filings with no counts, and group reports the company was only a subsidiary on — those counts describe the whole group.",
+        "operationId": "getCompanyEmployeeCountHistory",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetEmployeeCountHistoryResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
     "/api/v1/reports/{id}": {
       "get": {
         "operationId": "getReportById",
@@ -8004,6 +8065,57 @@
           "paging": { "$ref": "#/components/schemas/Paging" }
         },
         "required": ["reports", "paging"]
+      },
+      "EmployeeCountHistoryEntryDto": {
+        "type": "object",
+        "properties": {
+          "reportId": { "type": "string", "format": "uuid" },
+          "identifier": { "type": "string", "nullable": true },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportTypeEnum" }]
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "When the report was submitted."
+          },
+          "employeeCountCategory": {
+            "description": "The company's size bracket as it stood when this report was filed, from the report's company snapshot. Admin-curated, not the company's own declaration, so it can disagree with the counts beside it.",
+            "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
+          },
+          "femaleCount": { "type": "number", "nullable": true },
+          "maleCount": { "type": "number", "nullable": true },
+          "neutralCount": { "type": "number", "nullable": true },
+          "totalCount": {
+            "type": "number",
+            "description": "Sum of the three figures, a missing one counting as zero. Neutral is included."
+          }
+        },
+        "required": [
+          "reportId",
+          "type",
+          "status",
+          "submittedAt",
+          "employeeCountCategory",
+          "totalCount"
+        ]
+      },
+      "GetEmployeeCountHistoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "description": "Newest first.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmployeeCountHistoryEntryDto"
+            }
+          }
+        },
+        "required": ["entries"]
       },
       "ReportProviderEnum": {
         "type": "string",

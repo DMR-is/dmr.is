@@ -1,4 +1,5 @@
 import {
+  zGetCompanyEmployeeCountHistoryPath,
   zGetReportByIdPath,
   zGetReportOutlierGroupsPath,
   zGetReportOutliersPath,
@@ -27,6 +28,14 @@ export const reportsRouter = router({
         query: { page, pageSize },
       })
     }),
+
+  employeeCountHistory: protectedProcedure
+    .input(zGetCompanyEmployeeCountHistoryPath)
+    .query(({ ctx, input }) =>
+      ctx.api.getCompanyEmployeeCountHistory({
+        path: { companyId: input.companyId },
+      }),
+    ),
 
   getById: protectedProcedure
     .input(zGetReportByIdPath)
