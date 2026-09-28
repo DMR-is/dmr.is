@@ -14,9 +14,11 @@ export const stripKennitalaDash = (value: unknown): unknown =>
     : value
 
 /**
- * Whether a value is a checksum-valid kennitala, dashed or not. The one test
- * both the DTO decorator and the payload rules use, so a handle one refuses the
- * other cannot accept.
+ * Whether a value is a checksum-valid kennitala, dashed or not. The payload
+ * rules refuse an employee `identifier` that passes it: the identifier is shown
+ * to reviewers and is the employer's own handle, never a national id. A plain
+ * 10-digit handle that happens to pass the checksum is refused too; that rare
+ * false match is the price of not publishing a real one.
  */
 export const isKennitalaLike = (value: unknown): boolean => {
   const digits = stripKennitalaDash(value)
@@ -50,30 +52,6 @@ export function IsKennitala(validationOptions?: ValidationOptions) {
           typeof value === 'string' &&
           TEN_DIGITS.test(value) &&
           isValidKennitala(value),
-      },
-    })
-}
-
-/**
- * Refuses a value that is a valid kennitala, with or without its dash.
- *
- * For fields that must stay pseudonymous — an employee's `identifier` is shown
- * to reviewers and is the employer's own handle, never a national id. A plain
- * 10-digit handle that happens to pass the checksum is refused too; that rare
- * false match is the price of not publishing a real one.
- */
-export function IsNotKennitala(validationOptions?: ValidationOptions) {
-  return (object: object, propertyName: string) =>
-    registerDecorator({
-      name: 'isNotKennitala',
-      target: object.constructor,
-      propertyName,
-      options: {
-        message: `${propertyName} must not be a kennitala — use a pseudonymous handle of your own`,
-        ...validationOptions,
-      },
-      validator: {
-        validate: (value: unknown) => !isKennitalaLike(value),
       },
     })
 }
