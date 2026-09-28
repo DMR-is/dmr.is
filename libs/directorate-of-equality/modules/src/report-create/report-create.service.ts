@@ -113,6 +113,20 @@ export class ReportCreateService implements IReportCreateService {
     return this.createEqualityReport(input, options)
   }
 
+  async findReplay(
+    providerType: ReportProviderEnum,
+    providerId: string,
+    submittingCompanyId: string,
+    type: ReportTypeEnum,
+  ): Promise<CreateReportResponseDto | null> {
+    return this.findExistingByProviderTuple(
+      providerType,
+      providerId,
+      submittingCompanyId,
+      type,
+    )
+  }
+
   private async createSalaryReport(
     input: CreateReportDto,
     options: CreateSalaryOptions,

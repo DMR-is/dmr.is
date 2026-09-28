@@ -120,6 +120,7 @@ describe('ApplicationService', () => {
   let resolveEqualityCoverage: jest.Mock
   let createSalary: jest.Mock
   let createEquality: jest.Mock
+  let findReplay: jest.Mock
   let reportFindOne: jest.Mock
   let reportUpdate: jest.Mock
   let companyReportFindAll: jest.Mock
@@ -154,6 +155,7 @@ describe('ApplicationService', () => {
     createEquality = jest
       .fn()
       .mockResolvedValue({ reportId: 'report-1', replayed: false })
+    findReplay = jest.fn().mockResolvedValue(null)
     reportFindOne = jest.fn()
     reportUpdate = jest.fn().mockResolvedValue([1])
     companyReportFindAll = jest.fn().mockResolvedValue([])
@@ -207,7 +209,7 @@ describe('ApplicationService', () => {
           },
           {
             provide: IReportCreateService,
-            useValue: { createSalary, createEquality },
+            useValue: { createSalary, createEquality, findReplay },
           },
           {
             provide: IReportCommentService,
@@ -357,6 +359,25 @@ describe('ApplicationService', () => {
 
       expect(JSON.parse(JSON.stringify(SUB_CRITERION_CATALOG))).toEqual(before)
       expect([...SUB_CRITERION_GENERAL_SCALE]).toEqual(beforeScale)
+    })
+  })
+
+  describe('findReplay', () => {
+    it('looks the tuple up in the stored, channel-namespaced form', async () => {
+      const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
+      const replay = { reportId: 'earlier', replayed: true }
+      findReplay.mockResolvedValue(replay)
+
+      await expect(
+        partnerService.findReplay('p-1', COMPANY, ReportTypeEnum.EQUALITY),
+      ).resolves.toBe(replay)
+
+      expect(findReplay).toHaveBeenCalledWith(
+        ReportProviderEnum.OTHER,
+        `${COMPANY.nationalId}:p-1`,
+        COMPANY.id,
+        ReportTypeEnum.EQUALITY,
+      )
     })
   })
 

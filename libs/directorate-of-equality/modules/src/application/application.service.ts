@@ -197,6 +197,19 @@ export class ApplicationService implements IApplicationService {
     return this.reportCreateService.createSalary(createInput, options)
   }
 
+  async findReplay(
+    providerId: string,
+    company: CompanyDto,
+    type: ReportTypeEnum,
+  ): Promise<CreateReportResponseDto | null> {
+    return this.reportCreateService.findReplay(
+      this.channel.providerType,
+      this.channel.buildProviderId(providerId, company.nationalId),
+      company.id,
+      type,
+    )
+  }
+
   async getSalaryReportEligibility(
     company: CompanyDto,
   ): Promise<SalaryReportEligibilityDto> {

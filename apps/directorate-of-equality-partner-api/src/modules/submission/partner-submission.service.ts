@@ -6,7 +6,7 @@ import {
   SubmitPartnerSalaryReportDto,
 } from '@dmr.is/doe-modules/application'
 import { CompanyDto, ICompanyService } from '@dmr.is/doe-modules/company'
-import { SalaryDataBasisEnum } from '@dmr.is/doe-modules/report'
+import { ReportTypeEnum, SalaryDataBasisEnum } from '@dmr.is/doe-modules/report'
 import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
 import { SalaryAnalysisResponseDto } from '@dmr.is/doe-modules/report-statistics'
 import {
@@ -37,6 +37,11 @@ const LOGGING_CONTEXT = 'PartnerSubmissionService'
  * island.is sends formats we have not catalogued, so the check is not imposed
  * on a channel that has never been refused for them.
  *
+ * A replay is answered first, before anything reads the body: the guide
+ * promises a replay's body is not read, and the document conversion, the
+ * expansion and the snapshot checks all run before the shared path would have
+ * noticed the replay itself.
+ *
  * Everything past the expansion is the identical code every other channel runs.
  * The submission rules, the equality gate, idempotent replay and event emission
  * are not reachable from here and cannot fork per channel.
@@ -59,6 +64,15 @@ export class PartnerSubmissionService {
     company: CompanyDto,
     partnerClientId: string | null = null,
   ): Promise<CreateReportResponseDto> {
+    const replay = await this.applicationService.findReplay(
+      input.providerId,
+      company,
+      ReportTypeEnum.SALARY,
+    )
+    if (replay) {
+      return replay
+    }
+
     this.assertSalaryDataPeriodMatchesBasis(input)
     await this.companyService.assertKnownSnapshotCodes(input.company)
 
@@ -103,6 +117,15 @@ export class PartnerSubmissionService {
     company: CompanyDto,
     partnerClientId: string | null = null,
   ): Promise<CreateReportResponseDto> {
+    const replay = await this.applicationService.findReplay(
+      input.providerId,
+      company,
+      ReportTypeEnum.EQUALITY,
+    )
+    if (replay) {
+      return replay
+    }
+
     await this.companyService.assertKnownSnapshotCodes(input.company)
 
     const { html, warnings } = await convertEqualityDocumentToHtml(
