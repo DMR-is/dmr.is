@@ -10,18 +10,13 @@ import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { ReportTypeEnum } from '../../../../gen/fetch'
 import {
   NAV_PATHS,
   ReportStatusTranslatedEnum,
 } from '../../../../lib/constants'
-import {
-  companiesText,
-  serverErrorText,
-  sharedText,
-} from '../../../../lib/text'
+import { companiesText, serverErrorText } from '../../../../lib/text'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
-import { formatTimestampDate } from '../../../../lib/utils'
+import { formatTimestampDate, reportTypeLabel } from '../../../../lib/utils'
 
 const t = companiesText.detailView
 
@@ -78,13 +73,10 @@ export const CompanyReportsTab = ({ companyId }: Props) => {
           <ActionCard
             key={report.id}
             headingVariant="h4"
-            heading={
-              report.type === ReportTypeEnum.SALARY
-                ? report.includesImprovementPlan
-                  ? sharedText.typeLabels.IMPROVEMENT_PLAN
-                  : sharedText.typeLabels.SALARY
-                : sharedText.typeLabels.EQUALITY
-            }
+            heading={reportTypeLabel(
+              report.type,
+              report.includesImprovementPlan,
+            )}
             text={report.createdAt ? formatTimestampDate(report.createdAt) : ''}
             tag={{
               label: ReportStatusTranslatedEnum[report.status],

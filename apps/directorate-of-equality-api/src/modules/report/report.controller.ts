@@ -12,6 +12,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import {
+  GetEmployeeCountHistoryResponseDto,
   GetReportOutlierGroupsResponseDto,
   GetReportOutliersQueryDto,
   GetReportsForCompanyResponseDto,
@@ -75,6 +76,19 @@ export class ReportController {
     @Query() query: PagingQuery,
   ): Promise<GetReportsForCompanyResponseDto> {
     return this.reportService.listForCompany(companyId, query)
+  }
+
+  @Get('company/:companyId/employee-count-history')
+  @DoeResponse({
+    operationId: 'getCompanyEmployeeCountHistory',
+    type: GetEmployeeCountHistoryResponseDto,
+    description:
+      'The average headcount (by gender) the company declared on each report it filed itself, newest first. Excludes drafts, withdrawn reports, filings with no counts, and group reports the company was only a subsidiary on — those counts describe the whole group.',
+  })
+  async getEmployeeCountHistory(
+    @Param('companyId', ParseUUIDPipe) companyId: string,
+  ): Promise<GetEmployeeCountHistoryResponseDto> {
+    return this.reportService.getEmployeeCountHistory(companyId)
   }
 
   @Get(':id')

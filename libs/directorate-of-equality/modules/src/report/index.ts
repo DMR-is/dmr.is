@@ -6,6 +6,7 @@
  * Exporting the class would let a caller bypass that indirection.
  */
 
+export * from './dto/employee-count-history.dto'
 export * from './dto/equality-report-summary.dto'
 export * from './dto/equality-report.dto'
 export * from './dto/get-report-outlier-groups-response.dto'

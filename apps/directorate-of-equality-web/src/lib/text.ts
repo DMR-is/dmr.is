@@ -300,7 +300,14 @@ export const reportText = {
     companyInfoHeading: 'Upplýsingar fyrirtækis',
     averageEmployeesHeading: 'Meðalfjöldi starfsmanna',
     genderNeutralRegistry: 'Hlutlaus skráning kyns í Þjóðskrá',
+    totalCount: 'Samtals',
     subsidaries: 'Dótturfélög',
+    sincePrevious: 'frá síðustu',
+    comparedWith: (type: string, date: string) =>
+      `Borið saman við skýrslugjöfina á undan: ${type}, ${date}.`,
+    noPrevious: 'Engin fyrri skýrslugjöf með starfsmannafjölda.',
+    previousLoadError: 'Ekki tókst að sækja fyrri skýrslugjöf til samanburðar.',
+    viewHistory: 'Skoða starfsmannafjöldasögu',
   },
   denialModal: {
     heading: 'Höfnun skýrslu',
@@ -1089,6 +1096,18 @@ export const companiesText = {
     tabLegacy: 'Eldri gögn',
     tabsLabel: 'Fyrirtækjaflippar',
     timelineHeading: 'Saga fyrirtækis',
+    employeeCountHistory: {
+      heading: 'Starfsmannafjöldasaga',
+      description:
+        'Meðalfjöldi starfsmanna eins og fyrirtækið gaf hann upp við hverja skýrslugjöf, nýjasta fyrst. Samstæðuskýrslur þar sem fyrirtækið er dótturfélag eru ekki taldar með, því þar er gefinn upp fjöldi allrar samstæðunnar.',
+      submittedAt: 'Dags. skýrslugjafar',
+      report: 'Skýrsla',
+      status: 'Staða',
+      size: 'Stærðarflokkur',
+      neutral: 'Hlutlaus skráning',
+      total: 'Samtals',
+      loadError: 'Villa við að sækja starfsmannafjöldasögu',
+    },
     sidebarTitle: 'Staða fyrirtækis',
     statusLabel: 'Staða',
     finesButton: 'Hefja dagsektarferli',
