@@ -1,4 +1,5 @@
 import { Transform } from 'class-transformer'
+import { IsEmail, Min } from 'class-validator'
 import { isBase64 } from 'validator'
 
 import {
@@ -13,6 +14,7 @@ import {
   ApiString,
 } from '@dmr.is/decorators'
 
+import { TrimString } from '../../report/lib/trim-string'
 import { GenderEnum } from '../../report/models/report.enums'
 import {
   SubmitReportCompanyDto,
@@ -44,6 +46,8 @@ export class SubmitEqualityReportDto {
   companyAdminTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   companyAdminEmail!: string
 
   @ApiEnum(GenderEnum)
@@ -59,9 +63,12 @@ export class SubmitEqualityReportDto {
   contactTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   contactEmail!: string
 
-  @ApiString()
+  @ApiString({ minLength: 1 })
+  @TrimString()
   contactPhone!: string
 
   /*
@@ -109,12 +116,15 @@ export class SubmitEqualityReportDto {
   equalityReportPdfFilename?: string
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   averageEmployeeMaleCount?: number | null
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   averageEmployeeFemaleCount?: number | null
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   averageEmployeeNeutralCount?: number | null
 
   @ApiDto(SubmitReportCompanyDto)

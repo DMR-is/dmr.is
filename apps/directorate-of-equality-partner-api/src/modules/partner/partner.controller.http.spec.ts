@@ -193,6 +193,20 @@ describe('PartnerController over HTTP', () => {
       expect(res.body.details).toEqual(['property bogus should not exist'])
       expect(submitEquality).not.toHaveBeenCalled()
     })
+
+    it('refuses a contact address that is not one', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/api/v1/partner/reports/equality')
+        .field(
+          'payload',
+          JSON.stringify({ ...VALID_PAYLOAD, contactEmail: 'notanemail' }),
+        )
+        .attach('document', DOCX, 'plan.docx')
+
+      expect(res.status).toBe(400)
+      expect(res.body.details).toEqual(['contactEmail must be an email'])
+      expect(submitEquality).not.toHaveBeenCalled()
+    })
   })
 
   describe('request body limit', () => {

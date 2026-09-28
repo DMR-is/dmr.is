@@ -1,4 +1,4 @@
-import { ArrayMinSize, IsInt } from 'class-validator'
+import { ArrayMinSize, IsEmail, IsInt, Min } from 'class-validator'
 
 import {
   ApiArray,
@@ -153,6 +153,8 @@ export class CreateReportDto {
   companyAdminTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   companyAdminEmail!: string
 
   @ApiEnum(GenderEnum)
@@ -168,18 +170,24 @@ export class CreateReportDto {
   contactTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   contactEmail!: string
 
-  @ApiString()
+  @ApiString({ minLength: 1 })
+  @TrimString()
   contactPhone!: string
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeMaleCount!: number
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeFemaleCount!: number
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeNeutralCount!: number
 
   @ApiEnum(SalaryDataBasisEnum, {

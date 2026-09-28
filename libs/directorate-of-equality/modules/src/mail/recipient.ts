@@ -3,8 +3,8 @@
  *
  * ⚠️ **One address, and it has to look like one.** The three columns this module
  * mails to — `report.contactEmail`, `report.companyAdminEmail` and
- * `company.email` — are all `IsString()` only: no `@IsEmail`, no `MinLength`, so
- * whatever was typed is what is stored. `contactEmail` now carries the approval's
+ * `company.email` — are `@IsEmail` on the report and company DTOs now, but rows
+ * written before that hold whatever was typed. `contactEmail` now carries the approval's
  * pay-gap PDFs rather than a comment notice.
  *
  * Shared by the report mail and the deadline reminder deliberately. The two paths
