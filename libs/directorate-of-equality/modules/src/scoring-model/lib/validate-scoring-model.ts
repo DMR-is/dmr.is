@@ -178,6 +178,12 @@ const messagesOf = (error: BadRequestException): string[] => {
  * So unresolvable assignments are reported and then dropped, and the gate runs
  * over what is left. Dropping only ever removes reasons the gate would give, and
  * each dropped one is stated here first.
+ *
+ * A duplicate sub-criterion title is reported but NOT dropped. The criterion's
+ * weight is derived from all of its sub-criteria, the duplicate included, so
+ * dropping it left the CRITERIA total counting a weight the SUB_CRITERIA total
+ * did not, and one model showed two different totals. It is renamed for the
+ * gate instead, which keeps every weight and every assignment on it in play.
  */
 const sanitiseForGate = (
   criteria: ScoringCriterionDto[],
@@ -192,19 +198,21 @@ const sanitiseForGate = (
   for (const criterion of criteria) {
     const subCriteria = []
     for (const sub of criterion.subCriteria) {
-      const pair = `${criterion.title}\0${sub.title}`
-      if (seenPairs.has(pair)) {
+      const pairOf = (title: string) => `${criterion.title}\0${title}`
+      let title = sub.title
+      if (seenPairs.has(pairOf(title))) {
         // The pipeline keys on this pair and would collapse the two rows, so
-        // the expander refuses it. Reported, then held back so everything else
-        // about the model can still be judged.
+        // the expander refuses it. Reported, then renamed for the gate only.
         reasons.add(
           ScoringValidationScopeEnum.SUB_CRITERIA,
           `Tvö undirviðmið heita „${criterion.title} / ${sub.title}“; heitin verða að vera einkvæm`,
         )
-        continue
+        for (let n = 2; seenPairs.has(pairOf(title)); n++) {
+          title = `${sub.title} (${n})`
+        }
       }
-      seenPairs.add(pair)
-      subCriteria.push(sub)
+      seenPairs.add(pairOf(title))
+      subCriteria.push(title === sub.title ? sub : { ...sub, title })
       subIds.add(sub.id)
       for (const step of sub.steps) stepIds.add(step.id)
     }
