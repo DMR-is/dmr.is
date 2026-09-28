@@ -38,9 +38,7 @@ out-of-band onboarding step, done on the internal DoE API by one of:
 
 A **vendor client key** does not come from an employer. Jafnréttisstofa first
 approves your organisation as a provider; you then collect your own keys on the
-Jafnréttisstofa self-service web, signed in as your organisation — or, until that
-web ships, Jafnréttisstofa issues them. See section D, including what is not yet
-available.
+Jafnréttisstofa self-service web, signed in as your organisation. See section D.
 
 Practical consequences for an integration:
 
@@ -802,8 +800,8 @@ each concerns, so you can attach it to the right thing without parsing the text.
 
 ⚠️ **`VALID` means the model is complete, not that your next filing will
 succeed.** Two of the submission's rules need the filing's own employees and
-cannot be judged here: that the report covers enough of them, and that each one
-carries a þrep for every personal sub-criterion.
+cannot be judged here: that the report has at least one employee, and that each
+one carries a þrep for every personal sub-criterion.
 
 ### Scales and job assignments are written whole
 
@@ -829,25 +827,18 @@ For an intermediary — an accounting firm, a payroll bureau — that files for 
 employers. One credential for your organisation, and one delegation per company
 that allows you to act for it, instead of a key from every customer.
 
-> **Availability.** The API side of this section is live. The Jafnréttisstofa
-> self-service web — where your organisation collects its keys and your
-> customers grant you permission — is still being built. Until it ships, ask
-> Jafnréttisstofa to issue your organisation's key, and note that no customer
-> can connect to you yet: every request naming a company is a `403` until that
-> web exists.
-
 ### Getting set up
 
 1. **Be approved.** Ask Jafnréttisstofa to approve your organisation as a
    provider. This is their decision; there is no route that does it.
 2. **Collect your key.** Sign in to the Jafnréttisstofa self-service web as your
-   organisation and create a key — or, until that web ships, have Jafnréttisstofa
-   issue one. As with company keys, it is shown exactly once and you rotate by
+   organisation and create a key. As with company keys, it is shown exactly once and you rotate by
    creating a new one, deploying it, and revoking the old.
 3. **Let your customers connect.** Put a "Tengjast Jafnréttisstofu" link in your
    own product that opens the self-service web. The customer signs in through
    island.is as their company, picks your organisation from the list of approved
-   providers, and chooses what to allow. Nothing in the link is trusted: the
+   providers, and grants access — all of it, since there is no partial consent
+   (see [Scopes](#scopes)). Nothing in the link is trusted: the
    company comes from their sign-in, and the provider from the list.
 4. **Poll `GET /partner/delegations`** to see who has connected. There is no
    callback — polling is how you notice a new connection, and a withdrawal.
