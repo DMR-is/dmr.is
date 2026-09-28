@@ -12,7 +12,7 @@ import ReactSelect, {
 import { theme } from '@dmr.is/island-ui-theme'
 
 import { Icon } from './Icon'
-import { islandSelectStyles } from './selectStyles'
+import { islandSelectStyles, SELECT_MD_QUERY } from './selectStyles'
 
 export type InlineSelectOption = { value: string; label: string }
 
@@ -114,10 +114,19 @@ const truncated: CSSProperties = {
   textOverflow: 'ellipsis',
 }
 
+const sharedStyles = islandSelectStyles<InlineSelectOption, false>({
+  controlMinHeight: 32,
+  optionPadding: '8px 12px',
+})
+
 const customStyles: StylesConfig<InlineSelectOption, false> = {
-  ...islandSelectStyles<InlineSelectOption, false>({
-    controlMinHeight: 32,
-    optionPadding: '8px 12px',
+  ...sharedStyles,
+  // 14px like the compact control, at every breakpoint the shared size sets.
+  option: (base, state) => ({
+    ...sharedStyles.option?.(base, state),
+    fontSize: 14,
+    lineHeight: 1.25,
+    [SELECT_MD_QUERY]: { fontSize: 14, lineHeight: 1.25 },
   }),
   valueContainer: (base) => ({
     ...base,

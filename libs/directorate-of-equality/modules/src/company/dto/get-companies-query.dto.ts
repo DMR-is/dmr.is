@@ -291,7 +291,6 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsString({ each: true })
   postcode?: string[]
 
-
   // ---------------------------------------------------------------------
   // Report criteria
   //
@@ -357,22 +356,34 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsEnum(EqualityCoverageSourceEnum, { each: true })
   reportEqualitySource?: EqualityCoverageSourceEnum[]
 
-  @ApiOptionalDateTime({ description: 'Filing submitted on or after this date.' })
+  @ApiOptionalDateTime({
+    description: 'Filing submitted on or after this date.',
+  })
   reportSubmittedFrom?: Date
 
-  @ApiOptionalDateTime({ description: 'Filing submitted on or before this date.' })
+  @ApiOptionalDateTime({
+    description: 'Filing submitted on or before this date.',
+  })
   reportSubmittedTo?: Date
 
-  @ApiOptionalDateTime({ description: 'Filing approved on or after this date.' })
+  @ApiOptionalDateTime({
+    description: 'Filing approved on or after this date.',
+  })
   reportApprovedFrom?: Date
 
-  @ApiOptionalDateTime({ description: 'Filing approved on or before this date.' })
+  @ApiOptionalDateTime({
+    description: 'Filing approved on or before this date.',
+  })
   reportApprovedTo?: Date
 
-  @ApiOptionalDateTime({ description: 'Filing valid until on or after this date.' })
+  @ApiOptionalDateTime({
+    description: 'Filing valid until on or after this date.',
+  })
   reportValidUntilFrom?: Date
 
-  @ApiOptionalDateTime({ description: 'Filing valid until on or before this date.' })
+  @ApiOptionalDateTime({
+    description: 'Filing valid until on or before this date.',
+  })
   reportValidUntilTo?: Date
 
   @ApiOptionalDateTime({

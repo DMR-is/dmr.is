@@ -1,6 +1,11 @@
 import { Op } from 'sequelize'
 
-import { buildReportCompanyWhere, buildWageGapRangeWhere } from './filters'
+import { ReportTypeEnum } from '../models/report.enums'
+import {
+  buildImprovementPlanWhere,
+  buildReportCompanyWhere,
+  buildWageGapRangeWhere,
+} from './filters'
 
 /**
  * Unwrap the single `literal()` a company filter produces, as SQL text.
@@ -116,10 +121,10 @@ describe('buildWageGapRangeWhere', () => {
 
   it('reads the named figure out of the snapshot', () => {
     expect(sqlOf('rawGapPercent', 5, undefined)).toContain(
-      "\"rr\".\"wage_gap_decomposition_snapshot\"->>'rawGapPercent'",
+      '"rr"."wage_gap_decomposition_snapshot"->>\'rawGapPercent\'',
     )
     expect(sqlOf('oskyrtPercent', 1, undefined)).toContain(
-      "\"rr\".\"wage_gap_decomposition_snapshot\"->>'oskyrtPercent'",
+      '"rr"."wage_gap_decomposition_snapshot"->>\'oskyrtPercent\'',
     )
   })
 
@@ -159,5 +164,20 @@ describe('buildWageGapRangeWhere', () => {
     expect(
       buildWageGapRangeWhere('oskyrtPercent', 0, Number.POSITIVE_INFINITY),
     ).toBeUndefined()
+  })
+})
+
+describe('buildImprovementPlanWhere', () => {
+  const clausesOf = (hasImprovementPlan: boolean) =>
+    (
+      buildImprovementPlanWhere(hasImprovementPlan) as Record<symbol, unknown[]>
+    )[Op.and]
+
+  it('limits "no improvement plan" to salary reports', () => {
+    expect(clausesOf(false)).toContainEqual({ type: ReportTypeEnum.SALARY })
+  })
+
+  it('needs no type constraint for "has an improvement plan"', () => {
+    expect(clausesOf(true)).not.toContainEqual({ type: ReportTypeEnum.SALARY })
   })
 })

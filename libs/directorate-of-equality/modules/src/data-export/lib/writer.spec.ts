@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs'
 
 import type { ExportColumn } from './columns'
-import { writeCsv, writeXlsx } from './writer'
+import { writeXlsx } from './writer'
 
 type Row = { name: string; count: number | null; due: Date | null }
 
@@ -17,79 +17,6 @@ const metadata = {
   rowCount: 1,
   filters: ['Starfsmannafjöldi: 25–49, 50+'],
 }
-
-describe('writeCsv', () => {
-  it('starts with a BOM so Excel reads it as UTF-8', () => {
-    // Without this every Icelandic character in the file arrives mangled.
-    const csv = writeCsv([], columns).toString('utf8')
-
-    expect(csv.startsWith('﻿')).toBe(true)
-  })
-
-  it('writes a header row even with no data', () => {
-    const csv = writeCsv([], columns).toString('utf8')
-
-    expect(csv).toBe('﻿Nafn,Fjöldi,Skiladagur\r\n')
-  })
-
-  it('leaves a null cell empty rather than writing "null" or 0', () => {
-    // A company with no due date has no due date. `0` would read as the epoch
-    // and "null" would read as a value.
-    const csv = writeCsv(
-      [{ name: 'A', count: null, due: null }],
-      columns,
-    ).toString('utf8')
-
-    expect(csv.split('\r\n')[1]).toBe('A,,')
-  })
-
-  it('keeps zero, which is a real count', () => {
-    const csv = writeCsv(
-      [{ name: 'A', count: 0, due: null }],
-      columns,
-    ).toString('utf8')
-
-    expect(csv.split('\r\n')[1]).toBe('A,0,')
-  })
-
-  it('quotes and escapes a value that would otherwise break the row', () => {
-    const csv = writeCsv(
-      [{ name: 'Nafn, ehf. "gamla"', count: 1, due: null }],
-      columns,
-    ).toString('utf8')
-
-    expect(csv.split('\r\n')[1]).toBe('"Nafn, ehf. ""gamla""",1,')
-  })
-
-  it('does not let a newline in a value split the row', () => {
-    const csv = writeCsv(
-      [{ name: 'A\nB', count: 1, due: null }],
-      columns,
-    ).toString('utf8')
-
-    // Still exactly one data row: header, data, trailing empty.
-    expect(csv.replace(/"[^"]*"/g, 'X').split('\r\n')).toHaveLength(3)
-  })
-
-  it('neutralises a text cell Excel would run as a formula', () => {
-    const csv = writeCsv(
-      [{ name: '=HYPERLINK("http://x")', count: -1, due: null }],
-      columns,
-    ).toString('utf8')
-
-    // Text is prefixed with a quote; a negative number is left alone.
-    expect(csv.split('\r\n')[1]).toBe('"\'=HYPERLINK(""http://x"")",-1,')
-  })
-
-  it('writes dates as ISO days, not locale strings', () => {
-    const csv = writeCsv(
-      [{ name: 'A', count: 1, due: new Date('2028-03-31T00:00:00Z') }],
-      columns,
-    ).toString('utf8')
-
-    expect(csv.split('\r\n')[1]).toBe('A,1,2028-03-31')
-  })
-})
 
 describe('writeXlsx', () => {
   const read = async (buffer: Buffer) => {

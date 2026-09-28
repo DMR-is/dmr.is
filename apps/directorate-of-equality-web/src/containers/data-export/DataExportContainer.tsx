@@ -220,11 +220,20 @@ export const DataExportContainer = () => {
               reportCriteria.improvementPlan[0] === 'yes',
           }
         : {}),
-      // The API takes ISO datetimes; the pickers give local Dates.
+      // The pickers give local midnight and the API reads the UTC day, so the
+      // picked calendar day is sent as UTC midnight to survive any time zone.
       ...Object.fromEntries(
         Object.entries(reportDates)
           .filter(([, value]) => value instanceof Date)
-          .map(([key, value]) => [key, (value as Date).toISOString()]),
+          .map(([key, value]) => {
+            const day = value as Date
+            return [
+              key,
+              new Date(
+                Date.UTC(day.getFullYear(), day.getMonth(), day.getDate()),
+              ).toISOString(),
+            ]
+          }),
       ),
       // The gap selects carry strings. `Number('')` is 0, which would read as
       // a real lower bound of zero, so an empty value is dropped rather than
@@ -299,9 +308,7 @@ export const DataExportContainer = () => {
   const handleSubmit = () => {
     setPage(1)
     setSubmitted(toServerQuery(draft, criteria, dates, gaps, query))
-    setSubmittedSummary(
-      buildFilterSummary(draft, criteria, dates, gaps, query),
-    )
+    setSubmittedSummary(buildFilterSummary(draft, criteria, dates, gaps, query))
     // Deferred to the paint after the results render, otherwise focus moves to
     // a heading that still says "choose your filters".
     requestAnimationFrame(() => resultsRef.current?.focus())
@@ -433,7 +440,9 @@ export const DataExportContainer = () => {
                       ? dataExportText.searching
                       : dataExportText.resultCount(total)}
                   </Text>
-                  {exportHref && total > 0 && (
+                  {/* Hidden while refetching, so the link never pairs a new
+                      filter with the previous count. */}
+                  {exportHref && total > 0 && !isFetching && (
                     <a href={exportHref} download>
                       <Button
                         icon="download"

@@ -20,79 +20,6 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
-import { WageGapDirectionEnum } from '../../report/lib/wage-gap-decomposition'
-import {
-  CommunicationStatusEnum,
-  EqualityCoverageSourceEnum,
-  GenderEnum,
-  ReportStatusEnum,
-  ReportTypeEnum,
-  SalaryDataBasisEnum,
-} from '../../report/models/report.enums'
-
-/**
- * The two things a company files. The whole taxonomy — there is no third kind,
- * and the retired vottun/staðfesting distinction is not one of these.
- */
-export const REPORT_TYPE_LABEL: Record<ReportTypeEnum, string> = {
-  [ReportTypeEnum.EQUALITY]: 'Jafnréttisáætlun',
-  [ReportTypeEnum.SALARY]: 'Skýrslugjöf',
-}
-
-export const REPORT_STATUS_LABEL: Record<ReportStatusEnum, string> = {
-  [ReportStatusEnum.DRAFT]: 'Drög',
-  [ReportStatusEnum.SUBMITTED]: 'Innsend',
-  [ReportStatusEnum.POSTPONED]: 'Frestað',
-  [ReportStatusEnum.IN_REVIEW]: 'Í vinnslu',
-  [ReportStatusEnum.DENIED]: 'Hafnað',
-  [ReportStatusEnum.APPROVED]: 'Samþykkt',
-  [ReportStatusEnum.SUPERSEDED]: 'Úrelt',
-  [ReportStatusEnum.WITHDRAWN]: 'Afturkölluð',
-}
-
-export const COMMUNICATION_STATUS_LABEL: Record<
-  CommunicationStatusEnum,
-  string
-> = {
-  [CommunicationStatusEnum.NOT_STARTED]: 'Ekki hafin',
-  [CommunicationStatusEnum.AWAITING_RESPONSE]: 'Bíður svars',
-  [CommunicationStatusEnum.RESPONSE_RECEIVED]: 'Svar borist',
-  [CommunicationStatusEnum.CLOSED]: 'Lokið',
-}
-
-export const EQUALITY_SOURCE_LABEL: Record<
-  EqualityCoverageSourceEnum,
-  string
-> = {
-  [EqualityCoverageSourceEnum.REPORT]: 'Skráð í þessu kerfi',
-  [EqualityCoverageSourceEnum.LEGACY]: 'Úr eldra kerfi',
-}
-
-export const GENDER_LABEL: Record<GenderEnum, string> = {
-  [GenderEnum.MALE]: 'Karl',
-  [GenderEnum.FEMALE]: 'Kona',
-  [GenderEnum.NEUTRAL]: 'Kynsegin/annað',
-}
-
-/**
- * Which gender a pay gap disfavours.
- *
- * ⚠️ A separate map from `GENDER_LABEL`, not a reuse of it. NONE is a real
- * member here and it is not a gender — it means the gap landed on zero, so
- * there is nobody it runs against. Rendering it through a gender map would
- * need a fourth "gender" and would put that word in a column that is about
- * direction.
- */
-export const WAGE_GAP_DIRECTION_LABEL: Record<WageGapDirectionEnum, string> = {
-  [WageGapDirectionEnum.MALE]: 'Körlum',
-  [WageGapDirectionEnum.FEMALE]: 'Konum',
-  [WageGapDirectionEnum.NONE]: 'Hvorugu',
-}
-
-export const SALARY_DATA_BASIS_LABEL: Record<SalaryDataBasisEnum, string> = {
-  [SalaryDataBasisEnum.MONTH]: 'Einn mánuður',
-  [SalaryDataBasisEnum.AVERAGE]: 'Meðaltal 12 mánaða',
-}
 
 /**
  * Employee-count buckets. The numbers, not the enum names — a spreadsheet
@@ -138,9 +65,8 @@ export const COMPANY_REPORT_STATUS_LABEL: Record<
 }
 
 /**
- * Per-obligation state. Spelled out rather than the screen's bare "Vantar":
- * the two obligation columns sit side by side in the sheet and a reader
- * sorting on one of them loses the header context the screen provides.
+ * Per-obligation state. One map serves both obligation columns, so MISSING
+ * stays a bare "Vantar" and the column header names what is missing.
  */
 export const OBLIGATION_STATUS_LABEL: Record<
   CompanyObligationStatusEnum,

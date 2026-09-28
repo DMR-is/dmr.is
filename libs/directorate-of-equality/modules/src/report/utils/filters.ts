@@ -11,7 +11,7 @@ import { literal, Op, WhereOptions } from 'sequelize'
 
 import { DoeModels } from '../../constants'
 import { GetReportsQueryDto } from '../dto/get-reports.query.dto'
-import { ReportStatusEnum } from '../models/report.enums'
+import { ReportStatusEnum, ReportTypeEnum } from '../models/report.enums'
 import { ReportModel } from '../models/report.model'
 
 /**
@@ -56,7 +56,8 @@ export const buildFreeTextWhere = (term: string): WhereOptions => {
  * query doesn't need to join (or paginate around) the per-employee tables.
  *
  * - `true`  → only reports WITH outliers
- * - `false` → only reports WITHOUT outliers
+ * - `false` → only SALARY reports WITHOUT outliers. An equality plan has no
+ *   outliers and can never carry an improvement plan, so it matches neither.
  *
  * The outer table is referenced by its Sequelize alias (`ReportModel.name`)
  * — `findAndCountAll` / `count` both alias the main table by class name in
@@ -69,6 +70,7 @@ export const buildImprovementPlanWhere = (
   const negation = hasImprovementPlan ? '' : 'NOT '
   return {
     [Op.and]: [
+      ...(hasImprovementPlan ? [] : [{ type: ReportTypeEnum.SALARY }]),
       literal(
         `${negation}EXISTS (SELECT 1 FROM "${DoeModels.REPORT_EMPLOYEE}" "re" ` +
           `INNER JOIN "${DoeModels.REPORT_EMPLOYEE_OUTLIER}" "reo" ` +

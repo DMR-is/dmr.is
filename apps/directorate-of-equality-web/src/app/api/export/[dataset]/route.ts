@@ -8,7 +8,7 @@ import { authOptions } from '../../../../lib/auth/authOptions'
 
 const logger = getLogger('data-export')
 
-const DATASETS = new Set(['companies', 'reports'])
+const DATASETS = new Set(['companies'])
 
 /**
  * Proxies "Gagnaútdráttur" to the bearer-guarded export endpoint.
@@ -62,7 +62,7 @@ export async function GET(
     })
 
     return NextResponse.json(
-      { error: 'Failed to build the export', status: res.status, detail },
+      { error: 'Failed to build the export', status: res.status },
       { status: res.status },
     )
   }
@@ -70,18 +70,17 @@ export async function GET(
   const buffer = await res.arrayBuffer()
 
   // Content-Type and the filename come from the API — it is the side that knows
-  // which format was produced and what the file is called. Rebuilding either
-  // here would mean two places to keep in step with `?format=`.
+  // what the file is called. Rebuilding either here would mean two places to
+  // keep in step.
   const headers = new Headers({
     'Content-Type':
       res.headers.get('content-type') ?? 'application/octet-stream',
+    // Kennitölur and pay-gap figures on a URL that does not vary by user.
+    'Cache-Control': 'private, no-store',
   })
 
   const disposition = res.headers.get('content-disposition')
   if (disposition) headers.set('Content-Disposition', disposition)
-
-  const rowCount = res.headers.get('x-export-row-count')
-  if (rowCount) headers.set('X-Export-Row-Count', rowCount)
 
   return new NextResponse(buffer, { status: 200, headers })
 }

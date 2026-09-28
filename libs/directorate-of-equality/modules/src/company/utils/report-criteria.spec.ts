@@ -121,6 +121,15 @@ describe('buildCompanyReportCriteriaWhere', () => {
     )
   })
 
+  it('limits "no improvement plan" to salary reports', () => {
+    expect(sqlOf({ reportHasImprovementPlan: false } as never)).toContain(
+      `"r"."type" = 'SALARY'`,
+    )
+    expect(sqlOf({ reportHasImprovementPlan: true } as never)).not.toContain(
+      `"r"."type" = 'SALARY'`,
+    )
+  })
+
   it('refuses a non-finite gap bound rather than emitting it', () => {
     expect(
       buildCompanyReportCriteriaWhere({
