@@ -38,7 +38,7 @@ export const frontPageText = {
     linkText: 'Lesa meira',
   },
   panelExport: {
-    title: 'Gagnaútráttur',
+    title: 'Gagnaútdráttur',
     description:
       'Sækja skýrslur og tölfræðileg gögn um starfsemi stofnunarinnar.',
     linkText: 'Sækja skýrslu',

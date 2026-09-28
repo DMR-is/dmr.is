@@ -1,6 +1,7 @@
 import { literal, Op, WhereOptions } from 'sequelize'
 
 import { DoeModels } from '../../constants'
+import { ReportTypeEnum } from '../../report/models/report.enums'
 import {
   quoteList,
   wageGapExistsSql,
@@ -163,6 +164,11 @@ export const buildCompanyReportCriteriaWhere = (
 
   if (query.reportHasImprovementPlan !== undefined) {
     const negation = query.reportHasImprovementPlan ? '' : 'NOT '
+    // Only a salary report can carry an improvement plan, so "none" means a
+    // salary report without one, never an equality plan.
+    if (!query.reportHasImprovementPlan) {
+      predicates.push(`"r"."type" = '${ReportTypeEnum.SALARY}'`)
+    }
     predicates.push(
       `${negation}EXISTS (SELECT 1 FROM "${DoeModels.REPORT_EMPLOYEE}" "re" ` +
         `INNER JOIN "${DoeModels.REPORT_EMPLOYEE_OUTLIER}" "reo" ` +

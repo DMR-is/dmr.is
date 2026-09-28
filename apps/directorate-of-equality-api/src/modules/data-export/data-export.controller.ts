@@ -1,11 +1,9 @@
-import type { Response } from 'express'
-
 import {
   Controller,
   Get,
+  Header,
   Inject,
   Query,
-  Res,
   StreamableFile,
   UseGuards,
 } from '@nestjs/common'
@@ -14,12 +12,12 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { GetCompaniesQueryDto } from '@dmr.is/doe-modules/company'
 import {
   DataExportFileDto,
-  DataExportFormatEnum,
   IDataExportService,
 } from '@dmr.is/doe-modules/data-export'
-import { GetReportsQueryDto } from '@dmr.is/doe-modules/report'
+import { UserModel } from '@dmr.is/doe-modules/user'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { CurrentAdminUser } from '../../core/decorators/current-admin-user.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { contentDisposition } from '../../core/http/content-disposition'
@@ -27,9 +25,9 @@ import { contentDisposition } from '../../core/http/content-disposition'
 /**
  * "Gagnaútdráttur" — the admin data export.
  *
- * Both routes take the SAME query DTO as the list endpoint they mirror, so a
- * filter the admin built on screen is handed straight through. Whatever
- * `?format=` says, the response is a file: these are `@Get` rather than `@Post`
+ * The route takes the SAME query DTO as the company list, so a filter the
+ * admin built on screen is handed straight through. The response is a file:
+ * this is a `@Get` rather than a `@Post`
  * so the browser can fetch them with a plain link and the filter stays in the
  * URL, which is what makes an export reproducible by pasting it to a colleague.
  */
@@ -51,6 +49,7 @@ export class DataExportController {
   ) {}
 
   @Get('companies')
+  @Header('Cache-Control', 'private, no-store')
   @DoeResponse({
     operationId: 'exportCompanies',
     successDescription:
@@ -60,47 +59,18 @@ export class DataExportController {
   })
   async exportCompanies(
     @Query() query: GetCompaniesQueryDto,
-    @Query('format') format: DataExportFormatEnum,
     @Query('filterSummary') filterSummary: string | string[] | undefined,
-    @Res({ passthrough: true }) res: Response,
+    @CurrentAdminUser() adminUser: UserModel,
   ): Promise<StreamableFile> {
     const file = await this.dataExportService.exportCompanies(
       query,
-      normaliseFormat(format),
       normaliseSummary(filterSummary),
+      adminUser.id,
     )
 
-    return toStreamableFile(file, res)
-  }
-
-  @Get('reports')
-  @DoeResponse({
-    operationId: 'exportReports',
-    successDescription: 'The reports matching the filter, as a spreadsheet.',
-    produces:
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  })
-  async exportReports(
-    @Query() query: GetReportsQueryDto,
-    @Query('format') format: DataExportFormatEnum,
-    @Query('filterSummary') filterSummary: string | string[] | undefined,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<StreamableFile> {
-    const file = await this.dataExportService.exportReports(
-      query,
-      normaliseFormat(format),
-      normaliseSummary(filterSummary),
-    )
-
-    return toStreamableFile(file, res)
+    return toStreamableFile(file)
   }
 }
-
-/** Anything but an explicit `csv` is xlsx — the format the admins open. */
-const normaliseFormat = (format: DataExportFormatEnum): DataExportFormatEnum =>
-  format === DataExportFormatEnum.CSV
-    ? DataExportFormatEnum.CSV
-    : DataExportFormatEnum.XLSX
 
 /**
  * `?filterSummary=` repeated is an array, given once is a string, absent is
@@ -118,18 +88,9 @@ const normaliseSummary = (value: string | string[] | undefined): string[] => {
  * `attachment`, unlike the report PDFs, which are served `inline` to render in
  * the viewer. A spreadsheet has nothing to render into — the browser would
  * either download it anyway or hand it to a plugin.
- *
- * The row count rides along as a header so the caller can tell an empty export
- * from a failed one without opening the file.
  */
-const toStreamableFile = (
-  file: DataExportFileDto,
-  res: Response,
-): StreamableFile => {
-  res.setHeader('X-Export-Row-Count', String(file.rowCount))
-
-  return new StreamableFile(file.content, {
+const toStreamableFile = (file: DataExportFileDto): StreamableFile =>
+  new StreamableFile(file.content, {
     type: file.contentType,
     disposition: contentDisposition('attachment', file.fileName),
   })
-}

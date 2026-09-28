@@ -17,7 +17,7 @@ type Options = {
 }
 
 /** `theme.breakpoints.md`, as a media query — react-select takes plain CSS. */
-const MD = `@media (min-width: ${theme.breakpoints.md}px)`
+export const SELECT_MD_QUERY = `@media (min-width: ${theme.breakpoints.md}px)`
 
 /**
  * `Input.mixins.inputSizes.sm`: 16 on mobile, 18 from md up.
@@ -29,7 +29,7 @@ export const selectTypography = {
   fontFamily: theme.typography.fontFamily,
   fontSize: 16,
   lineHeight: 1.25,
-  [MD]: { fontSize: 18, lineHeight: 1.555556 },
+  [SELECT_MD_QUERY]: { fontSize: 18, lineHeight: 1.555556 },
 }
 
 /** `Input.mixins.input` — the weight island-ui gives a chosen value. */

@@ -49,6 +49,10 @@ import { EMPLOYEE_RANGES } from '../../lib/utils'
 const line = (label: string, values: string[]): string | null =>
   values.length ? `${label}: ${values.join(', ')}` : null
 
+/** Option labels for the selected values; an unknown value is shown as-is. */
+const labelFor = (options: ReportFilterOption[], values: string[]): string[] =>
+  values.map((value) => options.find((o) => o.value === value)?.label ?? value)
+
 export const buildFilterSummary = (
   filters: CompanyFilters,
   criteria: ReportCriteria,
@@ -56,14 +60,6 @@ export const buildFilterSummary = (
   gaps: ReportGapBounds,
   query: string,
 ): string[] => {
-  const labelFor = (
-    options: { value: string; label: string }[],
-    values: string[],
-  ) =>
-    values.map(
-      (value) => options.find((o) => o.value === value)?.label ?? value,
-    )
-
   return [
     query.trim() ? `Leitarorð: ${query.trim()}` : null,
     line('Starfsmannafjöldi', labelFor(EMPLOYEE_RANGES, filters.employees)),
@@ -93,7 +89,6 @@ export const buildFilterSummary = (
     ...reportSummary(criteria, dates, gaps),
   ].filter((value): value is string => value !== null)
 }
-
 
 const DATE_RANGE_LABELS: Array<[string, ReportDateKey, ReportDateKey]> = [
   ['Skýrsla innsend', 'reportSubmittedFrom', 'reportSubmittedTo'],
@@ -159,14 +154,6 @@ const reportSummary = (
   dates: ReportDateRanges,
   gaps: ReportGapBounds,
 ): string[] => {
-  const labelFor = (
-    options: ReportFilterOption[],
-    values: string[],
-  ): string[] =>
-    values.map(
-      (value) => options.find((o) => o.value === value)?.label ?? value,
-    )
-
   const prefix = 'Skýrslur — '
 
   return [

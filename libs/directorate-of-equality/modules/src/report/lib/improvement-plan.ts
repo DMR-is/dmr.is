@@ -23,7 +23,7 @@ export const computeIncludesImprovementPlan = async (
   if (reportIds.length === 0) return result
   for (const id of reportIds) result.set(id, false)
 
-  const rows = ((await outlierModel.findAll({
+  const rows = (await outlierModel.findAll({
     include: [
       {
         model: ReportEmployeeModel,
@@ -36,7 +36,7 @@ export const computeIncludesImprovementPlan = async (
     attributes: [[col('reportEmployee.report_id'), 'reportId']],
     group: [col('reportEmployee.report_id')],
     raw: true,
-  })) as unknown) as { reportId: string }[]
+  })) as unknown as { reportId: string }[]
 
   for (const row of rows) result.set(row.reportId, true)
   return result

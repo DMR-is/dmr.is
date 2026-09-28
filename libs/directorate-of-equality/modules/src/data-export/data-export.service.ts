@@ -8,57 +8,35 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICompanyService } from '../company/company.service.interface'
 import { GetCompaniesQueryDto } from '../company/dto/get-companies-query.dto'
 import { CompanyReportModel } from '../company/models/company-report.model'
-import { IsatCategoryModel } from '../company/models/isat-category.model'
+import { IsatSectionModel } from '../company/models/isat-section.model'
 import { PostcodeModel } from '../location/models/postcode.model'
 import { RegionModel } from '../location/models/region.model'
-import { GetReportsQueryDto } from '../report/dto/get-reports.query.dto'
-import { computeIncludesImprovementPlan } from '../report/lib/improvement-plan'
 import { ReportStatusEnum } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
-import { buildReportListWhere } from '../report/utils/filters'
-import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
-import { ReportResultModel } from '../report-result/models/report-result.model'
-import {
-  DataExportFileDto,
-  DataExportFormatEnum,
-} from './dto/data-export.dto'
-import {
-  COMPANY_EXPORT_COLUMNS,
-  type ExportColumn,
-  REPORT_EXPORT_COLUMNS,
-} from './lib/columns'
-import type {
-  CompanyEmployeeCounts,
-  CompanyExportRow,
-  ReportExportRow,
-} from './lib/rows'
-import {
-  CSV_MIME,
-  type ExportMetadata,
-  writeCsv,
-  writeXlsx,
-  XLSX_MIME,
-} from './lib/writer'
+import type { DataExportFileDto } from './dto/data-export.dto'
+import { COMPANY_EXPORT_COLUMNS, type ExportColumn } from './lib/columns'
+import type { CompanyEmployeeCounts, CompanyExportRow } from './lib/rows'
+import { type ExportMetadata, writeXlsx, XLSX_MIME } from './lib/writer'
 import { IDataExportService } from './data-export.service.interface'
 
 const LOGGING_CONTEXT = 'DataExportService'
 
 /**
  * Hard ceiling on an export, well above anything the register can produce
- * today (~1 800 companies, a few thousand reports).
+ * today (~1 800 companies).
  *
  * It exists so a filter that accidentally matches everything fails loudly
  * instead of building a multi-hundred-megabyte workbook in memory and taking
  * the API down with it. If this is ever hit legitimately, the fix is streaming,
  * not a bigger number.
  */
-const MAX_EXPORT_ROWS = 50_000
+const MAX_EXPORT_ROWS = 10_000
 
 /** Location lookup, keyed by `postcode.id`. */
-type LocationLookup = Map<string, { code: string; place: string; region: string | null }>
-
-/** ÍSAT lookup, keyed by leaf `code`. */
-type IsatLookup = Map<string, { section: string; description: string }>
+type LocationLookup = Map<
+  string,
+  { code: string; place: string; region: string | null }
+>
 
 const toNumber = (value: unknown): number | null => {
   if (value === null || value === undefined) return null
@@ -71,30 +49,26 @@ export class DataExportService implements IDataExportService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(ICompanyService) private readonly companyService: ICompanyService,
-    @InjectModel(ReportModel) private readonly reportModel: typeof ReportModel,
-    @InjectModel(ReportResultModel)
-    private readonly reportResultModel: typeof ReportResultModel,
-    @InjectModel(ReportEmployeeOutlierModel)
-    private readonly reportEmployeeOutlierModel: typeof ReportEmployeeOutlierModel,
     @InjectModel(CompanyReportModel)
     private readonly companyReportModel: typeof CompanyReportModel,
     @InjectModel(PostcodeModel)
     private readonly postcodeModel: typeof PostcodeModel,
-    @InjectModel(IsatCategoryModel)
-    private readonly isatCategoryModel: typeof IsatCategoryModel,
+    @InjectModel(IsatSectionModel)
+    private readonly isatSectionModel: typeof IsatSectionModel,
   ) {}
 
   async exportCompanies(
     query: GetCompaniesQueryDto,
-    format: DataExportFormatEnum,
     filterSummary: string[],
+    actorUserId: string,
   ): Promise<DataExportFileDto> {
     // The same read the register list runs, unpaged — see `findAllByFilter`.
     const companies = await this.companyService.findAllByFilter(query)
-    this.assertWithinLimit(companies.length)
+    this.assertWithinLimit(companies.length, actorUserId)
 
-    const [locations, employeeCounts] = await Promise.all([
+    const [locations, isatSections, employeeCounts] = await Promise.all([
       this.loadLocations(),
+      this.loadIsatSections(),
       this.loadLatestEmployeeCounts(companies.map((company) => company.id)),
     ])
 
@@ -108,6 +82,9 @@ export class DataExportService implements IDataExportService {
         postcode: location?.code ?? null,
         place: location?.place ?? null,
         region: location?.region ?? null,
+        isatSectionDescription: company.isatCategory
+          ? (isatSections.get(company.isatCategory.section) ?? null)
+          : null,
         employeeCounts: employeeCounts.get(company.id) ?? null,
       }
     })
@@ -116,65 +93,19 @@ export class DataExportService implements IDataExportService {
       rows,
       COMPANY_EXPORT_COLUMNS,
       'Fyrirtæki',
-      format,
       filterSummary,
-    )
-  }
-
-  async exportReports(
-    query: GetReportsQueryDto,
-    format: DataExportFormatEnum,
-    filterSummary: string[],
-  ): Promise<DataExportFileDto> {
-    // `buildReportListWhere` is the list's own builder, so the export resolves
-    // to exactly the reports the screen showed. `subQuery: false` for the same
-    // reason the list sets it: the free-text filter reaches into joined columns.
-    const reports = await this.reportModel.scope('listview').findAll({
-      where: buildReportListWhere(query),
-      order: [['createdAt', 'DESC']],
-      subQuery: false,
-    })
-    this.assertWithinLimit(reports.length)
-
-    const reportIds = reports.map((report) => report.id)
-
-    const [results, improvementPlans, locations, isat] = await Promise.all([
-      this.loadResults(reportIds),
-      computeIncludesImprovementPlan(
-        this.reportEmployeeOutlierModel,
-        reportIds,
-      ),
-      this.loadLocations(),
-      this.loadIsat(),
-    ])
-
-    const rows = reports.map((report) =>
-      this.toReportRow(
-        report,
-        results.get(report.id),
-        improvementPlans.get(report.id) ?? false,
-        locations,
-        isat,
-      ),
-    )
-
-    return this.render(
-      rows,
-      REPORT_EXPORT_COLUMNS,
-      'Skýrslur',
-      format,
-      filterSummary,
+      actorUserId,
     )
   }
 
   // -------------------------------------------------------------------------
 
-  private assertWithinLimit(rowCount: number): void {
+  private assertWithinLimit(rowCount: number, actorUserId: string): void {
     if (rowCount <= MAX_EXPORT_ROWS) return
 
     this.logger.warn(
       `Refusing export of ${rowCount} rows (limit ${MAX_EXPORT_ROWS})`,
-      { context: LOGGING_CONTEXT, rowCount },
+      { context: LOGGING_CONTEXT, rowCount, actorUserId },
     )
     throw new PayloadTooLargeException(
       `Útdrátturinn nær til ${rowCount} raða, sem er yfir hámarkinu (${MAX_EXPORT_ROWS}). Þrengdu síurnar.`,
@@ -185,17 +116,17 @@ export class DataExportService implements IDataExportService {
     rows: TRow[],
     columns: ExportColumn<TRow>[],
     title: string,
-    format: DataExportFormatEnum,
     filterSummary: string[],
+    actorUserId: string,
   ): Promise<DataExportFileDto> {
     const generatedAt = new Date()
     const stamp = generatedAt.toISOString().slice(0, 10)
-    const isCsv = format === DataExportFormatEnum.CSV
 
-    this.logger.info(`Exporting ${rows.length} ${title} rows as ${format}`, {
+    this.logger.info(`Exporting ${rows.length} ${title} rows`, {
       context: LOGGING_CONTEXT,
       rowCount: rows.length,
-      format,
+      // Who took the kennitölur and pay-gap figures out of the system.
+      actorUserId,
     })
 
     const metadata: ExportMetadata = {
@@ -206,12 +137,9 @@ export class DataExportService implements IDataExportService {
     }
 
     return {
-      fileName: `jafnrettisstofa-${title.toLowerCase()}-${stamp}.${format}`,
-      contentType: isCsv ? CSV_MIME : XLSX_MIME,
-      rowCount: rows.length,
-      content: isCsv
-        ? writeCsv(rows, columns)
-        : await writeXlsx(rows, columns, metadata),
+      fileName: `jafnrettisstofa-${title.toLowerCase()}-${stamp}.xlsx`,
+      contentType: XLSX_MIME,
+      content: await writeXlsx(rows, columns, metadata),
     }
   }
 
@@ -239,28 +167,13 @@ export class DataExportService implements IDataExportService {
     )
   }
 
-  /** The 665 ÍSAT leaves, as one lookup. Same reasoning as `loadLocations`. */
-  private async loadIsat(): Promise<IsatLookup> {
-    const rows = await this.isatCategoryModel.findAll()
-
-    return new Map(
-      rows.map((row) => [
-        row.code,
-        { section: row.section, description: row.description },
-      ]),
-    )
-  }
-
-  private async loadResults(
-    reportIds: string[],
-  ): Promise<Map<string, ReportResultModel>> {
-    if (reportIds.length === 0) return new Map()
-
-    const rows = await this.reportResultModel.findAll({
-      where: { reportId: { [Op.in]: reportIds } },
+  /** The ÍSAT section names, keyed by section code. Same reasoning as `loadLocations`. */
+  private async loadIsatSections(): Promise<Map<string, string>> {
+    const rows = await this.isatSectionModel.findAll({
+      attributes: ['code', 'description'],
     })
 
-    return new Map(rows.map((row) => [row.reportId, row]))
+    return new Map(rows.map((row) => [row.code, row.description]))
   }
 
   /**
@@ -315,83 +228,11 @@ export class DataExportService implements IDataExportService {
         male,
         female,
         neutral,
-        total: parts.length
-          ? parts.reduce((sum, part) => sum + part, 0)
-          : null,
+        total: parts.length ? parts.reduce((sum, part) => sum + part, 0) : null,
         reportedAt: report.approvedAt ?? null,
       })
     }
 
     return counts
-  }
-
-  private toReportRow(
-    report: ReportModel,
-    result: ReportResultModel | undefined,
-    includesImprovementPlan: boolean,
-    locations: LocationLookup,
-    isat: IsatLookup,
-  ): ReportExportRow {
-    const company = report.companyReport?.company ?? null
-    const location = company?.postcodeId
-      ? locations.get(company.postcodeId)
-      : undefined
-    const isatEntry = company?.isatCategoryCode
-      ? isat.get(company.isatCategoryCode)
-      : undefined
-
-    const gap = result?.wageGapDecompositionSnapshot
-
-    return {
-      id: report.id,
-      identifier: report.identifier,
-      type: report.type,
-      status: report.status,
-      communicationStatus: report.communicationStatus,
-      equalitySource: report.equalitySource,
-
-      companyName: report.companyReport?.name ?? null,
-      companyNationalId: report.companyReport?.nationalId ?? null,
-      // The company's CURRENT bucket where we have the company, falling back to
-      // the snapshot for a report whose company row has since gone.
-      companyEmployeeCountCategory:
-        company?.employeeCountCategory ??
-        report.companyReport?.employeeCountCategory ??
-        null,
-      companySector: company?.sector ?? null,
-      companyIsatSection: isatEntry?.section ?? null,
-      companyIsatDescription: isatEntry?.description ?? null,
-      postcode: location?.code ?? null,
-      region: location?.region ?? null,
-
-      createdAt: report.createdAt ?? null,
-      approvedAt: report.approvedAt ?? null,
-      validUntil: report.validUntil ?? null,
-      correctionDeadline: report.correctionDeadline ?? null,
-      reviewerName: report.reviewer
-        ? `${report.reviewer.firstName} ${report.reviewer.lastName}`.trim()
-        : null,
-      includesImprovementPlan,
-
-      companyAdminName: report.companyAdminName,
-      companyAdminGender: report.companyAdminGender,
-      contactName: report.contactName,
-      contactEmail: report.contactEmail,
-
-      salaryDataPeriod: report.salaryDataPeriod ?? null,
-      salaryDataBasis: report.salaryDataBasis ?? null,
-      counts: gap?.counts ?? null,
-      meanHourlyWageMale: gap?.meanHourlyWageMale ?? null,
-      meanHourlyWageFemale: gap?.meanHourlyWageFemale ?? null,
-      rawGapPercent: gap?.rawGapPercent ?? null,
-      rawGapDirection: gap?.rawGapDirection ?? null,
-      oskyrtPercent: gap?.oskyrtPercent ?? null,
-      oskyrtDirection: gap?.oskyrtDirection ?? null,
-      benchmarkPercent: toNumber(result?.salaryDifferenceThresholdPercent),
-      // Carried through as the server computed it — see the field's docblock.
-      oskyrtWithinBenchmark: gap?.oskyrtWithinBenchmark ?? null,
-      minimumSetSize: gap?.minimumSetSize ?? null,
-      calculationVersion: result?.calculationVersion ?? null,
-    }
   }
 }

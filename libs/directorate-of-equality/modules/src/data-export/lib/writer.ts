@@ -1,19 +1,14 @@
 /**
- * Turns rows + columns into the bytes of a file.
- *
- * Two formats, for two different readers. The xlsx is what the admins open:
- * frozen header, autofilter, real date cells. The CSV is for whatever parses
- * the file downstream, so it is plain RFC 4180 — comma-separated and quoted,
- * not tuned for one spreadsheet's import dialog.
+ * Turns rows + columns into the bytes of an xlsx: frozen header, autofilter,
+ * real date cells.
  */
 
 import ExcelJS from 'exceljs'
 
-import type { ExportCellValue, ExportColumn } from './columns'
+import type { ExportColumn } from './columns'
 
 export const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-export const CSV_MIME = 'text/csv; charset=utf-8'
 
 /** Excel's own date format code; `dd.mm.yyyy` is the Icelandic convention. */
 const DATE_FORMAT = 'dd.mm.yyyy'
@@ -77,9 +72,8 @@ export async function writeXlsx<TRow>(
   const about = workbook.addWorksheet('Um útdráttinn')
   about.columns = [{ width: 28 }, { width: 70 }]
   about.addRow(['Útdráttur', metadata.title]).font = { bold: true }
-  about
-    .addRow(['Keyrt', metadata.generatedAt])
-    .getCell(2).numFmt = `${DATE_FORMAT} hh:mm`
+  about.addRow(['Keyrt', metadata.generatedAt]).getCell(2).numFmt =
+    `${DATE_FORMAT} hh:mm`
   about.addRow(['Fjöldi raða', metadata.rowCount])
   about.addRow([])
   about.addRow(['Síur', '']).font = { bold: true }
@@ -92,36 +86,4 @@ export async function writeXlsx<TRow>(
   // `as Buffer`: exceljs types this as its own `Buffer` interface, which is
   // structurally Node's but not nominally.
   return (await workbook.xlsx.writeBuffer()) as Buffer
-}
-
-/** RFC 4180: double the quotes, wrap anything that could confuse a parser. */
-const csvCell = (value: ExportCellValue): string => {
-  if (value === null || value === undefined) return ''
-
-  const raw =
-    value instanceof Date ? value.toISOString().slice(0, 10) : String(value)
-
-  // Formula injection: applicant-entered text starting with = + - @ tab or CR
-  // would run as a formula in Excel. Strings only — a number stays a number.
-  const text =
-    typeof value === 'string' && /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw
-
-  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-}
-
-export function writeCsv<TRow>(
-  rows: TRow[],
-  columns: ExportColumn<TRow>[],
-): Buffer {
-  const lines = [
-    columns.map((column) => csvCell(column.header)).join(','),
-    ...rows.map((row) =>
-      columns.map((column) => csvCell(column.value(row))).join(','),
-    ),
-  ]
-
-  // Leading BOM: without it Excel reads a UTF-8 CSV as the system codepage and
-  // every Icelandic character in the file arrives mangled. Harmless to the
-  // parsers this format is actually for.
-  return Buffer.from(`﻿${lines.join('\r\n')}\r\n`, 'utf8')
 }

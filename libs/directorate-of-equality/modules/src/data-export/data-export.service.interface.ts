@@ -1,14 +1,13 @@
 import { GetCompaniesQueryDto } from '../company/dto/get-companies-query.dto'
-import { GetReportsQueryDto } from '../report/dto/get-reports.query.dto'
-import { DataExportFileDto, DataExportFormatEnum } from './dto/data-export.dto'
+import type { DataExportFileDto } from './dto/data-export.dto'
 
 /**
  * Builds the files behind "Gagnaútdráttur".
  *
- * Both methods take the SAME query DTO the corresponding list endpoint takes,
- * and resolve it through the same `where` builder — an export whose filter
- * behaved even slightly differently from the screen it was launched from would
- * be wrong in a way nobody could spot from the file.
+ * Takes the SAME query DTO the company list endpoint takes, and resolves it
+ * through the same `where` builder — an export whose filter behaved even
+ * slightly differently from the screen it was launched from would be wrong in
+ * a way nobody could spot from the file.
  *
  * Paging params on the query are ignored: the export is the whole filtered set
  * or it is misleading.
@@ -22,14 +21,8 @@ import { DataExportFileDto, DataExportFormatEnum } from './dto/data-export.dto'
 export interface IDataExportService {
   exportCompanies(
     query: GetCompaniesQueryDto,
-    format: DataExportFormatEnum,
     filterSummary: string[],
-  ): Promise<DataExportFileDto>
-
-  exportReports(
-    query: GetReportsQueryDto,
-    format: DataExportFormatEnum,
-    filterSummary: string[],
+    actorUserId: string,
   ): Promise<DataExportFileDto>
 }
 
