@@ -1,5 +1,6 @@
 import {
   addBusinessDays,
+  getEarliestPublishingDate,
   getHolidaysForYear,
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
@@ -182,6 +183,55 @@ describe('dateUtils', () => {
         expect(result.getMonth()).toBe(0) // January (0-indexed)
         expect(result.getFullYear()).toBe(2024)
       }
+    })
+  })
+  describe('getEarliestPublishingDate', () => {
+    // Local-time constructors, so the picker semantics hold in any timezone.
+    // Tuesday 5 May 2026; the surrounding week has no holidays.
+    const tuesdayAt = (hours: number, minutes = 0) =>
+      new Date(2026, 4, 5, hours, minutes)
+    const localMidnight = (month: number, day: number) =>
+      new Date(2026, month, day).getTime()
+
+    it('should offer today before noon', () => {
+      expect(getEarliestPublishingDate(undefined, tuesdayAt(11, 59))).toEqual(
+        new Date(localMidnight(4, 5)),
+      )
+    })
+    it('should offer the next day from noon onwards', () => {
+      expect(
+        getEarliestPublishingDate(undefined, tuesdayAt(12)).getTime(),
+      ).toBe(localMidnight(4, 6))
+      expect(
+        getEarliestPublishingDate(undefined, tuesdayAt(20)).getTime(),
+      ).toBe(localMidnight(4, 6))
+    })
+    it('should clamp a minDate in the past to the noon rule', () => {
+      // The bug: a historical minDate reached the picker unchanged, so an
+      // evening Skiptalok could still pick today.
+      const pastMinDate = new Date(2026, 2, 10)
+      expect(
+        getEarliestPublishingDate(pastMinDate, tuesdayAt(20)).getTime(),
+      ).toBe(localMidnight(4, 6))
+    })
+    it('should keep a minDate in the future', () => {
+      const thursdayAfternoon = new Date(2026, 4, 7, 15)
+      expect(
+        getEarliestPublishingDate(thursdayAfternoon, tuesdayAt(10)).getTime(),
+      ).toBe(localMidnight(4, 7))
+    })
+    it('should skip the weekend after a Friday afternoon', () => {
+      const fridayEvening = new Date(2026, 4, 8, 20)
+      expect(
+        getEarliestPublishingDate(undefined, fridayEvening).getTime(),
+      ).toBe(localMidnight(4, 11))
+    })
+    it('should skip a holiday and the weekend after it', () => {
+      // Friday 1 May is Verkalýðsdagurinn
+      const thursdayEvening = new Date(2026, 3, 30, 20)
+      expect(
+        getEarliestPublishingDate(undefined, thursdayEvening).getTime(),
+      ).toBe(localMidnight(4, 4))
     })
   })
 })

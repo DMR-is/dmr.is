@@ -55,6 +55,38 @@ export const getNextValidPublishingDate = (
 }
 
 /**
+ * The first day a date picker may offer, as local midnight: today before noon,
+ * otherwise the next day, never earlier than `minDate`, and skipping weekends and
+ * holidays.
+ *
+ * Unlike {@link getNextValidPublishingDate}, this clamps to `now`. That helper
+ * only applies the noon rule when `fromDate` is today, so a `minDate` in the past
+ * came back unchanged and the picker offered today at any hour.
+ */
+export const getEarliestPublishingDate = (
+  minDate?: Date,
+  now: Date = new Date(),
+) => {
+  const earliest = new Date(now)
+  earliest.setHours(0, 0, 0, 0)
+
+  if (now.getHours() >= 12) {
+    earliest.setDate(earliest.getDate() + 1)
+  }
+
+  if (minDate && minDate.getTime() > earliest.getTime()) {
+    earliest.setTime(minDate.getTime())
+    earliest.setHours(0, 0, 0, 0)
+  }
+
+  while (isDateOnWeekendOrHoliday(earliest)) {
+    earliest.setDate(earliest.getDate() + 1)
+  }
+
+  return earliest
+}
+
+/**
  * Check if a given date is a valid publishing date (weekday and not holiday)
  */
 export const isValidPublishingDate = (date: Date): boolean => {

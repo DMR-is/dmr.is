@@ -1,5 +1,9 @@
 import * as z from 'zod'
 
+import {
+  isOnOrAfterEarliestPublishingDay,
+  PUBLISHING_DATE_CUTOFF_MESSAGE,
+} from '../base/publishing-dates'
 import { signatureSchemaRefined } from '../base/signature'
 
 export const createDivisionMeetingInput = z.object({
@@ -19,9 +23,13 @@ export const createDivisionEndingInput = z.object({
   endingDate: z.coerce.date({
     error: 'Dagsetning skiptaloka er nauðsynleg',
   }),
-  scheduledAt: z.coerce.date({
-    error: 'Dagsetning birtingar er nauðsynleg',
-  }),
+  scheduledAt: z.coerce
+    .date({
+      error: 'Dagsetning birtingar er nauðsynleg',
+    })
+    .refine((date) => isOnOrAfterEarliestPublishingDay(date), {
+      message: PUBLISHING_DATE_CUTOFF_MESSAGE,
+    }),
   content: z
     .string('Nauðsynlegt er að fylla út hvernig skiptum var lokið')
     .refine((content) => content.length > 0, {

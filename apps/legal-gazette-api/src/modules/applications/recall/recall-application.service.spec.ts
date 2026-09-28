@@ -414,6 +414,114 @@ describe('RecallApplicationService', () => {
   })
 
   describe('addDivisionEnding', () => {
+    // Only Date is faked: the fixtures schedule for 2026-05-05, so the clock is
+    // pinned to the morning before, and the Nest/Sequelize promise plumbing keeps
+    // its real timers.
+    const pinClock = (iso: string) =>
+      jest.useFakeTimers({
+        now: new Date(iso),
+        doNotFake: [
+          'nextTick',
+          'setImmediate',
+          'setTimeout',
+          'setInterval',
+          'queueMicrotask',
+        ],
+      })
+
+    beforeEach(() => {
+      pinClock('2026-05-04T10:00:00.000Z')
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    const mockSubmittableEstate = () => {
+      applicationModel.findOne.mockResolvedValue(
+        createMockApplication({ settlement: createMockSettlement({}) }) as any,
+      )
+      advertModel.findOneOrThrow.mockResolvedValue({
+        judgementDate: new Date('2026-03-15T00:00:00.000Z'),
+      })
+      advertModel.findOne.mockResolvedValue(null)
+      advertService.createAdvert.mockResolvedValue({
+        id: 'advert-789',
+        settlement: { id: 'settlement-789' },
+      })
+    }
+
+    it('should reject a same-day publication submitted after noon', async () => {
+      pinClock('2026-05-05T20:00:00.000Z')
+      mockSubmittableEstate()
+
+      await expect(
+        service.addDivisionEnding(
+          APPLICATION_ID,
+          createDivisionEndingBody(),
+          mockUser,
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(advertService.createAdvert).not.toHaveBeenCalled()
+    })
+
+    it('should reject a same-day publication at exactly noon', async () => {
+      pinClock('2026-05-05T12:00:00.000Z')
+      mockSubmittableEstate()
+
+      await expect(
+        service.addDivisionEnding(
+          APPLICATION_ID,
+          createDivisionEndingBody(),
+          mockUser,
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(advertService.createAdvert).not.toHaveBeenCalled()
+    })
+
+    it('should reject a publication date in the past', async () => {
+      pinClock('2026-05-06T09:00:00.000Z')
+      mockSubmittableEstate()
+
+      await expect(
+        service.addDivisionEnding(
+          APPLICATION_ID,
+          createDivisionEndingBody(),
+          mockUser,
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(advertService.createAdvert).not.toHaveBeenCalled()
+    })
+
+    it('should accept a same-day publication submitted before noon', async () => {
+      pinClock('2026-05-05T11:59:59.999Z')
+      mockSubmittableEstate()
+
+      await service.addDivisionEnding(
+        APPLICATION_ID,
+        createDivisionEndingBody(),
+        mockUser,
+      )
+
+      expect(advertService.createAdvert).toHaveBeenCalled()
+    })
+
+    it('should accept next-day publication submitted in the evening', async () => {
+      pinClock('2026-05-04T20:00:00.000Z')
+      mockSubmittableEstate()
+
+      await service.addDivisionEnding(
+        APPLICATION_ID,
+        createDivisionEndingBody(),
+        mockUser,
+      )
+
+      expect(advertService.createAdvert).toHaveBeenCalled()
+    })
+
     it('should clone the current settlement with ending overrides instead of mutating the previous settlement', async () => {
       const settlement = createMockSettlement({
         declaredClaims: 12,

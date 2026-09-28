@@ -1,9 +1,54 @@
 import * as z from 'zod'
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+/**
+ * Same-day publishing closes at noon, Reykjavik time. Atlantic/Reykjavik is
+ * UTC+0 all year round, so both the cutoff and the calendar day are read in UTC,
+ * which is also how the publishing task buckets `scheduledAt` into days.
+ */
+export const SAME_DAY_PUBLISHING_CUTOFF_HOUR = 12
+
+export const PUBLISHING_DATE_CUTOFF_MESSAGE =
+  'Birtingardagur má ekki vera liðinn og birting samdægurs er aðeins möguleg ef auglýsing berst fyrir kl. 12:00'
+
+const toReykjavikDay = (date: Date) => Math.floor(date.getTime() / MS_PER_DAY)
+
+/**
+ * The first calendar day (as UTC midnight) an advert submitted at `now` can be
+ * published on: today before noon, tomorrow from noon onwards.
+ *
+ * Weekends and holidays are left to the date pickers, which exclude them.
+ */
+export const getEarliestPublishingDay = (now: Date = new Date()): Date => {
+  const today = toReykjavikDay(now)
+  const earliest =
+    now.getUTCHours() >= SAME_DAY_PUBLISHING_CUTOFF_HOUR ? today + 1 : today
+
+  return new Date(earliest * MS_PER_DAY)
+}
+
+/**
+ * Whether `date` falls on or after {@link getEarliestPublishingDay}. The day is
+ * the Reykjavik day of the instant, i.e. the day the publishing task will
+ * publish it on.
+ */
+export const isOnOrAfterEarliestPublishingDay = (
+  date: Date | string,
+  now: Date = new Date(),
+): boolean => {
+  const day = toReykjavikDay(new Date(date))
+
+  if (Number.isNaN(day)) {
+    return false
+  }
+
+  return day >= toReykjavikDay(getEarliestPublishingDay(now))
+}
+
 const validateFuture = (dates: string[]) => {
   const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  return dates.every((date) => new Date(date) > now)
+  return dates.every((date) => isOnOrAfterEarliestPublishingDay(date, now))
 }
 
 const validateOrder = (dates: string[]) => {
@@ -43,7 +88,7 @@ export const publishingDatesSchemaRefined = z
     error: 'Hámark þrír birtingardagar mega vera til staðar',
   })
   .refine(validateFuture, {
-    message: 'Birtingardagar verða að vera í framtíðinni',
+    message: PUBLISHING_DATE_CUTOFF_MESSAGE,
   })
   .refine(validateOrder, {
     message: 'Birtingardagar verða vera í réttri röð',
@@ -72,7 +117,7 @@ export const publishingDatesRecallSchemaRefined = z
     },
   )
   .refine(validateFuture, {
-    message: 'Birtingardagar verða að vera í framtíðinni',
+    message: PUBLISHING_DATE_CUTOFF_MESSAGE,
   })
   .refine(validateMinimumDaysBetween, {
     message: 'Að minnsta kosti einn dagur verður að vera á milli birtingardaga',
