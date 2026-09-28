@@ -28,6 +28,7 @@ type QueryRow = {
   legacySalaryInForce?: boolean | null
   legacyCertificationType?: string | null
   legacyRound?: string | null
+  approvedSalaryReports?: string | number | null
   reportHeadcount?: string | number | null
   legacyHeadcount?: string | number | null
   region?: string | null
@@ -43,6 +44,7 @@ const setup = async (rows: QueryRow[], regions: string[] = []) => {
       legacySalaryInForce: false,
       legacyCertificationType: null,
       legacyRound: null,
+      approvedSalaryReports: '0',
       reportHeadcount: null,
       legacyHeadcount: null,
       ...row,
@@ -96,13 +98,23 @@ describe('AggregateStatisticsService', () => {
   })
 
   it('counts superseded salary reports toward the validity round', async () => {
-    const { service, companyFindAll } = await setup([])
-    await service.getStatistics()
+    // A renewal supersedes the first approval, so APPROVED alone would say 1.
+    const { service, companyFindAll } = await setup([
+      {
+        salaryReportActive: true,
+        legacyRound: '1.',
+        approvedSalaryReports: '2',
+      },
+    ])
+    const statistics = await service.getStatistics()
 
     const sql = JSON.stringify(companyFindAll.mock.calls[0][0].attributes)
     expect(sql).toContain(
       `r.status IN ('${ReportStatusEnum.APPROVED}', '${ReportStatusEnum.SUPERSEDED}')`,
     )
+    expect(statistics.rounds).toEqual([
+      expect.objectContaining({ round: 3, companies: 1 }),
+    ])
   })
 
   it('puts a company with no postcode in the unknown region, and lists it on the axis', async () => {
