@@ -187,51 +187,67 @@ describe('dateUtils', () => {
   })
   describe('getEarliestPublishingDate', () => {
     // Local-time constructors, so the picker semantics hold in any timezone.
+    // `now` is a Reykjavik (UTC) instant; the result is local midnight of the
+    // Reykjavik day, which is what the picker compares against. Written this way
+    // the expectations hold in any runner timezone.
     // Tuesday 5 May 2026; the surrounding week has no holidays.
-    const tuesdayAt = (hours: number, minutes = 0) =>
-      new Date(2026, 4, 5, hours, minutes)
-    const localMidnight = (month: number, day: number) =>
+    const tuesdayAt = (time: string) => new Date(`2026-05-05T${time}Z`)
+    const pickerDay = (month: number, day: number) =>
       new Date(2026, month, day).getTime()
 
-    it('should offer today before noon', () => {
-      expect(getEarliestPublishingDate(undefined, tuesdayAt(11, 59))).toEqual(
-        new Date(localMidnight(4, 5)),
-      )
+    it('should offer today before noon Reykjavik time', () => {
+      expect(
+        getEarliestPublishingDate(undefined, tuesdayAt('11:59:59')).getTime(),
+      ).toBe(pickerDay(4, 5))
     })
-    it('should offer the next day from noon onwards', () => {
+    it('should offer the next day from noon Reykjavik time onwards', () => {
       expect(
-        getEarliestPublishingDate(undefined, tuesdayAt(12)).getTime(),
-      ).toBe(localMidnight(4, 6))
+        getEarliestPublishingDate(undefined, tuesdayAt('12:00:00')).getTime(),
+      ).toBe(pickerDay(4, 6))
       expect(
-        getEarliestPublishingDate(undefined, tuesdayAt(20)).getTime(),
-      ).toBe(localMidnight(4, 6))
+        getEarliestPublishingDate(undefined, tuesdayAt('20:00:00')).getTime(),
+      ).toBe(pickerDay(4, 6))
+    })
+    it('should apply the cutoff at Reykjavik noon, not browser-local noon', () => {
+      // 10:30 Reykjavik is 12:30 in Berlin: same-day is still open in Iceland.
+      expect(
+        getEarliestPublishingDate(undefined, tuesdayAt('10:30:00')).getTime(),
+      ).toBe(pickerDay(4, 5))
+      // 22:30 Reykjavik is already Wednesday in Berlin, but still Tuesday
+      // evening in Iceland, so the earliest day is Wednesday, not Thursday.
+      expect(
+        getEarliestPublishingDate(undefined, tuesdayAt('22:30:00')).getTime(),
+      ).toBe(pickerDay(4, 6))
     })
     it('should clamp a minDate in the past to the noon rule', () => {
       // The bug: a historical minDate reached the picker unchanged, so an
       // evening Skiptalok could still pick today.
-      const pastMinDate = new Date(2026, 2, 10)
+      const pastMinDate = new Date('2026-03-10T00:00:00Z')
       expect(
-        getEarliestPublishingDate(pastMinDate, tuesdayAt(20)).getTime(),
-      ).toBe(localMidnight(4, 6))
+        getEarliestPublishingDate(pastMinDate, tuesdayAt('20:00:00')).getTime(),
+      ).toBe(pickerDay(4, 6))
     })
     it('should keep a minDate in the future', () => {
-      const thursdayAfternoon = new Date(2026, 4, 7, 15)
+      const thursdayAfternoon = new Date('2026-05-07T15:00:00Z')
       expect(
-        getEarliestPublishingDate(thursdayAfternoon, tuesdayAt(10)).getTime(),
-      ).toBe(localMidnight(4, 7))
+        getEarliestPublishingDate(
+          thursdayAfternoon,
+          tuesdayAt('10:00:00'),
+        ).getTime(),
+      ).toBe(pickerDay(4, 7))
     })
     it('should skip the weekend after a Friday afternoon', () => {
-      const fridayEvening = new Date(2026, 4, 8, 20)
+      const fridayEvening = new Date('2026-05-08T20:00:00Z')
       expect(
         getEarliestPublishingDate(undefined, fridayEvening).getTime(),
-      ).toBe(localMidnight(4, 11))
+      ).toBe(pickerDay(4, 11))
     })
     it('should skip a holiday and the weekend after it', () => {
       // Friday 1 May is Verkalýðsdagurinn
-      const thursdayEvening = new Date(2026, 3, 30, 20)
+      const thursdayEvening = new Date('2026-04-30T20:00:00Z')
       expect(
         getEarliestPublishingDate(undefined, thursdayEvening).getTime(),
-      ).toBe(localMidnight(4, 4))
+      ).toBe(pickerDay(4, 4))
     })
   })
 })

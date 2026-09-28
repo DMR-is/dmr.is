@@ -16,9 +16,14 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import {
+  getEarliestPublishingDate,
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
 } from '@dmr.is/utils-client/dateUtils'
+import {
+  fromCalendarDateIso,
+  toCalendarDateIso,
+} from '@dmr.is/utils-shared/date/calendarDate'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { DatePickerController } from '../controllers/DatePickerController'
@@ -72,11 +77,11 @@ export const PublishingFields = ({ applicationType }: Props) => {
 
     const lastDate =
       currentDates.length > 0
-        ? new Date(currentDates[currentDates.length - 1])
+        ? fromCalendarDateIso(currentDates[currentDates.length - 1])
         : new Date()
 
     const newDate = getNextValidPublishingDate(addDays(lastDate, 2))
-    const newDates = [...currentDates, newDate.toISOString()]
+    const newDates = [...currentDates, toCalendarDateIso(newDate)]
     updatePublishingDates(newDates)
   }, [currentDates, updatePublishingDates])
 
@@ -90,8 +95,11 @@ export const PublishingFields = ({ applicationType }: Props) => {
 
   const onDateChange = useCallback(
     (date: Date, index: number) => {
+      // Same snapping as DatePickerController: the picked day, not local
+      // midnight as an instant. Overwriting it with toISOString() here undid
+      // that, so a day picked east of UTC was stored as the previous day.
       const newDates = [...currentDates]
-      newDates[index] = date.toISOString()
+      newDates[index] = toCalendarDateIso(date)
       updatePublishingDates(newDates)
     },
     [currentDates, updatePublishingDates],
@@ -113,12 +121,12 @@ export const PublishingFields = ({ applicationType }: Props) => {
               {currentDates?.map((date, index) => {
                 const previousDate =
                   index > 0
-                    ? addDays(new Date(currentDates[index - 1]), 1)
+                    ? addDays(fromCalendarDateIso(currentDates[index - 1]), 1)
                     : null
 
                 const min = previousDate
                   ? getNextValidPublishingDate(previousDate)
-                  : getNextValidPublishingDate()
+                  : getEarliestPublishingDate()
                 const max = getNextValidPublishingDate(addYears(min, 1))
                 const excludeDates = getInvalidPublishingDatesInRange(min, max)
 

@@ -18,6 +18,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import {
+  getEarliestPublishingDate,
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
 } from '@dmr.is/utils-client/dateUtils'
@@ -87,8 +88,8 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
       }),
     )
 
-  const minDate = getNextValidPublishingDate(
-    dateData?.minDate ? new Date(dateData.minDate) : new Date(),
+  const minDate = getEarliestPublishingDate(
+    dateData?.minDate ? new Date(dateData.minDate) : undefined,
   )
   const maxDate = getNextValidPublishingDate(addYears(new Date(), 3))
   const invalidPublishingDates = getInvalidPublishingDatesInRange(

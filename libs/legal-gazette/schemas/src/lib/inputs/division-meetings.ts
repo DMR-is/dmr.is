@@ -7,9 +7,14 @@ import {
 import { signatureSchemaRefined } from '../base/signature'
 
 export const createDivisionMeetingInput = z.object({
-  meetingDate: z.iso.datetime({
-    error: 'Dagsetning skiptafundar er nauðsynleg',
-  }),
+  // The meeting date is also the publishing date, so the noon cutoff applies.
+  meetingDate: z.iso
+    .datetime({
+      error: 'Dagsetning skiptafundar er nauðsynleg',
+    })
+    .refine((date) => isOnOrAfterEarliestPublishingDay(date), {
+      message: PUBLISHING_DATE_CUTOFF_MESSAGE,
+    }),
   content: z.string().optional(),
   additionalText: z.string().optional(),
   signature: signatureSchemaRefined,

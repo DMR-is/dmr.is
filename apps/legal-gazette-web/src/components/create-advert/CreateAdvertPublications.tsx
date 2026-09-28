@@ -6,6 +6,10 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import {
+  fromCalendarDateIso,
+  toCalendarDateIso,
+} from '@dmr.is/utils-shared/date/calendarDate'
 
 type Props = {
   onChange: (publications: string[]) => void
@@ -33,13 +37,15 @@ export const CreateAdvertPublications = ({ onChange }: Props) => {
               <DatePicker
                 locale="is"
                 label={`Birtingardagur ${index + 1}`}
-                selected={new Date(publication)}
+                selected={fromCalendarDateIso(publication)}
                 placeholderText=""
                 size="sm"
                 backgroundColor="blue"
                 handleChange={(date) => {
+                  // The picked day, not local midnight as an instant, which
+                  // from a browser east of UTC lands on the previous day.
                   const updatedPubs = publications.map((pub, i) =>
-                    i === index ? date.toISOString() : pub,
+                    i === index ? toCalendarDateIso(date) : pub,
                   )
                   setPublications(updatedPubs)
                   handleChange(updatedPubs)
@@ -66,7 +72,7 @@ export const CreateAdvertPublications = ({ onChange }: Props) => {
             icon="add"
             iconType="outline"
             onClick={() => {
-              const newPubs = [...publications, new Date().toISOString()]
+              const newPubs = [...publications, toCalendarDateIso(new Date())]
               setPublications(newPubs)
               handleChange(newPubs)
             }}

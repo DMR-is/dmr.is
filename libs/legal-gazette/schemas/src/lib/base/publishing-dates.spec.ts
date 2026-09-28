@@ -1,5 +1,10 @@
-import { createDivisionEndingInput } from '../inputs/division-meetings'
 import {
+  createDivisionEndingInput,
+  createDivisionMeetingInput,
+} from '../inputs/division-meetings'
+import {
+  editorPublishingDatesRecallSchemaRefined,
+  editorPublishingDatesSchemaRefined,
   getEarliestPublishingDay,
   isOnOrAfterEarliestPublishingDay,
   PUBLISHING_DATE_CUTOFF_MESSAGE,
@@ -153,6 +158,30 @@ describe('publishing date schemas', () => {
     )
   })
 
+  it('reject a Skiptafundur meeting today after noon', () => {
+    // The meeting date doubles as the publishing date.
+    pinClock(at('12:30:00.000'))
+
+    const result = createDivisionMeetingInput.shape.meetingDate.safeParse(
+      '2026-05-05T14:00:00.000Z',
+    )
+
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0]?.message).toBe(
+      PUBLISHING_DATE_CUTOFF_MESSAGE,
+    )
+  })
+
+  it('accept a Skiptafundur meeting today before noon', () => {
+    pinClock(at('09:00:00.000'))
+
+    expect(
+      createDivisionMeetingInput.shape.meetingDate.safeParse(
+        '2026-05-05T14:00:00.000Z',
+      ).success,
+    ).toBe(true)
+  })
+
   it('accept a Skiptalok scheduled for today before noon', () => {
     pinClock(at('11:00:00.000'))
 
@@ -160,5 +189,49 @@ describe('publishing date schemas', () => {
       createDivisionEndingInput.shape.scheduledAt.safeParse(new Date(TUESDAY))
         .success,
     ).toBe(true)
+  })
+})
+
+describe('editor publishing date schemas', () => {
+  const pinClock = (date: Date) =>
+    jest.useFakeTimers({ now: date, doNotFake: ['nextTick', 'setImmediate'] })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('let editors book the same day after noon', () => {
+    pinClock(at('20:00:00.000'))
+
+    expect(
+      editorPublishingDatesSchemaRefined.safeParse([TUESDAY]).success,
+    ).toBe(true)
+    expect(
+      editorPublishingDatesRecallSchemaRefined.safeParse([TUESDAY, THURSDAY])
+        .success,
+    ).toBe(true)
+  })
+
+  it('still reject a past day for editors', () => {
+    pinClock(at('08:00:00.000'))
+
+    expect(editorPublishingDatesSchemaRefined.safeParse([MONDAY]).success).toBe(
+      false,
+    )
+    expect(
+      editorPublishingDatesRecallSchemaRefined.safeParse([MONDAY, THURSDAY])
+        .success,
+    ).toBe(false)
+  })
+
+  it('keep the other publishing date rules for editors', () => {
+    pinClock(at('08:00:00.000'))
+
+    expect(
+      editorPublishingDatesSchemaRefined.safeParse([THURSDAY, TUESDAY]).success,
+    ).toBe(false)
+    expect(
+      editorPublishingDatesRecallSchemaRefined.safeParse([TUESDAY]).success,
+    ).toBe(false)
   })
 })

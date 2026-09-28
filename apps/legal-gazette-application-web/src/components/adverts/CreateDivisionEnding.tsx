@@ -195,7 +195,9 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
             hasError={!!errors?.properties?.scheduledAt?.errors.length}
             errorMessage={errors?.properties?.scheduledAt?.errors[0]}
             onChange={(date) => {
-              handleSetState('scheduledAt', date)
+              // The picked day, as for endingDate above: local midnight from a
+              // browser east of UTC would otherwise publish a day early.
+              handleSetState('scheduledAt', toCalendarDate(date))
               setErrors((prev) =>
                 prev?.properties
                   ? {

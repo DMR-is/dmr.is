@@ -7,6 +7,6 @@ export default {
   transform: {
     '^.+\\.[tj]s$': ['@swc/jest'],
   },
-  moduleFileExtensions: ['ts', 'js', 'html'],
+  moduleFileExtensions: ['ts', 'js'],
   coverageDirectory: '../../../coverage/libs/legal-gazette/schemas',
 }

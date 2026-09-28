@@ -3,6 +3,8 @@ import * as z from 'zod'
 
 import {
   commonApplicationAnswersRefined,
+  editorPublishingDatesRecallSchemaRefined,
+  editorPublishingDatesSchemaRefined,
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
 } from '@dmr.is/legal-gazette-schemas'
@@ -29,14 +31,25 @@ const applicantNationalId = z.object({
   }),
 })
 
+// Editors are exempt from the applicants' noon cutoff for same-day publishing,
+// so the publishing dates are swapped for the editor variant.
 export const createAdvertAndCommonApplicationInput =
-  commonApplicationAnswersRefined.extend(applicantNationalId.shape)
+  commonApplicationAnswersRefined.extend({
+    ...applicantNationalId.shape,
+    publishingDates: editorPublishingDatesSchemaRefined,
+  })
 
 export const createAdvertAndRecallBankruptcyApplicationInput =
-  recallBankruptcyAnswersRefined.extend(applicantNationalId.shape)
+  recallBankruptcyAnswersRefined.extend({
+    ...applicantNationalId.shape,
+    publishingDates: editorPublishingDatesRecallSchemaRefined,
+  })
 
 export const createAdvertAndDeceasedApplicationInput =
-  recallDeceasedAnswersRefined.extend(applicantNationalId.shape)
+  recallDeceasedAnswersRefined.extend({
+    ...applicantNationalId.shape,
+    publishingDates: editorPublishingDatesRecallSchemaRefined,
+  })
 
 export const createSubscriberInput = z.object({
   nationalId: z.string().min(10).max(10),
