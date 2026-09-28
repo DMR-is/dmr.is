@@ -79,9 +79,31 @@ export class RequireApiScopeGuard implements CanActivate {
     }
 
     if (!request.apiKeyContext.scopes.includes(required)) {
-      throw new ForbiddenException(`API key is missing the "${required}" scope`)
+      throw new ForbiddenException(
+        this.refusal(request.apiKeyContext, required),
+      )
     }
 
     return true
+  }
+
+  /**
+   * Who can fix it. A company key's scopes are the key's own. A vendor key's are
+   * the firm's approval narrowed by the company's grant, and naming the key
+   * there sends the vendor to reissue a key that was never the problem.
+   */
+  private refusal(
+    apiKey: NonNullable<ApiKeyRequest['apiKeyContext']>,
+    required: ApiKeyScopeEnum,
+  ): string {
+    if (apiKey.kind !== ApiKeyKindEnum.PARTNER_CLIENT) {
+      return `API key is missing the "${required}" scope`
+    }
+
+    if (!apiKey.firmScopes.includes(required)) {
+      return `Your organisation is not approved for the "${required}" scope. Jafnréttisstofa sets what it is approved for.`
+    }
+
+    return `This company has not granted your organisation the "${required}" scope. Only the company itself can grant it, through Jafnréttisstofa.`
   }
 }

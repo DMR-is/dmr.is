@@ -40,12 +40,16 @@ describe('RequireApiScopeGuard', () => {
    * on a vendor key whose scopes were never resolved.
    */
   describe('a vendor client key', () => {
-    const vendorKey = (scopesResolved: boolean) => ({
+    const vendorKey = (
+      scopesResolved: boolean,
+      firmScopes = [ApiKeyScopeEnum.SALARY_SUBMIT],
+    ) => ({
       apiKeyContext: {
         kind: ApiKeyKindEnum.PARTNER_CLIENT,
         keyId: 'k',
         scopes: [ApiKeyScopeEnum.SALARY_SUBMIT],
         scopesResolved,
+        firmScopes,
       },
     })
 
@@ -61,6 +65,28 @@ describe('RequireApiScopeGuard', () => {
       const guard = withRequiredScope(ApiKeyScopeEnum.SALARY_SUBMIT)
 
       expect(guard.canActivate(contextFor(vendorKey(true)))).toBe(true)
+    })
+
+    // The key is fine in both cases; saying "API key is missing" sent vendors
+    // to reissue it. Each message names who can fix the refusal.
+    it('blames the firm’s approval when the firm lacks the scope', () => {
+      const guard = withRequiredScope(ApiKeyScopeEnum.SCORING_WRITE)
+
+      expect(() => guard.canActivate(contextFor(vendorKey(true)))).toThrow(
+        'Your organisation is not approved for the "scoring:write" scope',
+      )
+    })
+
+    it('blames the company’s grant when only the company withheld it', () => {
+      const guard = withRequiredScope(ApiKeyScopeEnum.SCORING_WRITE)
+      const narrowed = vendorKey(true, [
+        ApiKeyScopeEnum.SALARY_SUBMIT,
+        ApiKeyScopeEnum.SCORING_WRITE,
+      ])
+
+      expect(() => guard.canActivate(contextFor(narrowed))).toThrow(
+        'This company has not granted your organisation the "scoring:write" scope',
+      )
     })
   })
 
