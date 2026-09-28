@@ -459,6 +459,35 @@ describe('validateScoringModel', () => {
     )
   })
 
+  // The criterion's weight is derived from every sub-criterion, the duplicate
+  // included. Dropping the duplicate for the gate made CRITERIA count its weight
+  // and SUB_CRITERIA not, so one model showed two totals.
+  it('reports one total for both weight checks when a title is duplicated', () => {
+    const model = validModel()
+    const duplicate = {
+      ...model.criteria[0].subCriteria[0],
+      id: 'duplicate',
+      weight: 1.2345,
+      steps: [{ id: 'duplicate-step-1', stepOrder: 1, description: 'þrep' }],
+    }
+    model.criteria[0].subCriteria.push(duplicate)
+    model.criteria[0].weight += duplicate.weight
+    model.roles[0].stepAssignments.push({
+      subCriterionId: duplicate.id,
+      stepId: duplicate.steps[0].id,
+    })
+
+    const totals = messagesOf(model).filter((m) => m.includes('leggst saman'))
+
+    expect(totals).toEqual([
+      'Vægi viðmiða leggst saman í 101.2345%, á að vera 100%',
+      'Vægi undirviðmiða leggst saman í 101.2345%, á að vera 100%',
+    ])
+    expect(messagesOf(model)).not.toEqual(
+      expect.arrayContaining([expect.stringContaining('ekki lengur til')]),
+    )
+  })
+
   it('allows the same sub-criterion title under two different criteria', () => {
     const model = validModel()
     model.criteria[0].subCriteria[0].title = 'Menntun'
