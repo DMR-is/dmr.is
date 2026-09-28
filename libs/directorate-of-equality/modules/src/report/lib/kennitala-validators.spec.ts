@@ -3,7 +3,7 @@ import { validateSync } from 'class-validator'
 import { isValid } from 'kennitala'
 
 import { SubmitReportSubsidiaryDto } from '../../application/dto/submit-report-company.dto'
-import { IsNotKennitala } from './kennitala-validators'
+import { isKennitalaLike } from './kennitala-validators'
 
 // Built rather than written out: `disallow-kennitalas` forbids a checksum-valid
 // kennitala in source. Deterministic, unlike the package's generators, which
@@ -20,11 +20,6 @@ const withCheckDigit = (firstEight: string): string => {
 const COMPANY = withCheckDigit('55012320')
 const PERSON = withCheckDigit('03068523')
 const dashed = (kt: string) => `${kt.slice(0, 6)}-${kt.slice(6)}`
-
-class Pseudonymous {
-  @IsNotKennitala()
-  identifier!: string
-}
 
 const errorsFor = <T extends object>(cls: new () => T, plain: object) =>
   validateSync(plainToInstance(cls, plain), {
@@ -75,20 +70,20 @@ describe('kennitala validators', () => {
     })
   })
 
-  describe('IsNotKennitala', () => {
+  describe('isKennitalaLike', () => {
     it.each([
       ['a person', PERSON],
       ['a person, dashed', dashed(PERSON)],
       ['a company', COMPANY],
       ['padded', ` ${PERSON} `],
-    ])('refuses %s', (_label, identifier) => {
-      expect(errorsFor(Pseudonymous, { identifier })).toHaveLength(1)
+    ])('matches %s', (_label, identifier) => {
+      expect(isKennitalaLike(identifier)).toBe(true)
     })
 
     it.each(['E001', 'starfsmaður-17', '42', `A-${PERSON}`])(
-      'accepts the pseudonymous handle %p',
+      'does not match the pseudonymous handle %p',
       (identifier) => {
-        expect(errorsFor(Pseudonymous, { identifier })).toEqual([])
+        expect(isKennitalaLike(identifier)).toBe(false)
       },
     )
   })
