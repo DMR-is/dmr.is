@@ -1,3 +1,5 @@
+import { IsEmail, Min } from 'class-validator'
+
 import {
   ApiEnum,
   ApiOptionalBase64File,
@@ -7,6 +9,7 @@ import {
   ApiString,
 } from '@dmr.is/decorators'
 
+import { TrimString } from '../../report/lib/trim-string'
 import {
   GenderEnum,
   ReportProviderEnum,
@@ -29,6 +32,8 @@ export class AdminEqualityReportDto {
   companyAdminTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   companyAdminEmail!: string
 
   @ApiEnum(GenderEnum)
@@ -44,9 +49,12 @@ export class AdminEqualityReportDto {
   contactTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   contactEmail!: string
 
-  @ApiString()
+  @ApiString({ minLength: 1 })
+  @TrimString()
   contactPhone!: string
 
   // Exactly one of this and `equalityReportPdf` is required — enforced in
@@ -70,11 +78,14 @@ export class AdminEqualityReportDto {
   equalityReportPdfFilename?: string
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   averageEmployeeMaleCount?: number | null
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   averageEmployeeFemaleCount?: number | null
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   averageEmployeeNeutralCount?: number | null
 }
