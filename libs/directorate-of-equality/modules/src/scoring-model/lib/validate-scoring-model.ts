@@ -184,7 +184,19 @@ const messagesOf = (error: BadRequestException): string[] => {
  * dropping it left the CRITERIA total counting a weight the SUB_CRITERIA total
  * did not, and one model showed two different totals. It is renamed for the
  * gate instead, which keeps every weight and every assignment on it in play.
+ * The rename appends `GATE_TITLE_SUFFIX`, which no stored title can contain,
+ * so it cannot clash with a real one, and `runFilingGate` strips it from the
+ * gate's messages, so the employer only ever sees titles they wrote.
  */
+/**
+ * NUL and a number. Postgres `text` cannot hold NUL, so no title read from the
+ * database ends this way.
+ */
+const GATE_TITLE_SUFFIX = /\u0000\d+/g
+
+const withoutGateSuffix = (message: string): string =>
+  message.replace(GATE_TITLE_SUFFIX, '')
+
 const sanitiseForGate = (
   criteria: ScoringCriterionDto[],
   roles: ScoringRoleDto[],
@@ -208,7 +220,7 @@ const sanitiseForGate = (
           `Tvö undirviðmið heita „${criterion.title} / ${sub.title}“; heitin verða að vera einkvæm`,
         )
         for (let n = 2; seenPairs.has(pairOf(title)); n++) {
-          title = `${sub.title} (${n})`
+          title = `${sub.title}\u0000${n}`
         }
       }
       seenPairs.add(pairOf(title))
@@ -260,7 +272,7 @@ const runFilingGate = (
     parsed = expandToParsedPayload(clean, [])
   } catch (error) {
     if (!(error instanceof BadRequestException)) throw error
-    for (const message of messagesOf(error)) {
+    for (const message of messagesOf(error).map(withoutGateSuffix)) {
       reasons.add(scopeForMessage(message), message)
     }
     return
@@ -272,7 +284,7 @@ const runFilingGate = (
     assertWithinCapacity(parsed)
   } catch (error) {
     if (!(error instanceof BadRequestException)) throw error
-    for (const message of messagesOf(error)) {
+    for (const message of messagesOf(error).map(withoutGateSuffix)) {
       reasons.add(scopeForMessage(message), message)
     }
   }
@@ -283,7 +295,10 @@ const runFilingGate = (
 
   for (const issue of issues.list) {
     if (!MODEL_LEVEL_SCOPES.has(issue.scope)) continue
-    reasons.add(toValidationScope(issue.scope), issue.message)
+    reasons.add(
+      toValidationScope(issue.scope),
+      withoutGateSuffix(issue.message),
+    )
   }
 
   // The gate has a cap of its own, and when it fills it says so in an issue

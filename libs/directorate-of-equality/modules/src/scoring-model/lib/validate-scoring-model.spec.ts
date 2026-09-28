@@ -488,6 +488,24 @@ describe('validateScoringModel', () => {
     )
   })
 
+  // The gate-only rename must not collide with a title the employer wrote, nor
+  // leak into a message: `A`, `A` and `A (2)` is one duplicate, not two.
+  it('renames a duplicate for the gate without clashing with a real title', () => {
+    const model = validModel()
+    const [original] = model.criteria[0].subCriteria
+    model.criteria[0].subCriteria.push(
+      { ...original, id: 'duplicate', weight: 0, steps: [] },
+      { ...original, id: 'real', title: `${original.title} (2)`, weight: 0 },
+    )
+
+    const messages = messagesOf(model)
+
+    expect(messages.filter((m) => m.includes('einkvæm'))).toEqual([
+      `Tvö undirviðmið heita „RESPONSIBILITY / ${original.title}“; heitin verða að vera einkvæm`,
+    ])
+    expect(messages.some((m) => m.includes('\u0000'))).toBe(false)
+  })
+
   it('allows the same sub-criterion title under two different criteria', () => {
     const model = validModel()
     model.criteria[0].subCriteria[0].title = 'Menntun'
