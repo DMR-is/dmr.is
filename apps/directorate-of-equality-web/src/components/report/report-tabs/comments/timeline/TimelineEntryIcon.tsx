@@ -7,6 +7,7 @@ import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 import {
   AutoReviewDecisionEnum,
   ReportEventTypeEnum,
+  ReportStatusEnum,
 } from '../../../../../gen/fetch'
 import { TimelineEntryKind, TimelineItem } from './timelineHelpers'
 
@@ -26,6 +27,13 @@ export function TimelineEntryIcon({ kind, item }: Props) {
     item.event?.eventType === ReportEventTypeEnum.SYSTEM_AUTO_REVIEW &&
     item.event?.systemDecision === AutoReviewDecisionEnum.NEEDS_REVIEW
 
+  // A denial is the opposite of what the generic checkmark says, so it gets a
+  // cross instead.
+  const isDenied =
+    item.event?.eventType === ReportEventTypeEnum.STATUS_CHANGED &&
+    item.event?.scope !== 'company' &&
+    item.event?.toStatus === ReportStatusEnum.DENIED
+
   return (
     <Box
       display="flex"
@@ -44,6 +52,8 @@ export function TimelineEntryIcon({ kind, item }: Props) {
     >
       {isSystemNeedsReview ? (
         <Icon icon="warning" type="outline" color="blue400" />
+      ) : isDenied ? (
+        <Icon icon="close" color="blue400" />
       ) : isEvent ? (
         <Icon icon="checkmark" color="blue400" />
       ) : isIncoming ? (
