@@ -5,6 +5,8 @@ const generator = require('./refresh-sub-criterion-catalog.js')
 
 const {
   SHEET,
+  LEGACY_SHEETS,
+  SECTION_END_MARKER,
   HEADER_ROW,
   FIRST_DATA_ROW,
   SCALE_ROW,
@@ -12,6 +14,7 @@ const {
   COLS,
   SCALE_MARKER,
   assertLayout,
+  findCatalogSheet,
   extract,
   extractGeneralScale,
   readSteps,
@@ -96,6 +99,29 @@ describe('sub-criterion catalog generator', () => {
     expect(generalScale).toEqual(['Aldrei, engin', 'Stundum, nokkuð'])
   })
 
+  describe('sheet lookup', () => {
+    it('finds the sheet under its current name', () => {
+      const workbook = new ExcelJS.Workbook()
+      workbook.addWorksheet(SHEET)
+      expect(findCatalogSheet(workbook).name).toBe(SHEET)
+    })
+
+    it('still finds a pre-rename workbook', () => {
+      const workbook = new ExcelJS.Workbook()
+      workbook.addWorksheet('Undirviðmiðalisti (Lýsigögn)')
+      expect(LEGACY_SHEETS).toContain('Undirviðmiðalisti (Lýsigögn)')
+      expect(findCatalogSheet(workbook).name).toBe(
+        'Undirviðmiðalisti (Lýsigögn)',
+      )
+    })
+
+    it('rejects a workbook with neither name', () => {
+      const workbook = new ExcelJS.Workbook()
+      workbook.addWorksheet('Eitthvað annað')
+      expect(() => findCatalogSheet(workbook)).toThrow(/has no "/)
+    })
+  })
+
   describe('layout', () => {
     it('rejects a renamed header', () => {
       const sheet = validSheet()
@@ -158,6 +184,20 @@ describe('sub-criterion catalog generator', () => {
       sheet.getCell(FIRST_DATA_ROW + 1, COLS.title).value = null
 
       expect(run(sheet).entries).toHaveLength(1)
+    })
+
+    it('stops at the Yfirviðmið section instead of reading it as catalog rows', () => {
+      const sheet = validSheet()
+      // Same shape as the shipped template: section title, header, then rows
+      // that would be rejected as an unrecognised Yfirviðmið if read.
+      const sectionRow = FIRST_DATA_ROW + 3
+      sheet.getCell(sectionRow, COLS.parent).value = SECTION_END_MARKER
+      sheet.getCell(sectionRow + 2, COLS.parent).value = 'Tegund'
+      sheet.getCell(sectionRow + 2, COLS.title).value = 'Yfirviðmið'
+      sheet.getCell(sectionRow + 3, COLS.parent).value = 'Starfsbundið'
+      sheet.getCell(sectionRow + 3, COLS.title).value = 'Ábyrgð'
+
+      expect(run(sheet).entries).toHaveLength(2)
     })
 
     it('rejects a gap in the step columns', () => {

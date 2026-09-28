@@ -2,8 +2,8 @@
 /* eslint-disable no-console */
 /**
  * Regenerates `src/modules/application/sub-criterion-catalog/
- * sub-criterion-catalog.data.ts` from the `Undirviðmiðalisti (Lýsigögn)` sheet
- * of `src/modules/report-excel/template.xlsx`.
+ * sub-criterion-catalog.data.ts` from the `Viðmiðalisti (Lýsigögn)` sheet of
+ * `src/modules/report-excel/template.xlsx`.
  *
  * The catalog is Jafnréttisstofa's list of standard undirviðmið that the
  * workbook's Undirviðmið sheet offers in a dropdown. The application portal
@@ -22,7 +22,15 @@ const path = require('path')
 
 const ExcelJS = require('exceljs')
 
-const SHEET = 'Undirviðmiðalisti (Lýsigögn)'
+const SHEET = 'Viðmiðalisti (Lýsigögn)'
+
+/**
+ * The sheet's name before the 2026-09-24 template, which renamed it when it
+ * gained the Yfirviðmið definitions below the sub-criterion table. Accepted for
+ * the same reason `TYPE_BY_PARENT` keeps retired labels: this script takes an
+ * arbitrary workbook path, and an older template should still regenerate.
+ */
+const LEGACY_SHEETS = ['Undirviðmiðalisti (Lýsigögn)']
 
 /**
  * Sheet geometry, duplicating `report-excel/workbook.schema.ts` —
@@ -43,8 +51,19 @@ const FIRST_DATA_ROW = 6
 const MAX_STEPS = 8
 /** Row 4 carries the generic step-scale wording under the Þrep columns. */
 const SCALE_ROW = 4
-/** Defensive scan bound; the sheet ships with ~53 rows. */
+/** Defensive scan bound; the sub-criterion table ships with ~47 rows. */
 const LAST_DATA_ROW = 500
+
+/**
+ * Title, in the Yfirviðmið column with nothing beside it, of the section that
+ * follows the sub-criterion table: the five Yfirviðmið definitions that
+ * `Viðmið!D6:D10` look up. That section is a different table with its own
+ * header row, so the scan stops here rather than reading it as catalog rows,
+ * where its title row would be rejected as half-filled.
+ *
+ * An older template has no such section and scans to `LAST_DATA_ROW` as before.
+ */
+const SECTION_END_MARKER = 'Yfirviðmið'
 
 const COLS = {
   parent: 2,
@@ -308,12 +327,26 @@ const readNumSteps = (sheet, row, title) => {
   return parsed
 }
 
+/** The catalog sheet under its current name, or its pre-rename one. */
+const findCatalogSheet = (workbook) => {
+  const sheet = [SHEET, ...LEGACY_SHEETS]
+    .map((name) => workbook.getWorksheet(name))
+    .find(Boolean)
+  if (!sheet) {
+    throw new Error(
+      `Workbook has no "${SHEET}" sheet (nor ${LEGACY_SHEETS.map((name) => `"${name}"`).join(', ')})`,
+    )
+  }
+  return sheet
+}
+
 const extract = (sheet) => {
   const entries = []
 
   for (let row = FIRST_DATA_ROW; row <= LAST_DATA_ROW; row++) {
     const parentTitle = cell(sheet, row, COLS.parent)
     const title = cell(sheet, row, COLS.title)
+    if (parentTitle === SECTION_END_MARKER && !title) break
     // A wholly blank row ends a section and is skipped; a half-filled one is a
     // defect. Silently dropping it would shrink the served catalog by a row
     // Jafnréttisstofa believes it shipped.
@@ -476,10 +509,7 @@ const main = async () => {
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.readFile(source)
 
-  const sheet = workbook.getWorksheet(SHEET)
-  if (!sheet) {
-    throw new Error(`Workbook has no "${SHEET}" sheet`)
-  }
+  const sheet = findCatalogSheet(workbook)
 
   assertLayout(sheet)
 
@@ -517,6 +547,8 @@ if (require.main === module) {
 // behaviour unchanged when the file is run directly.
 module.exports = {
   SHEET,
+  LEGACY_SHEETS,
+  SECTION_END_MARKER,
   HEADER_ROW,
   FIRST_DATA_ROW,
   SCALE_ROW,
@@ -526,6 +558,7 @@ module.exports = {
   SCALE_MARKER,
   TYPE_BY_PARENT,
   assertLayout,
+  findCatalogSheet,
   extract,
   extractGeneralScale,
   readSteps,
