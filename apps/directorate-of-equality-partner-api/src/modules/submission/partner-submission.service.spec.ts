@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 
 import { IApplicationService } from '@dmr.is/doe-modules/application'
-import { CompanyDto } from '@dmr.is/doe-modules/company'
+import { CompanyDto, ICompanyService } from '@dmr.is/doe-modules/company'
 import { SalaryDataBasisEnum } from '@dmr.is/doe-modules/report'
 import { IScoringModelService } from '@dmr.is/doe-modules/scoring-model'
 import { Logger } from '@dmr.is/logging'
@@ -36,6 +36,7 @@ describe('PartnerSubmissionService', () => {
   let salaryAnalysis: jest.Mock
   let submitEquality: jest.Mock
   let warn: jest.Mock
+  let assertKnownSnapshotCodes: jest.Mock
 
   beforeEach(() => {
     expandToParsedPayload = jest.fn().mockResolvedValue(PARSED)
@@ -49,6 +50,7 @@ describe('PartnerSubmissionService', () => {
       replayed: false,
     })
     warn = jest.fn()
+    assertKnownSnapshotCodes = jest.fn().mockResolvedValue(undefined)
     convert.mockReset()
     convert.mockResolvedValue({
       html: '<h1>Jafnréttisáætlun</h1>',
@@ -62,6 +64,7 @@ describe('PartnerSubmissionService', () => {
         submitEquality,
       } as unknown as IApplicationService,
       { expandToParsedPayload } as unknown as IScoringModelService,
+      { assertKnownSnapshotCodes } as unknown as ICompanyService,
       { warn: warn } as unknown as Logger,
     )
   })
@@ -349,6 +352,41 @@ describe('PartnerSubmissionService', () => {
         service.submitEquality(input, undefined, COMPANY),
       ).rejects.toThrow(BadRequestException)
       expect(convert).toHaveBeenCalledWith(undefined)
+      expect(submitEquality).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('the company snapshot’s ÍSAT code and postcode', () => {
+    const company = { isatCategory: '99.99', postcode: '99999' }
+    const refusal = new BadRequestException('unknown codes')
+
+    beforeEach(() => {
+      assertKnownSnapshotCodes.mockRejectedValue(refusal)
+    })
+
+    it('refuses a salary filing before expanding anything', async () => {
+      await expect(
+        service.submitSalary(
+          { providerId: 'p-1', employees: EMPLOYEES, company } as never,
+          COMPANY,
+        ),
+      ).rejects.toBe(refusal)
+
+      expect(assertKnownSnapshotCodes).toHaveBeenCalledWith(company)
+      expect(expandToParsedPayload).not.toHaveBeenCalled()
+      expect(submitSalary).not.toHaveBeenCalled()
+    })
+
+    it('refuses an equality filing before converting the document', async () => {
+      await expect(
+        service.submitEquality(
+          { providerId: 'p-1', company } as never,
+          { buffer: Buffer.from('PK docx') } as Express.Multer.File,
+          COMPANY,
+        ),
+      ).rejects.toBe(refusal)
+
+      expect(convert).not.toHaveBeenCalled()
       expect(submitEquality).not.toHaveBeenCalled()
     })
   })
