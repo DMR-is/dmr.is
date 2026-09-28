@@ -29,6 +29,7 @@ import {
   getLimitAndOffset,
 } from '@dmr.is/utils-server/serverUtils'
 
+import { CompanySizeEnum } from '../company/models/company.enums'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { LegacyReportModel } from '../company/models/legacy-report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
@@ -38,6 +39,10 @@ import { ReportEmployeeOutlierModel } from '../report-employee/models/report-emp
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { UserModel } from '../user/models/user.model'
+import {
+  EmployeeCountHistoryEntryDto,
+  GetEmployeeCountHistoryResponseDto,
+} from './dto/employee-count-history.dto'
 import { EqualityReportDto } from './dto/equality-report.dto'
 import { GetReportOutlierGroupsResponseDto } from './dto/get-report-outlier-groups-response.dto'
 import {
@@ -228,6 +233,100 @@ export class ReportService implements IReportService {
     const paging = generatePaging(reports, query.page, query.pageSize, count)
 
     return { reports, paging }
+  }
+
+  /**
+   * One entry per submission the company filed ITSELF — its own
+   * `company_report` row has no parent. A group report's counts cover the
+   * whole group, so listing it under a subsidiary would read as that
+   * subsidiary's headcount jumping to the group's.
+   *
+   * DRAFTs never have a `company_report` row, so the inner join already drops
+   * them; the status filter says so anyway. WITHDRAWN is out because it is the
+   * auto-withdrawn predecessor of a resubmission, a near-copy of the row that
+   * replaced it. DENIED and SUPERSEDED stay: they were real filings, and the
+   * UI shows the status beside the figures.
+   *
+   * Equality reports may leave all three counts empty; such a filing says
+   * nothing about headcount and is skipped rather than shown as zero.
+   *
+   * Unpaged: a company files a handful of reports a year.
+   */
+  async getEmployeeCountHistory(
+    companyId: string,
+  ): Promise<GetEmployeeCountHistoryResponseDto> {
+    this.logger.debug('Fetching employee count history for company', {
+      context: LOGGING_CONTEXT,
+      companyId,
+    })
+
+    const rows = await this.reportModel.findAll({
+      attributes: [
+        'id',
+        'identifier',
+        'type',
+        'status',
+        'createdAt',
+        'averageEmployeeFemaleCount',
+        'averageEmployeeMaleCount',
+        'averageEmployeeNeutralCount',
+      ],
+      where: {
+        status: {
+          [Op.notIn]: [ReportStatusEnum.DRAFT, ReportStatusEnum.WITHDRAWN],
+        },
+        [Op.or]: [
+          { averageEmployeeFemaleCount: { [Op.ne]: null } },
+          { averageEmployeeMaleCount: { [Op.ne]: null } },
+          { averageEmployeeNeutralCount: { [Op.ne]: null } },
+        ],
+      },
+      include: [
+        {
+          model: CompanyReportModel,
+          as: 'companyReport',
+          attributes: ['employeeCountCategory'],
+          required: true,
+          where: { companyId, parentCompanyId: null },
+        },
+      ],
+      // `id` breaks ties so two filings stamped the same instant keep a
+      // stable order and the change column does not flip between loads.
+      order: [
+        ['createdAt', 'DESC'],
+        ['id', 'DESC'],
+      ],
+    })
+
+    const entries = rows.map((row): EmployeeCountHistoryEntryDto => {
+      const femaleCount = row.averageEmployeeFemaleCount
+      const maleCount = row.averageEmployeeMaleCount
+      const neutralCount = row.averageEmployeeNeutralCount
+      // Rounded to the column's two decimals so float addition cannot show
+      // 12.300000000000001 for figures that were stored as 12.30.
+      const totalCount =
+        Math.round(
+          ((femaleCount ?? 0) + (maleCount ?? 0) + (neutralCount ?? 0)) * 100,
+        ) / 100
+
+      return {
+        reportId: row.id,
+        identifier: row.identifier,
+        type: row.type,
+        status: row.status,
+        submittedAt: row.createdAt,
+        // `required: true` above guarantees the snapshot row; the fallback
+        // only satisfies the optional association type.
+        employeeCountCategory:
+          row.companyReport?.employeeCountCategory ?? CompanySizeEnum.UNKNOWN,
+        femaleCount,
+        maleCount,
+        neutralCount,
+        totalCount,
+      }
+    })
+
+    return { entries }
   }
 
   async getEqualityContentPdf(id: string): Promise<EqualityContentPdf> {

@@ -105,8 +105,10 @@ const makeService = () => {
   // return the same object so chained calls (`model.scope('x').findAndCountAll`)
   // resolve to the same mock functions we assert against.
   const count = jest.fn().mockResolvedValue(0)
+  const findAll = jest.fn().mockResolvedValue([])
   const reportModel = {
     findAndCountAll,
+    findAll,
     findByPkOrThrow,
     findByPk,
     findOne,
@@ -165,6 +167,7 @@ const makeService = () => {
   return {
     service,
     findAndCountAll,
+    findAll,
     scope: reportModel.scope,
     findByPkOrThrow,
     // The linked-equality lookup in `resolveEqualityReport`. Exposed so a test
@@ -252,6 +255,82 @@ describe('ReportService.listForCompany', () => {
       companyNationalId: '5508870269',
     })
     expect(result.paging.totalItems).toBe(1)
+  })
+})
+
+describe('ReportService.getEmployeeCountHistory', () => {
+  const COMPANY_ID = '00000000-0000-0000-0000-0000000000c1'
+
+  it("joins only the company's own filings, never a subsidiary row on a group report", async () => {
+    const { service, findAll } = makeService()
+
+    await service.getEmployeeCountHistory(COMPANY_ID)
+
+    const opts = findAll.mock.calls[0][0]
+    expect(opts.include).toEqual([
+      expect.objectContaining({
+        as: 'companyReport',
+        required: true,
+        attributes: ['employeeCountCategory'],
+        where: { companyId: COMPANY_ID, parentCompanyId: null },
+      }),
+    ])
+    expect(opts.order).toEqual([
+      ['createdAt', 'DESC'],
+      ['id', 'DESC'],
+    ])
+  })
+
+  it('drops drafts, withdrawn predecessors and filings with no counts', async () => {
+    const { service, findAll } = makeService()
+
+    await service.getEmployeeCountHistory(COMPANY_ID)
+
+    const where = findAll.mock.calls[0][0].where
+    expect(where.status).toEqual({
+      [Op.notIn]: [ReportStatusEnum.DRAFT, ReportStatusEnum.WITHDRAWN],
+    })
+    expect(where[Op.or]).toEqual([
+      { averageEmployeeFemaleCount: { [Op.ne]: null } },
+      { averageEmployeeMaleCount: { [Op.ne]: null } },
+      { averageEmployeeNeutralCount: { [Op.ne]: null } },
+    ])
+  })
+
+  it('maps rows and totals the three figures, a missing one counting as zero', async () => {
+    const { service, findAll } = makeService()
+    const submittedAt = new Date('2026-03-12T10:00:00.000Z')
+    findAll.mockResolvedValueOnce([
+      {
+        id: '00000000-0000-0000-0000-0000000000a1',
+        identifier: 'JAF-001',
+        type: ReportTypeEnum.EQUALITY,
+        status: ReportStatusEnum.APPROVED,
+        createdAt: submittedAt,
+        averageEmployeeFemaleCount: 12.1,
+        averageEmployeeMaleCount: 30.2,
+        averageEmployeeNeutralCount: null,
+        companyReport: { employeeCountCategory: CompanySizeEnum.LARGE },
+      },
+    ])
+
+    const result = await service.getEmployeeCountHistory(COMPANY_ID)
+
+    expect(result.entries).toEqual([
+      {
+        reportId: '00000000-0000-0000-0000-0000000000a1',
+        identifier: 'JAF-001',
+        type: ReportTypeEnum.EQUALITY,
+        status: ReportStatusEnum.APPROVED,
+        submittedAt,
+        employeeCountCategory: CompanySizeEnum.LARGE,
+        femaleCount: 12.1,
+        maleCount: 30.2,
+        neutralCount: null,
+        // 12.1 + 30.2 is 42.300000000000004 in floating point.
+        totalCount: 42.3,
+      },
+    ])
   })
 })
 

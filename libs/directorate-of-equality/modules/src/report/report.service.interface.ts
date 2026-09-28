@@ -1,6 +1,7 @@
 import { PagingQuery } from '@dmr.is/shared-dto'
 
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
+import { GetEmployeeCountHistoryResponseDto } from './dto/employee-count-history.dto'
 import { GetReportOutlierGroupsResponseDto } from './dto/get-report-outlier-groups-response.dto'
 import { GetReportOutliersQueryDto } from './dto/get-report-outliers.query.dto'
 import { GetReportsQueryDto } from './dto/get-reports.query.dto'
@@ -25,6 +26,15 @@ export interface IReportService {
     companyId: string,
     query: PagingQuery,
   ): Promise<GetReportsForCompanyResponseDto>
+  /**
+   * The headcount the company declared on each of its own submissions, newest
+   * first. Backs both the company page's history and the report company tab's
+   * "since the previous submission" figures, so the two cannot disagree about
+   * which submission came before.
+   */
+  getEmployeeCountHistory(
+    companyId: string,
+  ): Promise<GetEmployeeCountHistoryResponseDto>
   getById(id: string): Promise<ReportDetailDto>
   /**
    * The equality plan PDF a company uploaded, decoded from storage.
