@@ -1,6 +1,7 @@
 import {
   type CompanyDto,
   CompanySizeEnum,
+  ReportTypeEnum,
   type WageGapEmployeeDto,
 } from '../gen/fetch'
 import { reportText, sharedText } from './text'
@@ -272,6 +273,21 @@ export const parseInflightConflictStatus = (message: string): string | null => {
     status
   )
 }
+
+/**
+ * What a report is called in the admin UI. A salary report that carries an
+ * úrbótaáætlun is named for the plan, so one report reads the same on every
+ * screen that lists it.
+ */
+export const reportTypeLabel = (
+  type: ReportTypeEnum,
+  includesImprovementPlan: boolean,
+): string =>
+  type === ReportTypeEnum.SALARY
+    ? includesImprovementPlan
+      ? sharedText.typeLabels.IMPROVEMENT_PLAN
+      : sharedText.typeLabels.SALARY
+    : sharedText.typeLabels.EQUALITY
 
 export const COMPANY_SIZE_LABEL: Record<CompanySizeEnum, string> = {
   [CompanySizeEnum.UNKNOWN]: 'Óþekkt',

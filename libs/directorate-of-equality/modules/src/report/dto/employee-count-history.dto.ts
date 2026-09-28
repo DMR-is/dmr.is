@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 import {
+  ApiBoolean,
   ApiDateTime,
   ApiEnum,
   ApiNumber,
@@ -32,7 +33,16 @@ export class EmployeeCountHistoryEntryDto {
   @ApiEnum(ReportStatusEnum, { enumName: 'ReportStatusEnum' })
   status!: ReportStatusEnum
 
-  @ApiDateTime({ description: 'When the report was submitted.' })
+  @ApiBoolean({
+    description:
+      'Salary-only: whether the report carries an úrbótaáætlun. Lets the admin UI name it the way the reports tab does.',
+  })
+  includesImprovementPlan!: boolean
+
+  @ApiDateTime({
+    description:
+      "When the report was submitted: the company snapshot's creation time, not the report row's, which for an application-portal report is when the draft was opened.",
+  })
   submittedAt!: Date
 
   @ApiEnum(CompanySizeEnum, {

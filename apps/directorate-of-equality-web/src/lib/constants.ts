@@ -29,6 +29,13 @@ export const NAV_PATHS = {
 } satisfies Record<string, NavPath>
 
 /**
+ * Anchor of the Starfsmannafjöldasaga section on a company's Upplýsingar tab,
+ * which the report company tab links to. Upplýsingar is the default tab, so
+ * landing on the page with this hash is enough to reach the section.
+ */
+export const EMPLOYEE_COUNT_HISTORY_ANCHOR = 'starfsmannafjoldasaga'
+
+/**
  * Config key holding the annual gender base-salary difference threshold (%).
  * Read-mostly: the Kerfisstillingar page is the only place it is written, and
  * the API only ever lets it be lowered.

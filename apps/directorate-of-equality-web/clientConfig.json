@@ -4060,7 +4060,7 @@
     },
     "/api/v1/reports/company/{companyId}/employee-count-history": {
       "get": {
-        "description": "The average headcount (by gender) the company declared on each report it filed itself, newest first. Excludes drafts, withdrawn predecessors of a resubmission, filings with no counts, and group reports the company was only a subsidiary on — those counts describe the whole group.",
+        "description": "The average headcount (by gender) the company declared on each report it filed itself, newest first. Excludes drafts, withdrawn reports, filings with no counts, and group reports the company was only a subsidiary on — those counts describe the whole group.",
         "operationId": "getCompanyEmployeeCountHistory",
         "parameters": [
           {
@@ -8077,11 +8077,15 @@
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
           },
+          "includesImprovementPlan": {
+            "type": "boolean",
+            "description": "Salary-only: whether the report carries an úrbótaáætlun. Lets the admin UI name it the way the reports tab does."
+          },
           "submittedAt": {
             "type": "string",
             "format": "date-time",
             "example": "2026-02-19T10:30:00.000Z",
-            "description": "When the report was submitted."
+            "description": "When the report was submitted: the company snapshot's creation time, not the report row's, which for an application-portal report is when the draft was opened."
           },
           "employeeCountCategory": {
             "description": "The company's size bracket as it stood when this report was filed, from the report's company snapshot. Admin-curated, not the company's own declaration, so it can disagree with the counts beside it.",
@@ -8099,6 +8103,7 @@
           "reportId",
           "type",
           "status",
+          "includesImprovementPlan",
           "submittedAt",
           "employeeCountCategory",
           "totalCount"

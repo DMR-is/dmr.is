@@ -8,17 +8,44 @@ import { Tabs } from '@island.is/island-ui/core'
 
 import { CommentsContainer } from '../../../containers/report/CommentsContainer'
 import {
+  EmployeeCountHistoryEntryDto,
   ReportDetailDto,
   ReportTypeEnum,
   SalaryByGenderAndScoreDto,
 } from '../../../gen/fetch'
-import { NAV_PATHS } from '../../../lib/constants'
+import {
+  EMPLOYEE_COUNT_HISTORY_ANCHOR,
+  NAV_PATHS,
+} from '../../../lib/constants'
 import { reportText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
-import { EMPLOYEE_COUNT_HISTORY_ANCHOR } from '../../company/company-tabs/info-tab/EmployeeCountHistory'
 import { CompanyInfoTab } from './company-tab/CompanyInfoTab'
 import { EqualityReportTab } from './equality-tab/EqualityReportTab'
 import { SalaryReportTab } from './salary-tab/SalaryReportTab'
+
+/**
+ * The history entry filed before `report`. Entries arrive newest first in the
+ * server's order (snapshot time, ties broken by id), so a report that is in
+ * the list takes the next entry by position — the same neighbour the company
+ * page shows below it, even for two filings stamped the same instant.
+ *
+ * A report the history leaves out (withdrawn, or with no counts) has no
+ * position, so it falls back to the latest entry dated before it. That
+ * compares against `report.createdAt`, which for a portal report is when the
+ * draft was opened — close enough for a report that is not itself listed.
+ */
+const findPreviousEntry = (
+  entries: EmployeeCountHistoryEntryDto[],
+  report: ReportDetailDto,
+): EmployeeCountHistoryEntryDto | null => {
+  const index = entries.findIndex((entry) => entry.reportId === report.id)
+  if (index >= 0) return entries[index + 1] ?? null
+  return (
+    entries.find(
+      (entry) => new Date(entry.submittedAt) < new Date(report.createdAt),
+    ) ?? null
+  )
+}
 
 type ReportTabsProps = {
   report: ReportDetailDto
@@ -49,19 +76,14 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
 
   // The same endpoint the company page's history table reads, so "the
   // submission before this one" cannot differ between the two screens.
-  // Compared by date rather than taking the newest entry, so an older report
-  // is set against its own predecessor.
-  const { data: employeeCountHistory } = useQuery(
-    trpc.reports.employeeCountHistory.queryOptions({
-      companyId: report.company.companyId,
-    }),
-  )
+  const { data: employeeCountHistory, isError: employeeCountHistoryError } =
+    useQuery(
+      trpc.reports.employeeCountHistory.queryOptions({
+        companyId: report.company.companyId,
+      }),
+    )
   const previousEmployeeCount = employeeCountHistory
-    ? (employeeCountHistory.entries.find(
-        (entry) =>
-          entry.reportId !== report.id &&
-          new Date(entry.submittedAt) < new Date(report.createdAt),
-      ) ?? null)
+    ? findPreviousEntry(employeeCountHistory.entries, report)
     : undefined
 
   const jafnrettisaetlun = {
@@ -101,6 +123,7 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
           otherCount: report.averageEmployeeNeutralCount ?? undefined,
         }}
         previousEmployeeCount={previousEmployeeCount}
+        previousEmployeeCountError={employeeCountHistoryError}
         // Only when the company page will actually show the section.
         employeeCountHistoryHref={
           employeeCountHistory?.entries.length

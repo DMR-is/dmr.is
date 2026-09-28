@@ -13,7 +13,6 @@ import { Table } from '@dmr.is/ui/components/Tables/Table'
 import {
   type CompanySizeEnum,
   type EmployeeCountHistoryEntryDto,
-  ReportTypeEnum,
 } from '../../../../gen/fetch'
 import { reportText, sharedText } from '../../../../lib/text'
 import {
@@ -23,6 +22,7 @@ import {
   formatNationalId,
   formatTimestampDate,
   mapGender,
+  reportTypeLabel,
 } from '../../../../lib/utils'
 import { InfoItems } from './InfoItems'
 
@@ -111,6 +111,8 @@ interface CompanyInfoTabProps {
    * `null` when there is none.
    */
   previousEmployeeCount?: EmployeeCountHistoryEntryDto | null
+  /** The history failed to load, so there is nothing to compare against. */
+  previousEmployeeCountError?: boolean
   employeeCountHistoryHref?: string
 }
 
@@ -121,6 +123,7 @@ export const CompanyInfoTab = ({
   employees,
   subsidaries,
   previousEmployeeCount,
+  previousEmployeeCountError,
   employeeCountHistoryHref,
 }: CompanyInfoTabProps) => {
   const subsidariesData = useMemo(() => subsidaries ?? [], [subsidaries])
@@ -231,14 +234,22 @@ export const CompanyInfoTab = ({
               },
             ]}
           />
+          {previousEmployeeCountError && (
+            <Box marginTop={1}>
+              <Text variant="small" color="red600">
+                {c.previousLoadError}
+              </Text>
+            </Box>
+          )}
           {previousEmployeeCount !== undefined && (
             <Box marginTop={1}>
               <Text variant="small">
                 {previousEmployeeCount
                   ? c.comparedWith(
-                      previousEmployeeCount.type === ReportTypeEnum.SALARY
-                        ? sharedText.typeLabels.SALARY
-                        : sharedText.typeLabels.EQUALITY,
+                      reportTypeLabel(
+                        previousEmployeeCount.type,
+                        previousEmployeeCount.includesImprovementPlan,
+                      ),
                       formatTimestampDate(previousEmployeeCount.submittedAt),
                     )
                   : c.noPrevious}

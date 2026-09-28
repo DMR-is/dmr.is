@@ -242,10 +242,18 @@ export class ReportService implements IReportService {
    * subsidiary's headcount jumping to the group's.
    *
    * DRAFTs never have a `company_report` row, so the inner join already drops
-   * them; the status filter says so anyway. WITHDRAWN is out because it is the
+   * them; the status filter says so anyway. WITHDRAWN is out: either the
    * auto-withdrawn predecessor of a resubmission, a near-copy of the row that
-   * replaced it. DENIED and SUPERSEDED stay: they were real filings, and the
-   * UI shows the status beside the figures.
+   * replaced it, or a report the applicant deleted upstream. DENIED and
+   * SUPERSEDED stay: they were real filings, and the UI shows the status beside
+   * the figures.
+   *
+   * ⚠️ The submission time is the `company_report` snapshot's `createdAt`, NOT
+   * the report's. An application-portal report is created as a DRAFT when the
+   * applicant opens it and updated in place on submit, so `report.createdAt`
+   * is when the draft was opened — which can be weeks before, and out of order
+   * with, the company's other filings. The snapshot is immutable and written
+   * at submit on every channel.
    *
    * Equality reports may leave all three counts empty; such a filing says
    * nothing about headcount and is skipped rather than shown as zero.
@@ -266,7 +274,6 @@ export class ReportService implements IReportService {
         'identifier',
         'type',
         'status',
-        'createdAt',
         'averageEmployeeFemaleCount',
         'averageEmployeeMaleCount',
         'averageEmployeeNeutralCount',
@@ -285,20 +292,32 @@ export class ReportService implements IReportService {
         {
           model: CompanyReportModel,
           as: 'companyReport',
-          attributes: ['employeeCountCategory'],
+          attributes: ['createdAt', 'employeeCountCategory'],
           required: true,
           where: { companyId, parentCompanyId: null },
         },
       ],
       // `id` breaks ties so two filings stamped the same instant keep a
-      // stable order and the change column does not flip between loads.
+      // stable order, and the report tab's "previous" does not flip between
+      // loads.
       order: [
-        ['createdAt', 'DESC'],
+        [
+          { model: CompanyReportModel, as: 'companyReport' },
+          'createdAt',
+          'DESC',
+        ],
         ['id', 'DESC'],
       ],
     })
 
+    const improvementPlanMap = await this.computeIncludesImprovementPlan(
+      rows.map((row) => row.id),
+    )
+
     const entries = rows.map((row): EmployeeCountHistoryEntryDto => {
+      // `required: true` above guarantees the snapshot row; the fallbacks
+      // only satisfy the optional association type.
+      const snapshot = row.companyReport
       const femaleCount = row.averageEmployeeFemaleCount
       const maleCount = row.averageEmployeeMaleCount
       const neutralCount = row.averageEmployeeNeutralCount
@@ -314,11 +333,10 @@ export class ReportService implements IReportService {
         identifier: row.identifier,
         type: row.type,
         status: row.status,
-        submittedAt: row.createdAt,
-        // `required: true` above guarantees the snapshot row; the fallback
-        // only satisfies the optional association type.
+        includesImprovementPlan: improvementPlanMap.get(row.id) ?? false,
+        submittedAt: snapshot?.createdAt ?? row.createdAt,
         employeeCountCategory:
-          row.companyReport?.employeeCountCategory ?? CompanySizeEnum.UNKNOWN,
+          snapshot?.employeeCountCategory ?? CompanySizeEnum.UNKNOWN,
         femaleCount,
         maleCount,
         neutralCount,

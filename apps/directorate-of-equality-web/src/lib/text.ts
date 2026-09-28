@@ -306,6 +306,7 @@ export const reportText = {
     comparedWith: (type: string, date: string) =>
       `Borið saman við skýrslugjöfina á undan: ${type}, ${date}.`,
     noPrevious: 'Engin fyrri skýrslugjöf með starfsmannafjölda.',
+    previousLoadError: 'Ekki tókst að sækja fyrri skýrslugjöf til samanburðar.',
     viewHistory: 'Skoða starfsmannafjöldasögu',
   },
   denialModal: {

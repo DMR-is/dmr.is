@@ -12,11 +12,9 @@ import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
+import { type EmployeeCountHistoryEntryDto } from '../../../../gen/fetch'
 import {
-  type EmployeeCountHistoryEntryDto,
-  ReportTypeEnum,
-} from '../../../../gen/fetch'
-import {
+  EMPLOYEE_COUNT_HISTORY_ANCHOR,
   NAV_PATHS,
   ReportStatusTranslatedEnum,
 } from '../../../../lib/constants'
@@ -30,17 +28,12 @@ import {
   COMPANY_SIZE_LABEL,
   formatEmployeeCount,
   formatTimestampDate,
+  reportTypeLabel,
 } from '../../../../lib/utils'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
 const t = companiesText.detailView.employeeCountHistory
-
-/**
- * Anchor the report company tab links to. Upplýsingar is the default tab, so
- * landing on the page with this hash is enough to reach the section.
- */
-export const EMPLOYEE_COUNT_HISTORY_ANCHOR = 'starfsmannafjoldasaga'
 
 const columns: ColumnDef<EmployeeCountHistoryEntryDto>[] = [
   {
@@ -55,9 +48,10 @@ const columns: ColumnDef<EmployeeCountHistoryEntryDto>[] = [
     cell: ({ row }) => (
       <LinkV2 href={`${NAV_PATHS.heildarlisti.href}/${row.original.reportId}`}>
         <Button variant="text" size="small" unfocusable>
-          {row.original.type === ReportTypeEnum.SALARY
-            ? sharedText.typeLabels.SALARY
-            : sharedText.typeLabels.EQUALITY}
+          {reportTypeLabel(
+            row.original.type,
+            row.original.includesImprovementPlan,
+          )}
         </Button>
       </LinkV2>
     ),

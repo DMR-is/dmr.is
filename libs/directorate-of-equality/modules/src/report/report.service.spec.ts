@@ -261,6 +261,23 @@ describe('ReportService.listForCompany', () => {
 describe('ReportService.getEmployeeCountHistory', () => {
   const COMPANY_ID = '00000000-0000-0000-0000-0000000000c1'
 
+  const historyRow = (overrides: Record<string, unknown> = {}) => ({
+    id: '00000000-0000-0000-0000-0000000000a1',
+    identifier: 'JAF-001',
+    type: ReportTypeEnum.EQUALITY,
+    status: ReportStatusEnum.APPROVED,
+    // Draft-open time. Must NOT surface as `submittedAt`.
+    createdAt: new Date('2026-01-01T09:00:00.000Z'),
+    averageEmployeeFemaleCount: 12.1,
+    averageEmployeeMaleCount: 30.2,
+    averageEmployeeNeutralCount: null,
+    companyReport: {
+      createdAt: new Date('2026-03-12T10:00:00.000Z'),
+      employeeCountCategory: CompanySizeEnum.LARGE,
+    },
+    ...overrides,
+  })
+
   it("joins only the company's own filings, never a subsidiary row on a group report", async () => {
     const { service, findAll } = makeService()
 
@@ -271,17 +288,43 @@ describe('ReportService.getEmployeeCountHistory', () => {
       expect.objectContaining({
         as: 'companyReport',
         required: true,
-        attributes: ['employeeCountCategory'],
+        attributes: ['createdAt', 'employeeCountCategory'],
         where: { companyId: COMPANY_ID, parentCompanyId: null },
       }),
     ])
-    expect(opts.order).toEqual([
-      ['createdAt', 'DESC'],
-      ['id', 'DESC'],
+  })
+
+  it('selects exactly the columns the mapping reads', async () => {
+    const { service, findAll } = makeService()
+
+    await service.getEmployeeCountHistory(COMPANY_ID)
+
+    // Sequelize returns `undefined` for a column left out of `attributes`
+    // rather than throwing, so a dropped column would otherwise ship silently.
+    expect(findAll.mock.calls[0][0].attributes).toEqual([
+      'id',
+      'identifier',
+      'type',
+      'status',
+      'averageEmployeeFemaleCount',
+      'averageEmployeeMaleCount',
+      'averageEmployeeNeutralCount',
     ])
   })
 
-  it('drops drafts, withdrawn predecessors and filings with no counts', async () => {
+  it("orders by the snapshot's submission time, not the report row's", async () => {
+    const { service, findAll } = makeService()
+
+    await service.getEmployeeCountHistory(COMPANY_ID)
+
+    const [[association, column, direction], tieBreak] =
+      findAll.mock.calls[0][0].order
+    expect(association).toMatchObject({ as: 'companyReport' })
+    expect([column, direction]).toEqual(['createdAt', 'DESC'])
+    expect(tieBreak).toEqual(['id', 'DESC'])
+  })
+
+  it('drops drafts, withdrawn reports and filings with no counts', async () => {
     const { service, findAll } = makeService()
 
     await service.getEmployeeCountHistory(COMPANY_ID)
@@ -297,22 +340,9 @@ describe('ReportService.getEmployeeCountHistory', () => {
     ])
   })
 
-  it('maps rows and totals the three figures, a missing one counting as zero', async () => {
+  it('maps rows, dating each by its snapshot and totalling a missing figure as zero', async () => {
     const { service, findAll } = makeService()
-    const submittedAt = new Date('2026-03-12T10:00:00.000Z')
-    findAll.mockResolvedValueOnce([
-      {
-        id: '00000000-0000-0000-0000-0000000000a1',
-        identifier: 'JAF-001',
-        type: ReportTypeEnum.EQUALITY,
-        status: ReportStatusEnum.APPROVED,
-        createdAt: submittedAt,
-        averageEmployeeFemaleCount: 12.1,
-        averageEmployeeMaleCount: 30.2,
-        averageEmployeeNeutralCount: null,
-        companyReport: { employeeCountCategory: CompanySizeEnum.LARGE },
-      },
-    ])
+    findAll.mockResolvedValueOnce([historyRow()])
 
     const result = await service.getEmployeeCountHistory(COMPANY_ID)
 
@@ -322,7 +352,8 @@ describe('ReportService.getEmployeeCountHistory', () => {
         identifier: 'JAF-001',
         type: ReportTypeEnum.EQUALITY,
         status: ReportStatusEnum.APPROVED,
-        submittedAt,
+        includesImprovementPlan: false,
+        submittedAt: new Date('2026-03-12T10:00:00.000Z'),
         employeeCountCategory: CompanySizeEnum.LARGE,
         femaleCount: 12.1,
         maleCount: 30.2,
@@ -331,6 +362,33 @@ describe('ReportService.getEmployeeCountHistory', () => {
         totalCount: 42.3,
       },
     ])
+  })
+
+  it('flags a salary report that carries an úrbótaáætlun', async () => {
+    const { service, findAll, outlierFindAll } = makeService()
+    findAll.mockResolvedValueOnce([
+      historyRow({ id: 'r-plan', type: ReportTypeEnum.SALARY }),
+      historyRow({ id: 'r-plain', type: ReportTypeEnum.SALARY }),
+    ])
+    outlierFindAll.mockResolvedValueOnce([{ reportId: 'r-plan' }])
+
+    const result = await service.getEmployeeCountHistory(COMPANY_ID)
+
+    expect(
+      result.entries.map((e) => [e.reportId, e.includesImprovementPlan]),
+    ).toEqual([
+      ['r-plan', true],
+      ['r-plain', false],
+    ])
+  })
+
+  it('returns an empty history without querying outliers', async () => {
+    const { service, outlierFindAll } = makeService()
+
+    const result = await service.getEmployeeCountHistory(COMPANY_ID)
+
+    expect(result).toEqual({ entries: [] })
+    expect(outlierFindAll).not.toHaveBeenCalled()
   })
 })
 
