@@ -189,13 +189,18 @@ const messagesOf = (error: BadRequestException): string[] => {
  * gate's messages, so the employer only ever sees titles they wrote.
  */
 /**
- * NUL and a number. Postgres `text` cannot hold NUL, so no title read from the
- * database ends this way.
+ * Starts the gate-only suffix, which is this and a number. Postgres `text`
+ * cannot hold NUL, so no title read from the database contains it.
  */
-const GATE_TITLE_SUFFIX = /\u0000\d+/g
+const GATE_TITLE_MARK = '\u0000'
 
+// Split on the mark rather than match it: a regex holding a control character
+// is what `no-control-regex` exists to refuse.
 const withoutGateSuffix = (message: string): string =>
-  message.replace(GATE_TITLE_SUFFIX, '')
+  message
+    .split(GATE_TITLE_MARK)
+    .map((part, index) => (index === 0 ? part : part.replace(/^\d+/, '')))
+    .join('')
 
 const sanitiseForGate = (
   criteria: ScoringCriterionDto[],
@@ -220,7 +225,7 @@ const sanitiseForGate = (
           `Tvö undirviðmið heita „${criterion.title} / ${sub.title}“; heitin verða að vera einkvæm`,
         )
         for (let n = 2; seenPairs.has(pairOf(title)); n++) {
-          title = `${sub.title}\u0000${n}`
+          title = `${sub.title}${GATE_TITLE_MARK}${n}`
         }
       }
       seenPairs.add(pairOf(title))
