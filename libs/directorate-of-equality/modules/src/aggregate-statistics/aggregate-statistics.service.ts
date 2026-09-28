@@ -16,6 +16,7 @@ import {
   activeReportExists,
   COMPANY_QUERY_ALIAS,
   legacyCertificationInForceSql,
+  reportInForceSql,
 } from '../company/utils/report-status'
 import { DoeModels } from '../constants'
 import { PostcodeModel } from '../location/models/postcode.model'
@@ -47,14 +48,16 @@ const inForceLegacySql = (expression: string) => `(
   SELECT ${expression} FROM "${DoeModels.LEGACY_REPORT}" lr
   WHERE lr.company_id = ${COMPANY_ID}
   AND ${legacyCertificationInForceSql(ReportTypeEnum.SALARY)}
-  ORDER BY lr.legacy_modified_at DESC NULLS LAST
+  ORDER BY lr.legacy_modified_at DESC NULLS LAST, lr.id
   LIMIT 1
 )`
 
+// Prefers the in-force row, so round and status describe the same certificate.
 const LEGACY_ROUND_SQL = `(
   SELECT lr.round FROM "${DoeModels.LEGACY_REPORT}" lr
   WHERE lr.company_id = ${COMPANY_ID}
-  ORDER BY lr.legacy_modified_at DESC NULLS LAST
+  ORDER BY (${legacyCertificationInForceSql(ReportTypeEnum.SALARY)}) DESC,
+    lr.legacy_modified_at DESC NULLS LAST, lr.id
   LIMIT 1
 )`
 
@@ -78,22 +81,21 @@ const REPORT_HEADCOUNT_SQL = `(
   JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
   WHERE cr.company_id = ${COMPANY_ID}
   AND cr.parent_company_id IS NULL
-  AND r.type = '${ReportTypeEnum.SALARY}'
-  AND r.status = '${ReportStatusEnum.APPROVED}'
-  AND r.valid_until > NOW()
+  AND ${reportInForceSql(ReportTypeEnum.SALARY)}
   ORDER BY r.approved_at DESC NULLS LAST
   LIMIT 1
 )`
 
-// Each approved skýrslugjöf is one validity round. SUPERSEDED reports are left
-// out: a re-filing replaces the earlier report, it does not start a new round.
+// Each approved skýrslugjöf is one validity round. SUPERSEDED counts too: only
+// a later approval supersedes a report, so APPROVED alone is never more than 1.
+// A re-filing within a period also adds a round until Jafnréttisstofa defines one.
 const APPROVED_SALARY_REPORTS_SQL = `(
   SELECT COUNT(DISTINCT r.id)
   FROM "${DoeModels.COMPANY_REPORT}" cr
   JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
   WHERE cr.company_id = ${COMPANY_ID}
   AND r.type = '${ReportTypeEnum.SALARY}'
-  AND r.status = '${ReportStatusEnum.APPROVED}'
+  AND r.status IN ('${ReportStatusEnum.APPROVED}', '${ReportStatusEnum.SUPERSEDED}')
 )`
 
 type CompanyQueryRow = {
@@ -160,7 +162,7 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
   }
 
   private async loadCompanies(): Promise<CompanyStatisticsRow[]> {
-    const rows = ((await this.companyModel.findAll({
+    const rows = (await this.companyModel.findAll({
       attributes: [
         'sector',
         'employeeCountCategory',
@@ -201,7 +203,7 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
       ],
       raw: true,
       nest: true,
-    })) as unknown) as CompanyQueryRow[]
+    })) as unknown as CompanyQueryRow[]
 
     return rows.map((row) => ({
       region: row.postcode?.region?.name ?? UNKNOWN_REGION,
@@ -220,11 +222,11 @@ export class AggregateStatisticsService implements IAggregateStatisticsService {
 
   /** Read from the reference table so the region axis is stable across days. */
   private async loadRegionNames(): Promise<string[]> {
-    const rows = ((await this.regionModel.findAll({
+    const rows = (await this.regionModel.findAll({
       attributes: ['name'],
       order: [['name', 'ASC']],
       raw: true,
-    })) as unknown) as Array<{ name: string }>
+    })) as unknown as Array<{ name: string }>
 
     return [...rows.map((row) => row.name), UNKNOWN_REGION]
   }
