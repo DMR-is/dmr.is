@@ -56,10 +56,11 @@ const LAST_DATA_ROW = 500
 
 /**
  * Title, in the Yfirviðmið column with nothing beside it, of the section that
- * follows the sub-criterion table: the five Yfirviðmið definitions that
- * `Viðmið!D6:D10` look up. That section is a different table with its own
- * header row, so the scan stops here rather than reading it as catalog rows,
- * where its title row would be rejected as half-filled.
+ * follows the sub-criterion table: the five Yfirviðmið definitions, which
+ * `Viðmið!D6:D10` repeat as typed text (no formula links the two, so a wording
+ * change has to be made in both). That section is a different table with its
+ * own header row, so the scan stops here rather than reading it as catalog
+ * rows, where its title row would be rejected as half-filled.
  *
  * An older template has no such section and scans to `LAST_DATA_ROW` as before.
  */

@@ -688,6 +688,26 @@ describe('parseWorkbook', () => {
       }
     })
 
+    it('ships D6:D10 identical to the definitions on Viðmiðalisti (Lýsigögn)', async () => {
+      // The template records each Yfirviðmið definition twice: on Viðmið,
+      // which the parser reads, and in the metadata tab's Yfirviðmið section
+      // (D57:D61), which only Excel shows. No formula links them, so a template
+      // that rewords only one copy would have reports store a description that
+      // disagrees with the workbook's own reference list.
+      const wb = await freshTemplate()
+      const viðmið = wb.getWorksheet('Viðmið')!
+      const definitions = wb.getWorksheet('Viðmiðalisti (Lýsigögn)')!
+      for (let offset = 0; offset < 5; offset++) {
+        expect({
+          address: `D${6 + offset}`,
+          value: viðmið.getCell(6 + offset, 4).value,
+        }).toEqual({
+          address: `D${6 + offset}`,
+          value: definitions.getCell(57 + offset, 4).value,
+        })
+      }
+    })
+
     it('reads the shipped Lýsing once C10 is picked, and files the sub under it', async () => {
       const report = await parseInMemory(await buildFromDropdown())
       const personal = report.criteria.find(

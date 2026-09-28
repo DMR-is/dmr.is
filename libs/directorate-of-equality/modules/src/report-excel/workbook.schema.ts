@@ -112,12 +112,16 @@ export const SHEETS = {
 /**
  * `SUB_CRITERIA_CATALOG` as templates before 2026-09-24 name it. Workbooks
  * downloaded before the rename are filled in offline and uploaded later, so
- * both names stay ignored. No parser looks either tab up — the parsed sheets
- * only carry values the catalog tab computed — so the rename never affected
- * parsing; this keeps the list of ignored sheets true for both generations.
+ * both generations reach the parser. No parser looks either tab up, so the
+ * rename never affected parsing.
  */
 export const LEGACY_SUB_CRITERIA_CATALOG_SHEET = 'Undirviðmiðalisti (Lýsigögn)'
 
+/**
+ * The tabs the parser does not read. Descriptive only: nothing checks this set,
+ * and a tab is ignored because no parser asks for it, not because it is listed
+ * here.
+ */
 export const IGNORED_SHEETS: ReadonlySet<string> = new Set([
   SHEETS.INSTRUCTIONS,
   SHEETS.OVERVIEW,
