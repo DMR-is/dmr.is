@@ -5,7 +5,7 @@ import {
   SubmitPartnerEqualityReportDto,
   SubmitPartnerSalaryReportDto,
 } from '@dmr.is/doe-modules/application'
-import { CompanyDto } from '@dmr.is/doe-modules/company'
+import { CompanyDto, ICompanyService } from '@dmr.is/doe-modules/company'
 import { SalaryDataBasisEnum } from '@dmr.is/doe-modules/report'
 import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
 import { SalaryAnalysisResponseDto } from '@dmr.is/doe-modules/report-statistics'
@@ -32,6 +32,11 @@ const LOGGING_CONTEXT = 'PartnerSubmissionService'
  * needs it — the same reasoning that took `ReportExcelCoreModule` out of the
  * shared module when the workbook surface was dropped.
  *
+ * One check is this channel's own: the company snapshot's ÍSAT code and postcode
+ * must exist (`assertKnownSnapshotCodes`). Both are free text elsewhere, and
+ * island.is sends formats we have not catalogued, so the check is not imposed
+ * on a channel that has never been refused for them.
+ *
  * Everything past the expansion is the identical code every other channel runs.
  * The submission rules, the equality gate, idempotent replay and event emission
  * are not reachable from here and cannot fork per channel.
@@ -43,6 +48,8 @@ export class PartnerSubmissionService {
     private readonly applicationService: IApplicationService,
     @Inject(IScoringModelService)
     private readonly scoringModelService: IScoringModelService,
+    @Inject(ICompanyService)
+    private readonly companyService: ICompanyService,
     @Inject(LOGGER_PROVIDER)
     private readonly logger: Logger,
   ) {}
@@ -53,6 +60,7 @@ export class PartnerSubmissionService {
     partnerClientId: string | null = null,
   ): Promise<CreateReportResponseDto> {
     this.assertSalaryDataPeriodMatchesBasis(input)
+    await this.companyService.assertKnownSnapshotCodes(input.company)
 
     const { scoringModelId, employees, ...rest } = input
 
@@ -95,6 +103,8 @@ export class PartnerSubmissionService {
     company: CompanyDto,
     partnerClientId: string | null = null,
   ): Promise<CreateReportResponseDto> {
+    await this.companyService.assertKnownSnapshotCodes(input.company)
+
     const { html, warnings } = await convertEqualityDocumentToHtml(
       document?.buffer,
     )

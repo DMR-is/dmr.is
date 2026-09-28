@@ -59,6 +59,7 @@ import { LegacyReportModel } from './models/legacy-report.model'
 import { buildCompanyListQuery } from './utils/filters'
 import { ResolvedSector, resolveSector } from './utils/legal-form-sector'
 import { mapRskLegalEntity } from './utils/rsk-company-mapping'
+import { leadingIsatDigits, leadingPostcode } from './utils/snapshot-codes'
 import { companyMessages } from './company.messages'
 import {
   CompanyMailRecipient,
@@ -550,6 +551,47 @@ export class CompanyService implements ICompanyService {
         : null,
       sector: resolvedSector.sector,
       legalFormName: resolvedSector.legalFormName,
+    }
+  }
+
+  async assertKnownSnapshotCodes(input: {
+    isatCategory: string
+    postcode: string
+  }): Promise<void> {
+    const isat = leadingIsatDigits(input.isatCategory)
+    const postcode = leadingPostcode(input.postcode)
+
+    // A prefix match, so a filer naming a class (`62.01`) rather than its
+    // subclass (`62.01.0`) is not refused: the table holds subclasses only.
+    const [isatRow, postcodeRow] = await Promise.all([
+      isat
+        ? this.isatCategoryModel.findOne({
+            attributes: ['code'],
+            where: { code: { [Op.startsWith]: isat } },
+          })
+        : null,
+      postcode
+        ? this.postcodeModel.findOne({
+            attributes: ['code'],
+            where: { code: postcode },
+          })
+        : null,
+    ])
+
+    const refusals = [
+      ...(isatRow
+        ? []
+        : [companyMessages.unknownSnapshotIsatCategory(input.isatCategory)]),
+      ...(postcodeRow
+        ? []
+        : [companyMessages.unknownSnapshotPostcode(input.postcode)]),
+    ]
+
+    if (refusals.length > 0) {
+      throw new BadRequestException({
+        message: refusals.map((r) => r.message),
+        translatedMessage: refusals.map((r) => r.translatedMessage).join(' '),
+      })
     }
   }
 

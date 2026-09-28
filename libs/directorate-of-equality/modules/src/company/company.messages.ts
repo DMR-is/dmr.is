@@ -59,4 +59,12 @@ export const companyMessages = {
     message: `Company with national id "${nationalId}" is not active in the RSK company registry and cannot be created`,
     translatedMessage: 'Ekki er hægt að skrá fyrirtæki sem er ekki virkt',
   }),
+  unknownSnapshotIsatCategory: (value: string): ErrorMessage => ({
+    message: `company.isatCategory "${value}" does not lead with an ÍSAT2008 code`,
+    translatedMessage: `ÍSAT-flokkurinn „${value}“ er ekki til`,
+  }),
+  unknownSnapshotPostcode: (value: string): ErrorMessage => ({
+    message: `company.postcode "${value}" does not lead with a known Icelandic postcode`,
+    translatedMessage: `Póstnúmerið „${value}“ er ekki til`,
+  }),
 } as const

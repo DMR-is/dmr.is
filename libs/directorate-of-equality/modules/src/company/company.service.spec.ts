@@ -57,6 +57,7 @@ describe('CompanyService', () => {
   let eventsByCompanyId: jest.Mock
   let commentsByCompanyId: jest.Mock
   let isatFindByPk: jest.Mock
+  let isatFindOne: jest.Mock
   let isatSectionFindAll: jest.Mock
   let postcodeFindOne: jest.Mock
   let legacyReportFindAll: jest.Mock
@@ -68,6 +69,7 @@ describe('CompanyService', () => {
     create = jest.fn()
     findAndCountAll = jest.fn().mockResolvedValue({ rows: [], count: 0 })
     isatFindByPk = jest.fn()
+    isatFindOne = jest.fn().mockResolvedValue({ code: '62010' })
     isatSectionFindAll = jest.fn()
     postcodeFindOne = jest.fn()
     legacyReportFindAll = jest.fn().mockResolvedValue([])
@@ -112,7 +114,7 @@ describe('CompanyService', () => {
         },
         {
           provide: getModelToken(IsatCategoryModel),
-          useValue: { findByPk: isatFindByPk },
+          useValue: { findByPk: isatFindByPk, findOne: isatFindOne },
         },
         {
           provide: getModelToken(IsatSectionModel),
@@ -363,6 +365,57 @@ describe('CompanyService', () => {
       ).rejects.toThrow(NotFoundException)
 
       expect(create).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('assertKnownSnapshotCodes', () => {
+    beforeEach(() => {
+      postcodeFindOne.mockResolvedValue({ code: '101' })
+    })
+
+    it('accepts codes written with a description after them', async () => {
+      await expect(
+        service.assertKnownSnapshotCodes({
+          isatCategory: '62.01.0 Hugbúnaðargerð',
+          postcode: '101 Reykjavík',
+        }),
+      ).resolves.toBeUndefined()
+
+      expect(isatFindOne).toHaveBeenCalledWith({
+        attributes: ['code'],
+        where: { code: { [Op.startsWith]: '62010' } },
+      })
+      expect(postcodeFindOne).toHaveBeenCalledWith({
+        attributes: ['code'],
+        where: { code: '101' },
+      })
+    })
+
+    it('names both codes when neither exists', async () => {
+      isatFindOne.mockResolvedValue(null)
+      postcodeFindOne.mockResolvedValue(null)
+
+      const error = await service
+        .assertKnownSnapshotCodes({ isatCategory: '99.99', postcode: '999' })
+        .catch((e) => e)
+
+      expect(error).toBeInstanceOf(BadRequestException)
+      expect(error.getResponse().message).toEqual([
+        'company.isatCategory "99.99" does not lead with an ÍSAT2008 code',
+        'company.postcode "999" does not lead with a known Icelandic postcode',
+      ])
+    })
+
+    it('refuses text that leads with no code without querying', async () => {
+      await expect(
+        service.assertKnownSnapshotCodes({
+          isatCategory: 'ÍSAT-flokkur',
+          postcode: '99999',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(isatFindOne).not.toHaveBeenCalled()
+      expect(postcodeFindOne).not.toHaveBeenCalled()
     })
   })
 
