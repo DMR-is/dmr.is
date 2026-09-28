@@ -19,6 +19,7 @@ import {
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
 import { resolveEqualityContent } from '../report/lib/equality-content'
+import { providerIdConflictMessages } from '../report/lib/provider-id-conflict'
 import { rethrowReportWriteError } from '../report/lib/report-identifier'
 import { resolveSalaryDataBasis } from '../report/lib/salary-data-basis'
 import { computeWageGapDecomposition } from '../report/lib/wage-gap-decomposition'
@@ -493,9 +494,13 @@ export class ReportCreateService implements IReportCreateService {
       where: { reportId: existing.id, parentCompanyId: null },
     })
     if (!existingParent || existingParent.companyId !== submittingCompanyId) {
-      throw new ConflictException(
-        `Provider tuple (${providerType}, "${providerId}") is already registered for a different company`,
-      )
+      this.logger.warn('Provider tuple registered to a different company', {
+        context: LOGGING_CONTEXT,
+        reportId: existing.id,
+        providerType,
+        providerId,
+      })
+      throw new ConflictException(providerIdConflictMessages.otherCompany)
     }
 
     // A tuple is bound to one report type for good. Without this, reusing a
@@ -511,8 +516,15 @@ export class ReportCreateService implements IReportCreateService {
     // lookup miss, the insert collide with that index, and the caller receive a
     // 400 blaming its payload. One row per tuple is the contract; say so.
     if (existing.type !== expectedType) {
+      this.logger.warn('Provider tuple registered to the other report type', {
+        context: LOGGING_CONTEXT,
+        reportId: existing.id,
+        providerType,
+        providerId,
+        existingType: existing.type,
+      })
       throw new ConflictException(
-        `Provider tuple (${providerType}, "${providerId}") is already registered for a ${existing.type} report`,
+        providerIdConflictMessages.otherType(existing.type),
       )
     }
 
