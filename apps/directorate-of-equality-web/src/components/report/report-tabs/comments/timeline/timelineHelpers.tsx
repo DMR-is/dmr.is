@@ -331,9 +331,14 @@ export function timelineEntryText(
   }
 
   if (eventType === ReportEventTypeEnum.EDITED) {
+    // Only the applicant edits a report (`editEqualityContent`,
+    // `editOutliers`), and they have no `doe_user`, so the event never carries
+    // an actor. Without the company name the row opened mid-sentence —
+    // "gerði breytingar á skýrslu" with no subject.
+    const editorName = actorName ?? companyName
     return (
       <>
-        {actorName && <Bold>{actorName} </Bold>}
+        {editorName && <Bold>{editorName} </Bold>}
         {forReportType(reportText.timeline.edited, reportType)}
       </>
     )

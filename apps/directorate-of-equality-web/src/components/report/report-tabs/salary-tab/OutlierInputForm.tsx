@@ -11,7 +11,7 @@ export const OutlierInputForm = ({ outlierDate }: OutlierInputFormProps) => {
   return (
     <Box style={{ maxWidth: 390 }}>
       <DatePicker
-        readOnly
+        disabled
         placeholderText={reportText.salaryTab.remedyDeadlinePlaceholder}
         icon={{ name: 'calendar', type: 'outline' }}
         size="sm"
