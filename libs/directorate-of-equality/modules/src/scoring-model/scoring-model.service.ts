@@ -553,9 +553,15 @@ export class ScoringModelService implements IScoringModelService {
     // so accepting it would store a row nothing could ever score.
     const stepsBySubCriterion = new Map<string, Set<string>>()
     const personalSubIds = new Set<string>()
+    // Messages name a sub-criterion by its titles, never its id: the employer
+    // reading one knows the model by what they called things. Titles repeat
+    // across criteria, hence the parent — the `labelFor` form in
+    // `validate-scoring-model.ts`.
+    const labels = new Map<string, string>()
 
     for (const criterion of model.criteria ?? []) {
       for (const sub of criterion.subCriteria ?? []) {
+        labels.set(sub.id, `${criterion.title} / ${sub.title}`)
         stepsBySubCriterion.set(
           sub.id,
           new Set((sub.steps ?? []).map((step) => step.id)),
@@ -568,30 +574,34 @@ export class ScoringModelService implements IScoringModelService {
 
     const seen = new Set<string>()
 
-    for (const assignment of input.assignments) {
+    for (const [index, assignment] of input.assignments.entries()) {
       const steps = stepsBySubCriterion.get(assignment.subCriterionId)
 
+      // An id that is not in the model has no title to show, so the assignment
+      // is named by its place in the array instead.
       if (!steps) {
         throw new BadRequestException(
-          `Undirviðmið „${assignment.subCriterionId}“ er ekki í þessu starfsmati`,
+          `Úthlutun #${index + 1} vísar í undirviðmið sem er ekki í þessu starfsmati`,
         )
       }
 
+      const label = labels.get(assignment.subCriterionId)
+
       if (personalSubIds.has(assignment.subCriterionId)) {
         throw new BadRequestException(
-          `Undirviðmið „${assignment.subCriterionId}“ er einstaklingsbundið og er metið á starfsmann, ekki starf`,
+          `Undirviðmiðið „${label}“ er einstaklingsbundið og er metið á starfsmann, ekki starf`,
         )
       }
 
       if (!steps.has(assignment.stepId)) {
         throw new BadRequestException(
-          `Þrepið „${assignment.stepId}“ tilheyrir ekki undirviðmiðinu „${assignment.subCriterionId}“`,
+          `Úthlutun #${index + 1}: þrepið tilheyrir ekki undirviðmiðinu „${label}“`,
         )
       }
 
       if (seen.has(assignment.subCriterionId)) {
         throw new BadRequestException(
-          `Undirviðmiðið „${assignment.subCriterionId}“ kemur oftar en einu sinni fyrir; starf fær nákvæmlega eina úthlutun á hvert undirviðmið`,
+          `Undirviðmiðið „${label}“ kemur oftar en einu sinni fyrir; starf fær nákvæmlega eina úthlutun á hvert undirviðmið`,
         )
       }
 
