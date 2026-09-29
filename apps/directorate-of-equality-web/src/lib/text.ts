@@ -39,9 +39,8 @@ export const frontPageText = {
   },
   panelExport: {
     title: 'Gagnaútdráttur',
-    description:
-      'Sækja skýrslur og tölfræðileg gögn um starfsemi stofnunarinnar.',
-    linkText: 'Sækja skýrslu',
+    description: 'Sækja lista yfir fyrirtæki í Excel.',
+    linkText: 'Sækja lista',
   },
 }
 
