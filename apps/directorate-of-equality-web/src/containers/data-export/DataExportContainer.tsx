@@ -13,6 +13,7 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import { CompanyActiveFilters } from '../../components/companies/CompanyActiveFilters'
 import {
   CompanyFilter,
   type CompanyFilters,
@@ -39,6 +40,11 @@ import { dataExportText, serverErrorText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import * as styles from './DataExportContainer.css'
 import { buildFilterSummary } from './filterSummary'
+import {
+  buildReportChips,
+  type ReportChip,
+  type ReportState,
+} from './reportChips'
 
 const PAGE_SIZE = 25
 
@@ -54,6 +60,9 @@ const GAP_TO_KEY: Partial<Record<ReportGapKey, ReportGapKey>> = {
   reportRawGapPercentFrom: 'reportRawGapPercentTo',
   reportOskyrtPercentFrom: 'reportOskyrtPercentTo',
 }
+
+/** Everything the panel sets, as it was when "Sækja lista" was pressed. */
+type Submission = ReportState & { filters: CompanyFilters; query: string }
 
 const EMPTY_FILTERS: CompanyFilters = {
   employees: [],
@@ -104,14 +113,10 @@ export const DataExportContainer = () => {
    *
    * Deliberately a snapshot rather than a read of the drafts: it is what makes
    * the export match the table. Editing the panel afterwards changes neither
-   * until "Sækja lista" is pressed again.
+   * until "Sækja lista" is pressed again. Removing an active-filter chip is the
+   * one exception — it narrows the snapshot directly and refetches.
    */
-  const [submitted, setSubmitted] = useState<Record<string, unknown> | null>(
-    null,
-  )
-  // Snapshotted with `submitted` so the workbook's "Um útdráttinn" sheet
-  // describes the filter that produced the rows, not later panel edits.
-  const [submittedSummary, setSubmittedSummary] = useState<string[]>([])
+  const [submitted, setSubmitted] = useState<Submission | null>(null)
   const [page, setPage] = useState(1)
 
   // Focus lands here after a fetch: the results appear because a button was
@@ -247,9 +252,43 @@ export const DataExportContainer = () => {
     [],
   )
 
+  const submittedQuery = useMemo(
+    () =>
+      submitted &&
+      toServerQuery(
+        submitted.filters,
+        submitted.criteria,
+        submitted.dates,
+        submitted.gaps,
+        submitted.query,
+      ),
+    [submitted, toServerQuery],
+  )
+
+  // Derived from `submitted` so the workbook's "Um útdráttinn" sheet describes
+  // the filter that produced the rows, not later panel edits.
+  const submittedSummary = useMemo(
+    () =>
+      submitted
+        ? buildFilterSummary(
+            submitted.filters,
+            submitted.criteria,
+            submitted.dates,
+            submitted.gaps,
+            submitted.query,
+          )
+        : [],
+    [submitted],
+  )
+
+  const reportChips = useMemo(
+    () => (submitted ? buildReportChips(submitted) : []),
+    [submitted],
+  )
+
   const { data, isFetching, isError } = useQuery(
     trpc.company.list.queryOptions(
-      { ...(submitted ?? {}), page, pageSize: PAGE_SIZE },
+      { ...(submittedQuery ?? {}), page, pageSize: PAGE_SIZE },
       {
         // Nothing is fetched until the admin asks for it.
         enabled: submitted !== null,
@@ -307,8 +346,7 @@ export const DataExportContainer = () => {
 
   const handleSubmit = () => {
     setPage(1)
-    setSubmitted(toServerQuery(draft, criteria, dates, gaps, query))
-    setSubmittedSummary(buildFilterSummary(draft, criteria, dates, gaps, query))
+    setSubmitted({ filters: draft, criteria, dates, gaps, query })
     // Deferred to the paint after the results render, otherwise focus moves to
     // a heading that still says "choose your filters".
     requestAnimationFrame(() => resultsRef.current?.focus())
@@ -321,7 +359,47 @@ export const DataExportContainer = () => {
     setGaps(EMPTY_GAP_BOUNDS)
     setQuery('')
     setSubmitted(null)
-    setSubmittedSummary([])
+    setPage(1)
+  }
+
+  /*
+   * Chip removals. Each takes the value out of BOTH the snapshot, which
+   * refetches, and the draft, so the panel agrees with the table. Only that
+   * value leaves the draft — unsubmitted edits elsewhere in the panel stay
+   * unsubmitted rather than riding along on the refetch.
+   */
+  const handleFilterChipRemove = (key: keyof CompanyFilters, val: string[]) => {
+    if (!submitted) return
+
+    // `val` is the submitted selection minus the removed chip.
+    const removed = submitted.filters[key].filter((v) => !val.includes(v))
+    handleFiltersChange(
+      key,
+      draft[key].filter((v) => !removed.includes(v)),
+    )
+
+    setSubmitted({
+      ...submitted,
+      filters:
+        key === 'regionCode'
+          ? { ...submitted.filters, regionCode: val, postcode: [] }
+          : { ...submitted.filters, [key]: val },
+    })
+    setPage(1)
+  }
+
+  const handleQueryChipRemove = () => {
+    setQuery('')
+    setSubmitted((prev) => prev && { ...prev, query: '' })
+    setPage(1)
+  }
+
+  const handleReportChipRemove = (remove: ReportChip['remove']) => {
+    const next = remove({ criteria, dates, gaps })
+    setCriteria(next.criteria)
+    setDates(next.dates)
+    setGaps(next.gaps)
+    setSubmitted((prev) => prev && remove(prev))
     setPage(1)
   }
 
@@ -334,10 +412,10 @@ export const DataExportContainer = () => {
    * than a fetch so the browser owns the download.
    */
   const exportHref = useMemo(() => {
-    if (!submitted) return null
+    if (!submittedQuery) return null
 
     const params = new URLSearchParams()
-    for (const [key, value] of Object.entries(submitted)) {
+    for (const [key, value] of Object.entries(submittedQuery)) {
       if (Array.isArray(value)) {
         for (const item of value) params.append(key, String(item))
       } else if (value !== undefined && value !== null) {
@@ -352,7 +430,7 @@ export const DataExportContainer = () => {
     }
 
     return `/api/export/companies?${params.toString()}`
-  }, [submitted, submittedSummary])
+  }, [submittedQuery, submittedSummary])
 
   return (
     <GridContainer>
@@ -459,6 +537,30 @@ export const DataExportContainer = () => {
                 </Inline>
               )}
             </Box>
+
+            {submitted !== null && (
+              <CompanyActiveFilters
+                query={submitted.query}
+                quarantined={null}
+                filters={submitted.filters}
+                regionOptions={regionOptions}
+                postcodeOptions={postcodeOptions}
+                onFiltersChange={handleFilterChipRemove}
+                onQueryClear={handleQueryChipRemove}
+                onQuarantinedClear={() => undefined}
+                extraChips={reportChips.map((chip) => ({
+                  id: chip.id,
+                  label: chip.label,
+                  onRemove: () => handleReportChipRemove(chip.remove),
+                }))}
+                onReset={() => {
+                  handleReset()
+                  // The pressed button unmounts with the tags; without this
+                  // keyboard focus would drop to the top of the document.
+                  requestAnimationFrame(() => resultsRef.current?.focus())
+                }}
+              />
+            )}
 
             {isError && (
               <AlertMessage

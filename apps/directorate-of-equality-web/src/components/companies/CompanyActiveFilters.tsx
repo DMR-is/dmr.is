@@ -33,6 +33,16 @@ type Chip = {
   label: string
 }
 
+/**
+ * A chip for a filter `CompanyFilters` does not know about — the data export's
+ * report criteria. The screen that owns the filter owns its removal.
+ */
+export type ExtraChip = {
+  id: string
+  label: string
+  onRemove: () => void
+}
+
 type Props = {
   query: string
   quarantined: boolean | null
@@ -43,7 +53,29 @@ type Props = {
   onQueryClear: () => void
   onQuarantinedClear: () => void
   onReset: () => void
+  /** Appended after the company chips, matching where their cards sit. */
+  extraChips?: ExtraChip[]
 }
+
+const RemovableTag = ({
+  label,
+  onClick,
+}: {
+  label: string
+  onClick: () => void
+}) => (
+  <Tag variant="blue" outlined onClick={onClick}>
+    <Box
+      component="span"
+      display="inlineFlex"
+      alignItems="center"
+      columnGap={1}
+    >
+      {label}
+      <Icon icon="close" size="small" />
+    </Box>
+  </Tag>
+)
 
 const labelFor = (options: FilterOption[], value: string) =>
   options.find((option) => option.value === value)?.label ?? value
@@ -74,6 +106,7 @@ export const CompanyActiveFilters = ({
   onQueryClear,
   onQuarantinedClear,
   onReset,
+  extraChips = [],
 }: Props) => {
   const trpc = useTRPC()
 
@@ -192,7 +225,7 @@ export const CompanyActiveFilters = ({
     })),
   ]
 
-  if (!chips.length) return null
+  if (!chips.length && !extraChips.length) return null
 
   const remove = ({ key, value }: Chip) => {
     if (key === 'q') {
@@ -219,22 +252,18 @@ export const CompanyActiveFilters = ({
           {companiesText.activeFilters}:
         </Text>
         {chips.map((chip) => (
-          <Tag
+          <RemovableTag
             key={`${chip.key}-${chip.value}`}
-            variant="blue"
-            outlined
+            label={chip.label}
             onClick={() => remove(chip)}
-          >
-            <Box
-              component="span"
-              display="inlineFlex"
-              alignItems="center"
-              columnGap={1}
-            >
-              {chip.label}
-              <Icon icon="close" size="small" />
-            </Box>
-          </Tag>
+          />
+        ))}
+        {extraChips.map((chip) => (
+          <RemovableTag
+            key={chip.id}
+            label={chip.label}
+            onClick={chip.onRemove}
+          />
         ))}
         <Button variant="text" size="small" icon="reload" onClick={onReset}>
           {companiesText.clearAllFilters}

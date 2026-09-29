@@ -90,12 +90,13 @@ export const buildFilterSummary = (
   ].filter((value): value is string => value !== null)
 }
 
-const DATE_RANGE_LABELS: Array<[string, ReportDateKey, ReportDateKey]> = [
-  ['Skýrsla innsend', 'reportSubmittedFrom', 'reportSubmittedTo'],
-  ['Skýrsla samþykkt', 'reportApprovedFrom', 'reportApprovedTo'],
-  ['Skýrsla gildir til', 'reportValidUntilFrom', 'reportValidUntilTo'],
-  ['Launatímabil', 'reportSalaryDataPeriodFrom', 'reportSalaryDataPeriodTo'],
-]
+export const DATE_RANGE_LABELS: Array<[string, ReportDateKey, ReportDateKey]> =
+  [
+    ['Skýrsla innsend', 'reportSubmittedFrom', 'reportSubmittedTo'],
+    ['Skýrsla samþykkt', 'reportApprovedFrom', 'reportApprovedTo'],
+    ['Skýrsla gildir til', 'reportValidUntilFrom', 'reportValidUntilTo'],
+    ['Launatímabil', 'reportSalaryDataPeriodFrom', 'reportSalaryDataPeriodTo'],
+  ]
 
 const formatDay = (date: Date) =>
   `${String(date.getDate()).padStart(2, '0')}.${String(
@@ -110,7 +111,7 @@ const formatDay = (date: Date) =>
  * run the export, and "01.01.2026 –" is ambiguous about whether the other
  * bound was empty or lost.
  */
-const dateLine = (
+export const dateLine = (
   label: string,
   from: Date | undefined,
   to: Date | undefined,
@@ -128,7 +129,7 @@ const dateLine = (
  * read by someone who did not run the export, and the two differ by roughly a
  * factor of three on the same company.
  */
-const gapLine = (
+export const gapLine = (
   label: string,
   from: string | undefined,
   to: string | undefined,
