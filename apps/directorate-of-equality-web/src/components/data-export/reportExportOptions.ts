@@ -7,8 +7,8 @@ export type ReportFilterOption = { value: string; label: string }
  * vottun/staðfesting split is not part of it, and `IMPROVEMENT_PLAN` (which
  * the vinnslusvæði filter offers as a third pseudo-type mapping to
  * `hasImprovementPlan`) is deliberately absent here: an úrbótaáætlun is a
- * state OF a skýrslugjöf, not a kind of filing, and the export carries it as
- * its own column instead.
+ * state OF a skýrslugjöf, not a kind of filing, so the panel offers it as its
+ * own criterion (`IMPROVEMENT_PLAN_OPTIONS`) instead.
  */
 export const REPORT_TYPE_OPTIONS: ReportFilterOption[] = [
   { value: 'EQUALITY', label: sharedText.typeLabels.EQUALITY },
