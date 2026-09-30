@@ -149,10 +149,13 @@ const JOB_SUBS: SubSpec[] = [
   },
 ]
 
+/**
+ * The only title the template's C10 dropdown accepts. Its Lýsing ships typed
+ * into D10, so picking the title is all a current workbook needs; a custom
+ * title here would produce a file the template itself would refuse.
+ */
 const PERSONAL_CRITERION = {
-  title: 'Sérhæfing',
-  description:
-    'Einstaklingsbundið viðmið: sérhæfð þekking og færni sem starfsmaður leggur til.',
+  title: 'Einstaklingsbundið',
   weight: 10,
 }
 
@@ -993,9 +996,9 @@ const fillWorkbook = (
   for (const { row, weight } of JOB_CRITERIA) {
     criteria.getCell(`E${row}`).value = weight
   }
-  // Row 10 is the template's blank Einstaklingsbundið slot.
+  // Row 10 is the template's Einstaklingsbundið slot. D10 already carries its
+  // Lýsing, so only the title and the weight are written.
   criteria.getCell('C10').value = PERSONAL_CRITERION.title
-  criteria.getCell('D10').value = PERSONAL_CRITERION.description
   criteria.getCell('E10').value = PERSONAL_CRITERION.weight
 
   const subs = wb.getWorksheet(SHEETS.SUB_CRITERIA)

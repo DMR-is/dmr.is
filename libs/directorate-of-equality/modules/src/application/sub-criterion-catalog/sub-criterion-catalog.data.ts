@@ -6,7 +6,7 @@
  *
  *   node scripts/refresh-sub-criterion-catalog.js
  *
- * Source: the `Undirviðmiðalisti (Lýsigögn)` sheet of `template.xlsx`, which
+ * Source: the `Viðmiðalisti (Lýsigögn)` sheet of `template.xlsx`, which
  * is what feeds the Undirviðmið sheet's dropdown inside the workbook. The
  * application portal offers the same list, so the catalog is lifted out of
  * the xlsx and shipped as data rather than re-parsed at request time.

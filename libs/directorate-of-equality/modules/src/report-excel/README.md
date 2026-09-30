@@ -45,7 +45,7 @@ curl -o /tmp/doe-template.xlsx \
 
 Open in Excel or Numbers, fill out **Viðmið**, **Undirviðmið**,
 **Launagögn**, **Starfsmat**, **Einstaklingsmat**, save.
-`Leiðbeiningar`, `Yfirlit`, and `Undirviðmiðalisti (Lýsigögn)` are ignored
+`Leiðbeiningar`, `Yfirlit`, and `Viðmiðalisti (Lýsigögn)` are ignored
 on parse.
 
 ### Import a filled workbook
@@ -108,7 +108,7 @@ node scripts/refresh-template-data.js
 
 Commit both the updated xlsx and the regenerated `template-data.ts`.
 
-The `Undirviðmiðalisti (Lýsigögn)` sheet feeds a second generated file — the
+The `Viðmiðalisti (Lýsigögn)` sheet feeds a second generated file — the
 sub-criterion catalog the application portal reads — so a new workbook needs
 that regenerated too:
 

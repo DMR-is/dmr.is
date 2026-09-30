@@ -106,13 +106,27 @@ export const SHEETS = {
   ROLE_CLASSIFICATION: 'Starfsmat',
   EMPLOYEE_CLASSIFICATION: 'Einstaklingsmat',
   OVERVIEW: 'Yfirlit',
-  SUB_CRITERIA_CATALOG: 'Undirviðmiðalisti (Lýsigögn)',
+  SUB_CRITERIA_CATALOG: 'Viðmiðalisti (Lýsigögn)',
 } as const
 
+/**
+ * `SUB_CRITERIA_CATALOG` as templates before 2026-09-24 name it. Workbooks
+ * downloaded before the rename are filled in offline and uploaded later, so
+ * both generations reach the parser. No parser looks either tab up, so the
+ * rename never affected parsing.
+ */
+export const LEGACY_SUB_CRITERIA_CATALOG_SHEET = 'Undirviðmiðalisti (Lýsigögn)'
+
+/**
+ * The tabs the parser does not read. Descriptive only: nothing checks this set,
+ * and a tab is ignored because no parser asks for it, not because it is listed
+ * here.
+ */
 export const IGNORED_SHEETS: ReadonlySet<string> = new Set([
   SHEETS.INSTRUCTIONS,
   SHEETS.OVERVIEW,
   SHEETS.SUB_CRITERIA_CATALOG,
+  LEGACY_SUB_CRITERIA_CATALOG_SHEET,
 ])
 
 /**

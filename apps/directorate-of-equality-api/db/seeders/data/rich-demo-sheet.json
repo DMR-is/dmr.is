@@ -5,7 +5,7 @@
     {
       "type": "RESPONSIBILITY",
       "title": "Ábyrgð",
-      "description": "Metur ábyrgð starfsins á fólki, fjármálum, gæðum og öðrum þáttum.",
+      "description": "Metur þær kröfur sem starfið gerir til ábyrgðar á fólki, fjármálum, gæðum og öðrum þáttum.",
       "weight": 15,
       "subCriteria": [
         {
@@ -77,7 +77,7 @@
     {
       "type": "STRAIN",
       "title": "Álag",
-      "description": "Metur hraða, tímapressu, líkamlegt og tilfinningalegt álag.",
+      "description": "Metur kröfur starfsins til að vinna við áreiti, vera undir líkamlegu- og tilfinningalegu álagi og fleiri þátta.",
       "weight": 25,
       "subCriteria": [
         {
@@ -149,7 +149,7 @@
     {
       "type": "CONDITION",
       "title": "Vinnuaðstæður",
-      "description": "Metur vaktavinnu, ferðalög, áhættu og aðrar aðstæður starfsins.",
+      "description": "Metur kröfur starfsins um vinnuhraða, hávaða í starfsumhverfi, vinnu með gufur og eiturefni og fleiri þætti.",
       "weight": 20,
       "subCriteria": [
         {
@@ -189,7 +189,7 @@
     {
       "type": "COMPETENCE",
       "title": "Hæfni",
-      "description": "Metur menntunarkröfur, reynslukröfur og sérhæfingu starfsins.",
+      "description": "Metur menntunarkröfur starfsins, kröfur um starfsreynslu og ýmis konar færni sem starfið krefst.",
       "weight": 25,
       "subCriteria": [
         {

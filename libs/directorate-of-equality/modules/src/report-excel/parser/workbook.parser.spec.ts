@@ -647,6 +647,92 @@ describe('parseWorkbook', () => {
     })
   })
 
+  describe('Viðmið personal row as the template now fills it', () => {
+    // Since the 2026-09-24 template, `Viðmið!C10` is a dropdown offering only
+    // `Einstaklingsbundið`, and D10 ships with that criterion's Lýsing already
+    // typed in, hidden by conditional formatting while C10 is blank. Every
+    // other fixture here still types a custom title and its own description
+    // into row 10, which older in-flight workbooks do and the parser must keep
+    // accepting, so these are the tests that read row 10 as a current workbook
+    // presents it.
+    const PERSONAL_DESCRIPTION =
+      'Metnir eru eiginleikar starfsmanna sem metnir eru til launa umfram kröfur til starfs.'
+
+    const buildFromDropdown = async (): Promise<ExcelJS.Workbook> => {
+      const wb = new ExcelJS.Workbook()
+      await wb.xlsx.load(toArrayBuffer(await buildValidFilled()))
+
+      const viðmið = wb.getWorksheet('Viðmið')!
+      viðmið.getCell('C10').value = 'Einstaklingsbundið'
+      // `buildValidFilled` types its own description into D10; put back what
+      // the template ships, since picking C10 is the employer's only edit.
+      viðmið.getCell('D10').value = (await freshTemplate())
+        .getWorksheet('Viðmið')!
+        .getCell('D10').value
+      wb.getWorksheet('Undirviðmið')!.getCell('B10').value =
+        'Einstaklingsbundið'
+      return wb
+    }
+
+    it('ships every Lýsing in D6:D10 as typed text, not a formula', async () => {
+      // A workbook written by a program that does not recalculate (openpyxl,
+      // say) loses formula results on save, and the Lýsing would arrive empty.
+      // The template's authors reverted these cells to text for that reason;
+      // this fails if a later template brings the formulas back.
+      const viðmið = (await freshTemplate()).getWorksheet('Viðmið')!
+      for (const address of ['D6', 'D7', 'D8', 'D9', 'D10']) {
+        expect({
+          address,
+          value: typeof viðmið.getCell(address).value,
+        }).toEqual({ address, value: 'string' })
+      }
+    })
+
+    it('ships D6:D10 identical to the definitions on Viðmiðalisti (Lýsigögn)', async () => {
+      // The template records each Yfirviðmið definition twice: on Viðmið,
+      // which the parser reads, and in the metadata tab's Yfirviðmið section
+      // (D57:D61), which only Excel shows. No formula links them, so a template
+      // that rewords only one copy would have reports store a description that
+      // disagrees with the workbook's own reference list.
+      const wb = await freshTemplate()
+      const viðmið = wb.getWorksheet('Viðmið')!
+      const definitions = wb.getWorksheet('Viðmiðalisti (Lýsigögn)')!
+      for (let offset = 0; offset < 5; offset++) {
+        expect({
+          address: `D${6 + offset}`,
+          value: viðmið.getCell(6 + offset, 4).value,
+        }).toEqual({
+          address: `D${6 + offset}`,
+          value: definitions.getCell(57 + offset, 4).value,
+        })
+      }
+    })
+
+    it('reads the shipped Lýsing once C10 is picked, and files the sub under it', async () => {
+      const report = await parseInMemory(await buildFromDropdown())
+      const personal = report.criteria.find(
+        (c) => c.type === ReportCriterionTypeEnum.PERSONAL,
+      )
+
+      expect(personal).toEqual(
+        expect.objectContaining({
+          title: 'Einstaklingsbundið',
+          description: PERSONAL_DESCRIPTION,
+          weight: 10,
+        }),
+      )
+      expect(personal?.subCriteria.map((s) => s.title)).toEqual(['Tungumál'])
+    })
+
+    it('treats a blank C10 as no personal criterion, though D10 holds text', async () => {
+      const { errors } = await expectBadRequest(parseWorkbook(templateBuffer()))
+
+      expect(
+        errors.filter((e) => e.sheet === 'Viðmið' && e.row === 10),
+      ).toHaveLength(0)
+    })
+  })
+
   describe('ordinal derivation (column A is a formula in the real template)', () => {
     it('derives ordinal from row position, ignoring the =ROW()-5 formula in column A', async () => {
       const wb = await freshTemplate()
