@@ -1,7 +1,5 @@
 import type {
   ReportCriteria,
-  ReportDateRanges,
-  ReportGapBounds,
   ReportGapKey,
 } from '../../components/data-export/ReportCriteriaCards'
 import {
@@ -12,13 +10,14 @@ import {
   type ReportFilterOption,
 } from '../../components/data-export/reportExportOptions'
 import { dataExportText } from '../../lib/text'
-import { DATE_RANGE_LABELS, dateLine, gapLine } from './filterSummary'
+import {
+  DATE_RANGE_LABELS,
+  dateLine,
+  gapLine,
+  type Submission,
+} from './filterSummary'
 
-export type ReportState = {
-  criteria: ReportCriteria
-  dates: ReportDateRanges
-  gaps: ReportGapBounds
-}
+export type ReportState = Pick<Submission, 'criteria' | 'dates' | 'gaps'>
 
 /**
  * One removable report-criteria chip.
@@ -58,11 +57,16 @@ const GAP_RANGES: Array<[string, ReportGapKey, ReportGapKey]> = [
   ],
 ]
 
+const sameDay = (a: Date | undefined, b: Date | undefined) =>
+  a?.getTime() === b?.getTime()
+
 /**
  * Chips for the report half of the filter, in panel order.
  *
  * A range is one chip, and removing it clears both bounds — half a range is a
- * different question from the one that was asked.
+ * different question from the one that was asked. It clears them only while
+ * they still hold the chip's values, so a range edited in the panel since the
+ * last submit survives the chip's removal from the draft.
  */
 export const buildReportChips = ({
   criteria,
@@ -95,10 +99,18 @@ export const buildReportChips = ({
       {
         id: fromKey,
         label: text,
-        remove: <S extends ReportState>(state: S): S => ({
-          ...state,
-          gaps: { ...state.gaps, [fromKey]: undefined, [toKey]: undefined },
-        }),
+        remove: <S extends ReportState>(state: S): S =>
+          state.gaps[fromKey] === gaps[fromKey] &&
+          state.gaps[toKey] === gaps[toKey]
+            ? {
+                ...state,
+                gaps: {
+                  ...state.gaps,
+                  [fromKey]: undefined,
+                  [toKey]: undefined,
+                },
+              }
+            : state,
       },
     ]
   }),
@@ -110,10 +122,18 @@ export const buildReportChips = ({
       {
         id: fromKey,
         label: text,
-        remove: <S extends ReportState>(state: S): S => ({
-          ...state,
-          dates: { ...state.dates, [fromKey]: undefined, [toKey]: undefined },
-        }),
+        remove: <S extends ReportState>(state: S): S =>
+          sameDay(state.dates[fromKey], dates[fromKey]) &&
+          sameDay(state.dates[toKey], dates[toKey])
+            ? {
+                ...state,
+                dates: {
+                  ...state.dates,
+                  [fromKey]: undefined,
+                  [toKey]: undefined,
+                },
+              }
+            : state,
       },
     ]
   }),

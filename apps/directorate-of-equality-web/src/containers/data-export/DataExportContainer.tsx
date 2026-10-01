@@ -12,6 +12,7 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { CompanyActiveFilters } from '../../components/companies/CompanyActiveFilters'
 import {
@@ -39,12 +40,9 @@ import {
 import { dataExportText, serverErrorText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import * as styles from './DataExportContainer.css'
-import { buildFilterSummary } from './filterSummary'
-import {
-  buildReportChips,
-  type ReportChip,
-  type ReportState,
-} from './reportChips'
+import { fileNameFromDisposition, saveBlob } from './downloadFile'
+import { buildFilterSummary, type Submission } from './filterSummary'
+import { buildReportChips, type ReportChip } from './reportChips'
 
 const PAGE_SIZE = 25
 
@@ -60,9 +58,6 @@ const GAP_TO_KEY: Partial<Record<ReportGapKey, ReportGapKey>> = {
   reportRawGapPercentFrom: 'reportRawGapPercentTo',
   reportOskyrtPercentFrom: 'reportOskyrtPercentTo',
 }
-
-/** Everything the panel sets, as it was when "Sækja lista" was pressed. */
-type Submission = ReportState & { filters: CompanyFilters; query: string }
 
 const EMPTY_FILTERS: CompanyFilters = {
   employees: [],
@@ -118,6 +113,7 @@ export const DataExportContainer = () => {
    */
   const [submitted, setSubmitted] = useState<Submission | null>(null)
   const [page, setPage] = useState(1)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   // Focus lands here after a fetch: the results appear because a button was
   // pressed, so keyboard and screen-reader users have to be taken to them.
@@ -131,6 +127,15 @@ export const DataExportContainer = () => {
     trpc.location.postcodes.queryOptions(
       { regionCode: draft.regionCode.length ? draft.regionCode : undefined },
       { staleTime: 60 * 60_000, placeholderData: (prev) => prev },
+    ),
+  )
+
+  // Unnarrowed, so a submitted postcode keeps its label after the draft region
+  // changes. Same key as the panel's first load, so it comes from cache.
+  const { data: allPostcodesData } = useQuery(
+    trpc.location.postcodes.queryOptions(
+      { regionCode: undefined },
+      { staleTime: 60 * 60_000, enabled: submitted !== null },
     ),
   )
 
@@ -148,14 +153,23 @@ export const DataExportContainer = () => {
     [postcodesData],
   )
 
+  const submittedPostcodeOptions = useMemo(
+    () =>
+      (allPostcodesData ?? []).map((p) => ({
+        value: p.code,
+        label: `${p.code} ${p.place}`,
+      })),
+    [allPostcodesData],
+  )
+
   const toServerQuery = useCallback(
-    (
-      filters: CompanyFilters,
-      reportCriteria: ReportCriteria,
-      reportDates: ReportDateRanges,
-      reportGaps: ReportGapBounds,
-      q: string,
-    ): Record<string, unknown> => ({
+    ({
+      filters,
+      criteria: reportCriteria,
+      dates: reportDates,
+      gaps: reportGaps,
+      query: q,
+    }: Submission): Record<string, unknown> => ({
       ...(q.trim() ? { q: q.trim() } : {}),
       ...(filters.employees.length
         ? { employeeCountCategory: filters.employees as CompanySizeEnum[] }
@@ -253,31 +267,14 @@ export const DataExportContainer = () => {
   )
 
   const submittedQuery = useMemo(
-    () =>
-      submitted &&
-      toServerQuery(
-        submitted.filters,
-        submitted.criteria,
-        submitted.dates,
-        submitted.gaps,
-        submitted.query,
-      ),
+    () => submitted && toServerQuery(submitted),
     [submitted, toServerQuery],
   )
 
   // Derived from `submitted` so the workbook's "Um útdráttinn" sheet describes
   // the filter that produced the rows, not later panel edits.
   const submittedSummary = useMemo(
-    () =>
-      submitted
-        ? buildFilterSummary(
-            submitted.filters,
-            submitted.criteria,
-            submitted.dates,
-            submitted.gaps,
-            submitted.query,
-          )
-        : [],
+    () => (submitted ? buildFilterSummary(submitted) : []),
     [submitted],
   )
 
@@ -344,12 +341,15 @@ export const DataExportContainer = () => {
     })
   }
 
+  // Deferred to the paint after the results render, otherwise focus moves to
+  // a heading that still says "choose your filters".
+  const focusResults = () =>
+    requestAnimationFrame(() => resultsRef.current?.focus())
+
   const handleSubmit = () => {
     setPage(1)
     setSubmitted({ filters: draft, criteria, dates, gaps, query })
-    // Deferred to the paint after the results render, otherwise focus moves to
-    // a heading that still says "choose your filters".
-    requestAnimationFrame(() => resultsRef.current?.focus())
+    focusResults()
   }
 
   const handleReset = () => {
@@ -365,14 +365,21 @@ export const DataExportContainer = () => {
   /*
    * Chip removals. Each takes the value out of BOTH the snapshot, which
    * refetches, and the draft, so the panel agrees with the table. Only that
-   * value leaves the draft — unsubmitted edits elsewhere in the panel stay
-   * unsubmitted rather than riding along on the refetch.
+   * value leaves the draft, and only while the draft still holds it —
+   * unsubmitted edits stay unsubmitted rather than riding along on the refetch.
+   *
+   * The pressed chip unmounts, so each one moves focus to the results, whose
+   * live region then announces the new count.
    */
-  const handleFilterChipRemove = (key: keyof CompanyFilters, val: string[]) => {
+  const handleFilterChipRemove = (
+    key: keyof CompanyFilters,
+    remaining: string[],
+  ) => {
     if (!submitted) return
 
-    // `val` is the submitted selection minus the removed chip.
-    const removed = submitted.filters[key].filter((v) => !val.includes(v))
+    const removed = submitted.filters[key].filter(
+      (v) => !remaining.includes(v),
+    )
     handleFiltersChange(
       key,
       draft[key].filter((v) => !removed.includes(v)),
@@ -382,16 +389,20 @@ export const DataExportContainer = () => {
       ...submitted,
       filters:
         key === 'regionCode'
-          ? { ...submitted.filters, regionCode: val, postcode: [] }
-          : { ...submitted.filters, [key]: val },
+          ? { ...submitted.filters, regionCode: remaining, postcode: [] }
+          : { ...submitted.filters, [key]: remaining },
     })
     setPage(1)
+    focusResults()
   }
 
   const handleQueryChipRemove = () => {
-    setQuery('')
-    setSubmitted((prev) => prev && { ...prev, query: '' })
+    if (!submitted) return
+
+    setQuery((prev) => (prev === submitted.query ? '' : prev))
+    setSubmitted({ ...submitted, query: '' })
     setPage(1)
+    focusResults()
   }
 
   const handleReportChipRemove = (remove: ReportChip['remove']) => {
@@ -401,6 +412,7 @@ export const DataExportContainer = () => {
     setGaps(next.gaps)
     setSubmitted((prev) => prev && remove(prev))
     setPage(1)
+    focusResults()
   }
 
   const rows = data?.companies ?? []
@@ -431,6 +443,41 @@ export const DataExportContainer = () => {
 
     return `/api/export/companies?${params.toString()}`
   }, [submittedQuery, submittedSummary])
+
+  /*
+   * Fetched rather than linked: a plain `<a download>` saves whatever comes
+   * back, so a failed export arrived as a JSON file named like the dataset.
+   * Fetching first lets a failure become a toast instead.
+   */
+  const handleExport = async () => {
+    if (!exportHref || isDownloading) return
+
+    setIsDownloading(true)
+    try {
+      const res = await fetch(exportHref)
+      if (!res.ok) {
+        // 413 is the API's row ceiling: the admin can act on it, so it says so.
+        toast.error(
+          res.status === 413
+            ? dataExportText.exportTooLarge
+            : dataExportText.exportError,
+          { autoClose: 5000 },
+        )
+        return
+      }
+
+      const blob = await res.blob()
+      saveBlob(
+        blob,
+        fileNameFromDisposition(res.headers.get('content-disposition')) ??
+          'jafnrettisstofa-fyrirtaeki.xlsx',
+      )
+    } catch {
+      toast.error(dataExportText.exportError, { autoClose: 5000 })
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   return (
     <GridContainer>
@@ -521,18 +568,17 @@ export const DataExportContainer = () => {
                   {/* Hidden while refetching, so the link never pairs a new
                       filter with the previous count. */}
                   {exportHref && total > 0 && !isFetching && (
-                    <a href={exportHref} download>
-                      <Button
-                        icon="download"
-                        iconType="outline"
-                        size="small"
-                        variant="utility"
-                        colorScheme="white"
-                        as="span"
-                      >
-                        {dataExportText.export}
-                      </Button>
-                    </a>
+                    <Button
+                      icon="download"
+                      iconType="outline"
+                      size="small"
+                      variant="utility"
+                      colorScheme="white"
+                      onClick={handleExport}
+                      loading={isDownloading}
+                    >
+                      {dataExportText.export}
+                    </Button>
                   )}
                 </Inline>
               )}
@@ -541,13 +587,11 @@ export const DataExportContainer = () => {
             {submitted !== null && (
               <CompanyActiveFilters
                 query={submitted.query}
-                quarantined={null}
                 filters={submitted.filters}
                 regionOptions={regionOptions}
-                postcodeOptions={postcodeOptions}
+                postcodeOptions={submittedPostcodeOptions}
                 onFiltersChange={handleFilterChipRemove}
                 onQueryClear={handleQueryChipRemove}
-                onQuarantinedClear={() => undefined}
                 extraChips={reportChips.map((chip) => ({
                   id: chip.id,
                   label: chip.label,
@@ -557,7 +601,7 @@ export const DataExportContainer = () => {
                   handleReset()
                   // The pressed button unmounts with the tags; without this
                   // keyboard focus would drop to the top of the document.
-                  requestAnimationFrame(() => resultsRef.current?.focus())
+                  focusResults()
                 }}
               />
             )}

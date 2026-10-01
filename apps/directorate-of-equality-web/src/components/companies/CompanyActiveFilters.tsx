@@ -45,13 +45,14 @@ export type ExtraChip = {
 
 type Props = {
   query: string
-  quarantined: boolean | null
+  /** Only the register has the legacy quarantine constraint. */
+  quarantined?: boolean | null
   filters: CompanyFilters
   regionOptions: FilterOption[]
   postcodeOptions: FilterOption[]
   onFiltersChange: (key: keyof CompanyFilters, val: string[]) => void
   onQueryClear: () => void
-  onQuarantinedClear: () => void
+  onQuarantinedClear?: () => void
   onReset: () => void
   /** Appended after the company chips, matching where their cards sit. */
   extraChips?: ExtraChip[]
@@ -64,7 +65,13 @@ const RemovableTag = ({
   label: string
   onClick: () => void
 }) => (
-  <Tag variant="blue" outlined onClick={onClick}>
+  // Named as an action: the label alone reads as "Karl, button".
+  <Tag
+    variant="blue"
+    outlined
+    onClick={onClick}
+    aria-label={`${companiesText.removeFilter}: ${label}`}
+  >
     <Box
       component="span"
       display="inlineFlex"
@@ -98,7 +105,7 @@ const labelFor = (options: FilterOption[], value: string) =>
  */
 export const CompanyActiveFilters = ({
   query,
-  quarantined,
+  quarantined = null,
   filters,
   regionOptions,
   postcodeOptions,
@@ -233,7 +240,7 @@ export const CompanyActiveFilters = ({
       return
     }
     if (key === 'quarantined') {
-      onQuarantinedClear()
+      onQuarantinedClear?.()
       return
     }
     // Routed through the same handler the panel uses rather than setting the
