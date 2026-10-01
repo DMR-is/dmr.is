@@ -13,9 +13,9 @@ const DATASETS = new Set(['companies'])
 /**
  * Proxies "Gagnaútdráttur" to the bearer-guarded export endpoint.
  *
- * Same shape and same reason as `api/salary-template/route.ts`: a plain
- * `<a href>` from the browser carries no bearer token, so this same-origin
- * route injects the session token server-side and forwards the file.
+ * Same shape and same reason as `api/salary-template/route.ts`: the browser
+ * holds a session cookie, not the bearer token, so this same-origin route
+ * injects the token server-side and forwards the file.
  *
  * The whole query string is passed through untouched — it IS the filter, and
  * the API owns validating it. Rewriting it here would give the export a second
@@ -47,11 +47,9 @@ export async function GET(
     /*
      * The upstream reason is logged, not just the status.
      *
-     * A failed download reaches the browser as "download interrupted" with no
-     * body shown and nothing in the page's console — the request was a
-     * navigation, not a fetch the app can inspect. Without this line the only
-     * signal anyone gets is the browser's own wording, which describes the
-     * transfer rather than the cause.
+     * The client only gets the status — enough to pick a toast, not to say
+     * why the API failed. Without this line the cause is in neither the page
+     * nor the console.
      */
     const detail = await res.text().catch(() => '')
     logger.error('Upstream data export failed', {

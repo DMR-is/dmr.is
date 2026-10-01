@@ -32,6 +32,7 @@ export const saveBlob = (blob: Blob, fileName: string) => {
   document.body.appendChild(link)
   link.click()
   link.remove()
-  // Deferred: revoking in the same tick can cancel the download in Safari.
-  setTimeout(() => URL.revokeObjectURL(url), 0)
+  // Deferred: some engines resolve the blob URL asynchronously after `click()`,
+  // and revoking first cancels the download.
+  setTimeout(() => URL.revokeObjectURL(url), 10_000)
 }

@@ -363,6 +363,40 @@ export const DataExportContainer = () => {
   }
 
   /*
+   * Removing a region chip drops only the postcodes INSIDE that region. Region
+   * and postcode AND together on the server, so clearing every postcode — what
+   * the panel does when the region selection changes — would widen the result
+   * to the whole remaining region without the admin asking.
+   *
+   * Without the region and postcode lookups there is no way to tell which
+   * postcodes belong where, so it falls back to the panel's behaviour and
+   * clears them all.
+   */
+  const withoutRegions =
+    (regionCodes: string[]) =>
+    (filters: CompanyFilters): CompanyFilters => {
+      const removedRegionIds = new Set(
+        (regionsData ?? [])
+          .filter((r) => regionCodes.includes(r.code))
+          .map((r) => r.id),
+      )
+      const regionIdByPostcode = new Map(
+        (allPostcodesData ?? []).map((p) => [p.code, p.regionId]),
+      )
+
+      return {
+        ...filters,
+        regionCode: filters.regionCode.filter((c) => !regionCodes.includes(c)),
+        postcode:
+          regionsData && allPostcodesData
+            ? filters.postcode.filter(
+                (c) => !removedRegionIds.has(regionIdByPostcode.get(c) ?? ''),
+              )
+            : [],
+      }
+    }
+
+  /*
    * Chip removals. Each takes the value out of BOTH the snapshot, which
    * refetches, and the draft, so the panel agrees with the table. Only that
    * value leaves the draft, and only while the draft still holds it —
@@ -377,21 +411,25 @@ export const DataExportContainer = () => {
   ) => {
     if (!submitted) return
 
-    const removed = submitted.filters[key].filter(
-      (v) => !remaining.includes(v),
-    )
-    handleFiltersChange(
-      key,
-      draft[key].filter((v) => !removed.includes(v)),
-    )
+    const removed = submitted.filters[key].filter((v) => !remaining.includes(v))
+    const draftHeldIt = draft[key].some((v) => removed.includes(v))
 
-    setSubmitted({
-      ...submitted,
-      filters:
-        key === 'regionCode'
-          ? { ...submitted.filters, regionCode: remaining, postcode: [] }
-          : { ...submitted.filters, [key]: remaining },
-    })
+    if (key === 'regionCode') {
+      const dropRegions = withoutRegions(removed)
+      if (draftHeldIt) setDraft(dropRegions)
+      setSubmitted({ ...submitted, filters: dropRegions(submitted.filters) })
+    } else {
+      if (draftHeldIt) {
+        handleFiltersChange(
+          key,
+          draft[key].filter((v) => !removed.includes(v)),
+        )
+      }
+      setSubmitted({
+        ...submitted,
+        filters: { ...submitted.filters, [key]: remaining },
+      })
+    }
     setPage(1)
     focusResults()
   }
@@ -419,9 +457,8 @@ export const DataExportContainer = () => {
   const total = data?.paging?.totalItems ?? 0
 
   /**
-   * The export link carries the SUBMITTED filter and no paging — the file is
-   * the whole matching set, not the page on screen. Rendered as an `<a>` rather
-   * than a fetch so the browser owns the download.
+   * The export URL carries the SUBMITTED filter and no paging — the file is
+   * the whole matching set, not the page on screen. `handleExport` fetches it.
    */
   const exportHref = useMemo(() => {
     if (!submittedQuery) return null
@@ -456,11 +493,14 @@ export const DataExportContainer = () => {
     try {
       const res = await fetch(exportHref)
       if (!res.ok) {
-        // 413 is the API's row ceiling: the admin can act on it, so it says so.
+        // 413 is the API's row ceiling and 401 an expired session: both have a
+        // next step the admin can take, so they say so instead of "try again".
         toast.error(
           res.status === 413
             ? dataExportText.exportTooLarge
-            : dataExportText.exportError,
+            : res.status === 401
+              ? dataExportText.exportUnauthorized
+              : dataExportText.exportError,
           { autoClose: 5000 },
         )
         return
@@ -470,7 +510,7 @@ export const DataExportContainer = () => {
       saveBlob(
         blob,
         fileNameFromDisposition(res.headers.get('content-disposition')) ??
-          'jafnrettisstofa-fyrirtaeki.xlsx',
+          dataExportText.exportFallbackFileName,
       )
     } catch {
       toast.error(dataExportText.exportError, { autoClose: 5000 })

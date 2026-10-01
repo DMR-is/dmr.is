@@ -33,16 +33,23 @@ export type ReportChip = {
 
 // Prefixed where the bare option would not say what it filters: "Karl" or
 // "Úr eldra kerfi" alone could be about anything, "Með úrbótaáætlun" cannot.
-const CRITERIA: Array<[keyof ReportCriteria, ReportFilterOption[], string?]> = [
-  ['type', REPORT_TYPE_OPTIONS],
-  ['companyAdminGender', ADMIN_GENDER_OPTIONS, dataExportText.adminGenderLabel],
-  [
-    'equalitySource',
-    EQUALITY_SOURCE_OPTIONS,
-    dataExportText.equalitySourceLabel,
-  ],
-  ['improvementPlan', IMPROVEMENT_PLAN_OPTIONS],
-]
+// A `Record` so a new criterion without a chip is a type error. Key order is
+// insertion order, which is the panel order the chips follow.
+const CRITERIA: Record<
+  keyof ReportCriteria,
+  { options: ReportFilterOption[]; prefix?: string }
+> = {
+  type: { options: REPORT_TYPE_OPTIONS },
+  companyAdminGender: {
+    options: ADMIN_GENDER_OPTIONS,
+    prefix: dataExportText.adminGenderLabel,
+  },
+  equalitySource: {
+    options: EQUALITY_SOURCE_OPTIONS,
+    prefix: dataExportText.equalitySourceLabel,
+  },
+  improvementPlan: { options: IMPROVEMENT_PLAN_OPTIONS },
+}
 
 const GAP_RANGES: Array<[string, ReportGapKey, ReportGapKey]> = [
   [
@@ -73,7 +80,11 @@ export const buildReportChips = ({
   dates,
   gaps,
 }: ReportState): ReportChip[] => [
-  ...CRITERIA.flatMap(([key, options, prefix]) =>
+  ...(
+    Object.entries(CRITERIA) as Array<
+      [keyof ReportCriteria, (typeof CRITERIA)[keyof ReportCriteria]]
+    >
+  ).flatMap(([key, { options, prefix }]) =>
     criteria[key].map((value) => {
       const label =
         options.find((option) => option.value === value)?.label ?? value
