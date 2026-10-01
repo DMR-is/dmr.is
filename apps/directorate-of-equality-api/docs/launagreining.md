@@ -46,14 +46,14 @@ restoring incidental hours, and vice versa.
 
 Collected per employee (Launagögn columns J–O), grouped into two bands:
 
-| Band                                      | Column | Component                               |
-| ----------------------------------------- | ------ | --------------------------------------- |
-| **Fastar greiðslur** → viðbótarlaun       | J      | Föst yfirvinna                          |
-|                                           | K      | Föst bifreiðahlunnindi                  |
-|                                           | L      | Aðrar reglulegar greiðslur / hlunnindi  |
-| **Tilfallandi greiðslur** → aukagreiðslur | M      | Tilfallandi / mæld yfirvinna            |
-|                                           | N      | Tilfallandi / mældur bifreiðastyrkur    |
-|                                           | O      | Aðrar tilfallandi greiðslur / hlunnindi |
+| Band                                      | Column | Component                                                |
+| ----------------------------------------- | ------ | -------------------------------------------------------- |
+| **Fastar greiðslur** → viðbótarlaun       | J      | Föst yfirvinna / álag                                    |
+|                                           | K      | Fastur ökutækjastyrkur / bifreiðahlunnindi               |
+|                                           | L      | Aðrar reglulegar greiðslur / hlunnindi                   |
+| **Tilfallandi greiðslur** → aukagreiðslur | M      | Tilfallandi / mæld yfirvinna / álag                      |
+|                                           | N      | Tilfallandi / mældur ökutækjastyrkur / bifreiðahlunnindi |
+|                                           | O      | Aðrar tilfallandi greiðslur / hlunnindi                  |
 
 `Bónusgreiðslur` was a distinct field before 2.0 and no longer exists; bonuses
 belong in column O.

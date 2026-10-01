@@ -51,6 +51,12 @@ type ExpectedHeader = {
   column: string
   /** Case- and whitespace-insensitive prefix the header must start with. */
   startsWith: string
+  /**
+   * Earlier wordings of the SAME field, still accepted. For a header that was
+   * reworded without changing meaning, so a copy downloaded before the rewording
+   * still uploads. Never put a reassigned column's old header here.
+   */
+  formerly?: string[]
 }
 
 const EXPECTED: Array<{ sheet: string; headers: ExpectedHeader[] }> = [
@@ -69,7 +75,11 @@ const EXPECTED: Array<{ sheet: string; headers: ExpectedHeader[] }> = [
       // payment as an incidental one. The version gate catches that first;
       // these catch a file whose properties were stripped or rebuilt.
       { column: 'J', startsWith: 'Föst yfirvinna' },
-      { column: 'K', startsWith: 'Föst bifreiðahlunnindi' },
+      {
+        column: 'K',
+        startsWith: 'Fastur ökutækjastyrkur',
+        formerly: ['Föst bifreiðahlunnindi'],
+      },
       // 1.x: `Tilfallandi / mældur bifreiðastyrkur`.
       { column: 'L', startsWith: 'Aðrar reglulegar greiðslur' },
       // ⚠️ M and N both begin `Tilfallandi / mæld…` — these two prefixes MUST
@@ -77,7 +87,11 @@ const EXPECTED: Array<{ sheet: string; headers: ExpectedHeader[] }> = [
       // a shared prefix they would accept the pair swapped, which is precisely
       // the 1.x-vs-2.0 difference, and the check would be decorative.
       { column: 'M', startsWith: 'Tilfallandi / mæld yfirvinna' },
-      { column: 'N', startsWith: 'Tilfallandi / mældur bifreiðastyrkur' },
+      {
+        column: 'N',
+        startsWith: 'Tilfallandi / mældur ökutækjastyrkur',
+        formerly: ['Tilfallandi / mældur bifreiðastyrkur'],
+      },
       // 1.x: `Önnur hlunnindi eða greiðslur`.
       { column: 'O', startsWith: 'Aðrar tilfallandi greiðslur' },
     ],
@@ -125,9 +139,11 @@ export function assertWorkbookLayout(
     // to say why it matters. Not this function's job.
     if (!sheet) continue
 
-    for (const { column, startsWith } of headers) {
+    for (const { column, startsWith, formerly = [] } of headers) {
       const actual = readString(sheet.getCell(`${column}${TABLE_HEADER_ROW}`))
-      if (normalise(actual).startsWith(normalise(startsWith))) continue
+      const accepted = [startsWith, ...formerly]
+      if (accepted.some((p) => normalise(actual).startsWith(normalise(p))))
+        continue
 
       ok = false
       errors.add(
