@@ -925,6 +925,42 @@ describe('parseWorkbook', () => {
           expect(errors.every((e) => e.row === 5)).toBe(true)
         },
       )
+
+      // K and N were reworded inside 2.0 without changing meaning, so a copy
+      // downloaded before the rewording must still upload.
+      it.each([
+        ['K', 'Föst bifreiðahlunnindi (kr.)'],
+        ['N', 'Tilfallandi / mældur bifreiðastyrkur (kr.)'],
+      ])(
+        'still accepts the earlier 2.0 wording at Launagögn %s',
+        async (column, earlierHeader) => {
+          const wb = await freshTemplate()
+          writeEmployeeRow(wb, 1, {
+            name: 'X',
+            role: 'R',
+            gender: 'Kona',
+            paidHours: 173.33,
+            baseSalary: 650000,
+            additionalFixedOvertime: 0,
+            additionalFixedCarAllowance: null,
+            additionalFixedOther: null,
+            bonusOccasionalOvertime: null,
+            bonusOccasionalCarAllowance: null,
+            bonusOther: null,
+            field: 'X',
+            department: 'X',
+            startDate: new Date('2024-01-01'),
+          })
+          fillCriteriaAndSubCriteria(wb)
+          fillRoleClassification(wb, [[1, 1, 1, 1]])
+          fillEmployeeClassification(wb, [[1]])
+          const sheet = wb.getWorksheet('Launagögn')
+          if (!sheet) throw new Error('no Launagögn sheet')
+          sheet.getCell(`${column}5`).value = earlierHeader
+
+          await expect(parseInMemory(wb)).resolves.toBeDefined()
+        },
+      )
     })
 
     /**

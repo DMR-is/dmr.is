@@ -387,7 +387,7 @@ const outdatedTemplateLines = (found: string | null): string[] => [
     : `Sniðmátið er af eldri útgáfu; útgáfa ${MIN_TEMPLATE_VERSION} eða nýrri er nauðsynleg.`,
   'Sæktu nýjasta sniðmátið og færðu gögnin yfir í það.',
   `Á blaðinu „${SHEETS.EMPLOYEES}“ færast dálkar A–K beint yfir.`,
-  `Á blaðinu „${SHEETS.EMPLOYEES}“ hafa dálkar L–O breyst: L er nú „Aðrar reglulegar greiðslur / hlunnindi“ (fastar greiðslur), N er „Tilfallandi / mældur bifreiðastyrkur“ og O er „Aðrar tilfallandi greiðslur / hlunnindi“ — bónusgreiðslur færast í O.`,
+  `Á blaðinu „${SHEETS.EMPLOYEES}“ hafa dálkar L–O breyst: L er nú „Aðrar reglulegar greiðslur / hlunnindi“ (fastar greiðslur), N er „Tilfallandi / mældur ökutækjastyrkur / bifreiðahlunnindi“ og O er „Aðrar tilfallandi greiðslur / hlunnindi“ — bónusgreiðslur færast í O.`,
   `Athugaðu einnig „Greiddar stundir“ (dálkur E á blaðinu „${SHEETS.EMPLOYEES}“): skilgreiningin hefur breyst og á nú við fastar yfirvinnustundir en ekki tilfallandi greiddar stundir.`,
 ]
 
