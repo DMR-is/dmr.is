@@ -12,8 +12,15 @@ export interface ICompanyCommentService {
     dto: CreateCompanyCommentDto,
   ): Promise<CompanyCommentDto>
 
-  /** Soft-deletes a comment on the given company. */
-  delete(companyId: string, commentId: string): Promise<void>
+  /**
+   * Soft-deletes a comment on the given company. Only its author may: system
+   * notes and other reviewers' notes are refused.
+   */
+  delete(
+    companyId: string,
+    commentId: string,
+    actorUserId: string,
+  ): Promise<void>
 }
 
 export const ICompanyCommentService = Symbol('ICompanyCommentService')

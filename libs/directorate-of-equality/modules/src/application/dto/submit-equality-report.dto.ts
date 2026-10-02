@@ -1,4 +1,5 @@
 import { Transform } from 'class-transformer'
+import { ArrayMaxSize } from 'class-validator'
 import { isBase64 } from 'validator'
 
 import {
@@ -15,6 +16,7 @@ import {
 
 import { GenderEnum } from '../../report/models/report.enums'
 import {
+  MAX_SUBSIDIARIES,
   SubmitReportCompanyDto,
   SubmitReportSubsidiaryDto,
 } from './submit-report-company.dto'
@@ -120,6 +122,9 @@ export class SubmitEqualityReportDto {
   @ApiDto(SubmitReportCompanyDto)
   company!: SubmitReportCompanyDto
 
-  @ApiOptionalDtoArray(SubmitReportSubsidiaryDto)
+  @ApiOptionalDtoArray(SubmitReportSubsidiaryDto, {
+    maxItems: MAX_SUBSIDIARIES,
+  })
+  @ArrayMaxSize(MAX_SUBSIDIARIES)
   subsidiaries?: SubmitReportSubsidiaryDto[]
 }

@@ -41,6 +41,16 @@ export const companyMessages = {
     message: `No entity found in national registry for "${nationalId}" and no fallback name provided`,
     translatedMessage: 'Engin skráning fannst í þjóðskrá fyrir þessa kennitölu',
   }),
+  // The kennitala is named in the translated text too: a subsidiary list can
+  // hold several, and the applicant needs to know which one to correct.
+  invalidKennitala: (nationalId: string): ErrorMessage => ({
+    message: `Kennitala "${nationalId}" fails its checksum`,
+    translatedMessage: `Kennitalan ${nationalId} er ekki gild. Athugaðu hvort um innsláttarvillu sé að ræða.`,
+  }),
+  notALegalEntity: (nationalId: string): ErrorMessage => ({
+    message: `Kennitala "${nationalId}" does not belong to a legal entity`,
+    translatedMessage: `Kennitalan ${nationalId} er ekki kennitala lögaðila.`,
+  }),
   inactiveCannotCreate: (nationalId: string): ErrorMessage => ({
     message: `Company with national id "${nationalId}" is not active in the RSK company registry and cannot be created`,
     translatedMessage: 'Ekki er hægt að skrá fyrirtæki sem er ekki virkt',

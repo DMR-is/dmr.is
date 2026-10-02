@@ -1,3 +1,4 @@
+import { isCompanyKennitala, isValid as isValidKennitala } from 'kennitala'
 import { literal, Op, Order } from 'sequelize'
 
 import {
@@ -83,6 +84,24 @@ const toMailRecipient = (company: CompanyModel): CompanyMailRecipient => ({
   email: company.email?.trim() || null,
   quarantined: company.quarantined,
 })
+
+/**
+ * Refuses anything but a legal entity's kennitala before it reaches the
+ * national registry. Þjóðskrá holds people as well as companies, so without
+ * this a company lookup doubles as a name-and-address lookup for any person.
+ *
+ * Checksum first, on its own: `isCompanyKennitala` also fails a mistyped
+ * number, which would then be reported as "not a legal entity".
+ */
+const assertLegalEntityKennitala = (nationalId: string): void => {
+  if (!isValidKennitala(nationalId)) {
+    throw new BadRequestException(companyMessages.invalidKennitala(nationalId))
+  }
+
+  if (!isCompanyKennitala(nationalId)) {
+    throw new BadRequestException(companyMessages.notALegalEntity(nationalId))
+  }
+}
 
 @Injectable()
 export class CompanyService implements ICompanyService {
@@ -254,6 +273,8 @@ export class CompanyService implements ICompanyService {
       `Looking up company in national registry by national id "${nationalId}"`,
       { context: LOGGING_CONTEXT },
     )
+
+    assertLegalEntityKennitala(nationalId)
 
     const result =
       await this.nationalRegistryService.getEntityByNationalId(nationalId)
@@ -621,6 +642,8 @@ export class CompanyService implements ICompanyService {
       `Resolving report company snapshot source by national id "${input.nationalId}"`,
       { context: LOGGING_CONTEXT },
     )
+
+    assertLegalEntityKennitala(input.nationalId)
 
     const registry = await this.nationalRegistryService.getEntityByNationalId(
       input.nationalId,

@@ -4520,7 +4520,12 @@
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "nationalId": { "type": "string" }
+          "nationalId": {
+            "type": "string",
+            "pattern": "^\\d{6}[- ]?\\d{4}$",
+            "example": "0101901234",
+            "description": "National ID. Accepts XXXXXXXXXX, XXXXXX-XXXX, or XXXXXX XXXX — always normalised to XXXXXXXXXX."
+          }
         },
         "required": ["name", "nationalId"]
       },
@@ -4611,6 +4616,7 @@
           },
           "company": { "$ref": "#/components/schemas/SubmitReportCompanyDto" },
           "subsidiaries": {
+            "maxItems": 100,
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SubmitReportSubsidiaryDto"
@@ -4725,6 +4731,7 @@
           "averageEmployeeNeutralCount": { "type": "number", "nullable": true },
           "company": { "$ref": "#/components/schemas/SubmitReportCompanyDto" },
           "subsidiaries": {
+            "maxItems": 100,
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SubmitReportSubsidiaryDto"
@@ -5785,6 +5792,7 @@
         "properties": {
           "company": { "$ref": "#/components/schemas/SubmitReportCompanyDto" },
           "subsidiaries": {
+            "maxItems": 100,
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SubmitReportSubsidiaryDto"

@@ -1,3 +1,5 @@
+import { ArrayMaxSize } from 'class-validator'
+
 import {
   ApiDto,
   ApiOptionalBoolean,
@@ -6,6 +8,7 @@ import {
 } from '@dmr.is/decorators'
 
 import {
+  MAX_SUBSIDIARIES,
   SubmitReportCompanyDto,
   SubmitReportSubsidiaryDto,
 } from '../../../application/dto/submit-report-company.dto'
@@ -25,7 +28,10 @@ export class SubmitDraftDto {
   @ApiDto(SubmitReportCompanyDto)
   company!: SubmitReportCompanyDto
 
-  @ApiOptionalDtoArray(SubmitReportSubsidiaryDto)
+  @ApiOptionalDtoArray(SubmitReportSubsidiaryDto, {
+    maxItems: MAX_SUBSIDIARIES,
+  })
+  @ArrayMaxSize(MAX_SUBSIDIARIES)
   subsidiaries?: SubmitReportSubsidiaryDto[]
 
   @ApiOptionalUUID({

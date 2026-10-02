@@ -13,4 +13,8 @@ export const companyCommentMessages = {
     message: `Comment "${id}" not found`,
     translatedMessage: 'Athugasemd fannst ekki',
   }),
+  notAuthor: {
+    message: 'Reviewers may only delete their own comments',
+    translatedMessage: 'Aðeins höfundur athugasemdar getur eytt henni',
+  } satisfies ErrorMessage,
 } as const

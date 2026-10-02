@@ -24,6 +24,7 @@ import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
 import { IsatSectionModel } from './models/isat-section.model'
 import { LegacyReportModel } from './models/legacy-report.model'
+import { validKennitala } from './utils/valid-kennitala.testing'
 import { companyMessages } from './company.messages'
 import { CompanyService } from './company.service'
 
@@ -33,6 +34,11 @@ const mockLogger = {
   warn: jest.fn(),
   error: jest.fn(),
 }
+
+const SUBSIDIARY_ID = validKennitala('46020708')
+const NEW_SUBSIDIARY_ID = validKennitala('65037606')
+const UNREGISTERED_ID = validKennitala('45020128')
+const TYPO_ID = `${SUBSIDIARY_ID.slice(0, 9)}1`
 
 describe('CompanyService', () => {
   let service: CompanyService
@@ -362,7 +368,7 @@ describe('CompanyService', () => {
     it('returns existing company data with address fields seeded from the national registry', async () => {
       getEntityByNationalId.mockResolvedValue({
         entity: makeRegistryEntity({
-          kennitala: '5501234567',
+          kennitala: SUBSIDIARY_ID,
           nafn: 'Acme ehf.',
           heimili: 'Suðurgata 1',
           sveitarfelag: 'Reykjavík',
@@ -373,25 +379,25 @@ describe('CompanyService', () => {
         makeCompanyModel({
           id: 'company-1',
           name: 'Acme ehf.',
-          nationalId: '5501234567',
+          nationalId: SUBSIDIARY_ID,
           employeeCountCategory: CompanySizeEnum.SMALL,
         }),
       )
 
       const result = await service.getOrCreateSubsidiaryReportSnapshotSource({
         name: 'Ignored name',
-        nationalId: '5501234567',
+        nationalId: SUBSIDIARY_ID,
       })
 
-      expect(getEntityByNationalId).toHaveBeenCalledWith('5501234567')
+      expect(getEntityByNationalId).toHaveBeenCalledWith(SUBSIDIARY_ID)
       expect(findOne).toHaveBeenCalledWith({
-        where: { nationalId: '5501234567' },
+        where: { nationalId: SUBSIDIARY_ID },
       })
       expect(create).not.toHaveBeenCalled()
       expect(result).toEqual({
         companyId: 'company-1',
         name: 'Acme ehf.',
-        nationalId: '5501234567',
+        nationalId: SUBSIDIARY_ID,
         address: 'Suðurgata 1',
         city: 'Reykjavík',
         postcode: '101',
@@ -402,7 +408,7 @@ describe('CompanyService', () => {
     it('creates a live company row from the national registry name when no match exists', async () => {
       getEntityByNationalId.mockResolvedValue({
         entity: makeRegistryEntity({
-          kennitala: '6601234567',
+          kennitala: NEW_SUBSIDIARY_ID,
           nafn: 'Subsidiary ehf.',
           heimili: 'Hafnarstræti 5',
           sveitarfelag: 'Akureyri',
@@ -414,19 +420,19 @@ describe('CompanyService', () => {
         makeCompanyModel({
           id: 'company-2',
           name: 'Subsidiary ehf.',
-          nationalId: '6601234567',
+          nationalId: NEW_SUBSIDIARY_ID,
           employeeCountCategory: CompanySizeEnum.UNKNOWN,
         }),
       )
 
       const result = await service.getOrCreateSubsidiaryReportSnapshotSource({
         name: 'Submitted name',
-        nationalId: '6601234567',
+        nationalId: NEW_SUBSIDIARY_ID,
       })
 
       expect(create).toHaveBeenCalledWith({
         name: 'Subsidiary ehf.',
-        nationalId: '6601234567',
+        nationalId: NEW_SUBSIDIARY_ID,
         employeeCountCategory: CompanySizeEnum.UNKNOWN,
         sector: CompanySectorEnum.UNKNOWN,
         legalFormId: null,
@@ -435,7 +441,7 @@ describe('CompanyService', () => {
       expect(result).toEqual({
         companyId: 'company-2',
         name: 'Subsidiary ehf.',
-        nationalId: '6601234567',
+        nationalId: NEW_SUBSIDIARY_ID,
         address: 'Hafnarstræti 5',
         city: 'Akureyri',
         postcode: '600',
@@ -449,12 +455,63 @@ describe('CompanyService', () => {
       await expect(
         service.getOrCreateSubsidiaryReportSnapshotSource({
           name: 'Anything',
-          nationalId: '0000000000',
+          nationalId: UNREGISTERED_ID,
         }),
       ).rejects.toThrow(NotFoundException)
 
       expect(findOne).not.toHaveBeenCalled()
       expect(create).not.toHaveBeenCalled()
+    })
+
+    it('refuses a personal kennitala before asking the national registry', async () => {
+      await expect(
+        service.getOrCreateSubsidiaryReportSnapshotSource({
+          name: 'Anyone',
+          nationalId: '0101302989',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(companyMessages.notALegalEntity('0101302989')),
+      )
+
+      expect(getEntityByNationalId).not.toHaveBeenCalled()
+      expect(create).not.toHaveBeenCalled()
+    })
+
+    it('refuses a kennitala that fails its checksum', async () => {
+      await expect(
+        service.getOrCreateSubsidiaryReportSnapshotSource({
+          name: 'Typo ehf.',
+          nationalId: TYPO_ID,
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(companyMessages.invalidKennitala(TYPO_ID)),
+      )
+
+      expect(getEntityByNationalId).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('rskLookup', () => {
+    it('returns the registry name for a legal entity', async () => {
+      getEntityByNationalId.mockResolvedValue({
+        entity: makeRegistryEntity({
+          kennitala: SUBSIDIARY_ID,
+          nafn: 'Acme ehf.',
+        }),
+      })
+
+      await expect(service.rskLookup(SUBSIDIARY_ID)).resolves.toEqual({
+        name: 'Acme ehf.',
+        nationalId: SUBSIDIARY_ID,
+      })
+    })
+
+    it('refuses a personal kennitala before asking the national registry', async () => {
+      await expect(service.rskLookup('0101302989')).rejects.toThrow(
+        new BadRequestException(companyMessages.notALegalEntity('0101302989')),
+      )
+
+      expect(getEntityByNationalId).not.toHaveBeenCalled()
     })
   })
 
