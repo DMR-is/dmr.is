@@ -12,6 +12,7 @@ import type {
   ReportDateKey,
   ReportDateRanges,
   ReportGapBounds,
+  ReportGapKey,
 } from '../../components/data-export/ReportCriteriaCards'
 import {
   ADMIN_GENDER_OPTIONS,
@@ -25,6 +26,7 @@ import type {
   CompanySectorEnum,
   CompanyStatusEnum,
 } from '../../gen/fetch'
+import { dataExportText } from '../../lib/text'
 import { EMPLOYEE_RANGES } from '../../lib/utils'
 
 /** Everything the panel sets, as it was when "Sækja lista" was pressed. */
@@ -98,6 +100,34 @@ export const buildFilterSummary = ({
     ...reportSummary(criteria, dates, gaps),
   ].filter((value): value is string => value !== null)
 }
+
+type GapFromKey = Extract<ReportGapKey, `${string}From`>
+type GapToKey = Extract<ReportGapKey, `${string}To`>
+
+/**
+ * The pay-gap ranges, keyed by their lower bound. Shared by the summary sheet
+ * and the chips so both name a range the way the panel does, and a `Record`
+ * so a new range without a label is a type error.
+ */
+const GAP_RANGE_LABELS: Record<GapFromKey, [string, GapToKey]> = {
+  reportRawGapPercentFrom: [
+    dataExportText.rawGapRange,
+    'reportRawGapPercentTo',
+  ],
+  reportOskyrtPercentFrom: [
+    dataExportText.oskyrtGapRange,
+    'reportOskyrtPercentTo',
+  ],
+}
+
+/** `GAP_RANGE_LABELS` in the same `[label, from, to]` shape as the dates. */
+export const GAP_RANGES = (
+  Object.entries(GAP_RANGE_LABELS) as Array<[GapFromKey, [string, GapToKey]]>
+).map(([fromKey, [label, toKey]]): [string, GapFromKey, GapToKey] => [
+  label,
+  fromKey,
+  toKey,
+])
 
 export const DATE_RANGE_LABELS: Array<[string, ReportDateKey, ReportDateKey]> =
   [
@@ -180,15 +210,8 @@ const reportSummary = (
       `${prefix}úrbótaáætlun`,
       labelFor(IMPROVEMENT_PLAN_OPTIONS, criteria.improvementPlan),
     ),
-    gapLine(
-      `${prefix}óleiðréttur launamunur`,
-      gaps.reportRawGapPercentFrom,
-      gaps.reportRawGapPercentTo,
-    ),
-    gapLine(
-      `${prefix}óskýrður launamunur`,
-      gaps.reportOskyrtPercentFrom,
-      gaps.reportOskyrtPercentTo,
+    ...GAP_RANGES.map(([label, fromKey, toKey]) =>
+      gapLine(`${prefix}${label.toLowerCase()}`, gaps[fromKey], gaps[toKey]),
     ),
     ...DATE_RANGE_LABELS.map(([label, fromKey, toKey]) =>
       dateLine(`${prefix}${label.toLowerCase()}`, dates[fromKey], dates[toKey]),

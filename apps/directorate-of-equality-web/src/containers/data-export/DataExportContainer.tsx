@@ -59,6 +59,31 @@ const GAP_TO_KEY: Partial<Record<ReportGapKey, ReportGapKey>> = {
   reportOskyrtPercentFrom: 'reportOskyrtPercentTo',
 }
 
+/**
+ * The improvement-plan criterion as query params.
+ *
+ * Both ticked is NOT "no constraint". On the server "with" is an approved
+ * report with outliers and "without" an approved SALARY report without, so
+ * together they mean "an approved salary report" — only a salary report can
+ * carry an úrbótaáætlun. Sending nothing would also return companies that
+ * never filed one, while the chips and the summary sheet say otherwise.
+ *
+ * That narrows `reportType` to SALARY. Against an equality-only type
+ * selection nothing can match, and `false` makes the server say so: it pins
+ * the report to SALARY, which contradicts the type.
+ */
+const improvementPlanQuery = (
+  plan: string[],
+  types: string[],
+): Record<string, unknown> => {
+  if (plan.length === 1) return { reportHasImprovementPlan: plan[0] === 'yes' }
+  if (plan.length < 2) return {}
+
+  return types.length && !types.includes('SALARY')
+    ? { reportHasImprovementPlan: false }
+    : { reportType: ['SALARY'] }
+}
+
 const EMPTY_FILTERS: CompanyFilters = {
   employees: [],
   status: [],
@@ -231,14 +256,11 @@ export const DataExportContainer = () => {
       ...(reportCriteria.equalitySource.length
         ? { reportEqualitySource: reportCriteria.equalitySource }
         : {}),
-      // Both selected means both states, which is the same as no constraint —
-      // so it is sent as none rather than as a contradiction.
-      ...(reportCriteria.improvementPlan.length === 1
-        ? {
-            reportHasImprovementPlan:
-              reportCriteria.improvementPlan[0] === 'yes',
-          }
-        : {}),
+      // After `reportType`: both ticked narrows it — see `improvementPlanQuery`.
+      ...improvementPlanQuery(
+        reportCriteria.improvementPlan,
+        reportCriteria.type,
+      ),
       // The pickers give local midnight and the API reads the UTC day, so the
       // picked calendar day is sent as UTC midnight to survive any time zone.
       ...Object.fromEntries(

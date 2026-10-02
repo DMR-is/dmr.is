@@ -1,7 +1,4 @@
-import type {
-  ReportCriteria,
-  ReportGapKey,
-} from '../../components/data-export/ReportCriteriaCards'
+import type { ReportCriteria } from '../../components/data-export/ReportCriteriaCards'
 import {
   ADMIN_GENDER_OPTIONS,
   EQUALITY_SOURCE_OPTIONS,
@@ -13,6 +10,7 @@ import { dataExportText } from '../../lib/text'
 import {
   DATE_RANGE_LABELS,
   dateLine,
+  GAP_RANGES,
   gapLine,
   type Submission,
 } from './filterSummary'
@@ -50,19 +48,6 @@ const CRITERIA: Record<
   },
   improvementPlan: { options: IMPROVEMENT_PLAN_OPTIONS },
 }
-
-const GAP_RANGES: Array<[string, ReportGapKey, ReportGapKey]> = [
-  [
-    dataExportText.rawGapRange,
-    'reportRawGapPercentFrom',
-    'reportRawGapPercentTo',
-  ],
-  [
-    dataExportText.oskyrtGapRange,
-    'reportOskyrtPercentFrom',
-    'reportOskyrtPercentTo',
-  ],
-]
 
 const sameDay = (a: Date | undefined, b: Date | undefined) =>
   a?.getTime() === b?.getTime()
