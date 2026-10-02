@@ -509,7 +509,11 @@ describe('ScoringModelService', () => {
         service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
           assignments: [{ subCriterionId: JOB_SUB, stepId: PERSONAL_STEP }],
         }),
-      ).rejects.toThrow(BadRequestException)
+      ).rejects.toThrow(
+        new BadRequestException(
+          'Úthlutun #1: þrepið tilheyrir ekki undirviðmiðinu „Ábyrgð / Mannaforráð“',
+        ),
+      )
 
       expect(roleStepDestroy).not.toHaveBeenCalled()
     })
@@ -519,7 +523,11 @@ describe('ScoringModelService', () => {
         service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
           assignments: [{ subCriterionId: 'elsewhere', stepId: JOB_STEP }],
         }),
-      ).rejects.toThrow(BadRequestException)
+      ).rejects.toThrow(
+        new BadRequestException(
+          'Úthlutun #1 vísar í undirviðmið sem er ekki í þessu starfsmati',
+        ),
+      )
     })
 
     it('refuses a personal sub-criterion, which is scored per employee', async () => {
@@ -529,7 +537,11 @@ describe('ScoringModelService', () => {
             { subCriterionId: PERSONAL_SUB, stepId: PERSONAL_STEP },
           ],
         }),
-      ).rejects.toThrow(BadRequestException)
+      ).rejects.toThrow(
+        new BadRequestException(
+          'Undirviðmiðið „Frammistaða / Menntun“ er einstaklingsbundið og er metið á starfsmann, ekki starf',
+        ),
+      )
     })
 
     it('refuses the same sub-criterion twice', async () => {
@@ -540,7 +552,11 @@ describe('ScoringModelService', () => {
             { subCriterionId: JOB_SUB, stepId: JOB_STEP },
           ],
         }),
-      ).rejects.toThrow(BadRequestException)
+      ).rejects.toThrow(
+        new BadRequestException(
+          'Undirviðmiðið „Ábyrgð / Mannaforráð“ kemur oftar en einu sinni fyrir; starf fær nákvæmlega eina úthlutun á hvert undirviðmið',
+        ),
+      )
 
       expect(roleStepDestroy).not.toHaveBeenCalled()
     })

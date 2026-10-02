@@ -197,6 +197,19 @@ export class ApplicationService implements IApplicationService {
     return this.reportCreateService.createSalary(createInput, options)
   }
 
+  async findReplay(
+    providerId: string,
+    company: CompanyDto,
+    type: ReportTypeEnum,
+  ): Promise<CreateReportResponseDto | null> {
+    return this.reportCreateService.findReplay(
+      this.channel.providerType,
+      this.channel.buildProviderId(providerId, company.nationalId),
+      company.id,
+      type,
+    )
+  }
+
   async getSalaryReportEligibility(
     company: CompanyDto,
   ): Promise<SalaryReportEligibilityDto> {
@@ -1111,7 +1124,10 @@ export class ApplicationService implements IApplicationService {
           {
             model: ReportEmployeeModel,
             as: 'reportEmployee',
-            attributes: ['id', 'ordinal', 'gender'],
+            // `score` is read by ReportEmployeeOutlierModel.fromModel; left out,
+            // every filed outlier row reads `score: null` although the column
+            // is populated at submit. Same list as the admin ReportService.
+            attributes: ['id', 'ordinal', 'gender', 'score'],
             where: { reportId: report.id },
             required: true,
             include: [

@@ -7,9 +7,9 @@ import { BadRequestException } from '@nestjs/common'
 import { SalaryDataBasisEnum } from '../models/report.enums'
 
 /**
- * How many months back a declared payroll month may reach, counting the current
- * month as the first. Three years of months covers current filings and any late
- * catch-up.
+ * How many finished months a declared payroll month may be chosen from: last
+ * month and the ones before it, the oldest exactly this many months ago. Three
+ * years of months covers current filings and any late catch-up.
  *
  * This is the authoritative bound — it is enforced on every write path and
  * stated in the OpenAPI descriptions of `salaryDataPeriod`. The admin month
@@ -58,9 +58,14 @@ const PERIOD_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
 
 /**
  * The window a declared payroll month must fall in, as canonical `YYYY-MM-01`
- * strings: the current month back through `SALARY_DATA_PERIOD_MONTHS_BACK`
- * months, counting the current one as the first. Both bounds are in canonical
- * form, so they compare correctly as strings.
+ * strings: last month back to `SALARY_DATA_PERIOD_MONTHS_BACK` months ago, so
+ * it holds that many months. Both bounds are in canonical form, so they compare
+ * correctly as strings.
+ *
+ * The current month is outside it: until the month is over its payroll has not
+ * all been paid, so figures declared for it describe a month that has not
+ * happened. It once counted as soon as it had started, and when it stopped
+ * counting the oldest month moved back one, so the window still holds 36.
  *
  * Computed per call rather than at module load — the API is long-running, and a
  * bound frozen at boot would drift out of date after a month of uptime.
@@ -70,10 +75,10 @@ function salaryDataPeriodWindow(): { earliest: string; latest: string } {
 
   return {
     earliest: `${format(
-      subMonths(currentMonth, SALARY_DATA_PERIOD_MONTHS_BACK - 1),
+      subMonths(currentMonth, SALARY_DATA_PERIOD_MONTHS_BACK),
       'yyyy-MM',
     )}-01`,
-    latest: `${format(currentMonth, 'yyyy-MM')}-01`,
+    latest: `${format(subMonths(currentMonth, 1), 'yyyy-MM')}-01`,
   }
 }
 
@@ -111,7 +116,7 @@ export function normalizeSalaryDataPeriod(period: string): string {
 
   if (normalized > latest) {
     throw new BadRequestException(
-      `salaryDataPeriod "${period}" is in the future — the payroll month must have happened (latest is ${latest})`,
+      `salaryDataPeriod "${period}" is not a finished month — the payroll month must be over (latest is ${latest})`,
     )
   }
 

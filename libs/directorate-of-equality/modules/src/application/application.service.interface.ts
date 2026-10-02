@@ -2,6 +2,7 @@ import { PagingQuery } from '@dmr.is/shared-dto'
 
 import { CompanyDto } from '../company/dto/company.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
+import { ReportTypeEnum } from '../report/models/report.enums'
 import { EqualityContentPdf } from '../report/report.service.interface'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
@@ -36,6 +37,15 @@ export interface IApplicationService {
     company: CompanyDto,
     options?: SubmitEqualityOptions,
   ): Promise<CreateReportResponseDto>
+  /**
+   * The replay a submission with this caller's `providerId` would get, or
+   * null. Lets a channel answer a replay before reading the body.
+   */
+  findReplay(
+    providerId: string,
+    company: CompanyDto,
+    type: ReportTypeEnum,
+  ): Promise<CreateReportResponseDto | null>
   getActiveEqualityReport(
     company: CompanyDto,
   ): Promise<EqualityReportSummaryDto>

@@ -1,3 +1,5 @@
+import { IsEmail, Min, ValidateIf } from 'class-validator'
+
 import {
   ApiOptionalBase64File,
   ApiOptionalEnum,
@@ -6,6 +8,7 @@ import {
   ApiOptionalString,
 } from '@dmr.is/decorators'
 
+import { TrimString } from '../../../report/lib/trim-string'
 import {
   GenderEnum,
   SalaryDataBasisEnum,
@@ -28,7 +31,12 @@ export class UpdateDraftDto {
   })
   companyAdminTitle?: string | null
 
+  // A draft may hold a blank address while it is being filled in; any
+  // address it does hold must be one, as the filing DTOs require.
   @ApiOptionalString({ nullable: true })
+  @TrimString()
+  @ValidateIf((_, value) => value !== '')
+  @IsEmail()
   companyAdminEmail?: string | null
 
   @ApiOptionalEnum(GenderEnum, { nullable: true, enumName: 'GenderEnum' })
@@ -44,18 +52,25 @@ export class UpdateDraftDto {
   contactTitle?: string | null
 
   @ApiOptionalString({ nullable: true })
+  @TrimString()
+  @ValidateIf((_, value) => value !== '')
+  @IsEmail()
   contactEmail?: string | null
 
   @ApiOptionalString({ nullable: true })
+  @TrimString()
   contactPhone?: string | null
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   averageEmployeeMaleCount?: number | null
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   averageEmployeeFemaleCount?: number | null
 
   @ApiOptionalNumber({ nullable: true })
+  @Min(0)
   averageEmployeeNeutralCount?: number | null
 
   @ApiOptionalEnum(SalaryDataBasisEnum, {
@@ -69,7 +84,7 @@ export class UpdateDraftDto {
   @ApiOptionalString({
     nullable: true,
     description:
-      'The payroll month the salary data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Must name a month that has already happened, no earlier than 36 months ago. Required alongside `salaryDataBasis: MONTH` by submit time; ignored while the stored basis is `AVERAGE`.',
+      'The payroll month the salary data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Must name a month that is over — last month at the latest — and no earlier than 36 months ago. Required alongside `salaryDataBasis: MONTH` by submit time; ignored while the stored basis is `AVERAGE`.',
   })
   salaryDataPeriod?: string | null
 

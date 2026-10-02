@@ -1,8 +1,12 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common'
 
 import { IApplicationService } from '@dmr.is/doe-modules/application'
-import { CompanyDto } from '@dmr.is/doe-modules/company'
-import { SalaryDataBasisEnum } from '@dmr.is/doe-modules/report'
+import { CompanyDto, ICompanyService } from '@dmr.is/doe-modules/company'
+import { ReportTypeEnum, SalaryDataBasisEnum } from '@dmr.is/doe-modules/report'
 import { IScoringModelService } from '@dmr.is/doe-modules/scoring-model'
 import { Logger } from '@dmr.is/logging'
 
@@ -36,6 +40,8 @@ describe('PartnerSubmissionService', () => {
   let salaryAnalysis: jest.Mock
   let submitEquality: jest.Mock
   let warn: jest.Mock
+  let assertKnownSnapshotCodes: jest.Mock
+  let findReplay: jest.Mock
 
   beforeEach(() => {
     expandToParsedPayload = jest.fn().mockResolvedValue(PARSED)
@@ -49,6 +55,8 @@ describe('PartnerSubmissionService', () => {
       replayed: false,
     })
     warn = jest.fn()
+    assertKnownSnapshotCodes = jest.fn().mockResolvedValue(undefined)
+    findReplay = jest.fn().mockResolvedValue(null)
     convert.mockReset()
     convert.mockResolvedValue({
       html: '<h1>Jafnréttisáætlun</h1>',
@@ -60,8 +68,10 @@ describe('PartnerSubmissionService', () => {
         submitSalary,
         salaryAnalysis,
         submitEquality,
+        findReplay,
       } as unknown as IApplicationService,
       { expandToParsedPayload } as unknown as IScoringModelService,
+      { assertKnownSnapshotCodes } as unknown as ICompanyService,
       { warn: warn } as unknown as Logger,
     )
   })
@@ -350,6 +360,104 @@ describe('PartnerSubmissionService', () => {
       ).rejects.toThrow(BadRequestException)
       expect(convert).toHaveBeenCalledWith(undefined)
       expect(submitEquality).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('the company snapshot’s ÍSAT code and postcode', () => {
+    const company = { isatCategory: '99.99', postcode: '99999' }
+    const refusal = new BadRequestException('unknown codes')
+
+    beforeEach(() => {
+      assertKnownSnapshotCodes.mockRejectedValue(refusal)
+    })
+
+    it('refuses a salary filing before expanding anything', async () => {
+      await expect(
+        service.submitSalary(
+          { providerId: 'p-1', employees: EMPLOYEES, company } as never,
+          COMPANY,
+        ),
+      ).rejects.toBe(refusal)
+
+      expect(assertKnownSnapshotCodes).toHaveBeenCalledWith(company)
+      expect(expandToParsedPayload).not.toHaveBeenCalled()
+      expect(submitSalary).not.toHaveBeenCalled()
+    })
+
+    it('refuses an equality filing before converting the document', async () => {
+      await expect(
+        service.submitEquality(
+          { providerId: 'p-1', company } as never,
+          { buffer: Buffer.from('PK docx') } as Express.Multer.File,
+          COMPANY,
+        ),
+      ).rejects.toBe(refusal)
+
+      expect(convert).not.toHaveBeenCalled()
+      expect(submitEquality).not.toHaveBeenCalled()
+    })
+  })
+
+  // The guide promises a replay's body is not read. Everything this channel
+  // does before the shared path — conversion, expansion, snapshot checks — can
+  // refuse a body, so a replay has to be answered before any of it.
+  describe('a replayed providerId', () => {
+    const REPLAY = { reportId: 'earlier', replayed: true, status: 'SUBMITTED' }
+
+    beforeEach(() => {
+      findReplay.mockResolvedValue(REPLAY)
+    })
+
+    it('answers a salary replay without expanding or checking the body', async () => {
+      await expect(
+        service.submitSalary(
+          { providerId: 'p-1', employees: EMPLOYEES, company: {} } as never,
+          COMPANY,
+        ),
+      ).resolves.toBe(REPLAY)
+
+      expect(findReplay).toHaveBeenCalledWith(
+        'p-1',
+        COMPANY,
+        ReportTypeEnum.SALARY,
+      )
+      expect(assertKnownSnapshotCodes).not.toHaveBeenCalled()
+      expect(expandToParsedPayload).not.toHaveBeenCalled()
+      expect(submitSalary).not.toHaveBeenCalled()
+    })
+
+    it('answers an equality replay without reading the document', async () => {
+      await expect(
+        service.submitEquality(
+          { providerId: 'p-1', company: {} } as never,
+          { buffer: Buffer.from('%PDF-1.7') } as Express.Multer.File,
+          COMPANY,
+        ),
+      ).resolves.toBe(REPLAY)
+
+      expect(findReplay).toHaveBeenCalledWith(
+        'p-1',
+        COMPANY,
+        ReportTypeEnum.EQUALITY,
+      )
+      expect(assertKnownSnapshotCodes).not.toHaveBeenCalled()
+      expect(convert).not.toHaveBeenCalled()
+      expect(submitEquality).not.toHaveBeenCalled()
+    })
+
+    it('lets a taken providerId’s 409 through before reading anything', async () => {
+      const conflict = new ConflictException('taken')
+      findReplay.mockRejectedValue(conflict)
+
+      await expect(
+        service.submitEquality(
+          { providerId: 'p-1', company: {} } as never,
+          { buffer: Buffer.from('%PDF-1.7') } as Express.Multer.File,
+          COMPANY,
+        ),
+      ).rejects.toBe(conflict)
+
+      expect(convert).not.toHaveBeenCalled()
     })
   })
 })

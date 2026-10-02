@@ -58,6 +58,7 @@ import { LegacyReportModel } from './models/legacy-report.model'
 import { buildCompanyListQuery } from './utils/filters'
 import { ResolvedSector, resolveSector } from './utils/legal-form-sector'
 import { mapRskLegalEntity } from './utils/rsk-company-mapping'
+import { leadingIsatDigits, leadingPostcode } from './utils/snapshot-codes'
 import { companyMessages } from './company.messages'
 import {
   CompanyMailRecipient,
@@ -532,6 +533,47 @@ export class CompanyService implements ICompanyService {
     }
   }
 
+  async assertKnownSnapshotCodes(input: {
+    isatCategory: string
+    postcode: string
+  }): Promise<void> {
+    const isat = leadingIsatDigits(input.isatCategory)
+    const postcode = leadingPostcode(input.postcode)
+
+    // A prefix match, so a filer naming a class (`62.01`) rather than its
+    // subclass (`62.01.0`) is not refused: the table holds subclasses only.
+    const [isatRow, postcodeRow] = await Promise.all([
+      isat
+        ? this.isatCategoryModel.findOne({
+            attributes: ['code'],
+            where: { code: { [Op.startsWith]: isat } },
+          })
+        : null,
+      postcode
+        ? this.postcodeModel.findOne({
+            attributes: ['code'],
+            where: { code: postcode },
+          })
+        : null,
+    ])
+
+    const refusals = [
+      ...(isatRow
+        ? []
+        : [companyMessages.unknownSnapshotIsatCategory(input.isatCategory)]),
+      ...(postcodeRow
+        ? []
+        : [companyMessages.unknownSnapshotPostcode(input.postcode)]),
+    ]
+
+    if (refusals.length > 0) {
+      throw new BadRequestException({
+        message: refusals.map((r) => r.message),
+        translatedMessage: refusals.map((r) => r.translatedMessage).join(' '),
+      })
+    }
+  }
+
   /** Resolve an RSK 3-digit postcode to our `postcode` row, or null if unknown. */
   private async resolvePostcode(
     code: string | null,
@@ -622,13 +664,17 @@ export class CompanyService implements ICompanyService {
       { context: LOGGING_CONTEXT },
     )
 
-    const registry = await this.nationalRegistryService.getEntityByNationalId(
+    // find, not get: the registry answers a kennitala it does not hold with a
+    // 404, which getEntityByNationalId turns into a 502 — telling a filer our
+    // side failed when their subsidiary list named a company that does not
+    // exist. A 400, because the fault is in the submitted payload.
+    const registry = await this.nationalRegistryService.findEntityByNationalId(
       input.nationalId,
     )
 
     if (!registry.entity) {
-      throw new NotFoundException(
-        companyMessages.registryEntityNotFound(input.nationalId),
+      throw new BadRequestException(
+        companyMessages.subsidiaryNotInRegistry(input.nationalId),
       )
     }
 

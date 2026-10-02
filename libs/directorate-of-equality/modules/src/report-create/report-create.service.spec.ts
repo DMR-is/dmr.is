@@ -1451,7 +1451,31 @@ describe('ReportCreateService', () => {
         parentCompanyId: null,
       })
 
-      await expect(service.createSalary(input)).rejects.toThrow(/EQUALITY/)
+      await expect(service.createSalary(input)).rejects.toThrow(
+        'This providerId is already used for an equality report',
+      )
+    })
+
+    it('does not show the caller the stored, namespaced providerId', async () => {
+      const input = makeInput()
+      input.providerType = ReportProviderEnum.OTHER
+      input.providerId = '5555555555:vendor-client'
+
+      reportFindOne.mockResolvedValueOnce({
+        id: EXISTING_REPORT_ID,
+        providerType: input.providerType,
+        providerId: input.providerId,
+        type: ReportTypeEnum.EQUALITY,
+      })
+      companyReportFindOne.mockResolvedValueOnce({
+        companyId: PARENT_COMPANY_ID,
+        parentCompanyId: null,
+      })
+
+      const error = await service.createSalary(input).catch((e) => e)
+
+      expect(error).toBeInstanceOf(ConflictException)
+      expect(error.message).not.toContain('5555555555')
     })
 
     it('checks ownership before type, so a foreign tuple reveals nothing about it', async () => {

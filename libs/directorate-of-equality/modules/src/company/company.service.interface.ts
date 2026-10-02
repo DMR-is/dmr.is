@@ -82,6 +82,15 @@ export interface ICompanyService {
   getOrCreateSubsidiaryReportSnapshotSource(
     input: SubsidiaryReportSnapshotLookup,
   ): Promise<SubsidiaryReportSnapshotSourceDto>
+  /**
+   * Refuses a filed company snapshot whose `isatCategory` or `postcode` does
+   * not lead with a code in our reference tables. Lenient about how the code is
+   * written — see `snapshot-codes.ts`.
+   */
+  assertKnownSnapshotCodes(input: {
+    isatCategory: string
+    postcode: string
+  }): Promise<void>
   updateStatus(
     id: string,
     dto: UpdateCompanyStatusDto,

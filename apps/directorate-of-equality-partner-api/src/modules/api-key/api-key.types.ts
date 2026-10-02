@@ -37,6 +37,12 @@ export type PartnerClientKeyContext = VerifiedKey & {
    * approval.
    */
   scopesResolved: boolean
+  /**
+   * The firm's own approval, never narrowed. Kept beside `scopes` so a refusal
+   * can say whether the firm lacks the scope or the company withheld it — the
+   * two are fixed by different people.
+   */
+  firmScopes: ApiKeyScopeEnum[]
 }
 
 /**

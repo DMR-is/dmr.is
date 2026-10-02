@@ -40,6 +40,7 @@ describe('CompanyService', () => {
   let findOne: jest.Mock
   let create: jest.Mock
   let getEntityByNationalId: jest.Mock
+  let findEntityByNationalId: jest.Mock
   let getLegalEntityByNationalId: jest.Mock
   let emitCreated: jest.Mock
   let emitStatusChanged: jest.Mock
@@ -50,6 +51,7 @@ describe('CompanyService', () => {
   let eventsByCompanyId: jest.Mock
   let commentsByCompanyId: jest.Mock
   let isatFindByPk: jest.Mock
+  let isatFindOne: jest.Mock
   let isatSectionFindAll: jest.Mock
   let postcodeFindOne: jest.Mock
   let legacyReportFindAll: jest.Mock
@@ -61,10 +63,12 @@ describe('CompanyService', () => {
     create = jest.fn()
     findAndCountAll = jest.fn().mockResolvedValue({ rows: [], count: 0 })
     isatFindByPk = jest.fn()
+    isatFindOne = jest.fn().mockResolvedValue({ code: '62010' })
     isatSectionFindAll = jest.fn()
     postcodeFindOne = jest.fn()
     legacyReportFindAll = jest.fn().mockResolvedValue([])
     getEntityByNationalId = jest.fn()
+    findEntityByNationalId = jest.fn()
     getLegalEntityByNationalId = jest.fn()
     emitCreated = jest.fn()
     emitStatusChanged = jest.fn()
@@ -92,7 +96,7 @@ describe('CompanyService', () => {
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
           provide: INationalRegistryService,
-          useValue: { getEntityByNationalId },
+          useValue: { getEntityByNationalId, findEntityByNationalId },
         },
         {
           provide: IRskCompanyRegistryService,
@@ -104,7 +108,7 @@ describe('CompanyService', () => {
         },
         {
           provide: getModelToken(IsatCategoryModel),
-          useValue: { findByPk: isatFindByPk },
+          useValue: { findByPk: isatFindByPk, findOne: isatFindOne },
         },
         {
           provide: getModelToken(IsatSectionModel),
@@ -358,9 +362,60 @@ describe('CompanyService', () => {
     })
   })
 
+  describe('assertKnownSnapshotCodes', () => {
+    beforeEach(() => {
+      postcodeFindOne.mockResolvedValue({ code: '101' })
+    })
+
+    it('accepts codes written with a description after them', async () => {
+      await expect(
+        service.assertKnownSnapshotCodes({
+          isatCategory: '62.01.0 Hugbúnaðargerð',
+          postcode: '101 Reykjavík',
+        }),
+      ).resolves.toBeUndefined()
+
+      expect(isatFindOne).toHaveBeenCalledWith({
+        attributes: ['code'],
+        where: { code: { [Op.startsWith]: '62010' } },
+      })
+      expect(postcodeFindOne).toHaveBeenCalledWith({
+        attributes: ['code'],
+        where: { code: '101' },
+      })
+    })
+
+    it('names both codes when neither exists', async () => {
+      isatFindOne.mockResolvedValue(null)
+      postcodeFindOne.mockResolvedValue(null)
+
+      const error = await service
+        .assertKnownSnapshotCodes({ isatCategory: '99.99', postcode: '999' })
+        .catch((e) => e)
+
+      expect(error).toBeInstanceOf(BadRequestException)
+      expect(error.getResponse().message).toEqual([
+        'company.isatCategory "99.99" does not lead with an ÍSAT2008 code',
+        'company.postcode "999" does not lead with a known Icelandic postcode',
+      ])
+    })
+
+    it('refuses text that leads with no code without querying', async () => {
+      await expect(
+        service.assertKnownSnapshotCodes({
+          isatCategory: 'ÍSAT-flokkur',
+          postcode: '99999',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(isatFindOne).not.toHaveBeenCalled()
+      expect(postcodeFindOne).not.toHaveBeenCalled()
+    })
+  })
+
   describe('getOrCreateSubsidiaryReportSnapshotSource', () => {
     it('returns existing company data with address fields seeded from the national registry', async () => {
-      getEntityByNationalId.mockResolvedValue({
+      findEntityByNationalId.mockResolvedValue({
         entity: makeRegistryEntity({
           kennitala: '5501234567',
           nafn: 'Acme ehf.',
@@ -383,7 +438,7 @@ describe('CompanyService', () => {
         nationalId: '5501234567',
       })
 
-      expect(getEntityByNationalId).toHaveBeenCalledWith('5501234567')
+      expect(findEntityByNationalId).toHaveBeenCalledWith('5501234567')
       expect(findOne).toHaveBeenCalledWith({
         where: { nationalId: '5501234567' },
       })
@@ -400,7 +455,7 @@ describe('CompanyService', () => {
     })
 
     it('creates a live company row from the national registry name when no match exists', async () => {
-      getEntityByNationalId.mockResolvedValue({
+      findEntityByNationalId.mockResolvedValue({
         entity: makeRegistryEntity({
           kennitala: '6601234567',
           nafn: 'Subsidiary ehf.',
@@ -443,16 +498,21 @@ describe('CompanyService', () => {
       })
     })
 
-    it('throws NotFoundException when the national registry has no matching entity', async () => {
-      getEntityByNationalId.mockResolvedValue({ entity: null })
+    // The registry answers a kennitala it does not hold with a 404, which only
+    // findEntityByNationalId reports as `{ entity: null }` — getEntityByNationalId
+    // throws a 502 for it, which is how a filer's bad subsidiary once read as
+    // our failure. So the lookup must be the find variant.
+    it('throws BadRequestException when the national registry has no matching entity', async () => {
+      findEntityByNationalId.mockResolvedValue({ entity: null })
 
       await expect(
         service.getOrCreateSubsidiaryReportSnapshotSource({
           name: 'Anything',
           nationalId: '0000000000',
         }),
-      ).rejects.toThrow(NotFoundException)
+      ).rejects.toThrow(BadRequestException)
 
+      expect(getEntityByNationalId).not.toHaveBeenCalled()
       expect(findOne).not.toHaveBeenCalled()
       expect(create).not.toHaveBeenCalled()
     })

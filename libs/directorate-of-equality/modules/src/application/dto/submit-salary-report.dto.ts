@@ -1,3 +1,5 @@
+import { IsEmail, Min } from 'class-validator'
+
 import {
   ApiBoolean,
   ApiDto,
@@ -11,6 +13,7 @@ import {
   ApiString,
 } from '@dmr.is/decorators'
 
+import { TrimString } from '../../report/lib/trim-string'
 import {
   GenderEnum,
   SalaryDataBasisEnum,
@@ -72,6 +75,8 @@ export class SubmitSalaryReportDto {
   companyAdminTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   companyAdminEmail!: string
 
   @ApiEnum(GenderEnum)
@@ -87,18 +92,24 @@ export class SubmitSalaryReportDto {
   contactTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   contactEmail!: string
 
-  @ApiString()
+  @ApiString({ minLength: 1 })
+  @TrimString()
   contactPhone!: string
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeMaleCount!: number
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeFemaleCount!: number
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeNeutralCount!: number
 
   @ApiEnum(SalaryDataBasisEnum, {
@@ -111,7 +122,7 @@ export class SubmitSalaryReportDto {
   @ApiOptionalString({
     nullable: true,
     description:
-      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that has already happened, no earlier than 36 months ago. When the basis is `AVERAGE` there is no single month to name: island.is clears any value sent, and the partner API refuses it with a 400 — so do not send one.',
+      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that is over — last month at the latest — and no earlier than 36 months ago. When the basis is `AVERAGE` there is no single month to name: island.is clears any value sent, and the partner API refuses it with a 400 — so do not send one.',
   })
   salaryDataPeriod?: string | null
 
