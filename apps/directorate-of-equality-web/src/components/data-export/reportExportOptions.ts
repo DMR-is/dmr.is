@@ -65,7 +65,8 @@ export const GAP_BOUND_OPTIONS: ReportFilterOption[] = [
  * Whether the filing carries an úrbótaáætlun.
  *
  * A two-option multi-select rather than a checkbox: picking neither means no
- * constraint, and picking both means the same thing. A checkbox would make
+ * constraint, and picking both means "an approved salary report, with or
+ * without one" — see `improvementPlanQuery`. A checkbox would make
  * "unchecked" ambiguous between "don't care" and "only those without one",
  * which are different queries against the same data.
  */

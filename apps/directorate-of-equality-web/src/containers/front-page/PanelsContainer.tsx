@@ -10,17 +10,6 @@ export const PanelsContainer = () => {
     <Section>
       <Stack space={4}>
         <ImagePanel
-          align="right"
-          title={frontPageText.panelStats.title}
-          description={frontPageText.panelStats.description}
-          link="#"
-          linkText={frontPageText.panelStats.linkText}
-          image={{
-            src: '/assets/tolfraedi-image.svg',
-            alt: '',
-          }}
-        />
-        <ImagePanel
           title={frontPageText.panelExport.title}
           description={frontPageText.panelExport.description}
           link={NAV_PATHS.gagnautdrattur.href}

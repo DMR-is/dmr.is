@@ -12,7 +12,9 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
+import { CompanyActiveFilters } from '../../components/companies/CompanyActiveFilters'
 import {
   CompanyFilter,
   type CompanyFilters,
@@ -38,7 +40,9 @@ import {
 import { dataExportText, serverErrorText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import * as styles from './DataExportContainer.css'
-import { buildFilterSummary } from './filterSummary'
+import { fileNameFromDisposition, saveBlob } from './downloadFile'
+import { buildFilterSummary, type Submission } from './filterSummary'
+import { buildReportChips, type ReportChip } from './reportChips'
 
 const PAGE_SIZE = 25
 
@@ -53,6 +57,31 @@ const DATE_TO_KEY: Partial<Record<ReportDateKey, ReportDateKey>> = {
 const GAP_TO_KEY: Partial<Record<ReportGapKey, ReportGapKey>> = {
   reportRawGapPercentFrom: 'reportRawGapPercentTo',
   reportOskyrtPercentFrom: 'reportOskyrtPercentTo',
+}
+
+/**
+ * The improvement-plan criterion as query params.
+ *
+ * Both ticked is NOT "no constraint". On the server "with" is an approved
+ * report with outliers and "without" an approved SALARY report without, so
+ * together they mean "an approved salary report" — only a salary report can
+ * carry an úrbótaáætlun. Sending nothing would also return companies that
+ * never filed one, while the chips and the summary sheet say otherwise.
+ *
+ * That narrows `reportType` to SALARY. Against an equality-only type
+ * selection nothing can match, and `false` makes the server say so: it pins
+ * the report to SALARY, which contradicts the type.
+ */
+const improvementPlanQuery = (
+  plan: string[],
+  types: string[],
+): Record<string, unknown> => {
+  if (plan.length === 1) return { reportHasImprovementPlan: plan[0] === 'yes' }
+  if (plan.length < 2) return {}
+
+  return types.length && !types.includes('SALARY')
+    ? { reportHasImprovementPlan: false }
+    : { reportType: ['SALARY'] }
 }
 
 const EMPTY_FILTERS: CompanyFilters = {
@@ -104,15 +133,12 @@ export const DataExportContainer = () => {
    *
    * Deliberately a snapshot rather than a read of the drafts: it is what makes
    * the export match the table. Editing the panel afterwards changes neither
-   * until "Sækja lista" is pressed again.
+   * until "Sækja lista" is pressed again. Removing an active-filter chip is the
+   * one exception — it narrows the snapshot directly and refetches.
    */
-  const [submitted, setSubmitted] = useState<Record<string, unknown> | null>(
-    null,
-  )
-  // Snapshotted with `submitted` so the workbook's "Um útdráttinn" sheet
-  // describes the filter that produced the rows, not later panel edits.
-  const [submittedSummary, setSubmittedSummary] = useState<string[]>([])
+  const [submitted, setSubmitted] = useState<Submission | null>(null)
   const [page, setPage] = useState(1)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   // Focus lands here after a fetch: the results appear because a button was
   // pressed, so keyboard and screen-reader users have to be taken to them.
@@ -126,6 +152,15 @@ export const DataExportContainer = () => {
     trpc.location.postcodes.queryOptions(
       { regionCode: draft.regionCode.length ? draft.regionCode : undefined },
       { staleTime: 60 * 60_000, placeholderData: (prev) => prev },
+    ),
+  )
+
+  // Unnarrowed, so a submitted postcode keeps its label after the draft region
+  // changes. Same key as the panel's first load, so it comes from cache.
+  const { data: allPostcodesData } = useQuery(
+    trpc.location.postcodes.queryOptions(
+      { regionCode: undefined },
+      { staleTime: 60 * 60_000, enabled: submitted !== null },
     ),
   )
 
@@ -143,14 +178,23 @@ export const DataExportContainer = () => {
     [postcodesData],
   )
 
+  const submittedPostcodeOptions = useMemo(
+    () =>
+      (allPostcodesData ?? []).map((p) => ({
+        value: p.code,
+        label: `${p.code} ${p.place}`,
+      })),
+    [allPostcodesData],
+  )
+
   const toServerQuery = useCallback(
-    (
-      filters: CompanyFilters,
-      reportCriteria: ReportCriteria,
-      reportDates: ReportDateRanges,
-      reportGaps: ReportGapBounds,
-      q: string,
-    ): Record<string, unknown> => ({
+    ({
+      filters,
+      criteria: reportCriteria,
+      dates: reportDates,
+      gaps: reportGaps,
+      query: q,
+    }: Submission): Record<string, unknown> => ({
       ...(q.trim() ? { q: q.trim() } : {}),
       ...(filters.employees.length
         ? { employeeCountCategory: filters.employees as CompanySizeEnum[] }
@@ -212,14 +256,11 @@ export const DataExportContainer = () => {
       ...(reportCriteria.equalitySource.length
         ? { reportEqualitySource: reportCriteria.equalitySource }
         : {}),
-      // Both selected means both states, which is the same as no constraint —
-      // so it is sent as none rather than as a contradiction.
-      ...(reportCriteria.improvementPlan.length === 1
-        ? {
-            reportHasImprovementPlan:
-              reportCriteria.improvementPlan[0] === 'yes',
-          }
-        : {}),
+      // After `reportType`: both ticked narrows it — see `improvementPlanQuery`.
+      ...improvementPlanQuery(
+        reportCriteria.improvementPlan,
+        reportCriteria.type,
+      ),
       // The pickers give local midnight and the API reads the UTC day, so the
       // picked calendar day is sent as UTC midnight to survive any time zone.
       ...Object.fromEntries(
@@ -247,9 +288,26 @@ export const DataExportContainer = () => {
     [],
   )
 
+  const submittedQuery = useMemo(
+    () => submitted && toServerQuery(submitted),
+    [submitted, toServerQuery],
+  )
+
+  // Derived from `submitted` so the workbook's "Um útdráttinn" sheet describes
+  // the filter that produced the rows, not later panel edits.
+  const submittedSummary = useMemo(
+    () => (submitted ? buildFilterSummary(submitted) : []),
+    [submitted],
+  )
+
+  const reportChips = useMemo(
+    () => (submitted ? buildReportChips(submitted) : []),
+    [submitted],
+  )
+
   const { data, isFetching, isError } = useQuery(
     trpc.company.list.queryOptions(
-      { ...(submitted ?? {}), page, pageSize: PAGE_SIZE },
+      { ...(submittedQuery ?? {}), page, pageSize: PAGE_SIZE },
       {
         // Nothing is fetched until the admin asks for it.
         enabled: submitted !== null,
@@ -305,13 +363,15 @@ export const DataExportContainer = () => {
     })
   }
 
+  // Deferred to the paint after the results render, otherwise focus moves to
+  // a heading that still says "choose your filters".
+  const focusResults = () =>
+    requestAnimationFrame(() => resultsRef.current?.focus())
+
   const handleSubmit = () => {
     setPage(1)
-    setSubmitted(toServerQuery(draft, criteria, dates, gaps, query))
-    setSubmittedSummary(buildFilterSummary(draft, criteria, dates, gaps, query))
-    // Deferred to the paint after the results render, otherwise focus moves to
-    // a heading that still says "choose your filters".
-    requestAnimationFrame(() => resultsRef.current?.focus())
+    setSubmitted({ filters: draft, criteria, dates, gaps, query })
+    focusResults()
   }
 
   const handleReset = () => {
@@ -321,23 +381,112 @@ export const DataExportContainer = () => {
     setGaps(EMPTY_GAP_BOUNDS)
     setQuery('')
     setSubmitted(null)
-    setSubmittedSummary([])
     setPage(1)
+  }
+
+  /*
+   * Removing a region chip drops only the postcodes INSIDE that region. Region
+   * and postcode AND together on the server, so clearing every postcode — what
+   * the panel does when the region selection changes — would widen the result
+   * to the whole remaining region without the admin asking.
+   *
+   * Without the region and postcode lookups there is no way to tell which
+   * postcodes belong where, so it falls back to the panel's behaviour and
+   * clears them all.
+   */
+  const withoutRegions =
+    (regionCodes: string[]) =>
+    (filters: CompanyFilters): CompanyFilters => {
+      const removedRegionIds = new Set(
+        (regionsData ?? [])
+          .filter((r) => regionCodes.includes(r.code))
+          .map((r) => r.id),
+      )
+      const regionIdByPostcode = new Map(
+        (allPostcodesData ?? []).map((p) => [p.code, p.regionId]),
+      )
+
+      return {
+        ...filters,
+        regionCode: filters.regionCode.filter((c) => !regionCodes.includes(c)),
+        postcode:
+          regionsData && allPostcodesData
+            ? filters.postcode.filter(
+                (c) => !removedRegionIds.has(regionIdByPostcode.get(c) ?? ''),
+              )
+            : [],
+      }
+    }
+
+  /*
+   * Chip removals. Each takes the value out of BOTH the snapshot, which
+   * refetches, and the draft, so the panel agrees with the table. Only that
+   * value leaves the draft, and only while the draft still holds it —
+   * unsubmitted edits stay unsubmitted rather than riding along on the refetch.
+   *
+   * The pressed chip unmounts, so each one moves focus to the results, whose
+   * live region then announces the new count.
+   */
+  const handleFilterChipRemove = (
+    key: keyof CompanyFilters,
+    remaining: string[],
+  ) => {
+    if (!submitted) return
+
+    const removed = submitted.filters[key].filter((v) => !remaining.includes(v))
+    const draftHeldIt = draft[key].some((v) => removed.includes(v))
+
+    if (key === 'regionCode') {
+      const dropRegions = withoutRegions(removed)
+      if (draftHeldIt) setDraft(dropRegions)
+      setSubmitted({ ...submitted, filters: dropRegions(submitted.filters) })
+    } else {
+      if (draftHeldIt) {
+        handleFiltersChange(
+          key,
+          draft[key].filter((v) => !removed.includes(v)),
+        )
+      }
+      setSubmitted({
+        ...submitted,
+        filters: { ...submitted.filters, [key]: remaining },
+      })
+    }
+    setPage(1)
+    focusResults()
+  }
+
+  const handleQueryChipRemove = () => {
+    if (!submitted) return
+
+    setQuery((prev) => (prev === submitted.query ? '' : prev))
+    setSubmitted({ ...submitted, query: '' })
+    setPage(1)
+    focusResults()
+  }
+
+  const handleReportChipRemove = (remove: ReportChip['remove']) => {
+    const next = remove({ criteria, dates, gaps })
+    setCriteria(next.criteria)
+    setDates(next.dates)
+    setGaps(next.gaps)
+    setSubmitted((prev) => prev && remove(prev))
+    setPage(1)
+    focusResults()
   }
 
   const rows = data?.companies ?? []
   const total = data?.paging?.totalItems ?? 0
 
   /**
-   * The export link carries the SUBMITTED filter and no paging — the file is
-   * the whole matching set, not the page on screen. Rendered as an `<a>` rather
-   * than a fetch so the browser owns the download.
+   * The export URL carries the SUBMITTED filter and no paging — the file is
+   * the whole matching set, not the page on screen. `handleExport` fetches it.
    */
   const exportHref = useMemo(() => {
-    if (!submitted) return null
+    if (!submittedQuery) return null
 
     const params = new URLSearchParams()
-    for (const [key, value] of Object.entries(submitted)) {
+    for (const [key, value] of Object.entries(submittedQuery)) {
       if (Array.isArray(value)) {
         for (const item of value) params.append(key, String(item))
       } else if (value !== undefined && value !== null) {
@@ -352,7 +501,45 @@ export const DataExportContainer = () => {
     }
 
     return `/api/export/companies?${params.toString()}`
-  }, [submitted, submittedSummary])
+  }, [submittedQuery, submittedSummary])
+
+  /*
+   * Fetched rather than linked: a plain `<a download>` saves whatever comes
+   * back, so a failed export arrived as a JSON file named like the dataset.
+   * Fetching first lets a failure become a toast instead.
+   */
+  const handleExport = async () => {
+    if (!exportHref || isDownloading) return
+
+    setIsDownloading(true)
+    try {
+      const res = await fetch(exportHref)
+      if (!res.ok) {
+        // 413 is the API's row ceiling and 401 an expired session: both have a
+        // next step the admin can take, so they say so instead of "try again".
+        toast.error(
+          res.status === 413
+            ? dataExportText.exportTooLarge
+            : res.status === 401
+              ? dataExportText.exportUnauthorized
+              : dataExportText.exportError,
+          { autoClose: 5000 },
+        )
+        return
+      }
+
+      const blob = await res.blob()
+      saveBlob(
+        blob,
+        fileNameFromDisposition(res.headers.get('content-disposition')) ??
+          dataExportText.exportFallbackFileName,
+      )
+    } catch {
+      toast.error(dataExportText.exportError, { autoClose: 5000 })
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   return (
     <GridContainer>
@@ -443,22 +630,43 @@ export const DataExportContainer = () => {
                   {/* Hidden while refetching, so the link never pairs a new
                       filter with the previous count. */}
                   {exportHref && total > 0 && !isFetching && (
-                    <a href={exportHref} download>
-                      <Button
-                        icon="download"
-                        iconType="outline"
-                        size="small"
-                        variant="utility"
-                        colorScheme="white"
-                        as="span"
-                      >
-                        {dataExportText.export}
-                      </Button>
-                    </a>
+                    <Button
+                      icon="download"
+                      iconType="outline"
+                      size="small"
+                      variant="utility"
+                      colorScheme="white"
+                      onClick={handleExport}
+                      loading={isDownloading}
+                    >
+                      {dataExportText.export}
+                    </Button>
                   )}
                 </Inline>
               )}
             </Box>
+
+            {submitted !== null && (
+              <CompanyActiveFilters
+                query={submitted.query}
+                filters={submitted.filters}
+                regionOptions={regionOptions}
+                postcodeOptions={submittedPostcodeOptions}
+                onFiltersChange={handleFilterChipRemove}
+                onQueryClear={handleQueryChipRemove}
+                extraChips={reportChips.map((chip) => ({
+                  id: chip.id,
+                  label: chip.label,
+                  onRemove: () => handleReportChipRemove(chip.remove),
+                }))}
+                onReset={() => {
+                  handleReset()
+                  // The pressed button unmounts with the tags; without this
+                  // keyboard focus would drop to the top of the document.
+                  focusResults()
+                }}
+              />
+            )}
 
             {isError && (
               <AlertMessage

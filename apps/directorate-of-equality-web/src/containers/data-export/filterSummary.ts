@@ -12,6 +12,7 @@ import type {
   ReportDateKey,
   ReportDateRanges,
   ReportGapBounds,
+  ReportGapKey,
 } from '../../components/data-export/ReportCriteriaCards'
 import {
   ADMIN_GENDER_OPTIONS,
@@ -25,7 +26,17 @@ import type {
   CompanySectorEnum,
   CompanyStatusEnum,
 } from '../../gen/fetch'
+import { dataExportText } from '../../lib/text'
 import { EMPLOYEE_RANGES } from '../../lib/utils'
+
+/** Everything the panel sets, as it was when "Sækja lista" was pressed. */
+export type Submission = {
+  filters: CompanyFilters
+  criteria: ReportCriteria
+  dates: ReportDateRanges
+  gaps: ReportGapBounds
+  query: string
+}
 
 /**
  * The active filter, in the words the admin saw on screen.
@@ -53,13 +64,13 @@ const line = (label: string, values: string[]): string | null =>
 const labelFor = (options: ReportFilterOption[], values: string[]): string[] =>
   values.map((value) => options.find((o) => o.value === value)?.label ?? value)
 
-export const buildFilterSummary = (
-  filters: CompanyFilters,
-  criteria: ReportCriteria,
-  dates: ReportDateRanges,
-  gaps: ReportGapBounds,
-  query: string,
-): string[] => {
+export const buildFilterSummary = ({
+  filters,
+  criteria,
+  dates,
+  gaps,
+  query,
+}: Submission): string[] => {
   return [
     query.trim() ? `Leitarorð: ${query.trim()}` : null,
     line('Starfsmannafjöldi', labelFor(EMPLOYEE_RANGES, filters.employees)),
@@ -90,12 +101,41 @@ export const buildFilterSummary = (
   ].filter((value): value is string => value !== null)
 }
 
-const DATE_RANGE_LABELS: Array<[string, ReportDateKey, ReportDateKey]> = [
-  ['Skýrsla innsend', 'reportSubmittedFrom', 'reportSubmittedTo'],
-  ['Skýrsla samþykkt', 'reportApprovedFrom', 'reportApprovedTo'],
-  ['Skýrsla gildir til', 'reportValidUntilFrom', 'reportValidUntilTo'],
-  ['Launatímabil', 'reportSalaryDataPeriodFrom', 'reportSalaryDataPeriodTo'],
-]
+type GapFromKey = Extract<ReportGapKey, `${string}From`>
+type GapToKey = Extract<ReportGapKey, `${string}To`>
+
+/**
+ * The pay-gap ranges, keyed by their lower bound. Shared by the summary sheet
+ * and the chips so both name a range the way the panel does, and a `Record`
+ * so a new range without a label is a type error.
+ */
+const GAP_RANGE_LABELS: Record<GapFromKey, [string, GapToKey]> = {
+  reportRawGapPercentFrom: [
+    dataExportText.rawGapRange,
+    'reportRawGapPercentTo',
+  ],
+  reportOskyrtPercentFrom: [
+    dataExportText.oskyrtGapRange,
+    'reportOskyrtPercentTo',
+  ],
+}
+
+/** `GAP_RANGE_LABELS` in the same `[label, from, to]` shape as the dates. */
+export const GAP_RANGES = (
+  Object.entries(GAP_RANGE_LABELS) as Array<[GapFromKey, [string, GapToKey]]>
+).map(([fromKey, [label, toKey]]): [string, GapFromKey, GapToKey] => [
+  label,
+  fromKey,
+  toKey,
+])
+
+export const DATE_RANGE_LABELS: Array<[string, ReportDateKey, ReportDateKey]> =
+  [
+    ['Skýrsla innsend', 'reportSubmittedFrom', 'reportSubmittedTo'],
+    ['Skýrsla samþykkt', 'reportApprovedFrom', 'reportApprovedTo'],
+    ['Skýrsla gildir til', 'reportValidUntilFrom', 'reportValidUntilTo'],
+    ['Launatímabil', 'reportSalaryDataPeriodFrom', 'reportSalaryDataPeriodTo'],
+  ]
 
 const formatDay = (date: Date) =>
   `${String(date.getDate()).padStart(2, '0')}.${String(
@@ -110,7 +150,7 @@ const formatDay = (date: Date) =>
  * run the export, and "01.01.2026 –" is ambiguous about whether the other
  * bound was empty or lost.
  */
-const dateLine = (
+export const dateLine = (
   label: string,
   from: Date | undefined,
   to: Date | undefined,
@@ -128,7 +168,7 @@ const dateLine = (
  * read by someone who did not run the export, and the two differ by roughly a
  * factor of three on the same company.
  */
-const gapLine = (
+export const gapLine = (
   label: string,
   from: string | undefined,
   to: string | undefined,
@@ -170,15 +210,8 @@ const reportSummary = (
       `${prefix}úrbótaáætlun`,
       labelFor(IMPROVEMENT_PLAN_OPTIONS, criteria.improvementPlan),
     ),
-    gapLine(
-      `${prefix}óleiðréttur launamunur`,
-      gaps.reportRawGapPercentFrom,
-      gaps.reportRawGapPercentTo,
-    ),
-    gapLine(
-      `${prefix}óskýrður launamunur`,
-      gaps.reportOskyrtPercentFrom,
-      gaps.reportOskyrtPercentTo,
+    ...GAP_RANGES.map(([label, fromKey, toKey]) =>
+      gapLine(`${prefix}${label.toLowerCase()}`, gaps[fromKey], gaps[toKey]),
     ),
     ...DATE_RANGE_LABELS.map(([label, fromKey, toKey]) =>
       dateLine(`${prefix}${label.toLowerCase()}`, dates[fromKey], dates[toKey]),

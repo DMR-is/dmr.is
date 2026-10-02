@@ -31,15 +31,10 @@ export const frontPageText = {
     thisYear: 'Hlutfall mála eftir stöðu á þessu ári.',
     allTime: 'Hlutfall mála eftir stöðu frá upphafi.',
   },
-  panelStats: {
-    title: 'Tölulegar upplýsingar',
-    description:
-      'Upplýsingar birtar opinberlega á vef jafnréttisstofu og fylgst er með árangri ...',
-    linkText: 'Lesa meira',
-  },
   panelExport: {
     title: 'Gagnaútdráttur',
-    description: 'Sækja lista yfir fyrirtæki í Excel.',
+    description:
+      'Sía fyrirtæki eftir stöðu og innsendingum til þess að sækja lista í Excel.',
     linkText: 'Sækja lista',
   },
 }
@@ -51,6 +46,13 @@ export const dataExportText = {
   imageAlt: 'Gagnaútdráttur',
   submit: 'Sækja lista',
   export: 'Sækja Excel',
+  exportError: 'Ekki tókst að sækja Excel-skjalið. Reyndu aftur.',
+  exportTooLarge:
+    'Útdrátturinn er of stór til að sækja. Þrengdu síurnar og reyndu aftur.',
+  exportUnauthorized:
+    'Innskráningin er útrunnin. Endurhladdu síðuna og reyndu aftur.',
+  // Only used when the API sends no filename, which it always does today.
+  exportFallbackFileName: 'jafnrettisstofa-fyrirtaeki.xlsx',
   // The only count on the screen (the table's own is suppressed) and the
   // `aria-live` text, so what is drawn and what is announced are the same.
   resultCount: (count: number) =>
@@ -980,6 +982,7 @@ export const companiesText = {
   activeFilters: 'Virkar síur',
   activeFilterQuery: 'Leit',
   clearAllFilters: 'Hreinsa allt',
+  removeFilter: 'Fjarlægja síu',
   // Detail-header wording. The list can say a bare "Vantar" because the column
   // header names the obligation; the header has no such context, so each tag
   // has to name its own subject.
