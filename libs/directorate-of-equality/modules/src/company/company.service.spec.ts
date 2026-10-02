@@ -24,6 +24,7 @@ import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
 import { IsatSectionModel } from './models/isat-section.model'
 import { LegacyReportModel } from './models/legacy-report.model'
+import { validKennitala } from './utils/valid-kennitala.testing'
 import { companyMessages } from './company.messages'
 import { CompanyService } from './company.service'
 
@@ -32,23 +33,6 @@ const mockLogger = {
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
-}
-
-/**
- * A checksum-valid kennitala, computed rather than written out so the source
- * carries no real-looking ID (`disallow-kennitalas`).
- */
-const validKennitala = (first8: string): string => {
-  const weights = [3, 2, 7, 6, 5, 4, 3, 2]
-  const sum = weights.reduce(
-    (acc, weight, index) => acc + weight * Number(first8[index]),
-    0,
-  )
-  const check = (11 - (sum % 11)) % 11
-  if (check === 10) {
-    throw new Error(`no valid check digit for ${first8}`)
-  }
-  return `${first8}${check}0`
 }
 
 const SUBSIDIARY_ID = validKennitala('46020708')

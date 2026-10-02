@@ -1,8 +1,11 @@
 import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
 
+import { validKennitala } from '../../company/utils/valid-kennitala.testing'
 import { SubmitDraftDto } from '../../report-draft/submit/dto/submit-draft.dto'
 import { SubmitEqualityReportDto } from './submit-equality-report.dto'
+import { SubmitPartnerEqualityReportDto } from './submit-partner-equality-report.dto'
+import { SubmitPartnerSalaryReportDto } from './submit-partner-salary-report.dto'
 import { MAX_SUBSIDIARIES } from './submit-report-company.dto'
 import { SubmitSalaryReportDto } from './submit-salary-report.dto'
 
@@ -22,23 +25,6 @@ const subsidiaryErrors = (cls: SubmitDto, subsidiaries: unknown): string[] => {
   return [...Object.values(own?.constraints ?? {}), ...nested]
 }
 
-/**
- * A checksum-valid kennitala, computed rather than written out so the source
- * carries no real-looking ID (`disallow-kennitalas`).
- */
-const validKennitala = (first8: string): string => {
-  const weights = [3, 2, 7, 6, 5, 4, 3, 2]
-  const sum = weights.reduce(
-    (acc, weight, index) => acc + weight * Number(first8[index]),
-    0,
-  )
-  const check = (11 - (sum % 11)) % 11
-  if (check === 10) {
-    throw new Error(`no valid check digit for ${first8}`)
-  }
-  return `${first8}${check}0`
-}
-
 const COMPANY_ID = validKennitala('46020708')
 const DASHED_COMPANY_ID = `${COMPANY_ID.slice(0, 6)}-${COMPANY_ID.slice(6)}`
 
@@ -48,6 +34,8 @@ describe.each([
   ['SubmitDraftDto', SubmitDraftDto],
   ['SubmitSalaryReportDto', SubmitSalaryReportDto],
   ['SubmitEqualityReportDto', SubmitEqualityReportDto],
+  ['SubmitPartnerSalaryReportDto', SubmitPartnerSalaryReportDto],
+  ['SubmitPartnerEqualityReportDto', SubmitPartnerEqualityReportDto],
 ] as Array<[string, SubmitDto]>)('%s.subsidiaries', (_name, cls) => {
   it('accepts a list at the cap', () => {
     const list = Array.from({ length: MAX_SUBSIDIARIES }, () =>

@@ -45,7 +45,7 @@ export const companyMessages = {
   // hold several, and the applicant needs to know which one to correct.
   invalidKennitala: (nationalId: string): ErrorMessage => ({
     message: `Kennitala "${nationalId}" fails its checksum`,
-    translatedMessage: `Kennitalan ${nationalId} er ekki gild. Athugaðu hvort um innsláttarvillu sé að ræða`,
+    translatedMessage: `Kennitalan ${nationalId} er ekki gild. Athugaðu hvort um innsláttarvillu sé að ræða.`,
   }),
   notALegalEntity: (nationalId: string): ErrorMessage => ({
     message: `Kennitala "${nationalId}" does not belong to a legal entity`,
