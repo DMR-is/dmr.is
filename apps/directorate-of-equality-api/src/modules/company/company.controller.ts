@@ -287,7 +287,8 @@ export class CompanyController {
   async deleteComment(
     @Param('id') id: string,
     @Param('commentId') commentId: string,
+    @CurrentAdminUser() admin: UserModel,
   ): Promise<void> {
-    return this.companyCommentService.delete(id, commentId)
+    return this.companyCommentService.delete(id, commentId, admin.id)
   }
 }

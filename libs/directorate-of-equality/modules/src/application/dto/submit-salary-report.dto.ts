@@ -1,3 +1,5 @@
+import { ArrayMaxSize } from 'class-validator'
+
 import {
   ApiBoolean,
   ApiDto,
@@ -18,6 +20,7 @@ import {
 import { CreateReportOutlierGroupDto } from '../../report-create/dto/create-report.dto'
 import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 import {
+  MAX_SUBSIDIARIES,
   SubmitReportCompanyDto,
   SubmitReportSubsidiaryDto,
 } from './submit-report-company.dto'
@@ -124,7 +127,10 @@ export class SubmitSalaryReportDto {
   @ApiDto(SubmitReportCompanyDto)
   company!: SubmitReportCompanyDto
 
-  @ApiOptionalDtoArray(SubmitReportSubsidiaryDto)
+  @ApiOptionalDtoArray(SubmitReportSubsidiaryDto, {
+    maxItems: MAX_SUBSIDIARIES,
+  })
+  @ArrayMaxSize(MAX_SUBSIDIARIES)
   subsidiaries?: SubmitReportSubsidiaryDto[]
 
   @ApiOptionalBoolean({

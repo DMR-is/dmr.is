@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -75,7 +80,11 @@ export class CompanyCommentService implements ICompanyCommentService {
     return comment.fromModel()
   }
 
-  async delete(companyId: string, commentId: string): Promise<void> {
+  async delete(
+    companyId: string,
+    commentId: string,
+    actorUserId: string,
+  ): Promise<void> {
     this.logger.info(`Deleting comment ${commentId} for company ${companyId}`, {
       context: LOGGING_CONTEXT,
     })
@@ -84,6 +93,12 @@ export class CompanyCommentService implements ICompanyCommentService {
       { where: { id: commentId, companyId } },
       companyCommentMessages.notFound(commentId),
     )
+
+    // Same rule as report comments. A system note has no author, so no one
+    // can delete it.
+    if (comment.authorUserId !== actorUserId) {
+      throw new ForbiddenException(companyCommentMessages.notAuthor)
+    }
 
     await comment.destroy()
   }

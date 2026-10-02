@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -108,14 +112,34 @@ describe('CompanyCommentService', () => {
 
   it('delete soft-deletes the comment scoped to its company', async () => {
     const destroy = jest.fn()
-    commentFindOneOrThrow.mockResolvedValue({ destroy })
+    commentFindOneOrThrow.mockResolvedValue({ authorUserId: 'user-1', destroy })
 
-    await service.delete('company-1', 'comment-1')
+    await service.delete('company-1', 'comment-1', 'user-1')
 
     expect(commentFindOneOrThrow).toHaveBeenCalledWith(
       { where: { id: 'comment-1', companyId: 'company-1' } },
       companyCommentMessages.notFound('comment-1'),
     )
     expect(destroy).toHaveBeenCalled()
+  })
+
+  it("delete refuses another reviewer's comment", async () => {
+    const destroy = jest.fn()
+    commentFindOneOrThrow.mockResolvedValue({ authorUserId: 'user-2', destroy })
+
+    await expect(
+      service.delete('company-1', 'comment-1', 'user-1'),
+    ).rejects.toThrow(ForbiddenException)
+    expect(destroy).not.toHaveBeenCalled()
+  })
+
+  it('delete refuses a system note, which has no author', async () => {
+    const destroy = jest.fn()
+    commentFindOneOrThrow.mockResolvedValue({ authorUserId: null, destroy })
+
+    await expect(
+      service.delete('company-1', 'comment-1', 'user-1'),
+    ).rejects.toThrow(ForbiddenException)
+    expect(destroy).not.toHaveBeenCalled()
   })
 })

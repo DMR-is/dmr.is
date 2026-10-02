@@ -1,4 +1,10 @@
-import { ApiString } from '@dmr.is/decorators'
+import { ApiNationalId, ApiString } from '@dmr.is/decorators'
+
+/**
+ * Upper bound on `subsidiaries[]` in a submission. Each entry costs a national
+ * registry call, so the list must not be open-ended. Far above any real group.
+ */
+export const MAX_SUBSIDIARIES = 100
 
 /**
  * The reporting company, frozen onto the report as a snapshot rather than
@@ -33,6 +39,6 @@ export class SubmitReportSubsidiaryDto {
   @ApiString()
   name!: string
 
-  @ApiString()
+  @ApiNationalId()
   nationalId!: string
 }
