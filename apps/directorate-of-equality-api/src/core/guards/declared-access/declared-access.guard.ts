@@ -44,6 +44,10 @@ const GUARDS_METADATA = '__guards__'
  * - `ReportResourceGuard` — reviewer or owning company for the report, else
  *   `ForbiddenException`.
  *
+ * Each also checks that the token was issued for its surface before trusting
+ * `nationalId` (`token-surface.ts`), since `TokenJwtAuthGuard` checks only the
+ * signature and issuer.
+ *
  * Adding to this list widens what counts as secured across the whole API.
  * Nothing belongs here that can return `true` without tying the request to a
  * row the caller's own identity entitles them to.

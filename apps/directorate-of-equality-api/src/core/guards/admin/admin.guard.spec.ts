@@ -4,6 +4,15 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
 import { AdminGuard } from './admin.guard'
 
+const STAFF_CLIENT_ID = 'doe-web-client'
+
+const logger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+}
+
 const createUser = (nationalId: string): DMRUser =>
   ({
     nationalId,
@@ -12,6 +21,7 @@ const createUser = (nationalId: string): DMRUser =>
     scope: [],
     client: 'test',
     authorization: 'Bearer test',
+    aud: STAFF_CLIENT_ID,
   }) as DMRUser
 
 const createExecutionContext = (request: Record<string, unknown>) =>
@@ -28,9 +38,20 @@ describe('AdminGuard', () => {
 
   let guard: AdminGuard
 
+  const originalClientId = process.env.DOE_WEB_CLIENT_ID
+
   beforeEach(() => {
     jest.clearAllMocks()
-    guard = new AdminGuard(authorizationService as never)
+    process.env.DOE_WEB_CLIENT_ID = STAFF_CLIENT_ID
+    guard = new AdminGuard(logger as never, authorizationService as never)
+  })
+
+  afterAll(() => {
+    if (originalClientId === undefined) {
+      delete process.env.DOE_WEB_CLIENT_ID
+    } else {
+      process.env.DOE_WEB_CLIENT_ID = originalClientId
+    }
   })
 
   it('allows an active reviewer and attaches adminUser to the request', async () => {
@@ -78,5 +99,33 @@ describe('AdminGuard', () => {
     await expect(
       guard.canActivate(createExecutionContext(request)),
     ).rejects.toBeInstanceOf(ForbiddenException)
+  })
+
+  it('refuses a token issued to another IDS client before looking up the reviewer', async () => {
+    const request: Record<string, unknown> = {
+      user: { ...createUser('0000000000'), aud: 'some-other-client' },
+    }
+
+    await expect(
+      guard.canActivate(createExecutionContext(request)),
+    ).rejects.toBeInstanceOf(ForbiddenException)
+
+    expect(authorizationService.resolveAdminUser).not.toHaveBeenCalled()
+  })
+
+  it('refuses a delegated session acting for a reviewer', async () => {
+    const request: Record<string, unknown> = {
+      user: {
+        ...createUser('0000000000'),
+        actor: { nationalId: '1111111111', name: 'Delegate', scope: [] },
+      },
+    }
+
+    await expect(
+      guard.canActivate(createExecutionContext(request)),
+    ).rejects.toBeInstanceOf(ForbiddenException)
+
+    expect(authorizationService.resolveAdminUser).not.toHaveBeenCalled()
+    expect(request.adminUser).toBeUndefined()
   })
 })
