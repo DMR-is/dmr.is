@@ -52,12 +52,14 @@ export const ControlPanel = () => {
   const isAdmin = data?.user.role.slug === 'ritstjori'
 
   const paths = isAdmin
-    ? [...PagePaths].sort((a, b) => a.order - b.order).map((path) => {
-        return {
-          title: path.title,
-          href: path.pathname,
-        }
-      })
+    ? [...PagePaths]
+        .sort((a, b) => a.order - b.order)
+        .map((path) => {
+          return {
+            title: path.title,
+            href: path.pathname,
+          }
+        })
     : []
 
   useEffect(() => {
