@@ -9,6 +9,7 @@ import { getLogger } from '@dmr.is/logging-next'
 
 import { UserDto, UserRoleDto } from '../../gen/fetch'
 import { getDmrClient } from '../api/createClient'
+import { setLogoutHint } from './logoutHint'
 
 // This session timeout will be used to set the maxAge of the session cookie
 // IDS has a max timeout on refresh tokens, so we set our session timeout to be slightly more
@@ -138,9 +139,11 @@ export const authOptions: AuthOptions = {
         const decodedAccessToken = decodeJwt(account?.id_token) as JWT
         const nationalId = decodedAccessToken?.nationalId
         const authMember = await authorize(nationalId, account?.id_token)
-        // Return false if no user is found
         if (!authMember) {
-          return false
+          // End the IDS session so the next login can pick another person
+          await setLogoutHint(account.id_token)
+
+          return '/api/auth/access-denied'
         }
         // Mutate user object to include roles, nationalId and displayName
         user.role = authMember.role

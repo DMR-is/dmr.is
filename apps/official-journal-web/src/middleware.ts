@@ -14,7 +14,7 @@ export default createAuthMiddleware({
 
 export const config = {
   matcher: [
-    `/((?!api|innskraning|_next/static|_next/image|images|fonts|.well-known|assets|favicon.ico).*)`,
+    `/((?!api|innskraning|error|_next/static|_next/image|images|fonts|.well-known|assets|favicon.ico).*)`,
     '/api/trpc/(.*)',
   ],
 }

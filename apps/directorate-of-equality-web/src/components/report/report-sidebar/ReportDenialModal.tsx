@@ -27,9 +27,7 @@ export const ReportDenialModal = ({
 }: ReportDenialModalProps) => {
   const [denialReason, setDenialReason] = React.useState('')
   const handleChange = (value: string | null) => {
-    if (value && value.length > 0 && denialReason !== value) {
-      setDenialReason(value)
-    }
+    setDenialReason(value ?? '')
   }
 
   return (

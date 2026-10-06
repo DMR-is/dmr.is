@@ -53,21 +53,14 @@ export const CommunicationChannelFields = () => {
     channel: CommunicationChannelSchema,
     isEditing: string,
   ) => {
-    if (isEditing) {
-      const channelToEditIndex = channels.findIndex(
-        (c) => c.email === isEditing,
-      )
-      if (channelToEditIndex > -1) {
-        channels[channelToEditIndex] = channel
-      }
-    } else {
-      channels.push(channel)
-    }
+    const updatedChannels = isEditing
+      ? channels.map((c) => (c.email === isEditing ? channel : c))
+      : [...channels, channel]
 
-    setValue('communicationChannels', channels, {
+    setValue('communicationChannels', updatedChannels, {
       shouldValidate: true,
     })
-    updateLocalOnly({ communicationChannels: channels })
+    updateLocalOnly({ communicationChannels: updatedChannels })
     setToggleAdd(false)
     setIsEditing('')
     setCurrentChannel({ email: '', name: '', phone: '' })
@@ -118,6 +111,11 @@ export const CommunicationChannelFields = () => {
                               name="email"
                               placeholder="Netfang"
                               value={currentChannel.email}
+                              errorMessage={
+                                isEmailAlreadyAdded
+                                  ? 'Þetta netfang er þegar skráð'
+                                  : undefined
+                              }
                               onChange={(e) =>
                                 setCurrentChannel({
                                   ...currentChannel,

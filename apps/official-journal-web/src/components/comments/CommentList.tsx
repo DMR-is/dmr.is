@@ -24,7 +24,7 @@ export const CommentList = () => {
       ? currentCase.comments
       : sliceFirstAndLast(currentCase.comments, COMMENTS_TO_SHOW - 1)
 
-    return commentsToShow.sort((a, b) => {
+    return [...commentsToShow].sort((a, b) => {
       if (orderAsc.toggle) {
         return new Date(a.created).getTime() > new Date(b.created).getTime()
           ? 1

@@ -4,6 +4,8 @@ import { identityServerId, signOutUrl } from './identityProvider'
 
 export const useLogOut = () => {
   const logOut = async () => {
+    sessionStorage?.clear()
+
     // Revoke the refresh token and read the end-session URL while the session
     // cookie is still present; signOut() below deletes it.
     await fetch('/api/auth/revoke-refresh', { method: 'POST' }).catch(

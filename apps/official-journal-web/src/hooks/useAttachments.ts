@@ -107,12 +107,14 @@ export const useAttachments = () => {
       })
       .then((blob) => {
         const fileName = key?.split('/').pop() || 'downloaded.pdf'
+        const objectUrl = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
-        link.href = window.URL.createObjectURL(blob)
+        link.href = objectUrl
         link.download = fileName
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
+        window.URL.revokeObjectURL(objectUrl)
         setLoading(false)
       })
       .catch(() => {
