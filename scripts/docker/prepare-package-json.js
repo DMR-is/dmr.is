@@ -1,16 +1,25 @@
 // Prepares an app's generated `dist/package.json` for the `npm install` in its
 // Docker image. Every app Dockerfile runs it before installing:
 //
-//   node prepare-package-json.js <app package.json> <root package.json>
+//   node prepare-package-json.js package.json
 //
 // 1. Drops `@dmr.is/*` workspace dependencies. The build already bundled them,
 //    and npm cannot resolve them from a registry.
-// 2. Carries the root `resolutions` over as npm `overrides`. The image installs
-//    with npm and no lockfile, and npm ignores Yarn's `resolutions`, so without
-//    this every transitive security pin in the root package.json stops at the
-//    build machine and the image installs whatever the parent pins instead.
+// 2. Carries the `resolutions` Nx copies into the generated package.json over
+//    as npm `overrides`. The image installs with npm and no lockfile, and npm
+//    ignores Yarn's `resolutions`, so without this every transitive security
+//    pin stops at the build machine and the image installs whatever the parent
+//    pins instead.
+//
+// Anything it cannot translate faithfully throws, so a pin fails the image
+// build rather than silently going missing from it.
 
 const fs = require('fs')
+
+// The pkg.pr.new vanilla-extract builds are web build tooling that no image
+// installs at runtime, so they are left out on purpose. Any other URL or
+// protocol spec is unexpected and must be translated by hand.
+const SKIPPED_SPEC_PREFIXES = ['https://pkg.pr.new/']
 
 // `@scope/a/b` -> ['@scope/a', 'b']: a Yarn selector is a parent chain.
 const splitSelector = (selector) => {
@@ -24,13 +33,33 @@ const splitSelector = (selector) => {
   return names
 }
 
+// Returns the npm spec for a Yarn one, or null when it is skipped.
+const toNpmSpec = (selector, spec) => {
+  if (SKIPPED_SPEC_PREFIXES.some((prefix) => spec.startsWith(prefix))) {
+    return null
+  }
+
+  // `npm:1.2.3` is Yarn's explicit-registry form of a plain range.
+  const plain = spec.startsWith('npm:') ? spec.slice('npm:'.length) : spec
+  if (/^[a-z+]+:/i.test(plain) || plain.includes('@')) {
+    throw new Error(
+      `Cannot carry resolution "${selector}": "${spec}" into npm overrides. ` +
+        'Translate it in scripts/docker/prepare-package-json.js.',
+    )
+  }
+
+  return plain
+}
+
+// Mutates `dependencies`: a top-level resolution that names a direct
+// dependency also replaces that dependency's spec, the way Yarn applies it,
+// so the image can never install below the pin.
 const toOverrides = (resolutions, dependencies) => {
   const overrides = {}
 
-  for (const [selector, spec] of Object.entries(resolutions)) {
-    // URL and protocol specs (the pkg.pr.new vanilla-extract builds) are web
-    // build tooling. No runtime image installs them.
-    if (/^[a-z+]+:/.test(spec)) continue
+  for (const [selector, rawSpec] of Object.entries(resolutions)) {
+    const spec = toNpmSpec(selector, rawSpec)
+    if (spec === null) continue
 
     const names = splitSelector(selector)
     const leaf = names.pop()
@@ -44,10 +73,13 @@ const toOverrides = (resolutions, dependencies) => {
       node = node[parent]
     }
 
-    // npm refuses (EOVERRIDE) a top-level override that disagrees with a
-    // direct dependency, and `$name` is how it spells "the direct spec".
-    const value =
-      names.length === 0 && dependencies[leaf] !== undefined ? `$${leaf}` : spec
+    let value = spec
+    if (names.length === 0 && dependencies[leaf] !== undefined) {
+      // npm refuses (EOVERRIDE) a top-level override that disagrees with a
+      // direct dependency, and `$name` is how it spells "the direct spec".
+      dependencies[leaf] = spec
+      value = `$${leaf}`
+    }
 
     if (typeof node[leaf] === 'object') {
       node[leaf]['.'] = value
@@ -59,23 +91,33 @@ const toOverrides = (resolutions, dependencies) => {
   return overrides
 }
 
-const [appPath, rootPath] = process.argv.slice(2)
-if (!appPath || !rootPath) {
-  throw new Error(
-    'Usage: node prepare-package-json.js <app package.json> <root package.json>',
-  )
-}
-
-const app = JSON.parse(fs.readFileSync(appPath, 'utf8'))
-const root = JSON.parse(fs.readFileSync(rootPath, 'utf8'))
-
-app.dependencies = app.dependencies || {}
-for (const name of Object.keys(app.dependencies)) {
-  if (name.startsWith('@dmr.is/') && app.dependencies[name] === '*') {
-    delete app.dependencies[name]
+const preparePackageJson = (app) => {
+  if (!app.resolutions) {
+    throw new Error(
+      'The generated package.json has no `resolutions`. Nx copies them from ' +
+        'the root package.json; without them the image would install no pins.',
+    )
   }
+
+  const dependencies = { ...app.dependencies }
+  for (const name of Object.keys(dependencies)) {
+    if (name.startsWith('@dmr.is/') && dependencies[name] === '*') {
+      delete dependencies[name]
+    }
+  }
+
+  const overrides = toOverrides(app.resolutions, dependencies)
+  return { ...app, dependencies, overrides }
 }
 
-app.overrides = toOverrides(root.resolutions || {}, app.dependencies)
+module.exports = { preparePackageJson }
 
-fs.writeFileSync(appPath, JSON.stringify(app, null, 2))
+if (require.main === module) {
+  const [path] = process.argv.slice(2)
+  if (!path) {
+    throw new Error('Usage: node prepare-package-json.js <package.json>')
+  }
+
+  const app = JSON.parse(fs.readFileSync(path, 'utf8'))
+  fs.writeFileSync(path, JSON.stringify(preparePackageJson(app), null, 2))
+}

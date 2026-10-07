@@ -2,11 +2,10 @@ FROM public.ecr.aws/docker/library/node:24-alpine as deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 COPY ./apps/legal-gazette-public-web/dist/package.json ./
-# Strips @dmr.is/* and carries the root resolutions over as npm overrides,
-# since npm ignores Yarn's resolutions (scripts/docker/prepare-package-json.js).
-COPY ./package.json ./root-package.json
+# Strips @dmr.is/* and turns the resolutions Nx copied into package.json into
+# npm overrides, since npm ignores them (scripts/docker/prepare-package-json.js).
 COPY ./scripts/docker/prepare-package-json.js ./
-RUN node prepare-package-json.js package.json root-package.json && rm prepare-package-json.js root-package.json
+RUN node prepare-package-json.js package.json && rm prepare-package-json.js
 RUN npm install --omit=dev --legacy-peer-deps
 
 FROM public.ecr.aws/docker/library/node:24-alpine AS runner

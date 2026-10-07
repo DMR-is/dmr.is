@@ -183,7 +183,8 @@ jobs:
 
   # The prod rollout wait's rollback and credential-expiry paths only run for
   # real during a release, so check them against the fake aws on every change.
-  # Needs only bash and jq, which the runner has.
+  # That part needs only bash and jq, which the runner has. The image builds'
+  # resolutions-to-overrides step is also checked here, with Node.
   deploy-scripts:
     runs-on: ubuntu-latest
     steps:
@@ -191,3 +192,11 @@ jobs:
 
       - name: Test wait-for-services
         run: bash .github/actions/deploy/wait-for-services/test/run.sh
+
+      - name: ♻️ Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: Test prepare-package-json
+        run: node --test 'scripts/docker/*.test.js'

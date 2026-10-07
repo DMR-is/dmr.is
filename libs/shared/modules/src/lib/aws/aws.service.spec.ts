@@ -20,8 +20,10 @@ jest.mock('@aws-sdk/client-s3', () => ({
 }))
 
 jest.mock('@aws-sdk/client-sesv2', () => ({
-  SESv2Client: jest.fn().mockImplementation(() => ({})),
-  SendEmailCommand: jest.fn(),
+  SESv2Client: jest.fn().mockImplementation(() => ({
+    send: (...args: Array<unknown>) => sesSend(...args),
+  })),
+  SendEmailCommand: jest.fn().mockImplementation((input) => ({ input })),
 }))
 
 jest.mock('@aws-sdk/credential-providers', () => ({
@@ -33,6 +35,7 @@ jest.mock('@aws-sdk/s3-request-presigner', () => ({
 }))
 
 const s3Send = jest.fn()
+const sesSend = jest.fn()
 
 const ONE_MB = 1024 * 1024
 const CAP = ONE_MB * 20
@@ -282,5 +285,43 @@ describe('AWSService.getObjectBuffer', () => {
       'Failed to destroy S3 response stream',
       expect.objectContaining({ error: expect.any(Error) }),
     )
+  })
+})
+
+/*
+ * Every caller of `sendMail` branches on `result.ok` rather than catching,
+ * because `@LogAndHandle()` turns a failed send into an err result. Pin that
+ * here, once, instead of in each caller's spec.
+ */
+describe('AWSService.sendMail', () => {
+  let service: AWSService
+
+  const message = {
+    from: 'noreply@example.is',
+    to: 'someone@example.is',
+    subject: 'Subject',
+    text: 'Body',
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    service = new AWSService(mockLogger as never)
+  })
+
+  it('resolves an err result, not a rejection, when SES refuses the send', async () => {
+    sesSend.mockRejectedValue(new Error('SES is down'))
+
+    const result = await service.sendMail(message)
+
+    expect(result.result.ok).toBe(false)
+  })
+
+  it('resolves an ok result carrying the message id when SES accepts it', async () => {
+    sesSend.mockResolvedValue({ MessageId: 'abc123' })
+
+    const result = await service.sendMail(message)
+
+    expect(result.unwrap().messageId).toContain('abc123')
+    expect(sesSend).toHaveBeenCalledTimes(1)
   })
 })

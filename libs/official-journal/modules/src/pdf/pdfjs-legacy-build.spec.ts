@@ -1,4 +1,8 @@
 import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+import { PDFJS_DOCUMENT_OPTIONS } from './pdf.service'
 
 /*
  * `PdfService.getPdfJsLegacy` loads pdfjs-dist's ESM legacy build with a plain
@@ -8,12 +12,17 @@ import { execFileSync } from 'node:child_process'
  * process. A pdfjs upgrade that adds top-level await would otherwise surface as
  * ERR_REQUIRE_ASYNC_MODULE only when someone first generates an issue PDF.
  *
- * Keep the specifier and options in step with `pdf.service.ts`.
+ * The specifier is read from the service's source rather than shared through a
+ * constant: webpack only leaves a `require` of a string literal external.
  */
+const PDFJS_SPECIFIER = readFileSync(
+  join(__dirname, 'pdf.service.ts'),
+  'utf8',
+).match(/require\('(pdfjs-dist\/[^']+)'\)/)?.[1]
+
 const RESULT = 'RESULT:'
 
-const SCRIPT = `
-const RESULT = '${RESULT}'
+const script = (specifier: string) => `
 const { PDFDocument, StandardFonts } = require('pdf-lib')
 
 ;(async () => {
@@ -23,10 +32,10 @@ const { PDFDocument, StandardFonts } = require('pdf-lib')
     doc.addPage().drawText(text, { x: 50, y: 700, font, size: 12 })
   }
 
-  const pdfjs = require('pdfjs-dist/legacy/build/pdf.mjs')
+  const pdfjs = require(${JSON.stringify(specifier)})
   const pdf = await pdfjs.getDocument({
     data: new Uint8Array(await doc.save()),
-    isEvalSupported: false,
+    ...${JSON.stringify(PDFJS_DOCUMENT_OPTIONS)},
   }).promise
 
   const pages = []
@@ -36,7 +45,7 @@ const { PDFDocument, StandardFonts } = require('pdf-lib')
   }
   await pdf.destroy()
   // pdfjs logs its own warnings to stdout, so the result gets a marker.
-  process.stdout.write(RESULT + JSON.stringify(pages))
+  process.stdout.write(${JSON.stringify(RESULT)} + JSON.stringify(pages))
 })().catch((error) => {
   process.stderr.write(String(error && error.stack ? error.stack : error))
   process.exit(1)
@@ -44,11 +53,16 @@ const { PDFDocument, StandardFonts } = require('pdf-lib')
 `
 
 describe('pdfjs-dist legacy build', () => {
+  it('finds the pdfjs require in pdf.service.ts', () => {
+    expect(PDFJS_SPECIFIER).toBeDefined()
+  })
+
   it('loads through require(esm) and extracts page text', () => {
-    const output = execFileSync(process.execPath, ['-e', SCRIPT], {
-      cwd: __dirname,
-      encoding: 'utf8',
-    })
+    const output = execFileSync(
+      process.execPath,
+      ['-e', script(PDFJS_SPECIFIER ?? '')],
+      { cwd: __dirname, encoding: 'utf8', timeout: 30_000 },
+    )
 
     expect(
       JSON.parse(output.slice(output.indexOf(RESULT) + RESULT.length)),

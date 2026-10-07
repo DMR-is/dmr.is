@@ -95,7 +95,11 @@
     },
     "container": {
       "dependsOn": ["build"],
-      "inputs": ["production", "^production"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/docker/**"
+      ],
       "cache": false
     },
     "e2e": {
@@ -176,8 +180,7 @@
       "{workspaceRoot}/eslint-local-rules.js",
       "{workspaceRoot}/nx.json",
       "{workspaceRoot}/tsconfig.base.json",
-      "{workspaceRoot}/submodules/config.json",
-      "{workspaceRoot}/scripts/docker/**"
+      "{workspaceRoot}/submodules/config.json"
     ],
     "production": [
       "default",

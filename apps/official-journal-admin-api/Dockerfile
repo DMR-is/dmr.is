@@ -4,11 +4,10 @@ FROM docker.io/node:24-alpine as deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 COPY ./apps/official-journal-admin-api/dist/package.json ./
-# Strips @dmr.is/* and carries the root resolutions over as npm overrides,
-# since npm ignores Yarn's resolutions (scripts/docker/prepare-package-json.js).
-COPY ./package.json ./root-package.json
+# Strips @dmr.is/* and turns the resolutions Nx copied into package.json into
+# npm overrides, since npm ignores them (scripts/docker/prepare-package-json.js).
 COPY ./scripts/docker/prepare-package-json.js ./
-RUN node prepare-package-json.js package.json root-package.json && rm prepare-package-json.js root-package.json
+RUN node prepare-package-json.js package.json && rm prepare-package-json.js
 RUN npm install pg --legacy-peer-deps
 RUN npm install --omit=dev --legacy-peer-deps
 # Production image, copy all the files and run nest

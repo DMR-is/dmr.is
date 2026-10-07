@@ -30,6 +30,12 @@ import { getBrowser } from './puppetBrowser'
 
 const LOGGING_CATEGORY = 'pdf-service'
 
+/**
+ * `isEvalSupported: false` is pdf.js's own mitigation for GHSA-wgrm-67xf-hhpq.
+ * Exported so `pdfjs-legacy-build.spec.ts` loads pdfjs with the same options.
+ */
+export const PDFJS_DOCUMENT_OPTIONS = { isEvalSupported: false } as const
+
 @Injectable()
 export class PdfService implements OnModuleDestroy, IPdfService {
   private cachedPdfJs: any | null = null
@@ -111,7 +117,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
     const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(pdfBuffer),
-      isEvalSupported: false,
+      ...PDFJS_DOCUMENT_OPTIONS,
     })
     const pdf = await loadingTask.promise
     const markers = Array.from({ length: advertCount }, (_, index) =>
