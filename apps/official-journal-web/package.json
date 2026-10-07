@@ -9,6 +9,7 @@
     "@dmr.is/island-regulations": "*",
     "@dmr.is/island-ui-theme": "*",
     "@dmr.is/logging-next": "*",
+    "@dmr.is/regulations-tools": "0.11.0",
     "@dmr.is/shared-dto": "*",
     "@dmr.is/trpc": "*",
     "@dmr.is/ui": "*",
