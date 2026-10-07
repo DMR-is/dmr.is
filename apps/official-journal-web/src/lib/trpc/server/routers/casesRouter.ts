@@ -488,16 +488,19 @@ export const casesRouter = router({
   // Slim search for picking a published advert to compare against. Drops the
   // HTML so a page of results doesn't ship every advert body to the browser,
   // and drops revoked adverts — unpublishing a case marks its advert Afturkölluð.
+  // getAdverts can't filter by status, so over-fetch and trim after filtering
+  // to keep a page of mostly-revoked hits from emptying the list.
   searchPublishedAdverts: protectedProcedure
     .input(z.object({ search: z.string().trim().min(1) }))
     .query(async ({ ctx, input }) => {
       const { adverts } = await ctx.api.getAdverts({
         search: input.search,
-        pageSize: 10,
+        pageSize: 20,
       })
 
       return adverts
         .filter((advert) => advert.status !== AdvertStatus.Afturkölluð)
+        .slice(0, 10)
         .map((advert) => ({
           id: advert.id,
           title: advert.title,

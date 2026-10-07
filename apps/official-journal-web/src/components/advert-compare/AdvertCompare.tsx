@@ -20,8 +20,6 @@ import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatDate } from '../../lib/utils'
 import * as styles from './AdvertCompare.css'
 
-import '@dmr.is/regulations-tools/diff.css'
-
 const logger = getLogger('AdvertCompare')
 
 const SEARCH_DEBOUNCE_MS = 300
