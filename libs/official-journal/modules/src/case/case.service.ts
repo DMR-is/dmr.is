@@ -1078,7 +1078,9 @@ export class CaseService implements ICaseService {
         this.updatePublishedAdvertByHtml(caseId, {
           advertHtml: publishHtml,
           documentPdfUrl: pdfUrl,
-          title,
+          // The case title may have been edited since publication. The
+          // correction's `title` describes the correction, not the advert.
+          subject: activeCase.advertTitle,
           ...(activeCase?.requestedPublicationDate && {
             publicationDate: new Date(activeCase.requestedPublicationDate),
           }),
@@ -1099,6 +1101,22 @@ export class CaseService implements ICaseService {
     ResultWrapper.unwrap(updatePublishedCheck)
     ResultWrapper.unwrap(postCaseCorrectionCheck)
 
+    const advertId = activeCase.advertId
+    if (advertId) {
+      transaction?.afterCommit(async () => {
+        try {
+          await this.runner.updateItemInIndex(advertId)
+        } catch (error) {
+          this.logger.error('Failed to reindex corrected advert', {
+            error,
+            advertId,
+            caseId,
+            category: LOGGING_CATEGORY,
+          })
+        }
+      })
+    }
+
     return ResultWrapper.ok()
   }
 
@@ -1118,7 +1136,7 @@ export class CaseService implements ICaseService {
       advertResult.advertId,
       {
         documentHtml: body.advertHtml,
-        ...(body.title && { title: body.title }),
+        ...(body.subject && { subject: body.subject }),
         ...(body.publicationDate && { publicationDate: body.publicationDate }),
       },
     )

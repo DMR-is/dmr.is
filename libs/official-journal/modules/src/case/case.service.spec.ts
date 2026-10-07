@@ -9,6 +9,7 @@ import { Test } from '@nestjs/testing'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { PostApplicationBody } from '@dmr.is/shared-dto'
 import { IAWSService } from '@dmr.is/shared-modules'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { AdditionalPartiesService } from '../additional-parties'
 import { AdvertMainTypeModel } from '../advert-type/models'
@@ -69,6 +70,7 @@ describe('CaseService', () => {
   let priceService: IPriceService
   let pdfService: IPdfService
   let sequelize: Sequelize
+  let runner: IReindexRunnerService
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       imports: [LoggingModule],
@@ -95,7 +97,9 @@ describe('CaseService', () => {
         },
         {
           provide: IReindexRunnerService,
-          useClass: jest.fn(() => ({})),
+          useClass: jest.fn(() => ({
+            updateItemInIndex: jest.fn(),
+          })),
         },
         {
           provide: IRegulationsAdminService,
@@ -111,7 +115,9 @@ describe('CaseService', () => {
         },
         {
           provide: IJournalService,
-          useClass: jest.fn(() => ({})),
+          useClass: jest.fn(() => ({
+            updateAdvert: jest.fn(),
+          })),
         },
         {
           provide: IAttachmentService,
@@ -149,6 +155,7 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({
             create: () => ({}),
             findOne: () => ({}),
+            findByPk: jest.fn(),
             count: () => ({}),
           })),
         },
@@ -259,6 +266,7 @@ describe('CaseService', () => {
     commentService = app.get<ICommentServiceV2>(ICommentServiceV2)
     applicationService = app.get<IApplicationService>(IApplicationService)
     journalService = app.get<IJournalService>(IJournalService)
+    runner = app.get<IReindexRunnerService>(IReindexRunnerService)
     attachmentService = app.get<IAttachmentService>(IAttachmentService)
     externalService = app.get<IExternalService>(IExternalService)
     signatureService = app.get<ISignatureService>(ISignatureService)
@@ -292,6 +300,116 @@ describe('CaseService', () => {
       jest.spyOn(caseService, 'createCase').mockImplementationOnce(() => {
         throw new Error()
       })
+    })
+  })
+
+  describe('updateAdvert (correction)', () => {
+    const advertId = 'advert-1'
+    const activeCase = {
+      id: 'case-1',
+      advertId,
+      advertTitle: 'Nýtt heiti auglýsingar',
+      requestedPublicationDate: '2026-01-01T00:00:00.000Z',
+      advert: { id: advertId, documentPdfUrl: 'https://cdn.test/a.pdf' },
+      signature: { html: '<p>undirritun</p>' },
+      department: { title: 'A deild' },
+      additions: [],
+      attachments: [],
+    }
+
+    let updatePublishedAdvert: jest.SpyInstance
+    let updateItemInIndex: jest.SpyInstance
+    let afterCommitCallbacks: Array<() => Promise<void>>
+
+    const runAfterCommit = () =>
+      Promise.all(afterCommitCallbacks.map((cb) => cb()))
+
+    beforeEach(() => {
+      afterCommitCallbacks = []
+      jest.spyOn(sequelize, 'transaction').mockResolvedValue({
+        commit: jest.fn(),
+        rollback: jest.fn(),
+        afterCommit: (cb: () => Promise<void>) => {
+          afterCommitCallbacks.push(cb)
+        },
+      } as never)
+      updateItemInIndex = jest
+        .spyOn(runner, 'updateItemInIndex')
+        .mockResolvedValue({ advertId, success: true })
+      jest
+        .spyOn(caseModel as unknown as typeof CaseModel, 'findByPk')
+        .mockResolvedValue(activeCase as never)
+      updatePublishedAdvert = jest
+        .spyOn(journalService, 'updateAdvert')
+        .mockResolvedValue(ResultWrapper.ok({ advert: {} }) as never)
+
+      jest
+        .spyOn(caseService as never, 'createPdfAndUpload')
+        .mockResolvedValue(ResultWrapper.ok() as never)
+      jest
+        .spyOn(caseService as CaseService, 'updateAdvertByHtml')
+        .mockResolvedValue(ResultWrapper.ok())
+      jest
+        .spyOn(caseService as CaseService, 'postCaseCorrection')
+        .mockResolvedValue(ResultWrapper.ok())
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('writes the case title to the published advert subject', async () => {
+      await caseService.updateAdvert('case-1', {
+        advertHtml: '<p>leiðrétt</p>',
+        title: 'Leiðrétting á villu',
+        description: 'Heiti lagfært',
+      } as never)
+
+      expect(updatePublishedAdvert).toHaveBeenCalledWith(
+        advertId,
+        expect.objectContaining({ subject: activeCase.advertTitle }),
+      )
+    })
+
+    it('does not leak the correction title into the advert', async () => {
+      await caseService.updateAdvert('case-1', {
+        advertHtml: '<p>leiðrétt</p>',
+        title: 'Leiðrétting á villu',
+        description: 'Heiti lagfært',
+      } as never)
+
+      const [, body] = updatePublishedAdvert.mock.calls[0]
+      expect(body).not.toHaveProperty('title')
+      expect(body.subject).not.toBe('Leiðrétting á villu')
+      expect(caseService.postCaseCorrection).toHaveBeenCalledWith(
+        'case-1',
+        expect.objectContaining({ title: 'Leiðrétting á villu' }),
+        expect.anything(),
+      )
+    })
+
+    it('reindexes the advert after the correction commits', async () => {
+      await caseService.updateAdvert('case-1', {
+        advertHtml: '<p>leiðrétt</p>',
+        title: 'Leiðrétting á villu',
+        description: 'Heiti lagfært',
+      } as never)
+
+      expect(updateItemInIndex).not.toHaveBeenCalled()
+      await runAfterCommit()
+      expect(updateItemInIndex).toHaveBeenCalledWith(advertId)
+    })
+
+    it('does not fail the correction when reindexing throws', async () => {
+      updateItemInIndex.mockRejectedValueOnce(new Error('opensearch down'))
+
+      await caseService.updateAdvert('case-1', {
+        advertHtml: '<p>leiðrétt</p>',
+        title: 'Leiðrétting á villu',
+        description: 'Heiti lagfært',
+      } as never)
+
+      await expect(runAfterCommit()).resolves.toBeDefined()
     })
   })
 })
