@@ -1078,7 +1078,9 @@ export class CaseService implements ICaseService {
         this.updatePublishedAdvertByHtml(caseId, {
           advertHtml: publishHtml,
           documentPdfUrl: pdfUrl,
-          title,
+          // The case title may have been edited since publication. The
+          // correction's `title` describes the correction, not the advert.
+          subject: activeCase.advertTitle,
           ...(activeCase?.requestedPublicationDate && {
             publicationDate: new Date(activeCase.requestedPublicationDate),
           }),
@@ -1118,7 +1120,7 @@ export class CaseService implements ICaseService {
       advertResult.advertId,
       {
         documentHtml: body.advertHtml,
-        ...(body.title && { title: body.title }),
+        ...(body.subject && { subject: body.subject }),
         ...(body.publicationDate && { publicationDate: body.publicationDate }),
       },
     )
