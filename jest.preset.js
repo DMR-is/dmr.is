@@ -12,6 +12,13 @@ const ESM_ONLY_DEPS = [
   'domutils',
   'domelementtype',
   'entities',
+  // file-type 21 (regulations-api) and its tokenizer stack are ESM-only too.
+  'file-type',
+  'strtok3',
+  'token-types',
+  '@tokenizer/inflate',
+  '@borewit/text-codec',
+  'uint8array-extras',
 ]
 
 module.exports = {

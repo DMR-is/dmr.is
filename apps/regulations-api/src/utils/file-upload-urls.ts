@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import file_type from 'file-type'
+import { fileTypeFromStream } from 'file-type'
 import fetch from 'node-fetch'
 import { PassThrough, Readable } from 'stream'
 
@@ -150,7 +150,7 @@ const uploadFile = async (fileInfo: FileUrlMapping) => {
     if (!ContentType) {
       const [fileA, fileB] = await stupidStreamClone(res.body as Readable)
       Body = fileA
-      ContentType = (await file_type.fromStream(fileB))?.mime
+      ContentType = (await fileTypeFromStream(fileB))?.mime
     }
 
     // `Body` is a stream of unknown length, so this goes through lib-storage's

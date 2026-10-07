@@ -1,6 +1,6 @@
 import { createHash } from 'crypto'
 import type { FastifyRequest } from 'fastify'
-import file_type from 'file-type'
+import { fileTypeFromBuffer } from 'file-type'
 import isSvg from 'is-svg'
 import sharp from 'sharp'
 
@@ -107,7 +107,7 @@ const getS3Client = () => {
  *
  * The XML guard is load-bearing. `AUTO_CONTENT_TYPE` ran `file-type@3`, which
  * detected no text formats at all, so the SVG sniff always got its turn. The
- * `file-type@16` we run here *does* detect XML, and an `application/xml`
+ * `file-type@21` we run here *does* detect XML, and an `application/xml`
  * verdict would shadow the sniff below — storing every SVG that carries an
  * `<?xml …?>` declaration (i.e. anything Illustrator or Inkscape exports) as
  * `application/xml`, which browsers refuse to render in an `<img>`. Bare
@@ -118,7 +118,7 @@ const getS3Client = () => {
  * `file-type@3.9.0` + `is-svg@2.1.0` from the Yarn cache: identical output on
  * every case tried. */
 const detectContentType = async (body: Buffer): Promise<string> => {
-  const type = await file_type.fromBuffer(body)
+  const type = await fileTypeFromBuffer(body)
   if (type && type.mime !== 'application/xml') {
     return type.mime
   }
