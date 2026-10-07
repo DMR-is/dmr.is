@@ -97,7 +97,9 @@ describe('CaseService', () => {
         },
         {
           provide: IReindexRunnerService,
-          useClass: jest.fn(() => ({})),
+          useClass: jest.fn(() => ({
+            updateItemInIndex: jest.fn(),
+          })),
         },
         {
           provide: IRegulationsAdminService,
@@ -113,7 +115,9 @@ describe('CaseService', () => {
         },
         {
           provide: IJournalService,
-          useClass: jest.fn(() => ({})),
+          useClass: jest.fn(() => ({
+            updateAdvert: jest.fn(),
+          })),
         },
         {
           provide: IAttachmentService,
@@ -151,6 +155,7 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({
             create: () => ({}),
             findOne: () => ({}),
+            findByPk: jest.fn(),
             count: () => ({}),
           })),
         },
@@ -312,8 +317,8 @@ describe('CaseService', () => {
       attachments: [],
     }
 
-    let updatePublishedAdvert: jest.Mock
-    let updateItemInIndex: jest.Mock
+    let updatePublishedAdvert: jest.SpyInstance
+    let updateItemInIndex: jest.SpyInstance
     let afterCommitCallbacks: Array<() => Promise<void>>
 
     const runAfterCommit = () =>
@@ -321,26 +326,22 @@ describe('CaseService', () => {
 
     beforeEach(() => {
       afterCommitCallbacks = []
-      Object.assign(sequelize, {
-        transaction: jest.fn().mockResolvedValue({
-          commit: jest.fn(),
-          rollback: jest.fn(),
-          afterCommit: (cb: () => Promise<void>) => {
-            afterCommitCallbacks.push(cb)
-          },
-        }),
-      })
+      jest.spyOn(sequelize, 'transaction').mockResolvedValue({
+        commit: jest.fn(),
+        rollback: jest.fn(),
+        afterCommit: (cb: () => Promise<void>) => {
+          afterCommitCallbacks.push(cb)
+        },
+      } as never)
       updateItemInIndex = jest
-        .fn()
+        .spyOn(runner, 'updateItemInIndex')
         .mockResolvedValue({ advertId, success: true })
-      Object.assign(runner, { updateItemInIndex })
-      Object.assign(caseModel, {
-        findByPk: jest.fn().mockResolvedValue(activeCase),
-      })
+      jest
+        .spyOn(caseModel as unknown as typeof CaseModel, 'findByPk')
+        .mockResolvedValue(activeCase as never)
       updatePublishedAdvert = jest
-        .fn()
-        .mockResolvedValue(ResultWrapper.ok({ advert: {} }))
-      Object.assign(journalService, { updateAdvert: updatePublishedAdvert })
+        .spyOn(journalService, 'updateAdvert')
+        .mockResolvedValue(ResultWrapper.ok({ advert: {} }) as never)
 
       jest
         .spyOn(caseService as never, 'createPdfAndUpload')
