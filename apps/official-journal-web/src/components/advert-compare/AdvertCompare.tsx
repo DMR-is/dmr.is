@@ -83,7 +83,10 @@ const AdvertSearch = ({
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    const timeout = setTimeout(() => setSearch(query.trim()), SEARCH_DEBOUNCE_MS)
+    const timeout = setTimeout(
+      () => setSearch(query.trim()),
+      SEARCH_DEBOUNCE_MS,
+    )
     return () => clearTimeout(timeout)
   }, [query])
 
@@ -242,7 +245,10 @@ const CompareView = ({
     }
     if (!diffShowing) {
       return (
-        <HTMLDump className={styles.bodyText} html={publishedHtml as HTMLText} />
+        <HTMLDump
+          className={styles.bodyText}
+          html={publishedHtml as HTMLText}
+        />
       )
     }
     if (diffFailed) {

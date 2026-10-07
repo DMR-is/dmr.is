@@ -28,10 +28,9 @@ const OriginalCompare = dynamic(
   { ssr: false },
 )
 
-const AdvertCompare = dynamic(
-  () => import('../advert-compare/AdvertCompare'),
-  { ssr: false },
-)
+const AdvertCompare = dynamic(() => import('../advert-compare/AdvertCompare'), {
+  ssr: false,
+})
 
 type Props = {
   toggle: boolean
