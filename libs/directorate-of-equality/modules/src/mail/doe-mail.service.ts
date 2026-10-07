@@ -43,23 +43,6 @@ const LOGGING_CONTEXT = 'DoeMailService'
 const FALLBACK_FROM_ADDRESS = 'noreply@jafnretti.is'
 const FROM_DISPLAY_NAME = 'Jafnréttisstofa'
 
-/**
- * Whether a value is a `ResultWrapper`, checked rather than asserted.
- *
- * `ResultWrapper.ok`/`.err` both produce `{ result: { ok, … } }`, and `ok` is the
- * discriminant every caller in this module branches on, so its presence is the
- * property worth testing — not the class identity, which a serialization round
- * trip would lose.
- */
-const isResultWrapper = (value: unknown): value is ResultWrapper<unknown> => {
-  if (typeof value !== 'object' || value === null || !('result' in value)) {
-    return false
-  }
-
-  const result = (value as { result: unknown }).result
-  return typeof result === 'object' && result !== null && 'ok' in result
-}
-
 /** The rendered parts of one message, minus envelope and recipient. */
 type MailContent = {
   subject: string
@@ -234,48 +217,19 @@ export class DoeMailService implements IDoeMailService {
   }
 
   /**
-   * The one place this lib takes `IAWSService.sendMail` at its word about what
-   * a failure looks like.
+   * The one place this lib calls `IAWSService.sendMail`.
    *
    * ⚠️ **It resolves an err result — it does NOT reject.** The implementation
    * is decorated `@LogAndHandle()`, whose catch *returns* `handleException(...)`,
    * and `handleException` yields `ResultWrapper.err` on every branch without
-   * rethrowing. Confirmed by executing a decorated method, not by reading it.
-   *
-   * The declared return type is a bare `SentMessageInfo`, which
-   * `@types/nodemailer` defines as `any` — so it reads as "this throws on
-   * failure" and type-checks either way. That is precisely the bug it produced:
-   * a `try/catch` around the call is unreachable, and a hard SES failure looks
-   * like a successful send.
-   *
-   * Correcting the declaration is the real fix, but `sendMail` is shared with
-   * the Official Journal and the Legal Gazette, both of which have the same dead
-   * catch — so it is a cross-product change with its own blast radius and does
-   * not belong in this PR. This narrows it at DoE's boundary instead, in one
-   * place, so no caller in this lib repeats the assertion.
+   * rethrowing. So a `try/catch` around the call is unreachable, and a failed
+   * send has to be read from `result.ok`. The declared
+   * `Promise<ResultWrapper<SentMessageInfo>>` now says so.
    */
   private async sendMailResult(
     message: Parameters<IAWSService['sendMail']>[0],
   ): Promise<ResultWrapper<unknown>> {
-    const sent: unknown = await this.aws.sendMail(message, LOGGING_CONTEXT)
-
-    /*
-     * ⚠️ A runtime check, not `as ResultWrapper<unknown>`.
-     *
-     * `SentMessageInfo` is `any`, so an assertion here compiles no matter what
-     * the implementation returns and nothing outside this method would notice it
-     * drifting. If someone later makes `sendMail` honour its declared type —
-     * returning bare `SentMessageInfo` and throwing on failure, which is what the
-     * declaration promises — `sent.result` becomes `undefined` and a SUCCESSFUL
-     * send reads as a failure: no S3 archive on the approval path, and a bare
-     * `TypeError` instead of a `MailSendError` on the reminder path, defeating
-     * the exact distinction `mail-send.error.ts` draws.
-     *
-     * So: a result wrapper is used as one, and anything else is taken at face
-     * value as a delivered send, which is what returning a value would mean under
-     * the declared contract. Both branches are pinned in the spec.
-     */
-    return isResultWrapper(sent) ? sent : ResultWrapper.ok(sent)
+    return this.aws.sendMail(message, LOGGING_CONTEXT)
   }
 
   /**

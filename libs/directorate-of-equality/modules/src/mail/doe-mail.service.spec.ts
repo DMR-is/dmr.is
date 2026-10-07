@@ -452,16 +452,9 @@ describe('DoeMailService', () => {
     })
   })
 
-  /*
-   * ⚠️ `IAWSService.sendMail` is DECLARED `Promise<SentMessageInfo>`, and
-   * `SentMessageInfo` is `any`. The implementation actually resolves a
-   * `ResultWrapper` and never rejects, because `@LogAndHandle()`'s catch returns
-   * `handleException(...)`. Nothing in the type system holds either shape, so
-   * `sendMailResult` checks at runtime and both branches are pinned here — a
-   * later "cleanup" that makes the implementation honour its declaration must not
-   * turn a successful send into a failure.
-   */
-  describe('sendMailResult narrowing', () => {
+  // `IAWSService.sendMail` resolves an err result instead of rejecting, because
+  // `@LogAndHandle()`'s catch returns `handleException(...)`.
+  describe('sendMail failure', () => {
     it('treats an err result as a failed send', async () => {
       aws.sendMail.mockResolvedValue(
         ResultWrapper.err({ code: 500, message: 'SES is down' }),
@@ -473,33 +466,6 @@ describe('DoeMailService', () => {
           [],
         ),
       ).resolves.toBe(false)
-    })
-
-    // The DECLARED shape: a bare `SentMessageInfo`. Returning a value at all
-    // means the send succeeded under that contract, so it must not read as a
-    // failure and skip the S3 archive.
-    it('treats a bare non-ResultWrapper return as a delivered send', async () => {
-      aws.sendMail.mockResolvedValue({ messageId: '<abc@ses>' })
-
-      await expect(
-        service.sendReportApproved(
-          makeReport({ type: ReportTypeEnum.EQUALITY }),
-          [],
-        ),
-      ).resolves.toBe(true)
-      expect(logger.error).not.toHaveBeenCalled()
-    })
-
-    // Same for `undefined`, which is what a void implementation would give.
-    it('treats undefined as a delivered send rather than a failure', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
-
-      await expect(
-        service.sendReportApproved(
-          makeReport({ type: ReportTypeEnum.EQUALITY }),
-          [],
-        ),
-      ).resolves.toBe(true)
     })
   })
 

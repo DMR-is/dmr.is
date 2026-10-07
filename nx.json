@@ -176,7 +176,8 @@
       "{workspaceRoot}/eslint-local-rules.js",
       "{workspaceRoot}/nx.json",
       "{workspaceRoot}/tsconfig.base.json",
-      "{workspaceRoot}/submodules/config.json"
+      "{workspaceRoot}/submodules/config.json",
+      "{workspaceRoot}/scripts/docker/**"
     ],
     "production": [
       "default",

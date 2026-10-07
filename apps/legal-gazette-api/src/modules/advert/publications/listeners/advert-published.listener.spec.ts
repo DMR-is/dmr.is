@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IAWSService } from '@dmr.is/shared-modules'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertVersionEnum } from '../../../../models/advert-publication.model'
@@ -106,7 +107,7 @@ describe('AdvertPublishedListener', () => {
       debug: jest.fn(),
     }
     const mockAWSService = {
-      sendMail: jest.fn().mockResolvedValue(undefined),
+      sendMail: jest.fn().mockResolvedValue(ResultWrapper.ok(undefined)),
     }
     const mockPdfService = {
       generatePdfAndSaveToS3: jest.fn().mockResolvedValue(undefined),
@@ -339,8 +340,8 @@ describe('AdvertPublishedListener', () => {
     })
     describe('Email sending failures', () => {
       it('should not throw when email sending fails', async () => {
-        const mockError = new Error('SES service unavailable')
-        sesService.sendMail.mockRejectedValue(mockError)
+        const mockError = { code: 500, message: 'SES service unavailable' }
+        sesService.sendMail.mockResolvedValue(ResultWrapper.err(mockError))
         const event = createMockEvent()
         // Should not throw - email failure should be caught
         await expect(
@@ -348,8 +349,8 @@ describe('AdvertPublishedListener', () => {
         ).resolves.not.toThrow()
       })
       it('should log error when email sending fails', async () => {
-        const mockError = new Error('SES service unavailable')
-        sesService.sendMail.mockRejectedValue(mockError)
+        const mockError = { code: 500, message: 'SES service unavailable' }
+        sesService.sendMail.mockResolvedValue(ResultWrapper.err(mockError))
         const event = createMockEvent()
         await listener.sendEmailNotification(event)
         expect(logger.error).toHaveBeenCalledWith(
@@ -363,7 +364,10 @@ describe('AdvertPublishedListener', () => {
       })
       it('should succeed when email sending succeeds', async () => {
         sesService.sendMail.mockResolvedValue(
-          {} as Awaited<ReturnType<IAWSService['sendMail']>>,
+          ResultWrapper.ok({
+            envelope: { from: 'noreply@logbirtingablad.is', to: [] },
+            messageId: '<test@ses>',
+          }),
         )
         const event = createMockEvent()
         await listener.sendEmailNotification(event)
@@ -416,7 +420,9 @@ describe('AdvertPublishedListener', () => {
         expect(tbrService.postPayment).toHaveBeenCalled()
       })
       it('should allow email to fail without affecting TBR transaction', async () => {
-        sesService.sendMail.mockRejectedValue(new Error('SES unavailable'))
+        sesService.sendMail.mockResolvedValue(
+          ResultWrapper.err({ code: 500, message: 'SES unavailable' }),
+        )
         const event = createMockEvent()
         // Both should execute independently
         await Promise.all([

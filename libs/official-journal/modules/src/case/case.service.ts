@@ -1464,11 +1464,12 @@ export class CaseService implements ICaseService {
     if (caseToPublish.applicationId) {
       await this.utilityService.approveApplication(caseToPublish.applicationId)
     }
-    try {
-      await this.s3.sendMail(message, 'CaseService')
-    } catch (error) {
+    // `sendMail` is `@LogAndHandle()`-decorated, so a failed send resolves an
+    // err result rather than rejecting.
+    const sent = await this.s3.sendMail(message, 'CaseService')
+    if (!sent.result.ok) {
       this.logger.error('Failed to send publish email', {
-        error,
+        error: sent.result.error,
         publicationNumber: publicationNumber,
         category: LOGGING_CATEGORY,
       })
