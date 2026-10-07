@@ -28,6 +28,11 @@ const OriginalCompare = dynamic(
   { ssr: false },
 )
 
+const AdvertCompare = dynamic(
+  () => import('../advert-compare/AdvertCompare'),
+  { ssr: false },
+)
+
 type Props = {
   toggle: boolean
   onToggle: () => void
@@ -96,6 +101,18 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
                 size="small"
               >
                 Breytingarsaga
+              </Button>
+            }
+          />
+          <AdvertCompare
+            disclosure={
+              <Button
+                variant="utility"
+                icon="documents"
+                iconType="outline"
+                size="small"
+              >
+                Samanburður
               </Button>
             }
           />

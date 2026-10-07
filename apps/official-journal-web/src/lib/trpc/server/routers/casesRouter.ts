@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { CaseStatusEnum } from '../../../../gen/fetch'
+import { AdvertStatus, CaseStatusEnum } from '../../../../gen/fetch'
 import { getParamsWithoutNullOrEmpty } from '../../../utils'
 import { protectedProcedure, router } from '../trpc'
 
@@ -483,6 +483,29 @@ export const casesRouter = router({
     )
     .query(async ({ ctx, input }) => {
       return ctx.api.getAdverts(input)
+    }),
+
+  // Slim search for picking a published advert to compare against. Drops the
+  // HTML so a page of results doesn't ship every advert body to the browser,
+  // and drops revoked adverts — unpublishing a case marks its advert Afturkölluð.
+  searchPublishedAdverts: protectedProcedure
+    .input(z.object({ search: z.string().trim().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const { adverts } = await ctx.api.getAdverts({
+        search: input.search,
+        pageSize: 10,
+      })
+
+      return adverts
+        .filter((advert) => advert.status !== AdvertStatus.Afturkölluð)
+        .map((advert) => ({
+          id: advert.id,
+          title: advert.title,
+          publicationNumber: advert.publicationNumber?.full ?? null,
+          publicationDate: advert.publicationDate,
+          type: advert.type.title,
+          department: advert.department.title,
+        }))
     }),
 
   getPublicRegulationText: protectedProcedure
