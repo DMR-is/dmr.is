@@ -70,6 +70,7 @@ describe('CaseService', () => {
   let priceService: IPriceService
   let pdfService: IPdfService
   let sequelize: Sequelize
+  let runner: IReindexRunnerService
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       imports: [LoggingModule],
@@ -260,6 +261,7 @@ describe('CaseService', () => {
     commentService = app.get<ICommentServiceV2>(ICommentServiceV2)
     applicationService = app.get<IApplicationService>(IApplicationService)
     journalService = app.get<IJournalService>(IJournalService)
+    runner = app.get<IReindexRunnerService>(IReindexRunnerService)
     attachmentService = app.get<IAttachmentService>(IAttachmentService)
     externalService = app.get<IExternalService>(IExternalService)
     signatureService = app.get<ISignatureService>(ISignatureService)
@@ -311,13 +313,27 @@ describe('CaseService', () => {
     }
 
     let updatePublishedAdvert: jest.Mock
+    let updateItemInIndex: jest.Mock
+    let afterCommitCallbacks: Array<() => Promise<void>>
+
+    const runAfterCommit = () =>
+      Promise.all(afterCommitCallbacks.map((cb) => cb()))
 
     beforeEach(() => {
+      afterCommitCallbacks = []
       Object.assign(sequelize, {
-        transaction: jest
-          .fn()
-          .mockResolvedValue({ commit: jest.fn(), rollback: jest.fn() }),
+        transaction: jest.fn().mockResolvedValue({
+          commit: jest.fn(),
+          rollback: jest.fn(),
+          afterCommit: (cb: () => Promise<void>) => {
+            afterCommitCallbacks.push(cb)
+          },
+        }),
       })
+      updateItemInIndex = jest
+        .fn()
+        .mockResolvedValue({ advertId, success: true })
+      Object.assign(runner, { updateItemInIndex })
       Object.assign(caseModel, {
         findByPk: jest.fn().mockResolvedValue(activeCase),
       })
@@ -369,6 +385,30 @@ describe('CaseService', () => {
         expect.objectContaining({ title: 'Leiðrétting á villu' }),
         expect.anything(),
       )
+    })
+
+    it('reindexes the advert after the correction commits', async () => {
+      await caseService.updateAdvert('case-1', {
+        advertHtml: '<p>leiðrétt</p>',
+        title: 'Leiðrétting á villu',
+        description: 'Heiti lagfært',
+      } as never)
+
+      expect(updateItemInIndex).not.toHaveBeenCalled()
+      await runAfterCommit()
+      expect(updateItemInIndex).toHaveBeenCalledWith(advertId)
+    })
+
+    it('does not fail the correction when reindexing throws', async () => {
+      updateItemInIndex.mockRejectedValueOnce(new Error('opensearch down'))
+
+      await caseService.updateAdvert('case-1', {
+        advertHtml: '<p>leiðrétt</p>',
+        title: 'Leiðrétting á villu',
+        description: 'Heiti lagfært',
+      } as never)
+
+      await expect(runAfterCommit()).resolves.toBeDefined()
     })
   })
 })

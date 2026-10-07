@@ -1101,6 +1101,22 @@ export class CaseService implements ICaseService {
     ResultWrapper.unwrap(updatePublishedCheck)
     ResultWrapper.unwrap(postCaseCorrectionCheck)
 
+    const advertId = activeCase.advertId
+    if (advertId) {
+      transaction?.afterCommit(async () => {
+        try {
+          await this.runner.updateItemInIndex(advertId)
+        } catch (error) {
+          this.logger.error('Failed to reindex corrected advert', {
+            error,
+            advertId,
+            caseId,
+            category: LOGGING_CATEGORY,
+          })
+        }
+      })
+    }
+
     return ResultWrapper.ok()
   }
 
