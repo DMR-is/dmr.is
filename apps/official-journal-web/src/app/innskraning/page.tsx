@@ -22,23 +22,26 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') ?? '/'
   const [loading, setLoading] = useState(false)
-  const [accessDenied, setAccessDenied] = useState(false)
+  const [signinError, setSigninError] = useState<
+    'AccessDenied' | 'Other' | null
+  >(null)
 
   useEffect(() => {
     const fromCookie = document.cookie
       .split('; ')
       .some((c) => c.startsWith(`${SIGNIN_ERROR_COOKIE}=`))
-    const fromUrl =
-      new URLSearchParams(window.location.search).get('error') ===
-      'AccessDenied'
+    const urlError = new URLSearchParams(window.location.search).get('error')
 
     if (fromCookie) {
       document.cookie = `${SIGNIN_ERROR_COOKIE}=; Max-Age=0; Path=/`
     }
     // Only ever switch it on: dev strict mode runs this twice, and the cookie
     // is already gone the second time
-    if (fromCookie || fromUrl) {
-      setAccessDenied(true)
+    if (fromCookie || urlError === 'AccessDenied') {
+      setSigninError('AccessDenied')
+    } else if (urlError) {
+      // e.g. OAuthCallback, which NextAuth sends here rather than to /error
+      setSigninError('Other')
     }
   }, [])
 
@@ -65,11 +68,15 @@ function LoginContent() {
                 <Text variant="intro">
                   Skráðu þig inn hér með rafrænum skilríkjum.
                 </Text>
-                {accessDenied && (
+                {signinError && (
                   <AlertMessage
                     type="error"
                     title="Innskráning mistókst"
-                    message="Þú hefur ekki aðgang að þessu kerfi. Skráðu þig inn með öðrum aðgangi eða hafðu samband við umsjónaraðila."
+                    message={
+                      signinError === 'AccessDenied'
+                        ? 'Þú hefur ekki aðgang að þessu kerfi. Skráðu þig inn með öðrum aðgangi eða hafðu samband við umsjónaraðila.'
+                        : 'Ekki tókst að skrá þig inn. Reyndu aftur.'
+                    }
                   />
                 )}
                 <Box marginTop={[2, 2, 3]}>

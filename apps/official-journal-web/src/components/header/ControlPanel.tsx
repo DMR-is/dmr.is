@@ -35,7 +35,7 @@ const PanelTrigger = ({
       className={styles.controlPanel}
       onClick={onToggle}
       aria-expanded={expanded}
-      aria-controls={MENU_ID}
+      aria-controls={expanded ? MENU_ID : undefined}
     >
       {children}
     </button>

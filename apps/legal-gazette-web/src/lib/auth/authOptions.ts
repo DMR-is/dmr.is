@@ -6,6 +6,7 @@ import { decodeJwt } from 'jose'
 
 import { serverFetcher } from '@dmr.is/api-client/fetchers'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
+import { appAuthCookies } from '@dmr.is/auth/sessionCookies'
 import { getLogger } from '@dmr.is/logging-next'
 
 import { getLegalGazetteClient } from '../api/createClient'
@@ -27,14 +28,27 @@ type ErrorWithPotentialReqRes = Error & {
 // ISLAND_IS_DMR_WEB_CLIENT_ID, so local dev used per-app names and switched back
 // to the shared ones in production. Configuration now resolves per app, in that
 // app's own process, so the workaround and the NODE_ENV branch are unnecessary.
+// Own cookie names, so apps sharing a host can't overwrite each other's session
+export const AUTH_COOKIE_PREFIX = 'lg-web'
+
 export const identityServerConfig = {
   ...sharedIdentityServerConfig,
   scope: `openid offline_access profile`,
 }
 
+// Statuses that mean "this person may not sign in", as opposed to an outage
+const REFUSED_STATUSES = [401, 403, 404]
+
+class SignInRefused extends Error {}
+
+// Thrown from signIn for failures that aren't a refusal. NextAuth then shows
+// /error with the generic message and leaves the island.is session alone.
+const SIGN_IN_FAILED = 'SignInFailed'
+
+// Returns null only when the person is refused; throws on any other failure
 async function authorize(nationalId?: string, idToken?: string) {
   if (!idToken || !nationalId) {
-    return null
+    throw new Error(SIGN_IN_FAILED)
   }
 
   const dmrClient = getLegalGazetteClient(idToken)
@@ -50,11 +64,15 @@ async function authorize(nationalId?: string, idToken?: string) {
         error: error,
         category: LOGGING_CATEGORY,
       })
-      throw new Error('Member not found')
+      if (error && REFUSED_STATUSES.includes(error.statusCode)) {
+        throw new SignInRefused('Member not found')
+      }
+      throw new Error(SIGN_IN_FAILED)
     }
 
     return member
   } catch (e) {
+    const refused = e instanceof SignInRefused
     const error = e as ErrorWithPotentialReqRes
 
     if (error.request) {
@@ -65,11 +83,15 @@ async function authorize(nationalId?: string, idToken?: string) {
       delete error.response
     }
 
-    return null
+    if (refused) {
+      return null
+    }
+    throw new Error(SIGN_IN_FAILED)
   }
 }
 
 export const authOptions: AuthOptions = {
+  cookies: appAuthCookies(AUTH_COOKIE_PREFIX),
   pages: {
     signIn: '/innskraning',
     error: '/error',
@@ -124,9 +146,8 @@ export const authOptions: AuthOptions = {
         account?.provider === identityServerConfig.id &&
         account.access_token
       ) {
-        // Return false if no id_token is found
         if (!account?.id_token) {
-          return false
+          throw new Error(SIGN_IN_FAILED)
         }
         const decodedAccessToken = decodeJwt(account?.id_token) as JWT
         const nationalId = decodedAccessToken?.nationalId
@@ -145,7 +166,7 @@ export const authOptions: AuthOptions = {
         return true
       }
 
-      return false
+      throw new Error(SIGN_IN_FAILED)
     },
   },
   providers: [

@@ -62,8 +62,8 @@ export const ReportDenialModal = ({
             fluid
             size="default"
             type="submit"
-            onClick={() => onSubmit(denialReason)}
-            disabled={denialReason.length === 0 || isLoading}
+            onClick={() => onSubmit(denialReason.trim())}
+            disabled={denialReason.trim().length === 0 || isLoading}
             loading={isLoading}
           >
             {t.submitButton}

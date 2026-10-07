@@ -13,7 +13,10 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 
 import { useLocalFormStorage } from '../../../hooks/useLocalFormStorage'
-import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
+import {
+  flushPendingLocalWrites,
+  useUpdateApplication,
+} from '../../../hooks/useUpdateApplication'
 import { CommonFormSteps } from '../../../lib/forms/common/steps'
 import { RecallFormSteps } from '../../../lib/forms/recall/steps'
 import * as styles from './application-footer.css'
@@ -72,6 +75,7 @@ export const ApplicationFooter = () => {
     if (!canGoBack) return
 
     // Get all form values and merge with localStorage
+    flushPendingLocalWrites(id)
     const { metadata: _metadata, ...answers } = getValues()
     const mergedAnswers = getMergedData(answers)
 
@@ -93,6 +97,7 @@ export const ApplicationFooter = () => {
     getValues,
     getMergedData,
     clearErrors,
+    id,
   ])
 
   const goForward = useCallback(() => {
@@ -148,6 +153,7 @@ export const ApplicationFooter = () => {
     }
 
     // Get all form values and merge with localStorage
+    flushPendingLocalWrites(id)
     const { metadata: _formMetadata, ...allAnswers } = getValues()
     const mergedAnswers = getMergedData(allAnswers)
 
@@ -169,6 +175,7 @@ export const ApplicationFooter = () => {
     setError,
     getValues,
     getMergedData,
+    id,
   ])
   return (
     <Box

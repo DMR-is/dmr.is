@@ -28,6 +28,10 @@ const LOGGING_CATEGORY = 'next-auth'
 // app's own process, so the workaround and the NODE_ENV branch are unnecessary.
 // The app-specific scope stays -- that is genuinely per client, not per
 // environment.
+// Failures here are outages, not refusals: throwing sends NextAuth to /error
+// with the generic message instead of "no access"
+const SIGN_IN_FAILED = 'SignInFailed'
+
 export const identityServerConfig = {
   ...sharedIdentityServerConfig,
   scope: `openid offline_access profile @logbirtingablad.is/logbirtingabladid`,
@@ -141,9 +145,8 @@ export const authOptions: AuthOptions = {
         account?.provider === identityServerConfig.id &&
         account.access_token
       ) {
-        // Return false if no id_token is found
         if (!account?.id_token) {
-          return false
+          throw new Error(SIGN_IN_FAILED)
         }
         const decodedAccessToken = decodeJwt(account?.id_token) as JWT
         const nationalId = decodedAccessToken?.nationalId
@@ -152,9 +155,8 @@ export const authOptions: AuthOptions = {
           account?.access_token,
           account?.id_token,
         )
-        // Return false if no user is found
         if (!authMember) {
-          return false
+          throw new Error(SIGN_IN_FAILED)
         }
         // Mutate user object to include roles, nationalId and displayName
         user.nationalId = authMember.nationalId
@@ -163,7 +165,7 @@ export const authOptions: AuthOptions = {
         return true
       }
 
-      return false
+      throw new Error(SIGN_IN_FAILED)
     },
   },
   providers: [

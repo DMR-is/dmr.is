@@ -19,4 +19,4 @@ const handler = async (request: NextRequest) => {
   )
 }
 
-export { handler as GET, handler as POST }
+export { handler as POST }

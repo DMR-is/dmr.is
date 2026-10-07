@@ -46,7 +46,8 @@ export const CommunicationChannelFields = () => {
 
   const isEmailAlreadyAdded = channels.some(
     (channel) =>
-      channel.email === currentChannel.email && channel.email !== isEditing,
+      channel.email.toLowerCase() === currentChannel.email.toLowerCase() &&
+      channel.email !== isEditing,
   )
 
   const addChannel = (

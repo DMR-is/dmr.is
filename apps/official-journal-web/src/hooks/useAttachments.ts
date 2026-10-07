@@ -114,7 +114,9 @@ export const useAttachments = () => {
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-        window.URL.revokeObjectURL(objectUrl)
+        // Deferred: some engines resolve the blob URL asynchronously after
+        // `click()`, and revoking first cancels the download
+        setTimeout(() => window.URL.revokeObjectURL(objectUrl), 10_000)
         setLoading(false)
       })
       .catch(() => {

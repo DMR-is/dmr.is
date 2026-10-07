@@ -1,5 +1,5 @@
 import deepmerge from 'deepmerge'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 import {
   CommonApplicationAnswers,
@@ -34,6 +34,14 @@ type UpdateApplicationMutationOptions = {
 }
 
 export type UpdateApplicationType = 'COMMON' | 'RECALL'
+
+// Pending debounced localStorage writes per application, so navigation can
+// flush them before reading localStorage
+const pendingLocalFlushes = new Map<string, Set<() => void>>()
+
+export const flushPendingLocalWrites = (applicationId: string) => {
+  pendingLocalFlushes.get(applicationId)?.forEach((flush) => flush())
+}
 
 export type UpdateApplicationAnswersWithoutStep<
   T extends UpdateApplicationType,
@@ -187,21 +195,54 @@ export const useUpdateApplication = <T extends UpdateApplicationType>({
     [id, saveToStorage, queryClient, trpc],
   )
 
-  const debounceLocalHandler = useCallback(
-    debounce(
-      (answers: UpdateApplicationAnswers<T>) => updateLocalOnly(answers),
-      200,
-    ),
-    [updateLocalOnly],
-  )
+  const pendingLocalAnswers = useRef<UpdateApplicationAnswers<T> | null>(null)
 
+  const writePendingLocal = useCallback(() => {
+    const answers = pendingLocalAnswers.current
+    pendingLocalAnswers.current = null
+    if (answers) {
+      updateLocalOnly(answers)
+    }
+  }, [updateLocalOnly])
+
+  const debounceLocalHandler = useCallback(debounce(writePendingLocal, 200), [
+    writePendingLocal,
+  ])
+
+  // Merge into the pending write instead of replacing it, so a quick second
+  // call (e.g. onChange then onBlur) can't drop the first one
   const debouncedUpdateApplicationLocalOnly = useCallback(
     (answers: UpdateApplicationAnswers<T>) => {
-      debounceLocalHandler.cancel()
-      return debounceLocalHandler(answers)
+      pendingLocalAnswers.current = pendingLocalAnswers.current
+        ? deepmerge<UpdateApplicationAnswers<T>>(
+            pendingLocalAnswers.current,
+            answers,
+            { arrayMerge },
+          )
+        : answers
+      return debounceLocalHandler()
     },
     [debounceLocalHandler],
   )
+
+  useEffect(() => {
+    const flush = () => {
+      debounceLocalHandler.cancel()
+      writePendingLocal()
+    }
+    const flushes = pendingLocalFlushes.get(id) ?? new Set<() => void>()
+    flushes.add(flush)
+    pendingLocalFlushes.set(id, flushes)
+
+    return () => {
+      // Write anything still pending when the field unmounts (step change)
+      flush()
+      flushes.delete(flush)
+      if (flushes.size === 0) {
+        pendingLocalFlushes.delete(id)
+      }
+    }
+  }, [id, debounceLocalHandler, writePendingLocal])
 
   return {
     updateApplication,
