@@ -1,4 +1,3 @@
-import { dirname, join } from 'node:path'
 import { PDFDocument, PDFFont, PDFPage, rgb, StandardFonts } from 'pdf-lib'
 import type { Browser, Page } from 'puppeteer'
 
@@ -50,39 +49,10 @@ export class PdfService implements OnModuleDestroy, IPdfService {
   }
 
   private getPdfJsLegacy(): any {
-    if (this.cachedPdfJs) {
-      return this.cachedPdfJs
-    }
-
-    const errors: string[] = []
-
-    try {
-      const reactPdfEntry = require.resolve('react-pdf')
-      const reactPdfRoot = join(dirname(reactPdfEntry), '..', '..')
-      const nestedPdfJsPath = join(
-        reactPdfRoot,
-        'node_modules',
-        'pdfjs-dist',
-        'legacy',
-        'build',
-        'pdf.js',
-      )
-      this.cachedPdfJs = require(nestedPdfJsPath)
-      return this.cachedPdfJs
-    } catch (error: any) {
-      errors.push(
-        `react-pdf nested pdfjs failed: ${String(error?.message ?? error)}`,
-      )
-    }
-
-    try {
-      this.cachedPdfJs = require('pdfjs-dist/legacy/build/pdf.js')
-      return this.cachedPdfJs
-    } catch (error: any) {
-      errors.push(`top-level pdfjs failed: ${String(error?.message ?? error)}`)
-    }
-
-    throw new Error(`Unable to load pdfjs legacy build. ${errors.join(' | ')}`)
+    // pdfjs-dist 4 is ESM-only. Webpack leaves npm packages external, so this
+    // stays a runtime require, which Node 24 resolves through require(esm).
+    this.cachedPdfJs ??= require('pdfjs-dist/legacy/build/pdf.mjs')
+    return this.cachedPdfJs
   }
 
   private async mergePdfBuffers(buffers: Buffer[]): Promise<Buffer> {
@@ -141,7 +111,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
     const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(pdfBuffer),
-      disableWorker: true,
+      isEvalSupported: false,
     })
     const pdf = await loadingTask.promise
     const markers = Array.from({ length: advertCount }, (_, index) =>
