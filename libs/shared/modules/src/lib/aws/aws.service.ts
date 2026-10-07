@@ -462,7 +462,7 @@ export class AWSService implements IAWSService {
   async sendMail(
     message: Mail.Options,
     context = 'S3Service',
-  ): Promise<SentMessageInfo> {
+  ): Promise<ResultWrapper<SentMessageInfo>> {
     this.logger.info('Sending email with SES', {
       category: LOGGING_CATEGORY,
       context: context,

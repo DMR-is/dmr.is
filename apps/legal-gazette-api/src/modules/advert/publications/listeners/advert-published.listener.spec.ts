@@ -362,7 +362,9 @@ describe('AdvertPublishedListener', () => {
         )
       })
       it('should succeed when email sending succeeds', async () => {
-        sesService.sendMail.mockResolvedValue(undefined)
+        sesService.sendMail.mockResolvedValue(
+          {} as Awaited<ReturnType<IAWSService['sendMail']>>,
+        )
         const event = createMockEvent()
         await listener.sendEmailNotification(event)
         expect(sesService.sendMail).toHaveBeenCalledWith(
