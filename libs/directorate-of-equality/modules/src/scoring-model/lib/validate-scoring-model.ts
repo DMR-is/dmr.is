@@ -178,7 +178,30 @@ const messagesOf = (error: BadRequestException): string[] => {
  * So unresolvable assignments are reported and then dropped, and the gate runs
  * over what is left. Dropping only ever removes reasons the gate would give, and
  * each dropped one is stated here first.
+ *
+ * A duplicate sub-criterion title is reported but NOT dropped. The criterion's
+ * weight is derived from all of its sub-criteria, the duplicate included, so
+ * dropping it left the CRITERIA total counting a weight the SUB_CRITERIA total
+ * did not, and one model showed two different totals. It is renamed for the
+ * gate instead, which keeps every weight and every assignment on it in play.
+ * The rename appends `GATE_TITLE_SUFFIX`, which no stored title can contain,
+ * so it cannot clash with a real one, and `runFilingGate` strips it from the
+ * gate's messages, so the employer only ever sees titles they wrote.
  */
+/**
+ * Starts the gate-only suffix, which is this and a number. Postgres `text`
+ * cannot hold NUL, so no title read from the database contains it.
+ */
+const GATE_TITLE_MARK = '\u0000'
+
+// Split on the mark rather than match it: a regex holding a control character
+// is what `no-control-regex` exists to refuse.
+const withoutGateSuffix = (message: string): string =>
+  message
+    .split(GATE_TITLE_MARK)
+    .map((part, index) => (index === 0 ? part : part.replace(/^\d+/, '')))
+    .join('')
+
 const sanitiseForGate = (
   criteria: ScoringCriterionDto[],
   roles: ScoringRoleDto[],
@@ -192,19 +215,21 @@ const sanitiseForGate = (
   for (const criterion of criteria) {
     const subCriteria = []
     for (const sub of criterion.subCriteria) {
-      const pair = `${criterion.title}\0${sub.title}`
-      if (seenPairs.has(pair)) {
+      const pairOf = (title: string) => `${criterion.title}\0${title}`
+      let title = sub.title
+      if (seenPairs.has(pairOf(title))) {
         // The pipeline keys on this pair and would collapse the two rows, so
-        // the expander refuses it. Reported, then held back so everything else
-        // about the model can still be judged.
+        // the expander refuses it. Reported, then renamed for the gate only.
         reasons.add(
           ScoringValidationScopeEnum.SUB_CRITERIA,
           `Tvö undirviðmið heita „${criterion.title} / ${sub.title}“; heitin verða að vera einkvæm`,
         )
-        continue
+        for (let n = 2; seenPairs.has(pairOf(title)); n++) {
+          title = `${sub.title}${GATE_TITLE_MARK}${n}`
+        }
       }
-      seenPairs.add(pair)
-      subCriteria.push(sub)
+      seenPairs.add(pairOf(title))
+      subCriteria.push(title === sub.title ? sub : { ...sub, title })
       subIds.add(sub.id)
       for (const step of sub.steps) stepIds.add(step.id)
     }
@@ -252,7 +277,7 @@ const runFilingGate = (
     parsed = expandToParsedPayload(clean, [])
   } catch (error) {
     if (!(error instanceof BadRequestException)) throw error
-    for (const message of messagesOf(error)) {
+    for (const message of messagesOf(error).map(withoutGateSuffix)) {
       reasons.add(scopeForMessage(message), message)
     }
     return
@@ -264,7 +289,7 @@ const runFilingGate = (
     assertWithinCapacity(parsed)
   } catch (error) {
     if (!(error instanceof BadRequestException)) throw error
-    for (const message of messagesOf(error)) {
+    for (const message of messagesOf(error).map(withoutGateSuffix)) {
       reasons.add(scopeForMessage(message), message)
     }
   }
@@ -275,7 +300,10 @@ const runFilingGate = (
 
   for (const issue of issues.list) {
     if (!MODEL_LEVEL_SCOPES.has(issue.scope)) continue
-    reasons.add(toValidationScope(issue.scope), issue.message)
+    reasons.add(
+      toValidationScope(issue.scope),
+      withoutGateSuffix(issue.message),
+    )
   }
 
   // The gate has a cap of its own, and when it fills it says so in an issue

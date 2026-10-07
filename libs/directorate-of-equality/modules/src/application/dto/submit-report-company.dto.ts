@@ -1,5 +1,7 @@
 import { ApiNationalId, ApiString } from '@dmr.is/decorators'
 
+import { IsKennitala } from '../../report/lib/kennitala-validators'
+
 /**
  * Upper bound on `subsidiaries[]` in a submission. Each entry costs a national
  * registry call, so the list must not be open-ended. Far above any real group.
@@ -39,6 +41,9 @@ export class SubmitReportSubsidiaryDto {
   @ApiString()
   name!: string
 
+  // `@ApiNationalId()` strips the dash and checks the shape; the checksum keeps
+  // a mistyped kennitala from reaching the registry at all.
   @ApiNationalId()
+  @IsKennitala()
   nationalId!: string
 }

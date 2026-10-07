@@ -1,3 +1,5 @@
+import { IsEmail, Min } from 'class-validator'
+
 import {
   ApiBoolean,
   ApiDto,
@@ -9,6 +11,7 @@ import {
   ApiString,
 } from '@dmr.is/decorators'
 
+import { TrimString } from '../../report/lib/trim-string'
 import {
   GenderEnum,
   ReportProviderEnum,
@@ -37,6 +40,8 @@ export class AdminSalaryReportDto {
   companyAdminTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   companyAdminEmail!: string
 
   @ApiEnum(GenderEnum)
@@ -52,18 +57,24 @@ export class AdminSalaryReportDto {
   contactTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   contactEmail!: string
 
-  @ApiString()
+  @ApiString({ minLength: 1 })
+  @TrimString()
   contactPhone!: string
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeMaleCount!: number
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeFemaleCount!: number
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeNeutralCount!: number
 
   @ApiEnum(SalaryDataBasisEnum, {
@@ -76,7 +87,7 @@ export class AdminSalaryReportDto {
   @ApiOptionalString({
     nullable: true,
     description:
-      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; the day is normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that has already happened, no earlier than 36 months ago.',
+      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; the day is normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that is over — last month at the latest — and no earlier than 36 months ago.',
   })
   salaryDataPeriod?: string | null
 

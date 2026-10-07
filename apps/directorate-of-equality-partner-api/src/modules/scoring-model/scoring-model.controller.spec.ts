@@ -1,4 +1,5 @@
-import { NotFoundException } from '@nestjs/common'
+import { HttpStatus, NotFoundException } from '@nestjs/common'
+import { HTTP_CODE_METADATA } from '@nestjs/common/constants'
 
 import { CompanyDto } from '@dmr.is/doe-modules/company'
 import { IScoringModelService } from '@dmr.is/doe-modules/scoring-model'
@@ -125,5 +126,14 @@ describe('ScoringModelController', () => {
     ).resolves.toBeUndefined()
 
     expect(svc.deleteModel).toHaveBeenCalledWith(COMPANY, MODEL_ID)
+  })
+
+  it('answers the model delete with 204, since there is no body', () => {
+    expect(
+      Reflect.getMetadata(
+        HTTP_CODE_METADATA,
+        ScoringModelController.prototype.deleteModel,
+      ),
+    ).toBe(HttpStatus.NO_CONTENT)
   })
 })

@@ -37,6 +37,10 @@ export const companyMessages = {
     message: `No entity found in national registry for "${nationalId}"`,
     translatedMessage: 'Engin skráning fannst í þjóðskrá fyrir þessa kennitölu',
   }),
+  subsidiaryNotInRegistry: (nationalId: string): ErrorMessage => ({
+    message: `Subsidiary "${nationalId}" is not in the national registry — check the kennitala`,
+    translatedMessage: `Dótturfélag með kennitöluna ${nationalId} fannst ekki í þjóðskrá`,
+  }),
   registryEntityNotFoundNoFallback: (nationalId: string): ErrorMessage => ({
     message: `No entity found in national registry for "${nationalId}" and no fallback name provided`,
     translatedMessage: 'Engin skráning fannst í þjóðskrá fyrir þessa kennitölu',
@@ -54,5 +58,13 @@ export const companyMessages = {
   inactiveCannotCreate: (nationalId: string): ErrorMessage => ({
     message: `Company with national id "${nationalId}" is not active in the RSK company registry and cannot be created`,
     translatedMessage: 'Ekki er hægt að skrá fyrirtæki sem er ekki virkt',
+  }),
+  unknownSnapshotIsatCategory: (value: string): ErrorMessage => ({
+    message: `company.isatCategory "${value}" does not lead with an ÍSAT2008 code`,
+    translatedMessage: `ÍSAT-flokkurinn „${value}“ er ekki til`,
+  }),
+  unknownSnapshotPostcode: (value: string): ErrorMessage => ({
+    message: `company.postcode "${value}" does not lead with a known Icelandic postcode`,
+    translatedMessage: `Póstnúmerið „${value}“ er ekki til`,
   }),
 } as const

@@ -7,6 +7,8 @@ import {
   ApiString,
 } from '@dmr.is/decorators'
 
+import { TrimString } from '../../report/lib/trim-string'
+
 /**
  * One outlier group in the edit payload. The applicant supplies the shared
  * explanation (all five fields; the four texts non-empty) plus the ordinals of the detected
@@ -22,15 +24,19 @@ export class EditOutlierGroupDto {
   name?: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   reason!: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   action!: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   signatureName!: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   signatureRole!: string
 
   @ApiString({

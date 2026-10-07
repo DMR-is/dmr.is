@@ -1,4 +1,4 @@
-import { ArrayMinSize, IsInt } from 'class-validator'
+import { ArrayMinSize, IsEmail, IsInt, Min } from 'class-validator'
 
 import {
   ApiArray,
@@ -15,6 +15,7 @@ import {
   ApiUUID,
 } from '@dmr.is/decorators'
 
+import { TrimString } from '../../report/lib/trim-string'
 import {
   GenderEnum,
   ReportProviderEnum,
@@ -45,15 +46,19 @@ export class CreateReportOutlierGroupDto {
   name?: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   reason!: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   action!: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   signatureName!: string
 
   @ApiString({ minLength: 1 })
+  @TrimString()
   signatureRole!: string
 
   @ApiString({
@@ -148,6 +153,8 @@ export class CreateReportDto {
   companyAdminTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   companyAdminEmail!: string
 
   @ApiEnum(GenderEnum)
@@ -163,18 +170,24 @@ export class CreateReportDto {
   contactTitle?: string | null
 
   @ApiString()
+  @TrimString()
+  @IsEmail()
   contactEmail!: string
 
-  @ApiString()
+  @ApiString({ minLength: 1 })
+  @TrimString()
   contactPhone!: string
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeMaleCount!: number
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeFemaleCount!: number
 
   @ApiNumber()
+  @Min(0)
   averageEmployeeNeutralCount!: number
 
   @ApiEnum(SalaryDataBasisEnum, {
@@ -187,7 +200,7 @@ export class CreateReportDto {
   @ApiOptionalString({
     nullable: true,
     description:
-      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`, ignored (stored as null) for `AVERAGE`. Must name a month that has already happened, no earlier than 36 months ago.',
+      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`, ignored (stored as null) for `AVERAGE`. Must name a month that is over — last month at the latest — and no earlier than 36 months ago.',
   })
   salaryDataPeriod?: string | null
 

@@ -13,6 +13,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
 import { resolveOptionalEqualityContent } from '../../report/lib/equality-content'
+import { providerIdConflictMessages } from '../../report/lib/provider-id-conflict'
 import { isReportIdentifierCollision } from '../../report/lib/report-identifier'
 import { resolveDraftSalaryDataBasis } from '../../report/lib/salary-data-basis'
 import {
@@ -514,9 +515,13 @@ export class ReportDraftService implements IReportDraftService {
     }
 
     if (existing.companyNationalId !== companyNationalId) {
-      throw new ConflictException(
-        `Provider tuple (${providerType}, "${providerId}") is already registered for a different company`,
-      )
+      this.logger.warn('Provider tuple registered to a different company', {
+        context: LOGGING_CONTEXT,
+        reportId: existing.id,
+        providerType,
+        providerId,
+      })
+      throw new ConflictException(providerIdConflictMessages.otherCompany)
     }
 
     this.logger.info('Idempotent replay — returning existing draft report id', {

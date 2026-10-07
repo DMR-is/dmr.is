@@ -38,9 +38,7 @@ out-of-band onboarding step, done on the internal DoE API by one of:
 
 A **vendor client key** does not come from an employer. Jafnréttisstofa first
 approves your organisation as a provider; you then collect your own keys on the
-Jafnréttisstofa self-service web, signed in as your organisation — or, until that
-web ships, Jafnréttisstofa issues them. See section D, including what is not yet
-available.
+Jafnréttisstofa self-service web, signed in as your organisation. See section D.
 
 Practical consequences for an integration:
 
@@ -340,14 +338,14 @@ curl -X POST https://<host>/api/v1/partner/reports/equality \
 
 The `payload` part (`SubmitPartnerEqualityReportDto`):
 
-| Field                                                                                        | Notes                                                                                                                                                                                                                                                                                            |
-| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `providerId`                                                                                 | your own id for this submission, any non-empty string up to 256 chars, no `/` or `\\` — see above                                                                                                                                                                                                |
-| `companyAdminName` / `companyAdminTitle?` / `companyAdminEmail` / `companyAdminGender`       | the company executive who stands behind the plan. `companyAdminGender` is a `GenderEnum` value                                                                                                                                                                                                   |
-| `contactName` / `contactTitle?` / `contactEmail` / `contactPhone`                            | the day-to-day contact (tengiliður) Jafnréttisstofa writes to                                                                                                                                                                                                                                    |
-| `averageEmployeeMaleCount?` / `averageEmployeeFemaleCount?` / `averageEmployeeNeutralCount?` | optional and nullable on an equality report (required on a salary one)                                                                                                                                                                                                                           |
-| `company`                                                                                    | the reporting company: `name`, `address`, `city`, `postcode`, `isatCategory` — a snapshot frozen onto the report, not a lookup. **No `nationalId`**: it had to equal the company your key belongs to, so the only accepted value was the one we already had. The snapshot takes it from your key |
-| `subsidiaries?`                                                                              | `[{ name, nationalId }]` when the plan covers a group. At most 100 entries, and each `nationalId` must be a legal entity's kennitala (dashes and spaces are stripped) — otherwise a **`400`**                                                                                                    |
+| Field                                                                                        | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `providerId`                                                                                 | your own id for this submission, any non-empty string up to 256 chars, no `/` or `\\` — see above                                                                                                                                                                                                                                                                                                                                                                                  |
+| `companyAdminName` / `companyAdminTitle?` / `companyAdminEmail` / `companyAdminGender`       | the company executive who stands behind the plan. `companyAdminGender` is a `GenderEnum` value                                                                                                                                                                                                                                                                                                                                                                                     |
+| `contactName` / `contactTitle?` / `contactEmail` / `contactPhone`                            | the day-to-day contact (tengiliður) Jafnréttisstofa writes to                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `averageEmployeeMaleCount?` / `averageEmployeeFemaleCount?` / `averageEmployeeNeutralCount?` | optional and nullable on an equality report (required on a salary one)                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `company`                                                                                    | the reporting company: `name`, `address`, `city`, `postcode`, `isatCategory` — a snapshot frozen onto the report, not a lookup. `postcode` must lead with a real postcode (`101`, `101 Reykjavík`) and `isatCategory` with a real ÍSAT2008 code (`62.01.0`, `62010`, `62.01`), or the filing is refused with 400. **No `nationalId`**: it had to equal the company your key belongs to, so the only accepted value was the one we already had. The snapshot takes it from your key |
+| `subsidiaries?`                                                                              | `[{ name, nationalId }]` when the plan covers a group. At most 100 entries, and each `nationalId` must be a legal entity's kennitala (dashes and spaces are stripped) — otherwise a **`400`**                                                                                                                                                                                                                                                                                      |
 
 There is **no content field**. `equalityReportContent` and the two base64 PDF
 fields of the island.is contract are all absent here: the document part is the
@@ -638,15 +636,15 @@ under the strict validation above:
   asked you to predict an answer only detection could give: set it on a clean
   payroll and the filing was refused for postponing nothing.
 
-| Field                                                             | Notes                                                                                                                                                                                                                                                                             |
-| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `providerId`                                                      | your own id for this submission, any non-empty string up to 256 chars, no `/` or `\\` — see the section above                                                                                                                                                                     |
-| `salaryDataBasis`                                                 | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one                                                                                                                                                                         |
-| `salaryDataPeriod`                                                | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that has already happened and no earlier than 36 months ago. **Refused when the basis is `AVERAGE`** — an average covers twelve months, so there is no single month to name |
-| `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required                                                                                                                                                                                                                                                                          |
-| `scoringModelId`                                                  | the company's stored starfsmat. Must be `VALID`                                                                                                                                                                                                                                   |
-| `employees`                                                       | the payroll extract from B3                                                                                                                                                                                                                                                       |
-| `outlierGroups?`                                                  | the partition from B5                                                                                                                                                                                                                                                             |
+| Field                                                             | Notes                                                                                                                                                                                                                                                                                             |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `providerId`                                                      | your own id for this submission, any non-empty string up to 256 chars, no `/` or `\\` — see the section above                                                                                                                                                                                     |
+| `salaryDataBasis`                                                 | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one                                                                                                                                                                                         |
+| `salaryDataPeriod`                                                | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that is over — last month at the latest — and no earlier than 36 months ago. **Refused when the basis is `AVERAGE`** — an average covers twelve months, so there is no single month to name |
+| `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required                                                                                                                                                                                                                                                                                          |
+| `scoringModelId`                                                  | the company's stored starfsmat. Must be `VALID`                                                                                                                                                                                                                                                   |
+| `employees`                                                       | the payroll extract from B3                                                                                                                                                                                                                                                                       |
+| `outlierGroups?`                                                  | the partition from B5                                                                                                                                                                                                                                                                             |
 
 Resulting status: `SUBMITTED` when explanations were supplied (it lands in the
 reviewer queue), `POSTPONED` when deferred (a reviewer cannot pick it up).
@@ -802,8 +800,8 @@ each concerns, so you can attach it to the right thing without parsing the text.
 
 ⚠️ **`VALID` means the model is complete, not that your next filing will
 succeed.** Two of the submission's rules need the filing's own employees and
-cannot be judged here: that the report covers enough of them, and that each one
-carries a þrep for every personal sub-criterion.
+cannot be judged here: that the report has at least one employee, and that each
+one carries a þrep for every personal sub-criterion.
 
 ### Scales and job assignments are written whole
 
@@ -818,8 +816,8 @@ assignment rather than silently re-pointing it at a þrep you did not choose.
 
 ### Deleting
 
-`DELETE /partner/scoring-models/{modelId}` takes its criteria, sub-criteria,
-þrep and jobs with it. **Reports already filed against it are unaffected** — a
+`DELETE /partner/scoring-models/{modelId}` answers `204` with no body and
+takes its criteria, sub-criteria, þrep and jobs with it. **Reports already filed against it are unaffected** — a
 filing copies the model it was scored under, so the figures on a filed report
 never move when the model changes or goes away.
 
@@ -829,25 +827,18 @@ For an intermediary — an accounting firm, a payroll bureau — that files for 
 employers. One credential for your organisation, and one delegation per company
 that allows you to act for it, instead of a key from every customer.
 
-> **Availability.** The API side of this section is live. The Jafnréttisstofa
-> self-service web — where your organisation collects its keys and your
-> customers grant you permission — is still being built. Until it ships, ask
-> Jafnréttisstofa to issue your organisation's key, and note that no customer
-> can connect to you yet: every request naming a company is a `403` until that
-> web exists.
-
 ### Getting set up
 
 1. **Be approved.** Ask Jafnréttisstofa to approve your organisation as a
    provider. This is their decision; there is no route that does it.
 2. **Collect your key.** Sign in to the Jafnréttisstofa self-service web as your
-   organisation and create a key — or, until that web ships, have Jafnréttisstofa
-   issue one. As with company keys, it is shown exactly once and you rotate by
+   organisation and create a key. As with company keys, it is shown exactly once and you rotate by
    creating a new one, deploying it, and revoking the old.
 3. **Let your customers connect.** Put a "Tengjast Jafnréttisstofu" link in your
    own product that opens the self-service web. The customer signs in through
    island.is as their company, picks your organisation from the list of approved
-   providers, and chooses what to allow. Nothing in the link is trusted: the
+   providers, and grants access — all of it, since there is no partial consent
+   (see [Scopes](#scopes)). Nothing in the link is trusted: the
    company comes from their sign-in, and the provider from the list.
 4. **Poll `GET /partner/delegations`** to see who has connected. There is no
    callback — polling is how you notice a new connection, and a withdrawal.
@@ -947,9 +938,10 @@ Scoring model (section C):
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId`                                                                                                                                                   |
 | `201` | on a submission: filed — `status` says whether it is `SUBMITTED` or `POSTPONED`                                                                                                                                                                                                                              |
+| `204` | `DELETE` of a whole scoring model: deleted, no body                                                                                                                                                                                                                                                          |
 | `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx`; `X-Company-National-Id` missing or malformed with a vendor client key, sent with a company key, or sent on `GET /partner/delegations` |
 | `401` | missing or invalid key                                                                                                                                                                                                                                                                                       |
-| `403` | key lacks the scope the route declares (for a vendor client key: your organisation's scopes intersected with the company's); no live delegation from the company named in `X-Company-National-Id`; a company key on `GET /partner/delegations`                                                               |
+| `403` | key lacks the scope the route declares (for a vendor client key: your organisation's scopes intersected with the company's, and the message says which of the two lacks it); no live delegation from the company named in `X-Company-National-Id`; a company key on `GET /partner/delegations`               |
 | `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                                                                                                                                                           |
 | `409` | the company is not active in the register (any route); a sibling report is `IN_REVIEW`, or `POSTPONED` from island.is (one filed through this API is withdrawn and replaced); the `providerId` is already used for a report of the other type                                                                |
 | `413` | the equality document is past the 10MB limit                                                                                                                                                                                                                                                                 |
