@@ -61,6 +61,23 @@ test('raises a direct dependency to the pin before referencing it', () => {
   assert.deepEqual(result.overrides, { multer: '$multer' })
 })
 
+// Nx fills a direct spec with the resolved exact version, which already
+// satisfies a range pin. Rewriting it to the range would only widen it.
+test('keeps an exact direct version that satisfies a range pin', () => {
+  const result = prepare({ puppeteer: '^22.8.1' }, { puppeteer: '22.15.0' })
+
+  assert.equal(result.dependencies.puppeteer, '22.15.0')
+  assert.deepEqual(result.overrides, { puppeteer: '$puppeteer' })
+})
+
+test('replaces a direct spec that falls outside a range pin', () => {
+  for (const direct of ['22.1.0', '23.0.0', '^21.0.0', 'latest']) {
+    const result = prepare({ puppeteer: '^22.8.1' }, { puppeteer: direct })
+
+    assert.equal(result.dependencies.puppeteer, '^22.8.1', direct)
+  }
+})
+
 test('strips the npm: prefix from a plain range', () => {
   assert.deepEqual(prepare({ moment: 'npm:2.31.0' }).overrides, {
     moment: '2.31.0',
@@ -83,6 +100,14 @@ test('throws on a spec it cannot translate rather than dropping it', () => {
   assert.throws(() => prepare({ foo: 'npm:bar@1.0.0' }), { message: /foo/ })
   assert.throws(() => prepare({ foo: 'https://example.com/foo.tgz' }), {
     message: /foo/,
+  })
+})
+
+// Yarn-only selector forms would otherwise become overrides npm never matches.
+test('throws on a selector npm has no equivalent for', () => {
+  assert.throws(() => prepare({ '**/foo': '1.0.0' }), { message: /\*\*\/foo/ })
+  assert.throws(() => prepare({ 'foo@npm:^1/bar': '1.0.0' }), {
+    message: /foo@npm/,
   })
 })
 

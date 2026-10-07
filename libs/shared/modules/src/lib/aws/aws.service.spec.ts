@@ -314,6 +314,9 @@ describe('AWSService.sendMail', () => {
     const result = await service.sendMail(message)
 
     expect(result.result.ok).toBe(false)
+    // SES was reached, so the err result is its refusal and not an earlier
+    // failure.
+    expect(sesSend).toHaveBeenCalledTimes(1)
   })
 
   it('resolves an ok result carrying the message id when SES accepts it', async () => {

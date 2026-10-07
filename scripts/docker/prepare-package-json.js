@@ -11,17 +11,21 @@
 //    pin stops at the build machine and the image installs whatever the parent
 //    pins instead.
 //
-// Anything it cannot translate faithfully throws, so a pin fails the image
-// build rather than silently going missing from it.
+// Apart from the pkg.pr.new builds skipped below, anything it cannot translate
+// faithfully throws, so a pin fails the image build rather than silently going
+// missing from it.
 
 const fs = require('fs')
 
-// The pkg.pr.new vanilla-extract builds are web build tooling that no image
-// installs at runtime, so they are left out on purpose. Any other URL or
-// protocol spec is unexpected and must be translated by hand.
+// The pkg.pr.new vanilla-extract fork builds are left out on purpose: the web
+// images install the registry vanilla-extract releases, as they always have,
+// and the fork only matters to the build. Any other URL or protocol spec is
+// unexpected and must be translated by hand.
 const SKIPPED_SPEC_PREFIXES = ['https://pkg.pr.new/']
 
 // `@scope/a/b` -> ['@scope/a', 'b']: a Yarn selector is a parent chain.
+// Yarn also accepts `**/foo` and `foo@npm:^1/bar`, which have no npm override
+// equivalent and would become overrides npm never matches.
 const splitSelector = (selector) => {
   const parts = selector.split('/')
   const names = []
@@ -30,7 +34,58 @@ const splitSelector = (selector) => {
       parts[i].startsWith('@') ? `${parts[i]}/${parts[++i]}` : parts[i],
     )
   }
+
+  for (const name of names) {
+    if (name.includes('*') || name.lastIndexOf('@') > 0) {
+      throw new Error(
+        `Cannot carry resolution "${selector}" into npm overrides: npm has ` +
+          'no equivalent selector. Translate it in ' +
+          'scripts/docker/prepare-package-json.js.',
+      )
+    }
+  }
+
   return names
+}
+
+// A spec as an operator and the `x.y.z` it starts from: an exact version, or
+// a `^`/`~`/`>=` range's lower bound. Null for anything else. The script runs
+// before `npm install`, so there is no `semver` to ask.
+const parseSpec = (spec) => {
+  const match = /^(\^|~|>=)?(\d+)\.(\d+)\.(\d+)$/.exec(spec)
+  return match
+    ? { operator: match[1] ?? '', version: match.slice(2).map(Number) }
+    : null
+}
+
+const isBelow = (a, b) => {
+  for (let i = 0; i < 3; i++) {
+    if (a[i] !== b[i]) return a[i] < b[i]
+  }
+  return false
+}
+
+// Whether `version` falls inside the range a `^`/`~`/`>=` pin describes.
+const satisfies = (version, { operator, version: floor }) => {
+  if (isBelow(version, floor)) return false
+  if (operator === '>=') return true
+  if (operator === '~' || floor[0] === 0) {
+    return version[0] === floor[0] && version[1] === floor[1]
+  }
+  return version[0] === floor[0]
+}
+
+// Yarn applies a resolution to direct dependencies too. Keep the app's own
+// spec when everything it allows already satisfies a range pin, so an exact
+// version stays exact. Otherwise, and for an exact pin, use the pin.
+const directSpecFor = (direct, pin) => {
+  const pinSpec = parseSpec(pin)
+  const directSpec = parseSpec(direct)
+  if (!pinSpec || pinSpec.operator === '' || !directSpec) return pin
+  if (directSpec.operator !== '' && directSpec.operator !== pinSpec.operator) {
+    return pin
+  }
+  return satisfies(directSpec.version, pinSpec) ? direct : pin
 }
 
 // Returns the npm spec for a Yarn one, or null when it is skipped.
@@ -52,8 +107,8 @@ const toNpmSpec = (selector, spec) => {
 }
 
 // Mutates `dependencies`: a top-level resolution that names a direct
-// dependency also replaces that dependency's spec, the way Yarn applies it,
-// so the image can never install below the pin.
+// dependency can raise that dependency's spec (`directSpecFor`), so the image
+// can never install below the pin.
 const toOverrides = (resolutions, dependencies) => {
   const overrides = {}
 
@@ -77,7 +132,7 @@ const toOverrides = (resolutions, dependencies) => {
     if (names.length === 0 && dependencies[leaf] !== undefined) {
       // npm refuses (EOVERRIDE) a top-level override that disagrees with a
       // direct dependency, and `$name` is how it spells "the direct spec".
-      dependencies[leaf] = spec
+      dependencies[leaf] = directSpecFor(dependencies[leaf], spec)
       value = `$${leaf}`
     }
 
