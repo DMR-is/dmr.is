@@ -19,9 +19,12 @@ export const dynamic = 'force-dynamic'
 function handler(request: NextRequest) {
   const idToken = request.cookies.get(LOGOUT_HINT_COOKIE)?.value
 
-  // No hint means this wasn't a refused sign-in (e.g. a link from elsewhere)
+  // No hint means this wasn't a refused sign-in (e.g. a link from elsewhere).
+  // Not request.url: behind the load balancer that is the internal host.
   if (!idToken) {
-    return NextResponse.redirect(new URL('/innskraning', request.url))
+    return NextResponse.redirect(
+      new URL('/innskraning', process.env.NEXTAUTH_URL ?? request.url),
+    )
   }
 
   const postLogoutRedirectUri = process.env.BASE_URL as string
