@@ -108,14 +108,19 @@ describe('TokenJwtAuthGuard', () => {
     ).rejects.toThrow(UnauthorizedException)
   })
 
-  it('rejects with 401, not 503, when key lookups hit the rate limit', async () => {
+  it('answers 503 with its own warning when key lookups hit the rate limit', async () => {
+    // Also hits valid tokens once their cached key expires during an outage
     mockGetSigningKey.mockRejectedValue(
       new JwksRateLimitError('Too many requests to the JWKS endpoint'),
     )
 
     await expect(
       guard.canActivate(context(`Bearer ${sign()}`).ctx),
-    ).rejects.toThrow(UnauthorizedException)
+    ).rejects.toThrow(ServiceUnavailableException)
+    expect(logger.warn).toHaveBeenCalledWith(
+      'JWKS rate limit reached:',
+      expect.any(JwksRateLimitError),
+    )
     expect(logger.error).not.toHaveBeenCalled()
   })
 

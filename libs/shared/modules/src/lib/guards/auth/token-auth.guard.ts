@@ -117,20 +117,21 @@ export class TokenJwtAuthGuard implements CanActivate {
     }
   }
 
-  // An unknown key means a bad token (401), and so does hitting the rate limit,
-  // which only cache misses (unknown keys) count towards. Failing to fetch the
-  // keys is an outage (503) and must not read as a refusal
+  // An unknown key means a bad token (401). Failing to fetch the keys is an
+  // outage (503) and must not read as a refusal. The rate limit is 503 too:
+  // once a cached key expires during an outage, valid tokens hit it as well
   private async getPublicKey(kid?: string): Promise<string> {
     try {
       const key = await this.jwksClient.getSigningKey(kid)
       return key.getPublicKey()
     } catch (error) {
-      if (
-        error instanceof SigningKeyNotFoundError ||
-        error instanceof JwksRateLimitError
-      ) {
+      if (error instanceof SigningKeyNotFoundError) {
         this.logger.warn('Verification Error:', error)
         throw new UnauthorizedException('Invalid or expired token')
+      }
+      if (error instanceof JwksRateLimitError) {
+        this.logger.warn('JWKS rate limit reached:', error)
+        throw new ServiceUnavailableException('Could not verify token')
       }
       this.logger.error('Could not fetch signing keys:', error)
       throw new ServiceUnavailableException('Could not verify token')
