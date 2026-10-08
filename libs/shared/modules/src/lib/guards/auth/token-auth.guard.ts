@@ -1,5 +1,5 @@
 import * as jwt from 'jsonwebtoken'
-import jwksRsa, { SigningKeyNotFoundError } from 'jwks-rsa'
+import jwksRsa, { JwksRateLimitError, SigningKeyNotFoundError } from 'jwks-rsa'
 
 import {
   CanActivate,
@@ -117,15 +117,19 @@ export class TokenJwtAuthGuard implements CanActivate {
     }
   }
 
-  // An unknown key means a bad token (401); failing to fetch the keys is an
-  // outage (503) and must not read as a refusal
+  // An unknown key means a bad token (401), and so does hitting the rate limit,
+  // which only cache misses (unknown keys) count towards. Failing to fetch the
+  // keys is an outage (503) and must not read as a refusal
   private async getPublicKey(kid?: string): Promise<string> {
     try {
       const key = await this.jwksClient.getSigningKey(kid)
       return key.getPublicKey()
     } catch (error) {
-      if (error instanceof SigningKeyNotFoundError) {
-        this.logger.error('Verification Error:', error)
+      if (
+        error instanceof SigningKeyNotFoundError ||
+        error instanceof JwksRateLimitError
+      ) {
+        this.logger.warn('Verification Error:', error)
         throw new UnauthorizedException('Invalid or expired token')
       }
       this.logger.error('Could not fetch signing keys:', error)

@@ -2,17 +2,25 @@
 import { maskNationalId } from './maskNationalId'
 import type { LogEntry, Logger, LogLevel } from './types'
 
-// JSON.stringify drops an Error's message and stack (they aren't enumerable)
-const serializeErrors = (_key: string, value: unknown) => {
-  if (!(value instanceof Error)) return value
+// JSON.stringify drops an Error's message and stack (they aren't enumerable).
+// One replacer per log call: it tracks errors already written, so a cyclic
+// cause chain prints "[Circular]" instead of recursing until it overflows.
+const serializeErrors = () => {
+  const seen = new WeakSet<Error>()
 
-  const { code, cause } = value as { code?: unknown; cause?: unknown }
-  return {
-    name: value.name,
-    message: maskNationalId(value.message),
-    ...(value.stack && { stack: maskNationalId(value.stack) }),
-    ...(code !== undefined && { code }),
-    ...(cause !== undefined && { cause }),
+  return (_key: string, value: unknown) => {
+    if (!(value instanceof Error)) return value
+    if (seen.has(value)) return '[Circular]'
+    seen.add(value)
+
+    const { code, cause } = value as { code?: unknown; cause?: unknown }
+    return {
+      name: value.name,
+      message: maskNationalId(value.message),
+      ...(value.stack && { stack: maskNationalId(value.stack) }),
+      ...(code !== undefined && { code }),
+      ...(cause !== undefined && { cause }),
+    }
   }
 }
 
@@ -54,12 +62,12 @@ class NextLogger implements Logger {
 
     // In production, output JSON
     if (process.env['NODE_ENV'] === 'production') {
-      return JSON.stringify(entry, serializeErrors)
+      return JSON.stringify(entry, serializeErrors())
     }
 
     // In development, use readable format
     const prefix = this.category ? `[${this.category}]` : ''
-    const metaStr = meta ? ` ${JSON.stringify(meta, serializeErrors)}` : ''
+    const metaStr = meta ? ` ${JSON.stringify(meta, serializeErrors())}` : ''
     return `${entry.timestamp} ${prefix} ${level.toUpperCase()}: ${entry.message}${metaStr}`
   }
 
@@ -70,7 +78,16 @@ class NextLogger implements Logger {
   ): void {
     if (!this.shouldLog(level)) return
 
-    const formatted = this.formatMessage(level, message, meta)
+    let formatted: string
+    try {
+      formatted = this.formatMessage(level, message, meta)
+    } catch {
+      // Logging must never throw inside the caller's catch and hide the
+      // original failure, so drop metadata that can't be serialised
+      formatted = this.formatMessage(level, message, {
+        logError: 'Log metadata could not be serialised',
+      })
+    }
 
     // Use appropriate console method
     switch (level) {

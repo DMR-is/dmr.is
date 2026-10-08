@@ -114,6 +114,32 @@ describe('NextLogger', () => {
       })
       expect(parsed.error.stack).toContain('TypeError: fetch failed')
     })
+    it('should log a cyclic cause chain without throwing', () => {
+      process.env['NODE_ENV'] = 'production'
+      process.env['LOG_LEVEL'] = 'info'
+      const logger = getLogger('test')
+      const first = new Error('first')
+      const second = Object.assign(new Error('second'), { cause: first })
+      Object.assign(first, { cause: second })
+
+      expect(() => logger.error('Failure', { error: first })).not.toThrow()
+      const parsed = JSON.parse(consoleErrorSpy.mock.calls[0][0])
+      expect(parsed.error.message).toBe('first')
+      expect(parsed.error.cause.message).toBe('second')
+      expect(parsed.error.cause.cause).toBe('[Circular]')
+    })
+    it('should still log the message when metadata cannot be serialised', () => {
+      process.env['NODE_ENV'] = 'production'
+      process.env['LOG_LEVEL'] = 'info'
+      const logger = getLogger('test')
+      const cyclic: Record<string, unknown> = {}
+      cyclic['self'] = cyclic
+
+      expect(() => logger.error('Failure', { cyclic })).not.toThrow()
+      const parsed = JSON.parse(consoleErrorSpy.mock.calls[0][0])
+      expect(parsed.message).toBe('Failure')
+      expect(parsed.logError).toBe('Log metadata could not be serialised')
+    })
     it('should mask national ids in logged errors', () => {
       process.env['NODE_ENV'] = 'production'
       process.env['LOG_LEVEL'] = 'info'

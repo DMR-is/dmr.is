@@ -22,7 +22,8 @@ jest.mock('jwks-rsa', () => {
   }
 })
 
-const { SigningKeyNotFoundError, JwksError } = jest.requireActual('jwks-rsa')
+const { SigningKeyNotFoundError, JwksError, JwksRateLimitError } =
+  jest.requireActual('jwks-rsa')
 
 const keyPair = () =>
   generateKeyPairSync('rsa', {
@@ -67,6 +68,7 @@ describe('TokenJwtAuthGuard', () => {
   })
 
   beforeEach(() => {
+    jest.clearAllMocks()
     mockGetSigningKey.mockReset()
   })
 
@@ -104,6 +106,17 @@ describe('TokenJwtAuthGuard', () => {
     await expect(
       guard.canActivate(context(`Bearer ${sign()}`).ctx),
     ).rejects.toThrow(UnauthorizedException)
+  })
+
+  it('rejects with 401, not 503, when key lookups hit the rate limit', async () => {
+    mockGetSigningKey.mockRejectedValue(
+      new JwksRateLimitError('Too many requests to the JWKS endpoint'),
+    )
+
+    await expect(
+      guard.canActivate(context(`Bearer ${sign()}`).ctx),
+    ).rejects.toThrow(UnauthorizedException)
+    expect(logger.error).not.toHaveBeenCalled()
   })
 
   it.each([
