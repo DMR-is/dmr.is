@@ -18,6 +18,7 @@
     "@dmr.is/shared-middleware": "*",
     "@dmr.is/shared-models-base": "*",
     "@dmr.is/shared-modules": "*",
+    "@dmr.is/types": "*",
     "@dmr.is/utils-server": "*",
     "@dmr.is/utils-shared": "*",
     "@nestjs/cache-manager": "3.0.1",

@@ -95,7 +95,11 @@
     },
     "container": {
       "dependsOn": ["build"],
-      "inputs": ["production", "^production"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/docker/**"
+      ],
       "cache": false
     },
     "e2e": {

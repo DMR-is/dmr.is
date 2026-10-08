@@ -161,7 +161,7 @@ const SVG = Buffer.from(
 )
 
 /** SVG with an XML declaration — what most editors emit, and the shape that
- * `file-type@16` reports as `application/xml`. */
+ * `file-type@21` reports as `application/xml`. */
 const XML_DECL_SVG = Buffer.from(
   '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">' +
@@ -568,7 +568,7 @@ describe('POST /api/v1/file-upload — rejections and limits', () => {
  *   non-svg xml                    application/octet-stream  application/xml   <-- REGRESSION
  *   plain text                     application/octet-stream  application/octet-stream
  *
- * `file-type@16` detects XML where `file-type@3` detected no text formats at
+ * `file-type@21` detects XML where `file-type@3` detected no text formats at
  * all, so it returns before the `isSvg` fallback ever runs. Every SVG carrying
  * an `<?xml …?>` declaration — i.e. anything Illustrator or Inkscape exports —
  * would be stored as `application/xml` and refuse to render in an `<img>`.
@@ -592,7 +592,7 @@ describe('POST /api/v1/file-upload — content type detection', () => {
 
   it('sniffs a bare <svg> file', async () => {
     // CONTROL, not load-bearing: this shape passes with or WITHOUT the xml
-    // guard, because `file-type@16` returns undefined for a bare `<svg…>` and
+    // guard, because `file-type@21` returns undefined for a bare `<svg…>` and
     // the request reaches `isSvg` either way. It is here so the cases below
     // read as a contrast rather than a lone failure. If the SVG coverage ever
     // gets trimmed, trim THIS one — the `<?xml?>` and `<!DOCTYPE>` cases are

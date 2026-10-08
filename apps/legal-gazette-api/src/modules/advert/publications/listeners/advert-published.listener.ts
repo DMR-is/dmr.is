@@ -198,15 +198,18 @@ export class AdvertPublishedListener {
       html: `<h2>Auglýsing hefur verið útgefin:</h2><h3>${advert.publicationNumber} - ${advert.type.title} ${advert.title}</h3><p><a href="https://logbirtingablad.is/auglysingar/${advert.publicationNumber}/${publication.version}" target="_blank">Skoða auglýsingu</a></p>`,
     }
 
-    await this.sesService.sendMail(message).catch((error) => {
+    // `sendMail` is `@LogAndHandle()`-decorated, so a failed send resolves an
+    // err result rather than rejecting.
+    const sent = await this.sesService.sendMail(message)
+    if (!sent.result.ok) {
       this.logger.error('Failed to send email after publication', {
-        error: error,
+        error: sent.result.error,
         advertId: advert.id,
         publicationId: publication.id,
         version: publication.version,
         context: LOGGING_CONTEXT,
       })
-    })
+    }
   }
 
   @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED_SIDE_EFFECTS)
