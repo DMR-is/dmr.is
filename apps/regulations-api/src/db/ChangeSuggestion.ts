@@ -23,6 +23,35 @@ export type ChangeSuggestionStatus =
   | 'rejected'
   | 'superseded'
 
+/** Confidence band, in Icelandic as sent by the suggestion process. */
+export type ChangeSuggestionReportBand = 'hátt' | 'miðlungs' | 'lágt'
+
+export type ChangeSuggestionReportChange = {
+  band: ChangeSuggestionReportBand
+  amendingArticle?: string
+  instructionExcerpt?: string
+  [key: string]: unknown
+}
+
+/**
+ * Report produced by the change suggestion process, stored as-is in the
+ * `report` jsonb column. Fields without a value are omitted, and when the
+ * report could not be built only the counts and `error` are present — so
+ * everything but the counts is optional. Not validated beyond being an object,
+ * so a new `version` on their side does not start failing here.
+ */
+export type ChangeSuggestionReport = {
+  version?: number
+  baseRegulation?: string
+  amendingRegulation?: string
+  appliedCount: number
+  skippedCount: number
+  minConfidence?: number
+  changes?: ChangeSuggestionReportChange[]
+  skippedInstructions?: unknown[]
+  error?: string
+}
+
 export type ChangeSuggestion = {
   id: number
   regulationId: number
@@ -30,6 +59,7 @@ export type ChangeSuggestion = {
   title: PlainText
   text: HTMLText
   changeset: string | null
+  report: ChangeSuggestionReport | null
   status: ChangeSuggestionStatus
   appliedChangeId: number | null
   createdAt: Date
@@ -43,6 +73,7 @@ export type ChangeSuggestionCreateInput = {
   title: PlainText
   text: HTMLText
   changeset?: string | null
+  report?: ChangeSuggestionReport | null
   status?: ChangeSuggestionStatus
   filekey?: string
 }
@@ -211,9 +242,9 @@ export async function createChangeSuggestion(
 
   const query = `
     INSERT INTO "regulationchangesuggestion" 
-      ("regulationId", "changingId", title, text, changeset, status, "appliedChangeId", "decidedBy", "decidedAt", "createdAt")
+      ("regulationId", "changingId", title, text, changeset, report, status, "appliedChangeId", "decidedBy", "decidedAt", "createdAt")
     VALUES 
-      (:regulationId, :changingId, :title, :text, :changeset, :status, NULL, NULL, NULL, NOW())
+      (:regulationId, :changingId, :title, :text, :changeset, CAST(:report AS jsonb), :status, NULL, NULL, NULL, NOW())
     RETURNING *
   `
 
@@ -224,6 +255,8 @@ export async function createChangeSuggestion(
       title: data.title,
       text: textContent, // Use fetched content or original text
       changeset: data.changeset ?? null,
+      // Sequelize does not serialise a plain object as JSON in a raw query.
+      report: data.report ? JSON.stringify(data.report) : null,
       status: data.status ?? 'pending',
     },
     type: QueryTypes.SELECT,

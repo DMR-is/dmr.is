@@ -146,6 +146,16 @@ export const changeSuggestionRoutes: FastifyPluginCallback = (
     { onRequest: authMiddleware },
     async (req, reply) => {
       try {
+        const { report } = req.body
+        if (
+          report != null &&
+          (typeof report !== 'object' || Array.isArray(report))
+        ) {
+          return reply
+            .code(400)
+            .send({ error: 'report must be a JSON object when provided' })
+        }
+
         const suggestion = await createChangeSuggestion(req.body)
         return reply.code(201).send(suggestion)
       } catch (error) {
