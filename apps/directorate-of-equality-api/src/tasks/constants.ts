@@ -13,12 +13,15 @@ export const DOE_TASK_NAMESPACE = 3010
 export const DOE_TASK_JOB_IDS = {
   reportDeadlineReminder: 1,
   reportDraftPrune: 2,
+  noticeOutbox: 3,
 } as const
 
 export const REPORT_DEADLINE_REMINDER_LOGGING_CONTEXT =
   'ReportDeadlineReminderTask'
 
 export const REPORT_DRAFT_PRUNE_LOGGING_CONTEXT = 'ReportDraftPruneTask'
+
+export const NOTICE_OUTBOX_LOGGING_CONTEXT = 'NoticeOutboxTask'
 
 /** Abandoned drafts untouched for this long are reaped by the prune task. */
 export const DRAFT_PRUNE_AGE_MONTHS = 6

@@ -14,6 +14,7 @@ import { ConfigModel } from './config/models/config.model'
 import { PostcodeModel } from './location/models/postcode.model'
 import { RegionModel } from './location/models/region.model'
 import { MailboxDeliveryModel } from './mailbox-delivery/models/mailbox-delivery.model'
+import { NoticeOutboxModel } from './notice-outbox/models/notice-outbox.model'
 import { PartnerClientModel } from './partner-client/models/partner-client.model'
 import { PartnerClientKeyModel } from './partner-client/models/partner-client-key.model'
 import { PartnerDelegationModel } from './partner-client/models/partner-delegation.model'
@@ -143,4 +144,7 @@ export const DOE_MODELS = [
 
   // Mailbox delivery through One. After CompanyModel, which it references.
   MailboxDeliveryModel,
+
+  // Notices owed to a company. After ReportModel, which it references.
+  NoticeOutboxModel,
 ]

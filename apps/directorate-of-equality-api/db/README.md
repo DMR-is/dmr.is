@@ -608,6 +608,62 @@ status but `SENT` and `UNCERTAIN`. Indexes: a partial `mailbox_delivery_status_i
 (`WHERE status <> 'SENT'`) for the retry scan and the operator's UNCERTAIN and exhausted
 lists, and `mailbox_delivery_company_id_idx`.
 
+## Notice outbox
+
+`notice_outbox` holds the notices a company is owed: its report was submitted
+(`REPORT_SUBMITTED`), approved (`REPORT_APPROVED`) or denied (`REPORT_DENIED`). Each row is
+written in the same transaction as the change that owes it, so it commits or rolls back
+with that change. doe-api's `NoticeOutboxTask` (every minute, under advisory lock
+`DOE_TASK_JOB_IDS.noticeOutbox`) sends it afterwards; the logic is
+`libs/directorate-of-equality/modules/src/notice-dispatch/`.
+
+**Why an outbox.** The approve/deny emails used to go out from an after-commit hook. A
+process that died between the commit and the send left an approved report the company
+was never told about, with nothing to retry from. The row closes that: the notice is as
+durable as the decision. It also keeps PDF rendering and sending in doe-api only. The
+partner API submits reports too, but only writes the row; it has no Chromium and no mail
+or OneSystems credentials.
+
+**Channels.** Today every row is sent by email, as before: approve and deny mail the
+company, a submission (which never had an email) is marked `SKIPPED`. Delivery to the
+island.is mailbox through One (see "Mailbox delivery" above) replaces the email per kind
+once it is switched on, and the row then records `channel = MAILBOX`.
+
+**Retries.** A failed send keeps the row `PENDING`, counts the attempt and waits five
+minutes; after five attempts it becomes `FAILED`. A report with no usable contact or admin
+email, or a report or denial event that is gone, is `FAILED` at once, because no retry will
+change it. Every outcome is written outside the lock's transaction, so a failure later in
+the run cannot roll back a row whose mail has already gone.
+
+**Ids only.** The recipient, the text (the denial reason comes from the report's
+`STATUS_CHANGED` event) and the documents are read from the report at send time.
+`last_error` is the dispatcher's own short message, never a provider response, so unlike
+`mailbox_delivery.last_error` it holds nothing personal.
+
+**One row per kind per report.** `notice_outbox_kind_report_uq (kind, report_id)`: a report
+is submitted once and decided once (approve is a compare-and-swap from `IN_REVIEW`, deny
+from `IN_REVIEW`/`POSTPONED`, and nothing leaves `APPROVED` or `DENIED`), so a second row
+is a bug, and the constraint fails the transaction that tried instead of mailing twice.
+A report that lands `POSTPONED` gets its receipt at submission; the explanations that later
+move it to `SUBMITTED` do not owe a second one.
+
+| Column            | Type                                                                             |
+| ----------------- | -------------------------------------------------------------------------------- |
+| `id`              | `uuid` PK                                                                        |
+| `kind`            | `notice_outbox_kind_enum` (`REPORT_SUBMITTED`/`REPORT_APPROVED`/`REPORT_DENIED`) |
+| `report_id`       | `fk → report`                                                                    |
+| `status`          | `notice_outbox_status_enum` (`PENDING`/`DONE`/`SKIPPED`/`FAILED`)                |
+| `channel`         | `notice_outbox_channel_enum` (nullable — `EMAIL`/`MAILBOX`, set only on DONE)    |
+| `attempts`        | `integer` (default `0`; sends tried)                                             |
+| `last_attempt_at` | `timestamptz` (nullable)                                                         |
+| `last_error`      | `text` (nullable — the dispatcher's own message)                                 |
+| `processed_at`    | `timestamptz` (nullable — set exactly when the row leaves PENDING)               |
+
+CHECK constraints: `channel` is set if and only if the row is `DONE`, `processed_at` if and
+only if it is not `PENDING`, and `attempts` is non-negative. Index: partial
+`notice_outbox_pending_idx` on `created_at` `WHERE status = 'PENDING'`, the dispatcher's
+only query.
+
 ## Report identifier
 
 `report.identifier` is a six-uppercase-letter handle (`KTPQZW`) that exists so a report can be referred to — in a ticket, an email, a phone call — without quoting the company's kennitala. It carries no meaning and is derived from nothing about the report; that is the point. It is also what the admin report search matches on (`report/utils/filters.ts`), and it prints on the equality PDF.

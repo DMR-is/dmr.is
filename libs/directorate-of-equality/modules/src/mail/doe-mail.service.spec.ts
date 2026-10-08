@@ -7,6 +7,7 @@ import {
 } from '../report/models/report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
 import { DoeMailService } from './doe-mail.service'
+import { ReportMailOutcome } from './doe-mail.service.interface'
 
 describe('DoeMailService', () => {
   const logger = {
@@ -276,14 +277,18 @@ describe('DoeMailService', () => {
     })
 
     it('skips and warns when the report names no recipient', async () => {
-      await service.sendReportDenied(
-        makeReport({
-          type: ReportTypeEnum.SALARY,
-          contactEmail: null,
-          companyAdminEmail: null,
-        }),
-        'reason',
-      )
+      // Its own outcome, not FAILED: the outbox retries FAILED, and no retry
+      // will ever find an address the report does not have.
+      await expect(
+        service.sendReportDenied(
+          makeReport({
+            type: ReportTypeEnum.SALARY,
+            contactEmail: null,
+            companyAdminEmail: null,
+          }),
+          'reason',
+        ),
+      ).resolves.toBe(ReportMailOutcome.NO_RECIPIENT)
 
       expect(aws.sendMail).not.toHaveBeenCalled()
       expect(logger.warn).toHaveBeenCalled()
@@ -299,7 +304,7 @@ describe('DoeMailService', () => {
           makeReport({ type: ReportTypeEnum.SALARY }),
           'reason',
         ),
-      ).resolves.toBeUndefined()
+      ).resolves.toBe(ReportMailOutcome.FAILED)
 
       expect(logger.error).toHaveBeenCalled()
     })
@@ -465,7 +470,7 @@ describe('DoeMailService', () => {
           makeReport({ type: ReportTypeEnum.EQUALITY }),
           [],
         ),
-      ).resolves.toBe(false)
+      ).resolves.toBe(ReportMailOutcome.FAILED)
     })
   })
 
@@ -594,7 +599,7 @@ describe('DoeMailService', () => {
           makeReport({ type: ReportTypeEnum.EQUALITY }),
           [pdf('jafnréttisáætlun.pdf')],
         ),
-      ).resolves.toBe(false)
+      ).resolves.toBe(ReportMailOutcome.FAILED)
 
       expect(logger.error).toHaveBeenCalled()
     })
@@ -607,7 +612,7 @@ describe('DoeMailService', () => {
           makeReport({ type: ReportTypeEnum.EQUALITY }),
           [pdf('jafnréttisáætlun.pdf')],
         ),
-      ).resolves.toBe(true)
+      ).resolves.toBe(ReportMailOutcome.SENT)
     })
   })
 

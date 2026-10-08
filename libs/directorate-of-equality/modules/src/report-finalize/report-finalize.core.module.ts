@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
+import { NoticeOutboxCoreModule } from '../notice-outbox/notice-outbox.core.module'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
 import { ReportCoreModule } from '../report/report.core.module'
@@ -20,6 +21,7 @@ import { IReportFinalizeService } from './report-finalize.service.interface'
     ]),
     ReportAutoReviewCoreModule,
     ReportCoreModule,
+    NoticeOutboxCoreModule,
   ],
   providers: [
     {
