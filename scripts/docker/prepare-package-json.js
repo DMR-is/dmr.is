@@ -107,7 +107,7 @@ const toNpmSpec = (selector, spec) => {
 }
 
 // Mutates `dependencies`: a top-level resolution that names a direct
-// dependency can raise that dependency's spec (`directSpecFor`), so the image
+// dependency can replace that dependency's spec (`directSpecFor`), so the image
 // can never install below the pin.
 const toOverrides = (resolutions, dependencies) => {
   const overrides = {}
