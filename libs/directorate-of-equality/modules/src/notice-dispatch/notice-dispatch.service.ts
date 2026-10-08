@@ -6,6 +6,8 @@ import { InjectConnection, InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CompanySizeEnum } from '../company/models/company.enums'
+import { CompanyReportModel } from '../company/models/company-report.model'
 import { ICompanyFileService } from '../company-file/company-file.service.interface'
 import {
   IDoeMailService,
@@ -52,6 +54,33 @@ export const NOTICE_DISPATCH_MAX_ATTEMPTS = 5
  * "Re-driving a FAILED row" under `notice_outbox` in doe-api's `db/README.md`.
  */
 export const NOTICE_DISPATCH_RETRY_DELAY_MS = 5 * 60 * 1000
+
+/**
+ * Whether an approval is the one that completes the company's reporting
+ * obligations, which is when Jafnréttisstofa asks it to answer the service
+ * survey.
+ *
+ * - Under 50 employees (SMALL, MEDIUM) the equality report is the only filing,
+ *   so its approval completes them.
+ * - At 50+ (LARGE) the salary report comes after the equality report, and its
+ *   approval is the last step: approval requires every outlier explained, so
+ *   any úrbótaáætlun is in by then.
+ *
+ * Every other pairing is a filing with another one still owed (a LARGE
+ * company's equality report) or a salary report filed outside the size rule (an
+ * admin override), and gets no survey. UNKNOWN is not a size, so it gets none
+ * either.
+ *
+ * The size is the one snapshotted on the report at submission, not the
+ * company's current bucket: it is the size the filing was made under.
+ */
+export const offersServiceSurvey = (
+  type: ReportTypeEnum,
+  size: CompanySizeEnum | null,
+): boolean =>
+  type === ReportTypeEnum.EQUALITY
+    ? size === CompanySizeEnum.SMALL || size === CompanySizeEnum.MEDIUM
+    : type === ReportTypeEnum.SALARY && size === CompanySizeEnum.LARGE
 
 type SendResult =
   | {
@@ -105,6 +134,8 @@ export class NoticeDispatchService implements INoticeDispatchService {
     private readonly reportModel: typeof ReportModel,
     @InjectModel(ReportEventModel)
     private readonly reportEventModel: typeof ReportEventModel,
+    @InjectModel(CompanyReportModel)
+    private readonly companyReportModel: typeof CompanyReportModel,
     @InjectConnection() private readonly sequelize: Sequelize,
   ) {}
 
@@ -374,9 +405,22 @@ export class NoticeDispatchService implements INoticeDispatchService {
       rowTransaction,
     )
 
+    // The filing company's own snapshot row; a group report also has one per
+    // subsidiary, each with `parentCompanyId` set.
+    const snapshot = await this.companyReportModel.findOne({
+      where: { reportId, parentCompanyId: null },
+      attributes: ['employeeCountCategory'],
+    })
+
     const outcome = await this.mailService.sendReportApproved(
       report,
       attachments,
+      {
+        serviceSurvey: offersServiceSurvey(
+          report.type,
+          snapshot?.employeeCountCategory ?? null,
+        ),
+      },
     )
 
     /*

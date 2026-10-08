@@ -1,5 +1,6 @@
 import { Op } from 'sequelize'
 
+import { CompanySizeEnum } from '../company/models/company.enums'
 import { ReportMailOutcome } from '../mail/doe-mail.service.interface'
 import {
   NoticeOutboxChannelEnum,
@@ -13,6 +14,7 @@ import {
   NOTICE_DISPATCH_MAX_ATTEMPTS,
   NOTICE_DISPATCH_RETRY_DELAY_MS,
   NoticeDispatchService,
+  offersServiceSurvey,
 } from './notice-dispatch.service'
 
 describe('NoticeDispatchService', () => {
@@ -47,6 +49,10 @@ describe('NoticeDispatchService', () => {
   }
 
   const reportEventModel = {
+    findOne: jest.fn(),
+  }
+
+  const companyReportModel = {
     findOne: jest.fn(),
   }
 
@@ -112,6 +118,9 @@ describe('NoticeDispatchService', () => {
     noticeOutboxModel.update.mockResolvedValue([1])
     reportModel.findOne.mockResolvedValue(approvedReport())
     reportEventModel.findOne.mockResolvedValue({ reason: 'Vantar gögn' })
+    companyReportModel.findOne.mockResolvedValue({
+      employeeCountCategory: CompanySizeEnum.MEDIUM,
+    })
     reportPdfService.generateReportPdf.mockResolvedValue({
       pdf: Buffer.from('pdf-bytes'),
       fileName: 'jafnrettisaaetlun-report-1.pdf',
@@ -136,6 +145,7 @@ describe('NoticeDispatchService', () => {
       noticeOutboxModel as never,
       reportModel as never,
       reportEventModel as never,
+      companyReportModel as never,
       sequelize as never,
     )
   })
@@ -408,18 +418,26 @@ describe('NoticeDispatchService', () => {
       expect(reportPdfService.generateReportPdf).toHaveBeenCalledWith(
         'report-1',
       )
-      expect(mailService.sendReportApproved).toHaveBeenCalledWith(report, [
-        {
-          filename: 'jafnrettisaaetlun-report-1.pdf',
-          content: Buffer.from('pdf-bytes'),
-          label: 'jafnréttisáætlun',
-        },
-      ])
+      expect(mailService.sendReportApproved).toHaveBeenCalledWith(
+        report,
+        [
+          {
+            filename: 'jafnrettisaaetlun-report-1.pdf',
+            content: Buffer.from('pdf-bytes'),
+            label: 'jafnréttisáætlun',
+          },
+        ],
+        // A MEDIUM company's equality approval completes its obligations.
+        { serviceSurvey: true },
+      )
     })
 
     it('attaches the úrbótaáætlun as a second document on a SALARY approval', async () => {
       const report = approvedReport({ type: ReportTypeEnum.SALARY })
       reportModel.findOne.mockResolvedValue(report)
+      companyReportModel.findOne.mockResolvedValue({
+        employeeCountCategory: CompanySizeEnum.LARGE,
+      })
       reportPdfService.generateReportPdf.mockResolvedValue({
         pdf: Buffer.from('report-bytes'),
         fileName: 'launagreining-report-1.pdf',
@@ -431,18 +449,68 @@ describe('NoticeDispatchService', () => {
 
       await service.dispatchPending(lockTransaction)
 
-      expect(mailService.sendReportApproved).toHaveBeenCalledWith(report, [
-        {
-          filename: 'launagreining-report-1.pdf',
-          content: Buffer.from('report-bytes'),
-          label: 'jafnlaunaúttekt',
-        },
-        {
-          filename: 'urbotaaetlun-report-1.pdf',
-          content: Buffer.from('plan-bytes'),
-          label: 'úrbótaáætlun',
-        },
-      ])
+      expect(mailService.sendReportApproved).toHaveBeenCalledWith(
+        report,
+        [
+          {
+            filename: 'launagreining-report-1.pdf',
+            content: Buffer.from('report-bytes'),
+            label: 'jafnlaunaúttekt',
+          },
+          {
+            filename: 'urbotaaetlun-report-1.pdf',
+            content: Buffer.from('plan-bytes'),
+            label: 'úrbótaáætlun',
+          },
+        ],
+        { serviceSurvey: true },
+      )
+    })
+
+    describe('service survey', () => {
+      /*
+       * Asked only by the approval that completes the company's obligations:
+       * the equality report under 50 employees, the salary report at 50+.
+       */
+      it.each([
+        [ReportTypeEnum.EQUALITY, CompanySizeEnum.SMALL, true],
+        [ReportTypeEnum.EQUALITY, CompanySizeEnum.MEDIUM, true],
+        // A salary report is still owed.
+        [ReportTypeEnum.EQUALITY, CompanySizeEnum.LARGE, false],
+        [ReportTypeEnum.EQUALITY, CompanySizeEnum.UNKNOWN, false],
+        [ReportTypeEnum.SALARY, CompanySizeEnum.LARGE, true],
+        // Filed under an admin override, outside the size rule.
+        [ReportTypeEnum.SALARY, CompanySizeEnum.MEDIUM, false],
+        [ReportTypeEnum.SALARY, CompanySizeEnum.SMALL, false],
+        [ReportTypeEnum.SALARY, CompanySizeEnum.UNKNOWN, false],
+        [ReportTypeEnum.EQUALITY, null, false],
+        [ReportTypeEnum.SALARY, null, false],
+      ])('%s approval at size %s: %s', (type, size, expected) => {
+        expect(offersServiceSurvey(type, size)).toBe(expected)
+      })
+
+      // The filing company's own row, not a subsidiary's on a group report.
+      it("reads the filing company's size snapshot", async () => {
+        await service.dispatchPending(lockTransaction)
+
+        expect(companyReportModel.findOne).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { reportId: 'report-1', parentCompanyId: null },
+          }),
+        )
+      })
+
+      it('asks nothing when the report has no snapshot', async () => {
+        companyReportModel.findOne.mockResolvedValue(null)
+
+        await service.dispatchPending(lockTransaction)
+
+        expect(mailService.sendReportApproved).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          { serviceSurvey: false },
+        )
+      })
     })
 
     it('archives every attachment under the company national id', async () => {
@@ -665,6 +733,7 @@ describe('NoticeDispatchService', () => {
       expect(mailService.sendReportApproved).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'report-1' }),
         [],
+        expect.anything(),
       )
       // And nothing is archived, because nothing was produced to archive.
       expect(companyFileService.archive).not.toHaveBeenCalled()
