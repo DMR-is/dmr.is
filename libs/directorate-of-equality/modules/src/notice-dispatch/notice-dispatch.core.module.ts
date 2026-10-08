@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { CompanyReportModel } from '../company/models/company-report.model'
 import { CompanyFileCoreModule } from '../company-file/company-file.core.module'
 import { DoeMailModule } from '../mail/doe-mail.module'
 import { NoticeOutboxModel } from '../notice-outbox/models/notice-outbox.model'
@@ -18,6 +19,7 @@ import { INoticeDispatchService } from './notice-dispatch.service.interface'
 @Module({
   imports: [
     SequelizeModule.forFeature([
+      CompanyReportModel,
       NoticeOutboxModel,
       ReportModel,
       ReportEventModel,

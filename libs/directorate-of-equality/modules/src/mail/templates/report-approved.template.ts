@@ -12,6 +12,26 @@ export const buildReportApprovedSubject = (report: ReportModel): string =>
  * its own document — and an unnamed second attachment reads as a duplicate of
  * the first.
  */
+export const SERVICE_SURVEY_URL =
+  'https://haskoliislands.eu.qualtrics.com/jfe/form/SV_1FH0p5glq6huJXE?Q_Language=ISL'
+
+/**
+ * Jafnréttisstofa's service survey, worded as Jafnréttisstofa supplied it.
+ *
+ * Asked only once the company has met every reporting obligation it has — the
+ * caller decides that (`offersServiceSurvey`). Asking after a partial approval
+ * would survey a company that still has a filing ahead of it.
+ */
+const SERVICE_SURVEY_PARAGRAPHS = [
+  'Hér að neðan er hlekkur á stutta þjónustukönnun. Við vonumst til að þú hafir tíma til að svara henni og þannig koma þínu sjónarmiði á framfæri við okkur. Svörin eru ekki persónugreinanleg.',
+  'Þitt svar skiptir okkur miklu máli varðandi áframhaldandi þróun á þjónustu okkar.',
+]
+
+export type ReportApprovedMailOptions = {
+  /** Append the service survey link. */
+  serviceSurvey: boolean
+}
+
 const attachmentLine = (labels: string[]): string =>
   labels.length === 0
     ? ''
@@ -32,6 +52,7 @@ const attachmentLine = (labels: string[]): string =>
 export const buildReportApprovedHtml = (
   report: ReportModel,
   attachmentLabels: string[],
+  options: ReportApprovedMailOptions,
 ): string => {
   const kind = reportKindLabel(report.type)
   const attachments = attachmentLine(attachmentLabels)
@@ -41,12 +62,21 @@ export const buildReportApprovedHtml = (
     `<p>Jafnréttisstofa hefur samþykkt ${escapeHtml(kind.toLowerCase())} fyrirtækisins.</p>`,
     `<p>Samþykktin gildir til ${formatDate(report.validUntil)}.</p>`,
     attachments ? `<p>${escapeHtml(attachments)}</p>` : '',
+    ...(options.serviceSurvey
+      ? [
+          ...SERVICE_SURVEY_PARAGRAPHS.map(
+            (paragraph) => `<p>${escapeHtml(paragraph)}</p>`,
+          ),
+          `<p><a href="${escapeHtml(SERVICE_SURVEY_URL)}">Svara könnun</a></p>`,
+        ]
+      : []),
   ].join('')
 }
 
 export const buildReportApprovedText = (
   report: ReportModel,
   attachmentLabels: string[],
+  options: ReportApprovedMailOptions,
 ): string => {
   const kind = reportKindLabel(report.type)
   const attachments = attachmentLine(attachmentLabels)
@@ -56,5 +86,12 @@ export const buildReportApprovedText = (
     '',
     `Samþykktin gildir til ${formatDate(report.validUntil)}.`,
     ...(attachments ? ['', attachments] : []),
+    ...(options.serviceSurvey
+      ? [
+          '',
+          ...SERVICE_SURVEY_PARAGRAPHS,
+          `Svara könnun: ${SERVICE_SURVEY_URL}`,
+        ]
+      : []),
   ].join('\n')
 }
