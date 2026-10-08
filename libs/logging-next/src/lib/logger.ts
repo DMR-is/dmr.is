@@ -2,6 +2,20 @@
 import { maskNationalId } from './maskNationalId'
 import type { LogEntry, Logger, LogLevel } from './types'
 
+// JSON.stringify drops an Error's message and stack (they aren't enumerable)
+const serializeErrors = (_key: string, value: unknown) => {
+  if (!(value instanceof Error)) return value
+
+  const { code, cause } = value as { code?: unknown; cause?: unknown }
+  return {
+    name: value.name,
+    message: maskNationalId(value.message),
+    ...(value.stack && { stack: maskNationalId(value.stack) }),
+    ...(code !== undefined && { code }),
+    ...(cause !== undefined && { cause }),
+  }
+}
+
 const LOG_LEVELS: Record<LogLevel, number> = {
   debug: 0,
   info: 1,
@@ -40,12 +54,12 @@ class NextLogger implements Logger {
 
     // In production, output JSON
     if (process.env['NODE_ENV'] === 'production') {
-      return JSON.stringify(entry)
+      return JSON.stringify(entry, serializeErrors)
     }
 
     // In development, use readable format
     const prefix = this.category ? `[${this.category}]` : ''
-    const metaStr = meta ? ` ${JSON.stringify(meta)}` : ''
+    const metaStr = meta ? ` ${JSON.stringify(meta, serializeErrors)}` : ''
     return `${entry.timestamp} ${prefix} ${level.toUpperCase()}: ${entry.message}${metaStr}`
   }
 

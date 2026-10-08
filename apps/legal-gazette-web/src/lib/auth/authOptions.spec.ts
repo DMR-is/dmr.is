@@ -44,13 +44,13 @@ describe('authorize', () => {
     await expect(authorize('0101302399', 'id-token')).resolves.toBe(member)
   })
 
-  it.each([401, 403, 404])('refuses on a %i from the API', async (status) => {
+  it.each([403, 404])('refuses on a %i from the API', async (status) => {
     getMyUser.mockRejectedValue(httpError(status))
 
     await expect(authorize('0101307789', 'id-token')).resolves.toBeNull()
   })
 
-  it.each([500, 502])('throws SignInFailed on a %i', async (status) => {
+  it.each([401, 500, 502])('throws SignInFailed on a %i', async (status) => {
     getMyUser.mockRejectedValue(httpError(status))
 
     await expect(authorize('0101302399', 'id-token')).rejects.toThrow(

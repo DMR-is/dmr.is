@@ -48,13 +48,14 @@ describe('authorize', () => {
     await expect(authorize('0101302989', 'id-token')).resolves.toBeNull()
   })
 
-  it.each([401, 403, 404])('refuses on a %i from the API', async (status) => {
+  it.each([403, 404])('refuses on a %i from the API', async (status) => {
     getUserByNationalId.mockRejectedValue(httpError(status))
 
     await expect(authorize('0101302989', 'id-token')).resolves.toBeNull()
   })
 
   it.each([
+    ['a 401 from the API', httpError(401)],
     ['a 500 from the API', httpError(500)],
     ['a 502 from the API', httpError(502)],
     ['a network failure', new FetchError('connect ECONNREFUSED', 'system')],

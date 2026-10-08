@@ -1,4 +1,9 @@
-import { ExecutionContext, ForbiddenException } from '@nestjs/common'
+import {
+  ExecutionContext,
+  ForbiddenException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
@@ -38,8 +43,8 @@ describe('AuthorizationGuard', () => {
     phone: '1234567',
     isActive: true,
   })
-  // Error thrown when user is not found in database
-  const userNotFoundError = new Error('User not found')
+  // Error thrown when user is not found in database (findOneOrThrow)
+  const userNotFoundError = new NotFoundException('User not found')
   beforeEach(async () => {
     const mockUsersService = {
       getUserByNationalId: jest.fn(),
@@ -250,20 +255,13 @@ describe('AuthorizationGuard', () => {
           ForbiddenException,
         )
       })
-      it('should throw ForbiddenException when database lookup throws', async () => {
-        const context = createMockContext({ nationalId: '1234567890' })
-        usersService.getUserByNationalId.mockRejectedValue(userNotFoundError)
-        await expect(guard.canActivate(context)).rejects.toThrow(
-          ForbiddenException,
-        )
-      })
-      it('should throw ForbiddenException on database error', async () => {
+      it('should throw InternalServerErrorException on database error, not a refusal', async () => {
         const context = createMockContext({ nationalId: '1234567890' })
         usersService.getUserByNationalId.mockRejectedValue(
           new Error('Database connection error'),
         )
         await expect(guard.canActivate(context)).rejects.toThrow(
-          ForbiddenException,
+          InternalServerErrorException,
         )
       })
     })

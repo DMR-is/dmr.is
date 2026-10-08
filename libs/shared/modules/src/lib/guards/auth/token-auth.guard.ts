@@ -1,11 +1,13 @@
 import * as jwt from 'jsonwebtoken'
-import jwksRsa from 'jwks-rsa'
+import jwksRsa, { SigningKeyNotFoundError } from 'jwks-rsa'
 
 import {
   CanActivate,
   ExecutionContext,
+  HttpException,
   Inject,
   Injectable,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common'
 
@@ -82,8 +84,7 @@ export class TokenJwtAuthGuard implements CanActivate {
         throw new Error('Invalid access token header')
       }
 
-      const key = await this.jwksClient.getSigningKey(decodedHeader.kid)
-      const publicKey = key.getPublicKey()
+      const publicKey = await this.getPublicKey(decodedHeader.kid)
 
       // Verify the token with the public key
       const payload = jwt.verify(token, publicKey, {
@@ -108,8 +109,27 @@ export class TokenJwtAuthGuard implements CanActivate {
 
       return true
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error
+      }
       this.logger.error('Verification Error:', error)
       throw new UnauthorizedException('Invalid or expired token')
+    }
+  }
+
+  // An unknown key means a bad token (401); failing to fetch the keys is an
+  // outage (503) and must not read as a refusal
+  private async getPublicKey(kid?: string): Promise<string> {
+    try {
+      const key = await this.jwksClient.getSigningKey(kid)
+      return key.getPublicKey()
+    } catch (error) {
+      if (error instanceof SigningKeyNotFoundError) {
+        this.logger.error('Verification Error:', error)
+        throw new UnauthorizedException('Invalid or expired token')
+      }
+      this.logger.error('Could not fetch signing keys:', error)
+      throw new ServiceUnavailableException('Could not verify token')
     }
   }
 }

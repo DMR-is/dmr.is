@@ -5,6 +5,13 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/legal-gazette-application-web/jest.config.ts"
+      }
+    },
     "tsc": {
       "executor": "nx:run-commands",
       "dependsOn": ["codegen"],

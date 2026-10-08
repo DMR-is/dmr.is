@@ -36,8 +36,9 @@ export const identityServerConfig = {
   scope: `openid offline_access profile`,
 }
 
-// Statuses that mean "this person may not sign in", as opposed to an outage
-const REFUSED_STATUSES = [401, 403, 404]
+// Statuses that mean "this person may not sign in", as opposed to an outage.
+// 401 is a bad token, not a refusal, so it shows the generic error.
+const REFUSED_STATUSES = [403, 404]
 
 class SignInRefused extends Error {}
 
