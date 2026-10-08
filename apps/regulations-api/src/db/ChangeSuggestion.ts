@@ -52,15 +52,28 @@ export type ChangeSuggestionReport = {
   error?: string
 }
 
+const toJsonbSafe = (value: string) => value.replace(/\0/g, '').toWellFormed()
+
 /**
  * jsonb refuses `\u0000` and unpaired surrogates, both of which JSON.stringify
  * emits as escapes. Either would fail the whole INSERT and lose the suggestion
- * along with its report, so drop NULs and replace lone surrogates with U+FFFD.
+ * along with its report, so drop NULs and replace lone surrogates with U+FFFD,
+ * in object keys as well as string values. NULs go first, so a pair split by a
+ * NUL rejoins instead of becoming two U+FFFD.
  */
 export const serialiseReport = (report: ChangeSuggestionReport): string =>
-  JSON.stringify(report, (_key, value) =>
-    typeof value === 'string' ? value.replace(/\0/g, '').toWellFormed() : value,
-  )
+  JSON.stringify(report, (_key, value) => {
+    if (typeof value === 'string') {
+      return toJsonbSafe(value)
+    }
+    // A replacer never sees keys, so rebuild plain objects with cleaned ones.
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return Object.fromEntries(
+        Object.entries(value).map(([k, v]) => [toJsonbSafe(k), v]),
+      )
+    }
+    return value
+  })
 
 export type ChangeSuggestion = {
   id: number

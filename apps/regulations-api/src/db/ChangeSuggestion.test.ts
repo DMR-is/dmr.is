@@ -71,6 +71,32 @@ describe('serialiseReport', () => {
     })
   })
 
+  it('cleans object keys too, which a replacer never sees', () => {
+    const json = serialiseReport({
+      appliedCount: 0,
+      skippedCount: 0,
+      changes: [{ band: 'hátt', ['a\0b']: 1, ['\ud800']: 2 }],
+    })
+
+    expect(json).not.toContain('\\u0000')
+    expect(json).not.toMatch(/\\ud[89ab][0-9a-f]{2}/i)
+    expect(JSON.parse(json).changes[0]).toEqual({
+      band: 'hátt',
+      ab: 1,
+      '\ufffd': 2,
+    })
+  })
+
+  it('rejoins a surrogate pair split by a NUL', () => {
+    const json = serialiseReport({
+      appliedCount: 0,
+      skippedCount: 0,
+      error: '\ud83d\0\ude00',
+    })
+
+    expect(JSON.parse(json).error).toBe('😀')
+  })
+
   it('leaves valid surrogate pairs alone', () => {
     const json = serialiseReport({
       appliedCount: 0,

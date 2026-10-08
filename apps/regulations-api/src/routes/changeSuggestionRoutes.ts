@@ -35,9 +35,9 @@ const handleError = (error: unknown, reply: FastifyReply) => {
 }
 
 /**
- * Raised from Fastify's 1 MiB default for the create route only: the body
- * carries the full regulation HTML (unless sent via `filekey`) plus the
- * report. Auth runs in `onRequest`, before the body is parsed.
+ * Raised from Fastify's 1 MiB default for the routes that carry the full
+ * regulation HTML: create (unless sent via `filekey`, and plus the report) and
+ * update. Auth runs in `onRequest`, before the body is parsed.
  */
 export const CHANGE_SUGGESTION_BODY_LIMIT = 10 * 1024 * 1024
 
@@ -177,7 +177,7 @@ export const changeSuggestionRoutes: FastifyPluginCallback = (
    */
   fastify.put<Pms<'id'> & Body<ChangeSuggestionUpdateInput>>(
     '/change-suggestions/:id',
-    { onRequest: authMiddleware },
+    { onRequest: authMiddleware, bodyLimit: CHANGE_SUGGESTION_BODY_LIMIT },
     async (req, reply) => {
       try {
         const id = parseInt(req.params.id, 10)
