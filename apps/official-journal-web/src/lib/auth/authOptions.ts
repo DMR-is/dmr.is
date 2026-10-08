@@ -53,7 +53,7 @@ export const identityServerConfig =
       }
 
 // Returns null only when the person is refused; throws on any other failure
-async function authorize(nationalId?: string, idToken?: string) {
+export async function authorize(nationalId?: string, idToken?: string) {
   if (!idToken || !nationalId) {
     throw new Error(SIGN_IN_FAILED)
   }

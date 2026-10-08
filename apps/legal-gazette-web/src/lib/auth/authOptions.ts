@@ -46,7 +46,7 @@ class SignInRefused extends Error {}
 const SIGN_IN_FAILED = 'SignInFailed'
 
 // Returns null only when the person is refused; throws on any other failure
-async function authorize(nationalId?: string, idToken?: string) {
+export async function authorize(nationalId?: string, idToken?: string) {
   if (!idToken || !nationalId) {
     throw new Error(SIGN_IN_FAILED)
   }
@@ -85,6 +85,14 @@ async function authorize(nationalId?: string, idToken?: string) {
 
     if (refused) {
       return null
+    }
+
+    // HTTP errors are logged above; this catches network and client failures
+    if (!(e instanceof Error && e.message === SIGN_IN_FAILED)) {
+      getLogger('authorize').error('Failure authenticating', {
+        error: error as Error,
+        category: LOGGING_CATEGORY,
+      })
     }
     throw new Error(SIGN_IN_FAILED)
   }
