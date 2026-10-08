@@ -8,7 +8,7 @@ jest.mock('../utils/sequelize', () => ({
 }))
 jest.mock('./Regulation', () => ({}))
 
-import { createChangeSuggestion } from './ChangeSuggestion'
+import { createChangeSuggestion, serialiseReport } from './ChangeSuggestion'
 
 const baseInput = {
   regulationId: 1,
@@ -49,5 +49,35 @@ describe('createChangeSuggestion report', () => {
 
     const [, options] = query.mock.calls[0]
     expect(options.replacements.report).toBeNull()
+  })
+})
+
+describe('serialiseReport', () => {
+  it('drops NULs and replaces lone surrogates, which jsonb rejects', () => {
+    const json = serialiseReport({
+      appliedCount: 1,
+      skippedCount: 1,
+      changes: [{ band: 'lágt', instructionExcerpt: 'a\0b\ud800c' }],
+      skippedInstructions: ['x\0y'],
+    })
+
+    expect(json).not.toContain('\\u0000')
+    expect(json).not.toMatch(/\\ud[89ab][0-9a-f]{2}/i)
+    expect(JSON.parse(json)).toEqual({
+      appliedCount: 1,
+      skippedCount: 1,
+      changes: [{ band: 'lágt', instructionExcerpt: 'ab�c' }],
+      skippedInstructions: ['xy'],
+    })
+  })
+
+  it('leaves valid surrogate pairs alone', () => {
+    const json = serialiseReport({
+      appliedCount: 0,
+      skippedCount: 0,
+      error: 'emoji 😀',
+    })
+
+    expect(JSON.parse(json).error).toBe('emoji 😀')
   })
 })

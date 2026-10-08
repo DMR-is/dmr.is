@@ -52,6 +52,16 @@ export type ChangeSuggestionReport = {
   error?: string
 }
 
+/**
+ * jsonb refuses `\u0000` and unpaired surrogates, both of which JSON.stringify
+ * emits as escapes. Either would fail the whole INSERT and lose the suggestion
+ * along with its report, so drop NULs and replace lone surrogates with U+FFFD.
+ */
+export const serialiseReport = (report: ChangeSuggestionReport): string =>
+  JSON.stringify(report, (_key, value) =>
+    typeof value === 'string' ? value.replace(/\0/g, '').toWellFormed() : value,
+  )
+
 export type ChangeSuggestion = {
   id: number
   regulationId: number
@@ -256,7 +266,7 @@ export async function createChangeSuggestion(
       text: textContent, // Use fetched content or original text
       changeset: data.changeset ?? null,
       // Sequelize does not serialise a plain object as JSON in a raw query.
-      report: data.report ? JSON.stringify(data.report) : null,
+      report: data.report ? serialiseReport(data.report) : null,
       status: data.status ?? 'pending',
     },
     type: QueryTypes.SELECT,
