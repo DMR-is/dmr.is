@@ -19,6 +19,7 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatDate } from '../../lib/utils'
 import * as styles from './AdvertCompare.css'
+import { unwrapContainers } from './unwrapContainers'
 
 import { keepPreviousData } from '@tanstack/react-query'
 
@@ -28,42 +29,6 @@ const SEARCH_DEBOUNCE_MS = 500
 // One or two characters match most of the archive, so wait for a third before
 // searching. "1053/2026" and real titles clear this easily.
 const SEARCH_MIN_LENGTH = 3
-
-const BLOCK_TAGS = new Set([
-  'DIV',
-  'P',
-  'TABLE',
-  'UL',
-  'OL',
-  'BLOCKQUOTE',
-  'PRE',
-  'H1',
-  'H2',
-  'H3',
-  'H4',
-  'H5',
-  'H6',
-  'HR',
-])
-
-// The differ pairs top-level blocks, so a published document wrapped in a
-// container <div> reads as one block against the Meginmál's paragraphs and
-// the whole text shows as deleted and re-inserted. Lift the children of any
-// top-level <div> that holds block content, until only real blocks remain.
-const unwrapContainers = (html: string): string => {
-  const root = document.createElement('div')
-  root.innerHTML = html
-  let container = Array.from(root.children).find(isContainer)
-  while (container) {
-    container.replaceWith(...Array.from(container.childNodes))
-    container = Array.from(root.children).find(isContainer)
-  }
-  return root.innerHTML
-}
-
-const isContainer = (el: Element) =>
-  el.tagName === 'DIV' &&
-  Array.from(el.children).some((child) => BLOCK_TAGS.has(child.tagName))
 
 // The chosen advert is remembered per case, so reopening Samanburður goes
 // straight back to the same comparison.
@@ -140,11 +105,13 @@ const AdvertCompareContent = ({ closeModal }: { closeModal: () => void }) => {
       <Inline justifyContent="spaceBetween" alignY="center">
         <Stack space={0}>
           <Text variant="h3">Samanburður</Text>
-          <Text variant="small">
-            {selected
-              ? `Meginmál borið saman við ${selected.publicationNumber ?? ''} ${selected.title}`
-              : 'Meginmál borið saman við birta auglýsingu'}
-          </Text>
+          {selected ? (
+            <CompareSubtitle advert={selected} />
+          ) : (
+            <Text variant="small">
+              Meginmál borið saman við birta auglýsingu
+            </Text>
+          )}
         </Stack>
         <Button onClick={closeModal} icon="close" circle iconType="outline" />
       </Inline>
@@ -154,6 +121,23 @@ const AdvertCompareContent = ({ closeModal }: { closeModal: () => void }) => {
         <AdvertSearch onSelect={setSelected} />
       )}
     </Box>
+  )
+}
+
+// The stored pick is a snapshot; once the advert has loaded, show its current
+// number and title so a later retitle doesn't sit next to the live body.
+// Shares the getAdvert query with CompareView, so it costs no extra request.
+const CompareSubtitle = ({ advert }: { advert: SelectedAdvert }) => {
+  const trpc = useTRPC()
+  const { data } = useQuery(trpc.getAdvert.queryOptions({ id: advert.id }))
+  const title = data?.advert.title ?? advert.title
+  const publicationNumber =
+    data?.advert.publicationNumber?.full ?? advert.publicationNumber
+
+  return (
+    <Text variant="small">
+      {`Meginmál borið saman við ${publicationNumber ?? ''} ${title}`}
+    </Text>
   )
 }
 
@@ -174,8 +158,10 @@ const AdvertSearch = ({
     return () => clearTimeout(timeout)
   }, [query])
 
+  const trimmed = query.trim()
+  const tooShort = trimmed.length > 0 && trimmed.length < SEARCH_MIN_LENGTH
   const searchable = search.length >= SEARCH_MIN_LENGTH
-  const { data, isFetching, error } = useQuery({
+  const { data, isFetching, isPlaceholderData, error } = useQuery({
     ...trpc.searchPublishedAdverts.queryOptions({ search }),
     enabled: searchable,
     // Keep the last results on screen while the next search loads, rather
@@ -183,6 +169,9 @@ const AdvertSearch = ({
     placeholderData: keepPreviousData,
   })
   const results = searchable ? data : undefined
+  // Results on screen belong to an earlier query: either the debounce hasn't
+  // caught up with the input yet, or the next search is still loading.
+  const stale = trimmed !== search || isPlaceholderData
 
   return (
     <>
@@ -204,48 +193,59 @@ const AdvertSearch = ({
             title="Ekki tókst að leita"
             message="Villa kom upp við leit að auglýsingum. Reyndu aftur síðar."
           />
-        ) : isFetching && !results ? (
-          <SkeletonLoader repeat={3} height={64} space={1} />
+        ) : tooShort ? (
+          <Text variant="small">
+            Sláðu inn að minnsta kosti {SEARCH_MIN_LENGTH} stafi til að leita.
+          </Text>
+        ) : (isFetching || stale) && !results?.length ? (
+          trimmed ? (
+            <SkeletonLoader repeat={3} height={64} space={1} />
+          ) : null
         ) : results?.length === 0 ? (
           <Text>Engin birt auglýsing fannst.</Text>
         ) : (
-          <Stack space={1}>
-            {results?.map((advert) => (
-              <FocusableBox
-                key={advert.id}
-                component="button"
-                type="button"
-                className={styles.resultButton}
-                onClick={() =>
-                  onSelect({
-                    id: advert.id,
-                    title: advert.title,
-                    publicationNumber: advert.publicationNumber,
-                  })
-                }
-                border="standard"
-                borderRadius="large"
-                padding={2}
-                background="white"
-              >
-                <Stack space={0}>
-                  <Text variant="eyebrow" color="purple400">
-                    {[
-                      advert.publicationNumber,
-                      advert.department,
-                      advert.publicationDate
-                        ? formatDate(advert.publicationDate, 'd. MMMM yyyy')
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </Text>
-                  <Text variant="h5">{advert.type}</Text>
-                  <Text>{advert.title}</Text>
-                </Stack>
-              </FocusableBox>
-            ))}
-          </Stack>
+          <div
+            className={stale ? styles.staleResults : undefined}
+            aria-busy={stale}
+          >
+            <Stack space={1}>
+              {results?.map((advert) => (
+                <FocusableBox
+                  key={advert.id}
+                  component="button"
+                  type="button"
+                  className={styles.resultButton}
+                  onClick={() =>
+                    onSelect({
+                      id: advert.id,
+                      title: advert.title,
+                      publicationNumber: advert.publicationNumber,
+                    })
+                  }
+                  border="standard"
+                  borderRadius="large"
+                  padding={2}
+                  background="white"
+                >
+                  <Stack space={0}>
+                    <Text variant="eyebrow" color="purple400">
+                      {[
+                        advert.publicationNumber,
+                        advert.department,
+                        advert.publicationDate
+                          ? formatDate(advert.publicationDate, 'd. MMMM yyyy')
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </Text>
+                    <Text variant="h5">{advert.type}</Text>
+                    <Text>{advert.title}</Text>
+                  </Stack>
+                </FocusableBox>
+              ))}
+            </Stack>
+          </div>
         )}
       </Box>
     </>
