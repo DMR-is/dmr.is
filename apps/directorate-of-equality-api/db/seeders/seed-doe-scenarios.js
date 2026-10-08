@@ -943,6 +943,7 @@ function downSql() {
   return `
 BEGIN;
 
+DELETE FROM notice_outbox       WHERE report_id IN (SELECT id FROM report WHERE company_national_id IN (${companyNationalIds}));
 DELETE FROM report_comment      WHERE report_id IN (SELECT id FROM report WHERE company_national_id IN (${companyNationalIds}));
 DELETE FROM report_event        WHERE company_id IN (${companyIds});
 DELETE FROM report_employee_personal_criterion_step

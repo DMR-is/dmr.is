@@ -514,7 +514,7 @@ describe('ReportWorkflowService', () => {
 
     // The notice commits with the denial; the reason is read back from the
     // STATUS_CHANGED event when the dispatcher sends it.
-    it('queues the denial notice in the same transaction', async () => {
+    it('queues the denial notice', async () => {
       reportModel.update.mockResolvedValue([1])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
 
@@ -743,7 +743,7 @@ describe('ReportWorkflowService', () => {
       )
     })
 
-    it('queues the approval notice in the same transaction', async () => {
+    it('queues the approval notice', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
         type: ReportTypeEnum.EQUALITY,
@@ -1171,6 +1171,43 @@ describe('ReportWorkflowService', () => {
       expect(applicationSystemService.notifyApproved).toHaveBeenCalledWith(
         'app-uuid-1',
       )
+    })
+
+    /*
+     * What "the notice commits with the decision" rests on: a failed outbox
+     * write fails the decision, so the request's transaction rolls back, and no
+     * callback is left registered to tell island.is about a decision that
+     * never landed.
+     */
+    it('fails the approval, with no callback registered, when the notice cannot be queued', async () => {
+      seedApprovableReport()
+      noticeOutboxService.enqueue.mockRejectedValue(new Error('outbox down'))
+      const fake = makeFakeTransaction()
+
+      await expect(
+        withAmbientTransaction(fake, () =>
+          service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW)),
+        ),
+      ).rejects.toThrow('outbox down')
+
+      expect(fake.hookCount()).toBe(0)
+    })
+
+    it('fails the denial, with no callback registered, when the notice cannot be queued', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      noticeOutboxService.enqueue.mockRejectedValue(new Error('outbox down'))
+      const fake = makeFakeTransaction()
+
+      await expect(
+        withAmbientTransaction(fake, () =>
+          service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+            denialReason: 'Vantar gögn',
+          }),
+        ),
+      ).rejects.toThrow('outbox down')
+
+      expect(fake.hookCount()).toBe(0)
     })
 
     it('queues the denial notice inside the transaction and defers only the callback', async () => {

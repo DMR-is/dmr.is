@@ -51,9 +51,9 @@ export class NoticeOutboxTask {
         await this.advisoryLockService.runWithDistributedLock(
           DOE_TASK_NAMESPACE,
           DOE_TASK_JOB_IDS.noticeOutbox,
-          async () => {
+          async (lockTransaction) => {
             const { picked, settled } =
-              await this.noticeDispatchService.dispatchPending()
+              await this.noticeDispatchService.dispatchPending(lockTransaction)
 
             if (picked > 0) {
               this.logger.info(

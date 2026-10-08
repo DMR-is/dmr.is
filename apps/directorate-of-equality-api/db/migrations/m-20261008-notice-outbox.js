@@ -64,8 +64,9 @@ module.exports = {
       -- A report is submitted once and decided once, so a second
       -- row of a kind for one report is a bug. The constraint makes
       -- it fail the transaction that tried, instead of mailing the
-      -- company twice.
-      CONSTRAINT notice_outbox_kind_report_uq UNIQUE (kind, report_id),
+      -- company twice. report_id leads so the index also serves
+      -- the FK check when a report row is deleted.
+      CONSTRAINT notice_outbox_report_kind_uq UNIQUE (report_id, kind),
 
       CONSTRAINT notice_outbox_done_chk CHECK (
         status <> 'DONE' OR channel IS NOT NULL

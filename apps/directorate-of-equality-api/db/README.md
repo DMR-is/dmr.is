@@ -640,7 +640,7 @@ the run cannot roll back a row whose mail has already gone.
 `last_error` is the dispatcher's own short message, never a provider response, so unlike
 `mailbox_delivery.last_error` it holds nothing personal.
 
-**One row per kind per report.** `notice_outbox_kind_report_uq (kind, report_id)`: a report
+**One row per kind per report.** `notice_outbox_report_kind_uq (report_id, kind)`: a report
 is submitted once and decided once (approve is a compare-and-swap from `IN_REVIEW`, deny
 from `IN_REVIEW`/`POSTPONED`, and nothing leaves `APPROVED` or `DENIED`), so a second row
 is a bug, and the constraint fails the transaction that tried instead of mailing twice.
@@ -660,9 +660,22 @@ move it to `SUBMITTED` do not owe a second one.
 | `processed_at`    | `timestamptz` (nullable — set exactly when the row leaves PENDING)               |
 
 CHECK constraints: `channel` is set if and only if the row is `DONE`, `processed_at` if and
-only if it is not `PENDING`, and `attempts` is non-negative. Index: partial
+only if it is not `PENDING`, and `attempts` is non-negative. Indexes: partial
 `notice_outbox_pending_idx` on `created_at` `WHERE status = 'PENDING'`, the dispatcher's
-only query.
+only query; the unique constraint leads with `report_id`, so it also serves the FK check
+when a report is deleted.
+
+**Re-driving a FAILED row.** A send is retried five times five minutes apart, so an outage
+longer than ~20 minutes (a bad credential shipped and fixed an hour later) leaves its notices
+`FAILED`. To send one again, put it back to the state it was born in — the CHECK constraints
+require the three columns together:
+
+```sql
+UPDATE notice_outbox
+   SET status = 'PENDING', processed_at = NULL, attempts = 0,
+       last_attempt_at = NULL, last_error = NULL
+ WHERE id = '<notice id>' AND status = 'FAILED';
+```
 
 ## Report identifier
 
@@ -1624,6 +1637,7 @@ No FKs, no relationships. Standalone bookkeeping table.
 - `company` 1:N `company_event`; `doe_user` 1:N `company_event` via `actor_user_id` (nullable).
 - `company` 1:N `company_comment`; `doe_user` 1:N `company_comment` via `author_user_id` (nullable).
 - `company` 1:N `mailbox_delivery` via `(company_id, national_id)` → `company(id, national_id)`.
+- `report` 1:N `notice_outbox` via `report_id` (at most one row per `kind`).
 - `company` N:1 `postcode` N:1 `region`; `company` N:1 `isat_category` via `isat_category_code`.
 - `job_runs` standalone (no FKs).
 

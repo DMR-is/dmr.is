@@ -91,7 +91,9 @@ export class PdfRenderService implements IPdfRenderService {
 
       return Buffer.from(pdfBuffer)
     } catch (error) {
-      this.logger.warn('Failed to render PDF', {
+      // The message predates the move out of ReportPdfService; kept verbatim
+      // for anything that alerts on it.
+      this.logger.warn('Failed to generate report PDF', {
         context: LOGGING_CONTEXT,
         error,
       })

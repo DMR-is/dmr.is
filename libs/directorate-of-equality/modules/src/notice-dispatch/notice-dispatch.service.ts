@@ -1,7 +1,8 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
 
 import { Inject, Injectable } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
+import { InjectConnection, InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -46,11 +47,19 @@ export const NOTICE_DISPATCH_MAX_ATTEMPTS = 5
 /**
  * Wait between attempts on one row. Five attempts five minutes apart ride out a
  * short SES outage without mailing the company late by more than ~20 minutes.
+ *
+ * A longer outage leaves its notices FAILED. They are re-driven by hand: see
+ * "Re-driving a FAILED row" under `notice_outbox` in doe-api's `db/README.md`.
  */
 export const NOTICE_DISPATCH_RETRY_DELAY_MS = 5 * 60 * 1000
 
 type SendResult =
-  | { outcome: ReportMailOutcome; channel: NoticeOutboxChannelEnum }
+  | {
+      outcome: ReportMailOutcome
+      channel: NoticeOutboxChannelEnum
+      /** Runs once the row is recorded DONE. Never throws. */
+      afterDone?: () => Promise<void>
+    }
   | { outcome: 'SKIPPED' }
   | { outcome: 'GONE'; reason: string }
 
@@ -68,10 +77,18 @@ type SendResult =
  * would mail the company again. Writing outside it makes each row's outcome
  * stand the moment it is known.
  *
+ * ⚠️ **Every row runs in a savepoint on the lock's transaction, and so does
+ * every PDF render.** Reads still join the lock's transaction, and one failed
+ * query aborts a Postgres transaction for everything after it. Without the
+ * savepoints a DB error in one render would fail the other render too (the
+ * notice going out with no documents), then every later row's first read, and
+ * the lock's COMMIT would become a silent ROLLBACK.
+ *
  * ⚠️ **A process that dies between the send and the DONE write mails twice.**
  * Email has no idempotency key, so the next run cannot tell the send happened.
- * That window is milliseconds; the gap it replaces (a notice lost outright when
- * the process died after commit) was not.
+ * The DONE write follows the send directly — archiving the approval documents
+ * to S3 waits until after it — so the window is one UPDATE; the gap it replaces
+ * (a notice lost outright when the process died after commit) was not.
  */
 @Injectable()
 export class NoticeDispatchService implements INoticeDispatchService {
@@ -88,9 +105,12 @@ export class NoticeDispatchService implements INoticeDispatchService {
     private readonly reportModel: typeof ReportModel,
     @InjectModel(ReportEventModel)
     private readonly reportEventModel: typeof ReportEventModel,
+    @InjectConnection() private readonly sequelize: Sequelize,
   ) {}
 
-  async dispatchPending(): Promise<NoticeDispatchSummary> {
+  async dispatchPending(
+    lockTransaction: Transaction,
+  ): Promise<NoticeDispatchSummary> {
     const retryBefore = new Date(Date.now() - NOTICE_DISPATCH_RETRY_DELAY_MS)
 
     const rows = await this.noticeOutboxModel.findAll({
@@ -110,7 +130,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
     // Sequential on purpose: each approval renders PDFs in a fresh Chromium,
     // and the pool (`max: 5`) is shared with the lock's own connection.
     for (const row of rows) {
-      if (await this.dispatchRow(row)) {
+      if (await this.dispatchRow(row, lockTransaction)) {
         settled += 1
       }
     }
@@ -119,11 +139,16 @@ export class NoticeDispatchService implements INoticeDispatchService {
   }
 
   /** Returns whether the row left PENDING. Never throws. */
-  private async dispatchRow(row: NoticeOutboxModel): Promise<boolean> {
+  private async dispatchRow(
+    row: NoticeOutboxModel,
+    lockTransaction: Transaction,
+  ): Promise<boolean> {
     let result: SendResult
 
     try {
-      result = await this.send(row)
+      result = await this.inSavepoint(lockTransaction, (rowTransaction) =>
+        this.send(row, rowTransaction),
+      )
     } catch (error) {
       // Anything `send` did not turn into an outcome itself: a failed load, a
       // throw from a collaborator. Retryable, like a failed send.
@@ -141,8 +166,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
       }
     }
 
+    let settled: boolean
+
     try {
-      return await this.record(row, result)
+      settled = await this.record(row, result)
     } catch (error) {
       // The send may well have happened. The row stays PENDING and the next
       // run sends again: see the class note on the double-send window.
@@ -156,16 +183,48 @@ export class NoticeDispatchService implements INoticeDispatchService {
       )
       return false
     }
+
+    if (result.outcome === ReportMailOutcome.SENT && result.afterDone) {
+      try {
+        await result.afterDone()
+      } catch (error) {
+        // `afterDone` is not meant to throw. If it does, the row is already
+        // DONE, so log it rather than let it read as a failed send.
+        this.logger.error(`Follow-up to notice ${row.id} failed`, {
+          context: LOGGING_CONTEXT,
+          noticeId: row.id,
+          message: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+
+    return settled
   }
 
-  private async send(row: NoticeOutboxModel): Promise<SendResult> {
+  /**
+   * Runs `work` in a savepoint on `parent`. A DB error inside rolls back to the
+   * savepoint and leaves `parent` usable. `sequelize.transaction(cb)` without
+   * `{ transaction: parent }` would open a second top-level transaction on its
+   * own connection instead of nesting.
+   */
+  private inSavepoint<T>(
+    parent: Transaction,
+    work: (savepoint: Transaction) => Promise<T>,
+  ): Promise<T> {
+    return this.sequelize.transaction({ transaction: parent }, work)
+  }
+
+  private async send(
+    row: NoticeOutboxModel,
+    rowTransaction: Transaction,
+  ): Promise<SendResult> {
     switch (row.kind) {
       case NoticeOutboxKindEnum.REPORT_SUBMITTED:
         // No email for a submission has ever existed. The receipt goes out
         // only through the mailbox, which is not wired yet.
         return { outcome: 'SKIPPED' }
       case NoticeOutboxKindEnum.REPORT_APPROVED:
-        return this.sendApproved(row.reportId)
+        return this.sendApproved(row.reportId, rowTransaction)
       case NoticeOutboxKindEnum.REPORT_DENIED:
         return this.sendDenied(row.reportId)
       default:
@@ -240,7 +299,11 @@ export class NoticeDispatchService implements INoticeDispatchService {
 
         await this.noticeOutboxModel.update(
           { attempts, lastAttemptAt: now, lastError: 'send failed' },
-          { where: { id: row.id }, transaction: null },
+          // Same guard as `settle`: a row already settled is left alone.
+          {
+            where: { id: row.id, status: NoticeOutboxStatusEnum.PENDING },
+            transaction: null,
+          },
         )
         return false
     }
@@ -276,13 +339,17 @@ export class NoticeDispatchService implements INoticeDispatchService {
 
   /**
    * Tells the company its report was approved, with the approved document(s)
-   * attached, and archives the documents once the mail went out.
+   * attached, and hands back the archiving of the documents to run once the
+   * row is DONE.
    *
    * A render failure costs an attachment, never the notice: the notice is the
    * part that cannot be reconstructed later, and the documents can be
    * downloaded from the report screen.
    */
-  private async sendApproved(reportId: string): Promise<SendResult> {
+  private async sendApproved(
+    reportId: string,
+    rowTransaction: Transaction,
+  ): Promise<SendResult> {
     const report = await this.reportModel.findOne({
       where: { id: reportId },
       attributes: [
@@ -304,6 +371,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
     const attachments = await this.buildApprovalAttachments(
       report.type,
       reportId,
+      rowTransaction,
     )
 
     const outcome = await this.mailService.sendReportApproved(
@@ -317,14 +385,18 @@ export class NoticeDispatchService implements INoticeDispatchService {
      * record. Uploading first would let an unset or misconfigured bucket stop
      * the notification. And the archive is the Directorate's copy of what the
      * company received, so writing it after a failed send puts a false yes
-     * where someone will later look for proof of delivery. `archive` never
-     * throws.
+     * where someone will later look for proof of delivery.
+     *
+     * ⚠️ **After the DONE write, too.** Up to two S3 uploads with SDK retries
+     * take seconds; run before the write, a deploy landing in them would kill
+     * the process after the mail and before DONE, and the next run would mail
+     * the company again. `archive` never throws.
      */
-    if (outcome === ReportMailOutcome.SENT) {
-      await this.archiveApprovalDocuments(report, attachments)
+    return {
+      outcome,
+      channel: NoticeOutboxChannelEnum.EMAIL,
+      afterDone: () => this.archiveApprovalDocuments(report, attachments),
     }
-
-    return { outcome, channel: NoticeOutboxChannelEnum.EMAIL }
   }
 
   /**
@@ -389,19 +461,21 @@ export class NoticeDispatchService implements INoticeDispatchService {
    * company committed to rather than what the Directorate assessed, and filing
    * them together would bury it.
    *
-   * Each render is guarded on its own, so one failing costs only its own
-   * attachment. Empty means every render failed: the notice still goes, and
+   * Each render is guarded on its own, and runs in its own savepoint, so one
+   * failing — even on a DB error — costs only its own attachment. Empty means every render failed: the notice still goes, and
    * `buildReportApprovedHtml` omits the "Skjalið er í viðhengi" line.
    */
   private async buildApprovalAttachments(
     type: ReportTypeEnum,
     reportId: string,
+    rowTransaction: Transaction,
   ): Promise<ReportMailAttachment[]> {
     let reportAttachment: ReportMailAttachment | null = null
 
     try {
-      const { pdf, fileName } =
-        await this.reportPdfService.generateReportPdf(reportId)
+      const { pdf, fileName } = await this.inSavepoint(rowTransaction, () =>
+        this.reportPdfService.generateReportPdf(reportId),
+      )
 
       reportAttachment = {
         filename: fileName,
@@ -430,7 +504,9 @@ export class NoticeDispatchService implements INoticeDispatchService {
     let plan: ReportPdfResult | null = null
 
     try {
-      plan = await this.reportPdfService.generateImprovementPlanPdf(reportId)
+      plan = await this.inSavepoint(rowTransaction, () =>
+        this.reportPdfService.generateImprovementPlanPdf(reportId),
+      )
     } catch (error) {
       this.logger.error(
         `Failed to render the úrbótaáætlun for report ${reportId} — mailing the report alone`,
