@@ -8,7 +8,10 @@ jest.mock('../db/ChangeSuggestion', () => ({
 }))
 jest.mock('../db/Regulation', () => ({}))
 
-import { changeSuggestionRoutes } from './changeSuggestionRoutes'
+import {
+  CHANGE_SUGGESTION_BODY_LIMIT,
+  changeSuggestionRoutes,
+} from './changeSuggestionRoutes'
 
 const USER = 'cs-user'
 const PASS = 'cs-pass'
@@ -79,5 +82,21 @@ describe('POST /api/v1/change-suggestions report guard', () => {
     const res = await post(body)
 
     expect(res.statusCode).toBe(201)
+  })
+
+  it('accepts a body over the 1 MiB default', async () => {
+    const res = await post({ ...body, text: 'a'.repeat(2 * 1024 * 1024) })
+
+    expect(res.statusCode).toBe(201)
+  })
+
+  it('rejects a body over the route limit with 413', async () => {
+    const res = await post({
+      ...body,
+      text: 'a'.repeat(CHANGE_SUGGESTION_BODY_LIMIT),
+    })
+
+    expect(res.statusCode).toBe(413)
+    expect(createChangeSuggestion).not.toHaveBeenCalled()
   })
 })

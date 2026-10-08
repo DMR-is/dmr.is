@@ -34,6 +34,13 @@ const handleError = (error: unknown, reply: FastifyReply) => {
   return reply.code(500).send({ error: errorMessage })
 }
 
+/**
+ * Raised from Fastify's 1 MiB default for the create route only: the body
+ * carries the full regulation HTML (unless sent via `filekey`) plus the
+ * report. Auth runs in `onRequest`, before the body is parsed.
+ */
+export const CHANGE_SUGGESTION_BODY_LIMIT = 10 * 1024 * 1024
+
 // ---------------------------------------------------------------------------
 
 export const changeSuggestionRoutes: FastifyPluginCallback = (
@@ -143,7 +150,7 @@ export const changeSuggestionRoutes: FastifyPluginCallback = (
    */
   fastify.post<Body<ChangeSuggestionCreateInput>>(
     '/change-suggestions',
-    { onRequest: authMiddleware },
+    { onRequest: authMiddleware, bodyLimit: CHANGE_SUGGESTION_BODY_LIMIT },
     async (req, reply) => {
       try {
         const { report } = req.body
