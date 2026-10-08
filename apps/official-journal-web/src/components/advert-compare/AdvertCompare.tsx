@@ -30,13 +30,15 @@ const SEARCH_DEBOUNCE_MS = 500
 // searching. "1053/2026" and real titles clear this easily.
 const SEARCH_MIN_LENGTH = 3
 
-// The chosen advert is remembered per case, so reopening Samanburður goes
-// straight back to the same comparison.
+// The chosen advert is remembered per case for the tab's session, so going
+// back and forth between Samanburður and the editor returns to the same
+// comparison. sessionStorage rather than localStorage: it is only a
+// convenience while working on the case, and is gone once the tab closes.
 const storageKey = (caseId: string) => `ojoi-advert-compare:${caseId}`
 
 const readStoredAdvert = (caseId: string): SelectedAdvert | null => {
   try {
-    const raw = window.localStorage.getItem(storageKey(caseId))
+    const raw = window.sessionStorage.getItem(storageKey(caseId))
     if (!raw) return null
     const parsed = JSON.parse(raw)
     return typeof parsed?.id === 'string' && typeof parsed?.title === 'string'
@@ -57,13 +59,13 @@ const readStoredAdvert = (caseId: string): SelectedAdvert | null => {
 const storeAdvert = (caseId: string, advert: SelectedAdvert | null) => {
   try {
     if (advert) {
-      window.localStorage.setItem(storageKey(caseId), JSON.stringify(advert))
+      window.sessionStorage.setItem(storageKey(caseId), JSON.stringify(advert))
     } else {
-      window.localStorage.removeItem(storageKey(caseId))
+      window.sessionStorage.removeItem(storageKey(caseId))
     }
   } catch {
-    // Storage can be unavailable (private mode, blocked site data); the
-    // comparison still works, it just isn't remembered.
+    // Storage can be unavailable (blocked site data); the comparison still
+    // works, it just isn't remembered.
   }
 }
 
