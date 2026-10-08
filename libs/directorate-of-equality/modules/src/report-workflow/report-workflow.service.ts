@@ -293,7 +293,7 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
       if (report?.status !== expected) {
         this.logger.error(
-          `Not notifying anyone about report ${reportId}: its status is ${report?.status ?? 'gone'}, not ${expected} — the commit did not land`,
+          `Not calling back the application system about report ${reportId}: its status is ${report?.status ?? 'gone'}, not ${expected} — the commit did not land`,
           { context: LOGGING_CONTEXT },
         )
         return false
@@ -301,7 +301,7 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
       if (approvedAt && report.approvedAt?.getTime() !== approvedAt.getTime()) {
         this.logger.error(
-          `Not notifying anyone about report ${reportId}: it is APPROVED, but by a different attempt than this one — another approval committed while this one was reading back`,
+          `Not calling back the application system about report ${reportId}: it is APPROVED, but by a different attempt than this one — another approval committed while this one was reading back`,
           { context: LOGGING_CONTEXT },
         )
         return false
@@ -314,15 +314,17 @@ export class ReportWorkflowService implements IReportWorkflowService {
        * would: `runAfterCommit` runs the callback bare when there is no ambient
        * transaction, so a throw from here would surface to the caller.
        *
-       * Unable to confirm is treated as did not land. That can cost a company the
-       * notice for an approval that DID commit, and nothing recovers it: the
-       * reviewer saw a 200, so there is no retry to prompt and no re-notify path
-       * in this API. It is the no-durable-record gap, reached a second way. The
-       * other direction is still worse and irreversible: an official "samþykkt",
-       * with the PDFs, for an approval the database does not have.
+       * Unable to confirm is treated as did not land. That can cost the
+       * application system its callback for a decision that DID commit, and
+       * nothing recovers it: the reviewer saw a 200, so there is no retry to
+       * prompt. It is the no-durable-record gap, reached a second way. The
+       * company is not affected: its notice is an outbox row that committed with
+       * the decision, and the dispatcher sends it whatever this read says. The
+       * other direction is still worse and irreversible: a callback for a
+       * decision the database does not have.
        */
       this.logger.error(
-        `Not notifying anyone about report ${reportId}: could not read back its status to confirm the commit landed`,
+        `Not calling back the application system about report ${reportId}: could not read back its status to confirm the commit landed`,
         {
           context: LOGGING_CONTEXT,
           message: error instanceof Error ? error.message : String(error),
@@ -377,8 +379,10 @@ export class ReportWorkflowService implements IReportWorkflowService {
      * ⚠️ Compare-and-swap, same as `approve` — and for a sharper reason. Without
      * it an approve/deny race resolves in deny's favour: both read their status
      * from a context captured earlier in the request, the second write wins on
-     * `WHERE id` alone, and the row ends DENIED while the company holds an
-     * approval PDF and S3 an archived approval of a denied report.
+     * `WHERE id` alone, and the row ends DENIED with both a REPORT_APPROVED and
+     * a REPORT_DENIED notice in the outbox — two different kinds, so the
+     * outbox's unique constraint lets both through, and the company is mailed
+     * an approval with its PDFs and a denial of the same report.
      *
      * ⚠️ **Pins the one status it is about to report**, rather than accepting
      * either deniable value. `emitStatusChanged` below records
@@ -484,9 +488,11 @@ export class ReportWorkflowService implements IReportWorkflowService {
      * the request. Two concurrent approvals both see IN_REVIEW; the second blocks
      * on the row lock and then its `WHERE id = X` re-evaluates happily under READ
      * COMMITTED. That used to be a near-idempotent duplicate write. It is not any
-     * more: a second approval now means a second email WITH ATTACHMENTS to the
-     * company, a second STATUS_CHANGED, a second due-date advance and a second S3
-     * object.
+     * more: a second approval means a second STATUS_CHANGED, a second due-date
+     * advance and a second REPORT_APPROVED outbox row. The outbox's unique
+     * constraint stops that last one from mailing the company twice, but only by
+     * failing the request with a bare `UniqueConstraintError`; the CAS fails it
+     * first, and says why.
      *
      * Adding `status` to the WHERE and reading the affected-row count makes the
      * update the only thing that decides whether this is the approval — and it

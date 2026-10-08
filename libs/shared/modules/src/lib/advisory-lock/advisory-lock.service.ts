@@ -33,14 +33,16 @@ export class AdvisoryLockService {
    *
    * @param namespace - Namespace integer to scope this lock (must be unique per task group)
    * @param lockKey - Unique identifier for this job type
-   * @param fn - The async function to execute
+   * @param fn - The async function to execute. It receives the lock's
+   *   transaction, which its queries already join through CLS; it is passed so
+   *   `fn` can open savepoints on it (`sequelize.transaction({ transaction })`).
    * @param opts.cooldownMs - Minimum time between job runs (default: 60000ms = 1 minute)
    * @param opts.containerId - Optional container identifier for debugging
    */
   async runWithDistributedLock(
     namespace: number,
     lockKey: number,
-    fn: () => Promise<void>,
+    fn: (transaction: Transaction) => Promise<void>,
     opts?: { cooldownMs?: number; containerId?: string },
   ): Promise<{ ran: boolean; reason?: string }> {
     const cooldownMs = opts?.cooldownMs ?? 60000 // Default 1 minute cooldown
@@ -101,7 +103,7 @@ export class AdvisoryLockService {
       this.logger.debug(`Job ${lockKey} starting on container ${containerId}`, {
         context: LOGGING_CONTEXT,
       })
-      await fn()
+      await fn(tx)
       this.logger.debug(
         `Job ${lockKey} completed on container ${containerId}`,
         {

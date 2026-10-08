@@ -50,6 +50,18 @@ describe('NoticeDispatchService', () => {
     findOne: jest.fn(),
   }
 
+  const lockTransaction = { id: 'lock-tx' } as never
+
+  /*
+   * `sequelize.transaction({ transaction: parent }, work)` opens a savepoint on
+   * `parent`. The fake hands `work` a marker naming its parent, so a test can
+   * check what nests in what, and rejects as the real one does when `work`
+   * throws.
+   */
+  const sequelize = {
+    transaction: jest.fn(),
+  }
+
   const NOW = new Date('2026-10-08T10:00:00.000Z')
   const APPROVED_AT = new Date('2026-10-08T09:58:00.000Z')
 
@@ -109,6 +121,12 @@ describe('NoticeDispatchService', () => {
     companyFileService.archive.mockResolvedValue([])
     mailService.sendReportApproved.mockResolvedValue(ReportMailOutcome.SENT)
     mailService.sendReportDenied.mockResolvedValue(ReportMailOutcome.SENT)
+    sequelize.transaction.mockImplementation(
+      async (
+        options: { transaction: unknown },
+        work: (savepoint: unknown) => Promise<unknown>,
+      ) => work({ savepointOf: options.transaction }),
+    )
 
     service = new NoticeDispatchService(
       logger as never,
@@ -118,6 +136,7 @@ describe('NoticeDispatchService', () => {
       noticeOutboxModel as never,
       reportModel as never,
       reportEventModel as never,
+      sequelize as never,
     )
   })
 
@@ -127,7 +146,7 @@ describe('NoticeDispatchService', () => {
 
   describe('picking rows', () => {
     it('takes the oldest due PENDING rows, a bounded batch', async () => {
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       const [query] = noticeOutboxModel.findAll.mock.calls[0]
       expect(query.where.status).toBe(NoticeOutboxStatusEnum.PENDING)
@@ -150,7 +169,7 @@ describe('NoticeDispatchService', () => {
         outboxRow(NoticeOutboxKindEnum.REPORT_APPROVED),
       ])
 
-      await expect(service.dispatchPending()).resolves.toEqual({
+      await expect(service.dispatchPending(lockTransaction)).resolves.toEqual({
         picked: 2,
         settled: 2,
       })
@@ -173,7 +192,7 @@ describe('NoticeDispatchService', () => {
         return [1]
       })
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(order).toEqual(['send', 'record', 'send', 'record'])
     })
@@ -191,7 +210,7 @@ describe('NoticeDispatchService', () => {
         outboxRow(NoticeOutboxKindEnum.REPORT_APPROVED),
       ])
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       const [, options] = lastOutboxUpdate()
       expect(options.transaction).toBeNull()
@@ -202,7 +221,7 @@ describe('NoticeDispatchService', () => {
         outboxRow(NoticeOutboxKindEnum.REPORT_APPROVED),
       ])
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       const [values, options] = lastOutboxUpdate()
       expect(values).toEqual(
@@ -229,7 +248,7 @@ describe('NoticeDispatchService', () => {
         outboxRow(NoticeOutboxKindEnum.REPORT_SUBMITTED),
       ])
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(mailService.sendReportApproved).not.toHaveBeenCalled()
       expect(mailService.sendReportDenied).not.toHaveBeenCalled()
@@ -250,7 +269,7 @@ describe('NoticeDispatchService', () => {
       ])
       mailService.sendReportApproved.mockResolvedValue(ReportMailOutcome.FAILED)
 
-      await expect(service.dispatchPending()).resolves.toEqual({
+      await expect(service.dispatchPending(lockTransaction)).resolves.toEqual({
         picked: 1,
         settled: 0,
       })
@@ -262,8 +281,9 @@ describe('NoticeDispatchService', () => {
         lastError: 'send failed',
       })
       expect(values).not.toHaveProperty('status')
+      // Like `settle`: a row some other path already settled is left alone.
       expect(options).toEqual({
-        where: { id: 'notice-1' },
+        where: { id: 'notice-1', status: NoticeOutboxStatusEnum.PENDING },
         transaction: null,
       })
     })
@@ -276,7 +296,7 @@ describe('NoticeDispatchService', () => {
       ])
       mailService.sendReportDenied.mockResolvedValue(ReportMailOutcome.FAILED)
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       const [values] = lastOutboxUpdate()
       expect(values).toEqual(
@@ -297,7 +317,7 @@ describe('NoticeDispatchService', () => {
         ReportMailOutcome.NO_RECIPIENT,
       )
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       const [values] = lastOutboxUpdate()
       expect(values).toEqual(
@@ -316,7 +336,7 @@ describe('NoticeDispatchService', () => {
       ])
       reportModel.findOne.mockResolvedValue(null)
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(mailService.sendReportApproved).not.toHaveBeenCalled()
       const [values] = lastOutboxUpdate()
@@ -339,14 +359,17 @@ describe('NoticeDispatchService', () => {
         .mockRejectedValueOnce(new Error('db hiccup'))
         .mockResolvedValue(approvedReport())
 
-      await expect(service.dispatchPending()).resolves.toEqual({
+      await expect(service.dispatchPending(lockTransaction)).resolves.toEqual({
         picked: 2,
         settled: 1,
       })
 
       expect(noticeOutboxModel.update).toHaveBeenCalledWith(
         expect.objectContaining({ attempts: 1, lastError: 'send failed' }),
-        { where: { id: 'a' }, transaction: null },
+        {
+          where: { id: 'a', status: NoticeOutboxStatusEnum.PENDING },
+          transaction: null,
+        },
       )
       expect(mailService.sendReportDenied).toHaveBeenCalledTimes(1)
       expect(logger.error).toHaveBeenCalled()
@@ -358,7 +381,7 @@ describe('NoticeDispatchService', () => {
       ])
       noticeOutboxModel.update.mockRejectedValue(new Error('pool exhausted'))
 
-      await expect(service.dispatchPending()).resolves.toEqual({
+      await expect(service.dispatchPending(lockTransaction)).resolves.toEqual({
         picked: 1,
         settled: 0,
       })
@@ -380,7 +403,7 @@ describe('NoticeDispatchService', () => {
       const report = approvedReport()
       reportModel.findOne.mockResolvedValue(report)
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(reportPdfService.generateReportPdf).toHaveBeenCalledWith(
         'report-1',
@@ -406,7 +429,7 @@ describe('NoticeDispatchService', () => {
         fileName: 'urbotaaetlun-report-1.pdf',
       })
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(mailService.sendReportApproved).toHaveBeenCalledWith(report, [
         {
@@ -441,7 +464,7 @@ describe('NoticeDispatchService', () => {
         fileName: 'urbotaaetlun-report-1.pdf',
       })
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(companyFileService.archive).toHaveBeenCalledWith([
         expect.objectContaining({
@@ -460,23 +483,95 @@ describe('NoticeDispatchService', () => {
     })
 
     /**
-     * ⚠️ Archiving runs AFTER the send. Uploading first would let an unset or
-     * misconfigured bucket stop the notification.
+     * ⚠️ Archiving runs AFTER the send, and after the DONE write. Uploading
+     * first would let an unset or misconfigured bucket stop the notification;
+     * uploading before DONE would leave seconds of S3 calls in which a deploy
+     * kills the process after the mail, and the next run mails again.
      */
-    it('sends the mail before archiving', async () => {
+    it('sends the mail, records DONE, then archives', async () => {
       const order: string[] = []
       mailService.sendReportApproved.mockImplementation(async () => {
         order.push('mail')
         return ReportMailOutcome.SENT
+      })
+      noticeOutboxModel.update.mockImplementation(async (values) => {
+        order.push(`record ${values.status}`)
+        return [1]
       })
       companyFileService.archive.mockImplementation(async () => {
         order.push('archive')
         return []
       })
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
-      expect(order).toEqual(['mail', 'archive'])
+      expect(order).toEqual([
+        'mail',
+        `record ${NoticeOutboxStatusEnum.DONE}`,
+        'archive',
+      ])
+    })
+
+    it('does not archive when DONE could not be recorded', async () => {
+      noticeOutboxModel.update.mockRejectedValue(new Error('pool exhausted'))
+
+      await service.dispatchPending(lockTransaction)
+
+      // The row stays PENDING and the next run sends and archives again.
+      expect(companyFileService.archive).not.toHaveBeenCalled()
+    })
+
+    it('keeps the row DONE when archiving throws', async () => {
+      companyFileService.archive.mockRejectedValue(new Error('s3 down'))
+
+      await expect(service.dispatchPending(lockTransaction)).resolves.toEqual({
+        picked: 1,
+        settled: 1,
+      })
+
+      // One write, DONE; nothing turned the throw into a retryable failure.
+      expect(noticeOutboxModel.update).toHaveBeenCalledTimes(1)
+      const [values] = lastOutboxUpdate()
+      expect(values.status).toBe(NoticeOutboxStatusEnum.DONE)
+    })
+
+    /*
+     * ⚠️ Reads join the lock's transaction, so one failed query would abort it
+     * for everything after. Each row runs in a savepoint on it, and each render
+     * in a savepoint on the row's.
+     */
+    it('runs the row, and each render, in its own savepoint', async () => {
+      reportModel.findOne.mockResolvedValue(
+        approvedReport({ type: ReportTypeEnum.SALARY }),
+      )
+
+      await service.dispatchPending(lockTransaction)
+
+      const parents = sequelize.transaction.mock.calls.map(
+        ([options]) => options.transaction,
+      )
+      const rowSavepoint = { savepointOf: lockTransaction }
+      expect(parents).toEqual([lockTransaction, rowSavepoint, rowSavepoint])
+    })
+
+    it('still sends the plan when the report render fails on a DB error', async () => {
+      reportModel.findOne.mockResolvedValue(
+        approvedReport({ type: ReportTypeEnum.SALARY }),
+      )
+      reportPdfService.generateReportPdf.mockRejectedValue(
+        new Error('current transaction is aborted'),
+      )
+      reportPdfService.generateImprovementPlanPdf.mockResolvedValue({
+        pdf: Buffer.from('plan-bytes'),
+        fileName: 'urbotaaaetlun-report-1.pdf',
+      })
+
+      await service.dispatchPending(lockTransaction)
+
+      const [, attachments] = mailService.sendReportApproved.mock.calls[0]
+      expect(attachments).toEqual([
+        expect.objectContaining({ label: 'úrbótaáætlun' }),
+      ])
     })
 
     /*
@@ -489,7 +584,7 @@ describe('NoticeDispatchService', () => {
       async (outcome) => {
         mailService.sendReportApproved.mockResolvedValue(outcome)
 
-        await service.dispatchPending()
+        await service.dispatchPending(lockTransaction)
 
         expect(mailService.sendReportApproved).toHaveBeenCalled()
         expect(companyFileService.archive).not.toHaveBeenCalled()
@@ -503,7 +598,7 @@ describe('NoticeDispatchService', () => {
         approvedReport({ companyNationalId: null }),
       )
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(companyFileService.archive).not.toHaveBeenCalled()
       expect(mailService.sendReportApproved).toHaveBeenCalled()
@@ -525,7 +620,7 @@ describe('NoticeDispatchService', () => {
         new Error('chromium died'),
       )
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(mailService.sendReportApproved).toHaveBeenCalledTimes(1)
       const [, attachments] = mailService.sendReportApproved.mock.calls[0]
@@ -541,7 +636,7 @@ describe('NoticeDispatchService', () => {
       )
       reportPdfService.generateImprovementPlanPdf.mockResolvedValue(null)
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       const [, attachments] = mailService.sendReportApproved.mock.calls[0]
       expect(attachments).toHaveLength(1)
@@ -550,7 +645,7 @@ describe('NoticeDispatchService', () => {
     // An equality report has no outlier groups, so the plan must not be asked
     // for at all.
     it('does not ask for an úrbótaáætlun on an EQUALITY approval', async () => {
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(reportPdfService.generateImprovementPlanPdf).not.toHaveBeenCalled()
     })
@@ -565,7 +660,7 @@ describe('NoticeDispatchService', () => {
         new Error('chromium is missing'),
       )
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(mailService.sendReportApproved).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'report-1' }),
@@ -595,7 +690,7 @@ describe('NoticeDispatchService', () => {
       }
       reportModel.findOne.mockResolvedValue(report)
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(reportEventModel.findOne).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -619,7 +714,7 @@ describe('NoticeDispatchService', () => {
     it('gives up rather than mailing a denial with no reason', async () => {
       reportEventModel.findOne.mockResolvedValue(null)
 
-      await service.dispatchPending()
+      await service.dispatchPending(lockTransaction)
 
       expect(mailService.sendReportDenied).not.toHaveBeenCalled()
       const [values] = lastOutboxUpdate()

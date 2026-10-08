@@ -18,6 +18,7 @@ describe('NoticeOutboxTask', () => {
   let task: NoticeOutboxTask
   let runWithDistributedLock: jest.Mock
   let dispatchPending: jest.Mock
+  const lockTransaction = { id: 'lock-tx' }
 
   beforeEach(async () => {
     jest.clearAllMocks()
@@ -26,7 +27,7 @@ describe('NoticeOutboxTask', () => {
     runWithDistributedLock = jest
       .fn()
       .mockImplementation(async (_ns, _id, work) => {
-        await work()
+        await work(lockTransaction)
         return { ran: true }
       })
 
@@ -59,6 +60,8 @@ describe('NoticeOutboxTask', () => {
       expect.objectContaining({ containerId: 'notice-outbox' }),
     )
     expect(dispatchPending).toHaveBeenCalledTimes(1)
+    // The dispatcher opens a savepoint per row on the lock's transaction.
+    expect(dispatchPending).toHaveBeenCalledWith(lockTransaction)
   })
 
   it('does not dispatch when another container holds the lock', async () => {
