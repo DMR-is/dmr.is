@@ -4,6 +4,7 @@ import { BadRequestException, ForbiddenException } from '@nestjs/common'
 
 import { CLS_NAMESPACE } from '@dmr.is/constants'
 
+import { NoticeOutboxKindEnum } from '../notice-outbox/models/notice-outbox.enums'
 import {
   CommunicationStatusEnum,
   ReportProviderEnum,
@@ -40,20 +41,8 @@ describe('ReportWorkflowService', () => {
     notifyEdited: jest.fn(),
   }
 
-  const mailService = {
-    sendExternalCommentNotification: jest.fn(),
-    sendReportDenied: jest.fn(),
-    sendReportApproved: jest.fn(),
-    sendReportDeadlineReminder: jest.fn(),
-  }
-
-  const reportPdfService = {
-    generateReportPdf: jest.fn(),
-    generateImprovementPlanPdf: jest.fn(),
-  }
-
-  const companyFileService = {
-    archive: jest.fn(),
+  const noticeOutboxService = {
+    enqueue: jest.fn(),
   }
 
   const reportModel = {
@@ -105,10 +94,8 @@ describe('ReportWorkflowService', () => {
    * `mockRejectedValue`/`mockImplementation` anywhere in this file persists into
    * every later test, and the suite's result depends on declaration order.
    *
-   * `mailService` and `applicationSystemService` were the two that leaked: the
-   * deny test that rejects `notifyDenied`, and the approve tests that reject
-   * `sendReportApproved` or swap it for an ordering probe. Everything they can
-   * fail is reset to its happy value here.
+   * `applicationSystemService` leaked: the deny test that rejects
+   * `notifyDenied`. Everything it can fail is reset to its happy value here.
    */
   /*
    * ⚠️ **Fixed clock, because `decisionLanded` is per-attempt.**
@@ -121,10 +108,8 @@ describe('ReportWorkflowService', () => {
    * `now` is unknowable from here, so the clock is fixed and the seeds use
    * `APPROVED_AT`.
    *
-   * Deliberately mid-day: the archive test needs `approvedAt` to differ from the
-   * wall clock at archive time to keep its `new Date()` mutant dead, and it gets
-   * that by advancing the clock across midnight from inside a render mock — which
-   * is what a render taking seconds near midnight really does.
+   * Deliberately mid-day, so nothing here depends on which calendar date the
+   * clock lands on.
    */
   const APPROVED_AT = new Date('2026-08-31T10:00:00.000Z')
 
@@ -136,22 +121,7 @@ describe('ReportWorkflowService', () => {
     jest.clearAllMocks()
     jest.useFakeTimers({ doNotFake: ['nextTick', 'queueMicrotask'] })
     jest.setSystemTime(APPROVED_AT)
-    // A working renderer is the default so the existing approve cases exercise
-    // the happy path rather than silently falling into the notification's
-    // catch-and-log.
-    reportPdfService.generateReportPdf.mockResolvedValue({
-      pdf: Buffer.from('pdf-bytes'),
-      fileName: 'jafnrettisaaetlun-report-1.pdf',
-    })
-    // Null is the common case: a compliant company has no plan to attach.
-    reportPdfService.generateImprovementPlanPdf.mockResolvedValue(null)
-    companyFileService.archive.mockResolvedValue([])
-    // `true` is "delivered". A default of `undefined` would read as a failed
-    // send and skip the S3 archive in every test that does not set it.
-    mailService.sendReportApproved.mockResolvedValue(true)
-    mailService.sendReportDenied.mockResolvedValue(undefined)
-    mailService.sendExternalCommentNotification.mockResolvedValue(undefined)
-    mailService.sendReportDeadlineReminder.mockResolvedValue(undefined)
+    noticeOutboxService.enqueue.mockResolvedValue(undefined)
     applicationSystemService.notifyApproved.mockResolvedValue(undefined)
     applicationSystemService.notifyDenied.mockResolvedValue(undefined)
     applicationSystemService.notifyEdited.mockResolvedValue(undefined)
@@ -159,9 +129,7 @@ describe('ReportWorkflowService', () => {
       logger as never,
       reportEventService as never,
       applicationSystemService as never,
-      mailService as never,
-      reportPdfService as never,
-      companyFileService as never,
+      noticeOutboxService as never,
       reportModel as never,
       companyReportModel as never,
       companyModel as never,
@@ -544,45 +512,20 @@ describe('ReportWorkflowService', () => {
       )
     })
 
-    it('mails the company the trimmed denial reason', async () => {
+    // The notice commits with the denial; the reason is read back from the
+    // STATUS_CHANGED event when the dispatcher sends it.
+    it('queues the denial notice in the same transaction', async () => {
       reportModel.update.mockResolvedValue([1])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      const report = {
-        id: 'report-1',
-        type: ReportTypeEnum.EQUALITY,
-        contactEmail: 'contact@example.is',
-        companyAdminEmail: null,
-        // The after-commit gate re-reads `status` to confirm the commit landed.
-        status: ReportStatusEnum.DENIED,
-      }
-      reportModel.findOne.mockResolvedValue(report)
 
       await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
         denialReason: '  Vantar gögn  ',
       })
 
-      expect(mailService.sendReportDenied).toHaveBeenCalledWith(
-        report,
-        'Vantar gögn',
+      expect(noticeOutboxService.enqueue).toHaveBeenCalledWith(
+        NoticeOutboxKindEnum.REPORT_DENIED,
+        'report-1',
       )
-    })
-
-    // The denial is committed and event-logged before the mail runs, so a
-    // failure to even load the row must not surface to the reviewer.
-    it('still denies when the report cannot be loaded for the notification', async () => {
-      reportModel.update.mockResolvedValue([1])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      reportModel.findOne.mockResolvedValue(null)
-
-      await expect(
-        service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
-          denialReason: 'reason',
-        }),
-      ).resolves.toBeUndefined()
-
-      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
-      expect(reportEventService.emitStatusChanged).toHaveBeenCalled()
-      expect(logger.error).toHaveBeenCalled()
     })
 
     /*
@@ -611,7 +554,6 @@ describe('ReportWorkflowService', () => {
         denialReason: 'reason',
       })
 
-      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
       expect(applicationSystemService.notifyDenied).not.toHaveBeenCalled()
       expect(logger.error).toHaveBeenCalled()
     })
@@ -801,20 +743,13 @@ describe('ReportWorkflowService', () => {
       )
     })
 
-    it('mails the company the report PDF on an EQUALITY approval', async () => {
+    it('queues the approval notice in the same transaction', async () => {
       reportModel.update.mockResolvedValue([1])
-      const report = {
-        id: 'report-1',
+      reportModel.findOne.mockResolvedValue({
         type: ReportTypeEnum.EQUALITY,
-        validUntil: new Date('2029-08-31'),
-        contactEmail: 'contact@example.is',
-        companyAdminEmail: null,
-        // The after-commit gate re-reads both to confirm THIS attempt's commit
-        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
         approvedAt: APPROVED_AT,
-      }
-      reportModel.findOne.mockResolvedValue(report)
+      })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
@@ -822,59 +757,10 @@ describe('ReportWorkflowService', () => {
 
       await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
 
-      expect(reportPdfService.generateReportPdf).toHaveBeenCalledWith(
+      expect(noticeOutboxService.enqueue).toHaveBeenCalledWith(
+        NoticeOutboxKindEnum.REPORT_APPROVED,
         'report-1',
       )
-      expect(mailService.sendReportApproved).toHaveBeenCalledWith(report, [
-        {
-          filename: 'jafnrettisaaetlun-report-1.pdf',
-          content: Buffer.from('pdf-bytes'),
-          label: 'jafnréttisáætlun',
-        },
-      ])
-    })
-
-    it('attaches the úrbótaáætlun as a second document on a SALARY approval', async () => {
-      reportModel.update.mockResolvedValue([1])
-      const report = {
-        id: 'report-1',
-        type: ReportTypeEnum.SALARY,
-        validUntil: new Date('2029-08-31'),
-        contactEmail: 'contact@example.is',
-        companyAdminEmail: null,
-        // The after-commit gate re-reads both to confirm THIS attempt's commit
-        // landed — see APPROVED_AT.
-        status: ReportStatusEnum.APPROVED,
-        approvedAt: APPROVED_AT,
-      }
-      reportModel.findOne.mockResolvedValue(report)
-      reportModel.findAll.mockResolvedValue([])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
-      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
-      reportPdfService.generateReportPdf.mockResolvedValue({
-        pdf: Buffer.from('report-bytes'),
-        fileName: 'launagreining-report-1.pdf',
-      })
-      reportPdfService.generateImprovementPlanPdf.mockResolvedValue({
-        pdf: Buffer.from('plan-bytes'),
-        fileName: 'urbotaaetlun-report-1.pdf',
-      })
-
-      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
-
-      expect(mailService.sendReportApproved).toHaveBeenCalledWith(report, [
-        {
-          filename: 'launagreining-report-1.pdf',
-          content: Buffer.from('report-bytes'),
-          label: 'jafnlaunaúttekt',
-        },
-        {
-          filename: 'urbotaaetlun-report-1.pdf',
-          content: Buffer.from('plan-bytes'),
-          label: 'úrbótaáætlun',
-        },
-      ])
     })
 
     /**
@@ -894,8 +780,7 @@ describe('ReportWorkflowService', () => {
       ).rejects.toThrow(/no longer IN_REVIEW/)
 
       expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
-      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
-      expect(companyFileService.archive).not.toHaveBeenCalled()
+      expect(noticeOutboxService.enqueue).not.toHaveBeenCalled()
       expect(companyModel.update).not.toHaveBeenCalled()
     })
 
@@ -912,102 +797,7 @@ describe('ReportWorkflowService', () => {
       ).rejects.toThrow(/no longer IN_REVIEW/)
 
       expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
-      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
-    })
-
-    it('archives every attachment under the company national id', async () => {
-      // Deliberately 23:55 UTC: if the key ever went back to `new Date()` at
-      // archive time — after up to two renders — this would file under the next
-      // day, and the reconstructible-key argument that excuses having no
-      // `s3_key` column would break silently.
-      const approvedAt = new Date('2026-08-31T23:55:00.000Z')
-      jest.setSystemTime(approvedAt)
-      reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({
-        // The gate compares the `approvedAt` this attempt wrote; the clock was
-        // set to `approvedAt` above, so that is what `approve` writes.
-        status: ReportStatusEnum.APPROVED,
-        id: 'report-1',
-        type: ReportTypeEnum.SALARY,
-        companyNationalId: '5500000000',
-        contactEmail: 'contact@example.is',
-        approvedAt,
-      })
-      reportModel.findAll.mockResolvedValue([])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
-      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
-      /*
-       * ⚠️ The render CROSSES MIDNIGHT, which is what keeps this test's mutant
-       * dead. `approvedAt` is 23:55 and the archive runs at 00:02 the next day,
-       * so `new Date()` at archive time is a different calendar date — the exact
-       * regression the `approvedAt` key guards against, and the reason a report
-       * approved near midnight must not be filed under the following day.
-       */
-      reportPdfService.generateReportPdf.mockImplementation(async () => {
-        jest.setSystemTime(new Date('2026-09-01T00:02:00.000Z'))
-        return {
-          pdf: Buffer.from('report-bytes'),
-          fileName: 'launagreining-report-1.pdf',
-        }
-      })
-      reportPdfService.generateImprovementPlanPdf.mockResolvedValue({
-        pdf: Buffer.from('plan-bytes'),
-        fileName: 'urbotaaetlun-report-1.pdf',
-      })
-
-      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
-
-      expect(companyFileService.archive).toHaveBeenCalledWith([
-        expect.objectContaining({
-          companyNationalId: '5500000000',
-          filename: 'launagreining-report-1.pdf',
-          content: Buffer.from('report-bytes'),
-          issuedAt: approvedAt,
-        }),
-        expect.objectContaining({
-          companyNationalId: '5500000000',
-          filename: 'urbotaaetlun-report-1.pdf',
-          content: Buffer.from('plan-bytes'),
-          issuedAt: approvedAt,
-        }),
-      ])
-    })
-
-    /**
-     * ⚠️ Archiving runs AFTER the send. Uploading first would let an unset or
-     * misconfigured bucket stop the notification — the exact failure to avoid
-     * while the bucket is still being provisioned.
-     */
-    it('sends the mail before archiving', async () => {
-      const order: string[] = []
-      reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads both to confirm THIS attempt's commit
-        // landed — see APPROVED_AT.
-        status: ReportStatusEnum.APPROVED,
-        approvedAt: APPROVED_AT,
-        id: 'report-1',
-        type: ReportTypeEnum.EQUALITY,
-        companyNationalId: '5500000000',
-        contactEmail: 'contact@example.is',
-      })
-      reportModel.findAll.mockResolvedValue([])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
-      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
-      mailService.sendReportApproved.mockImplementation(async () => {
-        order.push('mail')
-        return true
-      })
-      companyFileService.archive.mockImplementation(async () => {
-        order.push('archive')
-        return []
-      })
-
-      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
-
-      expect(order).toEqual(['mail', 'archive'])
+      expect(noticeOutboxService.enqueue).not.toHaveBeenCalled()
     })
 
     // The prefix IS the retrieval path, so a document filed without a national
@@ -1041,8 +831,6 @@ describe('ReportWorkflowService', () => {
 
       await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
 
-      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
-      expect(companyFileService.archive).not.toHaveBeenCalled()
       expect(applicationSystemService.notifyApproved).not.toHaveBeenCalled()
       expect(logger.error).toHaveBeenCalled()
     })
@@ -1077,186 +865,6 @@ describe('ReportWorkflowService', () => {
           transaction: null,
         }),
       )
-    })
-
-    /*
-     * ⚠️ `archiveApprovalDocuments` documents itself as the Directorate's copy of
-     * what the company RECEIVED, so writing it after a failed send puts a false
-     * yes where someone will later look for proof of delivery. `sendReportApproved`
-     * returns the outcome for exactly this.
-     */
-    it('does not archive when the mail did not go out', async () => {
-      reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({
-        status: ReportStatusEnum.APPROVED,
-        id: 'report-1',
-        type: ReportTypeEnum.EQUALITY,
-        companyNationalId: '5500000000',
-        contactEmail: 'contact@example.is',
-        approvedAt: new Date('2026-08-31T10:00:00.000Z'),
-      })
-      reportModel.findAll.mockResolvedValue([])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
-      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
-      mailService.sendReportApproved.mockResolvedValue(false)
-
-      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
-
-      expect(mailService.sendReportApproved).toHaveBeenCalled()
-      expect(companyFileService.archive).not.toHaveBeenCalled()
-    })
-
-    it('skips archiving and warns when the report has no companyNationalId', async () => {
-      reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads both to confirm THIS attempt's commit
-        // landed — see APPROVED_AT.
-        status: ReportStatusEnum.APPROVED,
-        approvedAt: APPROVED_AT,
-        id: 'report-1',
-        type: ReportTypeEnum.EQUALITY,
-        companyNationalId: null,
-        contactEmail: 'contact@example.is',
-      })
-      reportModel.findAll.mockResolvedValue([])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
-      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
-
-      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
-
-      expect(companyFileService.archive).not.toHaveBeenCalled()
-      expect(mailService.sendReportApproved).toHaveBeenCalled()
-      expect(logger.warn).toHaveBeenCalled()
-    })
-
-    /**
-     * ⚠️ A failing plan render must not cost the company its report. It used to:
-     * the throw propagated past `sendReportApproved`, so an approval whose report
-     * PDF rendered perfectly sent nothing at all.
-     */
-    it('mails the report alone when the úrbótaáætlun render throws', async () => {
-      reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads both to confirm THIS attempt's commit
-        // landed — see APPROVED_AT.
-        status: ReportStatusEnum.APPROVED,
-        approvedAt: APPROVED_AT,
-        id: 'report-1',
-        type: ReportTypeEnum.SALARY,
-        companyNationalId: '5500000000',
-        contactEmail: 'contact@example.is',
-      })
-      reportModel.findAll.mockResolvedValue([])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
-      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
-      reportPdfService.generateReportPdf.mockResolvedValue({
-        pdf: Buffer.from('report-bytes'),
-        fileName: 'launagreining-report-1.pdf',
-      })
-      reportPdfService.generateImprovementPlanPdf.mockRejectedValue(
-        new Error('chromium died'),
-      )
-
-      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
-
-      expect(mailService.sendReportApproved).toHaveBeenCalledTimes(1)
-      const [, attachments] = mailService.sendReportApproved.mock.calls[0]
-      expect(attachments).toHaveLength(1)
-      expect(attachments[0].label).toBe('jafnlaunaúttekt')
-      expect(logger.error).toHaveBeenCalled()
-    })
-
-    // A compliant company has no plan; the salary report carries that finding.
-    it('sends only the report when there is no úrbótaáætlun', async () => {
-      reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads both to confirm THIS attempt's commit
-        // landed — see APPROVED_AT.
-        status: ReportStatusEnum.APPROVED,
-        approvedAt: APPROVED_AT,
-        id: 'report-1',
-        type: ReportTypeEnum.SALARY,
-        contactEmail: 'contact@example.is',
-      })
-      reportModel.findAll.mockResolvedValue([])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
-      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
-      reportPdfService.generateImprovementPlanPdf.mockResolvedValue(null)
-
-      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
-
-      const [, attachments] = mailService.sendReportApproved.mock.calls[0]
-      expect(attachments).toHaveLength(1)
-    })
-
-    // An equality report has no outlier groups, so the plan must not be asked
-    // for at all.
-    it('does not ask for an úrbótaáætlun on an EQUALITY approval', async () => {
-      reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads both to confirm THIS attempt's commit
-        // landed — see APPROVED_AT.
-        status: ReportStatusEnum.APPROVED,
-        approvedAt: APPROVED_AT,
-        id: 'report-1',
-        type: ReportTypeEnum.EQUALITY,
-        contactEmail: 'contact@example.is',
-      })
-      reportModel.findAll.mockResolvedValue([])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
-      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
-
-      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
-
-      expect(reportPdfService.generateImprovementPlanPdf).not.toHaveBeenCalled()
-    })
-
-    /*
-     * The approval, the due-date advance, the supersede and the audit event are
-     * all committed before the notification runs.
-     *
-     * ⚠️ And the NOTICE STILL GOES, without the attachment. The report render
-     * used to be the one unguarded one, so a Chromium failure propagated into
-     * `notifyCompanyApproved`'s catch and the company heard nothing at all about
-     * an approval that was already durable. The notice is the part that cannot be
-     * reconstructed later; the PDF can be downloaded from the report screen.
-     */
-    it('still approves and still notifies when the PDF cannot be rendered', async () => {
-      reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads both to confirm THIS attempt's commit
-        // landed — see APPROVED_AT.
-        status: ReportStatusEnum.APPROVED,
-        approvedAt: APPROVED_AT,
-        id: 'report-1',
-        type: ReportTypeEnum.EQUALITY,
-        contactEmail: 'contact@example.is',
-      })
-      reportModel.findAll.mockResolvedValue([])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
-      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
-      reportPdfService.generateReportPdf.mockRejectedValue(
-        new Error('chromium is missing'),
-      )
-
-      await expect(
-        service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW)),
-      ).resolves.toBeUndefined()
-
-      expect(mailService.sendReportApproved).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'report-1' }),
-        [],
-      )
-      // And nothing is archived, because nothing was produced to archive.
-      expect(companyFileService.archive).not.toHaveBeenCalled()
-      expect(reportEventService.emitStatusChanged).toHaveBeenCalled()
-      expect(logger.error).toHaveBeenCalled()
     })
 
     it('advances the parent company next_salary_report_due_at to the new validUntil on a SALARY approval', async () => {
@@ -1403,12 +1011,6 @@ describe('ReportWorkflowService', () => {
           status: ReportStatusEnum.APPROVED,
           approvedAt: APPROVED_AT,
         })
-        // company-notification lookup
-        .mockResolvedValueOnce({
-          id: 'report-1',
-          type: ReportTypeEnum.EQUALITY,
-          contactEmail: 'contact@example.is',
-        })
         // notify provider lookup
         .mockResolvedValueOnce({
           providerType: ReportProviderEnum.ISLAND_IS,
@@ -1530,9 +1132,8 @@ describe('ReportWorkflowService', () => {
       reportModel.findOne.mockResolvedValue({
         id: 'report-1',
         type: ReportTypeEnum.EQUALITY,
-        companyNationalId: '5500000000',
-        contactEmail: 'contact@example.is',
-        providerType: ReportProviderEnum.SYSTEM,
+        providerType: ReportProviderEnum.ISLAND_IS,
+        providerId: 'app-uuid-1',
         // The after-commit gate re-reads both to confirm THIS attempt's commit
         // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
@@ -1544,7 +1145,13 @@ describe('ReportWorkflowService', () => {
       companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
     }
 
-    it('does not mail on approve until the transaction commits', async () => {
+    /*
+     * The two halves of a decision's outbound work part ways here. The company's
+     * notice is an outbox row, so it is written INSIDE the transaction and
+     * commits or rolls back with the decision. The island.is callback is still
+     * irrevocable outbound work and still waits for the commit.
+     */
+    it('queues the approval notice inside the transaction and defers only the callback', async () => {
       seedApprovableReport()
       const fake = makeFakeTransaction()
 
@@ -1552,25 +1159,27 @@ describe('ReportWorkflowService', () => {
         service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW)),
       )
 
-      // The status write and the audit event have happened; the irrevocable part
-      // has not.
-      expect(reportEventService.emitStatusChanged).toHaveBeenCalled()
-      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
-      expect(reportPdfService.generateReportPdf).not.toHaveBeenCalled()
+      expect(noticeOutboxService.enqueue).toHaveBeenCalledWith(
+        NoticeOutboxKindEnum.REPORT_APPROVED,
+        'report-1',
+      )
+      expect(applicationSystemService.notifyApproved).not.toHaveBeenCalled()
       expect(fake.hookCount()).toBe(1)
 
       await fake.commit()
 
-      expect(mailService.sendReportApproved).toHaveBeenCalledTimes(1)
+      expect(applicationSystemService.notifyApproved).toHaveBeenCalledWith(
+        'app-uuid-1',
+      )
     })
 
-    it('does not mail on deny until the transaction commits', async () => {
+    it('queues the denial notice inside the transaction and defers only the callback', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
         id: 'report-1',
         type: ReportTypeEnum.SALARY,
-        contactEmail: 'contact@example.is',
-        providerType: ReportProviderEnum.SYSTEM,
+        providerType: ReportProviderEnum.ISLAND_IS,
+        providerId: 'app-uuid-1',
         // The after-commit gate re-reads `status` to confirm the commit landed.
         status: ReportStatusEnum.DENIED,
       })
@@ -1583,13 +1192,16 @@ describe('ReportWorkflowService', () => {
         }),
       )
 
-      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+      expect(noticeOutboxService.enqueue).toHaveBeenCalledWith(
+        NoticeOutboxKindEnum.REPORT_DENIED,
+        'report-1',
+      )
+      expect(applicationSystemService.notifyDenied).not.toHaveBeenCalled()
 
       await fake.commit()
 
-      expect(mailService.sendReportDenied).toHaveBeenCalledWith(
-        expect.anything(),
-        'Vantar gögn',
+      expect(applicationSystemService.notifyDenied).toHaveBeenCalledWith(
+        'app-uuid-1',
       )
     })
 
@@ -1599,12 +1211,12 @@ describe('ReportWorkflowService', () => {
      * `res.on('finish')` callback — so a rejection escaping the hook becomes an
      * unhandled rejection with no request left to fail.
      */
-    // A mail failure is caught by `notifyCompanyApproved` itself, a layer BELOW
-    // the hook — so this covers that path, not `runAfterCommit`'s catch-all. The
-    // test after it covers the catch-all.
-    it('survives a mail failure inside the deferred work', async () => {
+    // A callback failure is caught by `notifyApplicationSystem` itself, a layer
+    // BELOW the hook — so this covers that path, not `runAfterCommit`'s
+    // catch-all. The test after it covers the catch-all.
+    it('survives a callback failure inside the deferred work', async () => {
       seedApprovableReport()
-      mailService.sendReportApproved.mockRejectedValue(
+      applicationSystemService.notifyApproved.mockRejectedValue(
         new Error('everything is on fire'),
       )
       const fake = makeFakeTransaction()
@@ -1653,8 +1265,8 @@ describe('ReportWorkflowService', () => {
       )
     })
 
-    // A rolled-back transaction never runs its after-commit hooks, so a denial
-    // that did not persist cannot have told the company it did.
+    // A rolled-back transaction never runs its after-commit hooks, so an
+    // approval that did not persist cannot have told island.is it did.
     it('sends nothing if the transaction never commits', async () => {
       seedApprovableReport()
       const fake = makeFakeTransaction()
@@ -1663,9 +1275,9 @@ describe('ReportWorkflowService', () => {
         service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW)),
       )
 
-      // No commit() — this is the rollback path.
-      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
-      expect(companyFileService.archive).not.toHaveBeenCalled()
+      // No commit() — this is the rollback path. The outbox row was written
+      // inside the transaction, so it rolls back with it; only the callback
+      // is this wrapper's to hold back.
       expect(applicationSystemService.notifyApproved).not.toHaveBeenCalled()
     })
   })

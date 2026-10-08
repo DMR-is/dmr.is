@@ -15,11 +15,8 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IApplicationSystemService } from '../application-system/application-system.service.interface'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
-import { ICompanyFileService } from '../company-file/company-file.service.interface'
-import {
-  IDoeMailService,
-  ReportMailAttachment,
-} from '../mail/doe-mail.service.interface'
+import { NoticeOutboxKindEnum } from '../notice-outbox/models/notice-outbox.enums'
+import { INoticeOutboxService } from '../notice-outbox/notice-outbox.service.interface'
 import { computeReportValidUntil } from '../report/lib/day-boundaries'
 import {
   CommunicationStatusEnum,
@@ -34,10 +31,6 @@ import {
 } from '../report/types/report-resource-context'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportEventService } from '../report-event/report-event.service.interface'
-import {
-  IReportPdfService,
-  ReportPdfResult,
-} from '../report-pdf/report-pdf.service.interface'
 import { UserModel } from '../user/models/user.model'
 import { AssignReportDto } from './dto/assign-report.dto'
 import { DenyReportDto } from './dto/deny-report.dto'
@@ -53,12 +46,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
     private readonly reportEventService: IReportEventService,
     @Inject(IApplicationSystemService)
     private readonly applicationSystemService: IApplicationSystemService,
-    @Inject(IDoeMailService)
-    private readonly mailService: IDoeMailService,
-    @Inject(IReportPdfService)
-    private readonly reportPdfService: IReportPdfService,
-    @Inject(ICompanyFileService)
-    private readonly companyFileService: ICompanyFileService,
+    @Inject(INoticeOutboxService)
+    private readonly noticeOutboxService: INoticeOutboxService,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
@@ -173,8 +162,10 @@ export class ReportWorkflowService implements IReportWorkflowService {
   }
 
   /**
-   * Defers irrevocable outbound work — email, S3, island.is — until the
-   * request's transaction has actually committed.
+   * Defers irrevocable outbound work — the island.is application callback —
+   * until the request's transaction has actually committed. The company's own
+   * notice no longer goes through here: it is a notice-outbox row written in the
+   * transaction itself.
    *
    * **Why this is needed at all.** `Sequelize.useCLS` plus
    * `CLSMiddleware.forRoutes('*')` puts every query in one ambient transaction
@@ -189,10 +180,6 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * CLS `transaction` entry and releases the connection. So queries made from
    * here take a fresh pooled connection with no ambient transaction, rather than
    * joining a finished one.
-   *
-   * **Why it also fixes the latency.** `res.on('finish')` fires after the
-   * response is flushed, so the reviewer's approve returns before the PDFs
-   * render instead of waiting seconds for them.
    *
    * ⚠️ **The callback MUST NOT THROW.** Sequelize awaits these hooks inside
    * `commit()`'s `finally`, and `CLSMiddleware` calls `commit()` from an
@@ -210,10 +197,10 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * decision hooks call first. This wrapper cannot do it for them: it does not
    * know what its callback is claiming.
    *
-   * ⚠️ **Still no durable record.** If the process dies between commit and send,
-   * the report is approved and the company was never told, with nothing to retry
-   * from. Closing that needs the intent-to-send persisted inside the
-   * transaction; tracked separately.
+   * ⚠️ **Still no durable record for the callback.** If the process dies
+   * between commit and callback, island.is never hears of the decision. The
+   * company notice closed the same gap by moving to the notice outbox; the
+   * callback could follow it there.
    */
   private async runAfterCommit(
     label: string,
@@ -253,7 +240,9 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * (`node_modules/sequelize/lib/transaction.js:39-56`). `rollback()` has no such
    * block, which is why that path was never open; a failing commit was.
    *
-   * And it did not fail safe. The reload in `notifyCompanyApproved` selected no
+   * And it did not fail safe. The reload in `notifyCompanyApproved` (since moved
+   * to the notice outbox, which needs no gate: its row commits with the
+   * decision or not at all) selected no
    * `status`, so it found the row with its pre-transaction values and sent:
    * `formatDate(null)` renders an em dash rather than throwing, so the company
    * was told its report was approved, valid until `—`, for a row the database
@@ -263,9 +252,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * so a failing COMMIT delivers a 200 plus an unhandled rejection, never a 500.
    * There was no signal at all.
    *
-   * One read gates the whole hook rather than each reload, because
-   * `notifyApplicationSystem` has the same exposure and no reload of its own to
-   * add a column to.
+   * `notifyApplicationSystem`, the one thing still in these hooks, has the same
+   * exposure and no reload of its own to add a column to.
    *
    * ⚠️ **`transaction: null`, explicitly.** The usual argument is that
    * `commit()` runs `cleanup()` → `_clearCls()` before it awaits the hooks, so
@@ -283,14 +271,13 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * alone is a value every attempt shares. After a failed commit this read can
    * block up to the pool's 30s `acquire` timeout; if a second approval commits
    * inside that window, the first hook wakes to a row reading APPROVED and sends
-   * a second notice with a second set of PDFs and a second S3 object. Comparing
-   * the `approvedAt` this call wrote makes the gate per-attempt.
+   * a second island.is callback. Comparing the `approvedAt` this call wrote
+   * makes the gate per-attempt.
    *
    * `deny` has no equivalent stamp to compare — it writes only `status` and
    * `reviewerUserId` — so that path keeps the status-only gate. Its residual is
-   * narrower: a duplicate denial carries no attachments and writes no S3 object,
-   * costing one extra notice and one extra `notifyDenied`. Closing it needs a
-   * per-attempt column, which belongs with the durable record.
+   * one extra `notifyDenied`. Closing it needs a per-attempt column, which
+   * belongs with a durable record for the callback.
    */
   private async decisionLanded(
     reportId: string,
@@ -438,16 +425,22 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     await this.forceCloseCommunication(context.reportId)
 
-    // Both outbound calls are irrevocable, so neither may happen before the
-    // denial is durable. See `runAfterCommit`.
-    await this.runAfterCommit('denial notification', async () => {
+    // The company's notice commits with the denial or not at all. The
+    // dispatcher sends it.
+    await this.noticeOutboxService.enqueue(
+      NoticeOutboxKindEnum.REPORT_DENIED,
+      context.reportId,
+    )
+
+    // Irrevocable, so it may not happen before the denial is durable. See
+    // `runAfterCommit`.
+    await this.runAfterCommit('denial callback', async () => {
       if (
         !(await this.decisionLanded(context.reportId, ReportStatusEnum.DENIED))
       ) {
         return
       }
 
-      await this.notifyCompanyDenied(context.reportId, denialReason)
       await this.notifyApplicationSystem(
         context.reportId,
         ReportStatusEnum.DENIED,
@@ -545,10 +538,17 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     await this.forceCloseCommunication(context.reportId)
 
-    // Two PDF renders, an email, an S3 upload and the island.is callback — every
-    // one irrevocable, and none of them may happen until the approval is
-    // durable. See `runAfterCommit`.
-    await this.runAfterCommit('approval notification', async () => {
+    // The company's notice, with its PDFs and the S3 archive, commits with the
+    // approval or not at all. The dispatcher renders and sends it, so the
+    // reviewer's request no longer waits on Chromium.
+    await this.noticeOutboxService.enqueue(
+      NoticeOutboxKindEnum.REPORT_APPROVED,
+      context.reportId,
+    )
+
+    // Irrevocable, so it may not happen before the approval is durable. See
+    // `runAfterCommit`.
+    await this.runAfterCommit('approval callback', async () => {
       if (
         !(await this.decisionLanded(
           context.reportId,
@@ -559,7 +559,6 @@ export class ReportWorkflowService implements IReportWorkflowService {
         return
       }
 
-      await this.notifyCompanyApproved(context.reportId)
       await this.notifyApplicationSystem(
         context.reportId,
         ReportStatusEnum.APPROVED,
@@ -580,306 +579,6 @@ export class ReportWorkflowService implements IReportWorkflowService {
       { communicationStatus: CommunicationStatusEnum.CLOSED },
       { where: { id: reportId } },
     )
-  }
-
-  /**
-   * Tells the company its report was approved, with the approved document(s)
-   * attached.
-   *
-   * ⚠️ **This renders PDFs inside the reviewer's request.** `generateReportPdf`
-   * launches and closes a headless browser, so approving costs seconds, not
-   * milliseconds. That is accepted deliberately: there is no queue in this repo
-   * (only `@nestjs/schedule` + `AdvisoryLockService`), and a deferred send would
-   * need a pending-state column and a third task to carry it. If approval
-   * latency becomes a complaint, the fix is to share one browser across the two
-   * salary PDFs before it is to introduce a queue.
-   *
-   * Runs from `runAfterCommit`, which changes two things that used to be wrong.
-   *
-   * The approval, the due-date advance, the supersede and the audit event are all
-   * **committed** before this executes, so the mail can no longer be rolled back
-   * out from under the company. And the renders no longer hold the request's
-   * transaction or its pooled connection — the response has already been sent, so
-   * the seconds they cost are nobody's latency.
-   *
-   * Best-effort throughout: neither a render failure nor a send failure may
-   * surface, and per `runAfterCommit` nothing here may throw.
-   */
-  private async notifyCompanyApproved(reportId: string): Promise<void> {
-    try {
-      const report = await this.reportModel.findOne({
-        where: { id: reportId },
-        attributes: [
-          'id',
-          'type',
-          'validUntil',
-          'contactEmail',
-          'companyAdminEmail',
-          'companyNationalId',
-          // Dates the S3 key — see `archiveApprovalDocuments`.
-          'approvedAt',
-        ],
-      })
-
-      if (!report) {
-        this.logger.warn(
-          `Approved report ${reportId} vanished before its notification could be sent`,
-          { context: LOGGING_CONTEXT },
-        )
-        return
-      }
-
-      const attachments = await this.buildApprovalAttachments(
-        report.type,
-        reportId,
-      )
-
-      const delivered = await this.mailService.sendReportApproved(
-        report,
-        attachments,
-      )
-
-      /*
-       * ⚠️ **After the send, deliberately.** Archiving is secondary: the company
-       * having its documents is the point, keeping our own copy is the record.
-       * Uploading first would let an unset or misconfigured bucket stop the
-       * notification — the exact failure mode to avoid while the bucket is still
-       * being provisioned. `archive` never throws, so this cannot reach the catch
-       * below either.
-       *
-       * ⚠️ **And only when the send landed.** The archive is justified in
-       * `archiveApprovalDocuments` as the Directorate's copy of what the company
-       * received, so writing it after a failed send puts a false yes where
-       * someone will later go looking for proof of delivery. Nothing was
-       * received; there is nothing to keep a copy of. The failure is already
-       * logged by the mail service, at error.
-       */
-      if (!delivered) {
-        /*
-         * ⚠️ Logged here, not left to the mail service. `sendReportMail` logs at
-         * ERROR for a failed SES call but at WARN for the case that will actually
-         * dominate — a report with no usable contact or admin email — and an
-         * approval that produced neither a notice nor an archive must not be
-         * visible only at warn, where error-level alerting will not see it.
-         */
-        this.logger.error(
-          `Approved report ${reportId} was not delivered to the company — nothing archived either`,
-          { context: LOGGING_CONTEXT },
-        )
-        return
-      }
-
-      await this.archiveApprovalDocuments(report, attachments)
-    } catch (error) {
-      this.logger.error(
-        `Failed to notify company of approval for report ${reportId}`,
-        {
-          context: LOGGING_CONTEXT,
-          message: error instanceof Error ? error.message : String(error),
-        },
-      )
-    }
-  }
-
-  /**
-   * Keeps the Directorate's own copy of what was sent, under the company's
-   * prefix in the company-files bucket.
-   *
-   * The key is `company-files/{companyNationalId}/{YYYY-MM-DD}-{filename}` and
-   * is fully reconstructible from the report — national id, `approvedAt` and the
-   * deterministic file names — which is why nothing is written to the database
-   * yet. A `s3_key` column can follow if retrieval ever needs to not recompute
-   * it.
-   *
-   * ⚠️ Skipped when the report carries no `companyNationalId` (the column is
-   * nullable). The prefix IS the retrieval path, so a document filed without one
-   * is a document nobody will find; a warn is more useful than an unreachable
-   * object, and the company still received it by mail.
-   */
-  private async archiveApprovalDocuments(
-    report: Pick<ReportModel, 'id' | 'companyNationalId' | 'approvedAt'>,
-    attachments: ReportMailAttachment[],
-  ): Promise<void> {
-    if (attachments.length === 0) {
-      // Every render this report kind asks for failed — both for a salary
-      // report, the single one for an equality report. The notice went out
-      // without them, so there is nothing to keep a copy of.
-      return
-    }
-
-    const companyNationalId = report.companyNationalId
-
-    if (!companyNationalId) {
-      this.logger.warn(
-        `Not archiving approval documents for report ${report.id} — no companyNationalId to file them under`,
-        { context: LOGGING_CONTEXT },
-      )
-      return
-    }
-
-    /*
-     * ⚠️ `approvedAt`, not `new Date()`. The key is justified as "reconstructible
-     * from the report", and the only date on the report is `approvedAt`. Since
-     * archiving happens after up to two renders, a wall-clock stamp files an
-     * approval made near midnight under the following day — and the retrieval
-     * story that excuses having no `s3_key` column then breaks silently.
-     */
-    const issuedAt = report.approvedAt ?? new Date()
-
-    await this.companyFileService.archive(
-      attachments.map((attachment) => ({
-        companyNationalId,
-        filename: attachment.filename,
-        content: attachment.content,
-        issuedAt,
-      })),
-    )
-  }
-
-  /**
-   * The documents an approval mails, by report kind.
-   *
-   * An equality approval carries the report. A salary approval carries the
-   * report and the úrbótaáætlun as two documents, because the second is what the
-   * company committed to rather than what the Directorate assessed, and filing
-   * them together would bury it.
-   */
-  private async buildApprovalAttachments(
-    type: ReportTypeEnum,
-    reportId: string,
-  ): Promise<ReportMailAttachment[]> {
-    /*
-     * ⚠️ **Guarded, like the plan render below it.** This one used to be bare,
-     * which made it the one render that could still swallow the whole
-     * notification: a throw here propagated past `sendReportApproved` into
-     * `notifyCompanyApproved`'s catch, so a Chromium failure on a committed
-     * approval told the company nothing at all — not even that it had been
-     * approved.
-     *
-     * The notice is the part that cannot be reconstructed later; the documents
-     * can be downloaded from the report screen. So a render failure costs an
-     * attachment, never the notice. `buildReportApprovedHtml` already omits the
-     * "Skjalið er í viðhengi" line for an empty list, so the mail stays
-     * truthful with nothing attached.
-     */
-    let reportAttachment: ReportMailAttachment | null = null
-
-    try {
-      const { pdf, fileName } =
-        await this.reportPdfService.generateReportPdf(reportId)
-
-      reportAttachment = {
-        filename: fileName,
-        content: pdf,
-        label:
-          type === ReportTypeEnum.SALARY
-            ? 'jafnlaunaúttekt'
-            : 'jafnréttisáætlun',
-      }
-    } catch (error) {
-      this.logger.error(
-        `Failed to render the report PDF for approved report ${reportId} — sending the approval notice without it`,
-        {
-          context: LOGGING_CONTEXT,
-          message: error instanceof Error ? error.message : String(error),
-        },
-      )
-    }
-
-    if (type !== ReportTypeEnum.SALARY) {
-      return reportAttachment ? [reportAttachment] : []
-    }
-
-    /*
-     * ⚠️ **Its own try/catch, so a failed plan render still mails the report.**
-     *
-     * `null` means "no plan to state" and was handled; a THROW was not. Because
-     * this runs before `sendReportApproved`, a single failing plan render —
-     * chromium dying, a malformed group — took the whole notification with it:
-     * no mail, no report PDF, nothing to the company, on an approval where the
-     * report itself had rendered perfectly.
-     *
-     * The report is the part the company must have, which is this feature's own
-     * stated priority, so the plan degrades to absent rather than fatal. Logged
-     * at error because unlike `null` this IS a fault: the plan exists and could
-     * not be produced.
-     */
-    let plan: ReportPdfResult | null = null
-
-    try {
-      plan = await this.reportPdfService.generateImprovementPlanPdf(reportId)
-    } catch (error) {
-      this.logger.error(
-        `Failed to render the úrbótaáætlun for report ${reportId} — mailing the report alone`,
-        {
-          context: LOGGING_CONTEXT,
-          message: error instanceof Error ? error.message : String(error),
-        },
-      )
-    }
-
-    // Null for a compliant company with no outlier groups — there is no plan to
-    // state, and the salary report itself carries that as a finding.
-    const planAttachment: ReportMailAttachment | null = plan
-      ? { filename: plan.fileName, content: plan.pdf, label: 'úrbótaáætlun' }
-      : null
-
-    // Both entries are independently optional, so this is a filter rather than
-    // two return branches. Empty means every render failed: the notice still
-    // goes, without a "í viðhengi" line.
-    return [reportAttachment, planAttachment].filter(
-      (attachment): attachment is ReportMailAttachment => attachment !== null,
-    )
-  }
-
-  /**
-   * Tells the company its report was denied, with the reviewer's reason as the
-   * body.
-   *
-   * Loads its own narrow projection rather than taking a model from `deny`,
-   * which only ever issues an `update` and never holds an instance. The four
-   * attributes are exactly what the mail needs: `type` picks the subject noun,
-   * the two addresses resolve the recipient, `id` labels the log line.
-   *
-   * Runs from `runAfterCommit`, so the denial IS committed by the time this is
-   * called — the ambient CLS transaction has already been committed and its
-   * connection released. That is what makes emailing the company safe here: it
-   * cannot be rolled back underneath the mail.
-   *
-   * Still best-effort. The denial is durable, so a failed send must not surface
-   * to the reviewer; it is logged. And it must not throw at all — see the
-   * warning on `runAfterCommit`. `IDoeMailService.sendReportDenied` already swallows its
-   * own send errors; the try/catch here covers the load, so a missing or
-   * unreadable row cannot take the denial down with it either.
-   */
-  private async notifyCompanyDenied(
-    reportId: string,
-    denialReason: string,
-  ): Promise<void> {
-    try {
-      const report = await this.reportModel.findOne({
-        where: { id: reportId },
-        attributes: ['id', 'type', 'contactEmail', 'companyAdminEmail'],
-      })
-
-      if (!report) {
-        this.logger.warn(
-          `Denied report ${reportId} vanished before its notification could be sent`,
-          { context: LOGGING_CONTEXT },
-        )
-        return
-      }
-
-      await this.mailService.sendReportDenied(report, denialReason)
-    } catch (error) {
-      this.logger.error(
-        `Failed to notify company of denial for report ${reportId}`,
-        {
-          context: LOGGING_CONTEXT,
-          message: error instanceof Error ? error.message : String(error),
-        },
-      )
-    }
   }
 
   /**

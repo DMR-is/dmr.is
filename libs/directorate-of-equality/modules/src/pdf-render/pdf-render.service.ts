@@ -72,10 +72,9 @@ export class PdfRenderService implements IPdfRenderService {
        * `domcontentloaded` and the default all finish in ~1.5s and produce a
        * BYTE-IDENTICAL PDF. Waiting for network idle buys this renderer nothing.
        *
-       * The stake is higher than a failed download: `notifyCompanyApproved`
-       * renders inside the reviewer's approve request and swallows failures, so a
-       * hang here costs 30s per document and ends with the company never being
-       * told its report was approved.
+       * The stake is higher than a failed download: the notice dispatcher renders
+       * the approval's documents one at a time under its advisory lock, so a hang
+       * here costs 30s per document and holds up every notice queued behind it.
        *
        * The other PDF services in this repo (`legal-gazette-api`,
        * `official-journal`) still pass `networkidle0`. They work in the deployed

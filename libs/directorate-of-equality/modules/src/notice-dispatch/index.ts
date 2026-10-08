@@ -1,0 +1,11 @@
+/**
+ * Public surface of the `notice-dispatch` module. doe-api only: it renders
+ * PDFs and sends mail.
+ *
+ * Concrete `*.service.ts` classes are deliberately absent: consumers inject the
+ * `I*Service` symbol and import the core module, which is what binds the two.
+ * Exporting the class would let a caller bypass that indirection.
+ */
+
+export * from './notice-dispatch.core.module'
+export * from './notice-dispatch.service.interface'
