@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 
+import { PdfRenderCoreModule } from '../pdf-render/pdf-render.core.module'
 import { ReportCoreModule } from '../report/report.core.module'
 import { ReportStatisticsCoreModule } from '../report-statistics/report-statistics.core.module'
 import { ReportPdfService } from './report-pdf.service'
@@ -11,7 +12,7 @@ import { IReportPdfService } from './report-pdf.service.interface'
  * import this and reuse `IReportPdfService` without duplicating wiring.
  */
 @Module({
-  imports: [ReportCoreModule, ReportStatisticsCoreModule],
+  imports: [ReportCoreModule, ReportStatisticsCoreModule, PdfRenderCoreModule],
   providers: [
     {
       provide: IReportPdfService,
