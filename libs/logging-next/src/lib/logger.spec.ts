@@ -95,6 +95,64 @@ describe('NextLogger', () => {
       expect(parsed.key).toBe('value')
       expect(parsed.timestamp).toBeDefined()
     })
+    it('should log an Error with its name, message and stack', () => {
+      process.env['NODE_ENV'] = 'production'
+      process.env['LOG_LEVEL'] = 'info'
+      const logger = getLogger('test')
+      const cause = new Error('connect ECONNREFUSED')
+      const error = Object.assign(new TypeError('fetch failed'), {
+        cause,
+        code: 'ECONNREFUSED',
+      })
+      logger.error('Failure authenticating', { error })
+      const parsed = JSON.parse(consoleErrorSpy.mock.calls[0][0])
+      expect(parsed.error).toMatchObject({
+        name: 'TypeError',
+        message: 'fetch failed',
+        code: 'ECONNREFUSED',
+        cause: { name: 'Error', message: 'connect ECONNREFUSED' },
+      })
+      expect(parsed.error.stack).toContain('TypeError: fetch failed')
+    })
+    it('should log a cyclic cause chain without throwing', () => {
+      process.env['NODE_ENV'] = 'production'
+      process.env['LOG_LEVEL'] = 'info'
+      const logger = getLogger('test')
+      const first = new Error('first')
+      const second = Object.assign(new Error('second'), { cause: first })
+      Object.assign(first, { cause: second })
+
+      expect(() => logger.error('Failure', { error: first })).not.toThrow()
+      const parsed = JSON.parse(consoleErrorSpy.mock.calls[0][0])
+      expect(parsed.error.message).toBe('first')
+      expect(parsed.error.cause.message).toBe('second')
+      expect(parsed.error.cause.cause).toBe('[Circular]')
+    })
+    it('should still log the message when metadata cannot be serialised', () => {
+      process.env['NODE_ENV'] = 'production'
+      process.env['LOG_LEVEL'] = 'info'
+      const logger = getLogger('test')
+      const cyclic: Record<string, unknown> = {}
+      cyclic['self'] = cyclic
+
+      expect(() => logger.error('Failure', { cyclic })).not.toThrow()
+      const parsed = JSON.parse(consoleErrorSpy.mock.calls[0][0])
+      expect(parsed.message).toBe('Failure')
+      expect(parsed.logError).toBe('Log metadata could not be serialised')
+    })
+    it('should mask national ids in logged errors', () => {
+      process.env['NODE_ENV'] = 'production'
+      process.env['LOG_LEVEL'] = 'info'
+      const logger = getLogger('test')
+      logger.error('Lookup failed', {
+        error: new Error('request to /users/nationalId/0101302399 failed'),
+      })
+      const parsed = JSON.parse(consoleErrorSpy.mock.calls[0][0])
+      expect(parsed.error.message).toBe(
+        'request to /users/nationalId/--MASKED-- failed',
+      )
+      expect(parsed.error.stack).not.toContain('0101302399')
+    })
     it('should include metadata in log output', () => {
       process.env['NODE_ENV'] = 'development'
       process.env['LOG_LEVEL'] = 'info'

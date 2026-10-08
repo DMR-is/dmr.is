@@ -73,7 +73,7 @@ export const Header = ({
     }
 
     return options
-  }, [md])
+  }, [md, session?.user?.name])
 
   return (
     <Hidden print={true}>

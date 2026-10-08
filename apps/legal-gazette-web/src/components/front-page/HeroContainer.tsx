@@ -14,7 +14,7 @@ export const HeroContainer = () => {
       description="Umsýslukerfi Lögbirtingablaðsins, allt frá innsendingu til útgáfu. Ásamt yfirliti yfir útgefin mál. Lögbirtingablað hefur verið gefið út á prenti frá 2. Janúar 1908 en rafræn útgáfa hófst 1. júlí 2005."
       image={{
         src: '/assets/banner-image.svg',
-        alt: 'Image alt',
+        alt: '',
       }}
     >
       <GridRow>

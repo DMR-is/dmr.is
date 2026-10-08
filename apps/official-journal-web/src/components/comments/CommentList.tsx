@@ -24,15 +24,9 @@ export const CommentList = () => {
       ? currentCase.comments
       : sliceFirstAndLast(currentCase.comments, COMMENTS_TO_SHOW - 1)
 
-    return commentsToShow.sort((a, b) => {
-      if (orderAsc.toggle) {
-        return new Date(a.created).getTime() > new Date(b.created).getTime()
-          ? 1
-          : -1
-      }
-      return new Date(a.created).getTime() > new Date(b.created).getTime()
-        ? -1
-        : 1
+    return [...commentsToShow].sort((a, b) => {
+      const diff = new Date(a.created).getTime() - new Date(b.created).getTime()
+      return orderAsc.toggle ? diff : -diff
     })
   }, [currentCase.comments, expanded.toggle, orderAsc.toggle])
 

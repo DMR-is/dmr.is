@@ -13,6 +13,36 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { PagePaths } from '../../lib/constants'
 import * as styles from './ControlPanel.css'
 
+const MENU_ID = 'control-panel-menu'
+
+type PanelTriggerProps = {
+  isAdmin: boolean
+  expanded: boolean
+  onToggle: () => void
+  children: React.ReactNode
+}
+
+// Only editors get a menu, so everyone else sees a static label
+const PanelTrigger = ({
+  isAdmin,
+  expanded,
+  onToggle,
+  children,
+}: PanelTriggerProps) =>
+  isAdmin ? (
+    <button
+      type="button"
+      className={styles.controlPanel}
+      onClick={onToggle}
+      aria-expanded={expanded}
+      aria-controls={expanded ? MENU_ID : undefined}
+    >
+      {children}
+    </button>
+  ) : (
+    <div className={styles.controlPanel}>{children}</div>
+  )
+
 export const ControlPanel = () => {
   const { data } = useSession()
   const { formatMessage } = useFormatMessage()
@@ -22,12 +52,14 @@ export const ControlPanel = () => {
   const isAdmin = data?.user.role.slug === 'ritstjori'
 
   const paths = isAdmin
-    ? PagePaths.sort((a, b) => a.order - b.order).map((path) => {
-        return {
-          title: path.title,
-          href: path.pathname,
-        }
-      })
+    ? [...PagePaths]
+        .sort((a, b) => a.order - b.order)
+        .map((path) => {
+          return {
+            title: path.title,
+            href: path.pathname,
+          }
+        })
     : []
 
   useEffect(() => {
@@ -58,10 +90,10 @@ export const ControlPanel = () => {
 
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>
-      <button
-        className={styles.controlPanel}
-        onClick={() => setToggle((prev) => !prev)}
-        aria-expanded={toggle}
+      <PanelTrigger
+        isAdmin={isAdmin}
+        expanded={toggle}
+        onToggle={() => setToggle((prev) => !prev)}
       >
         <Box width="full">
           <Inline justifyContent="spaceBetween">
@@ -94,9 +126,10 @@ export const ControlPanel = () => {
             )}
           </Inline>
         </Box>
-      </button>
-      {toggle && (
+      </PanelTrigger>
+      {isAdmin && toggle && (
         <Box
+          id={MENU_ID}
           className={styles.dropdownMenu}
           background="white"
           borderColor="standard"

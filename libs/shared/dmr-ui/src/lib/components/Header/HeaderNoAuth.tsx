@@ -12,9 +12,13 @@ import { HeaderLogo } from './HeaderLogo'
 
 export type HeaderProps = {
   variant?: 'blue' | 'white'
+  title?: string
 }
 
-export const HeaderNoAuth = ({ variant = 'blue' }: HeaderProps) => {
+export const HeaderNoAuth = ({
+  variant = 'blue',
+  title = 'Lögbirtingablað',
+}: HeaderProps) => {
   return (
     <Hidden print={true}>
       <header className={styles.header({ variant })}>
@@ -39,7 +43,7 @@ export const HeaderNoAuth = ({ variant = 'blue' }: HeaderProps) => {
                     marginRight="auto"
                   >
                     <Box marginLeft={[2, 2, 3, 4]}>
-                      <Text fontWeight="medium">Lögbirtingablað</Text>
+                      <Text fontWeight="medium">{title}</Text>
                     </Box>
                   </Box>
                 </Inline>

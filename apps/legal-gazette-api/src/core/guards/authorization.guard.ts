@@ -4,6 +4,8 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
@@ -144,7 +146,10 @@ export class AuthorizationGuard implements CanActivate {
 
       return true
     } catch (error) {
-      // Admin check failed
+      // A lookup failure is an outage, not a refusal, so it must not become a 403
+      if (!(error instanceof ForbiddenException)) {
+        throw error
+      }
     }
 
     // Access denied - neither admin nor valid scope
@@ -215,11 +220,14 @@ export class AuthorizationGuard implements CanActivate {
 
       return dbUser
     } catch (error) {
-      logger.warn('Admin lookup failed', {
+      if (error instanceof NotFoundException) {
+        throw new ForbiddenException('Admin access required')
+      }
+      logger.error('Admin lookup failed', {
         nationalId: user.nationalId,
         error: error instanceof Error ? error.message : 'Unknown error',
       })
-      throw new ForbiddenException('Admin access required')
+      throw new InternalServerErrorException('Admin lookup failed')
     }
   }
 

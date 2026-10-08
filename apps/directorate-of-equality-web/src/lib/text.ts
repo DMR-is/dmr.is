@@ -1517,7 +1517,6 @@ export const headerText = {
   controlPanelTitle: 'Stjórnborð',
   userMenuLabel: 'Notandi',
   logout: 'Útskrá',
-  logoutButton: 'Skrá út',
 }
 
 export const sharedText = {

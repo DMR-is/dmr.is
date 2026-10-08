@@ -22,11 +22,13 @@ import { HeaderLogo } from './HeaderLogo'
 export type HeaderProps = {
   variant?: 'blue' | 'white'
   redirectTo?: string
+  title?: string
 }
 
 export const HeaderLogin = ({
   variant = 'blue',
   redirectTo = '/',
+  title = 'Lögbirtingablað',
 }: HeaderProps) => {
   const { md } = useBreakpoint()
   const [loading, setLoading] = useState(false)
@@ -54,7 +56,7 @@ export const HeaderLogin = ({
                     marginRight="auto"
                   >
                     <Box marginLeft={[2, 2, 3, 4]}>
-                      <Text fontWeight="medium">Lögbirtingablað</Text>
+                      <Text fontWeight="medium">{title}</Text>
                     </Box>
                   </Box>
                 </Inline>

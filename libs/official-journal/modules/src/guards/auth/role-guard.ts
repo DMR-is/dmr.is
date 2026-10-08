@@ -52,6 +52,10 @@ export class RoleGuard implements CanActivate {
       )
 
       if (!userLookup.result.ok) {
+        // Only a miss is a refusal; a failed lookup (e.g. the DB) is an outage
+        if (userLookup.result.error.code !== 404) {
+          throw new InternalServerErrorException('User role lookup failed')
+        }
         this.logger.warn('Could not find user', {
           error: userLookup.result.error,
           category: LOGGING_CATEGORY,

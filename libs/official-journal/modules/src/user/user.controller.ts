@@ -104,13 +104,11 @@ export class UserController {
   @ApiResponse({ status: 500, type: InternalServerErrorException })
   async getUserByNationalId(@Param('nationalId') nationalId: string) {
     this.logger.info('Getting user by nationalId', { nationalId })
-    const results = await this.userService.getUserByNationalId(nationalId)
-
-    if (!results.result.ok) {
-      throw new InternalServerErrorException('Could not get user')
-    }
-
-    return results.result.value
+    // Unwrap keeps the service's own status, so an unknown user is a 404
+    // (a refused sign-in in the web) rather than a 500 (an outage)
+    return ResultWrapper.unwrap(
+      await this.userService.getUserByNationalId(nationalId),
+    )
   }
 
   @Get('roles')

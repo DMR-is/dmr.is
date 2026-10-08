@@ -27,9 +27,7 @@ export const ReportDenialModal = ({
 }: ReportDenialModalProps) => {
   const [denialReason, setDenialReason] = React.useState('')
   const handleChange = (value: string | null) => {
-    if (value && value.length > 0 && denialReason !== value) {
-      setDenialReason(value)
-    }
+    setDenialReason(value ?? '')
   }
 
   return (
@@ -64,8 +62,8 @@ export const ReportDenialModal = ({
             fluid
             size="default"
             type="submit"
-            onClick={() => onSubmit(denialReason)}
-            disabled={denialReason.length === 0 || isLoading}
+            onClick={() => onSubmit(denialReason.trim())}
+            disabled={denialReason.trim().length === 0 || isLoading}
             loading={isLoading}
           >
             {t.submitButton}

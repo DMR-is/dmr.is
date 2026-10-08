@@ -1,4 +1,4 @@
-import { ExecutionContext } from '@nestjs/common'
+import { ExecutionContext, NotFoundException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
@@ -75,8 +75,8 @@ describe('AdvertPublicationController - Guard Authorization', () => {
           if (nationalId === ADMIN_NATIONAL_ID) {
             return Promise.resolve(createMockUserDto(nationalId))
           }
-          // All other users throw error (not admins)
-          throw new Error('User not found')
+          // All other users are not found, as findOneOrThrow does (not admins)
+          throw new NotFoundException('User not found')
         }),
       getEmployees: jest.fn(),
     }

@@ -20,7 +20,18 @@ export const serverFetcher = async <T>(
       error: null,
     }
   } catch (error) {
-    const err = await (error as Response).json()
+    // Not an HTTP response (e.g. a network failure): keep the original error
+    if (typeof (error as Response | undefined)?.json !== 'function') {
+      throw error
+    }
+
+    const response = error as Response
+    const err = await response.json().catch((parseError: unknown) => {
+      throw Object.assign(
+        new Error(`HTTP ${response.status} with a non-JSON body`),
+        { cause: parseError },
+      )
+    })
     return {
       data: null,
       error: err as ApiErrorDto,

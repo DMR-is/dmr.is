@@ -107,12 +107,16 @@ export const useAttachments = () => {
       })
       .then((blob) => {
         const fileName = key?.split('/').pop() || 'downloaded.pdf'
+        const objectUrl = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
-        link.href = window.URL.createObjectURL(blob)
+        link.href = objectUrl
         link.download = fileName
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
+        // Deferred: some engines resolve the blob URL asynchronously after
+        // `click()`, and revoking first cancels the download
+        setTimeout(() => window.URL.revokeObjectURL(objectUrl), 10_000)
         setLoading(false)
       })
       .catch(() => {
