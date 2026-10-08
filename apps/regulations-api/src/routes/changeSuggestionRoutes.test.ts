@@ -136,21 +136,18 @@ describe('POST /api/v1/change-suggestions report guard', () => {
       'wrong credentials',
       'Basic ' + Buffer.from(`${USER}:nope`).toString('base64'),
     ],
-  ])(
-    'rejects %s with 401 before parsing the body',
-    async (_, header) => {
-      const res = await app.inject({
-        method: 'POST',
-        url: '/api/v1/change-suggestions',
-        headers: {
-          'content-type': 'application/json',
-          ...(header ? { authorization: header } : {}),
-        },
-        payload: '{' + 'a'.repeat(CHANGE_SUGGESTION_BODY_LIMIT + 10),
-      })
+  ])('rejects %s with 401 before parsing the body', async (_, header) => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/change-suggestions',
+      headers: {
+        'content-type': 'application/json',
+        ...(header ? { authorization: header } : {}),
+      },
+      payload: '{' + 'a'.repeat(CHANGE_SUGGESTION_BODY_LIMIT + 10),
+    })
 
-      expect(res.statusCode).toBe(401)
-      expect(createChangeSuggestion).not.toHaveBeenCalled()
-    },
-  )
+    expect(res.statusCode).toBe(401)
+    expect(createChangeSuggestion).not.toHaveBeenCalled()
+  })
 })
