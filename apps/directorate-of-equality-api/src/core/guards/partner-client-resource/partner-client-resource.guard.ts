@@ -15,6 +15,11 @@ import {
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import {
+  assertCompanyToken,
+  PARTNER_WEB_SCOPE,
+} from '../token-surface/token-surface'
+
 export type PartnerClientResourceRequest = {
   user?: DMRUser
   partnerClientContext?: PartnerClientDto
@@ -47,14 +52,19 @@ export class PartnerClientResourceGuard implements CanActivate {
     const request = context
       .switchToHttp()
       .getRequest<PartnerClientResourceRequest>()
-    const nationalId = request.user?.nationalId
+    const user = request.user
+    const nationalId = user?.nationalId
 
-    if (!nationalId) {
+    if (!user || !nationalId) {
       this.logger.error('Current user does not have a national ID', {
         context: LOGGING_CONTEXT,
       })
       throw new UnauthorizedException()
     }
+
+    // Vendor keys are managed only from partner-web, so the island.is
+    // application scope is not enough here.
+    assertCompanyToken(user, this.logger, LOGGING_CONTEXT, [PARTNER_WEB_SCOPE])
 
     const client =
       await this.partnerClientService.findLiveByNationalId(nationalId)
