@@ -49,8 +49,21 @@ const claimValues = (value: unknown): string[] => {
  */
 @Injectable()
 export class StaffTokenGuard implements CanActivate {
+  constructor() {
+    // Nest builds guards when it maps routes, so this puts a missing value in
+    // the boot logs. OJ containers do not run varlock, so nothing else checks
+    // the environment before the first staff request.
+    if (!process.env[STAFF_CLIENT_ID_VAR]?.trim()) {
+      logger.error(
+        `Missing required environment variable: ${STAFF_CLIENT_ID_VAR}`,
+      )
+    }
+  }
+
   canActivate(context: ExecutionContext): boolean {
-    const staffClientId = process.env[STAFF_CLIENT_ID_VAR]
+    // Trimmed: a stray newline in the stored value would otherwise refuse
+    // every staff member.
+    const staffClientId = process.env[STAFF_CLIENT_ID_VAR]?.trim()
 
     if (!staffClientId) {
       logger.error(

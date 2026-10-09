@@ -48,6 +48,18 @@ const partyIds = (
 ): string[] =>
   (parties ?? []).map((party) => (typeof party === 'string' ? party : party.id))
 
+/**
+ * A non-admin may manage an account only when every one of its parties is one
+ * of the caller's. An account with no parties belongs to no one, so only an
+ * admin may manage it.
+ */
+const canManagePartiesOf = (
+  targetPartyIds: string[],
+  callerPartyIds: string[],
+): boolean =>
+  targetPartyIds.length > 0 &&
+  targetPartyIds.every((id) => callerPartyIds.includes(id))
+
 @Injectable()
 export class UserService implements IUserService {
   constructor(
@@ -307,13 +319,15 @@ export class UserService implements IUserService {
       const hasUpdatePermission =
         userToUpdate.role.title !== UserRoleEnum.User && !touchesAdmin
       // The target must belong to the caller's parties, and so must any
-      // parties the caller assigns
+      // parties the caller assigns. An empty assignment is refused: it would
+      // orphan the account, which this same rule then locks the caller out of.
       const hasInvoledParty =
-        targetPartyIds.length > 0 &&
-        targetPartyIds.every((id) => currentUserPartyIds.includes(id)) &&
-        (body.involvedParties ?? []).every((id) =>
-          currentUserPartyIds.includes(id),
-        )
+        canManagePartiesOf(targetPartyIds, currentUserPartyIds) &&
+        (body.involvedParties === undefined ||
+          (body.involvedParties.length > 0 &&
+            body.involvedParties.every((id) =>
+              currentUserPartyIds.includes(id),
+            )))
 
       if (!hasUpdatePermission || !hasInvoledParty) {
         if (!hasUpdatePermission) {
@@ -421,8 +435,10 @@ export class UserService implements IUserService {
       const hasDeletePermission =
         userToDelete.role.title !== UserRoleEnum.User &&
         userToDelete.role.title !== UserRoleEnum.Admin
-      const hasInvoledParty = partyIds(userToDelete.involvedParties).some(
-        (id) => currentUserPartyIds.includes(id),
+      // The same rule as update: deleting is the more destructive of the two
+      const hasInvoledParty = canManagePartiesOf(
+        partyIds(userToDelete.involvedParties),
+        currentUserPartyIds,
       )
 
       if (!hasDeletePermission || !hasInvoledParty) {
@@ -621,9 +637,7 @@ export class UserService implements IUserService {
     query: GetUsersQuery,
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUsersResponse>> {
-    const involedPartyIds = currentUser.involvedParties.map(
-      (involvedParty) => involvedParty.id,
-    )
+    const involedPartyIds = partyIds(currentUser.involvedParties)
 
     const { limit, offset } = getLimitAndOffset({
       page: query.page,
