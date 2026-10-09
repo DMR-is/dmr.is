@@ -4,6 +4,11 @@ import {
   buildReportApprovedSubject,
 } from '../mail/templates/report-approved.template'
 import {
+  buildReportDeadlineReminderHtml,
+  buildReportDeadlineReminderSubject,
+  ReportDeadlineReminderInput,
+} from '../mail/templates/report-deadline-reminder.template'
+import {
   buildReportDeniedHtml,
   buildReportDeniedSubject,
 } from '../mail/templates/report-denied.template'
@@ -13,8 +18,9 @@ import { ReportModel } from '../report/models/report.model'
 /**
  * The letters a company receives in its island.is mailbox, one PDF each.
  *
- * The approved and denied letters carry the same text as their emails: the
- * body is the email's own HTML, so the two channels cannot drift. The
+ * The approved, denied and deadline-reminder letters carry the same text as
+ * their emails: the body is the email's own HTML, so the two channels cannot
+ * drift. The
  * submission receipt has no email to copy.
  *
  * TODO(Jafnréttisstofa): Úlfhildur to confirm the letter text, the receipt's
@@ -94,6 +100,24 @@ export const buildDeniedLetter = (
       companyName,
       date: deniedAt,
       body: buildReportDeniedHtml(report, denialReason),
+    }),
+  }
+}
+
+/** `sentAt` is the letter's date: the run that sends it. */
+export const buildDeadlineReminderLetter = (
+  input: ReportDeadlineReminderInput,
+  sentAt: Date,
+): NoticeLetter => {
+  const subject = buildReportDeadlineReminderSubject(input)
+
+  return {
+    subject,
+    html: letterDocument({
+      subject,
+      companyName: input.companyName,
+      date: sentAt,
+      body: buildReportDeadlineReminderHtml(input),
     }),
   }
 }

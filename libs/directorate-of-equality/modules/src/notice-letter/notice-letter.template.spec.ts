@@ -1,6 +1,8 @@
+import { CompanyReminderTierEnum } from '../company/models/company-event.model'
 import { ReportTypeEnum } from '../report/models/report.enums'
 import {
   buildApprovedLetter,
+  buildDeadlineReminderLetter,
   buildDeniedLetter,
   buildSubmittedLetter,
 } from './notice-letter.template'
@@ -63,5 +65,24 @@ describe('notice letters', () => {
       'Vantar &lt;script&gt;gögn&lt;/script&gt;<br/>og fleira',
     )
     expect(letter.html).not.toContain('<script>')
+  })
+
+  it('a deadline reminder carries the email’s text, dated the day it is sent', () => {
+    const letter = buildDeadlineReminderLetter(
+      {
+        companyName: COMPANY,
+        reportType: ReportTypeEnum.SALARY,
+        tier: CompanyReminderTierEnum.TWO_WEEKS,
+        dueDate: new Date('2026-10-20T00:00:00.000Z'),
+      },
+      DATE,
+    )
+
+    expect(letter.subject).toBe(
+      'Áminning: skilafrestur jafnlaunaskýrslu — skiladagur 20.10.2026',
+    )
+    expect(letter.html).toContain('<p class="letter__date">08.10.2026</p>')
+    expect(letter.html).toContain('Skilafrestur er innan tveggja vikna.')
+    expect(letter.html).not.toContain(COMPANY)
   })
 })
