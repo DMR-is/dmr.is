@@ -23,6 +23,9 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 
 import { CaseController } from './case.controller'
+
+import { Client } from '@opensearch-project/opensearch'
+
 // mock sequelize models
 describe('CaseController', () => {
   let caseService: ICaseService
@@ -71,6 +74,10 @@ describe('CaseController', () => {
         {
           provide: Sequelize,
           useValue: jest.fn(),
+        },
+        {
+          provide: Client,
+          useValue: null,
         },
         {
           provide: ICaseService,
@@ -179,6 +186,83 @@ describe('CaseController', () => {
       expect(createSpy).toHaveBeenCalled()
     })
   })
+  describe('searchAdverts', () => {
+    const logger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    }
+    const controllerWith = (
+      journalService: Partial<IJournalService>,
+      openSearch: Partial<Client> | null,
+    ) =>
+      new CaseController(
+        {} as ICaseService,
+        {} as IPriceService,
+        journalService as IJournalService,
+        {} as ICommentServiceV2,
+        logger as never,
+        openSearch as Client | null,
+      )
+
+    it('searches OpenSearch when a cluster is configured', async () => {
+      const search = jest.fn().mockResolvedValue({
+        body: {
+          hits: {
+            total: { value: 1 },
+            hits: [{ _id: 'advert-1', _score: 3, _source: { title: 'T' } }],
+          },
+        },
+      })
+      const getAdverts = jest.fn()
+      const controller = controllerWith({ getAdverts }, { search } as never)
+
+      const result = await controller.searchAdverts({ search: '1053/2026' })
+
+      expect(getAdverts).not.toHaveBeenCalled()
+      expect(search).toHaveBeenCalledTimes(1)
+      expect(result.adverts).toEqual([
+        { id: 'advert-1', score: 3, title: 'T', highlight: undefined },
+      ])
+      expect(result.paging.totalItems).toBe(1)
+    })
+
+    it('falls back to the database search, trimmed to the lean shape', async () => {
+      const paging = {
+        page: 1,
+        pageSize: 20,
+        totalItems: 1,
+        totalPages: 1,
+        nextPage: null,
+        previousPage: null,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      }
+      const getAdverts = jest.fn().mockResolvedValue(
+        ResultWrapper.ok({
+          adverts: [
+            {
+              id: 'advert-1',
+              title: 'T',
+              subject: 'S',
+              document: { html: '<p>Meginmál</p>', isLegacy: false },
+            },
+          ],
+          paging,
+        }),
+      )
+      const controller = controllerWith({ getAdverts }, null)
+
+      const result = await controller.searchAdverts({ search: 'skipulag' })
+
+      expect(getAdverts).toHaveBeenCalledWith({ search: 'skipulag' })
+      expect(result.paging).toBe(paging)
+      expect(result.adverts[0]).toMatchObject({ id: 'advert-1', title: 'T' })
+      expect(result.adverts[0]).not.toHaveProperty('document')
+    })
+  })
+
   describe('deleteComment', () => {
     it('should delete a comment', async () => {
       jest

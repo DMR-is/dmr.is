@@ -7,7 +7,7 @@ import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
-import { PostApplicationBody } from '@dmr.is/shared-dto'
+import { CaseStatusEnum, PostApplicationBody } from '@dmr.is/shared-dto'
 import { IAWSService } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -71,6 +71,8 @@ describe('CaseService', () => {
   let pdfService: IPdfService
   let sequelize: Sequelize
   let runner: IReindexRunnerService
+  let utilityService: IUtilityService
+  let casePublishedAdvertsModel: typeof CasePublishedAdvertsModel
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       imports: [LoggingModule],
@@ -291,6 +293,10 @@ describe('CaseService', () => {
       getModelToken(CaseCategoriesModel),
     )
     sequelize = app.get<Sequelize>(Sequelize)
+    utilityService = app.get<IUtilityService>(IUtilityService)
+    casePublishedAdvertsModel = app.get(
+      getModelToken(CasePublishedAdvertsModel),
+    )
   })
   describe('create', () => {
     const body = { applicationId: '123' } as PostApplicationBody
@@ -410,6 +416,97 @@ describe('CaseService', () => {
       } as never)
 
       await expect(runAfterCommit()).resolves.toBeDefined()
+    })
+  })
+
+  describe('updateCaseStatus (unpublish)', () => {
+    const advertId = 'advert-1'
+    const currentUser = { id: 'user-1' } as never
+
+    let updateItemInIndex: jest.SpyInstance
+    let afterCommitCallbacks: Array<() => unknown>
+
+    const runAfterCommit = async () => {
+      afterCommitCallbacks.forEach((cb) => cb())
+      // The hook starts the reindex without awaiting it; let it settle.
+      await new Promise((resolve) => setImmediate(resolve))
+    }
+
+    beforeEach(() => {
+      afterCommitCallbacks = []
+      jest.spyOn(sequelize, 'transaction').mockResolvedValue({
+        commit: jest.fn(),
+        rollback: jest.fn(),
+        afterCommit: (cb: () => unknown) => {
+          afterCommitCallbacks.push(cb)
+        },
+      } as never)
+      updateItemInIndex = jest
+        .spyOn(runner, 'updateItemInIndex')
+        .mockResolvedValue({ advertId, success: true })
+      Object.assign(caseUpdateService, {
+        updateCaseStatus: jest.fn().mockResolvedValue(ResultWrapper.ok()),
+      })
+      Object.assign(casePublishedAdvertsModel, {
+        findOne: jest.fn().mockResolvedValue({ advertId }),
+      })
+      Object.assign(utilityService, {
+        advertStatusLookup: jest
+          .fn()
+          .mockResolvedValue(ResultWrapper.ok({ id: 'status-revoked' })),
+      })
+      jest
+        .spyOn(journalService, 'updateAdvert')
+        .mockResolvedValue(ResultWrapper.ok({ advert: {} }) as never)
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('reindexes the revoked advert after the unpublish commits', async () => {
+      await caseService.updateCaseStatus(
+        'case-1',
+        { status: CaseStatusEnum.Unpublished } as never,
+        currentUser,
+      )
+
+      expect(updateItemInIndex).not.toHaveBeenCalled()
+      await runAfterCommit()
+      expect(updateItemInIndex).toHaveBeenCalledWith(advertId)
+    })
+
+    it('does not reindex for any other status change', async () => {
+      await caseService.updateCaseStatus(
+        'case-1',
+        { status: CaseStatusEnum.Published } as never,
+        currentUser,
+      )
+
+      await runAfterCommit()
+      expect(afterCommitCallbacks).toHaveLength(0)
+      expect(updateItemInIndex).not.toHaveBeenCalled()
+    })
+
+    it('logs and does not fail the unpublish when reindexing throws', async () => {
+      updateItemInIndex.mockRejectedValueOnce(new Error('opensearch down'))
+      const logError = jest.spyOn(
+        (caseService as unknown as { logger: { error: () => void } }).logger,
+        'error',
+      )
+
+      const result = await caseService.updateCaseStatus(
+        'case-1',
+        { status: CaseStatusEnum.Unpublished } as never,
+        currentUser,
+      )
+
+      expect(result.result.ok).toBe(true)
+      await runAfterCommit()
+      expect(logError).toHaveBeenCalledWith(
+        'Failed to reindex revoked advert',
+        expect.objectContaining({ advertId, caseId: 'case-1' }),
+      )
     })
   })
 })

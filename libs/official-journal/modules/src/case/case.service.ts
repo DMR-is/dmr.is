@@ -692,6 +692,28 @@ export class CaseService implements ICaseService {
       })
     }
 
+    // Keep the search index in step with the revoke. Without this the index
+    // went on listing the advert under its old status until a full reindex.
+    const advertId = casePublishedAdvert.advertId
+    const reindex = async () => {
+      try {
+        await this.runner.updateItemInIndex(advertId)
+      } catch (error) {
+        this.logger.error('Failed to reindex revoked advert', {
+          error,
+          advertId,
+          caseId,
+          category: LOGGING_CATEGORY,
+        })
+      }
+    }
+    // Not awaited: Sequelize awaits afterCommit hooks inside commit(), so an
+    // awaited hook would hold the unpublish response on OpenSearch. reindex()
+    // catches its own errors. @Transactional always supplies the transaction.
+    transaction?.afterCommit(() => {
+      void reindex()
+    })
+
     return ResultWrapper.ok()
   }
 

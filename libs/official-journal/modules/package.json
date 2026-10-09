@@ -4,7 +4,8 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./guards/auth": "./src/guards/auth/index.ts"
+    "./guards/auth": "./src/guards/auth/index.ts",
+    "./search/query": "./src/search/query/index.ts"
   },
   "peerDependencies": {
     "@nestjs/cache-manager": "3.0.1",
