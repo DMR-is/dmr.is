@@ -38,6 +38,16 @@ import { IUserService } from './user.service.interface'
 const LOGGING_CONTEXT = 'UserService'
 const LOGGING_CATEGORY = 'user-service'
 
+/**
+ * Involved-party ids of a user. `RoleGuard` replaces `currentUser.involvedParties`
+ * with an array of id strings, while a user loaded from the DB carries
+ * objects, so compare by id whichever shape arrives.
+ */
+const partyIds = (
+  parties: ReadonlyArray<string | { id: string }> | undefined,
+): string[] =>
+  (parties ?? []).map((party) => (typeof party === 'string' ? party : party.id))
+
 @Injectable()
 export class UserService implements IUserService {
   constructor(
@@ -60,9 +70,10 @@ export class UserService implements IUserService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetUserResponse>> {
     const isAdmin = currentUser.role.title === UserRoleEnum.Admin
+    const currentUserPartyIds = partyIds(currentUser.involvedParties)
     const involedPartyIds: string[] = isAdmin
       ? (body.involvedParties ?? [])
-      : currentUser.involvedParties.map((involvedParty) => involvedParty.id)
+      : currentUserPartyIds
 
     if (!isAdmin) {
       const role = await this.userRoleModel.findByPk(body.roleId, {
@@ -71,8 +82,8 @@ export class UserService implements IUserService {
 
       const hasPermission = role?.title !== UserRoleEnum.User
       const hasAnyInvolvedParties = involedPartyIds.length > 0
-      const hasInvolvedParties = currentUser.involvedParties.every(
-        (involvedParty) => involedPartyIds.includes(involvedParty.id),
+      const hasInvolvedParties = currentUserPartyIds.every((id) =>
+        involedPartyIds.includes(id),
       )
 
       if (!hasPermission) {
@@ -280,13 +291,29 @@ export class UserService implements IUserService {
     }
 
     if (!isAdmin) {
-      const hasUpdatePermission = userToUpdate.role.title !== UserRoleEnum.User
-      const hasInvoledParty = userToUpdate.involvedParties.every(
-        (involvedParty) =>
-          currentUser.involvedParties.find(
-            (userInvolvedParty) => userInvolvedParty.id === involvedParty.id,
-          ),
-      )
+      const currentUserPartyIds = partyIds(currentUser.involvedParties)
+      const targetPartyIds = partyIds(userToUpdate.involvedParties)
+
+      // Only an admin may touch an admin account or hand out the admin role
+      const newRole = body.roleId
+        ? await this.userRoleModel.findByPk(body.roleId, { transaction })
+        : null
+      const touchesAdmin =
+        userToUpdate.role.title === UserRoleEnum.Admin ||
+        (!!body.roleId &&
+          newRole?.title !== UserRoleEnum.Editor &&
+          newRole?.title !== UserRoleEnum.User)
+
+      const hasUpdatePermission =
+        userToUpdate.role.title !== UserRoleEnum.User && !touchesAdmin
+      // The target must belong to the caller's parties, and so must any
+      // parties the caller assigns
+      const hasInvoledParty =
+        targetPartyIds.length > 0 &&
+        targetPartyIds.every((id) => currentUserPartyIds.includes(id)) &&
+        (body.involvedParties ?? []).every((id) =>
+          currentUserPartyIds.includes(id),
+        )
 
       if (!hasUpdatePermission || !hasInvoledParty) {
         if (!hasUpdatePermission) {
@@ -390,12 +417,12 @@ export class UserService implements IUserService {
     }
 
     if (!isAdmin) {
-      const hasDeletePermission = userToDelete?.role.title !== UserRoleEnum.User
-      const hasInvoledParty = userToDelete?.involvedParties.some(
-        (involvedParty) =>
-          currentUser.involvedParties.find(
-            (userInvolvedParty) => userInvolvedParty.id === involvedParty.id,
-          ),
+      const currentUserPartyIds = partyIds(currentUser.involvedParties)
+      const hasDeletePermission =
+        userToDelete.role.title !== UserRoleEnum.User &&
+        userToDelete.role.title !== UserRoleEnum.Admin
+      const hasInvoledParty = partyIds(userToDelete.involvedParties).some(
+        (id) => currentUserPartyIds.includes(id),
       )
 
       if (!hasDeletePermission || !hasInvoledParty) {
