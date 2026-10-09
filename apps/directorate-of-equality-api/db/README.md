@@ -577,29 +577,29 @@ deleting the company must not quietly erase it.
 companies, also unprefixed); `doe_` is for service-level tables such as `doe_api_key` and
 `doe_partner_*`.
 
-| Column                  | Type                                                                                                     |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| `id`                    | `uuid` PK                                                                                                |
-| `company_id`            | `fk → company`                                                                                           |
-| `national_id`           | `text` (the recipient's kennitala as sent; pinned to `company_id` by the composite FK)                   |
-| `kind`                  | `mailbox_delivery_kind_enum` (`OVERDUE_NOTICE`/`FINES_PRECURSOR`)                                        |
-| `idempotency_key`       | `text` (unique — the caller's key; a repeat call resumes this row)                                       |
-| `subject`               | `text` (the document's title in One and in the mailbox)                                                  |
-| `status`                | `mailbox_delivery_status_enum` (`PENDING`/`CASE_CREATED`/`DOCUMENT_CREATED`/`SENT`/`FAILED`/`UNCERTAIN`) |
-| `in_flight_step`        | `mailbox_delivery_step_enum` (nullable — `CREATE_DOCUMENT`/`SEND_DOC_TO_ISLAND_IS` while in a call)      |
-| `one_case_number`       | `text` (nullable — One's human-facing case number)                                                       |
-| `one_case_item_id`      | `text` (nullable — the case CreateDocument files under)                                                  |
-| `one_document_item_id`  | `text` (nullable — the filed document)                                                                   |
-| `island_is_document_id` | `text` (nullable — may stay NULL on a SENT row: One can confirm a send without an `ItemID`)              |
-| `pdf_sha256`            | `text` (nullable — lowercase hex; both or neither with `pdf_size_bytes`)                                 |
-| `pdf_size_bytes`        | `integer` (nullable)                                                                                     |
-| `attempts`              | `integer` (default `0`; claims so far, capped by the service)                                            |
-| `last_attempt_at`       | `timestamptz` (nullable)                                                                                 |
-| `last_error`            | `text` (nullable — may echo recipient details; never surface unfiltered)                                 |
-| `last_error_number`     | `text` (nullable — loggable form only)                                                                   |
-| `lease_token`           | `uuid` (nullable — both or neither with `lease_expires_at`)                                              |
-| `lease_expires_at`      | `timestamptz` (nullable)                                                                                 |
-| `sent_at`               | `timestamptz` (nullable — set means One confirmed the send; the row is then SENT or UNCERTAIN)           |
+| Column                  | Type                                                                                                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                    | `uuid` PK                                                                                                                                                 |
+| `company_id`            | `fk → company`                                                                                                                                            |
+| `national_id`           | `text` (the recipient's kennitala as sent; pinned to `company_id` by the composite FK)                                                                    |
+| `kind`                  | `mailbox_delivery_kind_enum` (`OVERDUE_NOTICE`/`FINES_PRECURSOR`, and `SALARY_`/`EQUALITY_REPORT_` + `SUBMITTED`/`APPROVED`/`DENIED`/`DEADLINE_REMINDER`) |
+| `idempotency_key`       | `text` (unique — the caller's key; a repeat call resumes this row)                                                                                        |
+| `subject`               | `text` (the document's title in One and in the mailbox)                                                                                                   |
+| `status`                | `mailbox_delivery_status_enum` (`PENDING`/`CASE_CREATED`/`DOCUMENT_CREATED`/`SENT`/`FAILED`/`UNCERTAIN`)                                                  |
+| `in_flight_step`        | `mailbox_delivery_step_enum` (nullable — `CREATE_DOCUMENT`/`SEND_DOC_TO_ISLAND_IS` while in a call)                                                       |
+| `one_case_number`       | `text` (nullable — One's human-facing case number)                                                                                                        |
+| `one_case_item_id`      | `text` (nullable — the case CreateDocument files under)                                                                                                   |
+| `one_document_item_id`  | `text` (nullable — the filed document)                                                                                                                    |
+| `island_is_document_id` | `text` (nullable — may stay NULL on a SENT row: One can confirm a send without an `ItemID`)                                                               |
+| `pdf_sha256`            | `text` (nullable — lowercase hex; both or neither with `pdf_size_bytes`)                                                                                  |
+| `pdf_size_bytes`        | `integer` (nullable)                                                                                                                                      |
+| `attempts`              | `integer` (default `0`; claims so far, capped by the service)                                                                                             |
+| `last_attempt_at`       | `timestamptz` (nullable)                                                                                                                                  |
+| `last_error`            | `text` (nullable — may echo recipient details; never surface unfiltered)                                                                                  |
+| `last_error_number`     | `text` (nullable — loggable form only)                                                                                                                    |
+| `lease_token`           | `uuid` (nullable — both or neither with `lease_expires_at`)                                                                                               |
+| `lease_expires_at`      | `timestamptz` (nullable)                                                                                                                                  |
+| `sent_at`               | `timestamptz` (nullable — set means One confirmed the send; the row is then SENT or UNCERTAIN)                                                            |
 
 CHECK constraints keep a forward status from outrunning its ids (`CASE_CREATED` needs the
 case, `DOCUMENT_CREATED` the case and document, `SENT` those and `sent_at`), forbid a

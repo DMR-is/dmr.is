@@ -105,10 +105,9 @@ export type MailboxDeliveryUnsettledStatus = Exclude<
  * Gated by `ONESYSTEMS_ENABLED`: the OneSystems client itself is not, so this
  * service is where the kill switch lives.
  *
- * CreateCase is repeated after any failure on the assumption that One
- * finds-or-creates the case (TODO(OneSystems): unconfirmed). If it does not, a
- * retry leaves an orphan case in One, never a second send; a case id that
- * loses the race to be saved is logged.
+ * CreateCase is repeated after any failure: One finds-or-creates the case
+ * (OneSystems, 29 Sep 2026). A case id that loses the race to be saved is
+ * logged.
  */
 export interface IMailboxDeliveryService {
   deliverToMailbox(
