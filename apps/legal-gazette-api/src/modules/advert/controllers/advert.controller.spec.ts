@@ -15,6 +15,7 @@ const ADMIN_NATIONAL_ID = '1234567890'
 const PUBLIC_WEB_NATIONAL_ID = '0987654321'
 const APPLICATION_WEB_NATIONAL_ID = '1122334455'
 const RANDOM_NATIONAL_ID = '5566778899'
+const STAFF_CLIENT_ID = '@logbirtingablad.is/test-web'
 interface MockUser {
   nationalId?: string
   scope?: string
@@ -54,7 +55,8 @@ describe('AdvertController - Guard Authorization', () => {
     user: MockUser | null,
     methodName: keyof AdvertController,
   ): ExecutionContext => {
-    const mockRequest = { user }
+    // Every mock user is a legal-gazette-web token (token-surface.ts)
+    const mockRequest = { user: user && { aud: STAFF_CLIENT_ID, ...user } }
     return {
       switchToHttp: () => ({
         getRequest: () => mockRequest,
@@ -66,6 +68,7 @@ describe('AdvertController - Guard Authorization', () => {
     } as unknown as ExecutionContext
   }
   beforeEach(async () => {
+    process.env.LEGAL_GAZETTE_WEB_CLIENT_ID = STAFF_CLIENT_ID
     const mockUsersService = {
       getUserByNationalId: jest
         .fn()
@@ -375,5 +378,8 @@ describe('AdvertController - Guard Authorization', () => {
       const adminResult = await authorizationGuard.canActivate(context)
       expect(adminResult).toBe(true)
     })
+  })
+  afterAll(() => {
+    delete process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
   })
 })

@@ -16,6 +16,7 @@ import { IUsersService } from '../../modules/users/users.service.interface'
 import { UserContext } from '../context/user/user.context'
 import { ADMIN_KEY } from '../decorators/admin.decorator'
 import { SCOPES_KEY } from './scope-guards/scopes.decorator'
+import { assertStaffToken } from './token-surface/token-surface'
 
 const logger = getLogger('AuthorizationGuard')
 
@@ -38,6 +39,12 @@ const logger = getLogger('AuthorizationGuard')
  * - **OR logic for mixed access**: When both decorators present, scope check happens first (cheap), admin lookup only if scope check fails
  * - **Single guard in chain**: Simplifies controller guard configuration
  *
+ * ## Admin check
+ * The admin check first requires an id_token issued to legal-gazette-web
+ * (`aud` = `LEGAL_GAZETTE_WEB_CLIENT_ID`) with no `actor`, so a token from
+ * another IDS client or a delegated session never reaches the user lookup.
+ * See `token-surface.ts`.
+ *
  * ## Usage:
  *
  * @example
@@ -53,7 +60,7 @@ const logger = getLogger('AuthorizationGuard')
  * @Controller('public')
  * export class PublicController { ... }
  *
- * // Admin-only - requires user in UserModel table
+ * // Admin-only - requires a legal-gazette-web token and a user in UserModel table
  * @UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
  * @AdminAccess()
  * @Controller('admin')
@@ -201,8 +208,9 @@ export class AuthorizationGuard implements CanActivate {
   }
 
   /**
-   * Check if user exists in the UserModel table (admin check).
-   * Returns false on error or if user not found.
+   * Check that the token was issued to legal-gazette-web for the staff member
+   * themselves, then that they exist in the UserModel table (admin check).
+   * Throws ForbiddenException when either check fails.
    */
   private async checkAdminAccess(
     user: { nationalId?: string } | undefined,
@@ -211,6 +219,8 @@ export class AuthorizationGuard implements CanActivate {
       logger.debug('Admin check skipped: No nationalId in request')
       throw new ForbiddenException('Admin access required')
     }
+
+    assertStaffToken(user)
 
     try {
       const dbUser = await this.usersService.getUserByNationalId(

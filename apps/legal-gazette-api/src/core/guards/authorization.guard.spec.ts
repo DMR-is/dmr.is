@@ -16,16 +16,22 @@ import { AuthorizationGuard } from './authorization.guard'
 interface MockUser {
   nationalId?: string
   scope?: string
+  aud?: string
+  actor?: { nationalId: string }
 }
+const STAFF_CLIENT_ID = '@logbirtingablad.is/test-web'
 describe('AuthorizationGuard', () => {
   let guard: AuthorizationGuard
   let reflector: Reflector
   let usersService: jest.Mocked<IUsersService>
   // Helper to create mock ExecutionContext
+  // A user is a legal-gazette-web token unless the test says otherwise
   const createMockContext = (
     user: MockUser | null = null,
   ): ExecutionContext => {
-    const mockRequest = { user }
+    const mockRequest = {
+      user: user && !('aud' in user) ? { aud: STAFF_CLIENT_ID, ...user } : user,
+    }
     return {
       switchToHttp: () => ({
         getRequest: () => mockRequest,
@@ -46,6 +52,7 @@ describe('AuthorizationGuard', () => {
   // Error thrown when user is not found in database (findOneOrThrow)
   const userNotFoundError = new NotFoundException('User not found')
   beforeEach(async () => {
+    process.env.LEGAL_GAZETTE_WEB_CLIENT_ID = STAFF_CLIENT_ID
     const mockUsersService = {
       getUserByNationalId: jest.fn(),
       getEmployees: jest.fn(),
@@ -74,6 +81,7 @@ describe('AuthorizationGuard', () => {
     usersService = module.get(IUsersService)
   })
   afterEach(() => {
+    delete process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
     jest.clearAllMocks()
   })
   // ==========================================
@@ -557,6 +565,78 @@ describe('AuthorizationGuard', () => {
       })
       const result = await guard.canActivate(context)
       expect(result).toBe(false)
+    })
+  })
+  // ==========================================
+  // Staff token surface
+  // ==========================================
+  describe('Staff token surface on @AdminAccess()', () => {
+    const adminOnly = () =>
+      jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
+        if (key === ADMIN_KEY) return true
+        return undefined
+      })
+
+    it('should refuse a token issued to another client, without a lookup', async () => {
+      adminOnly()
+      const context = createMockContext({
+        nationalId: '1234567890',
+        aud: '@other.is/client',
+      })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('should refuse a token with no aud', async () => {
+      adminOnly()
+      const context = createMockContext({
+        nationalId: '1234567890',
+        aud: undefined,
+      })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+    })
+
+    it('should refuse a delegated session, even for a staff member', async () => {
+      adminOnly()
+      const context = createMockContext({
+        nationalId: '1234567890',
+        actor: { nationalId: '0987654321' },
+      })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('should fail closed with a 500 when LEGAL_GAZETTE_WEB_CLIENT_ID is unset', async () => {
+      adminOnly()
+      delete process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
+      const context = createMockContext({ nationalId: '1234567890' })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        InternalServerErrorException,
+      )
+    })
+
+    it('should still allow a scope match on a mixed route from another client', async () => {
+      jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
+        if (key === ADMIN_KEY) return true
+        if (key === SCOPES_KEY) return ['@logbirtingablad.is/lg-application-web']
+        return undefined
+      })
+      const context = createMockContext({
+        nationalId: '1234567890',
+        aud: '@logbirtingablad.is/application-web',
+        scope: '@logbirtingablad.is/lg-application-web',
+      })
+      await expect(guard.canActivate(context)).resolves.toBe(true)
     })
   })
 })
