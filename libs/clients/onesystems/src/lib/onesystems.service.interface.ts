@@ -57,26 +57,18 @@ export interface OneSystemsSendDocToIslandIsInput {
 
 export interface OneSystemsSendDocToIslandIsResult {
   /**
-   * The response `ItemID`, assumed to be the document's id as issued by
-   * island.is. `null` when One answered `Success: true` without one: the spec
-   * makes `ItemID` nullable, so `Success: true` alone counts as sent.
-   *
-   * TODO(OneSystems): what does SendDocToIslandIs put in `ItemID`? The spec
-   * does not say, so neither the assumption above nor when it is null is
-   * confirmed.
+   * The response `DocumentId`, which is the document's `ItemId` in One, the
+   * same id passed in as `documentItemId` (OneSystems, 9 Oct 2026). `null` when
+   * One answered `Success: true` without one: `Success: true` alone counts as
+   * sent.
    */
   islandIsDocumentId: string | null
 }
 
 export interface OneSystemsCloseCaseInput {
   /**
-   * `CaseID`.
-   *
-   * TODO(OneSystems): is `CaseID` the `CaseNumber` or the case `ItemID`? The
-   * connection guide calls it the "málanúmer (from CreateCase)", which could
-   * mean either of the two that `createCase` returns.
-   *
-   * WARNING: do not rely on this call until OneSystems has answered.
+   * `CaseID`: the case `ItemID` from `createCase` (`caseItemId`), not the
+   * `CaseNumber` (OneSystems, 29 Sep 2026).
    */
   caseId: string
   /** `StatusName`: the status to put the case in. Defaults to `Lokið`. */
@@ -113,11 +105,9 @@ export interface OneSystemsCloseCaseResult {
  */
 export interface IOneSystemsService {
   /**
-   * Finds the party's case that uses `caseType`, or creates one from the
-   * template. Repeating it with the same input returns the same case.
-   *
-   * TODO(OneSystems): does CreateCase find-or-create? The connection guide
-   * says so; the spec does not. If it does not, a repeat makes a second case.
+   * Finds the party's open case that uses `caseType` (by `IDNumber` +
+   * `CaseType`), or creates one from the template. Repeating it with the same
+   * input returns the same case (OneSystems, 29 Sep 2026).
    */
   createCase(
     input: OneSystemsCreateCaseInput,
@@ -130,19 +120,14 @@ export interface IOneSystemsService {
 
   /**
    * Publishes a document to the recipient's island.is digital mailbox. Not
-   * idempotent: a repeat may deliver the document twice. `Success: true`
-   * without an `ItemID` resolves with `islandIsDocumentId: null`.
+   * idempotent: One answers a repeat with "Færsla þegar skráð.". `Success:
+   * true` without a `DocumentId` resolves with `islandIsDocumentId: null`.
    */
   sendDocToIslandIs(
     input: OneSystemsSendDocToIslandIsInput,
   ): Promise<OneSystemsSendDocToIslandIsResult>
 
-  /**
-   * Sets a case's status, closing it with the default `Lokið` status.
-   *
-   * WARNING: it is not yet known whether `caseId` must be the case number or
-   * the case `ItemID`. See {@link OneSystemsCloseCaseInput.caseId}.
-   */
+  /** Sets a case's status, closing it with the default `Lokið` status. */
   closeCase(input: OneSystemsCloseCaseInput): Promise<OneSystemsCloseCaseResult>
 }
 

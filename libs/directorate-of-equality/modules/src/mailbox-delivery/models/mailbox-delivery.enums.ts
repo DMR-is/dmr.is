@@ -21,7 +21,7 @@ export enum MailboxDeliveryKindEnum {
  *   DOCUMENT_CREATED → the PDF is filed under that case (`one_document_item_id`).
  *   SENT             → One confirmed the send to island.is (`sent_at` set;
  *                      `island_is_document_id` too, unless One confirmed
- *                      without an `ItemID`).
+ *                      without a `DocumentId`).
  *   FAILED           → One clearly rejected a call. Safe to retry.
  *   UNCERTAIN        → a call's outcome is unknown: a timeout, a 5xx, a
  *                      `Success: false`, a success with no usable id, or a
