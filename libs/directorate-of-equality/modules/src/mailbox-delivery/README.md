@@ -4,9 +4,10 @@ Delivers a notice to a company's island.is Stafrænt pósthólf through
 Jafnréttisstofa's case system, One: CreateCase, then CreateDocument, then
 SendDocToIslandIs. Each delivery is one row in `mailbox_delivery`.
 
-Nothing calls this yet. Every notice kind is unconfigured (see
-`mailbox-delivery.kinds.ts`), so `deliverToMailbox` throws before it writes a
-row. It also does nothing unless `ONESYSTEMS_ENABLED` is `true`. That flag is
+Nothing calls this yet. Each report notice kind has a case template and empty
+classification strings (see `mailbox-delivery.kinds.ts`); `OVERDUE_NOTICE` and
+`FINES_PRECURSOR` have none, so `deliverToMailbox` throws for them before it
+writes a row. It also does nothing unless `ONESYSTEMS_ENABLED` is `true`. That flag is
 checked here, not in the OneSystems client: the client is not gated, so any new
 consumer of the client must check the flag itself.
 
@@ -64,18 +65,15 @@ numbers that OneSystems confirms are raised before anything is filed or sent go
 into `ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS` in the client, which makes them FAILED.
 That list is empty until OneSystems confirms it.
 
-CreateCase is retried after any failure, on the assumption that One
-finds-or-creates the case. The spec does not document this
-(TODO(OneSystems)). If the assumption is wrong, a retry leaves an orphan case in
-One. It never causes a second send. A case id that loses the race to be saved
-is logged (`discardedCaseItemId`).
+CreateCase is retried after any failure: One finds-or-creates the case by
+`IDNumber` + `CaseType` (OneSystems, 29 Sep 2026). A case id that loses the race
+to be saved is logged (`discardedCaseItemId`).
 
 A row is claimed at most `MAILBOX_DELIVERY_MAX_ATTEMPTS` (5) times. Every
 claim adds one to `attempts`. After that `deliverToMailbox` makes no call and
 returns the row's own status with `skipped: 'ATTEMPTS_EXHAUSTED'`, and logs an
 error with the `deliveryId` and `attempts`. Without the cap a permanent
-rejection would be retried on every call, and while find-or-create is
-unconfirmed each retry may leave another orphan case in One. See
+rejection would be retried on every call. See
 [Exhausted rows](#exhausted-rows). A row whose last claim died mid-call is still
 claimed once more, so it becomes UNCERTAIN as usual.
 
@@ -88,9 +86,6 @@ The PR that wires the first `deliverToMailbox` caller must also:
   [Exhausted rows](#exhausted-rows)). Both need a person, and nothing tells
   one today. The partial index `mailbox_delivery_status_idx`
   (`WHERE status <> 'SENT'`) serves both queries.
-- Get OneSystems to confirm that CreateCase finds-or-creates the case
-  (TODO(OneSystems)). If it does not, every retry of a FAILED row can leave an
-  orphan case in One.
 
 ## Exhausted rows
 
@@ -117,10 +112,8 @@ ORDER BY last_attempt_at;
 `5` is `MAILBOX_DELIVERY_MAX_ATTEMPTS`. As in the UNCERTAIN list, read
 `last_error` for one row at a time and do not paste it anywhere.
 
-Fix the cause first: a kind classification One rejects, a recipient One cannot
-find, an outage that lasted longer than five calls. CreateCase find-or-create
-is still TODO(OneSystems), so each attempt so far may have left a case in One;
-check One under the company for orphan cases if that matters. Then re-arm the
+Fix the cause first: a case template One does not know, a recipient One cannot
+find, an outage that lasted longer than five calls. Then re-arm the
 row, so the next call with **the same idempotency key** resumes it from its
 saved ids:
 
