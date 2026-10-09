@@ -9,13 +9,13 @@ import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IApplicationService } from '@dmr.is/ojoi-modules'
-import { RoleGuard } from '@dmr.is/ojoi-modules/guards/auth'
+import { RoleGuard, StaffTokenGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@UseGuards(TokenJwtAuthGuard, StaffTokenGuard, RoleGuard)
 @Roles(UserRoleEnum.Admin)
 @Controller({
   version: '1',

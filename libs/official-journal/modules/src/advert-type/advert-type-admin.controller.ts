@@ -32,13 +32,13 @@ import {
 } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
-import { RoleGuard } from '../guards/auth'
+import { RoleGuard, StaffTokenGuard } from '../guards/auth'
 import { IAdvertTypeService } from './advert-type.service.interface'
 import { AdvertTypeError } from './advert-type-error'
 
 @Controller({ path: 'advert-types', version: '1' })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@UseGuards(TokenJwtAuthGuard, StaffTokenGuard, RoleGuard)
 @Roles(UserRoleEnum.Admin)
 export class AdvertTypeAdminController {
   constructor(

@@ -10,7 +10,7 @@ import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
-import { RoleGuard } from '../guards/auth'
+import { RoleGuard, StaffTokenGuard } from '../guards/auth'
 import {
   GenerateMonthlyIssuesQueryDto,
   GetMonthlyIssuesQueryDto,
@@ -44,7 +44,7 @@ export class IssuesController {
   @ApiOperation({ operationId: 'generateMonthlyIssues' })
   @ApiNoContentResponse({ description: 'Monthly issues generation started' })
   @ApiBearerAuth()
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @UseGuards(TokenJwtAuthGuard, StaffTokenGuard, RoleGuard)
   @Roles(UserRoleEnum.Admin)
   async generateMonthlyIssues(@Query() query: GenerateMonthlyIssuesQueryDto) {
     return this.issuesService.generateMonthlyIssues(
