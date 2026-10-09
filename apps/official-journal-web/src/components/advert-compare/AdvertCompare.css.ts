@@ -19,6 +19,12 @@ export const results = style({
   overflowY: 'auto',
 })
 
+// Results from an earlier query while the next one loads.
+export const staleResults = style({
+  opacity: 0.5,
+  transition: 'opacity 150ms',
+})
+
 export const resultButton = style({
   width: '100%',
   textAlign: 'left',
