@@ -18,6 +18,17 @@ import {
   looksLikeOneAddress,
   MailSendError,
 } from '@dmr.is/doe-modules/mail'
+import {
+  buildMailboxDeliveryIdempotencyKey,
+  IMailboxDeliveryService,
+  isMailboxDeliveryEnabled,
+  MailboxDeliveryKindEnum,
+} from '@dmr.is/doe-modules/mailbox-delivery'
+import {
+  buildDeadlineReminderLetter,
+  noticeLetterStyles,
+} from '@dmr.is/doe-modules/notice-letter'
+import { IPdfRenderService } from '@dmr.is/doe-modules/pdf-render'
 import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -56,6 +67,8 @@ type DeadlineKind = {
   sentEventType: CompanyDeadlineReminderEventType
   /** Event recorded when a reminder is due but no email is on file. */
   noEmailEventType: CompanyDeadlineReminderEventType
+  /** The mailbox kind, when the reminder goes through One. */
+  mailboxKind: MailboxDeliveryKindEnum
 }
 
 const DEADLINE_KINDS: DeadlineKind[] = [
@@ -66,6 +79,7 @@ const DEADLINE_KINDS: DeadlineKind[] = [
     sentEventType: CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
     noEmailEventType:
       CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+    mailboxKind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
   },
   {
     dueField: 'nextSalaryReportDueAt',
@@ -74,6 +88,7 @@ const DEADLINE_KINDS: DeadlineKind[] = [
     sentEventType: CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT,
     noEmailEventType:
       CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+    mailboxKind: MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
   },
 ]
 
@@ -139,8 +154,7 @@ const addDays = (date: Date, days: number): Date => {
 
 @Injectable()
 export class ReportDeadlineReminderService
-  implements IReportDeadlineReminderService
-{
+  implements IReportDeadlineReminderService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CompanyModel)
@@ -149,6 +163,10 @@ export class ReportDeadlineReminderService
     private readonly companyEventService: ICompanyEventService,
     @Inject(IDoeMailService)
     private readonly mailService: IDoeMailService,
+    @Inject(IMailboxDeliveryService)
+    private readonly mailboxDeliveryService: IMailboxDeliveryService,
+    @Inject(IPdfRenderService)
+    private readonly pdfRenderService: IPdfRenderService,
   ) {}
 
   async run(): Promise<void> {
@@ -197,6 +215,11 @@ export class ReportDeadlineReminderService
     }
 
     for (const company of companies) {
+      if (isMailboxDeliveryEnabled()) {
+        await this.remindCompanyByMailbox(company, kind, tier.tier, now)
+        continue
+      }
+
       /*
        * ⚠️ **Per-company, so one bad recipient cannot abort the run.**
        *
@@ -322,6 +345,108 @@ export class ReportDeadlineReminderService
   }
 
   /**
+   * Delivers the reminder to the company's island.is mailbox through One, in
+   * place of the email. The mailbox is addressed by kennitala, so the company's
+   * email address plays no part and no NO_EMAIL event is written.
+   *
+   * The SENT event is written only when One confirms the send. The delivery's
+   * key (kind, company, tier, due date) is what stops a second send: an
+   * UNCERTAIN or exhausted delivery keeps answering the same on every later
+   * run, without calling One, until a person settles it.
+   *
+   * ⚠️ **A delivery failure is caught here, per company.** It is not a
+   * database fault on the lock's transaction: `deliverToMailbox` records its own
+   * state outside every ambient transaction (`transaction: null`) and rethrows
+   * only after recording it. Letting it out would abort the run at the first
+   * company One rejects, every day, and withhold every reminder behind it. The
+   * SENT event insert stays outside the catch, so a fault there still aborts
+   * the run as `processTier` requires.
+   */
+  private async remindCompanyByMailbox(
+    company: CompanyModel,
+    kind: DeadlineKind,
+    tier: CompanyReminderTierEnum,
+    now: Date,
+  ): Promise<void> {
+    const dueDate = company[kind.dueField]
+    if (!dueDate) return
+
+    const dueDateIso = dueDate.toISOString()
+
+    const alreadySent = await this.companyEventService.hasDeadlineReminderEvent(
+      company.id,
+      kind.sentEventType,
+      tier,
+      dueDateIso,
+    )
+    if (alreadySent) return
+
+    const letter = buildDeadlineReminderLetter(
+      {
+        companyName: company.name,
+        reportType: kind.reportType,
+        tier,
+        dueDate,
+      },
+      now,
+    )
+    const meta = {
+      context: LOGGING_CONTEXT,
+      companyId: company.id,
+      reportType: kind.reportType,
+      tier,
+    }
+
+    let sent: boolean
+    try {
+      const result = await this.mailboxDeliveryService.deliverToMailbox({
+        idempotencyKey: buildMailboxDeliveryIdempotencyKey({
+          kind: kind.mailboxKind,
+          companyId: company.id,
+          discriminator: `${kind.reportType}-${tier}-${dueDateIso
+            .slice(0, 10)
+            .replace(/-/g, '')}`,
+        }),
+        kind: kind.mailboxKind,
+        companyId: company.id,
+        subject: letter.subject,
+        pdf: () =>
+          this.pdfRenderService.renderHtml(letter.html, noticeLetterStyles),
+      })
+
+      sent = result.status === 'SENT'
+      if (!sent) {
+        this.logger.error(
+          `${kind.reportType} ${tier} reminder for company ${company.id} was not delivered to the mailbox: ${result.status}`,
+          {
+            ...meta,
+            deliveryId: 'deliveryId' in result ? result.deliveryId : undefined,
+          },
+        )
+      }
+    } catch (error) {
+      this.logger.error(
+        `Could not deliver company ${company.id} its ${kind.reportType} ${tier} reminder to the mailbox — continuing with the rest of the batch`,
+        {
+          ...meta,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
+      return
+    }
+
+    if (!sent) return
+
+    await this.companyEventService.emitDeadlineReminderEvent(
+      company.id,
+      company.status,
+      kind.sentEventType,
+      tier,
+      dueDateIso,
+    )
+  }
+
+  /**
    * Records a NO_EMAIL event on the company timeline so the gap is visible to
    * admins. Deduped per (tier, due date) — same key as the sent event — so a
    * company with no usable email gets one event per tier per cycle, not one per
@@ -336,13 +461,12 @@ export class ReportDeadlineReminderService
     tier: CompanyReminderTierEnum,
     dueDateIso: string,
   ): Promise<void> {
-    const alreadyFlagged =
-      await this.companyEventService.hasDeadlineReminderEvent(
-        company.id,
-        kind.noEmailEventType,
-        tier,
-        dueDateIso,
-      )
+    const alreadyFlagged = await this.companyEventService.hasDeadlineReminderEvent(
+      company.id,
+      kind.noEmailEventType,
+      tier,
+      dueDateIso,
+    )
     if (alreadyFlagged) return
 
     this.logger.warn(
