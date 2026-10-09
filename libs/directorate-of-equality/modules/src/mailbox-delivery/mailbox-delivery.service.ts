@@ -41,6 +41,7 @@ import {
   DeliverToMailboxInput,
   DeliverToMailboxResult,
   IMailboxDeliveryService,
+  isMailboxDeliveryEnabled,
   type MailboxDeliveryUnsettledStatus,
 } from './mailbox-delivery.service.interface'
 
@@ -199,7 +200,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     // environment, not first on the day delivery is switched on.
     assertCanonicalKey(input, input.companyId.toLowerCase())
 
-    if (process.env.ONESYSTEMS_ENABLED !== 'true') {
+    if (!isMailboxDeliveryEnabled()) {
       return { status: 'DISABLED' }
     }
 

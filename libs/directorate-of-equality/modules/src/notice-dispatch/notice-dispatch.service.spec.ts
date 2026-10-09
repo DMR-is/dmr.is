@@ -1,6 +1,8 @@
 import { Op } from 'sequelize'
 
 import { ReportMailOutcome } from '../mail/doe-mail.service.interface'
+import { buildMailboxDeliveryIdempotencyKey } from '../mailbox-delivery/mailbox-delivery.idempotency-key'
+import { MailboxDeliveryKindEnum } from '../mailbox-delivery/models/mailbox-delivery.enums'
 import {
   NoticeOutboxChannelEnum,
   NoticeOutboxKindEnum,
@@ -8,12 +10,18 @@ import {
 } from '../notice-outbox/models/notice-outbox.enums'
 import { ReportStatusEnum, ReportTypeEnum } from '../report/models/report.model'
 import { ReportEventTypeEnum } from '../report/models/report-event.model'
+import { mergePdfs } from '../report-pdf/lib/merge'
 import {
   NOTICE_DISPATCH_BATCH_SIZE,
   NOTICE_DISPATCH_MAX_ATTEMPTS,
   NOTICE_DISPATCH_RETRY_DELAY_MS,
   NoticeDispatchService,
 } from './notice-dispatch.service'
+
+// pdf-lib cannot load the fake PDF bytes these tests pass around.
+jest.mock('../report-pdf/lib/merge', () => ({
+  mergePdfs: jest.fn(),
+}))
 
 describe('NoticeDispatchService', () => {
   const logger = {
@@ -50,6 +58,18 @@ describe('NoticeDispatchService', () => {
     findOne: jest.fn(),
   }
 
+  const companyReportModel = {
+    findOne: jest.fn(),
+  }
+
+  const mailboxDeliveryService = {
+    deliverToMailbox: jest.fn(),
+  }
+
+  const pdfRenderService = {
+    renderHtml: jest.fn(),
+  }
+
   const lockTransaction = { id: 'lock-tx' } as never
 
   /*
@@ -63,6 +83,7 @@ describe('NoticeDispatchService', () => {
   }
 
   const NOW = new Date('2026-10-08T10:00:00.000Z')
+  const COMPANY_ID = '0b9f5c1e-6a3d-4c2b-9e8f-1a2b3c4d5e6f'
   const APPROVED_AT = new Date('2026-10-08T09:58:00.000Z')
 
   let service: NoticeDispatchService
@@ -77,6 +98,7 @@ describe('NoticeDispatchService', () => {
     status: NoticeOutboxStatusEnum.PENDING,
     attempts: 0,
     lastAttemptAt: null,
+    createdAt: NOW,
     ...overrides,
   })
 
@@ -121,6 +143,20 @@ describe('NoticeDispatchService', () => {
     companyFileService.archive.mockResolvedValue([])
     mailService.sendReportApproved.mockResolvedValue(ReportMailOutcome.SENT)
     mailService.sendReportDenied.mockResolvedValue(ReportMailOutcome.SENT)
+    delete process.env.ONESYSTEMS_ENABLED
+    companyReportModel.findOne.mockResolvedValue({
+      companyId: COMPANY_ID,
+      name: 'Fyrirtæki ehf.',
+    })
+    mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+      status: 'SENT',
+      deliveryId: 'delivery-1',
+      islandIsDocumentId: 'doc-1',
+      sentAt: NOW,
+      alreadySent: false,
+    })
+    pdfRenderService.renderHtml.mockResolvedValue(Buffer.from('letter-pdf'))
+    jest.mocked(mergePdfs).mockResolvedValue(Buffer.from('merged-pdf'))
     sequelize.transaction.mockImplementation(
       async (
         options: { transaction: unknown },
@@ -133,15 +169,19 @@ describe('NoticeDispatchService', () => {
       mailService as never,
       reportPdfService as never,
       companyFileService as never,
+      mailboxDeliveryService as never,
+      pdfRenderService as never,
       noticeOutboxModel as never,
       reportModel as never,
       reportEventModel as never,
+      companyReportModel as never,
       sequelize as never,
     )
   })
 
   afterEach(() => {
     jest.useRealTimers()
+    delete process.env.ONESYSTEMS_ENABLED
   })
 
   describe('picking rows', () => {
@@ -724,6 +764,279 @@ describe('NoticeDispatchService', () => {
           lastError: 'denial reason not found',
         }),
       )
+    })
+  })
+
+  describe('mailbox delivery (ONESYSTEMS_ENABLED on)', () => {
+    beforeEach(() => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+    })
+
+    const delivered = () => {
+      const calls = mailboxDeliveryService.deliverToMailbox.mock.calls
+      expect(calls).toHaveLength(1)
+      return calls[0][0]
+    }
+
+    const dispatch = async (
+      kind: NoticeOutboxKindEnum,
+      overrides: Partial<{ attempts: number }> = {},
+    ) => {
+      noticeOutboxModel.findAll.mockResolvedValue([outboxRow(kind, overrides)])
+      return service.dispatchPending(lockTransaction)
+    }
+
+    const renderedHtml = () => pdfRenderService.renderHtml.mock.calls[0][0]
+
+    it.each([
+      [
+        NoticeOutboxKindEnum.REPORT_SUBMITTED,
+        ReportTypeEnum.SALARY,
+        MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+      ],
+      [
+        NoticeOutboxKindEnum.REPORT_SUBMITTED,
+        ReportTypeEnum.EQUALITY,
+        MailboxDeliveryKindEnum.EQUALITY_REPORT_SUBMITTED,
+      ],
+      [
+        NoticeOutboxKindEnum.REPORT_APPROVED,
+        ReportTypeEnum.SALARY,
+        MailboxDeliveryKindEnum.SALARY_REPORT_APPROVED,
+      ],
+      [
+        NoticeOutboxKindEnum.REPORT_APPROVED,
+        ReportTypeEnum.EQUALITY,
+        MailboxDeliveryKindEnum.EQUALITY_REPORT_APPROVED,
+      ],
+      [
+        NoticeOutboxKindEnum.REPORT_DENIED,
+        ReportTypeEnum.SALARY,
+        MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+      ],
+      [
+        NoticeOutboxKindEnum.REPORT_DENIED,
+        ReportTypeEnum.EQUALITY,
+        MailboxDeliveryKindEnum.EQUALITY_REPORT_DENIED,
+      ],
+    ])(
+      '%s for a %s report goes to the filing company as %s, keyed by the report, and is not emailed',
+      async (outboxKind, type, kind) => {
+        reportModel.findOne.mockResolvedValue(approvedReport({ type }))
+
+        await dispatch(outboxKind)
+
+        expect(delivered()).toEqual(
+          expect.objectContaining({
+            kind,
+            companyId: COMPANY_ID,
+            idempotencyKey: buildMailboxDeliveryIdempotencyKey({
+              kind,
+              companyId: COMPANY_ID,
+              discriminator: 'report-1',
+            }),
+          }),
+        )
+        expect(companyReportModel.findOne).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { reportId: 'report-1', parentCompanyId: null },
+          }),
+        )
+        expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+        expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+        const [values] = lastOutboxUpdate()
+        expect(values).toEqual(
+          expect.objectContaining({
+            status: NoticeOutboxStatusEnum.DONE,
+            channel: NoticeOutboxChannelEnum.MAILBOX,
+            attempts: 1,
+          }),
+        )
+      },
+    )
+
+    it('renders nothing unless the delivery asks for the PDF', async () => {
+      await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+
+      expect(pdfRenderService.renderHtml).not.toHaveBeenCalled()
+      expect(reportPdfService.generateReportPdf).not.toHaveBeenCalled()
+      // Nothing rendered in this run, so nothing to archive.
+      expect(companyFileService.archive).not.toHaveBeenCalled()
+    })
+
+    it('sends a submission receipt letter', async () => {
+      reportModel.findOne.mockResolvedValue(
+        approvedReport({ type: ReportTypeEnum.SALARY }),
+      )
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_SUBMITTED)
+
+      const input = delivered()
+      expect(input.subject).toBe('Skýrslugjöf móttekin')
+      await expect(input.pdf()).resolves.toEqual(Buffer.from('letter-pdf'))
+      expect(renderedHtml()).toContain('Fyrirtæki ehf.')
+      expect(renderedHtml()).toContain('08.10.2026')
+    })
+
+    it('merges the approval letter, the report and the úrbótaáætlun into one PDF, then archives the documents', async () => {
+      reportModel.findOne.mockResolvedValue(
+        approvedReport({ type: ReportTypeEnum.SALARY }),
+      )
+      reportPdfService.generateImprovementPlanPdf.mockResolvedValue({
+        pdf: Buffer.from('plan-bytes'),
+        fileName: 'urbotaaaetlun-report-1.pdf',
+      })
+      mailboxDeliveryService.deliverToMailbox.mockImplementation(
+        async (input: { pdf: () => Promise<Buffer> }) => {
+          await expect(input.pdf()).resolves.toEqual(Buffer.from('merged-pdf'))
+          return {
+            status: 'SENT',
+            deliveryId: 'delivery-1',
+            islandIsDocumentId: 'doc-1',
+            sentAt: NOW,
+            alreadySent: false,
+          }
+        },
+      )
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+
+      expect(delivered().subject).toBe('Skýrslugjöf samþykkt')
+      expect(mergePdfs).toHaveBeenCalledWith([
+        Buffer.from('letter-pdf'),
+        Buffer.from('pdf-bytes'),
+        Buffer.from('plan-bytes'),
+      ])
+      expect(renderedHtml()).toContain(
+        'Fylgiskjöl: jafnlaunaúttekt, úrbótaáætlun.',
+      )
+      expect(companyFileService.archive).toHaveBeenCalledWith([
+        expect.objectContaining({ filename: 'jafnrettisaaetlun-report-1.pdf' }),
+        expect.objectContaining({ filename: 'urbotaaaetlun-report-1.pdf' }),
+      ])
+    })
+
+    it('puts the reviewer’s reason in the denial letter', async () => {
+      reportEventModel.findOne.mockResolvedValue({
+        reason: 'Vantar <gögn>',
+        createdAt: NOW,
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
+
+      await delivered().pdf()
+      expect(renderedHtml()).toContain('Vantar &lt;gögn&gt;')
+    })
+
+    it.each([
+      [
+        'the report is gone',
+        () => reportModel.findOne.mockResolvedValue(null),
+        NoticeOutboxKindEnum.REPORT_APPROVED,
+        'report not found',
+      ],
+      [
+        'no company filed the report',
+        () => companyReportModel.findOne.mockResolvedValue(null),
+        NoticeOutboxKindEnum.REPORT_APPROVED,
+        'filing company not found',
+      ],
+      [
+        'the denial reason is gone',
+        () => reportEventModel.findOne.mockResolvedValue(null),
+        NoticeOutboxKindEnum.REPORT_DENIED,
+        'denial reason not found',
+      ],
+    ])(
+      'gives up without a delivery when %s',
+      async (_label, arrange, kind, lastError) => {
+        arrange()
+
+        await dispatch(kind)
+
+        expect(mailboxDeliveryService.deliverToMailbox).not.toHaveBeenCalled()
+        const [values] = lastOutboxUpdate()
+        expect(values).toEqual(
+          expect.objectContaining({
+            status: NoticeOutboxStatusEnum.FAILED,
+            lastError,
+          }),
+        )
+      },
+    )
+
+    // Retrying would only return UNCERTAIN again; a person checks One.
+    it('gives up on an UNCERTAIN delivery, naming it', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: 'UNCERTAIN',
+        deliveryId: 'delivery-7',
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
+
+      const [values] = lastOutboxUpdate()
+      expect(values).toEqual(
+        expect.objectContaining({
+          status: NoticeOutboxStatusEnum.FAILED,
+          lastError: expect.stringContaining('delivery-7 is UNCERTAIN'),
+        }),
+      )
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('gives up on a delivery that used all its attempts', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: 'FAILED',
+        deliveryId: 'delivery-7',
+        attempts: 5,
+        skipped: 'ATTEMPTS_EXHAUSTED',
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
+
+      const [values] = lastOutboxUpdate()
+      expect(values).toEqual(
+        expect.objectContaining({
+          status: NoticeOutboxStatusEnum.FAILED,
+          lastError: expect.stringContaining(
+            'delivery-7 used all its attempts',
+          ),
+        }),
+      )
+    })
+
+    it.each([
+      [
+        'a delivery held by another worker',
+        { status: 'IN_PROGRESS', deliveryId: 'd' },
+      ],
+      ['delivery switched off mid-run', { status: 'DISABLED' }],
+    ])('retries %s next run', async (_label, result) => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue(result)
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
+
+      expect(lastOutboxUpdate()[0]).toEqual({
+        attempts: 1,
+        lastAttemptAt: NOW,
+        lastError: 'send failed',
+      })
+    })
+
+    // The delivery recorded FAILED or UNCERTAIN on its own row; the next run
+    // resumes it by the same key.
+    it('retries a delivery that threw', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockRejectedValue(
+        new Error('OneSystems CreateDocument failed with HTTP 503'),
+      )
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_SUBMITTED)
+
+      expect(lastOutboxUpdate()[0]).toEqual({
+        attempts: 1,
+        lastAttemptAt: NOW,
+        lastError: 'send failed',
+      })
     })
   })
 })

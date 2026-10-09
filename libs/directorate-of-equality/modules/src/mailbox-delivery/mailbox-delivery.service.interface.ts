@@ -3,6 +3,14 @@ import {
   MailboxDeliveryStatusEnum,
 } from './models/mailbox-delivery.enums'
 
+/**
+ * Whether notices go to the island.is mailbox through One. The one reading of
+ * `ONESYSTEMS_ENABLED`: `deliverToMailbox` gates on it, and a caller that has
+ * an email fallback branches on it.
+ */
+export const isMailboxDeliveryEnabled = (): boolean =>
+  process.env.ONESYSTEMS_ENABLED === 'true'
+
 export interface DeliverToMailboxInput {
   /**
    * One per company per notice per period: build it with
