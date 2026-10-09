@@ -1,5 +1,12 @@
 import { QueryTypes, Transaction } from 'sequelize'
 
+import { cleanupAndCombineEditorOutputs } from '@dmr.is/regulations-tools/cleanupEditorOutput'
+import { extractAppendixesAndComments } from '@dmr.is/regulations-tools/textHelpers'
+import type { HTMLText, RegName } from '@dmr.is/regulations-tools/types'
+import { ensureRegName } from '@dmr.is/regulations-tools/utils'
+
+import { createPatch } from '../utils/createPatch'
+import { replaceImageUrls } from '../utils/replaceImageUrls'
 import { db } from '../utils/sequelize'
 
 // ---------------------------------------------------------------------------
@@ -20,7 +27,6 @@ export type PublishRegulationInput = {
     date: string
     title?: string
     text?: string
-    diff?: string
   }>
 }
 
@@ -60,6 +66,54 @@ async function getLawChapterIdBySlug(
 }
 
 /**
+ * The text an amend impact changes from: the latest finished change to the
+ * regulation, or its original text when it has none.
+ *
+ * Same query as `previousImpactResult` in reglugerd-admin-www, so changesets
+ * written here are diffed against the same base text as those written there.
+ */
+async function getPreviousRegulationText(
+  regulationId: number,
+  transaction: Transaction,
+): Promise<string> {
+  const results = await db.query<{ text: string }>(
+    `(
+       SELECT ch.date, ch.text, ch.regulationid, r.publisheddate
+       FROM regulationchange AS ch
+       JOIN regulation AS r ON r.id = ch.changingid
+       WHERE ch.regulationid = :regulationId AND ch.text != ''
+     )
+     UNION ALL
+     (
+       SELECT publisheddate AS date, text, id AS regulationid, publisheddate
+       FROM regulation
+       WHERE id = :regulationId
+     )
+     ORDER BY date DESC, publisheddate DESC, regulationid DESC
+     LIMIT 1`,
+    { replacements: { regulationId }, type: QueryTypes.SELECT, transaction },
+  )
+  return results[0]?.text ?? ''
+}
+
+/**
+ * Prepares a text for storing the way reglugerd-admin-www does for a
+ * text_locked regulation and for a change: cleans the editor output, then moves
+ * the files it links to onto the file server under the publishing regulation's
+ * name. The text arrives with appendixes and comments combined, so it is split
+ * first.
+ */
+const prepareText = (text: string, regName: RegName): HTMLText => {
+  const parts = extractAppendixesAndComments(text as HTMLText)
+  const cleaned = cleanupAndCombineEditorOutputs(
+    parts.text,
+    parts.appendixes,
+    parts.comments,
+  )
+  return replaceImageUrls(cleaned, regName)
+}
+
+/**
  * Mark tasks as not-done for impacted base regulation IDs.
  * This signals that a human editor needs to review the changes.
  */
@@ -84,6 +138,11 @@ async function setTasksDoneStatus(
 export async function publishRegulation(
   input: PublishRegulationInput,
 ): Promise<{ regulationId: number }> {
+  const regName = ensureRegName(input.name)
+  if (!regName) {
+    throw new Error(`Invalid regulation name ${input.name}`)
+  }
+
   const transaction = await db.transaction()
 
   try {
@@ -108,7 +167,7 @@ export async function publishRegulation(
         replacements: {
           name: input.name,
           title: input.title,
-          text: input.text,
+          text: prepareText(input.text, regName),
           signatureDate: input.signatureDate,
           publishedDate: input.publishedDate,
           effectiveDate: input.effectiveDate,
@@ -174,6 +233,16 @@ export async function publishRegulation(
             )
           }
         } else if (impact.type === 'amend') {
+          // An empty text marks an unfinished change, as in reglugerd-admin-www
+          const text = impact.text ? prepareText(impact.text, regName) : ''
+          const changeset = text
+            ? await createPatch(
+                targetRegId,
+                await getPreviousRegulationText(targetRegId, transaction),
+                text,
+              )
+            : ''
+
           await db.query(
             `INSERT INTO regulationchange (changingid, regulationid, date, title, text, changeset)
              VALUES (:changingId, :regulationId, :date, :title, :text, :changeset)`,
@@ -183,8 +252,8 @@ export async function publishRegulation(
                 regulationId: targetRegId,
                 date: impact.date,
                 title: impact.title ?? '',
-                text: impact.text ?? '',
-                changeset: impact.diff ?? '',
+                text,
+                changeset,
               },
               type: QueryTypes.INSERT,
               transaction,
