@@ -43,6 +43,7 @@ describe('MachineClientGuard', () => {
   })
 
   it('refuses everyone when the variable is unset or empty', () => {
+    delete process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES
     expect(guard.canActivate(contextFor({ scope: 'undefined' }))).toBe(false)
     process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES = ' '
     expect(guard.canActivate(contextFor({ scope: ' ' }))).toBe(false)

@@ -16,7 +16,11 @@ import { IUsersService } from '../../modules/users/users.service.interface'
 import { UserContext } from '../context/user/user.context'
 import { ADMIN_KEY } from '../decorators/admin.decorator'
 import { SCOPES_KEY } from './scope-guards/scopes.decorator'
-import { assertStaffToken } from './token-surface/token-surface'
+import {
+  assertStaffToken,
+  claimValues,
+  TokenSurfaceRefusedException,
+} from './token-surface/token-surface'
 
 const logger = getLogger('AuthorizationGuard')
 
@@ -157,6 +161,11 @@ export class AuthorizationGuard implements CanActivate {
       if (!(error instanceof ForbiddenException)) {
         throw error
       }
+
+      // Already logged with the reason; the logs below would misname it
+      if (error instanceof TokenSurfaceRefusedException) {
+        throw new ForbiddenException('Admin access required')
+      }
     }
 
     // Access denied - neither admin nor valid scope
@@ -181,7 +190,7 @@ export class AuthorizationGuard implements CanActivate {
    * Used when only @Scopes() decorator is present.
    */
   private checkScopes(
-    user: { scope?: string; nationalId?: string } | undefined,
+    user: { scope?: unknown; nationalId?: string } | undefined,
     requiredScopes: string[],
   ): boolean {
     if (!user) {
@@ -195,7 +204,7 @@ export class AuthorizationGuard implements CanActivate {
       logger.warn('Scope check failed: Missing required scope', {
         nationalId: user.nationalId,
         requiredScopes,
-        userScopes: user.scope?.split(' ') || [],
+        userScopes: claimValues(user.scope),
       })
       return false
     }
@@ -245,10 +254,10 @@ export class AuthorizationGuard implements CanActivate {
    * Check if user has at least one of the required scopes.
    */
   private hasMatchingScope(
-    user: { scope?: string } | undefined,
+    user: { scope?: unknown } | undefined,
     requiredScopes: string[],
   ): boolean {
-    const userScopes = user?.scope?.split(' ') || []
+    const userScopes = claimValues(user?.scope)
     return requiredScopes.some((scope) => userScopes.includes(scope))
   }
 
@@ -256,10 +265,10 @@ export class AuthorizationGuard implements CanActivate {
    * Get the scopes that match between user and required scopes.
    */
   private getMatchingScopes(
-    user: { scope?: string } | undefined,
+    user: { scope?: unknown } | undefined,
     requiredScopes: string[],
   ): string[] {
-    const userScopes = user?.scope?.split(' ') || []
+    const userScopes = claimValues(user?.scope)
     return requiredScopes.filter((scope) => userScopes.includes(scope))
   }
 }

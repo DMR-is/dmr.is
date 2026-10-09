@@ -14,7 +14,8 @@ const ADMIN_NATIONAL_ID = '1234567890'
 const PUBLIC_WEB_NATIONAL_ID = '0987654321'
 const APPLICATION_WEB_NATIONAL_ID = '1122334455'
 const RANDOM_NATIONAL_ID = '5566778899'
-const STAFF_CLIENT_ID = '@logbirtingablad.is/test-web'
+// Pinned in test-env.ts
+const STAFF_CLIENT_ID = process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
 interface MockUser {
   nationalId?: string
   scope?: string
@@ -69,7 +70,6 @@ describe('AdvertPublicationController - Guard Authorization', () => {
     } as unknown as ExecutionContext
   }
   beforeEach(async () => {
-    process.env.LEGAL_GAZETTE_WEB_CLIENT_ID = STAFF_CLIENT_ID
     const mockUsersService = {
       getUserByNationalId: jest
         .fn()
@@ -384,8 +384,5 @@ describe('AdvertPublicationController - Guard Authorization', () => {
         })
       })
     })
-  })
-  afterAll(() => {
-    delete process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
   })
 })

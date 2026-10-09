@@ -11,7 +11,8 @@ import { PdfAdminController } from './pdf-admin.controller'
 import { IPdfAdminService } from './pdf-admin.service.interface'
 const ADMIN_NATIONAL_ID = '1234567890'
 const NON_ADMIN_NATIONAL_ID = '0987654321'
-const STAFF_CLIENT_ID = '@logbirtingablad.is/test-web'
+// Pinned in test-env.ts
+const STAFF_CLIENT_ID = process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
 interface MockUser {
   nationalId?: string
   scope?: string
@@ -52,7 +53,6 @@ describe('PdfAdminController - Guard Authorization', () => {
     } as unknown as ExecutionContext
   }
   beforeEach(async () => {
-    process.env.LEGAL_GAZETTE_WEB_CLIENT_ID = STAFF_CLIENT_ID
     const mockUsersService = {
       getUserByNationalId: jest
         .fn()
@@ -137,8 +137,5 @@ describe('PdfAdminController - Guard Authorization', () => {
         user,
       )
     })
-  })
-  afterAll(() => {
-    delete process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
   })
 })

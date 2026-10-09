@@ -6,12 +6,12 @@ import {
 import { getLogger } from '@dmr.is/logging'
 
 /**
- * Which IDS tokens each caller surface accepts.
+ * Which IDS tokens the staff surface accepts.
  *
  * `TokenJwtAuthGuard` is shared with other products and checks only signature,
  * issuer and expiry, so a token IDS signed for any client reaches the guards
- * after it. Those guards call these checks before they trust `nationalId`,
- * which binds each surface to the client that serves it.
+ * after it. Admin routes call `assertStaffToken` before they trust
+ * `nationalId`.
  */
 
 const logger = getLogger('TokenSurface')
@@ -38,6 +38,17 @@ export const claimValues = (value: unknown): string[] => {
   return typeof value === 'string' ? value.split(' ').filter(Boolean) : []
 }
 
+/**
+ * A token refused here, already logged with the reason. Distinct from the
+ * plain 403 a missing admin row gives, so a caller does not log it again as
+ * one.
+ */
+export class TokenSurfaceRefusedException extends ForbiddenException {
+  constructor() {
+    super('Token is not valid for this endpoint')
+  }
+}
+
 const refuse = (claims: TokenClaims, reason: string): never => {
   // Claim names only, never the token. Neither value is a secret, and both
   // are what someone needs to see if a real client's token is shaped
@@ -47,7 +58,7 @@ const refuse = (claims: TokenClaims, reason: string): never => {
     clientId: claims.client_id,
   })
 
-  throw new ForbiddenException('Token is not valid for this endpoint')
+  throw new TokenSurfaceRefusedException()
 }
 
 /**
@@ -59,7 +70,9 @@ const refuse = (claims: TokenClaims, reason: string): never => {
  * member's authority to anyone they delegated anything to.
  */
 export const assertStaffToken = (user: unknown): void => {
-  const staffClientId = process.env[STAFF_CLIENT_ID_VAR]
+  // Trimmed: a stray newline in the stored value would otherwise refuse
+  // every staff member.
+  const staffClientId = process.env[STAFF_CLIENT_ID_VAR]?.trim()
 
   if (!staffClientId) {
     logger.error(

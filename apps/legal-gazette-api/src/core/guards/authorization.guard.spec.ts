@@ -16,10 +16,11 @@ import { AuthorizationGuard } from './authorization.guard'
 interface MockUser {
   nationalId?: string
   scope?: string
-  aud?: string
-  actor?: { nationalId: string }
+  aud?: string | string[]
+  actor?: object
 }
-const STAFF_CLIENT_ID = '@logbirtingablad.is/test-web'
+// Pinned in test-env.ts
+const STAFF_CLIENT_ID = process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
 describe('AuthorizationGuard', () => {
   let guard: AuthorizationGuard
   let reflector: Reflector
@@ -52,7 +53,6 @@ describe('AuthorizationGuard', () => {
   // Error thrown when user is not found in database (findOneOrThrow)
   const userNotFoundError = new NotFoundException('User not found')
   beforeEach(async () => {
-    process.env.LEGAL_GAZETTE_WEB_CLIENT_ID = STAFF_CLIENT_ID
     const mockUsersService = {
       getUserByNationalId: jest.fn(),
       getEmployees: jest.fn(),
@@ -81,7 +81,7 @@ describe('AuthorizationGuard', () => {
     usersService = module.get(IUsersService)
   })
   afterEach(() => {
-    delete process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
+    process.env.LEGAL_GAZETTE_WEB_CLIENT_ID = STAFF_CLIENT_ID
     jest.clearAllMocks()
   })
   // ==========================================
@@ -600,6 +600,48 @@ describe('AuthorizationGuard', () => {
       await expect(guard.canActivate(context)).rejects.toThrow(
         ForbiddenException,
       )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('should accept an aud array that contains legal-gazette-web', async () => {
+      adminOnly()
+      const context = createMockContext({
+        nationalId: '1234567890',
+        aud: ['@other.is/client', STAFF_CLIENT_ID as string],
+      })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).resolves.toBe(true)
+    })
+
+    it('should refuse an aud array without legal-gazette-web, without a lookup', async () => {
+      adminOnly()
+      const context = createMockContext({
+        nationalId: '1234567890',
+        aud: ['@other.is/client', `${STAFF_CLIENT_ID}-other`],
+      })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('should refuse any actor claim that is present, even an empty one', async () => {
+      adminOnly()
+      const context = createMockContext({ nationalId: '1234567890', actor: {} })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('should ignore surrounding whitespace in LEGAL_GAZETTE_WEB_CLIENT_ID', async () => {
+      adminOnly()
+      process.env.LEGAL_GAZETTE_WEB_CLIENT_ID = `${STAFF_CLIENT_ID}\n`
+      const context = createMockContext({ nationalId: '1234567890' })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).resolves.toBe(true)
     })
 
     it('should refuse a delegated session, even for a staff member', async () => {
@@ -638,6 +680,41 @@ describe('AuthorizationGuard', () => {
         scope: '@logbirtingablad.is/lg-application-web',
       })
       await expect(guard.canActivate(context)).resolves.toBe(true)
+    })
+
+    describe('mixed route with LEGAL_GAZETTE_WEB_CLIENT_ID unset', () => {
+      const mixed = () =>
+        jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
+          if (key === ADMIN_KEY) return true
+          if (key === SCOPES_KEY)
+            return ['@logbirtingablad.is/lg-application-web']
+          return undefined
+        })
+
+      beforeEach(() => {
+        delete process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
+      })
+
+      it('should still allow a scope match', async () => {
+        mixed()
+        const context = createMockContext({
+          nationalId: '1234567890',
+          scope: '@logbirtingablad.is/lg-application-web',
+        })
+        await expect(guard.canActivate(context)).resolves.toBe(true)
+      })
+
+      it('should fail closed with a 500 on a scope miss', async () => {
+        mixed()
+        const context = createMockContext({
+          nationalId: '1234567890',
+          scope: '@other.is/scope',
+        })
+        await expect(guard.canActivate(context)).rejects.toThrow(
+          InternalServerErrorException,
+        )
+        expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+      })
     })
   })
 })
