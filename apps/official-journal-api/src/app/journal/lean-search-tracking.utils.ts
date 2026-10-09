@@ -4,7 +4,7 @@ import {
   extractPhrase,
   matchPublicationNumber,
   matchPublicationNumberPrefix,
-} from '@dmr.is/ojoi-modules'
+} from '@dmr.is/ojoi-modules/search/query'
 import { GetAdvertsQueryParams } from '@dmr.is/shared-dto'
 
 import {

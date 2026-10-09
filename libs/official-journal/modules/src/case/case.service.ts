@@ -707,8 +707,12 @@ export class CaseService implements ICaseService {
         })
       }
     }
-    if (transaction) transaction.afterCommit(reindex)
-    else void reindex()
+    // Not awaited: Sequelize awaits afterCommit hooks inside commit(), so an
+    // awaited hook would hold the unpublish response on OpenSearch. reindex()
+    // catches its own errors. @Transactional always supplies the transaction.
+    transaction?.afterCommit(() => {
+      void reindex()
+    })
 
     return ResultWrapper.ok()
   }

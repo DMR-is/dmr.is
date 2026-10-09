@@ -678,6 +678,7 @@ export class CaseController {
     // search, trimmed to the lean shape so callers see one contract.
     this.logger.warn('OpenSearch unavailable, searching adverts in database', {
       context: 'CaseController',
+      category: LOG_CATEGORY,
     })
     const { adverts, paging } = ResultWrapper.unwrap(
       await this.journalService.getAdverts(params),
