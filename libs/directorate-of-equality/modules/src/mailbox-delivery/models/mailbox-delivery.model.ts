@@ -134,10 +134,9 @@ export class MailboxDeliveryModel extends MutableModel<
   oneDocumentItemId!: string | null
 
   /**
-   * SendDocToIslandIs's `ItemID`. The spec does not say what it identifies;
-   * taken to be the delivered mailbox document until OneSystems confirms.
-   * NULL on a SENT row when One confirmed the send without one, so "sent" is
-   * `sentAt`, never this column.
+   * SendDocToIslandIs's `DocumentId`: the document's `ItemId` in One
+   * (OneSystems, 9 Oct 2026). NULL on a SENT row when One confirmed the send
+   * without one, so "sent" is `sentAt`, never this column.
    */
   @Column({
     type: DataType.TEXT,

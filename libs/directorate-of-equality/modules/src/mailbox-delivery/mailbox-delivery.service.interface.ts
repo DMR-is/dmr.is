@@ -38,7 +38,7 @@ export interface DeliverToMailboxInput {
  *   rather than returning DISABLED.
  * - `SENT`: One confirmed the send. `alreadySent` is true when an earlier call
  *   had done it and this one made no call to One. `islandIsDocumentId` is null
- *   when One confirmed the send without an `ItemID` (the spec allows it).
+ *   when One confirmed the send without a `DocumentId`.
  * - `UNCERTAIN`: a call's outcome is unknown (an earlier one, a crash mid-call
  *   found just now, or a late reply saved into a row already UNCERTAIN). Needs
  *   a person to check One before anything is repeated; see the module README.

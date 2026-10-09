@@ -129,8 +129,8 @@ const SETTLED_STATUSES = [
 
 /**
  * The column that says a step's result is saved. For the send it is `sentAt`,
- * never `islandIsDocumentId`: One may confirm a send without an `ItemID`, so a
- * SENT row can have a NULL `island_is_document_id`.
+ * never `islandIsDocumentId`: One may confirm a send without a `DocumentId`,
+ * so a SENT row can have a NULL `island_is_document_id`.
  */
 const SAVED_WHEN_SET = {
   [MailboxDeliveryStepEnum.CREATE_DOCUMENT]: 'oneDocumentItemId',
