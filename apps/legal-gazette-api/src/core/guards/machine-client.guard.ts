@@ -16,7 +16,9 @@ const logger = getLogger('MachineClientGuard')
  */
 export class MachineClientGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const requiredScopes = (process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES ?? '')
+    const requiredScopes = (
+      process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES ?? ''
+    )
       .split(/[\s,]+/)
       .filter(Boolean)
 

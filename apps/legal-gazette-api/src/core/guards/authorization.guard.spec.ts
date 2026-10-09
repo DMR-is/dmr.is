@@ -628,7 +628,8 @@ describe('AuthorizationGuard', () => {
     it('should still allow a scope match on a mixed route from another client', async () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
         if (key === ADMIN_KEY) return true
-        if (key === SCOPES_KEY) return ['@logbirtingablad.is/lg-application-web']
+        if (key === SCOPES_KEY)
+          return ['@logbirtingablad.is/lg-application-web']
         return undefined
       })
       const context = createMockContext({
