@@ -1,5 +1,20 @@
 /** @jest-environment jsdom */
+import getStructuredDiff from '@dmr.is/regulations-tools/structuredDiff-browser'
+import { HTMLText } from '@dmr.is/regulations-tools/types'
+
 import { normalizeForDiff } from './normalizeForDiff'
+
+// What the editor sees: the number of marks the differ puts in the
+// comparison of the two normalised texts. Text changes come as ins/del;
+// a block with no text, such as an <hr>, is marked on the element itself.
+const diffMarks = (oldHtml: string, newHtml: string) => {
+  const { diff } = getStructuredDiff(
+    normalizeForDiff(oldHtml) as HTMLText,
+    normalizeForDiff(newHtml) as HTMLText,
+  )
+  return (diff.match(/<(ins|del)\b|<hr data-diff="(insert|delete)"/g) ?? [])
+    .length
+}
 
 const bare = '<p>Fyrsta málsgrein.</p><p align="center">Önnur.</p>'
 
@@ -79,9 +94,35 @@ describe('normalizeForDiff', () => {
     const editor =
       '<p>Í samræmi við skipulagslög.</p><p><em>Deiliskipulagsbreyting.</em><br />Um er að ræða breytingu.</p><p class="FHUndirskr" style="text-align: center;">Skipulagsfulltrúi,</p><p style="text-align: center;"><strong>B deild - Útgáfud.: 5. október 2023</strong></p>'
 
-    const strip = (html: string) =>
-      normalizeForDiff(html).replace(/ (style|align)="[^"]*"/g, '')
+    expect(diffMarks(published, editor)).toBe(0)
+  })
 
-    expect(strip(published)).toBe(strip(editor))
+  it('keeps an hr, so removing one shows as a change', () => {
+    expect(normalizeForDiff('<p>A</p><hr><p>B</p>')).toBe(
+      '<p>A</p><hr><p>B</p>',
+    )
+    expect(
+      diffMarks('<p>A</p><hr><p>B</p>', '<p>A</p><p>B</p>'),
+    ).toBeGreaterThan(0)
+  })
+
+  it('drops a line break ending a block, and keeps a leading one', () => {
+    expect(normalizeForDiff('<p>Texti.<br></p>')).toBe('<p>Texti.</p>')
+    expect(normalizeForDiff('<p><strong>Feitt<br></strong></p>')).toBe(
+      '<p><strong>Feitt</strong></p>',
+    )
+    expect(normalizeForDiff('<p><br>Texti.</p>')).toBe('<p><br>Texti.</p>')
+    expect(diffMarks('<p>Texti.<br></p>', '<p>Texti.</p>')).toBe(0)
+  })
+
+  it('moves a line break out of an inline tag past surrounding whitespace', () => {
+    expect(normalizeForDiff('<p><em>Fyrirsögn.<br>\n</em>Texti.</p>')).toBe(
+      '<p><em>Fyrirsögn.\n</em><br>Texti.</p>',
+    )
+  })
+
+  it('is idempotent for blocks nested inside inline tags', () => {
+    const once = normalizeForDiff('<div><span><p>Málsgrein.</p></span></div>')
+    expect(normalizeForDiff(once)).toBe(once)
   })
 })

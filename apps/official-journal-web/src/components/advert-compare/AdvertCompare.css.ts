@@ -80,6 +80,16 @@ diffMark('del.diffmove', {
   textDecorationColor: 'rgb(0 0 0 / 0.5)',
   opacity: 0.7,
 })
+// A rule has no text to wrap in ins/del; the differ marks the element itself.
+diffMark('hr[data-diff="insert"]', {
+  borderColor: '#2e9e6a',
+  borderTopWidth: 3,
+})
+diffMark('hr[data-diff="delete"]', {
+  borderColor: '#d64545',
+  borderTopWidth: 3,
+  borderTopStyle: 'dashed',
+})
 
 globalStyle(
   `
