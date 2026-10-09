@@ -485,15 +485,17 @@ export const casesRouter = router({
       return ctx.api.getAdverts(input)
     }),
 
-  // Slim search for picking a published advert to compare against. Drops the
-  // HTML so a page of results doesn't ship every advert body to the browser,
-  // and drops revoked adverts — unpublishing a case marks its advert Afturkölluð.
-  // getAdverts can't filter by status, so over-fetch and trim after filtering
-  // to keep a page of mostly-revoked hits from emptying the list.
+  // Slim search for picking a published advert to compare against. Runs on
+  // the admin API's OpenSearch-backed searchAdverts rather than getAdverts,
+  // whose database full-text query scans the advert table and held the API's
+  // connection pool for minutes under a few concurrent searches. Drops revoked
+  // adverts — unpublishing a case marks its advert Afturkölluð. The search
+  // can't filter by status, so over-fetch and trim after filtering to keep a
+  // page of mostly-revoked hits from emptying the list.
   searchPublishedAdverts: protectedProcedure
     .input(z.object({ search: z.string().trim().min(1) }))
     .query(async ({ ctx, input }) => {
-      const { adverts } = await ctx.api.getAdverts({
+      const { adverts } = await ctx.api.searchAdverts({
         search: input.search,
         pageSize: 20,
       })

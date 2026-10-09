@@ -27,6 +27,7 @@ import {
   ICaseService,
   IJournalService,
   IReindexRunnerService,
+  searchLeanAdverts,
 } from '@dmr.is/ojoi-modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
@@ -49,7 +50,7 @@ import {
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { AdvertsToRss, getOsBody, getOsPaging } from '../../util'
+import { AdvertsToRss } from '../../util'
 import { LeanSearchTrackingService } from './lean-search-tracking.service'
 
 import { Client } from '@opensearch-project/opensearch'
@@ -348,27 +349,8 @@ export class JournalController {
     @Query() qp?: GetAdvertsQueryParams,
     options: SearchOptions = {},
   ): Promise<GetLeanAdvertsResponse> {
-    const { body, alias, page, size } = getOsBody(qp)
-    const startTime = Date.now()
-
-    const res: any = await this.openSearch.search({ index: alias, body })
-    const durationMs = Date.now() - startTime
-
-    const hits = (res.body ?? res).hits
-    const totalItems =
-      typeof hits.total === 'number' ? hits.total : (hits.total?.value ?? 0)
-
-    const paging = getOsPaging(totalItems, page, size)
-
-    const response = {
-      adverts: hits.hits.map((h: any) => ({
-        id: h._id,
-        score: h._score,
-        ...h._source,
-        highlight: h.highlight,
-      })),
-      paging,
-    }
+    const { response, page, size, totalItems, durationMs } =
+      await searchLeanAdverts(this.openSearch, qp)
 
     if (options.track) {
       void this.leanSearchTrackingService.track(qp, {

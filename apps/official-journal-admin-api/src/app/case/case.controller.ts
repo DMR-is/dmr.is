@@ -43,6 +43,7 @@ import {
   ICommentServiceV2,
   IJournalService,
   IPriceService,
+  searchLeanAdverts,
 } from '@dmr.is/ojoi-modules'
 import { RoleGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import {
@@ -87,6 +88,7 @@ import {
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
   GetInstitutionsFullResponse,
+  GetLeanAdvertsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetPaymentResponse,
@@ -125,6 +127,8 @@ import {
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { Client } from '@opensearch-project/opensearch'
+
 const LOG_CATEGORY = 'case-controller'
 
 @ApiBearerAuth()
@@ -149,6 +153,11 @@ export class CaseController {
     private readonly commentServiceV2: ICommentServiceV2,
 
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+
+    // Null when OPENSEARCH_CLUSTER_ENDPOINT is unset; see OpenSearchModule.
+    // Injected by token: a `Client | null` annotation emits Object as its
+    // design type, which Nest cannot resolve.
+    @Inject(Client) private readonly openSearch: Client | null,
   ) {}
 
   @Post(':caseId/communication-channels')
@@ -649,6 +658,45 @@ export class CaseController {
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetAdvertsResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
+  }
+
+  // Advert search for the editors' pickers. Runs the public search against
+  // OpenSearch rather than getAdverts, whose full-text query scans the advert
+  // table, and unlike the public /adverts-lean it does not record the query
+  // in the public search analytics.
+  @Get('advert-search')
+  @ApiOperation({ operationId: 'searchAdverts' })
+  @ApiResponse({ status: 200, type: GetLeanAdvertsResponse })
+  async searchAdverts(
+    @Query() params?: GetAdvertsQueryParams,
+  ): Promise<GetLeanAdvertsResponse> {
+    if (this.openSearch) {
+      return (await searchLeanAdverts(this.openSearch, params)).response
+    }
+
+    // No OpenSearch (local dev without a cluster): fall back to the database
+    // search, trimmed to the lean shape so callers see one contract.
+    this.logger.warn('OpenSearch unavailable, searching adverts in database', {
+      context: 'CaseController',
+    })
+    const { adverts, paging } = ResultWrapper.unwrap(
+      await this.journalService.getAdverts(params),
+    )
+    return {
+      adverts: adverts.map((advert) => ({
+        id: advert.id,
+        title: advert.title,
+        department: advert.department,
+        type: advert.type,
+        subject: advert.subject,
+        status: advert.status,
+        publicationNumber: advert.publicationNumber,
+        publicationDate: advert.publicationDate,
+        categories: advert.categories,
+        involvedParty: advert.involvedParty,
+      })),
+      paging,
+    }
   }
 
   @Get('advert/:id')
