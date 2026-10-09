@@ -14,7 +14,7 @@ import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { GetPdfBody, GetPdfRespone } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
-import { RoleGuard } from '../guards/auth'
+import { RoleGuard, StaffTokenGuard } from '../guards/auth'
 import { IPdfService } from './pdf.service.interface'
 
 /**
@@ -54,7 +54,7 @@ export class PdfController {
   constructor(@Inject(IPdfService) private readonly pdfService: IPdfService) {}
 
   @Get('case/:id')
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @UseGuards(TokenJwtAuthGuard, StaffTokenGuard, RoleGuard)
   @Roles(UserRoleEnum.Admin)
   @ApiOperation({ operationId: 'getPdfByCaseId' })
   @ApiResponse({ status: 200, type: GetPdfRespone })

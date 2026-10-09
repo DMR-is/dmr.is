@@ -44,7 +44,7 @@ import {
   IJournalService,
   IPriceService,
 } from '@dmr.is/ojoi-modules'
-import { RoleGuard } from '@dmr.is/ojoi-modules/guards/auth'
+import { RoleGuard, StaffTokenGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,
@@ -128,7 +128,7 @@ import { ResultWrapper } from '@dmr.is/types'
 const LOG_CATEGORY = 'case-controller'
 
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@UseGuards(TokenJwtAuthGuard, StaffTokenGuard, RoleGuard)
 @Roles(UserRoleEnum.Admin)
 @Controller({
   version: '1',
