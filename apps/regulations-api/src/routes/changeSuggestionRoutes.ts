@@ -34,6 +34,13 @@ const handleError = (error: unknown, reply: FastifyReply) => {
   return reply.code(500).send({ error: errorMessage })
 }
 
+/**
+ * Raised from Fastify's 1 MiB default for the routes that carry the full
+ * regulation HTML: create (unless sent via `filekey`, and plus the report) and
+ * update. Auth runs in `onRequest`, before the body is parsed.
+ */
+export const CHANGE_SUGGESTION_BODY_LIMIT = 10 * 1024 * 1024
+
 // ---------------------------------------------------------------------------
 
 export const changeSuggestionRoutes: FastifyPluginCallback = (
@@ -143,9 +150,19 @@ export const changeSuggestionRoutes: FastifyPluginCallback = (
    */
   fastify.post<Body<ChangeSuggestionCreateInput>>(
     '/change-suggestions',
-    { onRequest: authMiddleware },
+    { onRequest: authMiddleware, bodyLimit: CHANGE_SUGGESTION_BODY_LIMIT },
     async (req, reply) => {
       try {
+        const { report } = req.body
+        if (
+          report != null &&
+          (typeof report !== 'object' || Array.isArray(report))
+        ) {
+          return reply
+            .code(400)
+            .send({ error: 'report must be a JSON object when provided' })
+        }
+
         const suggestion = await createChangeSuggestion(req.body)
         return reply.code(201).send(suggestion)
       } catch (error) {
@@ -160,7 +177,7 @@ export const changeSuggestionRoutes: FastifyPluginCallback = (
    */
   fastify.put<Pms<'id'> & Body<ChangeSuggestionUpdateInput>>(
     '/change-suggestions/:id',
-    { onRequest: authMiddleware },
+    { onRequest: authMiddleware, bodyLimit: CHANGE_SUGGESTION_BODY_LIMIT },
     async (req, reply) => {
       try {
         const id = parseInt(req.params.id, 10)
