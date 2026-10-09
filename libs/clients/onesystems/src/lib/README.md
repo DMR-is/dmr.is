@@ -27,19 +27,24 @@ Login -> CreateCase -> CreateDocument -> SendDocToIslandIs (-> CloseCase)
 | `sendDocToIslandIs` | `POST /api/actions/SendDocToIslandIs` | `islandIsDocumentId` (see below), or `null`     |
 | `closeCase`         | `POST /api/actions/CloseCase`         | `caseItemId` of the closed case                 |
 
-`createCase` finds the party's existing case for the template or creates one,
-so repeating it is expected to be safe (this is how the connection guide reads;
-OneSystems has not confirmed it). **`createDocument` and `sendDocToIslandIs`
-are not idempotent**: repeating either can file or deliver the document twice.
+`createCase` finds the party's open case for the template (by `IDNumber` +
+`CaseType`) or creates one, so repeating it is safe (OneSystems, 29 Sep 2026).
+**`createDocument` and `sendDocToIslandIs` are not idempotent**: a repeated
+`CreateDocument` files a second document with a new `ItemId`, and a repeated
+`SendDocToIslandIs` is answered with "Færsla þegar skráð." (OneSystems,
+9 Oct 2026).
 
-`sendDocToIslandIs` returns the response `ItemID` as `islandIsDocumentId`,
-assumed to be the id island.is issued (unconfirmed). The spec makes `ItemID`
-nullable and does not say what this call puts there, so `Success: true` without
-an `ItemID` counts as sent: it resolves with `islandIsDocumentId: null` and logs
-a warning. Every other action requires an `ItemID`.
+`SendDocToIslandIs` does not answer with the spec's `GeneralResponse`. It
+returns `{ Kennitala, DocumentId, Success, Errors }`, where `DocumentId` is the
+document's `ItemId` (OneSystems, 9 Oct 2026). `sendDocToIslandIs` returns
+`DocumentId` as `islandIsDocumentId`. `Success: true` without one still counts
+as sent: it resolves with `islandIsDocumentId: null` and logs a warning. On a
+failure, `Errors` becomes the error's `errorMessage`. The body carries the
+recipient's kennitala, so it is never logged or stored. Every other action
+requires an `ItemID`.
 
-`closeCase` is not ready to use: the guide does not say whether `CaseID` is the
-`CaseNumber` or the case `ItemID`.
+`closeCase` takes the case `ItemID` (`caseItemId`), not the `CaseNumber`
+(OneSystems, 29 Sep 2026).
 
 ## Configuration
 
@@ -93,11 +98,12 @@ anything here, and any new consumer must do the same.
   timeout. Anything that holds a lock across a call must outlast that.
 - **Response checks.** Every action response is JSON-parsed whatever its
   `Content-Type`, and must carry `Success: true` and (except for
-  `SendDocToIslandIs`) an `ItemID`.
+  `SendDocToIslandIs`, which carries `DocumentId`) an `ItemID`.
 - **Logging.** Logs carry the operation, HTTP status, One's `ErrorNumber`
-  (only when it looks like a code), body lengths and One's ids. The password,
-  the token, kennitölur, names, subjects, the document bytes, response bodies
-  and One's `ErrorMessage` are never logged. `errorMessage` is kept on the
+  (only when it looks like a code), the JSON type of `Errors`, body lengths and
+  One's ids. The password, the token, kennitölur, names, subjects, the
+  document bytes, response bodies and One's `ErrorMessage` and `Errors` are
+  never logged. `errorMessage` is kept on the
   error object only; do not log it. `errorNumber` is kept raw on the error
   too: a consumer that logs or stores it must pass it through
   `toLoggableErrorNumber`, which withholds anything that is not code-shaped or
@@ -214,9 +220,11 @@ code.
   ends UNCERTAIN instead of being retried.
 - Which `ErrorNumber`s are raised before a document is filed or sent
   (`ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS`)?
-- Does `CreateCase` find-or-create? Is `CloseCase`'s `CaseID` the
-  `CaseNumber` or the case `ItemID`?
-- What does `SendDocToIslandIs` put in `ItemID`?
+- What does a failed `SendDocToIslandIs` look like: the shape of `Errors`, and
+  is it a 200 with `Success: false` or a 4xx? In particular the duplicate
+  ("Færsla þegar skráð.").
+- Do `CreateCase` and `CreateDocument` still answer with the spec's
+  `CaseResponse` / `GeneralResponse`?
 - Do `CreateCase`, `CreateDocument` and `SendDocToIslandIs` need the same One
   permission? An empty 403 on the later two is treated as not definitive on
   the assumption that a missing permission already failed at `CreateCase`.

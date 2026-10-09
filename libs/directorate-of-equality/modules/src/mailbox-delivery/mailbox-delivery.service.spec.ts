@@ -63,10 +63,9 @@ const CONFIG = {
   islandIsType: 'island-type',
 }
 
-const KINDS: MailboxDeliveryKindConfigs = {
-  [MailboxDeliveryKindEnum.OVERDUE_NOTICE]: CONFIG,
-  [MailboxDeliveryKindEnum.FINES_PRECURSOR]: CONFIG,
-}
+const KINDS = Object.fromEntries(
+  Object.values(MailboxDeliveryKindEnum).map((kind) => [kind, CONFIG]),
+) as MailboxDeliveryKindConfigs
 
 const PDF = Buffer.from('%PDF-1.7 notice')
 const PDF_SHA256 = createHash('sha256').update(PDF).digest('hex')
@@ -402,7 +401,7 @@ describe('MailboxDeliveryService', () => {
   })
 
   describe('kind config', () => {
-    it('throws before any row or call while the real kinds are placeholders', async () => {
+    it('throws before any row or call for a real kind without a case template', async () => {
       service = build(MAILBOX_DELIVERY_KINDS)
 
       await expect(service.deliverToMailbox(input())).rejects.toThrow(
@@ -416,17 +415,59 @@ describe('MailboxDeliveryService', () => {
       expect(oneCalls()).toBe(0)
     })
 
-    it('names every missing field, and treats blank as missing', () => {
+    it.each([
+      ['missing', undefined],
+      ['blank', '  '],
+    ])('refuses a %s caseType', (_label, caseType) => {
       expect(() =>
         resolveKindConfig(MailboxDeliveryKindEnum.FINES_PRECURSOR, {
           ...KINDS,
-          [MailboxDeliveryKindEnum.FINES_PRECURSOR]: {
-            ...CONFIG,
-            docType: '  ',
-            islandIsType: undefined,
-          },
+          [MailboxDeliveryKindEnum.FINES_PRECURSOR]: { ...CONFIG, caseType },
         }),
-      ).toThrow(/FINES_PRECURSOR.*missing docType, islandIsType/)
+      ).toThrow(/FINES_PRECURSOR.*missing caseType/)
+    })
+
+    it('sends a missing classification field as an empty string', () => {
+      expect(
+        resolveKindConfig(MailboxDeliveryKindEnum.OVERDUE_NOTICE, {
+          ...KINDS,
+          [MailboxDeliveryKindEnum.OVERDUE_NOTICE]: { caseType: 'case-type' },
+        }),
+      ).toEqual({
+        caseType: 'case-type',
+        docCategory: '',
+        docType: '',
+        author: '',
+        islandIsCategory: '',
+        islandIsType: '',
+      })
+    })
+
+    it.each([
+      [MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED, 'SKYRSLA'],
+      [MailboxDeliveryKindEnum.SALARY_REPORT_APPROVED, 'SKYRSLA'],
+      [MailboxDeliveryKindEnum.SALARY_REPORT_DENIED, 'SKYRSLA'],
+      [MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER, 'SKYRSLA'],
+      [MailboxDeliveryKindEnum.EQUALITY_REPORT_SUBMITTED, 'J-AAETLUN'],
+      [MailboxDeliveryKindEnum.EQUALITY_REPORT_APPROVED, 'J-AAETLUN'],
+      [MailboxDeliveryKindEnum.EQUALITY_REPORT_DENIED, 'J-AAETLUN'],
+      [MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER, 'J-AAETLUN'],
+    ])('%s files under %s, unclassified', (kind, caseType) => {
+      expect(resolveKindConfig(kind)).toEqual({
+        caseType,
+        docCategory: '',
+        docType: '',
+        author: '',
+        islandIsCategory: '',
+        islandIsType: '',
+      })
+    })
+
+    it.each([
+      MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+      MailboxDeliveryKindEnum.FINES_PRECURSOR,
+    ])('%s has no case template yet', (kind) => {
+      expect(() => resolveKindConfig(kind)).toThrow(/missing caseType/)
     })
 
     it('returns a complete config', () => {

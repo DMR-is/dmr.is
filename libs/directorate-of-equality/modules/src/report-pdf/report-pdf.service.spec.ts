@@ -4,6 +4,8 @@ import { BadRequestException } from '@nestjs/common'
 
 import { Paging } from '@dmr.is/shared-dto'
 
+import { getBrowser } from '../pdf-render/lib/browser'
+import { PdfRenderService } from '../pdf-render/pdf-render.service'
 import { GetReportOutlierGroupsResponseDto } from '../report/dto/get-report-outlier-groups-response.dto'
 import {
   EqualityContentTypeEnum,
@@ -15,10 +17,9 @@ import { ReportEmployeeOutlierDto } from '../report-employee/dto/report-employee
 import { ReportOutlierGroupDto } from '../report-employee/dto/report-outlier-group.dto'
 import { BenefitsBreakdownDto } from '../report-statistics/dto/benefits-breakdown.dto'
 import { SalaryByGenderAndScoreDto } from '../report-statistics/dto/salary-by-gender-and-score.dto'
-import { getBrowser } from './lib/browser'
 import { ReportPdfService } from './report-pdf.service'
 
-jest.mock('./lib/browser', () => ({ getBrowser: jest.fn() }))
+jest.mock('../pdf-render/lib/browser', () => ({ getBrowser: jest.fn() }))
 
 const pdfMock = jest.fn(async () => new Uint8Array([1, 2, 3]))
 const closeMock = jest.fn(async () => undefined)
@@ -231,6 +232,10 @@ function makeService(reportOverrides = {}) {
     reportService as any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     statisticsService as any,
+    // The real renderer over the mocked browser, so the hardening and wait
+    // assertions below still cover what a report render actually does.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    new PdfRenderService(logger as any),
   )
 
   return { service, reportService, statisticsService }

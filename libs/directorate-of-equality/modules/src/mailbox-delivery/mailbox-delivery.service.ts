@@ -41,6 +41,7 @@ import {
   DeliverToMailboxInput,
   DeliverToMailboxResult,
   IMailboxDeliveryService,
+  isMailboxDeliveryEnabled,
   type MailboxDeliveryUnsettledStatus,
 } from './mailbox-delivery.service.interface'
 
@@ -90,11 +91,10 @@ export const MAILBOX_DELIVERY_LEASE_MINUTES = Math.ceil(
  * it. Every claim counts, whatever it then does.
  *
  * Without a cap a FAILED row is retried forever. CreateCase is repeated on any
- * failure, on the unconfirmed assumption that One finds-or-creates the case
- * (TODO(OneSystems)), so a permanent rejection (a bad classification, a
- * recipient One refuses) would retry on every call, and if the assumption is
- * wrong each claim may leave another orphan case in One. Five is enough to ride
- * out a brief outage and few enough to bound that.
+ * failure (One finds-or-creates the case by `IDNumber` + `CaseType`, OneSystems,
+ * 29 Sep 2026), so a permanent rejection (a case template One does not know, a
+ * recipient One refuses) would retry on every call. Five is enough to ride out
+ * a brief outage and few enough to bound that.
  *
  * An exhausted row is left as it is and reported as `ATTEMPTS_EXHAUSTED`. A
  * person fixes the cause and re-arms it by resetting `attempts` (see the
@@ -129,8 +129,8 @@ const SETTLED_STATUSES = [
 
 /**
  * The column that says a step's result is saved. For the send it is `sentAt`,
- * never `islandIsDocumentId`: One may confirm a send without an `ItemID`, so a
- * SENT row can have a NULL `island_is_document_id`.
+ * never `islandIsDocumentId`: One may confirm a send without a `DocumentId`,
+ * so a SENT row can have a NULL `island_is_document_id`.
  */
 const SAVED_WHEN_SET = {
   [MailboxDeliveryStepEnum.CREATE_DOCUMENT]: 'oneDocumentItemId',
@@ -159,11 +159,10 @@ type DeliveryCompany = Pick<CompanyModel, 'id' | 'name' | 'nationalId'>
  * a second connection with a real COMMIT, not a nested savepoint.
  *
  * Resume is driven by the saved ids and `sent_at`, not by `status`:
- * - CreateCase is assumed to find-or-create, so repeating it is taken to be
- *   harmless and it has no marker. Any failure of it leaves the row FAILED
- *   (retryable). TODO(OneSystems): the spec does not document find-or-create;
- *   if it is not, a retry leaves an orphan case in One (never a second send).
- *   A case id that loses the race to be saved is logged for that reason.
+ * - CreateCase finds-or-creates the case (OneSystems, 29 Sep 2026), so
+ *   repeating it is harmless and it has no marker. Any failure of it leaves
+ *   the row FAILED (retryable). A case id that loses the race to be saved is
+ *   logged.
  * - CreateDocument and SendDocToIslandIs are not safe to repeat. Each is
  *   preceded by an `in_flight_step` marker. A failure that
  *   `isDefinitiveOneSystemsFailure` says never reached the action leaves the
@@ -201,12 +200,12 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     // environment, not first on the day delivery is switched on.
     assertCanonicalKey(input, input.companyId.toLowerCase())
 
-    if (process.env.ONESYSTEMS_ENABLED !== 'true') {
+    if (!isMailboxDeliveryEnabled()) {
       return { status: 'DISABLED' }
     }
 
-    // Before any row or call, so a missing classification never leaves a
-    // half-started delivery behind.
+    // Before any row or call, so a kind without a case template never leaves
+    // a half-started delivery behind.
     const config = resolveKindConfig(input.kind, this.kindConfigs)
 
     // UUIDs compare case-insensitively in Postgres; lowercase it to match the
@@ -623,8 +622,8 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
 
   /**
    * Saves the case. If another worker saved one first, its case is kept and
-   * used. That assumes CreateCase finds-or-creates, so both name the same case
-   * (unconfirmed, TODO(OneSystems)); ours is logged in case it does not.
+   * used. CreateCase finds-or-creates, so both name the same case; ours is
+   * logged all the same.
    */
   private async saveCase(
     id: string,

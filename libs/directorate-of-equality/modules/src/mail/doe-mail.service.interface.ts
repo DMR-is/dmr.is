@@ -20,6 +20,17 @@ export type ReportMailAttachment = {
   label: string
 }
 
+/**
+ * How a report notice ended, so a caller that retries can tell a send worth
+ * retrying (`FAILED`, SES refused or threw) from one that never will succeed
+ * (`NO_RECIPIENT`, the report has no usable contact or admin email).
+ */
+export enum ReportMailOutcome {
+  SENT = 'SENT',
+  NO_RECIPIENT = 'NO_RECIPIENT',
+  FAILED = 'FAILED',
+}
+
 export interface IDoeMailService {
   sendExternalCommentNotification(
     report: ReportModel,
@@ -30,29 +41,30 @@ export interface IDoeMailService {
    * Notifies the company that its report was denied, with the reviewer's
    * `denialReason` as the body.
    *
-   * Best-effort like the comment notification: the denial is already committed
-   * and event-logged by the time this is called, so a failed send is logged and
-   * swallowed rather than surfaced to the reviewer.
+   * Never throws: a failed send is logged and returned as the outcome. The
+   * notice outbox retries on `FAILED`.
    */
-  sendReportDenied(report: ReportModel, denialReason: string): Promise<void>
+  sendReportDenied(
+    report: ReportModel,
+    denialReason: string,
+  ): Promise<ReportMailOutcome>
 
   /**
    * Notifies the company that its report was approved, attaching the documents
    * the approval produced — the report PDF, plus the úrbótaáætlun PDF for a
    * salary report.
    *
-   * Best-effort, for the same reason as `sendReportDenied`: the approval is
-   * committed before this runs, so a failed send is logged rather than thrown.
+   * Never throws, like `sendReportDenied`.
    *
-   * ⚠️ **Returns whether it was delivered**, which the others do not, because
-   * this one has a consequence: the caller archives the same attachments to S3
-   * as the Directorate's record of what the company received. Archiving a send
-   * that never happened puts a false yes in front of an auditor.
+   * ⚠️ **The outcome has a consequence here**: the caller archives the same
+   * attachments to S3 as the Directorate's record of what the company received,
+   * only on `SENT`. Archiving a send that never happened puts a false yes in
+   * front of an auditor.
    */
   sendReportApproved(
     report: ReportModel,
     attachments: ReportMailAttachment[],
-  ): Promise<boolean>
+  ): Promise<ReportMailOutcome>
 
   /**
    * Sends a 6-months-before reminder for an upcoming report deadline.

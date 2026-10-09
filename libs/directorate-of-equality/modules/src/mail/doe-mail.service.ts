@@ -35,6 +35,7 @@ import {
   CustomEmailSendResult,
   IDoeMailService,
   ReportMailAttachment,
+  ReportMailOutcome,
 } from './doe-mail.service.interface'
 import { MailSendError } from './mail-send.error'
 import { looksLikeOneAddress } from './recipient'
@@ -77,8 +78,8 @@ export class DoeMailService implements IDoeMailService {
   async sendReportDenied(
     report: ReportModel,
     denialReason: string,
-  ): Promise<void> {
-    await this.sendReportMail(
+  ): Promise<ReportMailOutcome> {
+    return this.sendReportMail(
       report,
       {
         subject: buildReportDeniedSubject(report),
@@ -93,7 +94,7 @@ export class DoeMailService implements IDoeMailService {
   async sendReportApproved(
     report: ReportModel,
     attachments: ReportMailAttachment[],
-  ): Promise<boolean> {
+  ): Promise<ReportMailOutcome> {
     const labels = attachments.map((attachment) => attachment.label)
 
     return this.sendReportMail(
@@ -263,15 +264,16 @@ export class DoeMailService implements IDoeMailService {
    * must be visible so the work can be retried) must not use this helper; see
    * `sendReportDeadlineReminder`.
    *
-   * Returns whether it was delivered, so a caller with a *consequence* of the
-   * send — the approval's S3 archive — can tell. Callers with none ignore it.
+   * Returns the outcome, so a caller with a *consequence* of the send — the
+   * approval's S3 archive, the outbox's retry — can tell. Callers with none
+   * ignore it.
    */
   private async sendReportMail(
     report: ReportModel,
     content: MailContent,
     kind: string,
     logFields: Record<string, unknown>,
-  ): Promise<boolean> {
+  ): Promise<ReportMailOutcome> {
     /*
      * ⚠️ Not `??`, and not "first truthy" either.
      *
@@ -302,7 +304,7 @@ export class DoeMailService implements IDoeMailService {
         `Skipping ${kind} email — report has no usable contact or admin email`,
         { ...logFields, context: LOGGING_CONTEXT },
       )
-      return false
+      return ReportMailOutcome.NO_RECIPIENT
     }
 
     try {
@@ -330,14 +332,14 @@ export class DoeMailService implements IDoeMailService {
           errorCode: sent.result.error.code,
           errorMessage: sent.result.error.message,
         })
-        return false
+        return ReportMailOutcome.FAILED
       }
 
       this.logger.info(`Sent ${kind}`, {
         ...logFields,
         context: LOGGING_CONTEXT,
       })
-      return true
+      return ReportMailOutcome.SENT
     } catch (error) {
       // Retained for a throw the decorator cannot intercept — building the
       // message, or a future undecorated implementation. `message` is extracted
@@ -349,7 +351,7 @@ export class DoeMailService implements IDoeMailService {
         context: LOGGING_CONTEXT,
         errorMessage: error instanceof Error ? error.message : String(error),
       })
-      return false
+      return ReportMailOutcome.FAILED
     }
   }
 }

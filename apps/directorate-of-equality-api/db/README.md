@@ -577,29 +577,29 @@ deleting the company must not quietly erase it.
 companies, also unprefixed); `doe_` is for service-level tables such as `doe_api_key` and
 `doe_partner_*`.
 
-| Column                  | Type                                                                                                     |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| `id`                    | `uuid` PK                                                                                                |
-| `company_id`            | `fk → company`                                                                                           |
-| `national_id`           | `text` (the recipient's kennitala as sent; pinned to `company_id` by the composite FK)                   |
-| `kind`                  | `mailbox_delivery_kind_enum` (`OVERDUE_NOTICE`/`FINES_PRECURSOR`)                                        |
-| `idempotency_key`       | `text` (unique — the caller's key; a repeat call resumes this row)                                       |
-| `subject`               | `text` (the document's title in One and in the mailbox)                                                  |
-| `status`                | `mailbox_delivery_status_enum` (`PENDING`/`CASE_CREATED`/`DOCUMENT_CREATED`/`SENT`/`FAILED`/`UNCERTAIN`) |
-| `in_flight_step`        | `mailbox_delivery_step_enum` (nullable — `CREATE_DOCUMENT`/`SEND_DOC_TO_ISLAND_IS` while in a call)      |
-| `one_case_number`       | `text` (nullable — One's human-facing case number)                                                       |
-| `one_case_item_id`      | `text` (nullable — the case CreateDocument files under)                                                  |
-| `one_document_item_id`  | `text` (nullable — the filed document)                                                                   |
-| `island_is_document_id` | `text` (nullable — may stay NULL on a SENT row: One can confirm a send without an `ItemID`)              |
-| `pdf_sha256`            | `text` (nullable — lowercase hex; both or neither with `pdf_size_bytes`)                                 |
-| `pdf_size_bytes`        | `integer` (nullable)                                                                                     |
-| `attempts`              | `integer` (default `0`; claims so far, capped by the service)                                            |
-| `last_attempt_at`       | `timestamptz` (nullable)                                                                                 |
-| `last_error`            | `text` (nullable — may echo recipient details; never surface unfiltered)                                 |
-| `last_error_number`     | `text` (nullable — loggable form only)                                                                   |
-| `lease_token`           | `uuid` (nullable — both or neither with `lease_expires_at`)                                              |
-| `lease_expires_at`      | `timestamptz` (nullable)                                                                                 |
-| `sent_at`               | `timestamptz` (nullable — set means One confirmed the send; the row is then SENT or UNCERTAIN)           |
+| Column                  | Type                                                                                                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                    | `uuid` PK                                                                                                                                                 |
+| `company_id`            | `fk → company`                                                                                                                                            |
+| `national_id`           | `text` (the recipient's kennitala as sent; pinned to `company_id` by the composite FK)                                                                    |
+| `kind`                  | `mailbox_delivery_kind_enum` (`OVERDUE_NOTICE`/`FINES_PRECURSOR`, and `SALARY_`/`EQUALITY_REPORT_` + `SUBMITTED`/`APPROVED`/`DENIED`/`DEADLINE_REMINDER`) |
+| `idempotency_key`       | `text` (unique — the caller's key; a repeat call resumes this row)                                                                                        |
+| `subject`               | `text` (the document's title in One and in the mailbox)                                                                                                   |
+| `status`                | `mailbox_delivery_status_enum` (`PENDING`/`CASE_CREATED`/`DOCUMENT_CREATED`/`SENT`/`FAILED`/`UNCERTAIN`)                                                  |
+| `in_flight_step`        | `mailbox_delivery_step_enum` (nullable — `CREATE_DOCUMENT`/`SEND_DOC_TO_ISLAND_IS` while in a call)                                                       |
+| `one_case_number`       | `text` (nullable — One's human-facing case number)                                                                                                        |
+| `one_case_item_id`      | `text` (nullable — the case CreateDocument files under)                                                                                                   |
+| `one_document_item_id`  | `text` (nullable — the filed document)                                                                                                                    |
+| `island_is_document_id` | `text` (nullable — may stay NULL on a SENT row: One can confirm a send without an `ItemID`)                                                               |
+| `pdf_sha256`            | `text` (nullable — lowercase hex; both or neither with `pdf_size_bytes`)                                                                                  |
+| `pdf_size_bytes`        | `integer` (nullable)                                                                                                                                      |
+| `attempts`              | `integer` (default `0`; claims so far, capped by the service)                                                                                             |
+| `last_attempt_at`       | `timestamptz` (nullable)                                                                                                                                  |
+| `last_error`            | `text` (nullable — may echo recipient details; never surface unfiltered)                                                                                  |
+| `last_error_number`     | `text` (nullable — loggable form only)                                                                                                                    |
+| `lease_token`           | `uuid` (nullable — both or neither with `lease_expires_at`)                                                                                               |
+| `lease_expires_at`      | `timestamptz` (nullable)                                                                                                                                  |
+| `sent_at`               | `timestamptz` (nullable — set means One confirmed the send; the row is then SENT or UNCERTAIN)                                                            |
 
 CHECK constraints keep a forward status from outrunning its ids (`CASE_CREATED` needs the
 case, `DOCUMENT_CREATED` the case and document, `SENT` those and `sent_at`), forbid a
@@ -607,6 +607,75 @@ marker on a settled row or a send marker without a document, and keep `sent_at` 
 status but `SENT` and `UNCERTAIN`. Indexes: a partial `mailbox_delivery_status_idx`
 (`WHERE status <> 'SENT'`) for the retry scan and the operator's UNCERTAIN and exhausted
 lists, and `mailbox_delivery_company_id_idx`.
+
+## Notice outbox
+
+`notice_outbox` holds the notices a company is owed: its report was submitted
+(`REPORT_SUBMITTED`), approved (`REPORT_APPROVED`) or denied (`REPORT_DENIED`). Each row is
+written in the same transaction as the change that owes it, so it commits or rolls back
+with that change. doe-api's `NoticeOutboxTask` (every minute, under advisory lock
+`DOE_TASK_JOB_IDS.noticeOutbox`) sends it afterwards; the logic is
+`libs/directorate-of-equality/modules/src/notice-dispatch/`.
+
+**Why an outbox.** The approve/deny emails used to go out from an after-commit hook. A
+process that died between the commit and the send left an approved report the company
+was never told about, with nothing to retry from. The row closes that: the notice is as
+durable as the decision. It also keeps PDF rendering and sending in doe-api only. The
+partner API submits reports too, but only writes the row; it has no Chromium and no mail
+or OneSystems credentials.
+
+**Channels.** Today every row is sent by email, as before: approve and deny mail the
+company, a submission (which never had an email) is marked `SKIPPED`. Delivery to the
+island.is mailbox through One (see "Mailbox delivery" above) replaces the email per kind
+once it is switched on, and the row then records `channel = MAILBOX`.
+
+**Retries.** A failed send keeps the row `PENDING`, counts the attempt and waits five
+minutes; after five attempts it becomes `FAILED`. A report with no usable contact or admin
+email, or a report or denial event that is gone, is `FAILED` at once, because no retry will
+change it. Every outcome is written outside the lock's transaction, so a failure later in
+the run cannot roll back a row whose mail has already gone.
+
+**Ids only.** The recipient, the text (the denial reason comes from the report's
+`STATUS_CHANGED` event) and the documents are read from the report at send time.
+`last_error` is the dispatcher's own short message, never a provider response, so unlike
+`mailbox_delivery.last_error` it holds nothing personal.
+
+**One row per kind per report.** `notice_outbox_report_kind_uq (report_id, kind)`: a report
+is submitted once and decided once (approve is a compare-and-swap from `IN_REVIEW`, deny
+from `IN_REVIEW`/`POSTPONED`, and nothing leaves `APPROVED` or `DENIED`), so a second row
+is a bug, and the constraint fails the transaction that tried instead of mailing twice.
+A report that lands `POSTPONED` gets its receipt at submission; the explanations that later
+move it to `SUBMITTED` do not owe a second one.
+
+| Column            | Type                                                                             |
+| ----------------- | -------------------------------------------------------------------------------- |
+| `id`              | `uuid` PK                                                                        |
+| `kind`            | `notice_outbox_kind_enum` (`REPORT_SUBMITTED`/`REPORT_APPROVED`/`REPORT_DENIED`) |
+| `report_id`       | `fk → report`                                                                    |
+| `status`          | `notice_outbox_status_enum` (`PENDING`/`DONE`/`SKIPPED`/`FAILED`)                |
+| `channel`         | `notice_outbox_channel_enum` (nullable — `EMAIL`/`MAILBOX`, set only on DONE)    |
+| `attempts`        | `integer` (default `0`; sends tried)                                             |
+| `last_attempt_at` | `timestamptz` (nullable)                                                         |
+| `last_error`      | `text` (nullable — the dispatcher's own message)                                 |
+| `processed_at`    | `timestamptz` (nullable — set exactly when the row leaves PENDING)               |
+
+CHECK constraints: `channel` is set if and only if the row is `DONE`, `processed_at` if and
+only if it is not `PENDING`, and `attempts` is non-negative. Indexes: partial
+`notice_outbox_pending_idx` on `created_at` `WHERE status = 'PENDING'`, the dispatcher's
+only query; the unique constraint leads with `report_id`, so it also serves the FK check
+when a report is deleted.
+
+**Re-driving a FAILED row.** A send is retried five times five minutes apart, so an outage
+longer than ~20 minutes (a bad credential shipped and fixed an hour later) leaves its notices
+`FAILED`. To send one again, put it back to the state it was born in — the CHECK constraints
+require the three columns together:
+
+```sql
+UPDATE notice_outbox
+   SET status = 'PENDING', processed_at = NULL, attempts = 0,
+       last_attempt_at = NULL, last_error = NULL
+ WHERE id = '<notice id>' AND status = 'FAILED';
+```
 
 ## Report identifier
 
@@ -1568,6 +1637,7 @@ No FKs, no relationships. Standalone bookkeeping table.
 - `company` 1:N `company_event`; `doe_user` 1:N `company_event` via `actor_user_id` (nullable).
 - `company` 1:N `company_comment`; `doe_user` 1:N `company_comment` via `author_user_id` (nullable).
 - `company` 1:N `mailbox_delivery` via `(company_id, national_id)` → `company(id, national_id)`.
+- `report` 1:N `notice_outbox` via `report_id` (at most one row per `kind`).
 - `company` N:1 `postcode` N:1 `region`; `company` N:1 `isat_category` via `isat_category_code`.
 - `job_runs` standalone (no FKs).
 

@@ -11,6 +11,12 @@ import {
 } from '@dmr.is/doe-modules/company'
 import { ICompanyEventService } from '@dmr.is/doe-modules/company-event'
 import { IDoeMailService, MailSendError } from '@dmr.is/doe-modules/mail'
+import {
+  buildMailboxDeliveryIdempotencyKey,
+  IMailboxDeliveryService,
+  MailboxDeliveryKindEnum,
+} from '@dmr.is/doe-modules/mailbox-delivery'
+import { IPdfRenderService } from '@dmr.is/doe-modules/pdf-render'
 import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -49,7 +55,7 @@ type CompanyOverrides = Partial<{
 }>
 
 const makeCompany = (overrides: CompanyOverrides = {}) =>
-  ({
+  (({
     id: 'company-1',
     name: 'Acme ehf.',
     email: 'acme@acme.is',
@@ -57,7 +63,7 @@ const makeCompany = (overrides: CompanyOverrides = {}) =>
     nextEqualityReportDueAt: EQUALITY_DUE,
     nextSalaryReportDueAt: SALARY_DUE,
     ...overrides,
-  }) as unknown as CompanyModel
+  } as unknown) as CompanyModel)
 
 describe('ReportDeadlineReminderService', () => {
   let service: ReportDeadlineReminderService
@@ -65,8 +71,19 @@ describe('ReportDeadlineReminderService', () => {
   let hasDeadlineReminderEvent: jest.Mock
   let emitDeadlineReminderEvent: jest.Mock
   let sendReportDeadlineReminder: jest.Mock
+  let deliverToMailbox: jest.Mock
+  let renderHtml: jest.Mock
 
   beforeEach(async () => {
+    delete process.env.ONESYSTEMS_ENABLED
+    deliverToMailbox = jest.fn().mockResolvedValue({
+      status: 'SENT',
+      deliveryId: 'delivery-1',
+      islandIsDocumentId: 'doc-1',
+      sentAt: new Date(),
+      alreadySent: false,
+    })
+    renderHtml = jest.fn().mockResolvedValue(Buffer.from('letter-pdf'))
     findAll = jest.fn().mockResolvedValue([])
     hasDeadlineReminderEvent = jest.fn().mockResolvedValue(false)
     emitDeadlineReminderEvent = jest.fn().mockResolvedValue(undefined)
@@ -85,10 +102,19 @@ describe('ReportDeadlineReminderService', () => {
           provide: IDoeMailService,
           useValue: { sendReportDeadlineReminder },
         },
+        {
+          provide: IMailboxDeliveryService,
+          useValue: { deliverToMailbox },
+        },
+        { provide: IPdfRenderService, useValue: { renderHtml } },
       ],
     }).compile()
 
     service = module.get(ReportDeadlineReminderService)
+  })
+
+  afterEach(() => {
+    delete process.env.ONESYSTEMS_ENABLED
   })
 
   // The run iterates kinds [equality, salary] × tiers [6mo, 2mo, 2wk, due], so
@@ -428,6 +454,135 @@ describe('ReportDeadlineReminderService', () => {
 
       expect(hasDeadlineReminderEvent).not.toHaveBeenCalled()
       expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('run – mailbox delivery (ONESYSTEMS_ENABLED on)', () => {
+    const COMPANY_ID = '0b9f5c1e-6a3d-4c2b-9e8f-1a2b3c4d5e6f'
+    const NOW = new Date('2026-10-09T06:00:00.000Z')
+
+    beforeEach(() => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+      jest.useFakeTimers().setSystemTime(NOW)
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    const company = (overrides: CompanyOverrides = {}) =>
+      makeCompany({ id: COMPANY_ID, ...overrides })
+
+    it('delivers the reminder letter to the mailbox instead of emailing, keyed by kind, tier and due date', async () => {
+      returnCompanyAtCall(CALL.salarySixMonths, company())
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+      expect(deliverToMailbox).toHaveBeenCalledTimes(1)
+      const [input] = deliverToMailbox.mock.calls[0]
+      expect(input).toEqual(
+        expect.objectContaining({
+          kind: MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
+          companyId: COMPANY_ID,
+          idempotencyKey: buildMailboxDeliveryIdempotencyKey({
+            kind: MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
+            companyId: COMPANY_ID,
+            discriminator: 'SALARY-SIX_MONTHS-20270115',
+          }),
+          subject: expect.stringContaining('15.01.2027'),
+        }),
+      )
+
+      await expect(input.pdf()).resolves.toEqual(Buffer.from('letter-pdf'))
+      const [html] = renderHtml.mock.calls[0]
+      expect(html).toContain('Acme ehf.')
+      expect(html).toContain('09.10.2026')
+
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+        COMPANY_ID,
+        CompanyStatusEnum.ACTIVE,
+        CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT,
+        CompanyReminderTierEnum.SIX_MONTHS,
+        SALARY_DUE.toISOString(),
+      )
+    })
+
+    // The mailbox is addressed by kennitala, not by email.
+    it('delivers to a company with no email on file, and writes no NO_EMAIL event', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company({ email: null }))
+
+      await service.run()
+
+      expect(deliverToMailbox).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent.mock.calls[0][2]).toBe(
+        CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+      )
+    })
+
+    it('skips a company already reminded for that tier and due date', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      hasDeadlineReminderEvent.mockResolvedValue(true)
+
+      await service.run()
+
+      expect(deliverToMailbox).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      [{ status: 'UNCERTAIN', deliveryId: 'delivery-7' }],
+      [{ status: 'IN_PROGRESS', deliveryId: 'delivery-7' }],
+      [
+        {
+          status: 'FAILED',
+          deliveryId: 'delivery-7',
+          attempts: 5,
+          skipped: 'ATTEMPTS_EXHAUSTED',
+        },
+      ],
+    ])('records no SENT event when the delivery answers %o', async (result) => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValue(result)
+
+      await service.run()
+
+      expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(result.status),
+        expect.objectContaining({ deliveryId: 'delivery-7' }),
+      )
+    })
+
+    // One rejection must not withhold every reminder behind it, every day.
+    it('carries on with the batch when a delivery throws', async () => {
+      const second = company({
+        id: '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f',
+      })
+      returnCompaniesAtCall(CALL.equalitySixMonths, [company(), second])
+      deliverToMailbox
+        .mockRejectedValueOnce(new Error('OneSystems CreateCase was rejected'))
+        .mockResolvedValueOnce({
+          status: 'SENT',
+          deliveryId: 'delivery-2',
+          islandIsDocumentId: null,
+          sentAt: NOW,
+          alreadySent: false,
+        })
+
+      await expect(service.run()).resolves.toBeUndefined()
+
+      expect(deliverToMailbox).toHaveBeenCalledTimes(2)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent.mock.calls[0][0]).toBe(second.id)
+    })
+
+    // A fault on the lock's transaction must still abort the run.
+    it('rethrows a failure to record the SENT event', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      emitDeadlineReminderEvent.mockRejectedValue(new Error('25P02'))
+
+      await expect(service.run()).rejects.toThrow('25P02')
     })
   })
 })

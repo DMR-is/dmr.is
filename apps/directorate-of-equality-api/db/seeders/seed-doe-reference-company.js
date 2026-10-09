@@ -326,6 +326,7 @@ DELETE FROM report_sub_criterion_step WHERE report_sub_criterion_id IN (
 DELETE FROM report_sub_criterion WHERE report_criterion_id IN (
   SELECT id FROM report_criterion WHERE report_id = '${SAL_REPORT_ID}');
 DELETE FROM report_criterion WHERE report_id = '${SAL_REPORT_ID}';
+DELETE FROM notice_outbox WHERE report_id IN ('${SAL_REPORT_ID}', '${EQ_REPORT_ID}');
 DELETE FROM report_event WHERE report_id IN ('${SAL_REPORT_ID}', '${EQ_REPORT_ID}');
 DELETE FROM company_report WHERE report_id IN ('${SAL_REPORT_ID}', '${EQ_REPORT_ID}');
 DELETE FROM report WHERE id = '${SAL_REPORT_ID}';
