@@ -20,6 +20,9 @@ jest.mock('../utils/replaceImageUrls', () => ({
   replaceImageUrls: (...args: unknown[]) => replaceImageUrls(...args),
 }))
 
+import { extractAppendixesAndComments } from '@dmr.is/regulations-tools/textHelpers'
+import type { HTMLText } from '@dmr.is/regulations-tools/types'
+
 import {
   PublishInputError,
   publishRegulation,
@@ -195,4 +198,112 @@ describe('publishRegulation regulation text', () => {
       expect(query).not.toHaveBeenCalled()
     },
   )
+})
+
+describe('publishRegulation appendixes and comments', () => {
+  beforeEach(() => {
+    query.mockReset()
+    query.mockImplementation(async (sql, options) => answer(sql, options))
+    createPatch.mockReset()
+    createPatch.mockResolvedValue('--- regulationId7\n+++ regulationId7\n')
+    replaceImageUrls.mockReset()
+    replaceImageUrls.mockImplementation((text: string) => text)
+  })
+
+  const appendixes = [
+    { title: 'Viðauki I', text: '<p>Efni fyrsta viðauka</p>' },
+    { title: 'Viðauki II', text: '<p>Efni annars viðauka</p>' },
+  ]
+  const comments = '<p>Athugasemd</p>'
+
+  /** What a reader of the stored text gets back. */
+  const readBack = (stored: string) =>
+    extractAppendixesAndComments(stored as HTMLText)
+
+  it('stores the regulation text so its appendixes and comments read back', async () => {
+    await publishRegulation({
+      ...input({}),
+      impacts: [],
+      text: '<p>Meginmál</p>',
+      appendixes,
+      comments,
+    })
+
+    const insert = query.mock.calls.find(([sql]) =>
+      String(sql).includes('INSERT INTO regulation '),
+    )
+    const parts = readBack(insert?.[1].replacements.text)
+    expect(parts.text).toContain('Meginmál')
+    expect(parts.text).not.toContain('Viðauki')
+    expect(parts.appendixes.map((a) => a.title)).toEqual([
+      'Viðauki I',
+      'Viðauki II',
+    ])
+    expect(parts.appendixes[1]?.text).toContain('Efni annars viðauka')
+    expect(parts.comments).toContain('Athugasemd')
+  })
+
+  it('stores an amend impact with its appendixes and comments, and diffs all of it', async () => {
+    await publishRegulation(
+      input({ text: '<p>Nýr texti</p>', appendixes, comments }),
+    )
+
+    const stored = changeInsert()?.text
+    const parts = readBack(stored)
+    expect(parts.appendixes.map((a) => a.title)).toEqual([
+      'Viðauki I',
+      'Viðauki II',
+    ])
+    expect(parts.comments).toContain('Athugasemd')
+    expect(createPatch.mock.calls[0][2]).toBe(stored)
+  })
+
+  it('treats an amend impact with appendixes but no text as unfinished', async () => {
+    await publishRegulation(input({ text: undefined, appendixes }))
+
+    expect(createPatch).not.toHaveBeenCalled()
+    expect(changeInsert()).toMatchObject({ text: '', changeset: '' })
+  })
+
+  it.each([
+    ['a string array', { appendixes: ['<p>Efni</p>'] }],
+    ['a missing title', { appendixes: [{ text: '<p>Efni</p>' }] }],
+    ['a non-array', { appendixes: { title: 'Viðauki', text: '<p>Efni</p>' } }],
+  ])(
+    'rejects appendixes with %s before touching the database',
+    async (_, parts) => {
+      await expect(
+        publishRegulation({ ...input({}), ...(parts as object) }),
+      ).rejects.toThrow(
+        new PublishInputError(
+          'Invalid appendixes for 0002/2021: expected an array of { title, text }',
+        ),
+      )
+      expect(query).not.toHaveBeenCalled()
+    },
+  )
+
+  it('rejects non-string comments before touching the database', async () => {
+    await expect(
+      publishRegulation({ ...input({}), comments: 5 as never }),
+    ).rejects.toThrow(
+      new PublishInputError(
+        'Invalid comments for 0002/2021: expected a string',
+      ),
+    )
+    expect(query).not.toHaveBeenCalled()
+  })
+
+  it('names the impact whose parts are malformed', async () => {
+    await expect(
+      publishRegulation(
+        input({ text: '<p>Nýr texti</p>', appendixes: ['x'] as never }),
+      ),
+    ).rejects.toThrow(
+      new PublishInputError(
+        'Invalid appendixes for impact on 0001/2020: expected an array of { title, text }',
+      ),
+    )
+    expect(query).not.toHaveBeenCalled()
+  })
 })

@@ -66,12 +66,13 @@ export class RegulationImpact {
   text?: string
 
   @ApiPropertyOptional({
-    type: [String],
-    description: 'Changed appendix content',
+    type: [RegulationAppendix],
+    description: 'Changed appendixes',
   })
+  @Type(() => RegulationAppendix)
   @IsArray()
   @IsOptional()
-  appendixes?: string[]
+  appendixes?: RegulationAppendix[]
 
   @ApiPropertyOptional({
     type: String,

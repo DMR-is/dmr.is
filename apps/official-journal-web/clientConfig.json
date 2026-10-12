@@ -5648,9 +5648,9 @@
             "description": "New/replacement text HTML"
           },
           "appendixes": {
-            "description": "Changed appendix content",
+            "description": "Changed appendixes",
             "type": "array",
-            "items": { "type": "string" }
+            "items": { "$ref": "#/components/schemas/RegulationAppendix" }
           },
           "comments": {
             "type": "string",
