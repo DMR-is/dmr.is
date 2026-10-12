@@ -33,7 +33,7 @@ function flattenImpacts(
           date: string
           title?: string
           text?: string
-          appendixes?: string[]
+          appendixes?: Array<{ title: string; text: string }>
           comments?: string
           diff?: string
           dropped?: boolean

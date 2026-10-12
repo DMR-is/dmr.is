@@ -2,8 +2,11 @@ import { QueryTypes, Transaction } from 'sequelize'
 
 import { cleanTitle } from '@dmr.is/regulations-tools/cleanTitle'
 import { cleanupAndCombineEditorOutputs } from '@dmr.is/regulations-tools/cleanupEditorOutput'
-import { extractAppendixesAndComments } from '@dmr.is/regulations-tools/textHelpers'
-import type { HTMLText, RegName } from '@dmr.is/regulations-tools/types'
+import type {
+  HTMLText,
+  PlainText,
+  RegName,
+} from '@dmr.is/regulations-tools/types'
 import { ensureRegName } from '@dmr.is/regulations-tools/utils'
 
 import { createPatch } from '../utils/createPatch'
@@ -15,23 +18,37 @@ import { db } from '../utils/sequelize'
 /** A publish request the caller has to fix; the route answers it with 400. */
 export class PublishInputError extends Error {}
 
-export type PublishRegulationInput = {
+export type PublishAppendix = { title: string; text: string }
+
+/**
+ * A text as the editor holds it: the main text, its appendixes and comments,
+ * kept apart. They are combined into the single stored HTML blob here, the
+ * same way reglugerd-admin-www combines them, so readers that split the blob
+ * with `extractAppendixesAndComments` get the parts back.
+ */
+type TextParts = {
+  text: string
+  appendixes?: PublishAppendix[]
+  comments?: string
+}
+
+export type PublishRegulationInput = TextParts & {
   name: string
   title: string
-  text: string
   signatureDate: string
   publishedDate: string
   effectiveDate: string
   type: 'base' | 'amending'
   ministryName?: string
   lawChapterSlugs?: string[]
-  impacts?: Array<{
-    type: 'amend' | 'repeal'
-    regulation: string
-    date: string
-    title?: string
-    text?: string
-  }>
+  impacts?: Array<
+    Partial<TextParts> & {
+      type: 'amend' | 'repeal'
+      regulation: string
+      date: string
+      title?: string
+    }
+  >
 }
 
 // ---------------------------------------------------------------------------
@@ -102,23 +119,55 @@ async function getPreviousRegulationText(
 
 /**
  * Prepares a text for storing the way reglugerd-admin-www does for a
- * text_locked regulation and for a change: cleans the editor output, then moves
- * the files it links to onto the file server under the publishing regulation's
- * name. The text arrives with appendixes and comments combined, so it is split
- * first.
+ * text_locked regulation and for a change: combines the text with its
+ * appendixes and comments and cleans the editor output, then moves the files
+ * it links to onto the file server under the publishing regulation's name.
  *
  * The file uploads start here, before the transaction commits, and are not
  * awaited. A publish that later rolls back leaves its uploaded files behind; a
  * retry writes the same keys, so they are overwritten rather than duplicated.
  */
-const prepareText = (text: string, regName: RegName): HTMLText => {
-  const parts = extractAppendixesAndComments(text as HTMLText)
+const prepareText = (parts: TextParts, regName: RegName): HTMLText => {
   const cleaned = cleanupAndCombineEditorOutputs(
-    parts.text,
-    parts.appendixes,
-    parts.comments,
+    parts.text as HTMLText,
+    parts.appendixes?.map(({ title, text }) => ({
+      title: title as PlainText,
+      text: text as HTMLText,
+    })),
+    parts.comments as HTMLText | undefined,
   )
   return replaceImageUrls(cleaned, regName)
+}
+
+/**
+ * The route has no body schema, so the parts that end up inside the stored
+ * text are checked here. A wrong shape would otherwise be dropped or throw deep
+ * inside the cleanup.
+ */
+const assertTextParts = (parts: Partial<TextParts>, where: string): void => {
+  const { appendixes, comments } = parts
+  if (
+    appendixes !== undefined &&
+    !(
+      Array.isArray(appendixes) &&
+      appendixes.every(
+        (a) =>
+          !!a &&
+          typeof a === 'object' &&
+          typeof a.title === 'string' &&
+          typeof a.text === 'string',
+      )
+    )
+  ) {
+    throw new PublishInputError(
+      `Invalid appendixes for ${where}: expected an array of { title, text }`,
+    )
+  }
+  if (comments !== undefined && typeof comments !== 'string') {
+    throw new PublishInputError(
+      `Invalid comments for ${where}: expected a string`,
+    )
+  }
 }
 
 /**
@@ -153,6 +202,10 @@ export async function publishRegulation(
   if (!regName || regName !== input.name) {
     throw new PublishInputError(`Invalid regulation name ${input.name}`)
   }
+  assertTextParts(input, input.name)
+  input.impacts?.forEach((impact) =>
+    assertTextParts(impact, `impact on ${impact.regulation}`),
+  )
 
   const transaction = await db.transaction()
 
@@ -178,7 +231,7 @@ export async function publishRegulation(
         replacements: {
           name: input.name,
           title: input.title,
-          text: prepareText(input.text, regName),
+          text: prepareText(input, regName),
           signatureDate: input.signatureDate,
           publishedDate: input.publishedDate,
           effectiveDate: input.effectiveDate,
@@ -245,7 +298,16 @@ export async function publishRegulation(
           }
         } else if (impact.type === 'amend') {
           // An empty text marks an unfinished change, as in reglugerd-admin-www
-          const text = impact.text ? prepareText(impact.text, regName) : ''
+          const text = impact.text
+            ? prepareText(
+                {
+                  text: impact.text,
+                  appendixes: impact.appendixes,
+                  comments: impact.comments,
+                },
+                regName,
+              )
+            : ''
           const changeset = text
             ? await createPatch(
                 targetRegId,
