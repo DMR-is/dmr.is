@@ -20,7 +20,11 @@ jest.mock('../utils/replaceImageUrls', () => ({
   replaceImageUrls: (...args: unknown[]) => replaceImageUrls(...args),
 }))
 
-import { publishRegulation, PublishRegulationInput } from './Publish'
+import {
+  PublishInputError,
+  publishRegulation,
+  PublishRegulationInput,
+} from './Publish'
 
 const NEW_REG_ID = 100
 const TARGET_REG_ID = 7
@@ -143,6 +147,14 @@ describe('publishRegulation amend impacts', () => {
     expect(changeInsert()).toBeUndefined()
   })
 
+  it('cleans the impact title', async () => {
+    await publishRegulation(
+      input({ title: '  Breyting  á   1. gr. ', text: '<p>Nýr texti</p>' }),
+    )
+
+    expect(changeInsert()?.title).toBe('Breyting á 1. gr.')
+  })
+
   it('moves files linked from the impact text before diffing it', async () => {
     await publishRegulation(input({ text: '<p>Nýr texti</p>' }))
 
@@ -174,10 +186,13 @@ describe('publishRegulation regulation text', () => {
     expect(stored).not.toBe(`${raw}<!-- 0002/2021 -->`)
   })
 
-  it('rejects an invalid name before touching the database', async () => {
-    await expect(
-      publishRegulation({ ...input({}), name: '../2021' }),
-    ).rejects.toThrow('Invalid regulation name')
-    expect(query).not.toHaveBeenCalled()
-  })
+  it.each(['../2021', '1/2020', '01/2020', '0001-2020'])(
+    'rejects the name %s before touching the database',
+    async (name) => {
+      await expect(publishRegulation({ ...input({}), name })).rejects.toThrow(
+        new PublishInputError(`Invalid regulation name ${name}`),
+      )
+      expect(query).not.toHaveBeenCalled()
+    },
+  )
 })

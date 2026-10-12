@@ -1,5 +1,6 @@
 import { QueryTypes, Transaction } from 'sequelize'
 
+import { cleanTitle } from '@dmr.is/regulations-tools/cleanTitle'
 import { cleanupAndCombineEditorOutputs } from '@dmr.is/regulations-tools/cleanupEditorOutput'
 import { extractAppendixesAndComments } from '@dmr.is/regulations-tools/textHelpers'
 import type { HTMLText, RegName } from '@dmr.is/regulations-tools/types'
@@ -10,6 +11,9 @@ import { replaceImageUrls } from '../utils/replaceImageUrls'
 import { db } from '../utils/sequelize'
 
 // ---------------------------------------------------------------------------
+
+/** A publish request the caller has to fix; the route answers it with 400. */
+export class PublishInputError extends Error {}
 
 export type PublishRegulationInput = {
   name: string
@@ -102,6 +106,10 @@ async function getPreviousRegulationText(
  * the files it links to onto the file server under the publishing regulation's
  * name. The text arrives with appendixes and comments combined, so it is split
  * first.
+ *
+ * The file uploads start here, before the transaction commits, and are not
+ * awaited. A publish that later rolls back leaves its uploaded files behind; a
+ * retry writes the same keys, so they are overwritten rather than duplicated.
  */
 const prepareText = (text: string, regName: RegName): HTMLText => {
   const parts = extractAppendixesAndComments(text as HTMLText)
@@ -138,9 +146,12 @@ async function setTasksDoneStatus(
 export async function publishRegulation(
   input: PublishRegulationInput,
 ): Promise<{ regulationId: number }> {
+  // `ensureRegName` also normalises ('1/2020' -> '0001/2020'), but the name is
+  // stored and looked up as given, and files move under the normalised one.
+  // Accept only names that are already canonical so the three agree.
   const regName = ensureRegName(input.name)
-  if (!regName) {
-    throw new Error(`Invalid regulation name ${input.name}`)
+  if (!regName || regName !== input.name) {
+    throw new PublishInputError(`Invalid regulation name ${input.name}`)
   }
 
   const transaction = await db.transaction()
@@ -251,7 +262,7 @@ export async function publishRegulation(
                 changingId: newRegulationId,
                 regulationId: targetRegId,
                 date: impact.date,
-                title: impact.title ?? '',
+                title: impact.title ? cleanTitle(impact.title) : '',
                 text,
                 changeset,
               },

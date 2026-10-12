@@ -2,6 +2,7 @@ import { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify'
 
 import {
   hasPendingTasks,
+  PublishInputError,
   publishRegulation,
   PublishRegulationInput,
 } from '../db/Publish'
@@ -14,7 +15,7 @@ type Body<T> = { Body: T }
 const handleError = (error: unknown, reply: FastifyReply) => {
   const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
-  if (error instanceof Error && error.message.startsWith('Invalid')) {
+  if (error instanceof PublishInputError) {
     return reply.code(400).send({ error: errorMessage })
   }
 

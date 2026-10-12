@@ -1,3 +1,5 @@
+// Private module of regulations-tools (no exports map; pinned version). Check
+// it still exists when bumping the package.
 import { asDiv } from '@dmr.is/regulations-tools/_cleanup/serverDOM'
 import { FILE_SERVER } from '@dmr.is/regulations-tools/constants'
 import type { HTMLText, RegName } from '@dmr.is/regulations-tools/types'
