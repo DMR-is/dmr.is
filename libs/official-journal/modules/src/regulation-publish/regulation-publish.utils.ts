@@ -16,7 +16,6 @@ export type RegulationPublishPayload = {
     date: string
     title?: string
     text?: string
-    diff?: string
   }>
 }
 
@@ -65,7 +64,6 @@ export function convertDraftToPublishPayload(
         date: impact.date,
         title: impact.title,
         text: impact.text,
-        diff: impact.diff,
       }))
   }
 
