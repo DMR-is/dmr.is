@@ -1,12 +1,10 @@
 import { RegulationAppendix, RegulationDraft } from '@dmr.is/shared-dto'
 
-type PublishAppendix = { title: string; text: string }
-
 export type RegulationPublishPayload = {
   name: string
   title: string
   text: string
-  appendixes?: PublishAppendix[]
+  appendixes?: RegulationAppendix[]
   comments?: string
   signatureDate: string
   publishedDate: string
@@ -20,7 +18,7 @@ export type RegulationPublishPayload = {
     date: string
     title?: string
     text?: string
-    appendixes?: PublishAppendix[]
+    appendixes?: RegulationAppendix[]
     comments?: string
   }>
 }
@@ -31,7 +29,7 @@ export type RegulationPublishPayload = {
  */
 const toPublishAppendixes = (
   appendixes: RegulationAppendix[] | undefined,
-): PublishAppendix[] | undefined =>
+): RegulationAppendix[] | undefined =>
   appendixes?.map(({ title, text }) => ({ title, text }))
 
 /**
