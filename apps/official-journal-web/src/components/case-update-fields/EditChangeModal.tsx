@@ -16,6 +16,7 @@ import { toast } from '@dmr.is/ui/utils/toast'
 
 import { RegulationImpact } from '../../gen/fetch'
 import { useCaseContext } from '../../hooks/useCaseContext'
+import { dropEmptyDiffMarks } from '../../lib/dropEmptyDiffMarks'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { useFileUploader } from '../../lib/utils'
 import { HTMLEditor } from '../editor/Editor'
@@ -124,7 +125,7 @@ export const EditChangeModal = ({
       simpleSanitize(originalText) as HTMLText,
       simpleSanitize(editorText) as HTMLText,
     )
-    setDiffHtml(result.diff)
+    setDiffHtml(dropEmptyDiffMarks(result.diff))
   }, [])
 
   const fileUploader = useFileUploader(
@@ -180,7 +181,7 @@ export const EditChangeModal = ({
           simpleSanitize(originalText) as HTMLText,
           simpleSanitize(text) as HTMLText,
         )
-        diff = result.diff as string
+        diff = dropEmptyDiffMarks(result.diff)
       } catch (e) {
         // Never persist a change with a diff we could not compute.
         logger.error('Failed to compute regulation diff before saving', {

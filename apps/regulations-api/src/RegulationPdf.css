@@ -440,6 +440,16 @@
   del.diffmove {
     text-decoration: line-through;
   }
+  /* A rule has no text to wrap in ins/del; the differ marks the element itself. */
+  hr[data-diff='insert'] {
+    border-color: #2e9e6a;
+    border-top-width: 3px;
+  }
+  hr[data-diff='delete'] {
+    border-color: #d64545;
+    border-top-width: 3px;
+    border-top-style: dashed;
+  }
 
   /* ======================================================================= */
 
