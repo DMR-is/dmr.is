@@ -10,7 +10,6 @@ import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
-import { dropEmptyDiffMarks } from '../../lib/dropEmptyDiffMarks'
 import * as s from './OriginalCompare.css'
 
 const logger = getLogger('OriginalCompare')
@@ -53,7 +52,7 @@ export const OriginalCompare = ({ disclosure }: Props) => {
         simpleSanitize(orignal) as HTMLText,
         simpleSanitize(activeCase.html) as HTMLText,
       )
-      if (!cancelled) setDiffHtml(dropEmptyDiffMarks(diff))
+      if (!cancelled) setDiffHtml(diff)
     }
 
     setDiffFailed(false)

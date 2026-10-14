@@ -16,7 +16,6 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
-import { dropEmptyDiffMarks } from '../../lib/dropEmptyDiffMarks'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatDate } from '../../lib/utils'
 import * as styles from './AdvertCompare.css'
@@ -291,7 +290,7 @@ const CompareView = ({
         normalizeForDiff(simpleSanitize(publishedHtml)) as HTMLText,
         normalizeForDiff(simpleSanitize(currentCase.html)) as HTMLText,
       )
-      if (!cancelled) setDiffHtml(dropEmptyDiffMarks(diff))
+      if (!cancelled) setDiffHtml(diff)
     }
 
     setDiffHtml(null)

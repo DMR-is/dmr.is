@@ -3,12 +3,6 @@ import getStructuredDiff from '@dmr.is/regulations-tools/structuredDiff-server'
 
 import { HTMLText, PlainText } from '../routes/types'
 
-/** Drops `<ins>`/`<del>` marks with nothing but newlines inside. */
-const dropEmptyMarks = (html: string) =>
-  html
-    .replace(/<del [^>]+>\n*<\/del>/g, '')
-    .replace(/<ins [^>]+>\n*<\/ins>/g, '') as HTMLText
-
 /**
  * Diffs two versions of regulation HTML (text, comments or an appendix).
  *
@@ -19,14 +13,18 @@ const dropEmptyMarks = (html: string) =>
  * well-nested.
  */
 export const getHtmlDiff = (older: HTMLText, newer: HTMLText): HTMLText =>
-  older === newer ? newer : dropEmptyMarks(getStructuredDiff(older, newer).diff)
+  older === newer ? newer : getStructuredDiff(older, newer).diff
 
 const toHTML = (textContent: PlainText) =>
-  textContent.replace(/>/g, '&lg;') as HTMLText
+  textContent.replace(/>/g, '&gt;') as HTMLText
 
 /**
  * Word diff of two plain-text values, such as titles. They have no structure
  * to align, so this stays on htmldiff.
+ *
+ * regulations-tools' own `getTextContentDiff` does the same, but its module
+ * also exports a React component and loads `react`, which this API does not
+ * ship.
  */
 export const getTextContentDiff = (
   older: PlainText,
@@ -34,4 +32,6 @@ export const getTextContentDiff = (
 ): HTMLText =>
   older === newer
     ? toHTML(newer)
-    : dropEmptyMarks(htmldiff(toHTML(older), toHTML(newer)))
+    : (htmldiff(toHTML(older), toHTML(newer))
+        .replace(/<del [^>]+>\n*<\/del>/g, '')
+        .replace(/<ins [^>]+>\n*<\/ins>/g, '') as HTMLText)

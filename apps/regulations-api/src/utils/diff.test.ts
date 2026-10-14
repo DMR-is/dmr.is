@@ -45,6 +45,22 @@ describe('getHtmlDiff', () => {
     ).toBe('Reglugerð þessi gildir einnig um skoðun eftirvagna.')
   })
 
+  it('leaves no empty marks when a table row is added', () => {
+    const table = (rows: string) =>
+      html(
+        `<h3 class="article__title">1. gr.</h3>\n<table>\n<tbody>\n${rows}</tbody>\n</table>\n`,
+      )
+    const row = (a: string, b: string) =>
+      `<tr>\n<td>${a}</td>\n<td>${b}</td>\n</tr>\n`
+    const diff = getHtmlDiff(
+      table(row('A', '1')),
+      table(row('A', '1') + row('B', '2')),
+    )
+
+    expect(diff).not.toMatch(/<(ins|del) [^>]+>\s*<\/\1>/)
+    expect(diff).toContain('<ins class="diffins">B</ins>')
+  })
+
   it('marks everything inserted when there is no earlier text', () => {
     const div = asDiv(getHtmlDiff(html(''), article('Ný málsgrein.')))
 
@@ -56,6 +72,13 @@ describe('getHtmlDiff', () => {
 })
 
 describe('getTextContentDiff', () => {
+  it('escapes > in plain text', () => {
+    const title = 'Reglugerð um mörk > 3,5 tonn' as PlainText
+    expect(getTextContentDiff(title, title)).toBe(
+      'Reglugerð um mörk &gt; 3,5 tonn',
+    )
+  })
+
   it('word-diffs plain text', () => {
     const diff = getTextContentDiff(
       'Reglugerð um skoðun ökutækja' as PlainText,
