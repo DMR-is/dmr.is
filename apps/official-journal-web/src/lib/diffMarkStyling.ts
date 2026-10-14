@@ -47,13 +47,13 @@ export const diffMarkStyling = (wrapper: string) => {
     opacity: 0.7,
   })
   // A rule has no text to wrap in ins/del; the differ marks the element itself.
+  // The browser's default hr border is 1px inset on every side; replace it.
   diffMark('hr[data-diff="insert"]', {
-    borderColor: '#2e9e6a',
-    borderTopWidth: 3,
+    borderStyle: 'none',
+    borderTop: '3px solid #2e9e6a',
   })
   diffMark('hr[data-diff="delete"]', {
-    borderColor: '#d64545',
-    borderTopWidth: 3,
-    borderTopStyle: 'dashed',
+    borderStyle: 'none',
+    borderTop: '3px dashed #d64545',
   })
 }
