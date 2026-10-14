@@ -40,9 +40,16 @@ export type RegulationSearchResults = {
 // ---------------------------------------------------------------------------
 
 export type CurrentRegulationChange = {
+  /** Date of the change itself */
   date?: ISODate
-  currentTitle: string // textSource.title,
-  currentText: string // textSource.text as HTMLText,
+  /** Title in force just before the change */
+  currentTitle: string
+  /** Text in force just before the change */
+  currentText: string
+  /** `regulationchange` id the text comes from; `null` for the original text */
+  sourceChangeId: number | null
+  /** Date of that `regulationchange` row; absent for the original text */
+  sourceDate?: ISODate
 }
 
 export * from '@dmr.is/regulations-tools/types'
