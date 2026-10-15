@@ -39,9 +39,13 @@ import { CompanyModel } from './company.model'
  *                    per company per due date, not one per run.
  *   EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED / SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED
  *                  → emitted by the same task, with mailbox delivery on, when
- *                    the reminder's delivery through One stopped where no
- *                    later run will finish it: UNCERTAIN, or out of attempts.
+ *                    the reminder's delivery through One ran out of attempts
+ *                    without being sent. No later run will finish it.
  *                    Same `reason`/idempotency rule as the SENT events.
+ *   EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED / SALARY_REPORT_DEADLINE_REMINDER_UNCONFIRMED
+ *                  → the same, when whether One sent it is unknown
+ *                    (UNCERTAIN, or interrupted mid-call). A person must check
+ *                    One; it may well be in the mailbox. Same rule.
  *   PARTNER_DELEGATION_GRANTED / PARTNER_DELEGATION_REVOKED
  *                  → the company allowed a vendor client to act for it, or
  *                    withdrew that. `reason` names the firm. `actor_user_id` is
@@ -66,6 +70,8 @@ export enum CompanyEventTypeEnum {
   SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL = 'SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL',
   EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED = 'EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED',
   SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED = 'SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED',
+  EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED = 'EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED',
+  SALARY_REPORT_DEADLINE_REMINDER_UNCONFIRMED = 'SALARY_REPORT_DEADLINE_REMINDER_UNCONFIRMED',
   API_KEY_ISSUED = 'API_KEY_ISSUED',
   API_KEY_REVOKED = 'API_KEY_REVOKED',
   PARTNER_DELEGATION_GRANTED = 'PARTNER_DELEGATION_GRANTED',
@@ -84,7 +90,7 @@ export type CompanyCustomEmailEventType =
 /**
  * Deadline-reminder event types the reminder task may emit — the
  * reminder-sent outcomes, the no-email-on-file outcomes and the mailbox
- * deliveries that stopped undelivered. The kind of report
+ * deliveries that stopped undelivered or unconfirmed. The kind of report
  * lives in the event type; which milestone fired lives in `reminderTier`. All
  * carry the ISO due date in `reason` and are deduped on
  * (companyId, eventType, reminderTier, reason).
@@ -96,6 +102,8 @@ export type CompanyDeadlineReminderEventType =
   | CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL
   | CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED
   | CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED
+  | CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED
+  | CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNCONFIRMED
 
 /**
  * Which deadline milestone a reminder event records. The reminder task walks

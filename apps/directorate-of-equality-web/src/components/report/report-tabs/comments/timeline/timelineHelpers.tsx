@@ -386,6 +386,10 @@ export function timelineEntryText(
       reportText.timeline.reminderUndeliveredEquality,
     SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED:
       reportText.timeline.reminderUndeliveredSalary,
+    EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED:
+      reportText.timeline.reminderUnconfirmedEquality,
+    SALARY_REPORT_DEADLINE_REMINDER_UNCONFIRMED:
+      reportText.timeline.reminderUnconfirmedSalary,
   }
   const COMPANY_EVENT_ACTOR_LABELS: Record<string, [string, string]> = {
     API_KEY_ISSUED: [

@@ -26,13 +26,35 @@ describe('NoticeOutboxTask', () => {
   let runWithDistributedLock: jest.Mock
   let dispatchPending: jest.Mock
   let findStuckDeliveries: jest.Mock
+  let countStuckDeliveries: jest.Mock
+  let unconfiguredKinds: jest.Mock
+  let findOverdueNotices: jest.Mock
   const lockTransaction = { id: 'lock-tx' }
+  const originalEnabled = process.env.ONESYSTEMS_ENABLED
+
+  const counts = (
+    overrides: Partial<
+      Record<'UNCERTAIN' | 'INTERRUPTED' | 'ATTEMPTS_EXHAUSTED', number>
+    > = {},
+  ) => ({ UNCERTAIN: 0, INTERRUPTED: 0, ATTEMPTS_EXHAUSTED: 0, ...overrides })
+
+  afterAll(() => {
+    if (originalEnabled === undefined) {
+      delete process.env.ONESYSTEMS_ENABLED
+    } else {
+      process.env.ONESYSTEMS_ENABLED = originalEnabled
+    }
+  })
 
   beforeEach(async () => {
     jest.clearAllMocks()
+    delete process.env.ONESYSTEMS_ENABLED
 
     dispatchPending = jest.fn().mockResolvedValue({ picked: 0, settled: 0 })
     findStuckDeliveries = jest.fn().mockResolvedValue([])
+    countStuckDeliveries = jest.fn().mockResolvedValue(counts())
+    unconfiguredKinds = jest.fn().mockReturnValue([])
+    findOverdueNotices = jest.fn().mockResolvedValue({ total: 0, notices: [] })
     runWithDistributedLock = jest
       .fn()
       .mockImplementation(async (_ns, _id, work) => {
@@ -50,11 +72,15 @@ describe('NoticeOutboxTask', () => {
         },
         {
           provide: INoticeDispatchService,
-          useValue: { dispatchPending },
+          useValue: { dispatchPending, findOverdueNotices },
         },
         {
           provide: IMailboxDeliveryService,
-          useValue: { findStuckDeliveries },
+          useValue: {
+            findStuckDeliveries,
+            countStuckDeliveries,
+            unconfiguredKinds,
+          },
         },
       ],
     }).compile()
@@ -108,6 +134,9 @@ describe('NoticeOutboxTask', () => {
     })
 
     it('names every delivery that needs a person, at error level, under its own lock', async () => {
+      countStuckDeliveries.mockResolvedValue(
+        counts({ UNCERTAIN: 1, INTERRUPTED: 1, ATTEMPTS_EXHAUSTED: 1 }),
+      )
       findStuckDeliveries.mockResolvedValue([
         stuck('d-1', 'UNCERTAIN'),
         stuck('d-2', 'ATTEMPTS_EXHAUSTED'),
@@ -143,14 +172,102 @@ describe('NoticeOutboxTask', () => {
       )
     })
 
-    it('says nothing when no delivery is stuck', async () => {
+    // The counts come from every row, not the capped list.
+    it('counts every stuck delivery, past the ones it names', async () => {
+      countStuckDeliveries.mockResolvedValue(counts({ UNCERTAIN: 70 }))
+      findStuckDeliveries.mockResolvedValue(
+        Array.from({ length: MAILBOX_DELIVERY_ALERT_LIMIT }, (_, i) =>
+          stuck(`d-${i}`, 'UNCERTAIN'),
+        ),
+      )
+
+      await task.alertStuckMailboxDeliveries()
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Mailbox deliveries need a person: 70 UNCERTAIN, 0 interrupted, 0 out of attempts (oldest ${MAILBOX_DELIVERY_ALERT_LIMIT} of 70 shown)`,
+        expect.anything(),
+      )
+    })
+
+    it('says nothing when nothing needs a person', async () => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+
+      await task.alertStuckMailboxDeliveries()
+
+      expect(findStuckDeliveries).not.toHaveBeenCalled()
+      expect(mockLogger.error).not.toHaveBeenCalled()
+    })
+
+    it('names every kind in use with no case template while the flag is on', async () => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+      unconfiguredKinds.mockReturnValue([
+        MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+        MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+      ])
+
+      await task.alertStuckMailboxDeliveries()
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('2 mailbox kinds have no case template'),
+        expect.objectContaining({
+          kinds: [
+            MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+            MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+          ],
+        }),
+      )
+    })
+
+    it('says nothing of case templates while the flag is off', async () => {
+      unconfiguredKinds.mockReturnValue([
+        MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+      ])
+
       await task.alertStuckMailboxDeliveries()
 
       expect(mockLogger.error).not.toHaveBeenCalled()
     })
 
+    // A decision held on a document One has filed but not sent, with the flag
+    // off for good, is named here and nowhere else.
+    it('names every overdue outbox row, with its reason', async () => {
+      findOverdueNotices.mockResolvedValue({
+        total: 2,
+        notices: [
+          {
+            noticeId: 'n-1',
+            kind: 'REPORT_APPROVED',
+            reportId: 'r-1',
+            attempts: 0,
+            lastError: 'mailbox delivery d-1 has a document in One',
+            createdAt: new Date('2026-10-14T10:00:00.000Z'),
+          },
+        ],
+      })
+
+      await task.alertStuckMailboxDeliveries()
+
+      expect(findOverdueNotices).toHaveBeenCalledWith(
+        MAILBOX_DELIVERY_ALERT_LIMIT,
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Notice outbox: 2 notices overdue (oldest 1 shown)',
+        expect.objectContaining({
+          notices: [
+            {
+              noticeId: 'n-1',
+              kind: 'REPORT_APPROVED',
+              reportId: 'r-1',
+              attempts: 0,
+              lastError: 'mailbox delivery d-1 has a document in One',
+            },
+          ],
+        }),
+      )
+    })
+
     it('catches a failed run instead of letting it escape', async () => {
-      findStuckDeliveries.mockRejectedValue(new Error('db is down'))
+      countStuckDeliveries.mockRejectedValue(new Error('db is down'))
 
       await expect(task.alertStuckMailboxDeliveries()).resolves.toBeUndefined()
       expect(mockLogger.error).toHaveBeenCalledWith(

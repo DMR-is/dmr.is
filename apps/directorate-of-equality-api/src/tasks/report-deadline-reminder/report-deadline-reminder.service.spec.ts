@@ -72,6 +72,7 @@ describe('ReportDeadlineReminderService', () => {
   let emitDeadlineReminderEvent: jest.Mock
   let sendReportDeadlineReminder: jest.Mock
   let deliverToMailbox: jest.Mock
+  let findDelivery: jest.Mock
   let renderHtml: jest.Mock
 
   beforeEach(async () => {
@@ -83,6 +84,7 @@ describe('ReportDeadlineReminderService', () => {
       sentAt: new Date(),
       alreadySent: false,
     })
+    findDelivery = jest.fn().mockResolvedValue(null)
     renderHtml = jest.fn().mockResolvedValue(Buffer.from('letter-pdf'))
     findAll = jest.fn().mockResolvedValue([])
     hasDeadlineReminderEvent = jest.fn().mockResolvedValue(false)
@@ -104,7 +106,7 @@ describe('ReportDeadlineReminderService', () => {
         },
         {
           provide: IMailboxDeliveryService,
-          useValue: { deliverToMailbox },
+          useValue: { deliverToMailbox, findDelivery },
         },
         { provide: IPdfRenderService, useValue: { renderHtml } },
       ],
@@ -578,13 +580,23 @@ describe('ReportDeadlineReminderService', () => {
       skipped: 'ATTEMPTS_EXHAUSTED',
     }
 
-    // No later run finishes these on its own, so the gap goes on the timeline.
+    // No later run finishes these on its own, so the gap goes on the
+    // timeline: UNCONFIRMED where One may have sent it, UNDELIVERED where it
+    // certainly did not.
     it.each([
-      ['UNCERTAIN', { status: 'UNCERTAIN', deliveryId: 'delivery-7' }],
-      ['out of attempts', exhausted],
+      [
+        'UNCERTAIN',
+        { status: 'UNCERTAIN', deliveryId: 'delivery-7' },
+        CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNCONFIRMED,
+      ],
+      [
+        'out of attempts',
+        exhausted,
+        CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+      ],
     ])(
-      'records an UNDELIVERED event, not SENT, when the delivery is %s',
-      async (_label, result) => {
+      'records its own event, not SENT, when the delivery is %s',
+      async (_label, result, eventType) => {
         returnCompanyAtCall(CALL.salarySixMonths, company())
         deliverToMailbox.mockResolvedValue(result)
 
@@ -592,7 +604,7 @@ describe('ReportDeadlineReminderService', () => {
 
         expect(hasDeadlineReminderEvent).toHaveBeenCalledWith(
           COMPANY_ID,
-          CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+          eventType,
           CompanyReminderTierEnum.SIX_MONTHS,
           SALARY_DUE.toISOString(),
         )
@@ -600,7 +612,7 @@ describe('ReportDeadlineReminderService', () => {
         expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
           COMPANY_ID,
           CompanyStatusEnum.ACTIVE,
-          CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+          eventType,
           CompanyReminderTierEnum.SIX_MONTHS,
           SALARY_DUE.toISOString(),
         )
@@ -629,6 +641,12 @@ describe('ReportDeadlineReminderService', () => {
       [{ status: 'IN_PROGRESS', deliveryId: 'delivery-7' }],
       [{ status: 'QUARANTINED' }],
       [{ status: 'DISABLED' }],
+      [
+        {
+          status: 'UNCONFIGURED',
+          kind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+        },
+      ],
     ])('records no event when the delivery answers %o', async (result) => {
       returnCompanyAtCall(CALL.equalitySixMonths, company())
       deliverToMailbox.mockResolvedValue(result)
@@ -676,6 +694,83 @@ describe('ReportDeadlineReminderService', () => {
       expect(deliverToMailbox).toHaveBeenCalledTimes(2)
       expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
       expect(emitDeadlineReminderEvent.mock.calls[0][0]).toBe(second.id)
+    })
+
+    /*
+     * The call that goes UNCERTAIN, or spends the last attempt, throws rather
+     * than answering so. The row it recorded says which, and the event is
+     * written on that run: a later run may never come for this tier and due
+     * date.
+     */
+    describe('a delivery that throws', () => {
+      const state = (overrides: Record<string, unknown>) => ({
+        deliveryId: 'delivery-7',
+        status: 'FAILED',
+        documentFiled: false,
+        sent: false,
+        interrupted: false,
+        inProgress: false,
+        exhausted: false,
+        ...overrides,
+      })
+
+      beforeEach(() => {
+        returnCompanyAtCall(CALL.equalitySixMonths, company())
+        deliverToMailbox.mockRejectedValue(
+          new Error('OneSystems SendDocToIslandIs did not answer'),
+        )
+      })
+
+      it.each([
+        [
+          'UNCERTAIN',
+          state({ status: 'UNCERTAIN' }),
+          CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED,
+        ],
+        [
+          'interrupted',
+          state({ status: 'CASE_CREATED', interrupted: true }),
+          CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED,
+        ],
+        [
+          'out of attempts',
+          state({ exhausted: true }),
+          CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+        ],
+      ])(
+        'reads the row back and records its event when it is %s',
+        async (_label, delivery, eventType) => {
+          findDelivery.mockResolvedValue(delivery)
+
+          await expect(service.run()).resolves.toBeUndefined()
+
+          expect(findDelivery).toHaveBeenCalledWith(
+            deliverToMailbox.mock.calls[0][0].idempotencyKey,
+          )
+          expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+          expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+            COMPANY_ID,
+            CompanyStatusEnum.ACTIVE,
+            eventType,
+            CompanyReminderTierEnum.SIX_MONTHS,
+            EQUALITY_DUE.toISOString(),
+          )
+        },
+      )
+
+      it.each([
+        ['has attempts left', state({ attempts: 2 })],
+        ['has no row', null],
+      ])(
+        'records no event when the row %s, for the next run to retry',
+        async (_label, delivery) => {
+          findDelivery.mockResolvedValue(delivery)
+
+          await service.run()
+
+          expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
+        },
+      )
     })
 
     // A fault on the lock's transaction must still abort the run.
