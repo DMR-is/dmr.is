@@ -48,8 +48,22 @@ export type CurrentRegulationChange = {
   currentText: string
   /** `regulationchange` id the text comes from; `null` for the original text */
   sourceChangeId: number | null
+  /** Name of the regulation that made that change; `null` for the original text */
+  sourceChangingName: RegName | null
   /** Date of that `regulationchange` row; absent for the original text */
   sourceDate?: ISODate
+  /** Earlier changes without text, so missing from `currentText`. Newest first */
+  skippedChanges: Array<SkippedRegulationChange>
+}
+
+export type SkippedRegulationChange = {
+  /** `regulationchange` id */
+  id: number
+  /** Id of the regulation that made the change */
+  changingId: number
+  /** Name of the regulation that made the change */
+  changingName: RegName
+  date: ISODate
 }
 
 export * from '@dmr.is/regulations-tools/types'

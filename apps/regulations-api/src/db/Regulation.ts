@@ -169,9 +169,9 @@ async function getLatestRegulationChange(
 
 export async function getRegulationChanges(
   regulationId: number,
-): Promise<Array<DB_RegulationChange>> {
+): Promise<Array<DB_RegulationChange & { changingName: RegName }>> {
   const changeQuery = `
-      SELECT ch.*
+      SELECT ch.*, r.name AS "changingName"
       FROM RegulationChange as ch
       JOIN Regulation AS r ON ch.changingId = r.id
       WHERE
@@ -182,7 +182,9 @@ export async function getRegulationChanges(
         ch.id DESC
       `
 
-  const regulationChanges = await db.query<DB_RegulationChange>(changeQuery, {
+  const regulationChanges = await db.query<
+    DB_RegulationChange & { changingName: RegName }
+  >(changeQuery, {
     replacements: { regulationId },
     type: QueryTypes.SELECT,
   })

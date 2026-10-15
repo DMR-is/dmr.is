@@ -6,6 +6,7 @@ import type {
   HTMLText,
   PlainText,
   RegName,
+  SkippedRegulationChange,
 } from '../routes/types'
 import { db } from '../utils/sequelize'
 import { getRegulationById, getRegulationChanges } from './Regulation'
@@ -401,6 +402,8 @@ export async function deleteChangeSuggestion(
  * The pair's own row is skipped even when it has text, since that is the text
  * *after* the change — a suggestion built on it would apply the change twice,
  * and one built on anything older would drop the changes in between.
+ * `skippedChanges` lists the earlier changes that text is missing because
+ * their rows have no consolidated text.
  */
 export async function getChangeHistoryCurrent(
   baseRegId: number,
@@ -433,16 +436,36 @@ export async function getChangeHistoryCurrent(
     )
   }
 
-  const previous = history
-    .slice(ownIndex + 1)
-    .find(({ changingid, text }) => changingid !== changingRegId && !!text)
+  // Walk back from the change to the newest version with text. Textless rows
+  // passed on the way are changes that text is missing; anything older is
+  // already in it.
+  const skippedChanges: Array<SkippedRegulationChange> = []
+  let previous: (typeof history)[number] | undefined
+
+  for (const change of history.slice(ownIndex + 1)) {
+    if (change.changingid === changingRegId) {
+      continue
+    }
+    if (change.text) {
+      previous = change
+      break
+    }
+    skippedChanges.push({
+      id: change.id,
+      changingId: change.changingid,
+      changingName: change.changingName,
+      date: change.date,
+    })
+  }
 
   return {
     date: ownChange.date ?? undefined,
     currentTitle: previous?.title || baseRegulation.title,
     currentText: previous?.text ?? baseRegulation.text,
     sourceChangeId: previous?.id ?? null,
+    sourceChangingName: previous?.changingName ?? null,
     sourceDate: previous?.date ?? undefined,
+    skippedChanges,
   }
 }
 

@@ -128,7 +128,15 @@ describe('getChangeHistoryCurrent', () => {
     date: string,
     text = '',
     title = '',
-  ) => ({ id, regulationId: base.id, changingid, date, text, title })
+  ) => ({
+    id,
+    regulationId: base.id,
+    changingid,
+    changingName: `${changingid}/name`,
+    date,
+    text,
+    title,
+  })
 
   beforeEach(() => {
     getRegulationById.mockReset()
@@ -148,7 +156,9 @@ describe('getChangeHistoryCurrent', () => {
       currentTitle: 'Titill 2022',
       currentText: 'samsteypt 2022',
       sourceChangeId: 6766,
+      sourceChangingName: '24000/name',
       sourceDate: '2022-09-15',
+      skippedChanges: [],
     })
   })
 
@@ -186,6 +196,42 @@ describe('getChangeHistoryCurrent', () => {
     const result = await getChangeHistoryCurrent(22278, 25027)
 
     expect(result.sourceChangeId).toBe(6766)
+    expect(result.skippedChanges).toEqual([
+      {
+        id: 6900,
+        changingId: 24500,
+        changingName: '24500/name',
+        date: '2024-05-01',
+      },
+    ])
+  })
+
+  it('lists only the textless changes between the change and its source', async () => {
+    getRegulationChanges.mockResolvedValue([
+      row(8000, 26000, '2027-01-01'),
+      row(7000, 25027, '2026-03-01'),
+      row(6950, 24700, '2025-01-01'),
+      row(6900, 24500, '2024-05-01'),
+      row(6766, 24000, '2022-09-15', 'samsteypt 2022'),
+      row(6000, 23500, '2021-06-01'),
+    ])
+
+    const result = await getChangeHistoryCurrent(22278, 25027)
+
+    expect(result.skippedChanges.map(({ id }) => id)).toEqual([6950, 6900])
+  })
+
+  it('lists every earlier change when falling back to the original text', async () => {
+    getRegulationChanges.mockResolvedValue([
+      row(7000, 25027, '2026-03-01'),
+      row(6900, 24500, '2024-05-01'),
+      row(6766, 24000, '2022-09-15'),
+    ])
+
+    const result = await getChangeHistoryCurrent(22278, 25027)
+
+    expect(result.sourceChangeId).toBeNull()
+    expect(result.skippedChanges.map(({ id }) => id)).toEqual([6900, 6766])
   })
 
   it('goes back past every row of a change that takes effect in parts', async () => {
@@ -200,6 +246,7 @@ describe('getChangeHistoryCurrent', () => {
     expect(result).toMatchObject({
       date: '2026-03-01',
       currentText: 'samsteypt 2022',
+      skippedChanges: [],
     })
   })
 
@@ -223,7 +270,9 @@ describe('getChangeHistoryCurrent', () => {
       currentTitle: 'Upprunalegur titill',
       currentText: 'upprunalegt',
       sourceChangeId: null,
+      sourceChangingName: null,
       sourceDate: undefined,
+      skippedChanges: [],
     })
   })
 
