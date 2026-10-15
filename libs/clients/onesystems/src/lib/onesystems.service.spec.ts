@@ -597,6 +597,20 @@ describe('OneSystemsService', () => {
       })
     })
 
+    // One spells the spec's `ItemID` as "ItemId" in its own messages.
+    it('createCase and createDocument read ItemId too', async () => {
+      actionReplies = [
+        () => json({ Success: true, ItemId: 'item-7', ErrorMessage: null }),
+      ]
+
+      await expect(createCase()).resolves.toMatchObject({
+        caseItemId: 'item-7',
+      })
+      await expect(createDocument()).resolves.toEqual({
+        documentItemId: 'item-7',
+      })
+    })
+
     it('createDocument sends the file base64-encoded with PDF as the default extension', async () => {
       await expect(
         service.createDocument({
@@ -762,6 +776,31 @@ describe('OneSystemsService', () => {
       )
     })
 
+    it('sendDocToIslandIs does not warn when DocumentId differs from the ItemID only in case', async () => {
+      actionReplies = [() => sendDocResponse({ DocumentId: 'DOC-1' })]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'DOC-1',
+      })
+      expect(logger.warn).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      ['an empty object', {}],
+      ['an empty array', []],
+      ['an empty string', ''],
+    ])(
+      'sendDocToIslandIs: Success:true with Errors as %s is no errors, and does not warn',
+      async (_label, errors) => {
+        actionReplies = [() => sendDocResponse({ Errors: errors })]
+
+        await expect(sendDocToIslandIs()).resolves.toEqual({
+          islandIsDocumentId: 'doc-1',
+        })
+        expect(logger.warn).not.toHaveBeenCalled()
+      },
+    )
+
     // Whether a repeated send answers this way is still open, so it is kept
     // visible: the JSON type only, never the text.
     it('sendDocToIslandIs: Success:true with Errors is sent, with a warning naming only their shape', async () => {
@@ -857,6 +896,7 @@ describe('OneSystemsService', () => {
       ['null', null, 'null'],
       ['absent', undefined, 'absent'],
       ['an empty array', [], 'array'],
+      ['an empty object', {}, 'object'],
     ])(
       'sendDocToIslandIs: Success:false with Errors %s leaves errorMessage null',
       async (_label, errors, errorsShape) => {

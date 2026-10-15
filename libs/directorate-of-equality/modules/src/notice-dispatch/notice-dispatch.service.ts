@@ -54,6 +54,7 @@ import {
 import {
   INoticeDispatchService,
   NoticeDispatchSummary,
+  OverdueNotice,
 } from './notice-dispatch.service.interface'
 
 const LOGGING_CONTEXT = 'NoticeDispatchService'
@@ -81,6 +82,37 @@ export const NOTICE_DISPATCH_RETRY_DELAY_MS = 5 * 60 * 1000
  * next run, so the lock is held for about this long plus one row at worst.
  */
 export const NOTICE_DISPATCH_TIME_BUDGET_MS = 5 * 60 * 1000
+
+/**
+ * A PENDING row older than this is not progressing: five attempts five
+ * minutes apart settle a row within about half an hour. It is named in the
+ * daily alert (`findOverdueNotices`) unless it waits by design.
+ */
+export const NOTICE_OVERDUE_AFTER_MS = 60 * 60 * 1000
+
+/**
+ * The report statuses a notice of each kind is still owed in, checked when the
+ * row is sent. A row can wait a long time (a quarantine, the flag off, a held
+ * delivery), and what it would say may no longer be true by then:
+ *
+ * - A receipt is owed only while the report awaits a decision. Once it is
+ *   decided, superseded or withdrawn, "we have received it" would arrive after
+ *   the decision, or about a report nobody is assessing.
+ * - A decision is owed only while the report still has it. An approval whose
+ *   report has since been superseded, or a denial the report has moved on
+ *   from, must not go out on release.
+ *
+ * A row not owed is settled SKIPPED, naming the status, and never sent.
+ */
+const OWED_WHILE: Record<NoticeOutboxKindEnum, readonly ReportStatusEnum[]> = {
+  [NoticeOutboxKindEnum.REPORT_SUBMITTED]: [
+    ReportStatusEnum.SUBMITTED,
+    ReportStatusEnum.POSTPONED,
+    ReportStatusEnum.IN_REVIEW,
+  ],
+  [NoticeOutboxKindEnum.REPORT_APPROVED]: [ReportStatusEnum.APPROVED],
+  [NoticeOutboxKindEnum.REPORT_DENIED]: [ReportStatusEnum.DENIED],
+}
 
 /**
  * A row whose filing company is quarantined is not picked at all: quarantine
@@ -131,8 +163,15 @@ type MailboxNotice = {
 
 type Gone = { outcome: 'GONE'; reason: string }
 
-/** Not sent and not an attempt: the row stays PENDING for a later run. */
-type Held = { outcome: 'HELD'; reason: string }
+/**
+ * Not sent and not an attempt: the row stays PENDING for a later run.
+ * `alert` logs it at warn, for a hold that waits on a person rather than on
+ * time; such a row is also named in the daily alert once overdue.
+ */
+type Held = { outcome: 'HELD'; reason: string; alert?: boolean }
+
+/** No longer owed (`OWED_WHILE`): settled SKIPPED, never sent. */
+type NotOwed = { outcome: 'NOT_OWED'; reason: string }
 
 type SendResult =
   | {
@@ -147,6 +186,7 @@ type SendResult =
     }
   | Gone
   | Held
+  | NotOwed
 
 /**
  * Sends what the notice outbox says a company is owed.
@@ -167,6 +207,17 @@ type SendResult =
  *
  * Rows of a quarantined filing company are not picked (see
  * `FILING_COMPANY_NOT_QUARANTINED`).
+ *
+ * A row is sent only while the report still has a status its notice is owed
+ * in (`OWED_WHILE`), checked when it is sent: a receipt for a report already
+ * decided, or a decision the report has moved on from, is settled SKIPPED.
+ * This is what keeps the receipts held with the flag off from arriving after
+ * the decision once it goes on.
+ *
+ * With the flag on, a mailbox kind with no case template (`UNCONFIGURED`)
+ * holds its rows without counting an attempt, so switching the flag on before
+ * the templates are confirmed loses nothing. The daily alert names the kind,
+ * and every row overdue for another reason (`findOverdueNotices`).
  *
  * A mailbox delivery is idempotent by its key (kind, company, report), so a
  * retried row resumes the same delivery. One left UNCERTAIN is never retried:
@@ -241,12 +292,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
         { lastAttemptAt: null },
         { lastAttemptAt: { [Op.lt]: retryBefore } },
       ],
-      [Op.and]: [FILING_COMPANY_NOT_QUARANTINED],
-      // A receipt only ever goes to the mailbox. With the flag off it waits,
-      // unpicked, so it cannot take a batch slot from a notice that can go.
-      ...(isMailboxDeliveryEnabled()
-        ? {}
-        : { kind: { [Op.ne]: NoticeOutboxKindEnum.REPORT_SUBMITTED } }),
+      ...this.notWaitingByDesign(),
     }
 
     const rows = await this.noticeOutboxModel.findAll({
@@ -276,6 +322,66 @@ export class NoticeDispatchService implements INoticeDispatchService {
     }
 
     return { picked, settled }
+  }
+
+  async findOverdueNotices(
+    limit: number,
+  ): Promise<{ total: number; notices: OverdueNotice[] }> {
+    const where: WhereOptions<NoticeOutboxModel> = {
+      status: NoticeOutboxStatusEnum.PENDING,
+      createdAt: { [Op.lt]: new Date(Date.now() - NOTICE_OVERDUE_AFTER_MS) },
+      ...this.notWaitingByDesign(),
+    }
+
+    const total = await this.noticeOutboxModel.count({
+      where,
+      transaction: null,
+    })
+    if (total === 0) {
+      return { total, notices: [] }
+    }
+
+    const rows = await this.noticeOutboxModel.findAll({
+      where,
+      attributes: [
+        'id',
+        'kind',
+        'reportId',
+        'attempts',
+        'lastError',
+        'createdAt',
+      ],
+      order: [['createdAt', 'ASC']],
+      limit,
+      transaction: null,
+    })
+
+    return {
+      total,
+      notices: rows.map((row) => ({
+        noticeId: row.id,
+        kind: row.kind,
+        reportId: row.reportId,
+        attempts: row.attempts,
+        lastError: row.lastError,
+        createdAt: row.createdAt,
+      })),
+    }
+  }
+
+  /**
+   * The rows that wait by design, left out of the pick and the overdue alert:
+   * a quarantined filing company's, and, with the flag off, receipts. A
+   * receipt only ever goes to the mailbox, so with the flag off it waits,
+   * unpicked, and cannot take a batch slot from a notice that can go.
+   */
+  private notWaitingByDesign(): WhereOptions<NoticeOutboxModel> {
+    return {
+      [Op.and]: [FILING_COMPANY_NOT_QUARANTINED],
+      ...(isMailboxDeliveryEnabled()
+        ? {}
+        : { kind: { [Op.ne]: NoticeOutboxKindEnum.REPORT_SUBMITTED } }),
+    }
   }
 
   /** Returns whether the row left PENDING. Never throws. */
@@ -401,11 +507,16 @@ export class NoticeDispatchService implements INoticeDispatchService {
    *
    * - One confirmed the send: the company has it. The row is DONE by mailbox,
    *   and an approval's documents are archived as after any mailbox send.
-   * - UNCERTAIN: One may have sent it. Given up for a person, as with the flag
-   *   on, rather than emailed on top.
+   * - UNCERTAIN, or interrupted mid-call (`interrupted`, which the next claim
+   *   would mark UNCERTAIN): One may have sent it. Given up for a person, as
+   *   with the flag on, rather than emailed on top.
+   * - A worker holds a live lease on it: held until that call finishes, and
+   *   the next run reads what it left.
    * - One holds the document but has not sent it: held until the flag is back
    *   on and the delivery can finish. Emailing would leave the document in One
-   *   for the next run with the flag on to send as well.
+   *   for the next run with the flag on to send as well. Held with `alert`, and
+   *   named in the daily alert once overdue: if the flag stays off, a person
+   *   decides.
    * - Nothing past CreateCase (the case is shared and finds-or-creates): the
    *   email goes.
    */
@@ -449,6 +560,13 @@ export class NoticeDispatchService implements INoticeDispatchService {
       }
     }
 
+    if (delivery.interrupted) {
+      return {
+        outcome: 'GONE',
+        reason: `mailbox delivery ${delivery.deliveryId} was interrupted mid-call; check One before repeating anything`,
+      }
+    }
+
     if (delivery.sent || delivery.status === MailboxDeliveryStatusEnum.SENT) {
       return {
         outcome: ReportMailOutcome.SENT,
@@ -460,14 +578,67 @@ export class NoticeDispatchService implements INoticeDispatchService {
       }
     }
 
+    if (delivery.inProgress) {
+      return {
+        outcome: 'HELD',
+        reason: `mailbox delivery ${delivery.deliveryId} is in progress`,
+      }
+    }
+
     if (delivery.documentFiled) {
       return {
         outcome: 'HELD',
         reason: `mailbox delivery ${delivery.deliveryId} has a document in One that is not sent; waiting for ONESYSTEMS_ENABLED`,
+        alert: true,
       }
     }
 
     return null
+  }
+
+  /**
+   * Settles a row no longer owed (`OWED_WHILE`), unless its mailbox delivery
+   * already got somewhere in One. A delivery One sent is finished as usual, so
+   * the row records what the company has. A delivery One may hold a document
+   * for, or may have sent, is given up for a person: not sending a stale
+   * notice, and not losing track of what One holds.
+   */
+  private async notOwed(
+    row: NoticeOutboxModel,
+    report: Pick<ReportModel, 'id' | 'type' | 'status'>,
+    companyId: string,
+  ): Promise<NotOwed | Gone | null> {
+    const stale = notOwedByStatus(row.kind, report)
+    if (!stale) {
+      return null
+    }
+
+    const delivery = await this.mailboxDeliveryService.findDelivery(
+      buildMailboxDeliveryIdempotencyKey({
+        kind: MAILBOX_KINDS[row.kind][report.type],
+        companyId,
+        discriminator: report.id,
+      }),
+    )
+
+    if (!delivery) {
+      return stale
+    }
+    if (delivery.sent || delivery.status === MailboxDeliveryStatusEnum.SENT) {
+      return null
+    }
+    if (
+      delivery.documentFiled ||
+      delivery.interrupted ||
+      delivery.inProgress ||
+      delivery.status === MailboxDeliveryStatusEnum.UNCERTAIN
+    ) {
+      return {
+        outcome: 'GONE',
+        reason: `${stale.reason}, but mailbox delivery ${delivery.deliveryId} may have reached One; check One`,
+      }
+    }
+    return stale
   }
 
   /**
@@ -483,6 +654,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
       attributes: [
         'id',
         'type',
+        'status',
         'validUntil',
         'approvedAt',
         'companyNationalId',
@@ -500,6 +672,11 @@ export class NoticeDispatchService implements INoticeDispatchService {
 
     if (!company) {
       return { outcome: 'GONE', reason: 'filing company not found' }
+    }
+
+    const notOwed = await this.notOwed(row, report, company.companyId)
+    if (notOwed) {
+      return notOwed
     }
 
     const notice = await this.prepareMailboxNotice(
@@ -560,6 +737,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
               report.type,
               report.id,
               lockTransaction,
+              'send',
             )
             const letter = buildApprovedLetter(
               report,
@@ -641,6 +819,16 @@ export class NoticeDispatchService implements INoticeDispatchService {
         // Quarantined between the pick and the call. Not an attempt: the row
         // waits, and is not picked again until the quarantine is lifted.
         return { outcome: 'HELD', reason: 'the filing company is quarantined' }
+      case 'UNCONFIGURED':
+        // The flag is on before the kind's case template is set. Not an
+        // attempt, so nothing is spent and the row goes once the template
+        // is; `deliverToMailbox` logged it at error, and the daily alert
+        // names the kind and, once overdue, the row.
+        return {
+          outcome: 'HELD',
+          reason: `mailbox kind ${result.kind} has no case template; waiting for it in mailbox-delivery.kinds.ts`,
+          alert: true,
+        }
       default:
         return {
           outcome: 'GONE',
@@ -656,7 +844,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
     const now = new Date()
 
     if (result.outcome === 'HELD') {
-      this.logger.info(
+      this.logger[result.alert ? 'warn' : 'info'](
         `Holding notice ${row.kind} for report ${row.reportId}: ${result.reason}`,
         { context: LOGGING_CONTEXT, noticeId: row.id },
       )
@@ -670,6 +858,17 @@ export class NoticeDispatchService implements INoticeDispatchService {
         },
       )
       return false
+    }
+
+    if (result.outcome === 'NOT_OWED') {
+      this.logger.warn(
+        `Not sending notice ${row.kind} for report ${row.reportId}: ${result.reason}`,
+        { context: LOGGING_CONTEXT, noticeId: row.id },
+      )
+      return this.settle(row, NoticeOutboxStatusEnum.SKIPPED, now, {
+        channel: null,
+        lastError: result.reason,
+      })
     }
 
     if (result.outcome === 'GONE') {
@@ -796,6 +995,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
         'contactEmail',
         'companyAdminEmail',
         'companyNationalId',
+        'status',
         // Dates the S3 key — see `archiveApprovalDocuments`.
         'approvedAt',
       ],
@@ -805,10 +1005,20 @@ export class NoticeDispatchService implements INoticeDispatchService {
       return { outcome: 'GONE', reason: 'report not found' }
     }
 
+    // `startedInMailbox` has already found no delivery in One to finish.
+    const notOwed = notOwedByStatus(
+      NoticeOutboxKindEnum.REPORT_APPROVED,
+      report,
+    )
+    if (notOwed) {
+      return notOwed
+    }
+
     const attachments = await this.buildApprovalAttachments(
       report.type,
       reportId,
       lockTransaction,
+      'send',
     )
 
     const outcome = await this.mailService.sendReportApproved(
@@ -917,6 +1127,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
       report.type,
       report.id,
       lockTransaction,
+      'archive',
     )
     await this.archiveApprovalDocuments(report, attachments)
   }
@@ -933,11 +1144,16 @@ export class NoticeDispatchService implements INoticeDispatchService {
    * failing — even on a DB error — costs only its own attachment. Empty means
    * every render failed: the notice still goes, and `buildReportApprovedHtml`
    * omits the "Skjalið er í viðhengi" line.
+   *
+   * `purpose` only words the log: rendered again for the archive after the
+   * notice went out (`archiveRenderedAgain`), a failure costs the archive
+   * copy, not anything the company receives.
    */
   private async buildApprovalAttachments(
     type: ReportTypeEnum,
     reportId: string,
     lockTransaction: Transaction,
+    purpose: 'send' | 'archive',
   ): Promise<ReportMailAttachment[]> {
     let reportAttachment: ReportMailAttachment | null = null
 
@@ -956,7 +1172,9 @@ export class NoticeDispatchService implements INoticeDispatchService {
       }
     } catch (error) {
       this.logger.error(
-        `Failed to render the report PDF for approved report ${reportId} — sending the approval notice without it`,
+        purpose === 'send'
+          ? `Failed to render the report PDF for approved report ${reportId} — sending the approval notice without it`
+          : `Failed to render the report PDF for approved report ${reportId} again — the notice already went out; not archived`,
         {
           context: LOGGING_CONTEXT,
           message: error instanceof Error ? error.message : String(error),
@@ -978,7 +1196,9 @@ export class NoticeDispatchService implements INoticeDispatchService {
       )
     } catch (error) {
       this.logger.error(
-        `Failed to render the úrbótaáætlun for report ${reportId} — mailing the report alone`,
+        purpose === 'send'
+          ? `Failed to render the úrbótaáætlun for report ${reportId} — mailing the report alone`
+          : `Failed to render the úrbótaáætlun for report ${reportId} again — the notice already went out; not archived`,
         {
           context: LOGGING_CONTEXT,
           message: error instanceof Error ? error.message : String(error),
@@ -1003,11 +1223,17 @@ export class NoticeDispatchService implements INoticeDispatchService {
   private async sendDenied(reportId: string): Promise<SendResult> {
     const report = await this.reportModel.findOne({
       where: { id: reportId },
-      attributes: ['id', 'type', 'contactEmail', 'companyAdminEmail'],
+      attributes: ['id', 'type', 'status', 'contactEmail', 'companyAdminEmail'],
     })
 
     if (!report) {
       return { outcome: 'GONE', reason: 'report not found' }
+    }
+
+    // `startedInMailbox` has already found no delivery in One to finish.
+    const notOwed = notOwedByStatus(NoticeOutboxKindEnum.REPORT_DENIED, report)
+    if (notOwed) {
+      return notOwed
     }
 
     const deniedEvent = await this.findDenial(reportId)
@@ -1039,4 +1265,17 @@ export class NoticeDispatchService implements INoticeDispatchService {
       order: [['createdAt', 'DESC']],
     })
   }
+}
+
+/** `NOT_OWED` when the report no longer has a status `kind` is owed in. */
+function notOwedByStatus(
+  kind: NoticeOutboxKindEnum,
+  report: Pick<ReportModel, 'status'>,
+): NotOwed | null {
+  return OWED_WHILE[kind].includes(report.status)
+    ? null
+    : {
+        outcome: 'NOT_OWED',
+        reason: `report is ${report.status}; a ${kind} notice is no longer owed`,
+      }
 }

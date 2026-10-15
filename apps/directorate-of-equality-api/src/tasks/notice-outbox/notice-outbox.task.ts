@@ -1,7 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 
-import { IMailboxDeliveryService } from '@dmr.is/doe-modules/mailbox-delivery'
+import {
+  IMailboxDeliveryService,
+  isMailboxDeliveryEnabled,
+  StuckMailboxDeliveryReason,
+} from '@dmr.is/doe-modules/mailbox-delivery'
 import { INoticeDispatchService } from '@dmr.is/doe-modules/notice-dispatch'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AdvisoryLockService } from '@dmr.is/shared-modules'
@@ -14,7 +18,10 @@ import {
 
 const LOGGING_CONTEXT = NOTICE_OUTBOX_LOGGING_CONTEXT
 
-/** Deliveries named in one alert line; the count covers the rest. */
+/**
+ * Deliveries, and outbox rows, named in one alert line. The counts are taken
+ * over every row, so they cover the rest.
+ */
 export const MAILBOX_DELIVERY_ALERT_LIMIT = 50
 
 /**
@@ -93,11 +100,17 @@ export class NoticeOutboxTask {
     name: 'mailbox-delivery-alert-task',
   })
   /**
-   * Names, at error level, every mailbox delivery a person must act on:
-   * UNCERTAIN, interrupted mid-call, or out of attempts. Nothing else tells
-   * anyone. The dispatcher gives its outbox row up as FAILED and moves on, and
-   * a reminder only records a timeline event. See the mailbox-delivery
-   * README's "Alerting".
+   * Names, at error level, what a person must act on:
+   * - every mailbox delivery that is UNCERTAIN, interrupted mid-call, or out
+   *   of attempts. The dispatcher gives its outbox row up as FAILED and moves
+   *   on, and a reminder only records a timeline event;
+   * - with `ONESYSTEMS_ENABLED` on, every mailbox kind in use with no case
+   *   template. Its notices are held and its reminders not sent until the
+   *   template is set;
+   * - every outbox row overdue (`findOverdueNotices`): held on a document One
+   *   has filed but not sent while the flag is off, held on an unconfigured
+   *   kind, or failing on every run.
+   * Nothing else tells anyone. See the mailbox-delivery README's "Alerting".
    *
    * Daily, so a stuck delivery is raised every morning until it is settled,
    * and not behind `ONESYSTEMS_ENABLED`: rows left from before the flag went
@@ -109,28 +122,9 @@ export class NoticeOutboxTask {
         DOE_TASK_NAMESPACE,
         DOE_TASK_JOB_IDS.mailboxDeliveryAlert,
         async () => {
-          const stuck = await this.mailboxDeliveryService.findStuckDeliveries(
-            MAILBOX_DELIVERY_ALERT_LIMIT,
-          )
-          if (stuck.length === 0) {
-            return
-          }
-
-          const count = (reason: string) =>
-            stuck.filter((delivery) => delivery.reason === reason).length
-
-          this.logger.error(
-            `Mailbox deliveries need a person: ${count('UNCERTAIN')} UNCERTAIN, ${count('INTERRUPTED')} interrupted, ${count('ATTEMPTS_EXHAUSTED')} out of attempts${stuck.length === MAILBOX_DELIVERY_ALERT_LIMIT ? ` (first ${MAILBOX_DELIVERY_ALERT_LIMIT} shown)` : ''}`,
-            {
-              context: LOGGING_CONTEXT,
-              deliveries: stuck.map((delivery) => ({
-                deliveryId: delivery.deliveryId,
-                kind: delivery.kind,
-                reason: delivery.reason,
-                attempts: delivery.attempts,
-              })),
-            },
-          )
+          await this.alertStuckDeliveries()
+          this.alertUnconfiguredKinds()
+          await this.alertOverdueNotices()
         },
         {
           // Long enough to absorb every container's 08:00 firing, far
@@ -145,5 +139,72 @@ export class NoticeOutboxTask {
         message: error instanceof Error ? error.message : String(error),
       })
     }
+  }
+
+  private async alertStuckDeliveries(): Promise<void> {
+    const counts = await this.mailboxDeliveryService.countStuckDeliveries()
+    const total = Object.values(counts).reduce((sum, n) => sum + n, 0)
+    if (total === 0) {
+      return
+    }
+
+    const stuck = await this.mailboxDeliveryService.findStuckDeliveries(
+      MAILBOX_DELIVERY_ALERT_LIMIT,
+    )
+    const count = (reason: StuckMailboxDeliveryReason) => counts[reason]
+
+    this.logger.error(
+      `Mailbox deliveries need a person: ${count('UNCERTAIN')} UNCERTAIN, ${count('INTERRUPTED')} interrupted, ${count('ATTEMPTS_EXHAUSTED')} out of attempts${total > stuck.length ? ` (oldest ${stuck.length} of ${total} shown)` : ''}`,
+      {
+        context: LOGGING_CONTEXT,
+        deliveries: stuck.map((delivery) => ({
+          deliveryId: delivery.deliveryId,
+          kind: delivery.kind,
+          reason: delivery.reason,
+          attempts: delivery.attempts,
+        })),
+      },
+    )
+  }
+
+  /** Only while the flag is on: with it off, no kind is used. */
+  private alertUnconfiguredKinds(): void {
+    if (!isMailboxDeliveryEnabled()) {
+      return
+    }
+
+    const kinds = this.mailboxDeliveryService.unconfiguredKinds()
+    if (kinds.length === 0) {
+      return
+    }
+
+    this.logger.error(
+      `ONESYSTEMS_ENABLED is on but ${kinds.length} mailbox kinds have no case template: their notices are held and their reminders not sent`,
+      { context: LOGGING_CONTEXT, kinds },
+    )
+  }
+
+  private async alertOverdueNotices(): Promise<void> {
+    const { total, notices } =
+      await this.noticeDispatchService.findOverdueNotices(
+        MAILBOX_DELIVERY_ALERT_LIMIT,
+      )
+    if (total === 0) {
+      return
+    }
+
+    this.logger.error(
+      `Notice outbox: ${total} notices overdue${total > notices.length ? ` (oldest ${notices.length} shown)` : ''}`,
+      {
+        context: LOGGING_CONTEXT,
+        notices: notices.map((notice) => ({
+          noticeId: notice.noticeId,
+          kind: notice.kind,
+          reportId: notice.reportId,
+          attempts: notice.attempts,
+          lastError: notice.lastError,
+        })),
+      },
+    )
   }
 }

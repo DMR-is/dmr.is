@@ -47,7 +47,7 @@ export const MAILBOX_DELIVERY_KIND_CONFIGS = Symbol(
 
 /**
  * The case template of each report type: `undefined` until confirmed, so
- * `resolveKindConfig` throws for every report kind and nothing reaches One.
+ * every report kind is `UNCONFIGURED` and nothing reaches One.
  *
  * ⚠️ Deliberate. A wrong `CaseType` files real mail under the wrong case, and
  * CreateCase finds-or-creates by `IDNumber` + `CaseType`, so the wrong case is
@@ -77,7 +77,8 @@ const equality = { caseType: EQUALITY_CASE_TYPE, ...UNCLASSIFIED }
  * The classification of each notice kind.
  *
  * No kind has a confirmed case template yet (see `SALARY_CASE_TYPE`), so
- * `resolveKindConfig` throws for every one and none can reach One.
+ * `deliverToMailbox` answers `UNCONFIGURED` for every one and none can reach
+ * One.
  * `OVERDUE_NOTICE` and `FINES_PRECURSOR` have no template at all: whether
  * those notices go to the mailbox is still open.
  */
@@ -95,10 +96,30 @@ export const MAILBOX_DELIVERY_KINDS: MailboxDeliveryKindConfigs = {
 }
 
 /**
+ * The kinds something sends today: the outbox's receipts and decisions, and
+ * the deadline reminders. `OVERDUE_NOTICE` and `FINES_PRECURSOR` have no
+ * sender yet, so a missing template for them is nothing to alert on.
+ */
+export const MAILBOX_DELIVERY_KINDS_IN_USE: readonly MailboxDeliveryKindEnum[] =
+  Object.values(MailboxDeliveryKindEnum).filter(
+    (kind) =>
+      kind !== MailboxDeliveryKindEnum.OVERDUE_NOTICE &&
+      kind !== MailboxDeliveryKindEnum.FINES_PRECURSOR,
+  )
+
+/** Whether `kind` has a case template, so `resolveKindConfig` will not throw. */
+export function isKindConfigured(
+  kind: MailboxDeliveryKindEnum,
+  configs: MailboxDeliveryKindConfigs = MAILBOX_DELIVERY_KINDS,
+): boolean {
+  return Boolean(configs[kind]?.caseType?.trim())
+}
+
+/**
  * The complete config for `kind`, or an `InternalServerErrorException` when it
- * has no `caseType`. A missing classification field becomes `''`. The delivery
- * service calls it before it writes a row or makes a call, so a missing value
- * never leaves a half-started delivery.
+ * has no `caseType`. A missing classification field becomes `''`.
+ * `deliverToMailbox` checks `isKindConfigured` first and answers
+ * `UNCONFIGURED` without writing a row, so this throw is a backstop.
  */
 export function resolveKindConfig(
   kind: MailboxDeliveryKindEnum,

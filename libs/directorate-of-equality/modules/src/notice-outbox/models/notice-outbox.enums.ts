@@ -11,8 +11,11 @@ export enum NoticeOutboxStatusEnum {
   /** Sent through `channel`. */
   DONE = 'DONE',
   /**
-   * Not written any more. A receipt with mailbox delivery off used to settle
-   * here; it now waits PENDING for the flag. Kept for rows written before.
+   * Not sent because it was no longer owed when its turn came: a receipt for
+   * a report already decided, superseded or withdrawn, or a decision the
+   * report has moved on from (`OWED_WHILE` in the dispatcher). `last_error`
+   * names the report's status. Rows written before that rule are receipts
+   * settled with mailbox delivery off, which now wait PENDING instead.
    */
   SKIPPED = 'SKIPPED',
   /** Gave up: no recipient, the report is gone, or every attempt failed. */

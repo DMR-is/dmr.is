@@ -23,7 +23,9 @@ import {
 } from './models/mailbox-delivery.enums'
 import { buildMailboxDeliveryIdempotencyKey } from './mailbox-delivery.idempotency-key'
 import {
+  isKindConfigured,
   MAILBOX_DELIVERY_KINDS,
+  MAILBOX_DELIVERY_KINDS_IN_USE,
   type MailboxDeliveryKindConfigs,
   resolveKindConfig,
 } from './mailbox-delivery.kinds'
@@ -211,6 +213,10 @@ function createStore() {
         const row = [...rows.values()].find((r) => matches(r, options.where))
         return row ? { ...row } : null
       },
+    ),
+    count: jest.fn(
+      async (options: { where: Record<string | symbol, unknown> }) =>
+        [...rows.values()].filter((r) => matches(r, options.where)).length,
     ),
     findAll: jest.fn(
       async (options: {
@@ -470,10 +476,54 @@ describe('MailboxDeliveryService', () => {
         status: MailboxDeliveryStatusEnum.FAILED,
         documentFiled: true,
         sent: false,
+        interrupted: false,
+        inProgress: false,
+        exhausted: false,
       })
       expect(store.model.findOne).toHaveBeenCalledWith(
         expect.objectContaining({ transaction: null }),
       )
+    })
+
+    it.each([
+      [
+        'interrupted: a marker with its lease lapsed',
+        {
+          status: MailboxDeliveryStatusEnum.CASE_CREATED,
+          inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+          leaseExpiresAt: new Date(Date.now() - MINUTE),
+        },
+        { interrupted: true, inProgress: false, exhausted: false },
+      ],
+      [
+        'in progress: a live lease',
+        {
+          status: MailboxDeliveryStatusEnum.CASE_CREATED,
+          inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+          leaseExpiresAt: new Date(Date.now() + 5 * MINUTE),
+        },
+        { interrupted: false, inProgress: true, exhausted: false },
+      ],
+      [
+        'exhausted: out of attempts, no marker, no live lease',
+        {
+          status: MailboxDeliveryStatusEnum.FAILED,
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        },
+        { interrupted: false, inProgress: false, exhausted: true },
+      ],
+      [
+        'none of them: UNCERTAIN is settled, whatever its attempts',
+        {
+          status: MailboxDeliveryStatusEnum.UNCERTAIN,
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        },
+        { interrupted: false, inProgress: false, exhausted: false },
+      ],
+    ])('says %s', async (_label, overrides, expected) => {
+      store.seed(overrides)
+
+      await expect(service.findDelivery(KEY)).resolves.toMatchObject(expected)
     })
   })
 
@@ -535,19 +585,58 @@ describe('MailboxDeliveryService', () => {
         { deliveryId: exhausted.id, reason: 'ATTEMPTS_EXHAUSTED' },
       ])
       expect(store.model.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({ limit: 50, transaction: null }),
+        expect.objectContaining({
+          limit: 50,
+          // Oldest attempt first: the fake ignores `order`, so it is pinned
+          // here.
+          order: [['lastAttemptAt', 'ASC']],
+          transaction: null,
+        }),
       )
+
+      // Counted over every row, not the `limit` named.
+      await expect(service.countStuckDeliveries()).resolves.toEqual({
+        UNCERTAIN: 1,
+        INTERRUPTED: 1,
+        ATTEMPTS_EXHAUSTED: 1,
+      })
+      for (const [options] of store.model.count.mock.calls) {
+        expect(options).toEqual(expect.objectContaining({ transaction: null }))
+      }
+    })
+
+    it('counts past the limit it names', async () => {
+      for (const discriminator of ['A', 'B', 'C']) {
+        store.seed({
+          idempotencyKey: keyFor(discriminator),
+          status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        })
+      }
+
+      await expect(service.findStuckDeliveries(2)).resolves.toHaveLength(2)
+      await expect(service.countStuckDeliveries()).resolves.toEqual({
+        UNCERTAIN: 3,
+        INTERRUPTED: 0,
+        ATTEMPTS_EXHAUSTED: 0,
+      })
     })
   })
 
   describe('kind config', () => {
-    it('throws before any row or call for a real kind without a case template', async () => {
+    it('answers UNCONFIGURED, at error, before any row or call for a real kind without a case template', async () => {
       service = build(MAILBOX_DELIVERY_KINDS)
 
-      await expect(service.deliverToMailbox(input())).rejects.toThrow(
-        InternalServerErrorException,
-      )
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'UNCONFIGURED',
+        kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+      })
 
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('has no case template'),
+        expect.objectContaining({
+          kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+        }),
+      )
       expect(companies.findOne).not.toHaveBeenCalled()
       expect(store.model.bulkCreate).not.toHaveBeenCalled()
       expect(store.rows.size).toBe(0)
@@ -591,9 +680,23 @@ describe('MailboxDeliveryService', () => {
     it.each(Object.values(MailboxDeliveryKindEnum))(
       '%s has no confirmed case template, so it cannot reach One',
       (kind) => {
+        expect(isKindConfigured(kind)).toBe(false)
         expect(() => resolveKindConfig(kind)).toThrow(/missing caseType/)
       },
     )
+
+    it('names every kind in use without a case template, and only those', () => {
+      expect(build(MAILBOX_DELIVERY_KINDS).unconfiguredKinds()).toEqual(
+        MAILBOX_DELIVERY_KINDS_IN_USE,
+      )
+      expect(MAILBOX_DELIVERY_KINDS_IN_USE).not.toContain(
+        MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+      )
+      expect(MAILBOX_DELIVERY_KINDS_IN_USE).not.toContain(
+        MailboxDeliveryKindEnum.FINES_PRECURSOR,
+      )
+      expect(build(KINDS).unconfiguredKinds()).toEqual([])
+    })
 
     it.each([
       MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
@@ -601,7 +704,7 @@ describe('MailboxDeliveryService', () => {
       MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
       MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
     ])(
-      'refuses a real %s delivery before any row, render or call',
+      'answers UNCONFIGURED for a real %s delivery before any row, render or call',
       async (kind) => {
         service = build(MAILBOX_DELIVERY_KINDS)
 
@@ -609,7 +712,7 @@ describe('MailboxDeliveryService', () => {
           service.deliverToMailbox(
             input({ kind, idempotencyKey: keyFor('REPORT-1', kind) }),
           ),
-        ).rejects.toThrow(/missing caseType/)
+        ).resolves.toEqual({ status: 'UNCONFIGURED', kind })
 
         expect(companies.findOne).not.toHaveBeenCalled()
         expect(store.rows.size).toBe(0)

@@ -165,8 +165,9 @@ export class OneSystemsService implements IOneSystemsService {
       postApiActionsSendDocToIslandIs({ ...common, body }),
     )
     // `DocumentId` is the document's own `ItemId`, so it should name the
-    // document just sent. One's ids, not personal data.
-    if (itemId !== null && itemId !== body.ItemID) {
+    // document just sent. One's ids, not personal data. Compared without
+    // case: One's GUIDs may come back in another casing than they were sent.
+    if (itemId !== null && itemId.toLowerCase() !== body.ItemID.toLowerCase()) {
       this.logger.warn(
         `OneSystems ${operation} answered with a DocumentId other than the ItemID sent`,
         {
@@ -382,7 +383,9 @@ export class OneSystemsService implements IOneSystemsService {
       return { itemId: documentId, body }
     }
 
-    const itemId = nonEmptyString(body.ItemID)
+    // The spec's `ItemID`, and `ItemId` as One spells the same field in its
+    // own messages and in `DocumentId`: the casing is not settled.
+    const itemId = nonEmptyString(body.ItemID) ?? nonEmptyString(body.ItemId)
     if (!itemId) {
       // One reported success, so it may well have acted, but without the id
       // the result cannot be tracked. The outcome is unknown, not rejected.
@@ -706,6 +709,10 @@ function oneErrorText(body: Record<string, unknown>): string | null {
   return nonEmptyString(body.ErrorMessage) ?? errorsText(body.Errors)
 }
 
+/**
+ * Null for no errors: absent, blank, or an empty array or object. `{}` would
+ * otherwise read as text, and a success carrying it warn on every send.
+ */
 function errorsText(value: unknown): string | null {
   if (Array.isArray(value)) {
     const parts = value
@@ -714,7 +721,7 @@ function errorsText(value: unknown): string | null {
     return parts.length > 0 ? parts.join('; ') : null
   }
   if (isRecord(value)) {
-    return stringify(value)
+    return Object.keys(value).length > 0 ? stringify(value) : null
   }
   return nonEmptyString(value)
 }
