@@ -3,7 +3,7 @@ import { Observable } from 'rxjs'
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
-import { claimValues } from '../claim-values'
+import { scopeValues } from '../claim-values'
 import { ACTOR_SCOPES_KEY, SCOPES_KEY } from './scopes.decorator'
 
 // This guard is used by legal-gazette-api for scope-based authorization
@@ -48,7 +48,7 @@ export class ScopesGuard implements CanActivate {
   }
 
   private hasScope(needScopes: string[], haveScopes: unknown): boolean {
-    const parsed = claimValues(haveScopes)
+    const parsed = scopeValues(haveScopes)
     return needScopes.some((scope) => parsed.includes(scope))
   }
 }

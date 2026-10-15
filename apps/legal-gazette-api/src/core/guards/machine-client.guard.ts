@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext } from '@nestjs/common'
 
 import { getLogger } from '@dmr.is/logging'
 
-import { claimValues } from './claim-values'
+import { scopeValues } from './claim-values'
 
 const logger = getLogger('MachineClientGuard')
 
@@ -30,7 +30,7 @@ export class MachineClientGuard implements CanActivate {
     }
 
     const user = context.switchToHttp().getRequest().user
-    const scopes = claimValues(user?.scope)
+    const scopes = scopeValues(user?.scope)
 
     return requiredScopes.every((scope) => scopes.includes(scope))
   }

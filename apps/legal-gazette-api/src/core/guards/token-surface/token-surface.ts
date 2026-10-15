@@ -5,7 +5,7 @@ import {
 
 import { getLogger } from '@dmr.is/logging'
 
-import { claimValues } from '../claim-values'
+import { audienceValues } from '../claim-values'
 
 /**
  * Which IDS tokens the staff surface accepts.
@@ -32,17 +32,6 @@ type TokenClaims = {
   actor?: unknown
 }
 
-/**
- * A token refused here, already logged with the reason. Distinct from the
- * plain 403 a missing admin row gives, so a caller does not log it again as
- * one.
- */
-export class TokenSurfaceRefusedException extends ForbiddenException {
-  constructor() {
-    super('Token is not valid for this endpoint')
-  }
-}
-
 const refuse = (
   claims: TokenClaims,
   reason: string,
@@ -58,7 +47,9 @@ const refuse = (
     clientId: claims.client_id,
   })
 
-  throw new TokenSurfaceRefusedException()
+  // The same body as every other admin refusal, so a caller cannot tell which
+  // check it failed; the reason is in the log above.
+  throw new ForbiddenException('Admin access required')
 }
 
 /**
@@ -84,7 +75,7 @@ export const assertStaffToken = (user: unknown, route?: string): void => {
 
   const claims = (user ?? {}) as TokenClaims
 
-  if (!claimValues(claims.aud).includes(staffClientId)) {
+  if (!audienceValues(claims.aud).includes(staffClientId)) {
     refuse(claims, 'not issued to legal-gazette-web', route)
   }
 
@@ -97,7 +88,8 @@ export const assertStaffToken = (user: unknown, route?: string): void => {
     }
   }
 
-  if (claims.actor) {
+  // Any `actor` at all, falsy or not: only a delegated session carries one.
+  if (claims.actor !== undefined) {
     refuse(claims, 'delegated session on a staff route', route)
   }
 }

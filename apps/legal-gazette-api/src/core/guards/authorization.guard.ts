@@ -16,11 +16,8 @@ import { IUsersService } from '../../modules/users/users.service.interface'
 import { UserContext } from '../context/user/user.context'
 import { ADMIN_KEY } from '../decorators/admin.decorator'
 import { SCOPES_KEY } from './scope-guards/scopes.decorator'
-import {
-  assertStaffToken,
-  TokenSurfaceRefusedException,
-} from './token-surface/token-surface'
-import { claimValues } from './claim-values'
+import { assertStaffToken } from './token-surface/token-surface'
+import { scopeValues } from './claim-values'
 
 const logger = getLogger('AuthorizationGuard')
 
@@ -141,12 +138,20 @@ export class AuthorizationGuard implements CanActivate {
       // Scope check failed, fall through to admin check
     }
 
+    // Before the try, so a refusal (403, logged with its reason) or a missing
+    // client id (500) is not logged again as a missing admin row. A user with
+    // no nationalId is refused by checkAdminAccess first, as before. The route
+    // is the matched pattern or the path, never the query string.
+    if (user?.nationalId) {
+      assertStaffToken(
+        user,
+        `${request.method} ${request.route?.path ?? request.path}`,
+      )
+    }
+
     // Check admin access (expensive database lookup)
     try {
-      const adminUser = await this.checkAdminAccess(
-        user,
-        `${request.method} ${request.route?.path ?? request.url}`,
-      )
+      const adminUser = await this.checkAdminAccess(user)
 
       request.user = {
         ...request.user,
@@ -164,11 +169,6 @@ export class AuthorizationGuard implements CanActivate {
       // A lookup failure is an outage, not a refusal, so it must not become a 403
       if (!(error instanceof ForbiddenException)) {
         throw error
-      }
-
-      // Already logged with the reason; the logs below would misname it
-      if (error instanceof TokenSurfaceRefusedException) {
-        throw new ForbiddenException('Admin access required')
       }
     }
 
@@ -208,7 +208,7 @@ export class AuthorizationGuard implements CanActivate {
       logger.warn('Scope check failed: Missing required scope', {
         nationalId: user.nationalId,
         requiredScopes,
-        userScopes: claimValues(user.scope),
+        userScopes: scopeValues(user.scope),
       })
       return false
     }
@@ -221,20 +221,17 @@ export class AuthorizationGuard implements CanActivate {
   }
 
   /**
-   * Check that the token was issued to legal-gazette-web for the staff member
-   * themselves, then that they exist in the UserModel table (admin check).
-   * Throws ForbiddenException when either check fails.
+   * Check that the user exists in the UserModel table (admin check). The token
+   * itself is checked by `assertStaffToken` before this runs. Throws
+   * ForbiddenException when the user is not an admin.
    */
   private async checkAdminAccess(
     user: { nationalId?: string } | undefined,
-    route: string,
   ): Promise<UserDto> {
     if (!user?.nationalId) {
       logger.debug('Admin check skipped: No nationalId in request')
       throw new ForbiddenException('Admin access required')
     }
-
-    assertStaffToken(user, route)
 
     try {
       const dbUser = await this.usersService.getUserByNationalId(
@@ -262,7 +259,7 @@ export class AuthorizationGuard implements CanActivate {
     user: { scope?: unknown } | undefined,
     requiredScopes: string[],
   ): boolean {
-    const userScopes = claimValues(user?.scope)
+    const userScopes = scopeValues(user?.scope)
     return requiredScopes.some((scope) => userScopes.includes(scope))
   }
 
@@ -273,7 +270,7 @@ export class AuthorizationGuard implements CanActivate {
     user: { scope?: unknown } | undefined,
     requiredScopes: string[],
   ): string[] {
-    const userScopes = claimValues(user?.scope)
+    const userScopes = scopeValues(user?.scope)
     return requiredScopes.filter((scope) => userScopes.includes(scope))
   }
 }

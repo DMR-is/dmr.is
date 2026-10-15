@@ -7,6 +7,8 @@ import {
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { getLogger } from '@dmr.is/logging'
+
 import { UserDto } from '../../models/users.model'
 import { IUsersService } from '../../modules/users/users.service.interface'
 import { UserContext } from '../context/user/user.context'
@@ -17,13 +19,26 @@ import {
   STAFF_CLIENT_ID,
 } from './token-surface/staff-token.fixture'
 import { AuthorizationGuard } from './authorization.guard'
+
+// One logger for every category, so a spec can count the refusal logs
+jest.mock('@dmr.is/logging', () => {
+  const logger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }
+  return { ...jest.requireActual('@dmr.is/logging'), getLogger: () => logger }
+})
+const logger = jest.mocked(getLogger('AuthorizationGuard'))
+
 interface MockUser {
   nationalId?: string
   scope?: string
   aud?: unknown
-  azp?: string
-  client_id?: string
-  actor?: object
+  azp?: unknown
+  client_id?: unknown
+  actor?: unknown
 }
 describe('AuthorizationGuard', () => {
   let guard: AuthorizationGuard
@@ -33,8 +48,10 @@ describe('AuthorizationGuard', () => {
   // A user is a legal-gazette-web token unless the test says otherwise
   const createMockContext = (
     user: MockUser | null = null,
+    request: Record<string, unknown> = {},
   ): ExecutionContext => {
     const mockRequest = {
+      ...request,
       user: user && asStaffToken(user),
     }
     return {
@@ -84,8 +101,14 @@ describe('AuthorizationGuard', () => {
     reflector = module.get<Reflector>(Reflector)
     usersService = module.get(IUsersService)
   })
+  // Restored, not reassigned, the same way machine-client.guard.spec.ts does
+  const originalStaffClientId = process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
   afterEach(() => {
-    process.env.LEGAL_GAZETTE_WEB_CLIENT_ID = STAFF_CLIENT_ID
+    if (originalStaffClientId === undefined) {
+      delete process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
+    } else {
+      process.env.LEGAL_GAZETTE_WEB_CLIENT_ID = originalStaffClientId
+    }
     jest.clearAllMocks()
   })
   // ==========================================
@@ -686,14 +709,83 @@ describe('AuthorizationGuard', () => {
       },
     )
 
-    it('should refuse any actor claim that is present, even an empty one', async () => {
+    // Present means checked: a falsy or non-string value that is not exactly
+    // the client id is refused, not skipped
+    it.each(
+      ['azp', 'client_id'].flatMap((claim) =>
+        [
+          ['an empty string', ''],
+          ['null', null],
+          ['0', 0],
+          ['a number', 42],
+          ['an array of the client id', [STAFF_CLIENT_ID]],
+        ].map(([label, value]) => [claim, label, value] as const),
+      ),
+    )(
+      'should refuse a %s that is %s, without a lookup',
+      async (claim, _, value) => {
+        adminOnly()
+        const context = createMockContext({
+          nationalId: '1234567890',
+          [claim]: value,
+        })
+        usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+        await expect(guard.canActivate(context)).rejects.toThrow(
+          ForbiddenException,
+        )
+        expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+      },
+    )
+
+    // Presence, not a truthy check: a falsy value that is present still names
+    // a delegated session
+    it.each([
+      ['an empty object', {}],
+      ['an empty string', ''],
+      ['null', null],
+      ['0', 0],
+      ['false', false],
+    ])(
+      'should refuse any actor claim that is present, even %s',
+      async (_, actor) => {
+        adminOnly()
+        const context = createMockContext({ nationalId: '1234567890', actor })
+        usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+        await expect(guard.canActivate(context)).rejects.toThrow(
+          ForbiddenException,
+        )
+        expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+      },
+    )
+
+    it('should not split a string aud on spaces', async () => {
       adminOnly()
-      const context = createMockContext({ nationalId: '1234567890', actor: {} })
+      const context = createMockContext({
+        nationalId: '1234567890',
+        aud: `@other.is/client ${STAFF_CLIENT_ID}`,
+      })
       usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
       await expect(guard.canActivate(context)).rejects.toThrow(
         ForbiddenException,
       )
       expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('should log the route without its query string', async () => {
+      adminOnly()
+      const context = createMockContext(
+        { nationalId: '1234567890', aud: '@other.is/client' },
+        { method: 'GET', path: '/api/v1/users', url: '/api/v1/users?q=secret' },
+      )
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      // Once, from the token check: not again as a missing admin row
+      expect(logger.warn).toHaveBeenCalledTimes(1)
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ route: 'GET /api/v1/users' }),
+      )
     })
 
     it('should ignore surrounding whitespace in LEGAL_GAZETTE_WEB_CLIENT_ID', async () => {
