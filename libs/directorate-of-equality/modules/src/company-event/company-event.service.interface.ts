@@ -3,6 +3,7 @@ import { CompanyStatusEnum } from '../company/models/company.enums'
 import {
   CompanyCustomEmailEventType,
   CompanyDeadlineReminderEventType,
+  CompanyDueDateChangedEventType,
   CompanyReminderTierEnum,
 } from '../company/models/company-event.model'
 
@@ -52,6 +53,20 @@ export interface ICompanyEventService {
     companyId: string,
     status: CompanyStatusEnum,
     actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void>
+
+  /**
+   * Records an admin moving the company's next-due date by hand, with an
+   * optional reason. `fromDueAt` is null when the company had no date before.
+   */
+  emitDueDateChanged(
+    companyId: string,
+    status: CompanyStatusEnum,
+    eventType: CompanyDueDateChangedEventType,
+    fromDueAt: Date | null,
+    toDueAt: Date,
+    actorUserId: string,
     reason?: string | null,
   ): Promise<void>
 

@@ -1700,6 +1700,82 @@
         "tags": ["Companies"]
       }
     },
+    "/api/v1/companies/{id}/due-date": {
+      "patch": {
+        "operationId": "updateCompanyDueDate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyDueDateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
     "/api/v1/companies/{id}": {
       "get": {
         "operationId": "getCompanyById",
@@ -7392,6 +7468,26 @@
         },
         "required": ["quarantined"]
       },
+      "UpdateCompanyDueDateDto": {
+        "type": "object",
+        "properties": {
+          "reportType": {
+            "description": "Which next-due date to move: EQUALITY → `nextEqualityReportDueAt`, SALARY → `nextSalaryReportDueAt`.",
+            "allOf": [{ "$ref": "#/components/schemas/ReportTypeEnum" }]
+          },
+          "dueDate": {
+            "type": "string",
+            "example": "2026-11-20",
+            "description": "The new due date as a calendar day, `YYYY-MM-DD`. Stored as the end of that day (UTC), like every other next-due date. Cannot be cleared."
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional reason for the change, e.g. an extension granted, kept on the company timeline."
+          }
+        },
+        "required": ["reportType", "dueDate"]
+      },
       "CompanyTimelineItemKindEnum": {
         "type": "string",
         "enum": ["EVENT", "COMMENT"]
@@ -7415,7 +7511,9 @@
           "PARTNER_DELEGATION_REVOKED",
           "CUSTOM_EMAIL_SENT",
           "CUSTOM_EMAIL_FAILED",
-          "CUSTOM_EMAIL_SKIPPED"
+          "CUSTOM_EMAIL_SKIPPED",
+          "EQUALITY_REPORT_DUE_DATE_CHANGED",
+          "SALARY_REPORT_DUE_DATE_CHANGED"
         ]
       },
       "CompanyReminderTierEnum": {
@@ -7459,6 +7557,20 @@
             "format": "uuid",
             "nullable": true,
             "description": "The custom-email batch this event belongs to, on CUSTOM_EMAIL_* events only; null otherwise. The timeline uses it to fetch the message that was actually sent."
+          },
+          "fromDueAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "The next-due date before the change, on *_DUE_DATE_CHANGED events only; null when the company had none, and on every other event."
+          },
+          "toDueAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "The next-due date after the change, on *_DUE_DATE_CHANGED events only; null otherwise."
           },
           "createdAt": {
             "type": "string",

@@ -149,6 +149,9 @@ function adaptTimeline(
           // Null on every event but the three CUSTOM_EMAIL_* ones; where it is
           // set, the entry becomes expandable into the message that was sent.
           companyEmailId: item.event.companyEmailId ?? null,
+          // Set on *_DUE_DATE_CHANGED only; rendered into the headline.
+          fromDueAt: item.event.fromDueAt ?? null,
+          toDueAt: item.event.toDueAt ?? null,
           createdAt: item.event.createdAt,
         }
       : null,

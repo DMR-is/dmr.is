@@ -67,4 +67,16 @@ export const companyMessages = {
     message: `company.postcode "${value}" does not lead with a known Icelandic postcode`,
     translatedMessage: `Póstnúmerið „${value}“ er ekki til`,
   }),
+  invalidDueDate: (value: string): ErrorMessage => ({
+    message: `dueDate "${value}" is not a real calendar day`,
+    translatedMessage: `Dagsetningin „${value}“ er ekki gild`,
+  }),
+  dueDateBeforeCurrent: (value: string, current: string): ErrorMessage => ({
+    message: `dueDate "${value}" is before the current due date "${current}"`,
+    translatedMessage: 'Ekki er hægt að færa skiladag aftur í tímann',
+  }),
+  dueDateInPast: (value: string): ErrorMessage => ({
+    message: `dueDate "${value}" is in the past`,
+    translatedMessage: 'Skiladagur getur ekki verið liðinn',
+  }),
 } as const
