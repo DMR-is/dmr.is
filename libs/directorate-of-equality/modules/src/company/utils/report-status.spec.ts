@@ -108,7 +108,10 @@ describe('obligation predicates', () => {
         ),
       ).toBe(true)
       expect(
-        isReportRequired(company(CompanySizeEnum.SMALL), ReportTypeEnum.EQUALITY),
+        isReportRequired(
+          company(CompanySizeEnum.SMALL),
+          ReportTypeEnum.EQUALITY,
+        ),
       ).toBe(false)
       expect(
         isReportRequired(
