@@ -6,7 +6,9 @@ import { InjectConnection, InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
+import { owesSalaryReport } from '../company/utils/report-status'
 import { ICompanyFileService } from '../company-file/company-file.service.interface'
 import {
   IDoeMailService,
@@ -73,6 +75,60 @@ export const NOTICE_DISPATCH_MAX_ATTEMPTS = 5
  * "Re-driving a FAILED row" under `notice_outbox` in doe-api's `db/README.md`.
  */
 export const NOTICE_DISPATCH_RETRY_DELAY_MS = 5 * 60 * 1000
+
+/**
+ * Whether an approval is the one that completes the company's reporting
+ * obligations, which is when Jafnréttisstofa asks it to answer the service
+ * survey.
+ *
+ * - An equality report completes them when no salary report is owed.
+ * - A salary report completes them when one is owed: it cannot be submitted
+ *   before the equality obligation is met, and its approval requires every
+ *   outlier explained, so any úrbótaáætlun is in by then.
+ *
+ * A salary report filed when none is owed gets no survey. Nothing stops such a
+ * filing, and its company was already asked with its equality approval.
+ *
+ * "Owed" is the repo's one rule, `owesSalaryReport` (the twin of
+ * `salaryRequiredSql`): `salary_report_required`, set by the size trigger for
+ * LARGE, or `salary_report_required_override`, which an admin sets to force
+ * the obligation on for a company under 50. The override only forces it on.
+ * Neither is snapshotted on `company_report` (admin state, not filing data;
+ * see doe-api's `db/README.md`), so both are read off `company` when the
+ * notice is sent.
+ *
+ * An UNKNOWN-size company with no override owes no salary report (the trigger
+ * sets the flag for LARGE only), so, like a SMALL or MEDIUM one, it is asked
+ * on its equality approval. If it is later classified LARGE, its salary
+ * approval asks again.
+ *
+ * Null, a filing company not found, gets no survey.
+ */
+export const offersServiceSurvey = (
+  type: ReportTypeEnum,
+  company: Pick<
+    CompanyModel,
+    'salaryReportRequired' | 'salaryReportRequiredOverride'
+  > | null,
+): boolean => {
+  if (!company) {
+    return false
+  }
+  const owed = owesSalaryReport(company)
+  return type === ReportTypeEnum.SALARY
+    ? owed
+    : type === ReportTypeEnum.EQUALITY && !owed
+}
+
+/**
+ * Loads the filing company's salary obligation (`owesSalaryReport`) alongside
+ * its snapshot, for `offersServiceSurvey`.
+ */
+const FILING_COMPANY_OBLIGATION = {
+  model: CompanyModel,
+  as: 'company',
+  attributes: ['id', 'salaryReportRequired', 'salaryReportRequiredOverride'],
+}
 
 /**
  * No new row is started once a run has taken this long. The run holds the
@@ -684,6 +740,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
     const company = await this.companyReportModel.findOne({
       where: { reportId: row.reportId, parentCompanyId: null },
       attributes: ['companyId', 'name'],
+      include: [FILING_COMPANY_OBLIGATION],
     })
 
     if (!company) {
@@ -698,7 +755,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
     const notice = await this.prepareMailboxNotice(
       row,
       report,
-      company.name,
+      company,
       lockTransaction,
     )
 
@@ -726,9 +783,11 @@ export class NoticeDispatchService implements INoticeDispatchService {
   private async prepareMailboxNotice(
     row: NoticeOutboxModel,
     report: ReportModel,
-    companyName: string,
+    company: Pick<CompanyReportModel, 'name' | 'company'>,
     lockTransaction: Transaction,
   ): Promise<MailboxNotice | Gone> {
+    const companyName = company.name
+
     switch (row.kind) {
       case NoticeOutboxKindEnum.REPORT_SUBMITTED: {
         // The row is written in the submit transaction, so its creation is
@@ -760,6 +819,13 @@ export class NoticeDispatchService implements INoticeDispatchService {
               companyName,
               report.approvedAt ?? row.createdAt,
               attachments.map((attachment) => attachment.label),
+              {
+                // Same rule as the email: the mailbox letter replaces it.
+                serviceSurvey: offersServiceSurvey(
+                  report.type,
+                  company.company ?? null,
+                ),
+              },
             )
             const merged = await mergePdfs([
               await this.renderLetter(letter.html),
@@ -1037,9 +1103,23 @@ export class NoticeDispatchService implements INoticeDispatchService {
       'send',
     )
 
+    // The filing company's own snapshot row; a group report also has one per
+    // subsidiary, each with `parentCompanyId` set.
+    const snapshot = await this.companyReportModel.findOne({
+      where: { reportId, parentCompanyId: null },
+      attributes: ['companyId'],
+      include: [FILING_COMPANY_OBLIGATION],
+    })
+
     const outcome = await this.mailService.sendReportApproved(
       report,
       attachments,
+      {
+        serviceSurvey: offersServiceSurvey(
+          report.type,
+          snapshot?.company ?? null,
+        ),
+      },
     )
 
     if (outcome !== ReportMailOutcome.SENT) {

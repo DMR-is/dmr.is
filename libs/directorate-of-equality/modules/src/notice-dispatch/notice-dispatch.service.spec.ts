@@ -21,6 +21,7 @@ import {
   NOTICE_DISPATCH_TIME_BUDGET_MS,
   NOTICE_OVERDUE_AFTER_MS,
   NoticeDispatchService,
+  offersServiceSurvey,
 } from './notice-dispatch.service'
 
 // pdf-lib cannot load the fake PDF bytes these tests pass around.
@@ -185,9 +186,15 @@ describe('NoticeDispatchService', () => {
     mailService.sendReportApproved.mockResolvedValue(ReportMailOutcome.SENT)
     mailService.sendReportDenied.mockResolvedValue(ReportMailOutcome.SENT)
     delete process.env.ONESYSTEMS_ENABLED
+    // The filing company's snapshot: the mailbox reads its id and name, the
+    // survey decision whether the company owes a salary report.
     companyReportModel.findOne.mockResolvedValue({
       companyId: COMPANY_ID,
       name: 'Fyrirtæki ehf.',
+      company: {
+        salaryReportRequired: false,
+        salaryReportRequiredOverride: false,
+      },
     })
     mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
       status: 'SENT',
@@ -553,18 +560,30 @@ describe('NoticeDispatchService', () => {
       expect(reportPdfService.generateReportPdf).toHaveBeenCalledWith(
         'report-1',
       )
-      expect(mailService.sendReportApproved).toHaveBeenCalledWith(report, [
-        {
-          filename: 'jafnrettisaaetlun-report-1.pdf',
-          content: Buffer.from('pdf-bytes'),
-          label: 'jafnréttisáætlun',
-        },
-      ])
+      expect(mailService.sendReportApproved).toHaveBeenCalledWith(
+        report,
+        [
+          {
+            filename: 'jafnrettisaaetlun-report-1.pdf',
+            content: Buffer.from('pdf-bytes'),
+            label: 'jafnréttisáætlun',
+          },
+        ],
+        // With no salary report owed, the equality approval completes them.
+        { serviceSurvey: true },
+      )
     })
 
     it('attaches the úrbótaáætlun as a second document on a SALARY approval', async () => {
       const report = approvedReport({ type: ReportTypeEnum.SALARY })
       reportModel.findOne.mockResolvedValue(report)
+      companyReportModel.findOne.mockResolvedValue({
+        companyId: COMPANY_ID,
+        company: {
+          salaryReportRequired: true,
+          salaryReportRequiredOverride: false,
+        },
+      })
       reportPdfService.generateReportPdf.mockResolvedValue({
         pdf: Buffer.from('report-bytes'),
         fileName: 'launagreining-report-1.pdf',
@@ -576,18 +595,140 @@ describe('NoticeDispatchService', () => {
 
       await service.dispatchPending(lockTransaction)
 
-      expect(mailService.sendReportApproved).toHaveBeenCalledWith(report, [
-        {
-          filename: 'launagreining-report-1.pdf',
-          content: Buffer.from('report-bytes'),
-          label: 'jafnlaunaúttekt',
-        },
-        {
-          filename: 'urbotaaetlun-report-1.pdf',
-          content: Buffer.from('plan-bytes'),
-          label: 'úrbótaáætlun',
-        },
-      ])
+      expect(mailService.sendReportApproved).toHaveBeenCalledWith(
+        report,
+        [
+          {
+            filename: 'launagreining-report-1.pdf',
+            content: Buffer.from('report-bytes'),
+            label: 'jafnlaunaúttekt',
+          },
+          {
+            filename: 'urbotaaetlun-report-1.pdf',
+            content: Buffer.from('plan-bytes'),
+            label: 'úrbótaáætlun',
+          },
+        ],
+        { serviceSurvey: true },
+      )
+    })
+
+    describe('service survey', () => {
+      /*
+       * Asked only by the approval that completes the company's obligations:
+       * the equality report when no salary report is owed, else the salary
+       * report. "Owed" is `owesSalaryReport`, the twin of `salaryRequiredSql`:
+       * `salary_report_required` OR `salary_report_required_override`.
+       *
+       * The size column is not read; each row says what the size trigger
+       * leaves in `salary_report_required` for it (true for LARGE only, and an
+       * override leaves the flag as it was).
+       */
+      const owes = (required: boolean, override: boolean) => ({
+        salaryReportRequired: required,
+        salaryReportRequiredOverride: override,
+      })
+
+      it.each([
+        // SMALL or MEDIUM: only the equality report is owed.
+        ['EQUALITY', 'under 50', owes(false, false), true],
+        [
+          'SALARY',
+          'under 50, filed though not owed',
+          owes(false, false),
+          false,
+        ],
+        // LARGE: the salary report comes last.
+        ['EQUALITY', 'LARGE', owes(true, false), false],
+        ['SALARY', 'LARGE', owes(true, false), true],
+        // Under 50 with the override: owes a salary report, like LARGE.
+        ['EQUALITY', 'under 50, override on', owes(false, true), false],
+        ['SALARY', 'under 50, override on', owes(false, true), true],
+        // UNKNOWN: the trigger leaves the flag off, so no salary report is
+        // owed and the equality approval asks, as for SMALL or MEDIUM. If
+        // later classified LARGE, the salary approval asks again.
+        ['EQUALITY', 'UNKNOWN', owes(false, false), true],
+        ['SALARY', 'UNKNOWN, filed though not owed', owes(false, false), false],
+        ['EQUALITY', 'UNKNOWN, override on', owes(false, true), false],
+        ['SALARY', 'UNKNOWN, override on', owes(false, true), true],
+        // No filing company found.
+        ['EQUALITY', 'no filing company', null, false],
+        ['SALARY', 'no filing company', null, false],
+      ] as const)('%s approval, %s: %s', (type, _label, company, expected) => {
+        expect(offersServiceSurvey(ReportTypeEnum[type], company)).toBe(
+          expected,
+        )
+      })
+
+      // The filing company's own row, not a subsidiary's on a group report,
+      // with the company's current obligation joined in.
+      it("reads the filing company's salary obligation", async () => {
+        await service.dispatchPending(lockTransaction)
+
+        expect(companyReportModel.findOne).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { reportId: 'report-1', parentCompanyId: null },
+            include: [
+              expect.objectContaining({
+                as: 'company',
+                attributes: expect.arrayContaining([
+                  'salaryReportRequired',
+                  'salaryReportRequiredOverride',
+                ]),
+              }),
+            ],
+          }),
+        )
+      })
+
+      // The override forces the obligation on; the flag stays off under 50.
+      it('asks on a salary approval when the obligation is only an override', async () => {
+        reportModel.findOne.mockResolvedValue(
+          approvedReport({ type: ReportTypeEnum.SALARY }),
+        )
+        companyReportModel.findOne.mockResolvedValue({
+          companyId: COMPANY_ID,
+          company: owes(false, true),
+        })
+
+        await service.dispatchPending(lockTransaction)
+
+        expect(mailService.sendReportApproved).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          { serviceSurvey: true },
+        )
+      })
+
+      it('asks nothing on an equality approval while a salary report is owed', async () => {
+        companyReportModel.findOne.mockResolvedValue({
+          companyId: COMPANY_ID,
+          company: {
+            salaryReportRequired: true,
+            salaryReportRequiredOverride: false,
+          },
+        })
+
+        await service.dispatchPending(lockTransaction)
+
+        expect(mailService.sendReportApproved).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          { serviceSurvey: false },
+        )
+      })
+
+      it('asks nothing when the report has no snapshot', async () => {
+        companyReportModel.findOne.mockResolvedValue(null)
+
+        await service.dispatchPending(lockTransaction)
+
+        expect(mailService.sendReportApproved).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          { serviceSurvey: false },
+        )
+      })
     })
 
     it('archives every attachment under the company national id', async () => {
@@ -831,6 +972,7 @@ describe('NoticeDispatchService', () => {
       expect(mailService.sendReportApproved).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'report-1' }),
         [],
+        expect.anything(),
       )
       // And nothing is archived, because nothing was produced to archive.
       expect(companyFileService.archive).not.toHaveBeenCalled()
@@ -1369,6 +1511,38 @@ describe('NoticeDispatchService', () => {
         )
       },
     )
+
+    it('links the service survey in the letter when the approval completes reporting', async () => {
+      // EQUALITY with no salary report owed (the default): the last filing.
+      mailboxDeliveryService.deliverToMailbox.mockImplementation(
+        async (input: { pdf: () => Promise<Buffer> }) => {
+          await input.pdf()
+          return {
+            status: 'SENT',
+            deliveryId: 'delivery-1',
+            islandIsDocumentId: 'doc-1',
+            sentAt: NOW,
+            alreadySent: false,
+          }
+        },
+      )
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+
+      expect(companyReportModel.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: [
+            expect.objectContaining({
+              attributes: expect.arrayContaining([
+                'salaryReportRequired',
+                'salaryReportRequiredOverride',
+              ]),
+            }),
+          ],
+        }),
+      )
+      expect(renderedHtml()).toContain('Svara könnun')
+    })
 
     it('renders no letter unless the delivery asks for the PDF', async () => {
       await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)

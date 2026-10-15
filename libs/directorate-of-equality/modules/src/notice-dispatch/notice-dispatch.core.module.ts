@@ -21,10 +21,10 @@ import { INoticeDispatchService } from './notice-dispatch.service.interface'
 @Module({
   imports: [
     SequelizeModule.forFeature([
+      CompanyReportModel,
       NoticeOutboxModel,
       ReportModel,
       ReportEventModel,
-      CompanyReportModel,
     ]),
     DoeMailModule,
     ReportPdfCoreModule,
