@@ -4,12 +4,17 @@ Delivers a notice to a company's island.is Stafrænt pósthólf through
 Jafnréttisstofa's case system, One: CreateCase, then CreateDocument, then
 SendDocToIslandIs. Each delivery is one row in `mailbox_delivery`.
 
-Nothing calls this yet. Each report notice kind has a case template and empty
-classification strings (see `mailbox-delivery.kinds.ts`); `OVERDUE_NOTICE` and
-`FINES_PRECURSOR` have none, so `deliverToMailbox` throws for them before it
-writes a row. It also does nothing unless `ONESYSTEMS_ENABLED` is `true`. That flag is
-checked here, not in the OneSystems client: the client is not gated, so any new
-consumer of the client must check the flag itself.
+Two callers, both in doe-api: the notice dispatcher (`notice-dispatch/`, the
+submission receipt and the approval and denial letters, from `notice_outbox`)
+and the deadline-reminder task. No kind has a confirmed case template yet (see
+`mailbox-delivery.kinds.ts`), so `deliverToMailbox` throws for every kind
+before it writes a row. It also does nothing unless `ONESYSTEMS_ENABLED` is
+`true`. That flag is checked here, not in the OneSystems client: the client is
+not gated, so any new consumer of the client must check the flag itself.
+
+A quarantined company (`company.quarantined`) gets nothing: `deliverToMailbox`
+returns `QUARANTINED` before it writes a row, and the next call with the same
+key after the quarantine is lifted carries on.
 
 ## For callers
 
@@ -51,7 +56,7 @@ consumer of the client must check the flag itself.
 | `PENDING`          | Row written, nothing sent to One yet.                                                                                                                           | The next call starts it.                                                                                                    |
 | `CASE_CREATED`     | One has a case (`one_case_item_id`).                                                                                                                            | The next call creates the document.                                                                                         |
 | `DOCUMENT_CREATED` | The PDF is filed under the case (`one_document_item_id`).                                                                                                       | The next call sends it.                                                                                                     |
-| `SENT`             | One confirmed the send (`sent_at`). `island_is_document_id` is set too, unless One confirmed without an `ItemID`.                                               | Nothing. A repeat call returns SENT with `alreadySent: true`.                                                               |
+| `SENT`             | One confirmed the send (`sent_at`). `island_is_document_id` is set too, unless One confirmed without a `DocumentId`.                                            | Nothing. A repeat call returns SENT with `alreadySent: true`.                                                               |
 | `FAILED`           | One certainly did not act on the failed call: a CreateCase failure, a failed render, or a CreateDocument or send rejected before it reached One's action.       | The next call with the same key resumes from the saved ids, until `attempts` reaches 5 ([Exhausted rows](#exhausted-rows)). |
 | `UNCERTAIN`        | Whether One acted is unknown: a timeout, a 5xx, a `Success: false`, a response with no usable id, or a process that died mid-call (`in_flight_step` still set). | **Nothing. No code path leaves UNCERTAIN.** A person reconciles it (below).                                                 |
 
@@ -77,15 +82,28 @@ rejection would be retried on every call. See
 [Exhausted rows](#exhausted-rows). A row whose last claim died mid-call is still
 claimed once more, so it becomes UNCERTAIN as usual.
 
-## Before the first caller lands
+## Alerting
 
-The PR that wires the first `deliverToMailbox` caller must also:
+Every row that needs a person is reported once a day, by doe-api's
+`NoticeOutboxTask.alertStuckMailboxDeliveries` (08:00 Atlantic/Reykjavik,
+under its own advisory lock): one error-level log line,
+`Mailbox deliveries need a person: …`, with the count per reason and the
+`deliveryId`s (ids only, nothing personal). Error-level lines are what the
+service's alerting watches. `findStuckDeliveries` is the query, and it finds:
 
-- Add an alert or an admin read for rows with `status = 'UNCERTAIN'` and for
-  `ATTEMPTS_EXHAUSTED` rows (the query under
-  [Exhausted rows](#exhausted-rows)). Both need a person, and nothing tells
-  one today. The partial index `mailbox_delivery_status_idx`
-  (`WHERE status <> 'SENT'`) serves both queries.
+- `UNCERTAIN` rows: reconcile them ([below](#reconciling-an-uncertain-row)).
+- `INTERRUPTED` rows: a marker still set with its lease lapsed. They become
+  UNCERTAIN only on the next call with their key, which an outbox row that has
+  already given up never makes, so they are listed too.
+- `ATTEMPTS_EXHAUSTED` rows ([Exhausted rows](#exhausted-rows)).
+
+It runs whatever `ONESYSTEMS_ENABLED` says, since rows left from before the
+flag went off still need a person. The partial index
+`mailbox_delivery_status_idx` (`WHERE status <> 'SENT'`) serves it.
+
+A deadline reminder that stops this way also leaves an `…_UNDELIVERED` event
+on the company's timeline. There is no admin screen for these rows yet; until
+there is, the alert and the SQL below are the way in.
 
 ## Exhausted rows
 
@@ -128,7 +146,17 @@ WHERE id = '<delivery id>'
 
 For a row in a forward status, put that status in place of `'FAILED'`.
 Re-arming does not send anything by itself; the next `deliverToMailbox` call
-does.
+with the same key does. Who makes that call depends on the kind:
+
+- A deadline reminder: the reminder task, on its next daily run, while the
+  company is still in the tier's band.
+- A receipt, approval or denial (`…_SUBMITTED`, `…_APPROVED`, `…_DENIED`): the
+  notice dispatcher, but only for a `notice_outbox` row that is still
+  `PENDING`. By the time a delivery is exhausted its outbox row has usually
+  given up as `FAILED`, so re-drive that row too, after re-arming this one:
+  see "Re-driving a FAILED row" under `notice_outbox` in doe-api's
+  `db/README.md`. The same holds after reconciling an UNCERTAIN row to
+  `FAILED` below.
 
 ## Reconciling an UNCERTAIN row
 

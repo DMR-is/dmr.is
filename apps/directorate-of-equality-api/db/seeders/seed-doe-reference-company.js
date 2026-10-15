@@ -331,6 +331,8 @@ DELETE FROM report_event WHERE report_id IN ('${SAL_REPORT_ID}', '${EQ_REPORT_ID
 DELETE FROM company_report WHERE report_id IN ('${SAL_REPORT_ID}', '${EQ_REPORT_ID}');
 DELETE FROM report WHERE id = '${SAL_REPORT_ID}';
 DELETE FROM report WHERE id = '${EQ_REPORT_ID}';
+DELETE FROM mailbox_delivery WHERE company_id = '${COMPANY_ID}';
+DELETE FROM company_event WHERE company_id = '${COMPANY_ID}';
 DELETE FROM company WHERE id = '${COMPANY_ID}';
 COMMIT;
     `)

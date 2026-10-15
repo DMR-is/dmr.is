@@ -1,8 +1,9 @@
 import { ReportModel } from '../../report/models/report.model'
-
-type ApprovedReport = Pick<ReportModel, 'type' | 'validUntil'>
 import { escapeHtml, formatDate } from './format'
 import { reportKindLabel } from './report-labels'
+
+/** What the approval's text reads off the report, in the email and the letter. */
+export type ApprovedReport = Pick<ReportModel, 'type' | 'validUntil'>
 
 export const buildReportApprovedSubject = (
   report: Pick<ReportModel, 'type'>,

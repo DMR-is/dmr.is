@@ -1,4 +1,11 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import { Transaction } from 'sequelize'
+
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -61,6 +68,23 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       providerId,
       company,
     )
+
+    /*
+     * ⚠️ Lock the draft, then check it is still one. Two submits of the same
+     * draft both pass `findOwnedDraft`; without the lock both ran the whole
+     * pipeline and the second failed late, on a unique constraint, as an error
+     * that read like a bad payload. `FOR UPDATE` makes the second wait for the
+     * first to commit and then see it SUBMITTED, which is a 409. The lock
+     * joins the request's CLS transaction (`CLSMiddleware`), so it is held
+     * until the submit commits.
+     */
+    await report.reload({ lock: Transaction.LOCK.UPDATE })
+    if (report.status !== ReportStatusEnum.DRAFT) {
+      throw new ConflictException(
+        `Draft report "${providerId}" has already been submitted`,
+      )
+    }
+
     const isSalary = report.type === ReportTypeEnum.SALARY
 
     /*

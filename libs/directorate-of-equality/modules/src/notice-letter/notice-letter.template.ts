@@ -1,5 +1,6 @@
 import { escapeHtml, formatDate } from '../mail/templates/format'
 import {
+  type ApprovedReport,
   buildReportApprovedHtml,
   buildReportApprovedSubject,
   ReportApprovedMailOptions,
@@ -24,8 +25,8 @@ import { ReportModel } from '../report/models/report.model'
  * drift. The
  * submission receipt has no email to copy.
  *
- * TODO(Jafnréttisstofa): Úlfhildur to confirm the letter text, the receipt's
- * in particular.
+ * TODO(Jafnréttisstofa): the letter text awaits Jafnréttisstofa's review, the
+ * receipt's in particular.
  */
 export type NoticeLetter = {
   /** The document's title in One and in the mailbox. */
@@ -33,8 +34,6 @@ export type NoticeLetter = {
   /** A complete HTML document for `IPdfRenderService.renderHtml`. */
   html: string
 }
-
-type LetterReport = Pick<ReportModel, 'type' | 'validUntil'>
 
 export const buildSubmittedLetter = (
   report: Pick<ReportModel, 'type'>,
@@ -67,7 +66,7 @@ export const buildSubmittedLetter = (
  * the same PDF, not attachments.
  */
 export const buildApprovedLetter = (
-  report: LetterReport,
+  report: ApprovedReport,
   companyName: string,
   approvedAt: Date,
   enclosures: string[],

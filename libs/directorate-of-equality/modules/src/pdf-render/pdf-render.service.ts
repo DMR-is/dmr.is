@@ -3,7 +3,10 @@ import { Inject, Injectable } from '@nestjs/common'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { getBrowser } from './lib/browser'
-import { IPdfRenderService } from './pdf-render.service.interface'
+import {
+  IPdfRenderService,
+  type PdfDocumentKind,
+} from './pdf-render.service.interface'
 
 const LOGGING_CONTEXT = 'PdfRenderService'
 
@@ -11,7 +14,11 @@ const LOGGING_CONTEXT = 'PdfRenderService'
 export class PdfRenderService implements IPdfRenderService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {}
 
-  async renderHtml(html: string, styles: string): Promise<Buffer> {
+  async renderHtml(
+    html: string,
+    styles: string,
+    documentKind: PdfDocumentKind = 'report',
+  ): Promise<Buffer> {
     const browser = await getBrowser()
     try {
       const page = await browser.newPage()
@@ -91,10 +98,12 @@ export class PdfRenderService implements IPdfRenderService {
 
       return Buffer.from(pdfBuffer)
     } catch (error) {
-      // The message and context predate the move out of ReportPdfService;
-      // both kept verbatim for anything that alerts on them.
-      this.logger.warn('Failed to generate report PDF', {
+      // The report's message and context predate the move out of
+      // ReportPdfService; both are kept verbatim for anything that alerts on
+      // them. A letter names itself, so it is not taken for a report.
+      this.logger.warn(`Failed to generate ${documentKind} PDF`, {
         context: 'ReportPdfService',
+        documentKind,
         error,
       })
       throw error

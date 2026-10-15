@@ -510,6 +510,8 @@ DELETE FROM report_sub_criterion
 DELETE FROM report_criterion    WHERE report_id = ${escStr(RICH_SAL)};
 DELETE FROM company_report      WHERE company_id = ${escStr(RICH_CID)};
 DELETE FROM report              WHERE id IN (${escStr(RICH_SAL)}, ${escStr(RICH_EQ)});
+DELETE FROM mailbox_delivery    WHERE company_id = ${escStr(RICH_CID)};
+DELETE FROM company_event       WHERE company_id = ${escStr(RICH_CID)};
 DELETE FROM company             WHERE id = ${escStr(RICH_CID)};
 
 COMMIT;

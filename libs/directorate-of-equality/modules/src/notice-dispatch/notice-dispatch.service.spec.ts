@@ -3,7 +3,10 @@ import { Op } from 'sequelize'
 import { CompanySizeEnum } from '../company/models/company.enums'
 import { ReportMailOutcome } from '../mail/doe-mail.service.interface'
 import { buildMailboxDeliveryIdempotencyKey } from '../mailbox-delivery/mailbox-delivery.idempotency-key'
-import { MailboxDeliveryKindEnum } from '../mailbox-delivery/models/mailbox-delivery.enums'
+import {
+  MailboxDeliveryKindEnum,
+  MailboxDeliveryStatusEnum,
+} from '../mailbox-delivery/models/mailbox-delivery.enums'
 import {
   NoticeOutboxChannelEnum,
   NoticeOutboxKindEnum,
@@ -16,6 +19,7 @@ import {
   NOTICE_DISPATCH_BATCH_SIZE,
   NOTICE_DISPATCH_MAX_ATTEMPTS,
   NOTICE_DISPATCH_RETRY_DELAY_MS,
+  NOTICE_DISPATCH_TIME_BUDGET_MS,
   NoticeDispatchService,
   offersServiceSurvey,
 } from './notice-dispatch.service'
@@ -66,6 +70,7 @@ describe('NoticeDispatchService', () => {
 
   const mailboxDeliveryService = {
     deliverToMailbox: jest.fn(),
+    findDelivery: jest.fn(),
   }
 
   const pdfRenderService = {
@@ -160,6 +165,7 @@ describe('NoticeDispatchService', () => {
       sentAt: NOW,
       alreadySent: false,
     })
+    mailboxDeliveryService.findDelivery.mockResolvedValue(null)
     pdfRenderService.renderHtml.mockResolvedValue(Buffer.from('letter-pdf'))
     jest.mocked(mergePdfs).mockResolvedValue(Buffer.from('merged-pdf'))
     sequelize.transaction.mockImplementation(
@@ -210,7 +216,7 @@ describe('NoticeDispatchService', () => {
 
     it('reports what it picked and settled', async () => {
       noticeOutboxModel.findAll.mockResolvedValue([
-        outboxRow(NoticeOutboxKindEnum.REPORT_SUBMITTED),
+        outboxRow(NoticeOutboxKindEnum.REPORT_DENIED),
         outboxRow(NoticeOutboxKindEnum.REPORT_APPROVED),
       ])
 
@@ -218,6 +224,57 @@ describe('NoticeDispatchService', () => {
         picked: 2,
         settled: 2,
       })
+    })
+
+    // Quarantine halts every outbound touchpoint: the row is not picked, so it
+    // waits PENDING without taking a batch slot.
+    it('leaves out rows whose filing company is quarantined', async () => {
+      await service.dispatchPending(lockTransaction)
+
+      const [query] = noticeOutboxModel.findAll.mock.calls[0]
+      const [notQuarantined] = query.where[Op.and]
+      expect(notQuarantined.val).toContain('c.quarantined')
+      expect(notQuarantined.val).toContain('cr.parent_company_id IS NULL')
+      expect(notQuarantined.val).toContain('"NoticeOutboxModel"."report_id"')
+    })
+
+    // A receipt has no email. With the flag off it waits rather than taking a
+    // batch slot from a notice that can go.
+    it('leaves out submission receipts while mailbox delivery is off', async () => {
+      await service.dispatchPending(lockTransaction)
+
+      const [query] = noticeOutboxModel.findAll.mock.calls[0]
+      expect(query.where.kind).toEqual({
+        [Op.ne]: NoticeOutboxKindEnum.REPORT_SUBMITTED,
+      })
+    })
+
+    it('picks submission receipts while mailbox delivery is on', async () => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+
+      await service.dispatchPending(lockTransaction)
+
+      const [query] = noticeOutboxModel.findAll.mock.calls[0]
+      expect(query.where.kind).toBeUndefined()
+    })
+
+    // One slow mailbox row can take minutes, and the run holds the lock's
+    // transaction throughout.
+    it('starts no new row once the run is past its time budget', async () => {
+      noticeOutboxModel.findAll.mockResolvedValue([
+        { ...outboxRow(NoticeOutboxKindEnum.REPORT_DENIED), id: 'a' },
+        { ...outboxRow(NoticeOutboxKindEnum.REPORT_DENIED), id: 'b' },
+      ])
+      mailService.sendReportDenied.mockImplementation(async () => {
+        jest.advanceTimersByTime(NOTICE_DISPATCH_TIME_BUDGET_MS)
+        return ReportMailOutcome.SENT
+      })
+
+      await expect(service.dispatchPending(lockTransaction)).resolves.toEqual({
+        picked: 1,
+        settled: 1,
+      })
+      expect(mailService.sendReportDenied).toHaveBeenCalledTimes(1)
     })
 
     // One at a time: each approval launches Chromium, and the pool is shared
@@ -286,26 +343,32 @@ describe('NoticeDispatchService', () => {
       })
     })
 
-    // A submission never had an email. The receipt goes out only through the
-    // mailbox, which this phase does not send.
-    it('skips a submission receipt without sending anything', async () => {
+    // A submission never had an email; the receipt goes out only through the
+    // mailbox. A receipt picked as the flag goes off mid-run is held, not
+    // settled: switching the flag off must not drop it.
+    it('holds a submission receipt PENDING while mailbox delivery is off', async () => {
       noticeOutboxModel.findAll.mockResolvedValue([
-        outboxRow(NoticeOutboxKindEnum.REPORT_SUBMITTED),
+        outboxRow(NoticeOutboxKindEnum.REPORT_SUBMITTED, { attempts: 2 }),
       ])
 
-      await service.dispatchPending(lockTransaction)
+      await expect(service.dispatchPending(lockTransaction)).resolves.toEqual({
+        picked: 1,
+        settled: 0,
+      })
 
       expect(mailService.sendReportApproved).not.toHaveBeenCalled()
       expect(mailService.sendReportDenied).not.toHaveBeenCalled()
       expect(reportModel.findOne).not.toHaveBeenCalled()
-      const [values] = lastOutboxUpdate()
-      expect(values).toEqual(
-        expect.objectContaining({
-          status: NoticeOutboxStatusEnum.SKIPPED,
-          channel: null,
-          processedAt: NOW,
-        }),
-      )
+      const [values, options] = lastOutboxUpdate()
+      // Not an attempt: `attempts` and `status` are left alone.
+      expect(values).toEqual({
+        lastAttemptAt: NOW,
+        lastError: 'mailbox delivery is off',
+      })
+      expect(options.where).toEqual({
+        id: 'notice-1',
+        status: NoticeOutboxStatusEnum.PENDING,
+      })
     })
 
     it('keeps a failed send PENDING and counts the attempt', async () => {
@@ -431,7 +494,7 @@ describe('NoticeDispatchService', () => {
         settled: 0,
       })
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('it will be sent again'),
+        expect.stringContaining('the next run tries it again'),
         expect.anything(),
       )
     })
@@ -471,6 +534,7 @@ describe('NoticeDispatchService', () => {
       const report = approvedReport({ type: ReportTypeEnum.SALARY })
       reportModel.findOne.mockResolvedValue(report)
       companyReportModel.findOne.mockResolvedValue({
+        companyId: COMPANY_ID,
         employeeCountCategory: CompanySizeEnum.LARGE,
       })
       reportPdfService.generateReportPdf.mockResolvedValue({
@@ -852,6 +916,110 @@ describe('NoticeDispatchService', () => {
     })
   })
 
+  /*
+   * The flag went off while some approvals and denials were already partly
+   * through One. Each is checked against its delivery (same key) before it is
+   * emailed, so the company does not get it twice.
+   */
+  describe('mailbox delivery switched off mid-flight', () => {
+    const deliveryKey = (kind: MailboxDeliveryKindEnum) =>
+      buildMailboxDeliveryIdempotencyKey({
+        kind,
+        companyId: COMPANY_ID,
+        discriminator: 'report-1',
+      })
+
+    const dispatch = async (kind: NoticeOutboxKindEnum) => {
+      noticeOutboxModel.findAll.mockResolvedValue([outboxRow(kind)])
+      return service.dispatchPending(lockTransaction)
+    }
+
+    it('looks the delivery up by the key the mailbox path used', async () => {
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
+
+      expect(mailboxDeliveryService.findDelivery).toHaveBeenCalledWith(
+        deliveryKey(MailboxDeliveryKindEnum.EQUALITY_REPORT_DENIED),
+      )
+      // Nothing in One: the email goes.
+      expect(mailService.sendReportDenied).toHaveBeenCalledTimes(1)
+    })
+
+    it('records an approval One already sent as DONE by mailbox, emails nothing and archives', async () => {
+      mailboxDeliveryService.findDelivery.mockResolvedValue({
+        deliveryId: 'delivery-1',
+        status: MailboxDeliveryStatusEnum.SENT,
+        documentFiled: true,
+        sent: true,
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+
+      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+      expect(lastOutboxUpdate()[0]).toEqual(
+        expect.objectContaining({
+          status: NoticeOutboxStatusEnum.DONE,
+          channel: NoticeOutboxChannelEnum.MAILBOX,
+        }),
+      )
+      expect(companyFileService.archive).toHaveBeenCalledTimes(1)
+    })
+
+    it('gives up on an UNCERTAIN delivery rather than emailing on top of it', async () => {
+      mailboxDeliveryService.findDelivery.mockResolvedValue({
+        deliveryId: 'delivery-7',
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        documentFiled: false,
+        sent: false,
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
+
+      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+      expect(lastOutboxUpdate()[0]).toEqual(
+        expect.objectContaining({
+          status: NoticeOutboxStatusEnum.FAILED,
+          lastError: expect.stringContaining('delivery-7 is UNCERTAIN'),
+        }),
+      )
+    })
+
+    it('holds a notice whose document One holds unsent, for the flag to come back', async () => {
+      mailboxDeliveryService.findDelivery.mockResolvedValue({
+        deliveryId: 'delivery-3',
+        status: MailboxDeliveryStatusEnum.FAILED,
+        documentFiled: true,
+        sent: false,
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
+
+      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+      expect(lastOutboxUpdate()[0]).toEqual({
+        lastAttemptAt: NOW,
+        lastError: expect.stringContaining('delivery-3 has a document in One'),
+      })
+    })
+
+    it('emails a notice whose delivery never got past CreateCase', async () => {
+      mailboxDeliveryService.findDelivery.mockResolvedValue({
+        deliveryId: 'delivery-4',
+        status: MailboxDeliveryStatusEnum.FAILED,
+        documentFiled: false,
+        sent: false,
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+
+      expect(mailService.sendReportApproved).toHaveBeenCalledTimes(1)
+      expect(lastOutboxUpdate()[0]).toEqual(
+        expect.objectContaining({
+          status: NoticeOutboxStatusEnum.DONE,
+          channel: NoticeOutboxChannelEnum.EMAIL,
+        }),
+      )
+    })
+  })
+
   describe('mailbox delivery (ONESYSTEMS_ENABLED on)', () => {
     beforeEach(() => {
       process.env.ONESYSTEMS_ENABLED = 'true'
@@ -965,13 +1133,104 @@ describe('NoticeDispatchService', () => {
       expect(renderedHtml()).toContain('Svara könnun')
     })
 
-    it('renders nothing unless the delivery asks for the PDF', async () => {
-      await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+    it('renders no letter unless the delivery asks for the PDF', async () => {
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
 
       expect(pdfRenderService.renderHtml).not.toHaveBeenCalled()
       expect(reportPdfService.generateReportPdf).not.toHaveBeenCalled()
-      // Nothing rendered in this run, so nothing to archive.
       expect(companyFileService.archive).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      ['resumed past CreateDocument', false],
+      ['was already sent', true],
+    ])(
+      'still archives an approval whose delivery %s, rendering the documents again',
+      async (_label, alreadySent) => {
+        mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+          status: 'SENT',
+          deliveryId: 'delivery-1',
+          islandIsDocumentId: 'doc-1',
+          sentAt: NOW,
+          alreadySent,
+        })
+
+        await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+
+        // No letter: `pdf` never ran. The documents are rendered for the archive.
+        expect(pdfRenderService.renderHtml).not.toHaveBeenCalled()
+        expect(reportPdfService.generateReportPdf).toHaveBeenCalledTimes(1)
+        expect(companyFileService.archive).toHaveBeenCalledWith([
+          expect.objectContaining({
+            filename: 'jafnrettisaaetlun-report-1.pdf',
+            companyNationalId: '5500000000',
+            issuedAt: APPROVED_AT,
+          }),
+        ])
+      },
+    )
+
+    // The send landed, the DONE write did not. The next run resumes the same
+    // delivery by its key, gets `alreadySent`, sends nothing and archives.
+    it('records DONE without a second send after a lost DONE write', async () => {
+      noticeOutboxModel.update.mockRejectedValueOnce(
+        new Error('pool exhausted'),
+      )
+      await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+      expect(companyFileService.archive).not.toHaveBeenCalled()
+
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: 'SENT',
+        deliveryId: 'delivery-1',
+        islandIsDocumentId: 'doc-1',
+        sentAt: NOW,
+        alreadySent: true,
+      })
+      await service.dispatchPending(lockTransaction)
+
+      const calls = mailboxDeliveryService.deliverToMailbox.mock.calls
+      expect(calls).toHaveLength(2)
+      expect(calls[1][0].idempotencyKey).toBe(calls[0][0].idempotencyKey)
+      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+      expect(lastOutboxUpdate()[0]).toEqual(
+        expect.objectContaining({
+          status: NoticeOutboxStatusEnum.DONE,
+          channel: NoticeOutboxChannelEnum.MAILBOX,
+        }),
+      )
+      expect(companyFileService.archive).toHaveBeenCalledTimes(1)
+    })
+
+    it('holds the row, not an attempt, when the company was quarantined after the pick', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: 'QUARANTINED',
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED, { attempts: 1 })
+
+      expect(lastOutboxUpdate()[0]).toEqual({
+        lastAttemptAt: NOW,
+        lastError: 'the filing company is quarantined',
+      })
+    })
+
+    it('gives up as FAILED after the last allowed attempt on the mailbox channel', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: 'IN_PROGRESS',
+        deliveryId: 'delivery-1',
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED, {
+        attempts: NOTICE_DISPATCH_MAX_ATTEMPTS - 1,
+      })
+
+      expect(lastOutboxUpdate()[0]).toEqual(
+        expect.objectContaining({
+          status: NoticeOutboxStatusEnum.FAILED,
+          attempts: NOTICE_DISPATCH_MAX_ATTEMPTS,
+          lastError: 'send failed',
+        }),
+      )
     })
 
     it('sends a submission receipt letter', async () => {

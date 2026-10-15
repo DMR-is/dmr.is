@@ -1,4 +1,4 @@
-import { Op, Transaction } from 'sequelize'
+import { literal, Op, Transaction, WhereOptions } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
 import { Inject, Injectable } from '@nestjs/common'
@@ -21,7 +21,10 @@ import {
   IMailboxDeliveryService,
   isMailboxDeliveryEnabled,
 } from '../mailbox-delivery/mailbox-delivery.service.interface'
-import { MailboxDeliveryKindEnum } from '../mailbox-delivery/models/mailbox-delivery.enums'
+import {
+  MailboxDeliveryKindEnum,
+  MailboxDeliveryStatusEnum,
+} from '../mailbox-delivery/models/mailbox-delivery.enums'
 import {
   buildApprovedLetter,
   buildDeniedLetter,
@@ -98,6 +101,34 @@ export const offersServiceSurvey = (
     ? size === CompanySizeEnum.SMALL || size === CompanySizeEnum.MEDIUM
     : type === ReportTypeEnum.SALARY && size === CompanySizeEnum.LARGE
 
+/**
+ * No new row is started once a run has taken this long. The run holds the
+ * advisory lock's transaction, and a pool connection with it, until it ends,
+ * and one mailbox row can take minutes when One is slow (two calls at up to
+ * 2 x (30 s + 120 s) each, plus renders). Rows left over are picked by the
+ * next run, so the lock is held for about this long plus one row at worst.
+ */
+export const NOTICE_DISPATCH_TIME_BUDGET_MS = 5 * 60 * 1000
+
+/**
+ * A row whose filing company is quarantined is not picked at all: quarantine
+ * halts every outbound touchpoint (`CompanyService.updateQuarantine`), and the
+ * notice waits, PENDING and untouched, until it is lifted. Not picking it, as
+ * opposed to picking and passing over it, keeps a long quarantine from taking
+ * batch slots every run.
+ *
+ * Raw SQL against the alias Sequelize gives `notice_outbox` in this query
+ * (`"NoticeOutboxModel"`); every name in it is a constant.
+ */
+const FILING_COMPANY_NOT_QUARANTINED = literal(`NOT EXISTS (
+  SELECT 1
+    FROM company_report cr
+    JOIN company c ON c.id = cr.company_id
+   WHERE cr.report_id = "NoticeOutboxModel"."report_id"
+     AND cr.parent_company_id IS NULL
+     AND c.quarantined
+)`)
+
 /** The mailbox kind of each notice, by report type: each has its own case template. */
 const MAILBOX_KINDS: Record<
   NoticeOutboxKindEnum,
@@ -128,6 +159,9 @@ type MailboxNotice = {
 
 type Gone = { outcome: 'GONE'; reason: string }
 
+/** Not sent and not an attempt: the row stays PENDING for a later run. */
+type Held = { outcome: 'HELD'; reason: string }
+
 type SendResult =
   | {
       outcome: ReportMailOutcome.SENT
@@ -139,8 +173,8 @@ type SendResult =
       outcome: ReportMailOutcome.NO_RECIPIENT | ReportMailOutcome.FAILED
       channel: NoticeOutboxChannelEnum
     }
-  | { outcome: 'SKIPPED' }
   | Gone
+  | Held
 
 /**
  * Sends what the notice outbox says a company is owed.
@@ -149,7 +183,18 @@ type SendResult =
  * mailbox through One as a PDF letter, and no email is sent: the receipt, the
  * approval (letter, report and úrbótaáætlun merged into one PDF) and the
  * denial. With it off, the approval and denial are emailed as before, and the
- * receipt, which never had an email, is SKIPPED.
+ * receipt, which never had an email, waits PENDING for the flag: it is not
+ * picked while the flag is off, so turning the flag off during a One incident
+ * holds the receipts rather than dropping them.
+ *
+ * ⚠️ **An approval or denial already started through One is not emailed when
+ * the flag goes off.** Its `mailbox_delivery` row (same key) is checked first:
+ * a send One confirmed records the row DONE by mailbox, an UNCERTAIN one gives
+ * the row up for a person, and a document One already holds waits for the
+ * flag to come back rather than leave it orphaned and mail the company too.
+ *
+ * Rows of a quarantined filing company are not picked (see
+ * `FILING_COMPANY_NOT_QUARANTINED`).
  *
  * A mailbox delivery is idempotent by its key (kind, company, report), so a
  * retried row resumes the same delivery. One left UNCERTAIN is never retried:
@@ -169,8 +214,10 @@ type SendResult =
  * notice going out with no documents), then every later row's first read, and
  * the lock's COMMIT would become a silent ROLLBACK.
  *
- * ⚠️ **A process that dies between the send and the DONE write mails twice.**
- * Email has no idempotency key, so the next run cannot tell the send happened.
+ * ⚠️ **A process that dies between the send and the DONE write mails twice,
+ * by email.** Email has no idempotency key, so the next run cannot tell the
+ * send happened. A mailbox send does not repeat: the next run resumes the same
+ * delivery by its key and gets `alreadySent`.
  * The DONE write follows the send directly — archiving the approval documents
  * to S3 waits until after it — so the window is one UPDATE on a fresh pool
  * connection: under contention that includes the wait for one (`max: 5`, up to
@@ -181,7 +228,10 @@ type SendResult =
  * ⚠️ **A process that dies between the DONE write and the archive keeps no
  * copy.** The company has the documents and the row says DONE, but nothing in
  * S3 or the database records the missing archive. That is the price of never
- * mailing twice; a missing archive is not evidence the notice failed.
+ * mailing twice; a missing archive is not evidence the notice failed. A
+ * mailbox approval whose PDF was not rendered in the run that recorded it
+ * (a resume past CreateDocument, or `alreadySent`) is not such a gap: its
+ * documents are rendered again for the archive.
  */
 @Injectable()
 export class NoticeDispatchService implements INoticeDispatchService {
@@ -210,31 +260,50 @@ export class NoticeDispatchService implements INoticeDispatchService {
   async dispatchPending(
     lockTransaction: Transaction,
   ): Promise<NoticeDispatchSummary> {
-    const retryBefore = new Date(Date.now() - NOTICE_DISPATCH_RETRY_DELAY_MS)
+    const startedAt = Date.now()
+    const retryBefore = new Date(startedAt - NOTICE_DISPATCH_RETRY_DELAY_MS)
+
+    const where: WhereOptions<NoticeOutboxModel> = {
+      status: NoticeOutboxStatusEnum.PENDING,
+      [Op.or]: [
+        { lastAttemptAt: null },
+        { lastAttemptAt: { [Op.lt]: retryBefore } },
+      ],
+      [Op.and]: [FILING_COMPANY_NOT_QUARANTINED],
+      // A receipt only ever goes to the mailbox. With the flag off it waits,
+      // unpicked, so it cannot take a batch slot from a notice that can go.
+      ...(isMailboxDeliveryEnabled()
+        ? {}
+        : { kind: { [Op.ne]: NoticeOutboxKindEnum.REPORT_SUBMITTED } }),
+    }
 
     const rows = await this.noticeOutboxModel.findAll({
-      where: {
-        status: NoticeOutboxStatusEnum.PENDING,
-        [Op.or]: [
-          { lastAttemptAt: null },
-          { lastAttemptAt: { [Op.lt]: retryBefore } },
-        ],
-      },
+      where,
       order: [['createdAt', 'ASC']],
       limit: NOTICE_DISPATCH_BATCH_SIZE,
     })
 
+    let picked = 0
     let settled = 0
 
     // Sequential on purpose: each approval renders PDFs in a fresh Chromium,
     // and the pool (`max: 5`) is shared with the lock's own connection.
     for (const row of rows) {
+      if (Date.now() - startedAt >= NOTICE_DISPATCH_TIME_BUDGET_MS) {
+        this.logger.warn(
+          `Notice dispatch ran past its time budget; leaving ${rows.length - picked} rows for the next run`,
+          { context: LOGGING_CONTEXT, left: rows.length - picked },
+        )
+        break
+      }
+
+      picked += 1
       if (await this.dispatchRow(row, lockTransaction)) {
         settled += 1
       }
     }
 
-    return { picked: rows.length, settled }
+    return { picked, settled }
   }
 
   /** Returns whether the row left PENDING. Never throws. */
@@ -274,9 +343,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
       settled = await this.record(row, result)
     } catch (error) {
       // The send may well have happened. The row stays PENDING and the next
-      // run sends again: see the class note on the double-send window.
+      // run tries again: an email is sent again (see the class note on the
+      // double-send window), a mailbox delivery resumes by its key.
       this.logger.error(
-        `Could not record the outcome of notice ${row.id} — it will be sent again`,
+        `Could not record the outcome of notice ${row.id} — the next run tries it again`,
         {
           context: LOGGING_CONTEXT,
           noticeId: row.id,
@@ -334,15 +404,98 @@ export class NoticeDispatchService implements INoticeDispatchService {
     switch (row.kind) {
       case NoticeOutboxKindEnum.REPORT_SUBMITTED:
         // No email for a submission has ever existed. The receipt goes out
-        // only through the mailbox.
-        return { outcome: 'SKIPPED' }
+        // only through the mailbox, so it waits for the flag. Not picked while
+        // the flag is off; this covers the flag going off mid-run.
+        return { outcome: 'HELD', reason: 'mailbox delivery is off' }
       case NoticeOutboxKindEnum.REPORT_APPROVED:
-        return this.sendApproved(row.reportId, lockTransaction)
+        return (
+          (await this.startedInMailbox(row, lockTransaction)) ??
+          this.sendApproved(row.reportId, lockTransaction)
+        )
       case NoticeOutboxKindEnum.REPORT_DENIED:
-        return this.sendDenied(row.reportId)
+        return (
+          (await this.startedInMailbox(row, lockTransaction)) ??
+          this.sendDenied(row.reportId)
+        )
       default:
         return { outcome: 'GONE', reason: `unknown kind ${row.kind}` }
     }
+  }
+
+  /**
+   * With the flag off: what to do instead of emailing, when this notice's
+   * mailbox delivery (same key) already got somewhere in One. Null when it did
+   * not, or there is none, and the email can go.
+   *
+   * - One confirmed the send: the company has it. The row is DONE by mailbox,
+   *   and an approval's documents are archived as after any mailbox send.
+   * - UNCERTAIN: One may have sent it. Given up for a person, as with the flag
+   *   on, rather than emailed on top.
+   * - One holds the document but has not sent it: held until the flag is back
+   *   on and the delivery can finish. Emailing would leave the document in One
+   *   for the next run with the flag on to send as well.
+   * - Nothing past CreateCase (the case is shared and finds-or-creates): the
+   *   email goes.
+   */
+  private async startedInMailbox(
+    row: NoticeOutboxModel,
+    lockTransaction: Transaction,
+  ): Promise<SendResult | null> {
+    const report = await this.reportModel.findOne({
+      where: { id: row.reportId },
+      attributes: ['id', 'type', 'companyNationalId', 'approvedAt'],
+    })
+    const company = report
+      ? await this.companyReportModel.findOne({
+          where: { reportId: row.reportId, parentCompanyId: null },
+          attributes: ['companyId'],
+        })
+      : null
+
+    // The email path gives a missing report its own outcome.
+    if (!report || !company) {
+      return null
+    }
+
+    const kind = MAILBOX_KINDS[row.kind][report.type]
+    const delivery = await this.mailboxDeliveryService.findDelivery(
+      buildMailboxDeliveryIdempotencyKey({
+        kind,
+        companyId: company.companyId,
+        discriminator: report.id,
+      }),
+    )
+
+    if (!delivery) {
+      return null
+    }
+
+    if (delivery.status === MailboxDeliveryStatusEnum.UNCERTAIN) {
+      return {
+        outcome: 'GONE',
+        reason: `mailbox delivery ${delivery.deliveryId} is UNCERTAIN; check One before repeating anything`,
+      }
+    }
+
+    if (delivery.sent || delivery.status === MailboxDeliveryStatusEnum.SENT) {
+      return {
+        outcome: ReportMailOutcome.SENT,
+        channel: NoticeOutboxChannelEnum.MAILBOX,
+        afterDone:
+          row.kind === NoticeOutboxKindEnum.REPORT_APPROVED
+            ? () => this.archiveRenderedAgain(report, lockTransaction)
+            : undefined,
+      }
+    }
+
+    if (delivery.documentFiled) {
+      return {
+        outcome: 'HELD',
+        reason: `mailbox delivery ${delivery.deliveryId} has a document in One that is not sent; waiting for ONESYSTEMS_ENABLED`,
+      }
+    }
+
+    return null
   }
 
   /**
@@ -425,9 +578,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
       }
 
       case NoticeOutboxKindEnum.REPORT_APPROVED: {
-        // Filled by `pdf`, so only documents actually sent are archived. A
-        // resume past CreateDocument renders nothing and archives nothing.
-        let sent: ReportMailAttachment[] = []
+        // Filled by `pdf`, so what is archived is what was sent. Null when
+        // `pdf` never ran in this run: a resume past CreateDocument, or a
+        // delivery that was `alreadySent`.
+        let sent: ReportMailAttachment[] | null = null
 
         return {
           subject: buildReportApprovedSubject(report),
@@ -457,7 +611,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
             sent = attachments
             return merged
           },
-          afterDone: () => this.archiveApprovalDocuments(report, sent),
+          afterDone: () =>
+            sent
+              ? this.archiveApprovalDocuments(report, sent)
+              : this.archiveRenderedAgain(report, lockTransaction),
         }
       }
 
@@ -486,7 +643,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
   }
 
   private renderLetter(html: string): Promise<Buffer> {
-    return this.pdfRenderService.renderHtml(html, noticeLetterStyles)
+    return this.pdfRenderService.renderHtml(html, noticeLetterStyles, 'letter')
   }
 
   /**
@@ -517,6 +674,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
           outcome: ReportMailOutcome.FAILED,
           channel: NoticeOutboxChannelEnum.MAILBOX,
         }
+      case 'QUARANTINED':
+        // Quarantined between the pick and the call. Not an attempt: the row
+        // waits, and is not picked again until the quarantine is lifted.
+        return { outcome: 'HELD', reason: 'the filing company is quarantined' }
       default:
         return {
           outcome: 'GONE',
@@ -531,11 +692,21 @@ export class NoticeDispatchService implements INoticeDispatchService {
   ): Promise<boolean> {
     const now = new Date()
 
-    if (result.outcome === 'SKIPPED') {
-      return this.settle(row, NoticeOutboxStatusEnum.SKIPPED, now, {
-        channel: null,
-        lastError: null,
-      })
+    if (result.outcome === 'HELD') {
+      this.logger.info(
+        `Holding notice ${row.kind} for report ${row.reportId}: ${result.reason}`,
+        { context: LOGGING_CONTEXT, noticeId: row.id },
+      )
+      // Not an attempt, so `attempts` is untouched; `last_attempt_at` spaces
+      // the next look by the retry delay.
+      await this.noticeOutboxModel.update(
+        { lastAttemptAt: now, lastError: result.reason },
+        {
+          where: { id: row.id, status: NoticeOutboxStatusEnum.PENDING },
+          transaction: null,
+        },
+      )
+      return false
     }
 
     if (result.outcome === 'GONE') {
@@ -695,6 +866,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
       },
     )
 
+    if (outcome !== ReportMailOutcome.SENT) {
+      return { outcome, channel: NoticeOutboxChannelEnum.EMAIL }
+    }
+
     /*
      * ⚠️ **After the send, and only when it landed.** Archiving is secondary:
      * the company having its documents is the point, keeping our own copy is the
@@ -709,10 +884,6 @@ export class NoticeDispatchService implements INoticeDispatchService {
      * the process after the mail and before DONE, and the next run would mail
      * the company again. `archive` never throws.
      */
-    if (outcome !== ReportMailOutcome.SENT) {
-      return { outcome, channel: NoticeOutboxChannelEnum.EMAIL }
-    }
-
     return {
       outcome,
       channel: NoticeOutboxChannelEnum.EMAIL,
@@ -740,8 +911,12 @@ export class NoticeDispatchService implements INoticeDispatchService {
     attachments: ReportMailAttachment[],
   ): Promise<void> {
     if (attachments.length === 0) {
-      // Every render this report kind asks for failed. The notice went out
-      // without them, so there is nothing to keep a copy of.
+      // Every render this report kind asks for failed, each already logged
+      // at error. Said again here so the missing archive has its own line.
+      this.logger.warn(
+        `No approval documents to archive for report ${report.id} — every render failed`,
+        { context: LOGGING_CONTEXT },
+      )
       return
     }
 
@@ -772,6 +947,28 @@ export class NoticeDispatchService implements INoticeDispatchService {
         issuedAt,
       })),
     )
+  }
+
+  /**
+   * Archives an approval's documents when they were not rendered in this run:
+   * a mailbox delivery that resumed past CreateDocument, or was already sent,
+   * never calls `pdf`. An approved report's documents do not change and the
+   * S3 key is fixed by the report, so rendering them again files the same
+   * copy the company was sent. Never throws.
+   */
+  private async archiveRenderedAgain(
+    report: Pick<
+      ReportModel,
+      'id' | 'type' | 'companyNationalId' | 'approvedAt'
+    >,
+    lockTransaction: Transaction,
+  ): Promise<void> {
+    const attachments = await this.buildApprovalAttachments(
+      report.type,
+      report.id,
+      lockTransaction,
+    )
+    await this.archiveApprovalDocuments(report, attachments)
   }
 
   /**

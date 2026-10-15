@@ -135,8 +135,10 @@ export class MailboxDeliveryModel extends MutableModel<
 
   /**
    * SendDocToIslandIs's `DocumentId`: the document's `ItemId` in One
-   * (OneSystems, 9 Oct 2026). NULL on a SENT row when One confirmed the send
-   * without one, so "sent" is `sentAt`, never this column.
+   * (OneSystems, 9 Oct 2026), so One's own id, not one island.is assigns,
+   * despite the name. It normally equals `oneDocumentItemId`; the client warns
+   * when it does not. NULL on a SENT row when One confirmed the send without
+   * one, so "sent" is `sentAt`, never this column.
    */
   @Column({
     type: DataType.TEXT,
