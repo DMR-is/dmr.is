@@ -186,6 +186,17 @@ describe('UserService authorization', () => {
       expectForbidden(result)
       expect(userInvolvedPartiesModel.destroy).not.toHaveBeenCalled()
     })
+
+    it('leaves the parties alone when involvedParties is null', async () => {
+      users.target = dbUser('target', ROLES.editor, ['party-a'])
+      const result = await update(
+        'target',
+        { firstName: 'X', involvedParties: null as never },
+        editor(),
+      )
+      expect(result.result.ok).toBe(true)
+      expect(userInvolvedPartiesModel.destroy).not.toHaveBeenCalled()
+    })
   })
 
   it('lets an admin hand out the admin role', async () => {
@@ -253,8 +264,8 @@ describe('UserService authorization', () => {
 
     it("creates a user-role account in the editor's own parties", async () => {
       const result = await create(
-        { roleId: ROLES.editor.id, involvedParties: ['party-b'] },
-        caller(ROLES.editor, ['party-a']),
+        { roleId: ROLES.editor.id },
+        caller(ROLES.editor, ['party-a', 'party-b']),
       )
       expect(result.result.ok).toBe(true)
       expect(userModel.create).toHaveBeenCalledWith(
@@ -262,9 +273,37 @@ describe('UserService authorization', () => {
         expect.anything(),
       )
       expect(userInvolvedPartiesModel.bulkCreate).toHaveBeenCalledWith(
-        [{ userId: 'created', involvedPartyId: 'party-a' }],
+        [
+          { userId: 'created', involvedPartyId: 'party-a' },
+          { userId: 'created', involvedPartyId: 'party-b' },
+        ],
         expect.anything(),
       )
+    })
+
+    it('assigns the named parties when they are all its own', async () => {
+      const result = await create(
+        { roleId: ROLES.editor.id, involvedParties: ['party-b'] },
+        caller(ROLES.editor, ['party-a', 'party-b']),
+      )
+      expect(result.result.ok).toBe(true)
+      expect(userInvolvedPartiesModel.bulkCreate).toHaveBeenCalledWith(
+        [{ userId: 'created', involvedPartyId: 'party-b' }],
+        expect.anything(),
+      )
+    })
+
+    it.each([
+      ['a party it does not belong to', ['party-b']],
+      ['its own party and another', ['party-a', 'party-b']],
+      ['no parties', []],
+    ])('may not create a user in %s', async (_, involvedParties) => {
+      const result = await create(
+        { roleId: ROLES.editor.id, involvedParties },
+        caller(ROLES.editor, ['party-a']),
+      )
+      expectForbidden(result)
+      expect(userModel.create).not.toHaveBeenCalled()
     })
 
     it('may not create a user when it has no parties', async () => {
@@ -284,5 +323,26 @@ describe('UserService authorization', () => {
     )
     const [{ include }] = userModel.findAndCountAll.mock.calls[0]
     expect(include[0].where.id[Op.in]).toEqual(['party-a', 'party-b'])
+  })
+
+  it('counts each listed user once, and never lists admin accounts', async () => {
+    const list = (role?: string) =>
+      service.getUsersByUserInvolvedParties(
+        { page: 1, pageSize: 10, role } as never,
+        caller(ROLES.editor, ['party-a']),
+      )
+
+    await list()
+    await list('fulltrui')
+
+    const [[unfiltered], [filtered]] = userModel.findAndCountAll.mock.calls
+    expect(unfiltered.distinct).toBe(true)
+    expect(unfiltered.include[1].where).toEqual({
+      title: { [Op.ne]: UserRoleEnum.Admin },
+    })
+    expect(filtered.include[1].where).toEqual({
+      title: { [Op.ne]: UserRoleEnum.Admin },
+      slug: { [Op.eq]: 'fulltrui' },
+    })
   })
 })

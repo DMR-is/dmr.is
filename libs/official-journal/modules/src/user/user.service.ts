@@ -83,9 +83,11 @@ export class UserService implements IUserService {
   ): Promise<ResultWrapper<GetUserResponse>> {
     const isAdmin = currentUser.role.title === UserRoleEnum.Admin
     const currentUserPartyIds = partyIds(currentUser.involvedParties)
+    // A non-admin who names no parties creates the account in all of their
+    // own; named parties must all be the caller's, as in `updateUser`.
     const involedPartyIds: string[] = isAdmin
       ? (body.involvedParties ?? [])
-      : currentUserPartyIds
+      : (body.involvedParties ?? currentUserPartyIds)
 
     if (!isAdmin) {
       const role = await this.userRoleModel.findByPk(body.roleId, {
@@ -93,9 +95,10 @@ export class UserService implements IUserService {
       })
 
       const hasPermission = role?.title !== UserRoleEnum.User
-      const hasAnyInvolvedParties = involedPartyIds.length > 0
-      const hasInvolvedParties = currentUserPartyIds.every((id) =>
-        involedPartyIds.includes(id),
+      const hasAnyInvolvedParties = currentUserPartyIds.length > 0
+      const hasInvolvedParties = canManagePartiesOf(
+        involedPartyIds,
+        currentUserPartyIds,
       )
 
       if (!hasPermission) {
@@ -120,9 +123,9 @@ export class UserService implements IUserService {
         )
       }
 
-      if (!hasInvolvedParties) {
+      if (hasAnyInvolvedParties && !hasInvolvedParties) {
         this.logger.warn(
-          'User tried to create a user with different involved parties',
+          'User tried to create a user outside their involved parties',
           {
             context: LOGGING_CONTEXT,
             category: LOGGING_CATEGORY,
@@ -321,13 +324,12 @@ export class UserService implements IUserService {
       // The target must belong to the caller's parties, and so must any
       // parties the caller assigns. An empty assignment is refused: it would
       // orphan the account, which this same rule then locks the caller out of.
+      // `null` leaves the parties as they are, like the write below; the DTO
+      // does not validate the field, so it can arrive.
       const hasInvoledParty =
         canManagePartiesOf(targetPartyIds, currentUserPartyIds) &&
-        (body.involvedParties === undefined ||
-          (body.involvedParties.length > 0 &&
-            body.involvedParties.every((id) =>
-              currentUserPartyIds.includes(id),
-            )))
+        (body.involvedParties == null ||
+          canManagePartiesOf(body.involvedParties, currentUserPartyIds))
 
       if (!hasUpdatePermission || !hasInvoledParty) {
         if (!hasUpdatePermission) {
@@ -647,6 +649,8 @@ export class UserService implements IUserService {
     const users = await this.userModel.findAndCountAll({
       limit,
       offset,
+      // The party join yields a row per matching party; count users, not rows
+      distinct: true,
       where: query.search
         ? {
             [Op.or]: {
@@ -677,18 +681,18 @@ export class UserService implements IUserService {
         },
         {
           model: UserRoleModel,
-          where: query.role
-            ? {
-                [Op.and]: {
-                  slug: {
-                    [Op.eq]: query.role,
-                  },
-                  title: {
-                    [Op.ne]: UserRoleEnum.Admin,
-                  },
-                },
-              }
-            : {},
+          // Admin accounts are never listed to a non-admin, who can neither
+          // update nor delete them, whether or not a role filter is set
+          where: {
+            title: {
+              [Op.ne]: UserRoleEnum.Admin,
+            },
+            ...(query.role && {
+              slug: {
+                [Op.eq]: query.role,
+              },
+            }),
+          },
         },
       ],
     })

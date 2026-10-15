@@ -4,7 +4,18 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 
+import { getLogger } from '@dmr.is/logging'
+
 import { StaffTokenGuard } from './staff-token.guard'
+
+jest.mock('@dmr.is/logging', () => {
+  const logger = { error: jest.fn(), warn: jest.fn(), info: jest.fn() }
+  return { getLogger: () => logger }
+})
+
+const logger = getLogger('StaffTokenGuard') as unknown as {
+  error: jest.Mock
+}
 
 const WEB_CLIENT_ID = '@stjornartidindi.is/test-web'
 
@@ -21,6 +32,7 @@ describe('StaffTokenGuard', () => {
   beforeEach(() => {
     process.env.OFFICIAL_JOURNAL_WEB_CLIENT_ID = WEB_CLIENT_ID
     guard = new StaffTokenGuard()
+    logger.error.mockClear()
   })
 
   afterEach(() => {
@@ -101,5 +113,18 @@ describe('StaffTokenGuard', () => {
     expect(() => guard.canActivate(contextFor({ aud: WEB_CLIENT_ID }))).toThrow(
       InternalServerErrorException,
     )
+  })
+
+  it('logs a missing client id when built, before any request', () => {
+    delete process.env.OFFICIAL_JOURNAL_WEB_CLIENT_ID
+    new StaffTokenGuard()
+    expect(logger.error).toHaveBeenCalledWith(
+      'Missing required environment variable: OFFICIAL_JOURNAL_WEB_CLIENT_ID',
+    )
+  })
+
+  it('logs nothing when built with the client id set', () => {
+    new StaffTokenGuard()
+    expect(logger.error).not.toHaveBeenCalled()
   })
 })
