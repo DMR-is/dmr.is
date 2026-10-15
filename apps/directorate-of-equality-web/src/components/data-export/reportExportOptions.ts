@@ -19,11 +19,13 @@ export const REPORT_TYPE_OPTIONS: ReportFilterOption[] = [
  * Where the jafnréttisáætlun behind a report came from. LEGACY means an
  * unexpired certification carried over from the retired register rather than a
  * plan filed here — worth being able to count, because that cohort shrinks
- * every year and the figures change as it does.
+ * every year and the figures change as it does. EXEMPT means a municipality
+ * filed a salary report with no plan in force, which its sector permits.
  */
 export const EQUALITY_SOURCE_OPTIONS: ReportFilterOption[] = [
   { value: 'REPORT', label: 'Skráð í þessu kerfi' },
   { value: 'LEGACY', label: 'Úr eldra kerfi' },
+  { value: 'EXEMPT', label: 'Undanþegið (sveitarfélag)' },
 ]
 
 /**

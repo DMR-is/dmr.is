@@ -119,14 +119,14 @@ export class ReportDto {
   @ApiOptionalUuid({
     nullable: true,
     description:
-      'Salary-only. FK to the approved EQUALITY report this salary was audited against. Null on equality reports, and on a salary report filed against a legacy certificate — read `equalitySource` rather than inferring from this field.',
+      'Salary-only. FK to the approved EQUALITY report this salary was audited against. Null on equality reports, on a salary report filed against a legacy certificate, and on one filed under the municipal exemption — read `equalitySource` rather than inferring from this field.',
   })
   equalityReportId!: string | null
 
   @ApiEnum(EqualityCoverageSourceEnum, {
-    enumName: 'EqualityCoverageSourceEnum',
+    enumName: 'ReportEqualitySourceEnum',
     description:
-      'What met the equality obligation this report was filed under: `REPORT` (linked via `equalityReportId`) or `LEGACY` (an unexpired certificate from the retired register, which has no report row to link). Always `REPORT` on equality reports and on everything filed before the legacy basis was accepted.',
+      'What met the equality obligation this report was filed under: `REPORT` (linked via `equalityReportId`), `LEGACY` (an unexpired certificate from the retired register, which has no report row to link), or `EXEMPT` (nothing covered the company, and as a municipality — sector `SVEITARFELAG` — it may file a salary report without equality coverage). Always `REPORT` on equality reports and on everything filed before the legacy basis was accepted.',
   })
   equalitySource!: EqualityCoverageSourceEnum
 

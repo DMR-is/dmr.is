@@ -386,6 +386,12 @@ export const reportText = {
     legacyMessage:
       'Þessari launagreiningu var skilað á grundvelli jafnréttisáætlunar sem var í gildi í eldra skráningarkerfi Jafnréttisstofu. Áætlunin sjálf var aldrei skráð í þetta kerfi og er því ekki aðgengileg hér — sjá flipann „Eldri gögn“ á fyrirtækinu.',
     legacyValidUntilLabel: 'Gildir til',
+    // A salary report filed by a sveitarfélag with no plan in force. They may
+    // file regardless of their equality report, so the absence is not a gap
+    // in this report, and the empty state's wording would suggest it was.
+    exemptTitle: 'Engin jafnréttisáætlun tengd',
+    exemptMessage:
+      'Sveitarfélögum er heimilt að skila launagreiningu óháð stöðu jafnréttisáætlunar. Engin jafnréttisáætlun var í gildi þegar þessari launagreiningu var skilað.',
     approvedDateLabel: 'Dagsetning samþykktar',
     expiryLabel: 'Gildistími',
     responsibleLabel: 'Ábyrgðaraðili',

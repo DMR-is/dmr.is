@@ -11,7 +11,7 @@ import { ReportDetailDto } from './dto/report-detail.dto'
 import { ReportOverviewDto } from './dto/report-overview.dto'
 import { ReportOverviewStatisticsDto } from './dto/report-overview-statistics.dto'
 import { ReportModel } from './models/report.model'
-import { EqualityCoverage } from './types/equality-coverage'
+import { EqualityCoverage, SalaryFilingBasis } from './types/equality-coverage'
 
 /** An uploaded equality plan, decoded and ready to stream. */
 export type EqualityContentPdf = {
@@ -66,6 +66,16 @@ export interface IReportService {
    * is what is wanted.
    */
   resolveEqualityCoverage(companyId: string): Promise<EqualityCoverage | null>
+  /**
+   * What a salary report filed now would be filed against: the coverage above
+   * when there is any, otherwise EXEMPT when the company's sector may file
+   * without it (`SALARY_EQUALITY_EXEMPT_SECTORS`), otherwise null.
+   *
+   * The one answer behind `GET reports/salary/eligibility` and every salary
+   * submission path. `GET reports/equality/active` deliberately does not use
+   * it — an exemption is not a plan.
+   */
+  resolveSalaryFilingBasis(companyId: string): Promise<SalaryFilingBasis | null>
   /**
    * The filed-report half of the lookup, unmapped. For callers that must
    * resolve the caller-facing `providerId` through their own channel, which

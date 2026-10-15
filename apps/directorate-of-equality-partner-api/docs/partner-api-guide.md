@@ -434,6 +434,14 @@ Returns `{ eligible, reason, dueAt, earliestNewDueAt }`.
 - `MISSING_EQUALITY_REPORT` — no approved, in-force equality report and no
   unexpired legacy certificate. The two count equally.
 
+A company registered with the Directorate as a sveitarfélag (sector
+`SVEITARFELAG`) is exempt: it may file a salary report whatever the state of
+its equality report, and this route does not refuse it for that reason. An
+inter-municipal body (byggðasamlag) is not a sveitarfélag and is not exempt. In
+a group filing the subsidiaries share the parent's exemption. A municipality
+whose sector the Directorate has not classified yet is still gated until it is
+— ask the Directorate if one is refused.
+
 Cheaper than discovering it from a rejected submission after building the
 payload.
 
@@ -626,7 +634,8 @@ Three fields are **not** part of this body, and sending any of them is a `400`
 under the strict validation above:
 
 - **`equalityReportId`** — resolved server-side to the company's approved,
-  in-force equality report (`404` when there is none). There was only ever one
+  in-force equality report or legacy certificate (`404` when there is neither
+  and the company is not an exempt sveitarfélag). There was only ever one
   value the submission would accept, and it is the one the server already
   computes for B2.
 - **`importedFromExcel`** — there is no workbook on this API for a payload to
@@ -942,7 +951,7 @@ Scoring model (section C):
 | `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, empty or over-long `providerId`; or an equality document that is not a usable `.docx`; `X-Company-National-Id` missing or malformed with a vendor client key, sent with a company key, or sent on `GET /partner/delegations` |
 | `401` | missing or invalid key                                                                                                                                                                                                                                                                                       |
 | `403` | key lacks the scope the route declares (for a vendor client key: your organisation's scopes intersected with the company's, and the message says which of the two lacks it); no live delegation from the company named in `X-Company-National-Id`; a company key on `GET /partner/delegations`               |
-| `404` | no approved equality report; unknown `providerId`; report filed on another channel                                                                                                                                                                                                                           |
+| `404` | no equality coverage (except an exempt sveitarfélag); unknown `providerId`; report filed on another channel                                                                                                                                                                                                  |
 | `409` | the company is not active in the register (any route); a sibling report is `IN_REVIEW`, or `POSTPONED` from island.is (one filed through this API is withdrawn and replaced); the `providerId` is already used for a report of the other type                                                                |
 | `413` | the equality document is past the 10MB limit                                                                                                                                                                                                                                                                 |
 | `429` | rate limit — per key (headers) or per IP                                                                                                                                                                                                                                                                     |

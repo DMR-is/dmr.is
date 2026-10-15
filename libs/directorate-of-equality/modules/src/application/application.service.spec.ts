@@ -118,6 +118,7 @@ describe('ApplicationService', () => {
   let configGetByKey: jest.Mock
   let getOrCreateSubsidiaryReportSnapshotSource: jest.Mock
   let resolveEqualityCoverage: jest.Mock
+  let resolveSalaryFilingBasis: jest.Mock
   let createSalary: jest.Mock
   let createEquality: jest.Mock
   let findReplay: jest.Mock
@@ -147,6 +148,7 @@ describe('ApplicationService', () => {
       .fn()
       .mockResolvedValue(makeCompanySnapshotSource())
     resolveEqualityCoverage = jest.fn()
+    resolveSalaryFilingBasis = jest.fn()
     // `replayed` comes from the creation service, and this service passes the
     // response through untouched — the assertions below check that it does.
     createSalary = jest
@@ -205,7 +207,7 @@ describe('ApplicationService', () => {
           },
           {
             provide: IReportService,
-            useValue: { resolveEqualityCoverage },
+            useValue: { resolveEqualityCoverage, resolveSalaryFilingBasis },
           },
           {
             provide: IReportCreateService,
@@ -713,7 +715,7 @@ describe('ApplicationService', () => {
     }
 
     it('is eligible when there is no due date and an equality report exists', async () => {
-      resolveEqualityCoverage.mockResolvedValue(activeEquality)
+      resolveSalaryFilingBasis.mockResolvedValue(activeEquality)
 
       const result = await service.getSalaryReportEligibility(COMPANY)
 
@@ -722,8 +724,27 @@ describe('ApplicationService', () => {
       expect(result.dueAt).toBeNull()
     })
 
+    // Sveitarfélög may file whatever the state of their equality report. The
+    // exemption is decided in the shared lookup, so the route has to read that
+    // lookup rather than the coverage one — reading coverage is what would
+    // have told a municipality no.
+    it('is eligible when the company is exempt from the equality precondition', async () => {
+      resolveSalaryFilingBasis.mockResolvedValue({
+        source: EqualityCoverageSourceEnum.EXEMPT,
+        report: null,
+        legacyValidUntil: null,
+      })
+
+      const result = await service.getSalaryReportEligibility(COMPANY)
+
+      expect(resolveSalaryFilingBasis).toHaveBeenCalledWith(COMPANY.id)
+      expect(resolveEqualityCoverage).not.toHaveBeenCalled()
+      expect(result.eligible).toBe(true)
+      expect(result.reason).toBeNull()
+    })
+
     it('is ineligible with MISSING_EQUALITY_REPORT when nothing covers the company', async () => {
-      resolveEqualityCoverage.mockResolvedValue(null)
+      resolveSalaryFilingBasis.mockResolvedValue(null)
       const soon = new Date()
       soon.setMonth(soon.getMonth() + 3)
       const company = { ...COMPANY, nextSalaryReportDueAt: soon }
@@ -752,7 +773,7 @@ describe('ApplicationService', () => {
       })
 
       it('quotes the same date an approval would write', async () => {
-        resolveEqualityCoverage.mockResolvedValue(activeEquality)
+        resolveSalaryFilingBasis.mockResolvedValue(activeEquality)
 
         const result = await service.getSalaryReportEligibility(COMPANY)
 
@@ -764,7 +785,7 @@ describe('ApplicationService', () => {
       // year plus three. Note the new deadline is LATER than the old one — the
       // cost is the year that went unused, not a deadline moving backwards.
       it('offers three years from today to a company that still has time left', async () => {
-        resolveEqualityCoverage.mockResolvedValue(activeEquality)
+        resolveSalaryFilingBasis.mockResolvedValue(activeEquality)
         const inAYear = new Date('2027-09-22T23:59:59.999Z')
 
         const result = await service.getSalaryReportEligibility({
@@ -778,7 +799,7 @@ describe('ApplicationService', () => {
       })
 
       it('reports the forecast even when the equality precondition blocks the filing', async () => {
-        resolveEqualityCoverage.mockResolvedValue(null)
+        resolveSalaryFilingBasis.mockResolvedValue(null)
 
         const result = await service.getSalaryReportEligibility(COMPANY)
 
@@ -1106,6 +1127,33 @@ describe('ApplicationService', () => {
         approvedAt: null,
         validUntil: new Date('2028-03-31T23:59:59.000Z'),
       })
+      expect(reportFindOne).toHaveBeenCalledTimes(1)
+    })
+
+    // A sveitarfélag that filed with nothing covering it. There is no coverage
+    // to describe, so the detail carries no equality block and makes no second
+    // lookup.
+    it('reports no equality coverage for an EXEMPT salary report, without a second lookup', async () => {
+      const salaryReport = makeReportRow({
+        id: REPORT_ID,
+        providerId: PROVIDER_ID,
+        type: ReportTypeEnum.SALARY,
+        status: ReportStatusEnum.SUBMITTED,
+        identifier: 'SAL-2026-003',
+        equalityReportId: null,
+        equalitySource: EqualityCoverageSourceEnum.EXEMPT,
+        equalityLegacyValidUntil: null,
+        outliersPostponed: false,
+      })
+
+      reportFindOne.mockResolvedValueOnce(salaryReport)
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      const result = await service.getReport(PROVIDER_ID, COMPANY)
+
+      expect(result.equalityReport).toBeNull()
       expect(reportFindOne).toHaveBeenCalledTimes(1)
     })
 

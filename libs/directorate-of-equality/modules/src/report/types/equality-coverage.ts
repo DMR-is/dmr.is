@@ -35,3 +35,20 @@ export type EqualityCoverage =
        */
       legacyValidUntil: string
     }
+
+/**
+ * What a salary report may be filed against: the company's equality coverage,
+ * or — when there is none — an exemption from needing it.
+ *
+ * Kept apart from `EqualityCoverage` on purpose. EXEMPT is not coverage, and
+ * `GET reports/equality/active` must keep answering 404 for a municipality
+ * with no plan, so the type that route reads cannot have an EXEMPT arm to
+ * forget. Only the salary-filing paths read this one.
+ */
+export type SalaryFilingBasis =
+  | EqualityCoverage
+  | {
+      source: EqualityCoverageSourceEnum.EXEMPT
+      report: null
+      legacyValidUntil: null
+    }

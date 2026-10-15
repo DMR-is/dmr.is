@@ -30,6 +30,7 @@ import {
 } from '@dmr.is/utils-server/serverUtils'
 
 import { CompanySizeEnum } from '../company/models/company.enums'
+import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { LegacyReportModel } from '../company/models/legacy-report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
@@ -71,6 +72,7 @@ import {
 } from './dto/report-timeline-item.dto'
 import { computeIncludesImprovementPlan } from './lib/improvement-plan'
 import { isLegacyEqualityCoverageActive } from './lib/legacy-equality-coverage'
+import { isExemptFromSalaryEqualityPrecondition } from './lib/salary-equality-exemption'
 import {
   EqualityContentTypeEnum,
   EqualityCoverageSourceEnum,
@@ -79,7 +81,7 @@ import {
 } from './models/report.enums'
 import { ReportModel } from './models/report.model'
 import { ReportEventModel } from './models/report-event.model'
-import { EqualityCoverage } from './types/equality-coverage'
+import { EqualityCoverage, SalaryFilingBasis } from './types/equality-coverage'
 import { buildReportListWhere } from './utils/filters'
 import { EqualityContentPdf, IReportService } from './report.service.interface'
 
@@ -106,6 +108,8 @@ export class ReportService implements IReportService {
     private readonly reportOutlierGroupModel: typeof ReportOutlierGroupModel,
     @InjectModel(LegacyReportModel)
     private readonly legacyReportModel: typeof LegacyReportModel,
+    @InjectModel(CompanyModel)
+    private readonly companyModel: typeof CompanyModel,
   ) {}
 
   async list(query: GetReportsQueryDto): Promise<GetReportsResponseDto> {
@@ -663,6 +667,44 @@ export class ReportService implements IReportService {
   }
 
   /**
+   * What a salary report filed now would be filed against, or null when the
+   * company may not file one.
+   *
+   * Coverage first, exemption second. A municipality holding a plan still has
+   * its salary report linked to that plan — EXEMPT records that nothing covered
+   * the company, not that its sector was looked at, and recording it over a
+   * real plan would throw away the link the reviewer reads.
+   *
+   * The sector is read from `company` here rather than taken from a caller.
+   * `ReportCreateService` only holds the submission's own company snapshot,
+   * and a precondition that trusted it would let a submission name its own
+   * exemption.
+   */
+  async resolveSalaryFilingBasis(
+    companyId: string,
+  ): Promise<SalaryFilingBasis | null> {
+    const coverage = await this.resolveEqualityCoverage(companyId)
+
+    if (coverage) {
+      return coverage
+    }
+
+    const company = await this.companyModel.findByPk(companyId, {
+      attributes: ['id', 'sector'],
+    })
+
+    if (!isExemptFromSalaryEqualityPrecondition(company?.sector)) {
+      return null
+    }
+
+    return {
+      source: EqualityCoverageSourceEnum.EXEMPT,
+      report: null,
+      legacyValidUntil: null,
+    }
+  }
+
+  /**
    * The furthest-out unexpired `equality_valid_until` the retired register
    * holds for this company, or null.
    *
@@ -966,12 +1008,14 @@ export class ReportService implements IReportService {
    * `ReportModel.fromModelToEqualityReport` — this method just decides
    * *which* report to project from.
    *
-   * ⚠️ **`equalitySource` is read before the link, and a LEGACY row returns
-   * null rather than throwing.** That row has no equality report to project and
-   * never did: the company was covered by a certificate on the retired
-   * register, which mints no `report` row, so there is nothing to load. The
-   * "missing link = data-integrity error" rule still holds for every other
-   * salary report, and keeping the two apart is the whole reason
+   * ⚠️ **`equalitySource` is read before the link, and a LEGACY or EXEMPT row
+   * returns null rather than throwing.** Neither has an equality report to
+   * project, and neither ever did. A LEGACY company was covered by a
+   * certificate on the retired register, which mints no `report` row, so there
+   * is nothing to load. An EXEMPT company is a sveitarfélag that filed with no
+   * plan in force, which its sector permits. The "missing link =
+   * data-integrity error" rule still holds for every other salary report, and
+   * keeping the two apart is the whole reason
    * `equality_source` is a stored column rather than an inference from a null
    * FK — before it existed, the only two states were "linked" and "broken", and
    * a legitimate legacy filing would have read as the second and 500'd the
@@ -984,7 +1028,12 @@ export class ReportService implements IReportService {
       return ReportModel.fromModelToEqualityReport(report)
     }
 
-    if (report.equalitySource === EqualityCoverageSourceEnum.LEGACY) {
+    // EXEMPT has no plan behind it either: the company's sector may file a
+    // salary report without one, and nothing covered it when it did.
+    if (
+      report.equalitySource === EqualityCoverageSourceEnum.LEGACY ||
+      report.equalitySource === EqualityCoverageSourceEnum.EXEMPT
+    ) {
       return null
     }
 

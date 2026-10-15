@@ -79,7 +79,9 @@ const zGetCompaniesQuery = z.object({
   reportCompanyAdminGender: z
     .array(z.enum(['MALE', 'FEMALE', 'NEUTRAL']))
     .optional(),
-  reportEqualitySource: z.array(z.enum(['REPORT', 'LEGACY'])).optional(),
+  reportEqualitySource: z
+    .array(z.enum(['REPORT', 'LEGACY', 'EXEMPT']))
+    .optional(),
   reportSubmittedFrom: z.string().optional(),
   reportSubmittedTo: z.string().optional(),
   reportApprovedFrom: z.string().optional(),

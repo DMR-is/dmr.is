@@ -11,11 +11,12 @@ import { SubmitSalaryReportDto } from './submit-salary-report.dto'
  * the same reason: on this channel they are facts the server is in a better
  * position to know than the caller.
  *
- * - **`equalityReportId`** — there is exactly one answer a caller could give
- *   that the submission would accept, and the server already computes it
- *   (`findActiveEqualityForCompany`) one route earlier to answer
- *   `GET /reports/salary/eligibility`. Asking a vendor to fetch it and hand it
- *   back could only ever reproduce that value or produce a 404, and in practice
+ * - **`equalityReportId`** — there is exactly one filing basis the submission
+ *   would accept, and the server already computes it
+ *   (`resolveSalaryFilingBasis`) one route earlier to answer
+ *   `GET /reports/salary/eligibility`: the company's coverage, or EXEMPT for an
+ *   uncovered sveitarfélag. Asking a vendor to fetch an id and hand it back
+ *   could only ever reproduce that answer or produce a 404, and in practice
  *   produced the 404: the equality submission returns a `reportId`, the salary
  *   submission wants the report's own id, and nothing about the field names
  *   warns that these differ. Resolved server-side instead.

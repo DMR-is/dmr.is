@@ -24,7 +24,7 @@ import {
   ReportEventTypeEnum,
 } from '../report/models/report-event.model'
 import { IReportService } from '../report/report.service.interface'
-import { EqualityCoverage } from '../report/types/equality-coverage'
+import { SalaryFilingBasis } from '../report/types/equality-coverage'
 import { AUTO_REVIEW_ENFORCE } from '../report-auto-review/report-auto-review.constants'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
@@ -83,18 +83,24 @@ export class ReportFinalizeService implements IReportFinalizeService {
    * bug caught a second time, and at far greater scale: the ~540 companies
    * whose equality plan exists only on the retired register were told by both
    * read routes that they had none, and could file no salary report at all.
+   *
+   * It now also answers EXEMPT for a sector that may file without coverage
+   * (sveitarfélög), from the same shared lookup and for the same reason: the
+   * eligibility route says yes to a municipality with no plan, so this has to.
    */
-  async resolveEqualityCoverage(companyId: string): Promise<EqualityCoverage> {
-    const coverage = await this.reportService.resolveEqualityCoverage(companyId)
+  async resolveSalaryFilingBasis(
+    companyId: string,
+  ): Promise<SalaryFilingBasis> {
+    const basis = await this.reportService.resolveSalaryFilingBasis(companyId)
 
-    if (!coverage) {
+    if (!basis) {
       // The same sentence `GET .../reports/equality/active` answers with, so a
       // caller that skipped the eligibility pre-check reads one message from
       // either route.
       throw new NotFoundException('No approved equality report is in force')
     }
 
-    return coverage
+    return basis
   }
 
   /**
@@ -112,10 +118,10 @@ export class ReportFinalizeService implements IReportFinalizeService {
    *
    * Joins on `companyId` alone, NOT `parentCompanyId: null`, so that this
    * selects exactly what `findActiveEqualityForCompany` selects for the
-   * eligibility and active-report routes and for `resolveEqualityCoverage`. A
+   * eligibility and active-report routes and for `resolveSalaryFilingBasis`. A
    * subsidiary covered by a group equality report is handed that report's id
    * by those routes and must be allowed to name it back here; filtering to the
-   * parent row is the regression `resolveEqualityCoverage` documents above.
+   * parent row is the regression `resolveSalaryFilingBasis` documents above.
    *
    * 404 rather than 403, with the same sentence as for an unknown id: the
    * caller learns nothing about whether the id exists for someone else.
