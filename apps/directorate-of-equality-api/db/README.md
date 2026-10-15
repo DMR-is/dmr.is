@@ -590,7 +590,7 @@ companies, also unprefixed); `doe_` is for service-level tables such as `doe_api
 | `one_case_number`       | `text` (nullable — One's human-facing case number)                                                                                                        |
 | `one_case_item_id`      | `text` (nullable — the case CreateDocument files under)                                                                                                   |
 | `one_document_item_id`  | `text` (nullable — the filed document)                                                                                                                    |
-| `island_is_document_id` | `text` (nullable — may stay NULL on a SENT row: One can confirm a send without an `ItemID`)                                                               |
+| `island_is_document_id` | `text` (nullable — SendDocToIslandIs's `DocumentId`, which is One's document `ItemId`, not an island.is id; may stay NULL on a SENT row)                  |
 | `pdf_sha256`            | `text` (nullable — lowercase hex; both or neither with `pdf_size_bytes`)                                                                                  |
 | `pdf_size_bytes`        | `integer` (nullable)                                                                                                                                      |
 | `attempts`              | `integer` (default `0`; claims so far, capped by the service)                                                                                             |
@@ -624,10 +624,18 @@ durable as the decision. It also keeps PDF rendering and sending in doe-api only
 partner API submits reports too, but only writes the row; it has no Chromium and no mail
 or OneSystems credentials.
 
-**Channels.** Today every row is sent by email, as before: approve and deny mail the
-company, a submission (which never had an email) is marked `SKIPPED`. Delivery to the
-island.is mailbox through One (see "Mailbox delivery" above) replaces the email per kind
-once it is switched on, and the row then records `channel = MAILBOX`.
+**Channels.** With `ONESYSTEMS_ENABLED` off, approve and deny are emailed as before, and a
+submission (which never had an email) waits `PENDING`: it is not picked until the flag is
+on, so switching the flag off during a One incident holds receipts instead of dropping
+them. With the flag on, every kind goes to the island.is mailbox through One (see "Mailbox
+delivery" above) and the row records `channel = MAILBOX`. An approval or denial whose
+mailbox delivery already got somewhere is not emailed when the flag goes off: one One
+sent is recorded `DONE` by mailbox, an UNCERTAIN one is `FAILED` for a person, and one
+whose document One holds unsent waits `PENDING` for the flag. `SKIPPED` is no longer
+written; it stays in the enum for rows written before.
+
+**Quarantine.** A row whose filing company is quarantined is not picked; it waits
+`PENDING` and goes once the quarantine is lifted.
 
 **Retries.** A failed send keeps the row `PENDING`, counts the attempt and waits five
 minutes; after five attempts it becomes `FAILED`. A report with no usable contact or admin
@@ -642,8 +650,9 @@ the run cannot roll back a row whose mail has already gone.
 
 **One row per kind per report.** `notice_outbox_report_kind_uq (report_id, kind)`: a report
 is submitted once and decided once (approve is a compare-and-swap from `IN_REVIEW`, deny
-from `IN_REVIEW`/`POSTPONED`, and nothing leaves `APPROVED` or `DENIED`), so a second row
-is a bug, and the constraint fails the transaction that tried instead of mailing twice.
+from `IN_REVIEW`/`POSTPONED`; `DENIED` is final, and `APPROVED` only ever moves on to
+`SUPERSEDED` when a newer report of the type is approved, which owes no notice), so a
+second row is a bug, and the constraint fails the transaction that tried instead of mailing twice.
 A report that lands `POSTPONED` gets its receipt at submission; the explanations that later
 move it to `SUBMITTED` do not owe a second one.
 
@@ -678,10 +687,32 @@ SELECT n.kind, r.status
 ```
 
 Re-drive `REPORT_APPROVED` only while the status is `APPROVED`, and `REPORT_DENIED` only while it
-is `DENIED`. A `REPORT_SUBMITTED` receipt is still true after the report moves on. Then put the row
-back to the state it was born in. Only `status` and `processed_at` are tied together by a CHECK
-(`notice_outbox_processed_chk`); `attempts = 0` is what restores the five retries, and clearing
-`last_attempt_at` lets the next run pick the row up at once:
+is `DENIED`. A `REPORT_SUBMITTED` receipt is still true after the report moves on.
+
+With `ONESYSTEMS_ENABLED` on, the row goes out through its `mailbox_delivery` row, keyed by the
+mailbox kind, the filing company and the report id. Settle that row first, or the re-driven
+notice resumes the same stuck delivery and fails again:
+
+```sql
+SELECT id, status, attempts, in_flight_step, one_document_item_id, sent_at
+  FROM mailbox_delivery
+ WHERE idempotency_key LIKE 'mailbox-delivery:v1:%:' || (
+         SELECT company_id FROM company_report
+          WHERE report_id = '<report id>' AND parent_company_id IS NULL
+       ) || ':' || upper('<report id>');
+```
+
+- `UNCERTAIN`, or `in_flight_step` set: reconcile it first, under "Reconciling an UNCERTAIN
+  row" in the mailbox-delivery module README. If One sent it, the row becomes `SENT` and the
+  re-driven notice is recorded `DONE` without a second send.
+- `attempts` at 5: fix the cause and re-arm it ("Exhausted rows" in the same README).
+- No row, or `SENT`: nothing to do first.
+
+Then put the outbox row back to the state it was born in. Three CHECKs tie columns to `status`:
+`processed_at` is set exactly when the row is not `PENDING` (`notice_outbox_processed_chk`), and
+`channel` exactly when it is `DONE` (`notice_outbox_done_chk`, `notice_outbox_channel_chk`). A
+`FAILED` row has no channel, so only `processed_at` needs clearing. `attempts = 0` is what restores
+the five retries, and clearing `last_attempt_at` lets the next run pick the row up at once:
 
 ```sql
 UPDATE notice_outbox
@@ -782,7 +813,7 @@ So admins know **when** to consider starting the fines process, the company list
 - The "when" + an optional reason are captured on the emitted `company_event` (`QUARANTINED` / `UNQUARANTINED`) so the company timeline carries the full audit. The flag itself stores no timestamp.
 - The list endpoint exposes a `quarantined` filter.
 
-**Enforcement is the caller's responsibility.** This database/flag only records the decision; every outbound code path (mail service, future scheduled jobs, notification hooks) must check `company.quarantined` and skip quarantined companies. Those gates are added per touchpoint as they are built — there are no automated outbound jobs gated on it yet.
+**Enforcement is the caller's responsibility.** This database/flag only records the decision; every outbound code path (mail service, scheduled jobs, notification hooks) must check `company.quarantined` and skip quarantined companies. The gates so far: the deadline-reminder task leaves quarantined companies out of its query; the notice dispatcher does not pick a `notice_outbox` row whose filing company is quarantined, so the receipt, approval or denial waits until it is lifted; and `deliverToMailbox` refuses a quarantined company before it writes anything.
 
 ## Application-facing reads and writes
 
@@ -1233,7 +1264,7 @@ next due dates; admins act on them via the derived `equalityReportOverdue` /
 
 ### `company_event`
 
-Immutable, append-only timeline of company-lifecycle events. Mirrors `report_event` but scoped to the company. Insert-only (`created_at` only). Carries `CREATED` (registration), `STATUS_CHANGED` (`ACTIVE`/`INACTIVE` move, with `from_status`/`to_status`), the fines/quarantine toggles (`FINES_STARTED`/`FINES_STOPPED`/`QUARANTINED`/`UNQUARANTINED`, each with an optional `reason` and no status move), the four deadline-reminder outcomes emitted by the report-deadline-reminder task, `API_KEY_ISSUED`/`API_KEY_REVOKED` for the third-party integration credentials, and `PARTNER_DELEGATION_GRANTED`/`PARTNER_DELEGATION_REVOKED` when the company allows a vendor client to act for it or withdraws that (the firm named in `reason`). For reminder events, `reason` holds the ISO due date being reminded about and `reminder_tier` records which milestone fired — together they form the idempotency key (one row per company per report-kind per tier per due date).
+Immutable, append-only timeline of company-lifecycle events. Mirrors `report_event` but scoped to the company. Insert-only (`created_at` only). Carries `CREATED` (registration), `STATUS_CHANGED` (`ACTIVE`/`INACTIVE` move, with `from_status`/`to_status`), the fines/quarantine toggles (`FINES_STARTED`/`FINES_STOPPED`/`QUARANTINED`/`UNQUARANTINED`, each with an optional `reason` and no status move), the six deadline-reminder outcomes emitted by the report-deadline-reminder task (`…_SENT`, `…_NO_EMAIL` when no usable email is on file, and `…_UNDELIVERED` when a mailbox delivery stopped UNCERTAIN or out of attempts, added in `m-20261015-company-event-reminder-undelivered`), `API_KEY_ISSUED`/`API_KEY_REVOKED` for the third-party integration credentials, and `PARTNER_DELEGATION_GRANTED`/`PARTNER_DELEGATION_REVOKED` when the company allows a vendor client to act for it or withdraws that (the firm named in `reason`). For reminder events, `reason` holds the ISO due date being reminded about and `reminder_tier` records which milestone fired — together they form the idempotency key (one row per company per report-kind per tier per due date).
 
 | Column          | Type                                                                                                      |
 | --------------- | --------------------------------------------------------------------------------------------------------- |

@@ -20,6 +20,7 @@ import {
 } from '@dmr.is/doe-modules/mail'
 import {
   buildMailboxDeliveryIdempotencyKey,
+  DeliverToMailboxResult,
   IMailboxDeliveryService,
   isMailboxDeliveryEnabled,
   MailboxDeliveryKindEnum,
@@ -67,6 +68,11 @@ type DeadlineKind = {
   sentEventType: CompanyDeadlineReminderEventType
   /** Event recorded when a reminder is due but no email is on file. */
   noEmailEventType: CompanyDeadlineReminderEventType
+  /**
+   * Event recorded when the mailbox delivery stopped undelivered (UNCERTAIN,
+   * or out of attempts) and no later run will finish it on its own.
+   */
+  undeliveredEventType: CompanyDeadlineReminderEventType
   /** The mailbox kind, when the reminder goes through One. */
   mailboxKind: MailboxDeliveryKindEnum
 }
@@ -79,6 +85,8 @@ const DEADLINE_KINDS: DeadlineKind[] = [
     sentEventType: CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
     noEmailEventType:
       CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+    undeliveredEventType:
+      CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
     mailboxKind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
   },
   {
@@ -88,6 +96,8 @@ const DEADLINE_KINDS: DeadlineKind[] = [
     sentEventType: CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT,
     noEmailEventType:
       CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+    undeliveredEventType:
+      CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
     mailboxKind: MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
   },
 ]
@@ -353,7 +363,17 @@ export class ReportDeadlineReminderService
    * The SENT event is written only when One confirms the send. The delivery's
    * key (kind, company, tier, due date) is what stops a second send: an
    * UNCERTAIN or exhausted delivery keeps answering the same on every later
-   * run, without calling One, until a person settles it.
+   * run, without calling One, until a person settles it. Such a delivery gets
+   * an UNDELIVERED event, once per tier and due date, so the gap is on the
+   * company's timeline as the email path's NO_EMAIL is; doe-api's daily
+   * mailbox alert names the delivery to settle.
+   *
+   * ⚠️ **Flipping the flags.** Both channels need `EMAIL_REMINDER_JOB_ENABLED`
+   * (the task does not run without it), so with it off nothing is sent by
+   * either. Turning `ONESYSTEMS_ENABLED` off while a reminder's delivery is
+   * UNCERTAIN emails that reminder on the next run, since only a SENT event
+   * stops the email path: the company may then have it twice. Settle UNCERTAIN
+   * deliveries before turning the flag off.
    *
    * ⚠️ **A delivery failure is caught here, per company.** It is not a
    * database fault on the lock's transaction: `deliverToMailbox` records its own
@@ -398,9 +418,9 @@ export class ReportDeadlineReminderService
       tier,
     }
 
-    let sent: boolean
+    let result: DeliverToMailboxResult
     try {
-      const result = await this.mailboxDeliveryService.deliverToMailbox({
+      result = await this.mailboxDeliveryService.deliverToMailbox({
         idempotencyKey: buildMailboxDeliveryIdempotencyKey({
           kind: kind.mailboxKind,
           companyId: company.id,
@@ -412,19 +432,12 @@ export class ReportDeadlineReminderService
         companyId: company.id,
         subject: letter.subject,
         pdf: () =>
-          this.pdfRenderService.renderHtml(letter.html, noticeLetterStyles),
+          this.pdfRenderService.renderHtml(
+            letter.html,
+            noticeLetterStyles,
+            'letter',
+          ),
       })
-
-      sent = result.status === 'SENT'
-      if (!sent) {
-        this.logger.error(
-          `${kind.reportType} ${tier} reminder for company ${company.id} was not delivered to the mailbox: ${result.status}`,
-          {
-            ...meta,
-            deliveryId: 'deliveryId' in result ? result.deliveryId : undefined,
-          },
-        )
-      }
     } catch (error) {
       this.logger.error(
         `Could not deliver company ${company.id} its ${kind.reportType} ${tier} reminder to the mailbox — continuing with the rest of the batch`,
@@ -436,12 +449,60 @@ export class ReportDeadlineReminderService
       return
     }
 
-    if (!sent) return
+    if (result.status === 'SENT') {
+      await this.companyEventService.emitDeadlineReminderEvent(
+        company.id,
+        company.status,
+        kind.sentEventType,
+        tier,
+        dueDateIso,
+      )
+      return
+    }
+
+    this.logger.error(
+      `${kind.reportType} ${tier} reminder for company ${company.id} was not delivered to the mailbox: ${result.status}`,
+      {
+        ...meta,
+        deliveryId: 'deliveryId' in result ? result.deliveryId : undefined,
+      },
+    )
+
+    // Only where no later run will finish it. IN_PROGRESS is another worker's,
+    // and DISABLED or QUARANTINED send nothing by design.
+    if (
+      result.status === 'UNCERTAIN' ||
+      ('skipped' in result && result.skipped === 'ATTEMPTS_EXHAUSTED')
+    ) {
+      await this.flagUndelivered(company, kind, tier, dueDateIso)
+    }
+  }
+
+  /**
+   * Records an UNDELIVERED event on the company timeline, deduped per (tier,
+   * due date) like `flagMissingEmail`, so the gap shows once per cycle, not
+   * once per run. Outside the delivery's catch: a fault on the lock's
+   * transaction must abort the run, as for the SENT event.
+   */
+  private async flagUndelivered(
+    company: CompanyModel,
+    kind: DeadlineKind,
+    tier: CompanyReminderTierEnum,
+    dueDateIso: string,
+  ): Promise<void> {
+    const alreadyFlagged =
+      await this.companyEventService.hasDeadlineReminderEvent(
+        company.id,
+        kind.undeliveredEventType,
+        tier,
+        dueDateIso,
+      )
+    if (alreadyFlagged) return
 
     await this.companyEventService.emitDeadlineReminderEvent(
       company.id,
       company.status,
-      kind.sentEventType,
+      kind.undeliveredEventType,
       tier,
       dueDateIso,
     )

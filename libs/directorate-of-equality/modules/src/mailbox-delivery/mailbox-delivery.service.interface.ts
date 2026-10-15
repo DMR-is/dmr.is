@@ -44,6 +44,10 @@ export interface DeliverToMailboxInput {
  * - `DISABLED`: `ONESYSTEMS_ENABLED` is not `'true'`. Nothing was written,
  *   rendered or sent. The key is checked first, so a malformed key throws
  *   rather than returning DISABLED.
+ * - `QUARANTINED`: the company is quarantined (`company.quarantined`), which
+ *   halts every outbound touchpoint. Nothing was written, rendered or sent,
+ *   and a delivery already under way is left where it stopped. Call again
+ *   with the same key once the quarantine is lifted.
  * - `SENT`: One confirmed the send. `alreadySent` is true when an earlier call
  *   had done it and this one made no call to One. `islandIsDocumentId` is null
  *   when One confirmed the send without a `DocumentId`.
@@ -65,6 +69,7 @@ export interface DeliverToMailboxInput {
  */
 export type DeliverToMailboxResult =
   | { status: 'DISABLED' }
+  | { status: 'QUARANTINED' }
   | {
       status: 'SENT'
       deliveryId: string
@@ -89,6 +94,40 @@ export type MailboxDeliveryUnsettledStatus = Exclude<
   MailboxDeliveryStatusEnum,
   MailboxDeliveryStatusEnum.SENT | MailboxDeliveryStatusEnum.UNCERTAIN
 >
+
+/** What a caller without the flag needs to know about an existing delivery. */
+export type MailboxDeliveryState = {
+  deliveryId: string
+  status: MailboxDeliveryStatusEnum
+  /** One holds the document: `one_document_item_id` is saved. */
+  documentFiled: boolean
+  /** One confirmed the send: `sent_at` is saved. */
+  sent: boolean
+}
+
+/**
+ * Why a delivery needs a person:
+ * - `UNCERTAIN`: whether One acted is unknown. Reconcile it against One.
+ * - `INTERRUPTED`: a call's marker is still set and its lease has lapsed, so
+ *   the process died mid-call. The next call with its key marks it UNCERTAIN;
+ *   an outbox row that has already given up never makes that call.
+ * - `ATTEMPTS_EXHAUSTED`: claimed `MAILBOX_DELIVERY_MAX_ATTEMPTS` times
+ *   without being sent. Fix the cause and re-arm it.
+ */
+export type StuckMailboxDeliveryReason =
+  | 'UNCERTAIN'
+  | 'INTERRUPTED'
+  | 'ATTEMPTS_EXHAUSTED'
+
+/** Ids and counts only: nothing personal, so it can go in a log line. */
+export type StuckMailboxDelivery = {
+  deliveryId: string
+  kind: MailboxDeliveryKindEnum
+  companyId: string
+  reason: StuckMailboxDeliveryReason
+  attempts: number
+  lastAttemptAt: Date | null
+}
 
 /**
  * Delivers a notice to a company's island.is Stafrænt pósthólf through One:
@@ -121,6 +160,21 @@ export interface IMailboxDeliveryService {
   deliverToMailbox(
     input: DeliverToMailboxInput,
   ): Promise<DeliverToMailboxResult>
+
+  /**
+   * The delivery holding `idempotencyKey`, or null. Reads only, and works
+   * whatever `ONESYSTEMS_ENABLED` says: a caller falling back to email uses
+   * it to avoid sending a notice One has already filed or sent.
+   */
+  findDelivery(idempotencyKey: string): Promise<MailboxDeliveryState | null>
+
+  /**
+   * The deliveries a person must act on (see `StuckMailboxDeliveryReason`),
+   * oldest attempt first, at most `limit`. Reads only, whatever
+   * `ONESYSTEMS_ENABLED` says: rows left from before the flag went off still
+   * need a person.
+   */
+  findStuckDeliveries(limit: number): Promise<StuckMailboxDelivery[]>
 }
 
 // Token for DI, based on https://stackoverflow.com/a/70088972
