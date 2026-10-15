@@ -249,10 +249,13 @@ export class ApplicationService implements IApplicationService {
     // they had no plan, and no route let them file anything. A salary report
     // filed on legacy coverage now records that in `equality_source` instead of
     // borrowing an id that does not exist.
-    const coverage = await this.reportService.resolveEqualityCoverage(
-      company.id,
-    )
-    if (!coverage) {
+    //
+    // Sveitarfélög are exempt: they may file whatever the state of their
+    // equality report, and the submission records EXEMPT. Resolved through the
+    // same `resolveSalaryFilingBasis` the submission reads, so this route can
+    // never say yes to a filing that is then refused, or the reverse.
+    const basis = await this.reportService.resolveSalaryFilingBasis(company.id)
+    if (!basis) {
       return {
         eligible: false,
         reason: SalaryReportEligibilityReasonEnum.MISSING_EQUALITY_REPORT,

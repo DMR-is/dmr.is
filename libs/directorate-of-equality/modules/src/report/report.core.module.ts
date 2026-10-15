@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { LegacyReportModel } from '../company/models/legacy-report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
@@ -24,6 +25,9 @@ import { IReportService } from './report.service.interface'
       // which answers whether the company's equality obligation is met from
       // either an APPROVED report or an unexpired certificate here.
       LegacyReportModel,
+      // Read by `resolveSalaryFilingBasis` for the sector, which decides
+      // whether a company may file a salary report with no equality coverage.
+      CompanyModel,
     ]),
   ],
   providers: [

@@ -43,7 +43,7 @@ describe('ReportFinalizeService', () => {
   let companyReportBulkCreate: jest.Mock
   let companyReportFindAll: jest.Mock
   let autoReviewEvaluate: jest.Mock
-  let resolveEqualityCoverage: jest.Mock
+  let resolveSalaryFilingBasis: jest.Mock
 
   beforeEach(async () => {
     reportFindAll = jest.fn().mockResolvedValue([])
@@ -64,7 +64,7 @@ describe('ReportFinalizeService', () => {
       signals: {},
     })
 
-    resolveEqualityCoverage = jest.fn().mockResolvedValue(null)
+    resolveSalaryFilingBasis = jest.fn().mockResolvedValue(null)
 
     const module = await Test.createTestingModule({
       providers: [
@@ -99,7 +99,7 @@ describe('ReportFinalizeService', () => {
         },
         {
           provide: IReportService,
-          useValue: { resolveEqualityCoverage },
+          useValue: { resolveSalaryFilingBasis },
         },
       ],
     }).compile()
@@ -152,7 +152,7 @@ describe('ReportFinalizeService', () => {
     // eligibility and active-report routes: `companyId` alone. A subsidiary is
     // handed its group's equality report id by those routes and must be able
     // to name it back here. `parentCompanyId: null` would refuse exactly that
-    // company — the regression `resolveEqualityCoverage` already documents.
+    // company — the regression `resolveSalaryFilingBasis` already documents.
     it('joins on companyId alone, so a subsidiary can cite its group report', async () => {
       reportFindOne.mockResolvedValueOnce({ id: EQUALITY_REPORT_ID })
 
@@ -333,20 +333,20 @@ describe('ReportFinalizeService', () => {
    * direct test: its only coverage was mock-call ordering in the report-create
    * spec, which mis-asserts rather than fails if a query is inserted.
    */
-  describe('resolveEqualityCoverage', () => {
+  describe('resolveSalaryFilingBasis', () => {
     it('returns the coverage the shared lookup resolves', async () => {
       const coverage = {
         source: EqualityCoverageSourceEnum.REPORT,
         report: { id: 'equality-1' },
         legacyValidUntil: null,
       }
-      resolveEqualityCoverage.mockResolvedValue(coverage)
+      resolveSalaryFilingBasis.mockResolvedValue(coverage)
 
       await expect(
-        service.resolveEqualityCoverage('company-1'),
+        service.resolveSalaryFilingBasis('company-1'),
       ).resolves.toEqual(coverage)
 
-      expect(resolveEqualityCoverage).toHaveBeenCalledWith('company-1')
+      expect(resolveSalaryFilingBasis).toHaveBeenCalledWith('company-1')
     })
 
     // The regression this replaced: the resolution used to filter
@@ -358,14 +358,14 @@ describe('ReportFinalizeService', () => {
     // `equalityReportId`. Delegating is what keeps the pre-check and the
     // submission from disagreeing, so the delegation itself is the assertion.
     it('asks the same lookup the eligibility routes answer from, so a subsidiary resolves too', async () => {
-      resolveEqualityCoverage.mockResolvedValue({
+      resolveSalaryFilingBasis.mockResolvedValue({
         source: EqualityCoverageSourceEnum.REPORT,
         report: { id: 'group-equality' },
         legacyValidUntil: null,
       })
 
       const coverage =
-        await service.resolveEqualityCoverage('subsidiary-company')
+        await service.resolveSalaryFilingBasis('subsidiary-company')
 
       expect(coverage.report?.id).toBe('group-equality')
       // No second query of its own: a divergent one is how the two answers
@@ -377,14 +377,14 @@ describe('ReportFinalizeService', () => {
     // exists only on the retired register. They have no report row to name, and
     // requiring one is what left them unable to file at all.
     it('passes legacy coverage through, dates and all', async () => {
-      resolveEqualityCoverage.mockResolvedValue({
+      resolveSalaryFilingBasis.mockResolvedValue({
         source: EqualityCoverageSourceEnum.LEGACY,
         report: null,
         legacyValidUntil: '2028-03-31',
       })
 
       await expect(
-        service.resolveEqualityCoverage('legacy-company'),
+        service.resolveSalaryFilingBasis('legacy-company'),
       ).resolves.toEqual({
         source: EqualityCoverageSourceEnum.LEGACY,
         report: null,
@@ -392,14 +392,29 @@ describe('ReportFinalizeService', () => {
       })
     })
 
-    it('404s with the sentence the active-report route answers with', async () => {
-      resolveEqualityCoverage.mockResolvedValue(null)
+    // A sveitarfélag with nothing covering it. The exemption is decided in the
+    // shared lookup, so this only has to hand it through rather than 404.
+    it('passes an exemption through instead of refusing', async () => {
+      const exempt = {
+        source: EqualityCoverageSourceEnum.EXEMPT,
+        report: null,
+        legacyValidUntil: null,
+      }
+      resolveSalaryFilingBasis.mockResolvedValue(exempt)
 
       await expect(
-        service.resolveEqualityCoverage('company-1'),
+        service.resolveSalaryFilingBasis('municipality'),
+      ).resolves.toEqual(exempt)
+    })
+
+    it('404s with the sentence the active-report route answers with', async () => {
+      resolveSalaryFilingBasis.mockResolvedValue(null)
+
+      await expect(
+        service.resolveSalaryFilingBasis('company-1'),
       ).rejects.toThrow(NotFoundException)
       await expect(
-        service.resolveEqualityCoverage('company-1'),
+        service.resolveSalaryFilingBasis('company-1'),
       ).rejects.toThrow('No approved equality report is in force')
     })
   })

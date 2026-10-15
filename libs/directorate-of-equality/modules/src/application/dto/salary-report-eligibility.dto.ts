@@ -18,6 +18,9 @@ export enum SalaryReportEligibilityReasonEnum {
    * The company has no APPROVED, in-force equality report and no unexpired
    * certificate on the Directorate's retired register. A salary report must be
    * filed against one of the two, so the flow is blocked until it is.
+   *
+   * Never returned for a sveitarfélag: municipalities may file a salary report
+   * whatever the state of their equality report.
    */
   MISSING_EQUALITY_REPORT = 'MISSING_EQUALITY_REPORT',
 }
@@ -47,7 +50,7 @@ export class SalaryReportEligibilityDto {
   @ApiOptionalEnum(SalaryReportEligibilityReasonEnum, {
     nullable: true,
     description:
-      'Machine-readable reason when `eligible` is false; null when eligible. Only `MISSING_EQUALITY_REPORT` today — no approved, in-force equality report and no unexpired legacy certificate.',
+      'Machine-readable reason when `eligible` is false; null when eligible. Only `MISSING_EQUALITY_REPORT` today — no approved, in-force equality report and no unexpired legacy certificate. Never returned for a municipality (sector `SVEITARFELAG`), which may file a salary report regardless of its equality report.',
   })
   reason!: SalaryReportEligibilityReasonEnum | null
 

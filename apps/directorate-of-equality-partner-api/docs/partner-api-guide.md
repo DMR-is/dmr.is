@@ -434,6 +434,9 @@ Returns `{ eligible, reason, dueAt, earliestNewDueAt }`.
 - `MISSING_EQUALITY_REPORT` — no approved, in-force equality report and no
   unexpired legacy certificate. The two count equally.
 
+Municipalities (sveitarfélög) are exempt. They may file a salary report
+whatever the state of their equality report, so this route never refuses one.
+
 Cheaper than discovering it from a rejected submission after building the
 payload.
 

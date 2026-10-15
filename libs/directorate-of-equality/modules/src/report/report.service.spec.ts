@@ -4,7 +4,10 @@ import { Op } from 'sequelize'
 
 import type { Logger } from '@dmr.is/logging'
 
-import { CompanySizeEnum } from '../company/models/company.enums'
+import {
+  CompanySectorEnum,
+  CompanySizeEnum,
+} from '../company/models/company.enums'
 import { ReportOutlierSortByEnum } from './dto/get-report-outliers.query.dto'
 import {
   type GetReportsQueryDto,
@@ -155,6 +158,15 @@ const makeService = () => {
     findOne: legacyFindOne,
   } as unknown as typeof import('../company/models/legacy-report.model').LegacyReportModel
 
+  // Read only for the sector by `resolveSalaryFilingBasis`. Defaults to a
+  // private company, which is not exempt.
+  const companyFindByPk = jest
+    .fn()
+    .mockResolvedValue({ id: 'company', sector: CompanySectorEnum.FYRIRTAEKI })
+  const companyModel = {
+    findByPk: companyFindByPk,
+  } as unknown as typeof import('../company/models/company.model').CompanyModel
+
   const service = new ReportService(
     logger,
     reportModel,
@@ -163,6 +175,7 @@ const makeService = () => {
     companyReportModel,
     reportOutlierGroupModel,
     legacyReportModel,
+    companyModel,
   )
   return {
     service,
@@ -180,6 +193,7 @@ const makeService = () => {
     companyReportFindAll,
     outlierGroupFindAll,
     legacyFindOne,
+    companyFindByPk,
     logger,
   }
 }
@@ -914,6 +928,26 @@ describe('ReportService.getById', () => {
       expect(logger.error).not.toHaveBeenCalled()
     })
 
+    // A municipality that filed with no plan in force. Same shape as LEGACY:
+    // no link and none owed, so it is not the data-integrity case below.
+    it('returns a null equalityReport for a salary report filed under the municipal exemption', async () => {
+      const { service, findByPkOrThrow, findByPk, logger } = makeService()
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.SALARY,
+          equalityReportId: null,
+          equalitySource: EqualityCoverageSourceEnum.EXEMPT,
+          equalityLegacyValidUntil: null,
+        }) as unknown as ReportModel,
+      )
+
+      const detail = await service.getById(baseReport.id)
+
+      expect(detail.equalityReport).toBeNull()
+      expect(findByPk).not.toHaveBeenCalled()
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
     it('throws when a salary report has no equalityReportId (data integrity)', async () => {
       const { service, findByPkOrThrow, logger } = makeService()
       findByPkOrThrow.mockResolvedValueOnce(
@@ -1479,6 +1513,80 @@ describe('ReportService.resolveEqualityCoverage', () => {
     legacyFindOne.mockResolvedValueOnce(null)
 
     expect(await service.resolveEqualityCoverage(COMPANY_ID)).toBeNull()
+  })
+})
+
+describe('ReportService.resolveSalaryFilingBasis', () => {
+  const COMPANY_ID = '00000000-0000-0000-0000-0000000000c1'
+
+  const EXEMPT = {
+    source: EqualityCoverageSourceEnum.EXEMPT,
+    report: null,
+    legacyValidUntil: null,
+  }
+
+  it('answers EXEMPT for a sveitarfélag that nothing covers', async () => {
+    const { service, findOne, legacyFindOne, companyFindByPk } = makeService()
+    findOne.mockResolvedValueOnce(null)
+    legacyFindOne.mockResolvedValueOnce(null)
+    companyFindByPk.mockResolvedValueOnce({
+      id: COMPANY_ID,
+      sector: CompanySectorEnum.SVEITARFELAG,
+    })
+
+    expect(await service.resolveSalaryFilingBasis(COMPANY_ID)).toEqual(EXEMPT)
+    expect(companyFindByPk).toHaveBeenCalledWith(COMPANY_ID, {
+      attributes: ['id', 'sector'],
+    })
+  })
+
+  // The exemption waives the precondition; it does not replace a plan. A
+  // municipality that holds one still has its salary report linked to it, and
+  // the sector is not even read.
+  it('links a municipality’s own report rather than recording an exemption', async () => {
+    const { service, findOne, companyFindByPk } = makeService()
+    findOne.mockResolvedValueOnce({ id: 'eq-1' })
+
+    const basis = await service.resolveSalaryFilingBasis(COMPANY_ID)
+
+    expect(basis?.source).toBe(EqualityCoverageSourceEnum.REPORT)
+    expect(basis?.report?.id).toBe('eq-1')
+    expect(companyFindByPk).not.toHaveBeenCalled()
+  })
+
+  it('records legacy coverage for a municipality that has it', async () => {
+    const { service, findOne, legacyFindOne, companyFindByPk } = makeService()
+    findOne.mockResolvedValueOnce(null)
+    legacyFindOne.mockResolvedValueOnce({ equalityValidUntil: '2099-03-31' })
+
+    const basis = await service.resolveSalaryFilingBasis(COMPANY_ID)
+
+    expect(basis?.source).toBe(EqualityCoverageSourceEnum.LEGACY)
+    expect(companyFindByPk).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    CompanySectorEnum.FYRIRTAEKI,
+    CompanySectorEnum.RADUNEYTI,
+    CompanySectorEnum.RIKISADILI,
+    // A municipality RSK has not classified is gated until an admin sets it.
+    CompanySectorEnum.UNKNOWN,
+  ])('refuses a %s company that nothing covers', async (sector) => {
+    const { service, findOne, legacyFindOne, companyFindByPk } = makeService()
+    findOne.mockResolvedValueOnce(null)
+    legacyFindOne.mockResolvedValueOnce(null)
+    companyFindByPk.mockResolvedValueOnce({ id: COMPANY_ID, sector })
+
+    expect(await service.resolveSalaryFilingBasis(COMPANY_ID)).toBeNull()
+  })
+
+  it('refuses when the company row is missing', async () => {
+    const { service, findOne, legacyFindOne, companyFindByPk } = makeService()
+    findOne.mockResolvedValueOnce(null)
+    legacyFindOne.mockResolvedValueOnce(null)
+    companyFindByPk.mockResolvedValueOnce(null)
+
+    expect(await service.resolveSalaryFilingBasis(COMPANY_ID)).toBeNull()
   })
 })
 

@@ -29,6 +29,10 @@ Invariants the FK implies (enforce via CHECK + trigger, not by plain FK alone):
 - `equality_source = 'LEGACY'` ⇒ `type = 'SALARY'` AND `equality_report_id IS NULL` AND `equality_legacy_valid_until IS NOT NULL`.
 - `equality_source = 'REPORT'` ⇒ `equality_legacy_valid_until IS NULL`. This is the default and covers every row written before the legacy basis was accepted.
 
+**The exception: sveitarfélög file without coverage.** A company whose `sector` is `SVEITARFELAG` may file a salary report whatever the state of its equality report. Coverage still wins when there is some: a municipality with a plan links it as `REPORT` or `LEGACY`. Only when nothing covers it does the salary row record `equality_source = 'EXEMPT'`, with no link and no date. The sector is read from `company` at filing (`ReportService.resolveSalaryFilingBasis`), never from the submission. The exemption waives the precondition only: the obligation and the `MISSING_EQUALITY_REPORT` status are unchanged. See m-20261015.
+
+- `equality_source = 'EXEMPT'` ⇒ `type = 'SALARY'` AND `equality_report_id IS NULL` AND `equality_legacy_valid_until IS NULL`.
+
 ## Actors
 
 - **Company admin** — fills out and submits reports on behalf of a company. In parent/subsidiary groups, one company acts as the parent and reports on its daughter companies in the same submission.
@@ -1236,8 +1240,8 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `imported_from_excel`            | `boolean` (server-set — see "Excel import transport" → "Recording how the data was entered")                                                                         |
 | `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                                                        |
 | `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")                                               |
-| `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against; null when `equality_source = LEGACY`) |
-| `equality_source`                | `'REPORT' \| 'LEGACY'` (not null, default `REPORT` — what met the equality obligation; see "Gating rule")                                                            |
+| `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against; null on any `LEGACY` or `EXEMPT` row) |
+| `equality_source`                | `'REPORT' \| 'LEGACY' \| 'EXEMPT'` (not null, default `REPORT` — what met the obligation; see "Gating rule")                                                         |
 | `equality_legacy_valid_until`    | `date` (nullable — the legacy certificate's stated expiry, snapshotted at filing; non-null exactly when `equality_source = LEGACY`)                                  |
 | `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                                                           |
 | `approved_at`                    | `timestamp` (nullable)                                                                                                                                               |
@@ -1561,7 +1565,7 @@ No FKs, no relationships. Standalone bookkeeping table.
 - `report_employee` ⟷ `report_sub_criterion_step` via `report_employee_personal_criterion_step`.
 - `report` 1:1 `report_result`.
 - `report` 1:N `public_report` (one public snapshot per approval; new approvals insert new rows).
-- `report` → `report` self-ref via `equality_report_id` (salary row points to the approved equality row it was audited against; absent when `equality_source = LEGACY`, where there is no row to point at).
+- `report` → `report` self-ref via `equality_report_id` (salary row points to the approved equality row it was audited against; absent when `equality_source` is `LEGACY` or `EXEMPT`, where there is no row to point at).
 - `report` N:1 `doe_user` via `reviewer_user_id` (DoE reviewer who accepted/denied).
 - `report` 1:N `report_event`; `doe_user` 1:N `report_event` via `actor_user_id` (nullable) and `assigned_user_id` (nullable, set on `ASSIGNED`); `company` 1:N `report_event` via `company_id` (nullable, set on `SUBMITTED`).
 - `report` 1:N `report_comment`; `doe_user` 1:N `report_comment` via `author_user_id` (nullable, set when `author_kind = REVIEWER`).

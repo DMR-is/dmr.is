@@ -174,9 +174,13 @@ export class ReportCreateService implements IReportCreateService {
     // `assertEqualityReportApproved` below is what validates it. Resolving
     // anyway would only cost a query and risk answering with a different
     // report than the one being filed against.
+    //
+    // EXEMPT is one more answer this can give: a municipality with nothing
+    // covering it may still file, and the row then records that rather than a
+    // link.
     const coverage = input.equalityReportId
       ? null
-      : await this.finalizeService.resolveEqualityCoverage(
+      : await this.finalizeService.resolveSalaryFilingBasis(
           submittingCompany.companyId,
         )
 
@@ -200,17 +204,18 @@ export class ReportCreateService implements IReportCreateService {
     }
 
     // Null `equality_report_id` used to be unrepresentable on a salary report.
-    // It now means exactly one thing, and the row says which rather than
-    // leaving it to be inferred: the company was covered by an unexpired
-    // certificate on the retired register, which mints no `report` row to link
-    // (see `LegacyReportModel`). The certificate's stated expiry is copied onto
-    // the row because `legacy_report` is replaced wholesale by the next
-    // register load, and this audit trail has to outlive it.
-    // Read off the coverage, NOT inferred from `!equalityReportId`. The two
-    // cannot disagree today — `resolveEqualityCoverage` throws rather than
-    // answering null, so a null id means LEGACY and nothing else — but that is
-    // an invariant held one call away, and inferring the basis from a null FK
-    // is the exact reading `EqualityCoverage` documents as the thing not to do.
+    // It now means one of two things, and the row says which rather than
+    // leaving it to be inferred:
+    //   - LEGACY: the company was covered by an unexpired certificate on the
+    //     retired register, which mints no `report` row to link (see
+    //     `LegacyReportModel`). The certificate's stated expiry is copied onto
+    //     the row because `legacy_report` is replaced wholesale by the next
+    //     register load, and this audit trail has to outlive it.
+    //   - EXEMPT: nothing covered the company, and its sector (sveitarfélag)
+    //     may file a salary report regardless.
+    // Read off the basis, NOT inferred from `!equalityReportId` — with two
+    // meanings for a null FK there is no inference left to make, which is the
+    // reading `EqualityCoverage` documents as the thing not to do.
     // Null coverage means the caller named a report, which is REPORT by
     // definition.
     const equalitySource = coverage?.source ?? EqualityCoverageSourceEnum.REPORT

@@ -741,7 +741,7 @@
             "name": "reportEqualitySource",
             "required": false,
             "in": "query",
-            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here) or LEGACY (carried over from the retired register).",
+            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here), LEGACY (carried over from the retired register) or EXEMPT (a municipality that filed a salary report with no equality coverage).",
             "schema": {
               "type": "array",
               "items": {
@@ -2745,7 +2745,7 @@
             "name": "reportEqualitySource",
             "required": false,
             "in": "query",
-            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here) or LEGACY (carried over from the retired register).",
+            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here), LEGACY (carried over from the retired register) or EXEMPT (a municipality that filed a salary report with no equality coverage).",
             "schema": {
               "type": "array",
               "items": {
@@ -4504,7 +4504,7 @@
             "name": "equalitySource",
             "required": false,
             "in": "query",
-            "description": "Return only reports whose equality coverage came from the given source — REPORT (filed in this system) or LEGACY (an unexpired certification carried over from the retired register).",
+            "description": "Return only reports whose equality coverage came from the given source — REPORT (filed in this system), LEGACY (an unexpired certification carried over from the retired register) or EXEMPT (a municipality that filed a salary report with no equality coverage).",
             "schema": {
               "type": "array",
               "items": {
@@ -5939,6 +5939,9 @@
               "Unauthorized",
               "Forbidden",
               "BadRequest",
+              "Conflict",
+              "PayloadTooLarge",
+              "TooManyRequests",
               "InternalServerError",
               "ConnectionAcquireTimeoutError",
               "UnknownError"
@@ -5952,6 +5955,9 @@
               "Unauthorized",
               "Forbidden",
               "BadRequest",
+              "Conflict",
+              "PayloadTooLarge",
+              "TooManyRequests",
               "InternalServerError",
               "ConnectionAcquireTimeoutError",
               "UnknownError"
@@ -6707,7 +6713,7 @@
             "description": "Job title (starfsheiti) of the company contact (tengiliður)."
           },
           "contactEmail": { "type": "string" },
-          "contactPhone": { "type": "string" },
+          "contactPhone": { "type": "string", "minLength": 1 },
           "averageEmployeeMaleCount": { "type": "number" },
           "averageEmployeeFemaleCount": { "type": "number" },
           "averageEmployeeNeutralCount": { "type": "number" },
@@ -6718,7 +6724,7 @@
           "salaryDataPeriod": {
             "type": "string",
             "nullable": true,
-            "description": "The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; the day is normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that has already happened, no earlier than 36 months ago."
+            "description": "The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; the day is normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that is over — last month at the latest — and no earlier than 36 months ago."
           },
           "parsed": {
             "description": "Parsed workbook payload from the excel import endpoint. Contains the criteria tree, role list, and employee rows.",
@@ -6808,7 +6814,7 @@
             "description": "Job title (starfsheiti) of the company contact (tengiliður)."
           },
           "contactEmail": { "type": "string" },
-          "contactPhone": { "type": "string" },
+          "contactPhone": { "type": "string", "minLength": 1 },
           "equalityReportContent": {
             "type": "string",
             "description": "Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`. Mutually exclusive with `equalityReportPdf`."
@@ -7027,7 +7033,7 @@
       "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
       "EqualityCoverageSourceEnum": {
         "type": "string",
-        "enum": ["REPORT", "LEGACY"]
+        "enum": ["REPORT", "LEGACY", "EXEMPT"]
       },
       "CompanySortByEnum": {
         "type": "string",
@@ -7830,7 +7836,7 @@
           },
           "reportEqualitySource": {
             "type": "array",
-            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here) or LEGACY (carried over from the retired register).",
+            "description": "Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here), LEGACY (carried over from the retired register) or EXEMPT (a municipality that filed a salary report with no equality coverage).",
             "items": {
               "$ref": "#/components/schemas/EqualityCoverageSourceEnum"
             }
@@ -9294,10 +9300,10 @@
             "type": "string",
             "format": "uuid",
             "nullable": true,
-            "description": "Salary-only. FK to the approved EQUALITY report this salary was audited against. Null on equality reports, and on a salary report filed against a legacy certificate — read `equalitySource` rather than inferring from this field."
+            "description": "Salary-only. FK to the approved EQUALITY report this salary was audited against. Null on equality reports, on a salary report filed against a legacy certificate, and on one filed under the municipal exemption — read `equalitySource` rather than inferring from this field."
           },
           "equalitySource": {
-            "description": "What met the equality obligation this report was filed under: `REPORT` (linked via `equalityReportId`) or `LEGACY` (an unexpired certificate from the retired register, which has no report row to link). Always `REPORT` on equality reports and on everything filed before the legacy basis was accepted.",
+            "description": "What met the equality obligation this report was filed under: `REPORT` (linked via `equalityReportId`), `LEGACY` (an unexpired certificate from the retired register, which has no report row to link), or `EXEMPT` (nothing covered the company, and as a municipality — sector `SVEITARFELAG` — it may file a salary report without equality coverage). Always `REPORT` on equality reports and on everything filed before the legacy basis was accepted.",
             "allOf": [
               { "$ref": "#/components/schemas/EqualityCoverageSourceEnum" }
             ]

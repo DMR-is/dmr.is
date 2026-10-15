@@ -192,7 +192,7 @@ export class GetReportsQueryDto extends PagingQuery {
     isArray: true,
     required: false,
     description:
-      'Return only reports whose equality coverage came from the given source — REPORT (filed in this system) or LEGACY (an unexpired certification carried over from the retired register).',
+      'Return only reports whose equality coverage came from the given source — REPORT (filed in this system), LEGACY (an unexpired certification carried over from the retired register) or EXEMPT (a municipality that filed a salary report with no equality coverage).',
   })
   @Transform(({ value }) => {
     if (value == null) return undefined

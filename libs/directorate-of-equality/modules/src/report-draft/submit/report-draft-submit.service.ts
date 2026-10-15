@@ -70,12 +70,13 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
      * unexpired certificate from the retired register has no id to send. Those
      * ~540 companies could not submit through this route at all: the field they
      * were told was required names a `report` row the register load never
-     * created for them. `resolveEqualityCoverage` 404s when nothing covers the
-     * company, which is the honest refusal the 400 was standing in for.
+     * created for them. `resolveSalaryFilingBasis` 404s when nothing covers the
+     * company and its sector is not exempt, which is the honest refusal the 400
+     * was standing in for.
      */
     const coverage =
       isSalary && !input.equalityReportId
-        ? await this.finalizeService.resolveEqualityCoverage(company.id)
+        ? await this.finalizeService.resolveSalaryFilingBasis(company.id)
         : null
 
     // Outliers are a salary-only concept, so the flag has no meaning on an

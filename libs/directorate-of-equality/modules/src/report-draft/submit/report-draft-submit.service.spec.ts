@@ -85,7 +85,7 @@ describe('ReportDraftSubmitService', () => {
   let getDetectedOutlierEmployeeIds: jest.Mock
   let createForReport: jest.Mock
   let assertEqualityReportApproved: jest.Mock
-  let resolveEqualityCoverage: jest.Mock
+  let resolveSalaryFilingBasis: jest.Mock
   let withdrawInflightSibling: jest.Mock
   let createCompanyReportSnapshots: jest.Mock
   let emitSubmittedEvent: jest.Mock
@@ -128,7 +128,7 @@ describe('ReportDraftSubmitService', () => {
     getDetectedOutlierEmployeeIds = jest.fn().mockResolvedValue(new Set())
     createForReport = jest.fn().mockResolvedValue({ id: 'result-1' })
     assertEqualityReportApproved = jest.fn().mockResolvedValue(undefined)
-    resolveEqualityCoverage = jest.fn().mockResolvedValue(null)
+    resolveSalaryFilingBasis = jest.fn().mockResolvedValue(null)
     withdrawInflightSibling = jest.fn().mockResolvedValue([])
     createCompanyReportSnapshots = jest.fn().mockResolvedValue(undefined)
     emitSubmittedEvent = jest.fn().mockResolvedValue(undefined)
@@ -164,7 +164,7 @@ describe('ReportDraftSubmitService', () => {
           provide: IReportFinalizeService,
           useValue: {
             assertEqualityReportApproved,
-            resolveEqualityCoverage,
+            resolveSalaryFilingBasis,
             withdrawInflightSibling,
             createCompanyReportSnapshots,
             emitSubmittedEvent,
@@ -205,7 +205,7 @@ describe('ReportDraftSubmitService', () => {
   it('resolves the coverage itself when the salary submit names no equality report', async () => {
     findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
     getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set())
-    resolveEqualityCoverage.mockResolvedValueOnce({
+    resolveSalaryFilingBasis.mockResolvedValueOnce({
       source: EqualityCoverageSourceEnum.REPORT,
       report: { id: RESOLVED_EQUALITY_ID },
       legacyValidUntil: null,
@@ -217,7 +217,7 @@ describe('ReportDraftSubmitService', () => {
       salaryBody({ equalityReportId: null }),
     )
 
-    expect(resolveEqualityCoverage).toHaveBeenCalledWith(COMPANY.id)
+    expect(resolveSalaryFilingBasis).toHaveBeenCalledWith(COMPANY.id)
     expect(reportUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         equalityReportId: RESOLVED_EQUALITY_ID,
@@ -230,7 +230,7 @@ describe('ReportDraftSubmitService', () => {
   it('records the legacy basis and expiry when the coverage is a legacy certificate', async () => {
     findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
     getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set())
-    resolveEqualityCoverage.mockResolvedValueOnce({
+    resolveSalaryFilingBasis.mockResolvedValueOnce({
       source: EqualityCoverageSourceEnum.LEGACY,
       report: null,
       legacyValidUntil: '2028-03-31',
@@ -254,9 +254,34 @@ describe('ReportDraftSubmitService', () => {
     )
   })
 
+  it('records EXEMPT with no link and no date for a municipality with no plan in force', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+    getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set())
+    resolveSalaryFilingBasis.mockResolvedValueOnce({
+      source: EqualityCoverageSourceEnum.EXEMPT,
+      report: null,
+      legacyValidUntil: null,
+    })
+
+    await service.submitDraft(
+      PROVIDER_ID,
+      COMPANY,
+      salaryBody({ equalityReportId: null }),
+    )
+
+    expect(assertEqualityReportApproved).not.toHaveBeenCalled()
+    expect(reportUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        equalityReportId: null,
+        equalitySource: EqualityCoverageSourceEnum.EXEMPT,
+        equalityLegacyValidUntil: null,
+      }),
+    )
+  })
+
   it('refuses the salary submit when nothing covers the company', async () => {
     findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
-    resolveEqualityCoverage.mockRejectedValueOnce(
+    resolveSalaryFilingBasis.mockRejectedValueOnce(
       new NotFoundException('No approved equality report is in force'),
     )
 
