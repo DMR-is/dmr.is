@@ -2,7 +2,7 @@ import cn from 'classnames'
 import { useEffect, useState } from 'react'
 
 import { getLogger } from '@dmr.is/logging-next'
-import { getDiff, HTMLDump } from '@dmr.is/regulations-tools/html'
+import { HTMLDump } from '@dmr.is/regulations-tools/html'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -37,17 +37,18 @@ export const OriginalCompare = ({ disclosure }: Props) => {
 
   // Only compute the diff once the drawer is actually opened. Cleaning +
   // diffing the full body is expensive, so we defer the work — and the
-  // sanitize-html chunk it needs — until the user asks for it. getDiff and
-  // HTMLDump themselves stay statically imported.
+  // differ and sanitize-html chunks it needs — until the user asks for it.
   useEffect(() => {
     if (!isOpen || activeText !== 'diff') return
 
     let cancelled = false
     const computeDiff = async () => {
-      const { simpleSanitize } = await import(
-        '@dmr.is/utils-server/cleanLegacyHtml'
-      )
-      const { diff } = getDiff(
+      const [{ default: getStructuredDiff }, { simpleSanitize }] =
+        await Promise.all([
+          import('@dmr.is/regulations-tools/structuredDiff-browser'),
+          import('@dmr.is/utils-server/cleanLegacyHtml'),
+        ])
+      const { diff } = getStructuredDiff(
         simpleSanitize(orignal) as HTMLText,
         simpleSanitize(activeCase.html) as HTMLText,
       )

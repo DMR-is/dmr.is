@@ -5,6 +5,7 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateRegulationCancelBody,
   CreateRegulationChangeBody,
+  RegulationAppendix,
   RegulationDraft,
   RegulationImpact,
   UpdateRegulationCancelBody,
@@ -33,7 +34,7 @@ function flattenImpacts(
           date: string
           title?: string
           text?: string
-          appendixes?: string[]
+          appendixes?: RegulationAppendix[]
           comments?: string
           diff?: string
           dropped?: boolean

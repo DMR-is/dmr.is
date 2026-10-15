@@ -1,8 +1,7 @@
-import {
-  diffStyling,
-  regulationContentStyling,
-} from '@dmr.is/island-regulations/styling'
+import { regulationContentStyling } from '@dmr.is/island-regulations/styling'
 import { spacing, theme } from '@dmr.is/island-ui-theme'
+
+import { diffMarkStyling } from '../../lib/diffMarkStyling'
 
 import { style } from '@vanilla-extract/css'
 
@@ -80,7 +79,7 @@ export const referenceTextInner = style({
 
 export const referenceTextBody = style({})
 regulationContentStyling(referenceTextBody)
-diffStyling(referenceTextBody)
+diffMarkStyling(referenceTextBody)
 
 // Modal header
 export const modalHeader = style({

@@ -1,9 +1,6 @@
 /* eslint-disable no-console */
-import { readFileSync } from 'fs'
-import path from 'path'
 import { FindAttributeOptions, QueryTypes } from 'sequelize'
 
-import { execute as htmldiff } from '@dmr.is/regulations-tools/htmldiff-js'
 import { extractAppendixesAndComments } from '@dmr.is/regulations-tools/textHelpers'
 import { nameToSlug, toISODate } from '@dmr.is/regulations-tools/utils'
 
@@ -16,10 +13,8 @@ import {
 } from '../models'
 import {
   Appendix,
-  HTMLText,
   ISODate,
   ISODateTime,
-  PlainText,
   RegName,
   Regulation,
   RegulationDiff,
@@ -28,41 +23,12 @@ import {
   RegulationMaybeDiff,
   RegulationRedirect,
 } from '../routes/types'
+import { getHtmlDiff, getTextContentDiff } from '../utils/diff'
 import { db } from '../utils/sequelize'
 import { getRegulationLawChapters } from './LawChapter'
 import { getMinistry } from './Ministry'
 
 import promiseAll from '@hugsmidjan/qj/promiseAllObject'
-
-// ---------------------------------------------------------------------------
-
-const toHTML = (textContent: PlainText) =>
-  textContent.replace(/>/g, '&lg;') as HTMLText
-
-const SLOW_DIFF_LIMIT = 1500
-
-const getDiff = (older: HTMLText, newer: HTMLText, raw?: boolean) => {
-  const startTime = Date.now()
-  let diffed = htmldiff(older, newer)
-  if (!raw) {
-    diffed = diffed
-      .replace(/<del [^>]+>\n*<\/del>/g, '')
-      .replace(/<ins [^>]+>\n*<\/ins>/g, '') as HTMLText
-    // // The old, more aggressive version of the cleanup
-    // return diffed
-    //   .replace(/<del [^>]+>\s+<\/del>/g, '')
-    //   .replace(/<ins [^>]+>\s+<\/ins>/g, '') as HTMLText;
-  }
-  const time = Date.now() - startTime
-  return {
-    diff: diffed as HTMLText,
-    time,
-    slow: time > SLOW_DIFF_LIMIT,
-  }
-}
-
-const getTextContentDiff = (older: PlainText, newer: PlainText): HTMLText =>
-  older === newer ? toHTML(newer) : getDiff(toHTML(older), toHTML(newer)).diff
 
 // ---------------------------------------------------------------------------
 
@@ -203,9 +169,9 @@ async function getLatestRegulationChange(
 
 export async function getRegulationChanges(
   regulationId: number,
-): Promise<Array<DB_RegulationChange>> {
+): Promise<Array<DB_RegulationChange & { changingName: RegName }>> {
   const changeQuery = `
-      SELECT ch.*
+      SELECT ch.*, r.name AS "changingName"
       FROM RegulationChange as ch
       JOIN Regulation AS r ON ch.changingId = r.id
       WHERE
@@ -216,7 +182,9 @@ export async function getRegulationChanges(
         ch.id DESC
       `
 
-  const regulationChanges = await db.query<DB_RegulationChange>(changeQuery, {
+  const regulationChanges = await db.query<
+    DB_RegulationChange & { changingName: RegName }
+  >(changeQuery, {
     replacements: { regulationId },
     type: QueryTypes.SELECT,
   })
@@ -417,7 +385,7 @@ const _isDateMismatch = (
  *
  * However, to make the Regulation (or RegulationDiff) nicer to
  * consume, we filter out those empty appendixes, at the last possible momeent,
- * after htmldiff has been run on the different versions.
+ * after the different versions have been diffed.
  */
 const removeEmptyAppendixes = <T extends RegulationMaybeDiff>(
   regulation: T,
@@ -498,30 +466,6 @@ export async function getRegulation(
       return { regulation: removeEmptyAppendixes(augmentedRegulation) }
     }
 
-    // NOTE: htmldiff-js has a horrible performance hockey-stick curve
-    // and Byggingareglugerð (0112-2012) is crazy large and has
-    // huge amount of detailed changes so certain permutaions
-    // need to be cached, lest the server timeout.
-    // Those cached/static results are stored in the folder "static-diffs/*"
-    // FIXME: This is a horrible, horrible hack, and needs proper resolving
-    // upstream with a database table containing pre-rendered html diffs.
-    // -- Már @2021-11-08
-    if (/\/original$/.test(routePath)) {
-      const jsonFileName =
-        'static-diffs/' + routePath.replace(/\//g, '-') + '.json'
-      try {
-        const jsonPath = path.join(__dirname, jsonFileName)
-        const matchingRegulation = JSON.parse(
-          readFileSync(jsonPath).toString(),
-        ) as RegulationDiff
-        console.log('✅ Loaded:', jsonPath)
-        return {
-          regulation: matchingRegulation,
-        }
-      } catch (e) {
-        /* empty */
-      }
-    }
     // Resolve/apply diff
 
     const diffedRegulation = augmentedRegulation as unknown as RegulationDiff
@@ -566,14 +510,14 @@ export async function getRegulation(
       earlierTitle,
       augmentedRegulation.title,
     )
-    diffedRegulation.text = getDiff(
+    diffedRegulation.text = getHtmlDiff(
       earlierState.text,
       augmentedRegulation.text,
-    ).diff
-    diffedRegulation.comments = getDiff(
+    )
+    diffedRegulation.comments = getHtmlDiff(
       earlierState.comments,
       augmentedRegulation.comments,
-    ).diff
+    )
     diffedRegulation.appendixes = augmentedRegulation.appendixes.map(
       (baseAppendix, i) => {
         const { title, text } = earlierState.appendixes[i] || {
@@ -582,7 +526,7 @@ export async function getRegulation(
         }
         return {
           title: getTextContentDiff(title, baseAppendix.title),
-          text: getDiff(text, baseAppendix.text).diff,
+          text: getHtmlDiff(text, baseAppendix.text),
         }
       },
     )

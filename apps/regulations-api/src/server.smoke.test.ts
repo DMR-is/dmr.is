@@ -292,6 +292,27 @@ describe('bodyless POST with content-type: application/json (already 400 on Fast
     expect(res.statusCode).not.toBe(400)
     expect(res.body).not.toContain('FST_ERR_CTP_EMPTY_JSON_BODY')
   })
+
+  it('answers a non-canonical regulation name with 400, before any DB call', async () => {
+    setEnv({
+      REGULATIONS_API_USERNAME: 'pub-user',
+      REGULATIONS_API_PASSWORD: 'pub-pass',
+    })
+    app = build()
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/regulation/publish',
+      headers: {
+        authorization: basic('pub-user', 'pub-pass'),
+        'content-type': 'application/json',
+      },
+      payload: JSON.stringify({ name: '123/2021' }),
+    })
+
+    expect(res.statusCode).toBe(400)
+    expect(JSON.parse(res.body).error).toBe('Invalid regulation name 123/2021')
+  })
 })
 
 describe('auth runs before body parsing (true on both Fastify majors)', () => {

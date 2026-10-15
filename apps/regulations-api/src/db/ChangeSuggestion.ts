@@ -6,8 +6,8 @@ import type {
   HTMLText,
   PlainText,
   RegName,
+  SkippedRegulationChange,
 } from '../routes/types'
-import { removeHistoryAfterRegId } from '../utils/misc'
 import { db } from '../utils/sequelize'
 import { getRegulationById, getRegulationChanges } from './Regulation'
 
@@ -23,6 +23,58 @@ export type ChangeSuggestionStatus =
   | 'rejected'
   | 'superseded'
 
+/** Confidence band, in Icelandic as sent by the suggestion process. */
+export type ChangeSuggestionReportBand = 'hátt' | 'miðlungs' | 'lágt'
+
+export type ChangeSuggestionReportChange = {
+  band: ChangeSuggestionReportBand
+  amendingArticle?: string
+  instructionExcerpt?: string
+  [key: string]: unknown
+}
+
+/**
+ * Report produced by the change suggestion process, stored as-is in the
+ * `report` jsonb column. Fields without a value are omitted, and when the
+ * report could not be built only the counts and `error` are present — so
+ * everything but the counts is optional. Not validated beyond being an object,
+ * so a new `version` on their side does not start failing here.
+ */
+export type ChangeSuggestionReport = {
+  version?: number
+  baseRegulation?: string
+  amendingRegulation?: string
+  appliedCount: number
+  skippedCount: number
+  minConfidence?: number
+  changes?: ChangeSuggestionReportChange[]
+  skippedInstructions?: unknown[]
+  error?: string
+}
+
+const toJsonbSafe = (value: string) => value.replace(/\0/g, '').toWellFormed()
+
+/**
+ * jsonb refuses `\u0000` and unpaired surrogates, both of which JSON.stringify
+ * emits as escapes. Either would fail the whole INSERT and lose the suggestion
+ * along with its report, so drop NULs and replace lone surrogates with U+FFFD,
+ * in object keys as well as string values. NULs go first, so a pair split by a
+ * NUL rejoins instead of becoming two U+FFFD.
+ */
+export const serialiseReport = (report: ChangeSuggestionReport): string =>
+  JSON.stringify(report, (_key, value) => {
+    if (typeof value === 'string') {
+      return toJsonbSafe(value)
+    }
+    // A replacer never sees keys, so rebuild plain objects with cleaned ones.
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return Object.fromEntries(
+        Object.entries(value).map(([k, v]) => [toJsonbSafe(k), v]),
+      )
+    }
+    return value
+  })
+
 export type ChangeSuggestion = {
   id: number
   regulationId: number
@@ -30,6 +82,7 @@ export type ChangeSuggestion = {
   title: PlainText
   text: HTMLText
   changeset: string | null
+  report: ChangeSuggestionReport | null
   status: ChangeSuggestionStatus
   appliedChangeId: number | null
   createdAt: Date
@@ -43,6 +96,7 @@ export type ChangeSuggestionCreateInput = {
   title: PlainText
   text: HTMLText
   changeset?: string | null
+  report?: ChangeSuggestionReport | null
   status?: ChangeSuggestionStatus
   filekey?: string
 }
@@ -211,9 +265,9 @@ export async function createChangeSuggestion(
 
   const query = `
     INSERT INTO "regulationchangesuggestion" 
-      ("regulationId", "changingId", title, text, changeset, status, "appliedChangeId", "decidedBy", "decidedAt", "createdAt")
+      ("regulationId", "changingId", title, text, changeset, report, status, "appliedChangeId", "decidedBy", "decidedAt", "createdAt")
     VALUES 
-      (:regulationId, :changingId, :title, :text, :changeset, :status, NULL, NULL, NULL, NOW())
+      (:regulationId, :changingId, :title, :text, :changeset, CAST(:report AS jsonb), :status, NULL, NULL, NULL, NOW())
     RETURNING *
   `
 
@@ -224,6 +278,8 @@ export async function createChangeSuggestion(
       title: data.title,
       text: textContent, // Use fetched content or original text
       changeset: data.changeset ?? null,
+      // Sequelize does not serialise a plain object as JSON in a raw query.
+      report: data.report ? serialiseReport(data.report) : null,
       status: data.status ?? 'pending',
     },
     type: QueryTypes.SELECT,
@@ -339,7 +395,15 @@ export async function deleteChangeSuggestion(
 }
 
 /**
- * Get change history current change
+ * The base regulation's text as it stands just before the changing regulation
+ * takes effect: the newest `regulationchange` row dated before the pair's own
+ * row that carries a consolidated text, else the original `regulation.text`.
+ *
+ * The pair's own row is skipped even when it has text, since that is the text
+ * *after* the change — a suggestion built on it would apply the change twice,
+ * and one built on anything older would drop the changes in between.
+ * `skippedChanges` lists the earlier changes that text is missing because
+ * their rows have no consolidated text.
  */
 export async function getChangeHistoryCurrent(
   baseRegId: number,
@@ -350,43 +414,59 @@ export async function getChangeHistoryCurrent(
   }
 
   const baseRegulation = await getRegulationById(baseRegId)
-  const taskBase = baseRegulation
 
-  if (!taskBase) {
+  if (!baseRegulation) {
     throw new Error(`Base regulation not found: ${baseRegId}`)
   }
 
-  const changeHistory = await getRegulationChanges(taskBase.id)
-  const changes =
-    changeHistory &&
-    changeHistory.filter(({ changingid }) => changingid === changingRegId)
-  const _changes = changes.slice(0)
-  const _lastChange = changes[_changes.length - 1]
+  // Newest first: date, then publishedDate, then id, all descending.
+  const history = await getRegulationChanges(baseRegulation.id)
 
-  const changeHistoryAfterRegId = removeHistoryAfterRegId(
-    changeHistory,
-    changingRegId,
+  // A changing regulation can have several rows on one base (parts taking
+  // effect on different dates); "before the change" is before the oldest.
+  const ownIndex = history.findLastIndex(
+    ({ changingid }) => changingid === changingRegId,
   )
 
-  if (changeHistoryAfterRegId.length < 1) {
+  const ownChange = history[ownIndex]
+
+  if (!ownChange) {
     throw new Error(
-      `Not enough change history for regulation id: ${changingRegId}`,
+      `Change not found for regulation ${changingRegId} on base regulation ${baseRegId}`,
     )
   }
-  const baseSource =
-    changeHistoryAfterRegId[1] && changeHistoryAfterRegId[1].text
-      ? changeHistoryAfterRegId[1]
-      : taskBase
-  const textSource = changeHistoryAfterRegId[0]?.text
-    ? changeHistoryAfterRegId[0]
-    : baseSource
 
-  const currentChange: CurrentRegulationChange = {
-    date: _lastChange?.date ?? undefined,
-    currentTitle: textSource.title,
-    currentText: textSource.text,
+  // Walk back from the change to the newest version with text. Textless rows
+  // passed on the way are changes that text is missing; anything older is
+  // already in it.
+  const skippedChanges: Array<SkippedRegulationChange> = []
+  let previous: (typeof history)[number] | undefined
+
+  for (const change of history.slice(ownIndex + 1)) {
+    if (change.changingid === changingRegId) {
+      continue
+    }
+    if (change.text) {
+      previous = change
+      break
+    }
+    skippedChanges.push({
+      id: change.id,
+      changingId: change.changingid,
+      changingName: change.changingName,
+      date: change.date,
+    })
   }
-  return currentChange
+
+  return {
+    date: ownChange.date ?? undefined,
+    currentTitle: previous?.title || baseRegulation.title,
+    currentText: previous?.text ?? baseRegulation.text,
+    sourceChangeId: previous?.id ?? null,
+    sourceChangingName: previous?.changingName ?? null,
+    sourceDate: previous?.date ?? undefined,
+    skippedChanges,
+  }
 }
 
 /**
