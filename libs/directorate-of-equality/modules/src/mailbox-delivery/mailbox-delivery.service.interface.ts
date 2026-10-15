@@ -44,6 +44,12 @@ export interface DeliverToMailboxInput {
  * - `DISABLED`: `ONESYSTEMS_ENABLED` is not `'true'`. Nothing was written,
  *   rendered or sent. The key is checked first, so a malformed key throws
  *   rather than returning DISABLED.
+ * - `UNCONFIGURED`: `kind` has no case template in `mailbox-delivery.kinds.ts`
+ *   (`isKindConfigured`). Nothing was written, rendered or sent, and it is
+ *   logged at error. Not a failure of this delivery: the caller holds the
+ *   notice, uncounted, until the template is set, so switching the flag on
+ *   before the templates are confirmed loses nothing. doe-api's daily mailbox
+ *   alert names every unconfigured kind while the flag is on.
  * - `QUARANTINED`: the company is quarantined (`company.quarantined`), which
  *   halts every outbound touchpoint. Nothing was written, rendered or sent,
  *   and a delivery already under way is left where it stopped. Call again
@@ -69,6 +75,7 @@ export interface DeliverToMailboxInput {
  */
 export type DeliverToMailboxResult =
   | { status: 'DISABLED' }
+  | { status: 'UNCONFIGURED'; kind: MailboxDeliveryKindEnum }
   | { status: 'QUARANTINED' }
   | {
       status: 'SENT'
@@ -103,6 +110,19 @@ export type MailboxDeliveryState = {
   documentFiled: boolean
   /** One confirmed the send: `sent_at` is saved. */
   sent: boolean
+  /**
+   * A call's marker is still set and its lease has lapsed: the process died
+   * mid-call, so whether One acted is unknown, as for UNCERTAIN. The next
+   * claim would mark it UNCERTAIN.
+   */
+  interrupted: boolean
+  /** A worker holds a live lease on it and may be calling One right now. */
+  inProgress: boolean
+  /**
+   * Claimed `MAILBOX_DELIVERY_MAX_ATTEMPTS` times without being sent, and no
+   * call is under way: nothing retries it until a person re-arms it.
+   */
+  exhausted: boolean
 }
 
 /**
@@ -175,6 +195,18 @@ export interface IMailboxDeliveryService {
    * need a person.
    */
   findStuckDeliveries(limit: number): Promise<StuckMailboxDelivery[]>
+
+  /**
+   * How many deliveries need a person, by reason, over every row rather than
+   * the `limit` that `findStuckDeliveries` names.
+   */
+  countStuckDeliveries(): Promise<Record<StuckMailboxDeliveryReason, number>>
+
+  /**
+   * The kinds in use (`MAILBOX_DELIVERY_KINDS_IN_USE`) with no case template.
+   * Each answers `UNCONFIGURED` while the flag is on.
+   */
+  unconfiguredKinds(): MailboxDeliveryKindEnum[]
 }
 
 // Token for DI, based on https://stackoverflow.com/a/70088972

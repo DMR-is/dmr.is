@@ -23,6 +23,7 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyModel } from '../company/models/company.model'
 import {
+  MailboxDeliveryKindEnum,
   MailboxDeliveryStatusEnum,
   MailboxDeliveryStepEnum,
 } from './models/mailbox-delivery.enums'
@@ -32,7 +33,9 @@ import {
   mailboxDeliveryIdempotencyKeyPrefix,
 } from './mailbox-delivery.idempotency-key'
 import {
+  isKindConfigured,
   MAILBOX_DELIVERY_KIND_CONFIGS,
+  MAILBOX_DELIVERY_KINDS_IN_USE,
   MailboxDeliveryKindConfig,
   type MailboxDeliveryKindConfigs,
   resolveKindConfig,
@@ -45,6 +48,7 @@ import {
   type MailboxDeliveryState,
   type MailboxDeliveryUnsettledStatus,
   type StuckMailboxDelivery,
+  type StuckMailboxDeliveryReason,
 } from './mailbox-delivery.service.interface'
 
 const LOGGING_CONTEXT = 'MailboxDeliveryService'
@@ -130,6 +134,30 @@ const SETTLED_STATUSES = [
 ]
 
 /**
+ * The rows that need a person, one filter per reason. A row matches at most
+ * one: UNCERTAIN is settled, and an exhausted row has no marker.
+ */
+const STUCK_WHERE: Record<
+  StuckMailboxDeliveryReason,
+  WhereOptions<MailboxDeliveryModel>
+> = {
+  UNCERTAIN: { status: MailboxDeliveryStatusEnum.UNCERTAIN },
+  INTERRUPTED: {
+    status: { [Op.notIn]: SETTLED_STATUSES },
+    inFlightStep: { [Op.ne]: null },
+    [Op.or]: LEASE_FREE,
+  },
+  // The same test as `findExhausted`: a row whose last attempt still holds its
+  // lease is not stuck yet.
+  ATTEMPTS_EXHAUSTED: {
+    status: { [Op.notIn]: SETTLED_STATUSES },
+    attempts: { [Op.gte]: MAILBOX_DELIVERY_MAX_ATTEMPTS },
+    inFlightStep: null,
+    [Op.or]: LEASE_FREE,
+  },
+}
+
+/**
  * The column that says a step's result is saved. For the send it is `sentAt`,
  * never `islandIsDocumentId`: One may confirm a send without a `DocumentId`,
  * so a SENT row can have a NULL `island_is_document_id`.
@@ -210,7 +238,16 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     }
 
     // Before any row or call, so a kind without a case template never leaves
-    // a half-started delivery behind.
+    // a half-started delivery behind. A result, not a throw: a throw is a
+    // failed attempt to every caller, and the flag going on before the
+    // templates are confirmed would spend every notice's attempts.
+    if (!isKindConfigured(input.kind, this.kindConfigs)) {
+      this.logger.error(
+        `Mailbox delivery kind ${input.kind} has no case template; nothing sent while ONESYSTEMS_ENABLED is on`,
+        { context: LOGGING_CONTEXT, kind: input.kind },
+      )
+      return { status: 'UNCONFIGURED', kind: input.kind }
+    }
     const config = resolveKindConfig(input.kind, this.kindConfigs)
 
     // UUIDs compare case-insensitively in Postgres; lowercase it to match the
@@ -293,35 +330,72 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
   ): Promise<MailboxDeliveryState | null> {
     const row = await this.deliveryModel.findOne({
       where: { idempotencyKey },
-      attributes: ['id', 'status', 'oneDocumentItemId', 'sentAt'],
+      attributes: [
+        'id',
+        'status',
+        'oneDocumentItemId',
+        'sentAt',
+        'attempts',
+        'inFlightStep',
+        'leaseExpiresAt',
+      ],
       transaction: null,
     })
     if (!row) {
       return null
     }
+
+    // On this process's clock, not Postgres's as the claim uses: close enough
+    // for a caller deciding whether to wait, and a lease is minutes long.
+    const leaseLive = Boolean(
+      row.leaseExpiresAt && row.leaseExpiresAt.getTime() > Date.now(),
+    )
+    const unsettled = !SETTLED_STATUSES.includes(row.status)
+
     return {
       deliveryId: row.id,
       status: row.status,
       documentFiled: Boolean(row.oneDocumentItemId),
       sent: Boolean(row.sentAt),
+      interrupted: unsettled && Boolean(row.inFlightStep) && !leaseLive,
+      inProgress: unsettled && leaseLive,
+      exhausted:
+        unsettled &&
+        !row.inFlightStep &&
+        !leaseLive &&
+        row.attempts >= MAILBOX_DELIVERY_MAX_ATTEMPTS,
+    }
+  }
+
+  unconfiguredKinds(): MailboxDeliveryKindEnum[] {
+    return MAILBOX_DELIVERY_KINDS_IN_USE.filter(
+      (kind) => !isKindConfigured(kind, this.kindConfigs),
+    )
+  }
+
+  async countStuckDeliveries(): Promise<
+    Record<StuckMailboxDeliveryReason, number>
+  > {
+    const count = (reason: StuckMailboxDeliveryReason) =>
+      this.deliveryModel.count({
+        where: STUCK_WHERE[reason],
+        transaction: null,
+      })
+    // One after another: each takes its own pool connection.
+    return {
+      UNCERTAIN: await count('UNCERTAIN'),
+      INTERRUPTED: await count('INTERRUPTED'),
+      ATTEMPTS_EXHAUSTED: await count('ATTEMPTS_EXHAUSTED'),
     }
   }
 
   async findStuckDeliveries(limit: number): Promise<StuckMailboxDelivery[]> {
     const rows = await this.deliveryModel.findAll({
       where: {
-        status: { [Op.ne]: MailboxDeliveryStatusEnum.SENT },
         [Op.or]: [
-          { status: MailboxDeliveryStatusEnum.UNCERTAIN },
-          { inFlightStep: { [Op.ne]: null }, [Op.or]: LEASE_FREE },
-          // The same test as `findExhausted`: a row whose last attempt still
-          // holds its lease is not stuck yet.
-          {
-            status: { [Op.notIn]: SETTLED_STATUSES },
-            attempts: { [Op.gte]: MAILBOX_DELIVERY_MAX_ATTEMPTS },
-            inFlightStep: null,
-            [Op.or]: LEASE_FREE,
-          },
+          STUCK_WHERE.UNCERTAIN,
+          STUCK_WHERE.INTERRUPTED,
+          STUCK_WHERE.ATTEMPTS_EXHAUSTED,
         ],
       },
       attributes: [

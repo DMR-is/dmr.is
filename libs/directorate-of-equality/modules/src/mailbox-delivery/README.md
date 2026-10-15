@@ -7,9 +7,11 @@ SendDocToIslandIs. Each delivery is one row in `mailbox_delivery`.
 Two callers, both in doe-api: the notice dispatcher (`notice-dispatch/`, the
 submission receipt and the approval and denial letters, from `notice_outbox`)
 and the deadline-reminder task. No kind has a confirmed case template yet (see
-`mailbox-delivery.kinds.ts`), so `deliverToMailbox` throws for every kind
-before it writes a row. It also does nothing unless `ONESYSTEMS_ENABLED` is
-`true`. That flag is checked here, not in the OneSystems client: the client is
+`mailbox-delivery.kinds.ts`), so `deliverToMailbox` answers `UNCONFIGURED`
+for every kind, logged at error, before it writes a row. Callers hold the
+notice without counting an attempt, so switching the flag on early loses
+nothing, and the daily alert names every unconfigured kind while the flag is
+on. It also does nothing unless `ONESYSTEMS_ENABLED` is `true`. That flag is checked here, not in the OneSystems client: the client is
 not gated, so any new consumer of the client must check the flag itself.
 
 A quarantined company (`company.quarantined`) gets nothing: `deliverToMailbox`
@@ -101,8 +103,16 @@ It runs whatever `ONESYSTEMS_ENABLED` says, since rows left from before the
 flag went off still need a person. The partial index
 `mailbox_delivery_status_idx` (`WHERE status <> 'SENT'`) serves it.
 
-A deadline reminder that stops this way also leaves an `…_UNDELIVERED` event
-on the company's timeline. There is no admin screen for these rows yet; until
+The same run, with the flag on, names every kind in use with no case
+template, and names every `notice_outbox` row overdue (an hour old and still
+`PENDING`, not waiting on a quarantine or, with the flag off, a receipt): one
+held on a document One has filed but not sent, one held on an unconfigured
+kind, or one failing every run. The counts are taken over every row; at most
+50 rows of each are named.
+
+A deadline reminder that stops this way also leaves an event on the
+company's timeline, on the run that stopped it: `…_UNCONFIRMED` for an
+UNCERTAIN or interrupted delivery, `…_UNDELIVERED` for one out of attempts. There is no admin screen for these rows yet; until
 there is, the alert and the SQL below are the way in.
 
 ## Exhausted rows

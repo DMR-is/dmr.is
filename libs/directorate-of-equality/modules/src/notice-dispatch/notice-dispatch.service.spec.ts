@@ -19,6 +19,7 @@ import {
   NOTICE_DISPATCH_MAX_ATTEMPTS,
   NOTICE_DISPATCH_RETRY_DELAY_MS,
   NOTICE_DISPATCH_TIME_BUDGET_MS,
+  NOTICE_OVERDUE_AFTER_MS,
   NoticeDispatchService,
   offersServiceSurvey,
 } from './notice-dispatch.service'
@@ -51,6 +52,7 @@ describe('NoticeDispatchService', () => {
   }
 
   const noticeOutboxModel = {
+    count: jest.fn(),
     findAll: jest.fn(),
     update: jest.fn(),
   }
@@ -94,19 +96,36 @@ describe('NoticeDispatchService', () => {
 
   let service: NoticeDispatchService
 
+  /** A status each kind is owed in: what the report says when it is sent. */
+  const OWED_STATUS: Record<NoticeOutboxKindEnum, ReportStatusEnum> = {
+    [NoticeOutboxKindEnum.REPORT_SUBMITTED]: ReportStatusEnum.SUBMITTED,
+    [NoticeOutboxKindEnum.REPORT_APPROVED]: ReportStatusEnum.APPROVED,
+    [NoticeOutboxKindEnum.REPORT_DENIED]: ReportStatusEnum.DENIED,
+  }
+
+  /*
+   * The report's default status follows the last row built, so a test about a
+   * denial reads a DENIED report without saying so. A test about a notice no
+   * longer owed sets `status` itself.
+   */
+  let owedStatus: ReportStatusEnum
+
   const outboxRow = (
     kind: NoticeOutboxKindEnum,
     overrides: Partial<{ attempts: number; lastAttemptAt: Date | null }> = {},
-  ) => ({
-    id: 'notice-1',
-    kind,
-    reportId: 'report-1',
-    status: NoticeOutboxStatusEnum.PENDING,
-    attempts: 0,
-    lastAttemptAt: null,
-    createdAt: NOW,
-    ...overrides,
-  })
+  ) => {
+    owedStatus = OWED_STATUS[kind]
+    return {
+      id: 'notice-1',
+      kind,
+      reportId: 'report-1',
+      status: NoticeOutboxStatusEnum.PENDING,
+      attempts: 0,
+      lastAttemptAt: null,
+      createdAt: NOW,
+      ...overrides,
+    }
+  }
 
   const approvedReport = (overrides: Record<string, unknown> = {}) => ({
     id: 'report-1',
@@ -116,6 +135,19 @@ describe('NoticeDispatchService', () => {
     companyAdminEmail: null,
     companyNationalId: '5500000000',
     approvedAt: APPROVED_AT,
+    status: owedStatus,
+    ...overrides,
+  })
+
+  /** A `findDelivery` answer: nothing set unless the test says so. */
+  const deliveryState = (overrides: Record<string, unknown> = {}) => ({
+    deliveryId: 'delivery-1',
+    status: MailboxDeliveryStatusEnum.FAILED,
+    documentFiled: false,
+    sent: false,
+    interrupted: false,
+    inProgress: false,
+    exhausted: false,
     ...overrides,
   })
 
@@ -138,7 +170,8 @@ describe('NoticeDispatchService', () => {
 
     noticeOutboxModel.findAll.mockResolvedValue([])
     noticeOutboxModel.update.mockResolvedValue([1])
-    reportModel.findOne.mockResolvedValue(approvedReport())
+    owedStatus = ReportStatusEnum.APPROVED
+    reportModel.findOne.mockImplementation(async () => approvedReport())
     reportEventModel.findOne.mockResolvedValue({ reason: 'Vantar gögn' })
     reportPdfService.generateReportPdf.mockResolvedValue({
       pdf: Buffer.from('pdf-bytes'),
@@ -897,6 +930,7 @@ describe('NoticeDispatchService', () => {
       const report = {
         id: 'report-1',
         type: ReportTypeEnum.EQUALITY,
+        status: ReportStatusEnum.DENIED,
         contactEmail: 'contact@example.is',
         companyAdminEmail: null,
       }
@@ -944,6 +978,202 @@ describe('NoticeDispatchService', () => {
    * through One. Each is checked against its delivery (same key) before it is
    * emailed, so the company does not get it twice.
    */
+  describe('a notice no longer owed', () => {
+    const dispatch = async (kind: NoticeOutboxKindEnum) => {
+      noticeOutboxModel.findAll.mockResolvedValue([outboxRow(kind)])
+      return service.dispatchPending(lockTransaction)
+    }
+
+    const skipped = (status: ReportStatusEnum, kind: NoticeOutboxKindEnum) =>
+      expect(lastOutboxUpdate()[0]).toEqual(
+        expect.objectContaining({
+          status: NoticeOutboxStatusEnum.SKIPPED,
+          channel: null,
+          lastError: `report is ${status}; a ${kind} notice is no longer owed`,
+        }),
+      )
+
+    /*
+     * A quarantine holds a decision unpicked. Released after the report was
+     * superseded, it must not mail a stale approval with its PDFs.
+     */
+    it.each([
+      [NoticeOutboxKindEnum.REPORT_APPROVED, ReportStatusEnum.SUPERSEDED],
+      [NoticeOutboxKindEnum.REPORT_DENIED, ReportStatusEnum.SUBMITTED],
+    ])(
+      'settles %s SKIPPED by email when the report is now %s, and sends nothing',
+      async (kind, status) => {
+        reportModel.findOne.mockResolvedValue(approvedReport({ status }))
+
+        await dispatch(kind)
+
+        expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+        expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+        expect(reportPdfService.generateReportPdf).not.toHaveBeenCalled()
+        skipped(status, kind)
+      },
+    )
+
+    describe('with mailbox delivery on', () => {
+      beforeEach(() => {
+        process.env.ONESYSTEMS_ENABLED = 'true'
+      })
+
+      /*
+       * The receipts held while the flag was off: the first run with it on
+       * must not send "received" for a report decided since.
+       */
+      it.each([
+        ReportStatusEnum.APPROVED,
+        ReportStatusEnum.DENIED,
+        ReportStatusEnum.SUPERSEDED,
+        ReportStatusEnum.WITHDRAWN,
+      ])('settles a receipt SKIPPED when the report is %s', async (status) => {
+        reportModel.findOne.mockResolvedValue(approvedReport({ status }))
+
+        await dispatch(NoticeOutboxKindEnum.REPORT_SUBMITTED)
+
+        expect(mailboxDeliveryService.deliverToMailbox).not.toHaveBeenCalled()
+        skipped(status, NoticeOutboxKindEnum.REPORT_SUBMITTED)
+      })
+
+      it.each([
+        ReportStatusEnum.SUBMITTED,
+        ReportStatusEnum.POSTPONED,
+        ReportStatusEnum.IN_REVIEW,
+      ])('sends a receipt while the report is %s', async (status) => {
+        reportModel.findOne.mockResolvedValue(approvedReport({ status }))
+
+        await dispatch(NoticeOutboxKindEnum.REPORT_SUBMITTED)
+
+        expect(mailboxDeliveryService.deliverToMailbox).toHaveBeenCalledTimes(1)
+        expect(lastOutboxUpdate()[0].status).toBe(NoticeOutboxStatusEnum.DONE)
+      })
+
+      it('settles a superseded approval SKIPPED without delivering it', async () => {
+        reportModel.findOne.mockResolvedValue(
+          approvedReport({ status: ReportStatusEnum.SUPERSEDED }),
+        )
+
+        await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+
+        expect(mailboxDeliveryService.deliverToMailbox).not.toHaveBeenCalled()
+        skipped(
+          ReportStatusEnum.SUPERSEDED,
+          NoticeOutboxKindEnum.REPORT_APPROVED,
+        )
+      })
+
+      // One sent it before the report moved on: the row records what the
+      // company has, through the usual resume.
+      it('finishes a delivery One already sent, whatever the status', async () => {
+        reportModel.findOne.mockResolvedValue(
+          approvedReport({ status: ReportStatusEnum.APPROVED }),
+        )
+        mailboxDeliveryService.findDelivery.mockResolvedValue(
+          deliveryState({ sent: true, status: MailboxDeliveryStatusEnum.SENT }),
+        )
+
+        await dispatch(NoticeOutboxKindEnum.REPORT_SUBMITTED)
+
+        expect(mailboxDeliveryService.deliverToMailbox).toHaveBeenCalledTimes(1)
+        expect(lastOutboxUpdate()[0]).toEqual(
+          expect.objectContaining({
+            status: NoticeOutboxStatusEnum.DONE,
+            channel: NoticeOutboxChannelEnum.MAILBOX,
+          }),
+        )
+      })
+
+      it.each([
+        ['holds a filed document', { documentFiled: true }],
+        ['is UNCERTAIN', { status: MailboxDeliveryStatusEnum.UNCERTAIN }],
+        ['was interrupted', { interrupted: true }],
+        ['is in progress', { inProgress: true }],
+      ])(
+        'gives a stale notice up for a person when its delivery %s',
+        async (_label, state) => {
+          reportModel.findOne.mockResolvedValue(
+            approvedReport({ status: ReportStatusEnum.APPROVED }),
+          )
+          mailboxDeliveryService.findDelivery.mockResolvedValue(
+            deliveryState({ deliveryId: 'delivery-5', ...state }),
+          )
+
+          await dispatch(NoticeOutboxKindEnum.REPORT_SUBMITTED)
+
+          expect(mailboxDeliveryService.deliverToMailbox).not.toHaveBeenCalled()
+          expect(lastOutboxUpdate()[0]).toEqual(
+            expect.objectContaining({
+              status: NoticeOutboxStatusEnum.FAILED,
+              lastError: expect.stringContaining(
+                'delivery-5 may have reached One',
+              ),
+            }),
+          )
+        },
+      )
+    })
+  })
+
+  describe('overdue notices', () => {
+    it('counts and names the PENDING rows older than the overdue window, outside any transaction', async () => {
+      noticeOutboxModel.count.mockResolvedValue(3)
+      noticeOutboxModel.findAll.mockResolvedValue([
+        {
+          ...outboxRow(NoticeOutboxKindEnum.REPORT_APPROVED),
+          lastError: 'mailbox delivery delivery-3 has a document in One',
+        },
+      ])
+
+      await expect(service.findOverdueNotices(1)).resolves.toEqual({
+        total: 3,
+        notices: [
+          {
+            noticeId: 'notice-1',
+            kind: NoticeOutboxKindEnum.REPORT_APPROVED,
+            reportId: 'report-1',
+            attempts: 0,
+            lastError: 'mailbox delivery delivery-3 has a document in One',
+            createdAt: NOW,
+          },
+        ],
+      })
+
+      const [countQuery] = noticeOutboxModel.count.mock.calls[0]
+      const [query] = noticeOutboxModel.findAll.mock.calls[0]
+      for (const options of [countQuery, query]) {
+        expect(options.transaction).toBeNull()
+        expect(options.where.status).toBe(NoticeOutboxStatusEnum.PENDING)
+        expect(options.where.createdAt).toEqual({
+          [Op.lt]: new Date(NOW.getTime() - NOTICE_OVERDUE_AFTER_MS),
+        })
+        // A quarantined company's rows, and receipts with the flag off, wait
+        // by design.
+        expect(options.where[Op.and][0].val).toContain('c.quarantined')
+        expect(options.where.kind).toEqual({
+          [Op.ne]: NoticeOutboxKindEnum.REPORT_SUBMITTED,
+        })
+      }
+      expect(query.order).toEqual([['createdAt', 'ASC']])
+      expect(query.limit).toBe(1)
+    })
+
+    it('counts receipts while mailbox delivery is on', async () => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+      noticeOutboxModel.count.mockResolvedValue(0)
+
+      await expect(service.findOverdueNotices(50)).resolves.toEqual({
+        total: 0,
+        notices: [],
+      })
+      expect(
+        noticeOutboxModel.count.mock.calls[0][0].where.kind,
+      ).toBeUndefined()
+      expect(noticeOutboxModel.findAll).not.toHaveBeenCalled()
+    })
+  })
+
   describe('mailbox delivery switched off mid-flight', () => {
     const deliveryKey = (kind: MailboxDeliveryKindEnum) =>
       buildMailboxDeliveryIdempotencyKey({
@@ -1023,6 +1253,75 @@ describe('NoticeDispatchService', () => {
       })
     })
 
+    // The predicate is `sent || status === SENT`: a row SENT by status alone
+    // still counts as sent.
+    it('records a delivery SENT by status, with no sent_at read, as DONE by mailbox', async () => {
+      mailboxDeliveryService.findDelivery.mockResolvedValue(
+        deliveryState({ status: MailboxDeliveryStatusEnum.SENT }),
+      )
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
+
+      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+      expect(lastOutboxUpdate()[0]).toEqual(
+        expect.objectContaining({
+          status: NoticeOutboxStatusEnum.DONE,
+          channel: NoticeOutboxChannelEnum.MAILBOX,
+        }),
+      )
+    })
+
+    // A marker left by a dead process: whether One acted is unknown, as for
+    // UNCERTAIN, though the row has not been claimed again to say so.
+    it('gives up on a delivery interrupted mid-call rather than emailing on top of it', async () => {
+      mailboxDeliveryService.findDelivery.mockResolvedValue(
+        deliveryState({
+          deliveryId: 'delivery-8',
+          status: MailboxDeliveryStatusEnum.CASE_CREATED,
+          interrupted: true,
+        }),
+      )
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+
+      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+      expect(lastOutboxUpdate()[0]).toEqual(
+        expect.objectContaining({
+          status: NoticeOutboxStatusEnum.FAILED,
+          lastError: expect.stringContaining('delivery-8 was interrupted'),
+        }),
+      )
+    })
+
+    it('holds a notice whose delivery another worker is calling One for', async () => {
+      mailboxDeliveryService.findDelivery.mockResolvedValue(
+        deliveryState({ deliveryId: 'delivery-9', inProgress: true }),
+      )
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
+
+      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+      expect(lastOutboxUpdate()[0]).toEqual({
+        lastAttemptAt: NOW,
+        lastError: 'mailbox delivery delivery-9 is in progress',
+      })
+    })
+
+    // Held indefinitely if the flag stays off, so it is logged at warn and
+    // named in the daily alert once overdue.
+    it('logs the hold on a filed, unsent document at warn', async () => {
+      mailboxDeliveryService.findDelivery.mockResolvedValue(
+        deliveryState({ deliveryId: 'delivery-3', documentFiled: true }),
+      )
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('delivery-3 has a document in One'),
+        expect.objectContaining({ noticeId: 'notice-1' }),
+      )
+    })
+
     it('emails a notice whose delivery never got past CreateCase', async () => {
       mailboxDeliveryService.findDelivery.mockResolvedValue({
         deliveryId: 'delivery-4',
@@ -1098,7 +1397,9 @@ describe('NoticeDispatchService', () => {
     ])(
       '%s for a %s report goes to the filing company as %s, keyed by the report, and is not emailed',
       async (outboxKind, type, kind) => {
-        reportModel.findOne.mockResolvedValue(approvedReport({ type }))
+        reportModel.findOne.mockResolvedValue(
+          approvedReport({ type, status: OWED_STATUS[outboxKind] }),
+        )
 
         await dispatch(outboxKind)
 
@@ -1262,7 +1563,10 @@ describe('NoticeDispatchService', () => {
 
     it('sends a submission receipt letter', async () => {
       reportModel.findOne.mockResolvedValue(
-        approvedReport({ type: ReportTypeEnum.SALARY }),
+        approvedReport({
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.SUBMITTED,
+        }),
       )
 
       await dispatch(NoticeOutboxKindEnum.REPORT_SUBMITTED)
@@ -1421,6 +1725,78 @@ describe('NoticeDispatchService', () => {
 
     // The delivery recorded FAILED or UNCERTAIN on its own row; the next run
     // resumes it by the same key.
+    // The flag on before the kind's case template is set: nothing is spent,
+    // so nothing is lost, and the hold is loud.
+    it('holds the row, not an attempt, at warn, while the kind has no case template', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: 'UNCONFIGURED',
+        kind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DENIED,
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED, {
+        attempts: NOTICE_DISPATCH_MAX_ATTEMPTS - 1,
+      })
+
+      expect(lastOutboxUpdate()[0]).toEqual({
+        lastAttemptAt: NOW,
+        lastError: expect.stringContaining(
+          'EQUALITY_REPORT_DENIED has no case template',
+        ),
+      })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('has no case template'),
+        expect.objectContaining({ noticeId: 'notice-1' }),
+      )
+    })
+
+    it('renders every letter as a letter', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockImplementation(
+        async (input: { pdf: () => Promise<Buffer> }) => {
+          await input.pdf()
+          return {
+            status: 'SENT',
+            deliveryId: 'delivery-1',
+            islandIsDocumentId: 'doc-1',
+            sentAt: NOW,
+            alreadySent: false,
+          }
+        },
+      )
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
+
+      expect(pdfRenderService.renderHtml).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        'letter',
+      )
+    })
+
+    // The notice went out whole; only the archive copy is lost.
+    it('says a failed re-render for the archive cost the archive, not the notice', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: 'SENT',
+        deliveryId: 'delivery-1',
+        islandIsDocumentId: 'doc-1',
+        sentAt: NOW,
+        alreadySent: true,
+      })
+      reportPdfService.generateReportPdf.mockRejectedValue(
+        new Error('chromium is missing'),
+      )
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('the notice already went out; not archived'),
+        expect.anything(),
+      )
+      expect(logger.error).not.toHaveBeenCalledWith(
+        expect.stringContaining('sending the approval notice without it'),
+        expect.anything(),
+      )
+    })
+
     it('retries a delivery that threw', async () => {
       mailboxDeliveryService.deliverToMailbox.mockRejectedValue(
         new Error('OneSystems CreateDocument failed with HTTP 503'),
