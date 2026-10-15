@@ -34,8 +34,11 @@ export class AdvisoryLockService {
    * @param namespace - Namespace integer to scope this lock (must be unique per task group)
    * @param lockKey - Unique identifier for this job type
    * @param fn - The async function to execute. It receives the lock's
-   *   transaction, which its queries already join through CLS; it is passed so
-   *   `fn` can open savepoints on it (`sequelize.transaction({ transaction })`).
+   *   transaction, so `fn` can open savepoints on it
+   *   (`sequelize.transaction({ transaction })`). When the app enables CLS
+   *   (`clsNamespace`), `fn`'s queries join it without being passed it. Anything
+   *   written on it is undone if `fn` later throws, together with this job's
+   *   cooldown row; write with `transaction: null` what must outlive a failure.
    * @param opts.cooldownMs - Minimum time between job runs (default: 60000ms = 1 minute)
    * @param opts.containerId - Optional container identifier for debugging
    */
@@ -238,7 +241,9 @@ export class AdvisoryLockService {
           })
         } catch (e) {
           this.logger.warn(
-            `Failed to unlock advisory lock (${namespace}, ${lockKey}): ${String(e)}`,
+            `Failed to unlock advisory lock (${namespace}, ${lockKey}): ${String(
+              e,
+            )}`,
             { context: LOGGING_CONTEXT },
           )
         }
