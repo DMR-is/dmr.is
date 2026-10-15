@@ -639,13 +639,34 @@ checked when it is sent: a receipt while the report is `SUBMITTED`, `POSTPONED` 
 `IN_REVIEW`, an approval while it is `APPROVED`, a denial while it is `DENIED`. Otherwise
 it is settled `SKIPPED`, `last_error` naming the status. That stops receipts held while
 the flag was off from arriving after the decision once it goes on, and a decision held by
-a quarantine from going out after the report was superseded. A row whose mailbox delivery
-One may already have acted on is `FAILED` for a person instead. `SKIPPED` rows from before
-this rule are receipts settled with the flag off.
+a quarantine from going out after the report was superseded. With the flag on, a row whose
+mailbox delivery One may already have acted on is `FAILED` for a person instead, and one
+whose delivery another worker is still running is held until it finishes. With the flag off,
+a receipt is not picked at all, and an approval's or denial's delivery is checked before the
+status (see "Channels"): one whose document One holds unsent stays `PENDING` whatever the
+report's status. `SKIPPED` rows from before this rule are receipts settled with the flag off.
 
 **Overdue rows.** Every `PENDING` row older than an hour that does not wait by design (a
 quarantined company's, or a receipt while the flag is off) is named in doe-api's daily
 mailbox alert, `Notice outbox: N notices overdue`, with its `last_error`.
+
+**Before turning the flag on.** Every receipt held while the flag was off goes out on the
+first run, however old, if its report is still `SUBMITTED`, `POSTPONED` or `IN_REVIEW`.
+List them first, and settle the ones too old to send `SKIPPED` (the cut-off is a decision for
+Jafnréttisstofa, not a constant):
+
+```sql
+SELECT n.id, n.report_id, n.created_at, r.status
+  FROM notice_outbox n JOIN report r ON r.id = n.report_id
+ WHERE n.kind = 'REPORT_SUBMITTED' AND n.status = 'PENDING'
+ ORDER BY n.created_at;
+
+UPDATE notice_outbox
+   SET status = 'SKIPPED', processed_at = now(),
+       last_error = 'receipt held past the cut-off; settled before ONESYSTEMS_ENABLED went on'
+ WHERE kind = 'REPORT_SUBMITTED' AND status = 'PENDING'
+   AND created_at < '<cut-off>';
+```
 
 **Quarantine.** A row whose filing company is quarantined is not picked; it waits
 `PENDING` and goes once the quarantine is lifted.
@@ -683,18 +704,20 @@ move it to `SUBMITTED` do not owe a second one.
 
 CHECK constraints: `channel` is set if and only if the row is `DONE`, `processed_at` if and
 only if it is not `PENDING`, and `attempts` is non-negative. Indexes: partial
-`notice_outbox_pending_idx` on `created_at` `WHERE status = 'PENDING'`, the dispatcher's
-only query; the unique constraint leads with `report_id`, so it also serves the FK check
+`notice_outbox_pending_idx` on `created_at` `WHERE status = 'PENDING'`, which narrows the
+dispatcher's pick to the few `PENDING` rows (it orders them by `last_attempt_at` `NULLS FIRST`,
+then `created_at`, so a held row, re-stamped on every look, goes to the back); the unique constraint leads with `report_id`, so it also serves the FK check
 when a report is deleted.
 
 **Re-driving a FAILED row.** A send is retried five times five minutes apart, so an outage
 longer than ~20 minutes (a bad credential shipped and fixed an hour later) leaves its notices
 `FAILED`. A re-driven row whose report has moved on since is settled `SKIPPED` rather than sent
-(see "Still owed"), so a stale approval is not mailed.
+(see "Still owed"), so a stale approval is not mailed. The exception is a decision whose document
+One holds unsent while the flag is off: it stays `PENDING` until the flag is back on.
 
-Whatever the flag says, the dispatcher reads the row's `mailbox_delivery` row, keyed by the
-mailbox kind, the filing company and the report id: with the flag on it resumes it, with it off
-it checks it before emailing. Settle that row first, or the re-driven notice resumes the same
+The dispatcher reads the row's `mailbox_delivery` row, keyed by the mailbox kind, the filing
+company and the report id: with the flag on it resumes it, with it off it checks an approval's
+or denial's before emailing (a receipt is not picked while the flag is off). Settle that row first, or the re-driven notice resumes the same
 stuck delivery and fails again. The lookup returns the receipt's and the decision's deliveries
 for the report, so match `kind` to the row:
 

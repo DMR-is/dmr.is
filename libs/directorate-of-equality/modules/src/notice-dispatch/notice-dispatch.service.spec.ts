@@ -104,9 +104,10 @@ describe('NoticeDispatchService', () => {
   }
 
   /*
-   * The report's default status follows the last row built, so a test about a
-   * denial reads a DENIED report without saying so. A test about a notice no
-   * longer owed sets `status` itself.
+   * The default `reportModel.findOne` answer's status follows the last row
+   * built, so a test about a denial reads a DENIED report without saying so.
+   * `approvedReport()` itself does not read it: called directly, it is
+   * APPROVED unless the test passes a `status`.
    */
   let owedStatus: ReportStatusEnum
 
@@ -135,7 +136,7 @@ describe('NoticeDispatchService', () => {
     companyAdminEmail: null,
     companyNationalId: '5500000000',
     approvedAt: APPROVED_AT,
-    status: owedStatus,
+    status: ReportStatusEnum.APPROVED,
     ...overrides,
   })
 
@@ -171,7 +172,9 @@ describe('NoticeDispatchService', () => {
     noticeOutboxModel.findAll.mockResolvedValue([])
     noticeOutboxModel.update.mockResolvedValue([1])
     owedStatus = ReportStatusEnum.APPROVED
-    reportModel.findOne.mockImplementation(async () => approvedReport())
+    reportModel.findOne.mockImplementation(async () =>
+      approvedReport({ status: owedStatus }),
+    )
     reportEventModel.findOne.mockResolvedValue({ reason: 'Vantar gögn' })
     reportPdfService.generateReportPdf.mockResolvedValue({
       pdf: Buffer.from('pdf-bytes'),
@@ -228,12 +231,18 @@ describe('NoticeDispatchService', () => {
   })
 
   describe('picking rows', () => {
-    it('takes the oldest due PENDING rows, a bounded batch', async () => {
+    it('takes the least recently tried due PENDING rows, a bounded batch', async () => {
       await service.dispatchPending(lockTransaction)
 
       const [query] = noticeOutboxModel.findAll.mock.calls[0]
       expect(query.where.status).toBe(NoticeOutboxStatusEnum.PENDING)
-      expect(query.order).toEqual([['createdAt', 'ASC']])
+      // Never-tried rows first, then by when each was last looked at. A held
+      // row is re-stamped on every look, so held rows rotate to the back and
+      // cannot fill every batch ahead of rows that can go.
+      expect(query.order).toEqual([
+        ['lastAttemptAt', 'ASC NULLS FIRST'],
+        ['createdAt', 'ASC'],
+      ])
       expect(query.limit).toBe(NOTICE_DISPATCH_BATCH_SIZE)
       // A row tried less than the retry delay ago is not due yet.
       expect(query.where[Op.or]).toEqual([
@@ -497,7 +506,7 @@ describe('NoticeDispatchService', () => {
       ])
       reportModel.findOne
         .mockRejectedValueOnce(new Error('db hiccup'))
-        .mockResolvedValue(approvedReport())
+        .mockResolvedValue(approvedReport({ status: ReportStatusEnum.DENIED }))
 
       await expect(service.dispatchPending(lockTransaction)).resolves.toEqual({
         picked: 2,
@@ -974,11 +983,6 @@ describe('NoticeDispatchService', () => {
     })
   })
 
-  /*
-   * The flag went off while some approvals and denials were already partly
-   * through One. Each is checked against its delivery (same key) before it is
-   * emailed, so the company does not get it twice.
-   */
   describe('a notice no longer owed', () => {
     const dispatch = async (kind: NoticeOutboxKindEnum) => {
       noticeOutboxModel.findAll.mockResolvedValue([outboxRow(kind)])
@@ -1090,7 +1094,6 @@ describe('NoticeDispatchService', () => {
         ['holds a filed document', { documentFiled: true }],
         ['is UNCERTAIN', { status: MailboxDeliveryStatusEnum.UNCERTAIN }],
         ['was interrupted', { interrupted: true }],
-        ['is in progress', { inProgress: true }],
       ])(
         'gives a stale notice up for a person when its delivery %s',
         async (_label, state) => {
@@ -1114,6 +1117,24 @@ describe('NoticeDispatchService', () => {
           )
         },
       )
+      // Another worker holds a live lease and may be calling One right now;
+      // a call that then succeeds must not be recorded as failed.
+      it('holds a stale notice while its delivery is in progress', async () => {
+        reportModel.findOne.mockResolvedValue(
+          approvedReport({ status: ReportStatusEnum.APPROVED }),
+        )
+        mailboxDeliveryService.findDelivery.mockResolvedValue(
+          deliveryState({ deliveryId: 'delivery-5', inProgress: true }),
+        )
+
+        await dispatch(NoticeOutboxKindEnum.REPORT_SUBMITTED)
+
+        expect(mailboxDeliveryService.deliverToMailbox).not.toHaveBeenCalled()
+        expect(lastOutboxUpdate()[0]).toEqual({
+          lastAttemptAt: NOW,
+          lastError: expect.stringContaining('delivery-5 is in progress'),
+        })
+      })
     })
   })
 
@@ -1175,6 +1196,11 @@ describe('NoticeDispatchService', () => {
     })
   })
 
+  /*
+   * The flag went off while some approvals and denials were already partly
+   * through One. Each is checked against its delivery (same key) before it is
+   * emailed, so the company does not get it twice.
+   */
   describe('mailbox delivery switched off mid-flight', () => {
     const deliveryKey = (kind: MailboxDeliveryKindEnum) =>
       buildMailboxDeliveryIdempotencyKey({
@@ -1706,6 +1732,8 @@ describe('NoticeDispatchService', () => {
       )
     })
 
+    // The delivery recorded FAILED or UNCERTAIN on its own row; the next run
+    // resumes it by the same key.
     it.each([
       [
         'a delivery held by another worker',
@@ -1724,8 +1752,6 @@ describe('NoticeDispatchService', () => {
       })
     })
 
-    // The delivery recorded FAILED or UNCERTAIN on its own row; the next run
-    // resumes it by the same key.
     // The flag on before the kind's case template is set: nothing is spent,
     // so nothing is lost, and the hold is loud.
     it('holds the row, not an attempt, at warn, while the kind has no case template', async () => {

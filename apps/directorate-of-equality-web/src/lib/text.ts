@@ -881,12 +881,12 @@ export const reportText = {
       'Áminning um skil jafnréttisáætlunar komst ekki í pósthólf á island.is',
     reminderUndeliveredSalary:
       'Áminning um skil jafnlaunaskýrslu komst ekki í pósthólf á island.is',
-    // Not "komst ekki": One may have sent it, and the entry stays after a
-    // person confirms it did.
+    // Not "komst ekki": One may have sent it. Worded as what was known when
+    // it was sent, not as a to-do: the entry stays after a person checks.
     reminderUnconfirmedEquality:
-      'Ekki tókst að staðfesta að áminning um skil jafnréttisáætlunar hafi borist í pósthólf á island.is — þarf að kanna',
+      'Ekki tókst við sendingu að staðfesta að áminning um skil jafnréttisáætlunar hefði borist í pósthólf á island.is',
     reminderUnconfirmedSalary:
-      'Ekki tókst að staðfesta að áminning um skil jafnlaunaskýrslu hafi borist í pósthólf á island.is — þarf að kanna',
+      'Ekki tókst við sendingu að staðfesta að áminning um skil jafnlaunaskýrslu hefði borist í pósthólf á island.is',
     // Admin-authored mail. All three outcomes are recorded, and the two
     // non-deliveries are worded as such: an entry that read "sendi tölvupóst"
     // for a message that never arrived is worse than no entry at all.

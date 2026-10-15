@@ -257,8 +257,10 @@ type SendResult =
  *
  * With the flag on, a mailbox kind with no case template (`UNCONFIGURED`)
  * holds its rows without counting an attempt, so switching the flag on before
- * the templates are confirmed loses nothing. The daily alert names the kind,
- * and every row overdue for another reason (`findOverdueNotices`).
+ * the templates are confirmed loses no notice. A held row goes to the back of
+ * the pick, so held rows cannot starve the ones that can go. The daily alert
+ * names the kind, and every row overdue for another reason
+ * (`findOverdueNotices`).
  *
  * A mailbox delivery is idempotent by its key (kind, company, report), so a
  * retried row resumes the same delivery. One left UNCERTAIN is never retried:
@@ -336,9 +338,16 @@ export class NoticeDispatchService implements INoticeDispatchService {
       ...this.notWaitingByDesign(),
     }
 
+    // Least recently looked at first, never-tried rows ahead of all. A held
+    // row (unconfigured kind, a document One holds) is re-stamped on every
+    // look, so it goes to the back of the queue: however many are held, they
+    // cannot fill every batch and starve rows that can go.
     const rows = await this.noticeOutboxModel.findAll({
       where,
-      order: [['createdAt', 'ASC']],
+      order: [
+        ['lastAttemptAt', 'ASC NULLS FIRST'],
+        ['createdAt', 'ASC'],
+      ],
       limit: NOTICE_DISPATCH_BATCH_SIZE,
     })
 
@@ -648,7 +657,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
     row: NoticeOutboxModel,
     report: Pick<ReportModel, 'id' | 'type' | 'status'>,
     companyId: string,
-  ): Promise<NotOwed | Gone | null> {
+  ): Promise<NotOwed | Gone | Held | null> {
     const stale = notOwedByStatus(row.kind, report)
     if (!stale) {
       return null
@@ -668,10 +677,17 @@ export class NoticeDispatchService implements INoticeDispatchService {
     if (delivery.sent || delivery.status === MailboxDeliveryStatusEnum.SENT) {
       return null
     }
+    if (delivery.inProgress) {
+      // Another worker holds a live lease and may be calling One right now.
+      // Look again once it has finished, as `startedInMailbox` does.
+      return {
+        outcome: 'HELD',
+        reason: `${stale.reason}, but mailbox delivery ${delivery.deliveryId} is in progress`,
+      }
+    }
     if (
       delivery.documentFiled ||
       delivery.interrupted ||
-      delivery.inProgress ||
       delivery.status === MailboxDeliveryStatusEnum.UNCERTAIN
     ) {
       return {

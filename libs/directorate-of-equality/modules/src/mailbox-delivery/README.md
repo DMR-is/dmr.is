@@ -8,10 +8,11 @@ Two callers, both in doe-api: the notice dispatcher (`notice-dispatch/`, the
 submission receipt and the approval and denial letters, from `notice_outbox`)
 and the deadline-reminder task. No kind has a confirmed case template yet (see
 `mailbox-delivery.kinds.ts`), so `deliverToMailbox` answers `UNCONFIGURED`
-for every kind, logged at error, before it writes a row. Callers hold the
-notice without counting an attempt, so switching the flag on early loses
-nothing, and the daily alert names every unconfigured kind while the flag is
-on. It also does nothing unless `ONESYSTEMS_ENABLED` is `true`. That flag is checked here, not in the OneSystems client: the client is
+for every kind, logged at error, before it writes a row. The dispatcher holds
+the notice without counting an attempt, and the reminder task emails the
+reminder instead, so switching the flag on early loses nothing. doe-api logs
+an error at boot, and the daily alert names every unconfigured kind, while the
+flag is on. It also does nothing unless `ONESYSTEMS_ENABLED` is `true`. That flag is checked here, not in the OneSystems client: the client is
 not gated, so any new consumer of the client must check the flag itself.
 
 A quarantined company (`company.quarantined`) gets nothing: `deliverToMailbox`

@@ -103,6 +103,23 @@ describe('NoticeOutboxTask', () => {
     expect(dispatchPending).toHaveBeenCalledWith(lockTransaction)
   })
 
+  it('logs how many of the picked rows settled', async () => {
+    dispatchPending.mockResolvedValue({ picked: 3, settled: 2 })
+
+    await task.run()
+
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Notice outbox: 2 of 3 notices settled',
+      expect.objectContaining({ picked: 3, settled: 2 }),
+    )
+  })
+
+  it('logs nothing when no row was due', async () => {
+    await task.run()
+
+    expect(mockLogger.info).not.toHaveBeenCalled()
+  })
+
   it('does not dispatch when another container holds the lock', async () => {
     runWithDistributedLock.mockResolvedValue({
       ran: false,
@@ -260,20 +277,106 @@ describe('NoticeOutboxTask', () => {
               reportId: 'r-1',
               attempts: 0,
               lastError: 'mailbox delivery d-1 has a document in One',
+              createdAt: new Date('2026-10-14T10:00:00.000Z'),
             },
           ],
         }),
       )
     })
 
+    it('counts in the singular for one', async () => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+      unconfiguredKinds.mockReturnValue([
+        MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+      ])
+      findOverdueNotices.mockResolvedValue({
+        total: 1,
+        notices: [
+          {
+            noticeId: 'n-1',
+            kind: 'REPORT_APPROVED',
+            reportId: 'r-1',
+            attempts: 0,
+            lastError: null,
+            createdAt: new Date('2026-10-14T10:00:00.000Z'),
+          },
+        ],
+      })
+
+      await task.alertStuckMailboxDeliveries()
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('1 mailbox kind has no case template'),
+        expect.anything(),
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Notice outbox: 1 notice overdue',
+        expect.anything(),
+      )
+    })
+
     it('catches a failed run instead of letting it escape', async () => {
-      countStuckDeliveries.mockRejectedValue(new Error('db is down'))
+      runWithDistributedLock.mockRejectedValue(new Error('db is down'))
 
       await expect(task.alertStuckMailboxDeliveries()).resolves.toBeUndefined()
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Mailbox delivery alert failed — aborting this run',
         expect.anything(),
       )
+    })
+
+    // The overdue alert is the only place a held decision is named.
+    it('still raises the other alerts when one fails', async () => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+      countStuckDeliveries.mockRejectedValue(new Error('db is down'))
+      unconfiguredKinds.mockReturnValue([
+        MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+      ])
+      findOverdueNotices.mockResolvedValue({ total: 2, notices: [] })
+
+      await expect(task.alertStuckMailboxDeliveries()).resolves.toBeUndefined()
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Mailbox delivery alert: stuck deliveries failed',
+        expect.objectContaining({ message: 'db is down' }),
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('has no case template'),
+        expect.anything(),
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Notice outbox: 2 notices overdue'),
+        expect.anything(),
+      )
+    })
+  })
+
+  describe('the boot check', () => {
+    it('names every unconfigured kind at boot while the flag is on', () => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+      unconfiguredKinds.mockReturnValue([
+        MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+      ])
+
+      task.onModuleInit()
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('has no case template'),
+        expect.objectContaining({
+          kinds: [MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED],
+          when: 'at boot',
+        }),
+      )
+    })
+
+    it('says nothing at boot while the flag is off', () => {
+      unconfiguredKinds.mockReturnValue([
+        MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+      ])
+
+      task.onModuleInit()
+
+      expect(mockLogger.error).not.toHaveBeenCalled()
     })
   })
 })
