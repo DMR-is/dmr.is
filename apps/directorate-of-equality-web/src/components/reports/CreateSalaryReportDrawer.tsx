@@ -24,6 +24,7 @@ import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import {
   CompanyReportStatusEnum,
+  CompanySectorEnum,
   GenderEnum,
   type ParsedReportDto,
   type SalaryAnalysisOutlierDto,
@@ -219,14 +220,19 @@ export const CreateSalaryReportDrawer = () => {
     isError: companyLoadFailed,
   } = useAllCompanies()
 
-  // A salary report must reference an approved, in-force equality report. The
-  // company's server-computed report status already tells us when one is
-  // missing, so we can warn the admin up front rather than let them fill in the
-  // whole form and hit a 404 on submit.
+  // A salary report must be filed against an approved, in-force equality report
+  // or legacy certificate — except by a sveitarfélag, which may file regardless
+  // (`SALARY_EQUALITY_EXEMPT_SECTORS` on the server, which has the final say).
+  // The company's server-computed report status already tells us when coverage
+  // is missing, so we can warn the admin up front rather than let them fill in
+  // the whole form and hit a 404 on submit. The status alone is not enough: a
+  // municipality without a plan still reads MISSING_EQUALITY_REPORT, because
+  // the obligation stands even though it does not gate this filing.
   const selectedCompany = companies.find((c) => c.id === companyId) ?? null
   const missingEqualityReport =
     selectedCompany?.reportStatus ===
-    CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
+      CompanyReportStatusEnum.MISSING_EQUALITY_REPORT &&
+    selectedCompany.sector !== CompanySectorEnum.SVEITARFELAG
 
   const requestUploadMutation = useMutation(
     trpc.adminReport.requestImportUpload.mutationOptions(),

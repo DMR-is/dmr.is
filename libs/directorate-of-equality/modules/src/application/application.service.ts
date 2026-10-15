@@ -1208,11 +1208,19 @@ export class ApplicationService implements IApplicationService {
    * `legacy_report`, which the next register load replaces wholesale, so the
    * snapshot taken at filing is the only stable record of what covered this
    * submission.
+   *
+   * EXEMPT is null, and said so explicitly rather than reached by falling
+   * through on a null `equalityReportId`: a sveitarfélag that filed with no
+   * plan in force has no coverage to describe.
    */
   private async loadLinkedEqualityReport(
     report: ReportModel,
   ): Promise<EqualityReportSummaryDto | null> {
     if (report.type !== ReportTypeEnum.SALARY) {
+      return null
+    }
+
+    if (report.equalitySource === EqualityCoverageSourceEnum.EXEMPT) {
       return null
     }
 

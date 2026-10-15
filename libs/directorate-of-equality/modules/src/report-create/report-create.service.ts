@@ -178,7 +178,7 @@ export class ReportCreateService implements IReportCreateService {
     // EXEMPT is one more answer this can give: a municipality with nothing
     // covering it may still file, and the row then records that rather than a
     // link.
-    const coverage = input.equalityReportId
+    const basis = input.equalityReportId
       ? null
       : await this.finalizeService.resolveSalaryFilingBasis(
           submittingCompany.companyId,
@@ -186,8 +186,8 @@ export class ReportCreateService implements IReportCreateService {
 
     const equalityReportId =
       input.equalityReportId ??
-      (coverage?.source === EqualityCoverageSourceEnum.REPORT
-        ? coverage.report.id
+      (basis?.source === EqualityCoverageSourceEnum.REPORT
+        ? basis.report.id
         : null)
 
     if (equalityReportId) {
@@ -216,13 +216,13 @@ export class ReportCreateService implements IReportCreateService {
     // Read off the basis, NOT inferred from `!equalityReportId` — with two
     // meanings for a null FK there is no inference left to make, which is the
     // reading `EqualityCoverage` documents as the thing not to do.
-    // Null coverage means the caller named a report, which is REPORT by
+    // Null basis means the caller named a report, which is REPORT by
     // definition.
-    const equalitySource = coverage?.source ?? EqualityCoverageSourceEnum.REPORT
+    const equalitySource = basis?.source ?? EqualityCoverageSourceEnum.REPORT
 
     const equalityLegacyValidUntil =
-      coverage?.source === EqualityCoverageSourceEnum.LEGACY
-        ? coverage.legacyValidUntil
+      basis?.source === EqualityCoverageSourceEnum.LEGACY
+        ? basis.legacyValidUntil
         : null
 
     const withdrawnReportIds =

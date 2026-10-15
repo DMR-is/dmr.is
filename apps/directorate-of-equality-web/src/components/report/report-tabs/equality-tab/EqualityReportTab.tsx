@@ -10,8 +10,8 @@ import { Button, GridRow, Text } from '@island.is/island-ui/core'
 
 import {
   EqualityContentTypeEnum,
-  EqualityCoverageSourceEnum,
   EqualityReportDto,
+  ReportEqualitySourceEnum,
 } from '../../../../gen/fetch'
 import { formatCalendarDateIS } from '../../../../lib/constants'
 import { reportText } from '../../../../lib/text'
@@ -26,7 +26,7 @@ type EqualityReportTabProps = {
    * and `EXEMPT` both mean there is no plan to show and none is missing
    * either — see the branches below.
    */
-  source?: EqualityCoverageSourceEnum
+  source?: ReportEqualitySourceEnum
   /** The legacy certificate's stated expiry. Set only when `source` is LEGACY. */
   legacyValidUntil?: string | null
 }
@@ -57,7 +57,7 @@ export const EqualityReportTab = ({
    * company had no jafnréttisáætlun when the Directorate's own records say it
    * holds one.
    */
-  if (source === EqualityCoverageSourceEnum.LEGACY) {
+  if (source === ReportEqualitySourceEnum.LEGACY) {
     return (
       <Empty
         title={reportText.equalityTab.legacyTitle}
@@ -77,7 +77,7 @@ export const EqualityReportTab = ({
    * plan in force, so there is no plan to show and the empty state's "engin
    * jafnréttisáætlun" would read as a defect in the filing.
    */
-  if (source === EqualityCoverageSourceEnum.EXEMPT) {
+  if (source === ReportEqualitySourceEnum.EXEMPT) {
     return (
       <Empty
         title={reportText.equalityTab.exemptTitle}

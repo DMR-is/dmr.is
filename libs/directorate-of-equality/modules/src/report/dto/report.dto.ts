@@ -124,7 +124,7 @@ export class ReportDto {
   equalityReportId!: string | null
 
   @ApiEnum(EqualityCoverageSourceEnum, {
-    enumName: 'EqualityCoverageSourceEnum',
+    enumName: 'ReportEqualitySourceEnum',
     description:
       'What met the equality obligation this report was filed under: `REPORT` (linked via `equalityReportId`), `LEGACY` (an unexpired certificate from the retired register, which has no report row to link), or `EXEMPT` (nothing covered the company, and as a municipality — sector `SVEITARFELAG` — it may file a salary report without equality coverage). Always `REPORT` on equality reports and on everything filed before the legacy basis was accepted.',
   })

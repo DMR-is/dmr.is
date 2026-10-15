@@ -1009,10 +1009,11 @@ export class ReportService implements IReportService {
    * *which* report to project from.
    *
    * ⚠️ **`equalitySource` is read before the link, and a LEGACY or EXEMPT row
-   * returns null rather than throwing.** (EXEMPT: a municipality that filed
-   * with no plan in force, which its sector permits.) That row has no equality report to project and
-   * never did: the company was covered by a certificate on the retired
-   * register, which mints no `report` row, so there is nothing to load. The
+   * returns null rather than throwing.** Neither has an equality report to
+   * project, and neither ever did. A LEGACY company was covered by a
+   * certificate on the retired register, which mints no `report` row, so there
+   * is nothing to load. An EXEMPT company is a sveitarfélag that filed with no
+   * plan in force, which its sector permits. The
    * "missing link = data-integrity error" rule still holds for every other
    * salary report, and keeping the two apart is the whole reason
    * `equality_source` is a stored column rather than an inference from a null

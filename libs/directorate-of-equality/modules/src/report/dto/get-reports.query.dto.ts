@@ -188,7 +188,7 @@ export class GetReportsQueryDto extends PagingQuery {
 
   @ApiProperty({
     enum: EqualityCoverageSourceEnum,
-    enumName: 'EqualityCoverageSourceEnum',
+    enumName: 'ReportEqualitySourceEnum',
     isArray: true,
     required: false,
     description:
