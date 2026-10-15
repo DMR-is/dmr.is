@@ -55,7 +55,7 @@ type CompanyOverrides = Partial<{
 }>
 
 const makeCompany = (overrides: CompanyOverrides = {}) =>
-  (({
+  ({
     id: 'company-1',
     name: 'Acme ehf.',
     email: 'acme@acme.is',
@@ -63,7 +63,7 @@ const makeCompany = (overrides: CompanyOverrides = {}) =>
     nextEqualityReportDueAt: EQUALITY_DUE,
     nextSalaryReportDueAt: SALARY_DUE,
     ...overrides,
-  } as unknown) as CompanyModel)
+  }) as unknown as CompanyModel
 
 describe('ReportDeadlineReminderService', () => {
   let service: ReportDeadlineReminderService

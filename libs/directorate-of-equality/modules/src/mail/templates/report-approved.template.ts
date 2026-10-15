@@ -19,8 +19,8 @@ const attachmentLine = (labels: string[]): string =>
   labels.length === 0
     ? ''
     : labels.length === 1
-    ? `Skjalið er í viðhengi: ${labels[0]}.`
-    : `Skjölin eru í viðhengi: ${labels.join(', ')}.`
+      ? `Skjalið er í viðhengi: ${labels[0]}.`
+      : `Skjölin eru í viðhengi: ${labels.join(', ')}.`
 
 /**
  * The approval notice — a covering note, not the report.
