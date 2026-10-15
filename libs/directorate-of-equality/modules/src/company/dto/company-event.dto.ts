@@ -8,7 +8,7 @@ import {
   ApiUUId,
 } from '@dmr.is/decorators'
 
-import { CompanyStatusEnum } from '../models/company.enums'
+import { CompanySectorEnum, CompanyStatusEnum } from '../models/company.enums'
 import {
   CompanyEventTypeEnum,
   CompanyReminderTierEnum,
@@ -74,6 +74,22 @@ export class CompanyEventDto {
       'The next-due date after the change, on *_DUE_DATE_CHANGED events only; null otherwise.',
   })
   toDueAt!: Date | null
+
+  @ApiOptionalEnum(CompanySectorEnum, {
+    enumName: 'CompanySectorEnum',
+    nullable: true,
+    description:
+      'The sector before the change, on SECTOR_CHANGED events only; null otherwise.',
+  })
+  fromSector!: CompanySectorEnum | null
+
+  @ApiOptionalEnum(CompanySectorEnum, {
+    enumName: 'CompanySectorEnum',
+    nullable: true,
+    description:
+      'The sector after the change, on SECTOR_CHANGED events only; null otherwise.',
+  })
+  toSector!: CompanySectorEnum | null
 
   @ApiDateTime()
   createdAt!: Date

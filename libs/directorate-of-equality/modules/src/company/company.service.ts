@@ -1081,9 +1081,10 @@ export class CompanyService implements ICompanyService {
    * The raw `legalForm*` values are left untouched — they are RSK's data, not
    * ours, and keeping them lets a corrected mapping be re-derived later.
    *
-   * Audited via a structured log line rather than a `company_event`, matching
-   * `updateIsat`: sector is admin-owned classification data, not part of the
-   * company's regulatory timeline.
+   * A changed sector is recorded as a SECTOR_CHANGED `company_event`, unlike
+   * `updateIsat`: sector decides an obligation (a RADUNEYTI company owes a
+   * salary report whatever its size), so it belongs on the timeline. An
+   * override-only change (same sector, now pinned) emits nothing.
    */
   async updateSector(
     id: string,
@@ -1106,7 +1107,19 @@ export class CompanyService implements ICompanyService {
       { context: LOGGING_CONTEXT },
     )
 
+    const fromSector = company.sector
+
     await company.update({ sector: dto.sector, sectorOverride: override })
+
+    if (fromSector !== dto.sector) {
+      await this.companyEventService.emitSectorChanged(
+        id,
+        company.status,
+        fromSector,
+        dto.sector,
+        actorUserId,
+      )
+    }
 
     return this.loadCompanyDto(id)
   }
