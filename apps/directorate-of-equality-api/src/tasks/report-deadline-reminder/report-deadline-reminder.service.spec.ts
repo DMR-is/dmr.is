@@ -641,12 +641,6 @@ describe('ReportDeadlineReminderService', () => {
       [{ status: 'IN_PROGRESS', deliveryId: 'delivery-7' }],
       [{ status: 'QUARANTINED' }],
       [{ status: 'DISABLED' }],
-      [
-        {
-          status: 'UNCONFIGURED',
-          kind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
-        },
-      ],
     ])('records no event when the delivery answers %o', async (result) => {
       returnCompanyAtCall(CALL.equalitySixMonths, company())
       deliverToMailbox.mockResolvedValue(result)
@@ -658,6 +652,40 @@ describe('ReportDeadlineReminderService', () => {
         expect.stringContaining(result.status),
         expect.anything(),
       )
+    })
+
+    /*
+     * The flag on before the kind's case template is set: the reminder goes by
+     * email, so a band that closes meanwhile is not lost. The SENT event is the
+     * one both channels write, so the mailbox will not send it again.
+     */
+    it('emails the reminder when the mailbox kind has no case template', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValue({
+        status: 'UNCONFIGURED',
+        kind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+      })
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(1)
+      expect(sendReportDeadlineReminder).toHaveBeenCalledWith(
+        'acme@acme.is',
+        expect.objectContaining({
+          tier: CompanyReminderTierEnum.SIX_MONTHS,
+        }),
+      )
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+        COMPANY_ID,
+        CompanyStatusEnum.ACTIVE,
+        CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+        CompanyReminderTierEnum.SIX_MONTHS,
+        EQUALITY_DUE.toISOString(),
+      )
+      // `deliverToMailbox` logged it at error; not twice.
+      expect(mockLogger.error).not.toHaveBeenCalled()
+      expect(findDelivery).not.toHaveBeenCalled()
     })
 
     it('names the render a letter, for the failure log', async () => {
@@ -727,6 +755,8 @@ describe('ReportDeadlineReminderService', () => {
           state({ status: 'UNCERTAIN' }),
           CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED,
         ],
+        // Only when recording the failure itself failed: a call that throws
+        // clears its in-flight marker first.
         [
           'interrupted',
           state({ status: 'CASE_CREATED', interrupted: true }),
@@ -760,6 +790,7 @@ describe('ReportDeadlineReminderService', () => {
 
       it.each([
         ['has attempts left', state({ attempts: 2 })],
+        ['is in progress', state({ inProgress: true })],
         ['has no row', null],
       ])(
         'records no event when the row %s, for the next run to retry',
@@ -770,6 +801,37 @@ describe('ReportDeadlineReminderService', () => {
 
           expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
         },
+      )
+    })
+
+    /*
+     * The read-back is on its own pool connection, and the fault that made the
+     * call throw will often fail it too. That is a per-company skip, not an
+     * abort that would roll back the run's SENT events.
+     */
+    it('carries on with the batch when the read-back after a throw fails', async () => {
+      const second = company({
+        id: '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f',
+      })
+      returnCompaniesAtCall(CALL.equalitySixMonths, [company(), second])
+      deliverToMailbox
+        .mockRejectedValueOnce(new Error('pool acquire timeout'))
+        .mockResolvedValueOnce({
+          status: 'SENT',
+          deliveryId: 'delivery-2',
+          islandIsDocumentId: null,
+          sentAt: NOW,
+          alreadySent: false,
+        })
+      findDelivery.mockRejectedValue(new Error('pool acquire timeout'))
+
+      await expect(service.run()).resolves.toBeUndefined()
+
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent.mock.calls[0][0]).toBe(second.id)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Could not read back mailbox delivery'),
+        expect.objectContaining({ companyId: COMPANY_ID }),
       )
     })
 

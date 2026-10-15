@@ -710,18 +710,22 @@ function oneErrorText(body: Record<string, unknown>): string | null {
 }
 
 /**
- * Null for no errors: absent, blank, or an empty array or object. `{}` would
- * otherwise read as text, and a success carrying it warn on every send.
+ * Null for no errors: absent, null, blank, or an empty array or object, at any
+ * depth (`[{}]`, `[null]`). `{}` would otherwise read as text, and a success
+ * carrying it warn on every send.
  */
 function errorsText(value: unknown): string | null {
   if (Array.isArray(value)) {
     const parts = value
-      .map((entry) => (typeof entry === 'string' ? entry : stringify(entry)))
-      .filter((entry): entry is string => nonEmptyString(entry) !== null)
+      .map(errorsText)
+      .filter((entry): entry is string => entry !== null)
     return parts.length > 0 ? parts.join('; ') : null
   }
   if (isRecord(value)) {
     return Object.keys(value).length > 0 ? stringify(value) : null
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
   }
   return nonEmptyString(value)
 }

@@ -789,6 +789,9 @@ describe('OneSystemsService', () => {
       ['an empty object', {}],
       ['an empty array', []],
       ['an empty string', ''],
+      ['an array of an empty object', [{}]],
+      ['an array of null', [null]],
+      ['an array of blanks', ['', [], {}]],
     ])(
       'sendDocToIslandIs: Success:true with Errors as %s is no errors, and does not warn',
       async (_label, errors) => {
