@@ -10,7 +10,11 @@ import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { CompanyDto, ReportTypeEnum } from '../../../../gen/fetch'
+import {
+  CompanyDto,
+  CompanySizeEnum,
+  ReportTypeEnum,
+} from '../../../../gen/fetch'
 import { companiesText } from '../../../../lib/text'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { formatTimestampDate } from '../../../../lib/utils'
@@ -41,10 +45,10 @@ const toIsoDate = (date: Date): string => {
 
 /**
  * Inline-editable next-due date for one report kind, following
- * `CompanyEmailField`. Always editable, whether or not the company owes the
- * report, and never clearable. Never moves backwards: the earliest pickable day
- * is the current due date, or today when there is none (the API enforces the
- * same). The change and its optional reason land on the company timeline, and
+ * `CompanyEmailField`. Never clearable. The equality date reads "Á ekki við"
+ * instead of an editor for a SMALL company with no salary obligation. Never moves backwards or into the past: the
+ * earliest pickable day is the later of the current due date and today (the API
+ * enforces the same). The change and its optional reason land on the company timeline, and
  * the next approval overwrites the date again.
  */
 export const CompanyDueDateField = ({ company, reportType }: Props) => {
@@ -96,6 +100,18 @@ export const CompanyDueDateField = ({ company, reportType }: Props) => {
 
   const editLabel = isSalary ? t.dueDateEditSalary : t.dueDateEditEquality
 
+  // Mirrors the API: a SMALL company owes no plan unless it owes the salary
+  // report. UNKNOWN stays editable.
+  const equalityNotOwed =
+    !isSalary &&
+    company.employeeCountCategory === CompanySizeEnum.SMALL &&
+    !company.salaryReportRequired &&
+    !company.salaryReportRequiredOverride
+
+  if (equalityNotOwed) {
+    return <Text>{companiesText.obligationNotRequired}</Text>
+  }
+
   if (!isEditing) {
     return (
       <Box display="flex" alignItems="center" columnGap={1} flexWrap="wrap">
@@ -121,10 +137,10 @@ export const CompanyDueDateField = ({ company, reportType }: Props) => {
     )
   }
 
-  const today = new Date()
-  const minDate =
-    currentDay ??
-    new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  // An overdue date is earlier than today; never offer a day that is still past.
+  const minDate = currentDay && currentDay > today ? currentDay : today
 
   const nextDueDate = value ? toIsoDate(value) : null
   const isUnchanged =

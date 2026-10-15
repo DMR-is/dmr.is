@@ -1,5 +1,5 @@
 import { isCompanyKennitala, isValid as isValidKennitala } from 'kennitala'
-import { literal, Op, Order } from 'sequelize'
+import { literal, Op, Order, Transaction } from 'sequelize'
 
 import {
   BadRequestException,
@@ -874,19 +874,36 @@ export class CompanyService implements ICompanyService {
    * lands and the new one gets its own full set of reminders. The next
    * approval overwrites the date again (`advanceCompanyReportDueDate`).
    *
-   * Allowed whether or not the company owes the report, and never cleared.
-   * Never moves backwards: the new day may not be before the current due date,
-   * or before today when the company has none.
+   * Never cleared. The equality date is refused for a SMALL company with no
+   * salary obligation: it owes no plan, and those are exactly the values
+   * m-20260911-doe-clear-unowed-equality-due-dates cleared. UNKNOWN stays
+   * editable, since its size is an open question, not "owes nothing".
+   *
+   * Never moves backwards, and never into the past: the new day may be neither
+   * before the current due date nor before today. A past day would put the
+   * company straight into the reminder task's DUE band and leave it overdue.
    */
   async updateDueDate(
     id: string,
     dto: UpdateCompanyDueDateDto,
     actorUserId: string,
   ): Promise<CompanyDto> {
-    const company = await this.companyWithReportStatus.findOneOrThrow(
-      { where: { id } },
+    // `FOR UPDATE` in the request's CLS transaction, so a concurrent approval
+    // (`advanceCompanyReportDueDate`) cannot slip between this read and the
+    // write, and the event's from-date is the one actually replaced.
+    const company = await this.companyModel.findOneOrThrow(
+      { where: { id }, lock: Transaction.LOCK.UPDATE },
       companyMessages.notFound(id),
     )
+
+    if (
+      dto.reportType === ReportTypeEnum.EQUALITY &&
+      company.employeeCountCategory === CompanySizeEnum.SMALL &&
+      !company.salaryReportRequired &&
+      !company.salaryReportRequiredOverride
+    ) {
+      throw new BadRequestException(companyMessages.equalityPlanNotOwed(id))
+    }
 
     const day = new Date(`${dto.dueDate}T00:00:00.000Z`)
 
@@ -921,7 +938,7 @@ export class CompanyService implements ICompanyService {
     }
 
     const today = new Date().toISOString().slice(0, 10)
-    if (!fromDay && dto.dueDate < today) {
+    if (dto.dueDate < today) {
       throw new BadRequestException(companyMessages.dueDateInPast(dto.dueDate))
     }
 

@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
@@ -1072,6 +1072,9 @@ describe('CompanyService', () => {
         .mockResolvedValueOnce({
           id: 'company-30',
           status: CompanyStatusEnum.ACTIVE,
+          employeeCountCategory: CompanySizeEnum.MEDIUM,
+          salaryReportRequired: false,
+          salaryReportRequiredOverride: false,
           nextEqualityReportDueAt: null,
           nextSalaryReportDueAt: null,
           update,
@@ -1177,19 +1180,51 @@ describe('CompanyService', () => {
       expect(emitDueDateChanged).not.toHaveBeenCalled()
     })
 
-    it('measures from the current due date, not today, when one is set', async () => {
-      // Overdue since 10.10; 12.10 is past but still later than the current date.
+    it('rejects a past day even when it is later than an overdue current date', async () => {
+      // Overdue since 10.10; 12.10 is later than that but still before today
+      // (14.10), so it would land in the reminder task's DUE band.
+      const update = stubCompany({ nextEqualityReportDueAt: OLD_DUE })
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-10-12' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('allows today when the current date is overdue', async () => {
       const update = stubCompany({ nextEqualityReportDueAt: OLD_DUE })
 
       await service.updateDueDate(
         'company-30',
-        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-10-12' },
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-10-14' },
         'admin-1',
       )
 
       expect(update).toHaveBeenCalledWith({
-        nextEqualityReportDueAt: new Date('2026-10-12T23:59:59.999Z'),
+        nextEqualityReportDueAt: new Date('2026-10-14T23:59:59.999Z'),
       })
+    })
+
+    it('reads the company FOR UPDATE so a concurrent approval cannot interleave', async () => {
+      stubCompany({ nextEqualityReportDueAt: OLD_DUE })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-11-20' },
+        'admin-1',
+      )
+
+      expect(findOneOrThrow).toHaveBeenNthCalledWith(
+        1,
+        { where: { id: 'company-30' }, lock: Transaction.LOCK.UPDATE },
+        expect.anything(),
+      )
     })
 
     it('rejects a past day when the company has no due date yet', async () => {
@@ -1218,6 +1253,72 @@ describe('CompanyService', () => {
 
       expect(update).toHaveBeenCalledWith({
         nextSalaryReportDueAt: new Date('2026-10-14T23:59:59.999Z'),
+      })
+    })
+
+    it('rejects an equality date for a SMALL company that owes no plan', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.SMALL,
+      })
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-11-20' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('allows the salary date on a SMALL company', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.SMALL,
+      })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.SALARY, dueDate: '2026-11-20' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextSalaryReportDueAt: new Date('2026-11-20T23:59:59.999Z'),
+      })
+    })
+
+    it('allows the equality date on a SMALL company with the admin salary override', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.SMALL,
+        salaryReportRequiredOverride: true,
+      })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-11-20' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextEqualityReportDueAt: new Date('2026-11-20T23:59:59.999Z'),
+      })
+    })
+
+    it('keeps the equality date editable on an UNKNOWN-size company', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.UNKNOWN,
+      })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-11-20' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextEqualityReportDueAt: new Date('2026-11-20T23:59:59.999Z'),
       })
     })
 
