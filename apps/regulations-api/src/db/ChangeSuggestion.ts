@@ -6,8 +6,8 @@ import type {
   HTMLText,
   PlainText,
   RegName,
+  SkippedRegulationChange,
 } from '../routes/types'
-import { removeHistoryAfterRegId } from '../utils/misc'
 import { db } from '../utils/sequelize'
 import { getRegulationById, getRegulationChanges } from './Regulation'
 
@@ -395,7 +395,15 @@ export async function deleteChangeSuggestion(
 }
 
 /**
- * Get change history current change
+ * The base regulation's text as it stands just before the changing regulation
+ * takes effect: the newest `regulationchange` row dated before the pair's own
+ * row that carries a consolidated text, else the original `regulation.text`.
+ *
+ * The pair's own row is skipped even when it has text, since that is the text
+ * *after* the change — a suggestion built on it would apply the change twice,
+ * and one built on anything older would drop the changes in between.
+ * `skippedChanges` lists the earlier changes that text is missing because
+ * their rows have no consolidated text.
  */
 export async function getChangeHistoryCurrent(
   baseRegId: number,
@@ -406,43 +414,59 @@ export async function getChangeHistoryCurrent(
   }
 
   const baseRegulation = await getRegulationById(baseRegId)
-  const taskBase = baseRegulation
 
-  if (!taskBase) {
+  if (!baseRegulation) {
     throw new Error(`Base regulation not found: ${baseRegId}`)
   }
 
-  const changeHistory = await getRegulationChanges(taskBase.id)
-  const changes =
-    changeHistory &&
-    changeHistory.filter(({ changingid }) => changingid === changingRegId)
-  const _changes = changes.slice(0)
-  const _lastChange = changes[_changes.length - 1]
+  // Newest first: date, then publishedDate, then id, all descending.
+  const history = await getRegulationChanges(baseRegulation.id)
 
-  const changeHistoryAfterRegId = removeHistoryAfterRegId(
-    changeHistory,
-    changingRegId,
+  // A changing regulation can have several rows on one base (parts taking
+  // effect on different dates); "before the change" is before the oldest.
+  const ownIndex = history.findLastIndex(
+    ({ changingid }) => changingid === changingRegId,
   )
 
-  if (changeHistoryAfterRegId.length < 1) {
+  const ownChange = history[ownIndex]
+
+  if (!ownChange) {
     throw new Error(
-      `Not enough change history for regulation id: ${changingRegId}`,
+      `Change not found for regulation ${changingRegId} on base regulation ${baseRegId}`,
     )
   }
-  const baseSource =
-    changeHistoryAfterRegId[1] && changeHistoryAfterRegId[1].text
-      ? changeHistoryAfterRegId[1]
-      : taskBase
-  const textSource = changeHistoryAfterRegId[0]?.text
-    ? changeHistoryAfterRegId[0]
-    : baseSource
 
-  const currentChange: CurrentRegulationChange = {
-    date: _lastChange?.date ?? undefined,
-    currentTitle: textSource.title,
-    currentText: textSource.text,
+  // Walk back from the change to the newest version with text. Textless rows
+  // passed on the way are changes that text is missing; anything older is
+  // already in it.
+  const skippedChanges: Array<SkippedRegulationChange> = []
+  let previous: (typeof history)[number] | undefined
+
+  for (const change of history.slice(ownIndex + 1)) {
+    if (change.changingid === changingRegId) {
+      continue
+    }
+    if (change.text) {
+      previous = change
+      break
+    }
+    skippedChanges.push({
+      id: change.id,
+      changingId: change.changingid,
+      changingName: change.changingName,
+      date: change.date,
+    })
   }
-  return currentChange
+
+  return {
+    date: ownChange.date ?? undefined,
+    currentTitle: previous?.title || baseRegulation.title,
+    currentText: previous?.text ?? baseRegulation.text,
+    sourceChangeId: previous?.id ?? null,
+    sourceChangingName: previous?.changingName ?? null,
+    sourceDate: previous?.date ?? undefined,
+    skippedChanges,
+  }
 }
 
 /**
