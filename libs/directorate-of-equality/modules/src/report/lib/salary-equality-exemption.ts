@@ -4,14 +4,12 @@ import { CompanySectorEnum } from '../../company/models/company.enums'
  * Sectors that may file a salary report (jafnlaunaskýrsla) without an equality
  * report (jafnréttisáætlun) in force.
  *
- * The rule is the sector and nothing else, so a byggðasamlag is exempt
- * whenever its sector is SVEITARFELAG — and that is its normal sector, not an
- * edge case. `LEGAL_FORM_SECTOR` maps `byggdasamlag` to SVEITARFELAG on every
- * RSK path (admin create, subsidiary provisioning, `getOrCreateByNationalId`
- * on a company's first application or partner call), and m-20260915 moved
- * existing PUBLIC rows with a `bygg%` legal form there too. Only a row the
- * register sheet loaded as FYRIRTAEKI, or one an admin moves off SVEITARFELAG,
- * stays gated.
+ * The rule is the sector and nothing else. Byggðasamlög (Strætó bs., SORPA
+ * bs., …) are not exempt: they file on their own and are gated like any other
+ * employer. That holds because none of them is SVEITARFELAG — the register
+ * files them as FYRIRTAEKI, `LEGAL_FORM_SECTOR` maps an RSK `byggdasamlag` to
+ * FYRIRTAEKI, and m-20261016 moved the rows m-20260915 had put in
+ * SVEITARFELAG.
  *
  * Sveitarfélög are under a different rule from every other employer: their
  * salary report is not gated on the state of their equality report. Every

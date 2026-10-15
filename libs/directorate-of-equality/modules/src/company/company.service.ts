@@ -960,7 +960,9 @@ export class CompanyService implements ICompanyService {
    * waives the equality precondition on a salary filing
    * (`SALARY_EQUALITY_EXEMPT_SECTORS`), so a change into or out of it changes
    * what the company may file. Recording that crossing on the timeline is a
-   * known gap, left for a follow-up because the RSK refresh moves sector too.
+   * known gap, left for a follow-up: it needs a new event type, an enum
+   * migration and timeline rendering, and the register load also writes sector
+   * without going through here.
    */
   async updateSector(
     id: string,
