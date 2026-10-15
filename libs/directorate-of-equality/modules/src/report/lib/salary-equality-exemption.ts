@@ -15,7 +15,7 @@ import { CompanySectorEnum } from '../../company/models/company.enums'
  *
  * A group filing is judged on the submitting (parent) company alone, as it
  * always has been, so a municipality's subsidiaries in the filing — a municipal
- * ehf., say — are exempt along with it. The Directorate confirmed that intent.
+ * ehf., say — are exempt along with it. That is intended.
  *
  * This waives the *precondition* only. The equality obligation itself is
  * unchanged — the admin register still tags a municipality without a plan
