@@ -91,10 +91,10 @@ export class PdfRenderService implements IPdfRenderService {
 
       return Buffer.from(pdfBuffer)
     } catch (error) {
-      // The message predates the move out of ReportPdfService; kept verbatim
-      // for anything that alerts on it.
+      // The message and context predate the move out of ReportPdfService;
+      // both kept verbatim for anything that alerts on them.
       this.logger.warn('Failed to generate report PDF', {
-        context: LOGGING_CONTEXT,
+        context: 'ReportPdfService',
         error,
       })
       throw error

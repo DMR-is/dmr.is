@@ -667,8 +667,21 @@ when a report is deleted.
 
 **Re-driving a FAILED row.** A send is retried five times five minutes apart, so an outage
 longer than ~20 minutes (a bad credential shipped and fixed an hour later) leaves its notices
-`FAILED`. To send one again, put it back to the state it was born in — the CHECK constraints
-require the three columns together:
+`FAILED`. First check the report still says what the notice announces. The dispatcher does not
+look at `report.status`, so re-driving a `REPORT_APPROVED` row for a report superseded since would
+mail a stale approval, with its PDFs:
+
+```sql
+SELECT n.kind, r.status
+  FROM notice_outbox n JOIN report r ON r.id = n.report_id
+ WHERE n.id = '<notice id>';
+```
+
+Re-drive `REPORT_APPROVED` only while the status is `APPROVED`, and `REPORT_DENIED` only while it
+is `DENIED`. A `REPORT_SUBMITTED` receipt is still true after the report moves on. Then put the row
+back to the state it was born in. Only `status` and `processed_at` are tied together by a CHECK
+(`notice_outbox_processed_chk`); `attempts = 0` is what restores the five retries, and clearing
+`last_attempt_at` lets the next run pick the row up at once:
 
 ```sql
 UPDATE notice_outbox

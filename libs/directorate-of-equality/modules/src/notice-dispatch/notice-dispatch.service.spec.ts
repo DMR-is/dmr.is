@@ -561,6 +561,18 @@ describe('NoticeDispatchService', () => {
       expect(companyFileService.archive).not.toHaveBeenCalled()
     })
 
+    it('does not archive when the row was no longer PENDING', async () => {
+      // Another path (a hand re-drive, a second dispatcher) settled it first.
+      noticeOutboxModel.update.mockResolvedValue([0])
+
+      await expect(service.dispatchPending(lockTransaction)).resolves.toEqual({
+        picked: 1,
+        settled: 0,
+      })
+
+      expect(companyFileService.archive).not.toHaveBeenCalled()
+    })
+
     it('keeps the row DONE when archiving throws', async () => {
       companyFileService.archive.mockRejectedValue(new Error('s3 down'))
 
@@ -577,10 +589,11 @@ describe('NoticeDispatchService', () => {
 
     /*
      * ⚠️ Reads join the lock's transaction, so one failed query would abort it
-     * for everything after. Each row runs in a savepoint on it, and each render
-     * in a savepoint on the row's.
+     * for everything after. Each row runs in a savepoint on it, and so does
+     * each render: on the row's savepoint, Sequelize would number the render
+     * savepoints after the row's parent count and reuse earlier rows' names.
      */
-    it('runs the row, and each render, in its own savepoint', async () => {
+    it('runs the row, and each render, in its own savepoint on the lock', async () => {
       reportModel.findOne.mockResolvedValue(
         approvedReport({ type: ReportTypeEnum.SALARY }),
       )
@@ -590,11 +603,19 @@ describe('NoticeDispatchService', () => {
       const parents = sequelize.transaction.mock.calls.map(
         ([options]) => options.transaction,
       )
-      const rowSavepoint = { savepointOf: lockTransaction }
-      expect(parents).toEqual([lockTransaction, rowSavepoint, rowSavepoint])
+      expect(parents).toEqual([
+        lockTransaction,
+        lockTransaction,
+        lockTransaction,
+      ])
     })
 
-    it('still sends the plan when the report render fails on a DB error', async () => {
+    /*
+     * Mocks cannot model an aborted transaction; the savepoint test above is
+     * what guards that. This pins only that one render's failure costs only its
+     * own attachment.
+     */
+    it('still sends the plan when the report render fails', async () => {
       reportModel.findOne.mockResolvedValue(
         approvedReport({ type: ReportTypeEnum.SALARY }),
       )
