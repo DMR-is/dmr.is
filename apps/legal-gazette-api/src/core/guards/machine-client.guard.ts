@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext } from '@nestjs/common'
 
 import { getLogger } from '@dmr.is/logging'
 
-import { claimValues } from './token-surface/token-surface'
+import { claimValues } from './claim-values'
 
 const logger = getLogger('MachineClientGuard')
 

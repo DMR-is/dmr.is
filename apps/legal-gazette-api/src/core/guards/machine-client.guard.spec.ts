@@ -10,8 +10,19 @@ describe('MachineClientGuard', () => {
       switchToHttp: () => ({ getRequest: () => ({ user }) }),
     }) as unknown as ExecutionContext
 
-  afterEach(() => {
+  // Restored, not deleted, so a value another setup file pins survives
+  const original = process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES
+
+  beforeEach(() => {
     delete process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES
+  })
+
+  afterEach(() => {
+    if (original === undefined) {
+      delete process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES
+    } else {
+      process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES = original
+    }
   })
 
   it('allows a token carrying the configured scope', () => {
@@ -43,7 +54,6 @@ describe('MachineClientGuard', () => {
   })
 
   it('refuses everyone when the variable is unset or empty', () => {
-    delete process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES
     expect(guard.canActivate(contextFor({ scope: 'undefined' }))).toBe(false)
     process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES = ' '
     expect(guard.canActivate(contextFor({ scope: ' ' }))).toBe(false)

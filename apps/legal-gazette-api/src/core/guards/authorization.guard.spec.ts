@@ -12,15 +12,19 @@ import { IUsersService } from '../../modules/users/users.service.interface'
 import { UserContext } from '../context/user/user.context'
 import { ADMIN_KEY } from '../decorators/admin.decorator'
 import { SCOPES_KEY } from './scope-guards/scopes.decorator'
+import {
+  asStaffToken,
+  STAFF_CLIENT_ID,
+} from './token-surface/staff-token.fixture'
 import { AuthorizationGuard } from './authorization.guard'
 interface MockUser {
   nationalId?: string
   scope?: string
-  aud?: string | string[]
+  aud?: unknown
+  azp?: string
+  client_id?: string
   actor?: object
 }
-// Pinned in test-env.ts
-const STAFF_CLIENT_ID = process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
 describe('AuthorizationGuard', () => {
   let guard: AuthorizationGuard
   let reflector: Reflector
@@ -31,7 +35,7 @@ describe('AuthorizationGuard', () => {
     user: MockUser | null = null,
   ): ExecutionContext => {
     const mockRequest = {
-      user: user && !('aud' in user) ? { aud: STAFF_CLIENT_ID, ...user } : user,
+      user: user && asStaffToken(user),
     }
     return {
       switchToHttp: () => ({
@@ -607,7 +611,7 @@ describe('AuthorizationGuard', () => {
       adminOnly()
       const context = createMockContext({
         nationalId: '1234567890',
-        aud: ['@other.is/client', STAFF_CLIENT_ID as string],
+        aud: ['@other.is/client', STAFF_CLIENT_ID],
       })
       usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
       await expect(guard.canActivate(context)).resolves.toBe(true)
@@ -625,6 +629,62 @@ describe('AuthorizationGuard', () => {
       )
       expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
     })
+
+    it.each([
+      ['a number', 42],
+      ['an object', { client: STAFF_CLIENT_ID }],
+      ['an array of non-strings', [42, null]],
+    ])('should refuse an aud that is %s, without a lookup', async (_, aud) => {
+      adminOnly()
+      const context = createMockContext({ nationalId: '1234567890', aud })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      ['an extension', `${STAFF_CLIENT_ID}-other`],
+      ['a prefix', STAFF_CLIENT_ID.slice(0, -1)],
+      ['a different case', STAFF_CLIENT_ID.toUpperCase()],
+    ])('should refuse an aud that is %s of the client id', async (_, aud) => {
+      adminOnly()
+      const context = createMockContext({ nationalId: '1234567890', aud })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('should accept an azp and client_id that name legal-gazette-web', async () => {
+      adminOnly()
+      const context = createMockContext({
+        nationalId: '1234567890',
+        azp: STAFF_CLIENT_ID,
+        client_id: STAFF_CLIENT_ID,
+      })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).resolves.toBe(true)
+    })
+
+    it.each(['azp', 'client_id'])(
+      'should refuse a %s naming another client, even with a matching aud',
+      async (claim) => {
+        adminOnly()
+        const context = createMockContext({
+          nationalId: '1234567890',
+          aud: [STAFF_CLIENT_ID, '@other.is/client'],
+          [claim]: '@other.is/client',
+        })
+        usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+        await expect(guard.canActivate(context)).rejects.toThrow(
+          ForbiddenException,
+        )
+        expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+      },
+    )
 
     it('should refuse any actor claim that is present, even an empty one', async () => {
       adminOnly()
@@ -674,6 +734,40 @@ describe('AuthorizationGuard', () => {
           return ['@logbirtingablad.is/lg-application-web']
         return undefined
       })
+      const context = createMockContext({
+        nationalId: '1234567890',
+        aud: '@logbirtingablad.is/application-web',
+        scope: '@logbirtingablad.is/lg-application-web',
+      })
+      await expect(guard.canActivate(context)).resolves.toBe(true)
+    })
+
+    it('should refuse another client on a mixed route without the scope, without a lookup', async () => {
+      jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
+        if (key === ADMIN_KEY) return true
+        if (key === SCOPES_KEY)
+          return ['@logbirtingablad.is/lg-application-web']
+        return undefined
+      })
+      const context = createMockContext({
+        nationalId: '1234567890',
+        aud: '@logbirtingablad.is/application-web',
+        scope: '@other.is/scope',
+      })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('should leave scope-only routes working with LEGAL_GAZETTE_WEB_CLIENT_ID unset', async () => {
+      jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
+        if (key === SCOPES_KEY)
+          return ['@logbirtingablad.is/lg-application-web']
+        return undefined
+      })
+      delete process.env.LEGAL_GAZETTE_WEB_CLIENT_ID
       const context = createMockContext({
         nationalId: '1234567890',
         aud: '@logbirtingablad.is/application-web',

@@ -18,9 +18,9 @@ import { ADMIN_KEY } from '../decorators/admin.decorator'
 import { SCOPES_KEY } from './scope-guards/scopes.decorator'
 import {
   assertStaffToken,
-  claimValues,
   TokenSurfaceRefusedException,
 } from './token-surface/token-surface'
+import { claimValues } from './claim-values'
 
 const logger = getLogger('AuthorizationGuard')
 
@@ -45,8 +45,9 @@ const logger = getLogger('AuthorizationGuard')
  *
  * ## Admin check
  * The admin check first requires an id_token issued to legal-gazette-web
- * (`aud` = `LEGAL_GAZETTE_WEB_CLIENT_ID`) with no `actor`, so a token from
- * another IDS client or a delegated session never reaches the user lookup.
+ * (`aud` = `LEGAL_GAZETTE_WEB_CLIENT_ID`, and `azp` / `client_id` when present)
+ * with no `actor`, so a token from another IDS client or a delegated session
+ * never reaches the user lookup.
  * See `token-surface.ts`.
  *
  * ## Usage:
@@ -142,7 +143,10 @@ export class AuthorizationGuard implements CanActivate {
 
     // Check admin access (expensive database lookup)
     try {
-      const adminUser = await this.checkAdminAccess(user)
+      const adminUser = await this.checkAdminAccess(
+        user,
+        `${request.method} ${request.route?.path ?? request.url}`,
+      )
 
       request.user = {
         ...request.user,
@@ -223,13 +227,14 @@ export class AuthorizationGuard implements CanActivate {
    */
   private async checkAdminAccess(
     user: { nationalId?: string } | undefined,
+    route: string,
   ): Promise<UserDto> {
     if (!user?.nationalId) {
       logger.debug('Admin check skipped: No nationalId in request')
       throw new ForbiddenException('Admin access required')
     }
 
-    assertStaffToken(user)
+    assertStaffToken(user, route)
 
     try {
       const dbUser = await this.usersService.getUserByNationalId(

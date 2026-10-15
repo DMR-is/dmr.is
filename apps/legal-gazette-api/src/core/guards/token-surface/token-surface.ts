@@ -5,6 +5,8 @@ import {
 
 import { getLogger } from '@dmr.is/logging'
 
+import { claimValues } from '../claim-values'
+
 /**
  * Which IDS tokens the staff surface accepts.
  *
@@ -25,17 +27,9 @@ const STAFF_CLIENT_ID_VAR = 'LEGAL_GAZETTE_WEB_CLIENT_ID'
 
 type TokenClaims = {
   aud?: unknown
+  azp?: unknown
   client_id?: unknown
   actor?: unknown
-}
-
-// IDS emits a multi-valued claim as an array but a single value as a string.
-export const claimValues = (value: unknown): string[] => {
-  if (Array.isArray(value)) {
-    return value.filter((item): item is string => typeof item === 'string')
-  }
-
-  return typeof value === 'string' ? value.split(' ').filter(Boolean) : []
 }
 
 /**
@@ -49,12 +43,18 @@ export class TokenSurfaceRefusedException extends ForbiddenException {
   }
 }
 
-const refuse = (claims: TokenClaims, reason: string): never => {
-  // Claim names only, never the token. Neither value is a secret, and both
+const refuse = (
+  claims: TokenClaims,
+  reason: string,
+  route: string | undefined,
+): never => {
+  // Client claims only, never the token. None of them is a secret, and they
   // are what someone needs to see if a real client's token is shaped
   // differently than these rules expect.
   logger.warn(`Refused a token not issued for this surface: ${reason}`, {
+    route,
     aud: claims.aud,
+    azp: claims.azp,
     clientId: claims.client_id,
   })
 
@@ -69,7 +69,7 @@ const refuse = (claims: TokenClaims, reason: string): never => {
  * acted for and `actor` the one signed in, so accepting one would hand a staff
  * member's authority to anyone they delegated anything to.
  */
-export const assertStaffToken = (user: unknown): void => {
+export const assertStaffToken = (user: unknown, route?: string): void => {
   // Trimmed: a stray newline in the stored value would otherwise refuse
   // every staff member.
   const staffClientId = process.env[STAFF_CLIENT_ID_VAR]?.trim()
@@ -85,10 +85,19 @@ export const assertStaffToken = (user: unknown): void => {
   const claims = (user ?? {}) as TokenClaims
 
   if (!claimValues(claims.aud).includes(staffClientId)) {
-    refuse(claims, 'not issued to legal-gazette-web')
+    refuse(claims, 'not issued to legal-gazette-web', route)
+  }
+
+  // `aud` can list several clients; `azp` (id_token) and `client_id` (access
+  // token) name the one the token was issued to. Checked when present, so the
+  // binding does not rest on how IDS fills `aud`.
+  for (const claim of ['azp', 'client_id'] as const) {
+    if (claims[claim] !== undefined && claims[claim] !== staffClientId) {
+      refuse(claims, `${claim} is not legal-gazette-web`, route)
+    }
   }
 
   if (claims.actor) {
-    refuse(claims, 'delegated session on a staff route')
+    refuse(claims, 'delegated session on a staff route', route)
   }
 }
