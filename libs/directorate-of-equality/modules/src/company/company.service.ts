@@ -62,6 +62,7 @@ import { IsatSectionModel } from './models/isat-section.model'
 import { LegacyReportModel } from './models/legacy-report.model'
 import { buildCompanyListQuery } from './utils/filters'
 import { ResolvedSector, resolveSector } from './utils/legal-form-sector'
+import { isReportRequired } from './utils/report-status'
 import { mapRskLegalEntity } from './utils/rsk-company-mapping'
 import { leadingIsatDigits, leadingPostcode } from './utils/snapshot-codes'
 import { companyMessages } from './company.messages'
@@ -897,15 +898,12 @@ export class CompanyService implements ICompanyService {
       companyMessages.notFound(id),
     )
 
-    // Without a salary obligation, SMALL owes neither report and MEDIUM owes
-    // no salary report. The admin override brings both back. UNKNOWN passes.
-    const owesSalary =
-      company.salaryReportRequired || company.salaryReportRequiredOverride
-    const notOwedSizes =
-      dto.reportType === ReportTypeEnum.SALARY
-        ? [CompanySizeEnum.SMALL, CompanySizeEnum.MEDIUM]
-        : [CompanySizeEnum.SMALL]
-    if (!owesSalary && notOwedSizes.includes(company.employeeCountCategory)) {
+    // UNKNOWN passes: an unclassified size is an open question, not "owes
+    // nothing", even though the obligation rule reads it as not required.
+    if (
+      company.employeeCountCategory !== CompanySizeEnum.UNKNOWN &&
+      !isReportRequired(company, dto.reportType)
+    ) {
       throw new BadRequestException(
         companyMessages.reportNotOwed(id, dto.reportType),
       )

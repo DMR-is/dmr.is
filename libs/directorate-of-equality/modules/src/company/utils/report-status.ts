@@ -282,6 +282,28 @@ export const salaryRequiredSql = `("${COMPANY_QUERY_ALIAS}"."salary_report_requi
 export const equalityRequiredSql = `("${COMPANY_QUERY_ALIAS}"."employee_count_category" IN ('${CompanySizeEnum.MEDIUM}', '${CompanySizeEnum.LARGE}') OR ${salaryRequiredSql})`
 
 /**
+ * `salaryRequiredSql` / `equalityRequiredSql` for a company already in memory.
+ * Keep the three in step: a change to the rule belongs in all of them.
+ */
+export const isReportRequired = (
+  company: {
+    employeeCountCategory: CompanySizeEnum
+    salaryReportRequired: boolean
+    salaryReportRequiredOverride: boolean
+  },
+  reportType: ReportTypeEnum,
+): boolean => {
+  const salaryRequired =
+    company.salaryReportRequired || company.salaryReportRequiredOverride
+  if (reportType === ReportTypeEnum.SALARY) return salaryRequired
+  return (
+    company.employeeCountCategory === CompanySizeEnum.MEDIUM ||
+    company.employeeCountCategory === CompanySizeEnum.LARGE ||
+    salaryRequired
+  )
+}
+
+/**
  * SQL boolean: the company owes no report of any kind — "ekki lagaskylt".
  *
  * ⚠️ SMALL specifically, not `NOT equalityRequiredSql`, even though the two

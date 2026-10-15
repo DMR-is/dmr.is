@@ -101,15 +101,17 @@ export const CompanyDueDateField = ({ company, reportType }: Props) => {
 
   const editLabel = isSalary ? t.dueDateEditSalary : t.dueDateEditEquality
 
-  // Mirrors the API: without a salary obligation, SMALL owes neither report and
-  // MEDIUM owes no salary report. UNKNOWN stays editable.
+  // Mirrors `isReportRequired` in the API's report-status.ts. UNKNOWN stays
+  // editable: its size is an open question, not "owes nothing".
   const owesSalary =
     company.salaryReportRequired || company.salaryReportRequiredOverride
-  const notOwedSizes: CompanySizeEnum[] = isSalary
-    ? [CompanySizeEnum.SMALL, CompanySizeEnum.MEDIUM]
-    : [CompanySizeEnum.SMALL]
+  const reportRequired = isSalary
+    ? owesSalary
+    : company.employeeCountCategory === CompanySizeEnum.MEDIUM ||
+      company.employeeCountCategory === CompanySizeEnum.LARGE ||
+      owesSalary
   const reportNotOwed =
-    !owesSalary && notOwedSizes.includes(company.employeeCountCategory)
+    company.employeeCountCategory !== CompanySizeEnum.UNKNOWN && !reportRequired
 
   if (reportNotOwed) {
     return <Text>{companiesText.obligationNotRequired}</Text>

@@ -28,11 +28,19 @@ module.exports = {
       COMMENT ON COLUMN company_event.from_due_at IS 'Next-due date before a *_DUE_DATE_CHANGED event; null when the company had none, and on every other event.';
       COMMENT ON COLUMN company_event.to_due_at IS 'Next-due date after a *_DUE_DATE_CHANGED event; null on every other event.';
 
-      ALTER TABLE company_event
-        ADD CONSTRAINT company_event_due_date_changed_chk CHECK (
-          event_type NOT IN ('EQUALITY_REPORT_DUE_DATE_CHANGED', 'SALARY_REPORT_DUE_DATE_CHANGED')
-          OR to_due_at IS NOT NULL
-        );
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint
+          WHERE conname = 'company_event_due_date_changed_chk'
+        ) THEN
+          ALTER TABLE company_event
+            ADD CONSTRAINT company_event_due_date_changed_chk CHECK (
+              event_type NOT IN ('EQUALITY_REPORT_DUE_DATE_CHANGED', 'SALARY_REPORT_DUE_DATE_CHANGED')
+              OR to_due_at IS NOT NULL
+            );
+        END IF;
+      END $$;
 
       COMMIT;
     `)
