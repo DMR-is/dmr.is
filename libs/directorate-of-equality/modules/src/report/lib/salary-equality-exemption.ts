@@ -4,8 +4,11 @@ import { CompanySectorEnum } from '../../company/models/company.enums'
  * Sectors that may file a salary report (jafnlaunaskýrsla) without an equality
  * report (jafnréttisáætlun) in force.
  *
- * `SVEITARFELAG` covers sveitarfélög and byggðasamlög alike (see
- * `LEGAL_FORM_SECTOR`); both are exempt.
+ * The rule is the sector and nothing else. Byggðasamlög are not in scope: the
+ * Directorate's register files them as FYRIRTAEKI, so they stay gated. One
+ * would only become exempt by being set to SVEITARFELAG — by an admin, or via
+ * RSK's legal form (`LEGAL_FORM_SECTOR`) on first lookup. Exempting them on
+ * purpose is a separate, later decision.
  *
  * Sveitarfélög are under a different rule from every other employer: their
  * salary report is not gated on the state of their equality report. Every

@@ -435,11 +435,10 @@ Returns `{ eligible, reason, dueAt, earliestNewDueAt }`.
   unexpired legacy certificate. The two count equally.
 
 A company registered with the Directorate as a sveitarfélag (sector
-`SVEITARFELAG`, which also covers byggðasamlög) is exempt: it may file a salary
-report whatever the state of its equality report, and this route does not
-refuse it for that reason. A municipality whose sector the Directorate has not
-classified yet is still gated until it is — ask the Directorate if one is
-refused.
+`SVEITARFELAG`) is exempt: it may file a salary report whatever the state of
+its equality report, and this route does not refuse it for that reason. A
+municipality whose sector the Directorate has not classified yet is still gated
+until it is — ask the Directorate if one is refused.
 
 Cheaper than discovering it from a rejected submission after building the
 payload.
