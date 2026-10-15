@@ -1013,9 +1013,9 @@ export class ReportService implements IReportService {
    * project, and neither ever did. A LEGACY company was covered by a
    * certificate on the retired register, which mints no `report` row, so there
    * is nothing to load. An EXEMPT company is a sveitarfélag that filed with no
-   * plan in force, which its sector permits. The
-   * "missing link = data-integrity error" rule still holds for every other
-   * salary report, and keeping the two apart is the whole reason
+   * plan in force, which its sector permits. The "missing link =
+   * data-integrity error" rule still holds for every other salary report, and
+   * keeping the two apart is the whole reason
    * `equality_source` is a stored column rather than an inference from a null
    * FK — before it existed, the only two states were "linked" and "broken", and
    * a legitimate legacy filing would have read as the second and 500'd the

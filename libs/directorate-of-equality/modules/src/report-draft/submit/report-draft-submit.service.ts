@@ -119,9 +119,10 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
     // Read off the basis rather than inferred from `!equalityReportId`, so
     // the basis and the date below come from one fact — see the CHECK in
     // m-20260916, which constrains the three columns together and would reject
-    // any row where the two derivations drifted. Coverage is only resolved for
-    // a salary report that named none, so an equality draft and a caller-named
-    // report both fall to REPORT, which is what each of them is.
+    // any row where the two derivations drifted. The basis — coverage, or
+    // EXEMPT — is only resolved for a salary report that named no report, so
+    // an equality draft and a caller-named report both fall to REPORT, which
+    // is what each of them is.
     const equalitySource = basis?.source ?? EqualityCoverageSourceEnum.REPORT
 
     const equalityLegacyValidUntil =

@@ -15,6 +15,11 @@ import type { EqualityCoverage } from '../types/equality-coverage'
  * (`GET reports/equality/active`, and the plan a salary report links). Kept
  * under the `EqualityCoverageSourceEnum` schema name so the island.is and
  * partner contracts see exactly the two values they can receive.
+ *
+ * ⚠️ The TS and schema names are crossed: the 3-value TS enum publishes as
+ * `ReportEqualitySourceEnum`. Never pass the TS enum itself with
+ * `enumName: 'EqualityCoverageSourceEnum'` — Nest keeps one schema per name
+ * without complaint, and EXEMPT would land in the public documents.
  */
 const EQUALITY_COVERAGE_SOURCES = {
   REPORT: EqualityCoverageSourceEnum.REPORT,

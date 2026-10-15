@@ -215,7 +215,8 @@ export class ReportCreateService implements IReportCreateService {
     //     may file a salary report regardless.
     // Read off the basis, NOT inferred from `!equalityReportId` — with two
     // meanings for a null FK there is no inference left to make, which is the
-    // reading `EqualityCoverage` documents as the thing not to do.
+    // reading `EqualityCoverage` warns against and `SalaryFilingBasis`, its
+    // superset, inherits.
     // Null basis means the caller named a report, which is REPORT by
     // definition.
     const equalitySource = basis?.source ?? EqualityCoverageSourceEnum.REPORT

@@ -95,9 +95,10 @@ export enum ReportProviderEnum {
 }
 
 /**
- * What met a company's equality obligation — the discriminator on
- * `report.equality_source`, and on `EqualityReportSummaryDto.source` one route
- * earlier.
+ * What a salary report was filed against — the discriminator on
+ * `report.equality_source`, published as the `ReportEqualitySourceEnum` schema.
+ * `EqualityReportSummaryDto.source` takes only REPORT and LEGACY, under the
+ * `EqualityCoverageSourceEnum` schema name — see that DTO.
  *
  *   REPORT  an APPROVED, in-force EQUALITY report filed in this system. The
  *           salary row links it via `equality_report_id`.
