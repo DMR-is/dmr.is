@@ -164,6 +164,18 @@ export class OneSystemsService implements IOneSystemsService {
     const { itemId } = await this.callAction(operation, (common) =>
       postApiActionsSendDocToIslandIs({ ...common, body }),
     )
+    // `DocumentId` is the document's own `ItemId`, so it should name the
+    // document just sent. One's ids, not personal data.
+    if (itemId !== null && itemId !== body.ItemID) {
+      this.logger.warn(
+        `OneSystems ${operation} answered with a DocumentId other than the ItemID sent`,
+        {
+          ...this.meta(operation),
+          sentItemId: body.ItemID,
+          returnedDocumentId: itemId,
+        },
+      )
+    }
     return { islandIsDocumentId: itemId }
   }
 
@@ -339,12 +351,32 @@ export class OneSystemsService implements IOneSystemsService {
     if (operation === 'SendDocToIslandIs') {
       // One answers SendDocToIslandIs with `DocumentId` (the document's
       // `ItemId`), not the spec's `ItemID` (OneSystems, 9 Oct 2026). One said
-      // the send succeeded, so it counts as sent even without the id.
-      const documentId = nonEmptyString(body.DocumentId)
+      // the send succeeded, so it counts as sent even without the id. Its own
+      // message spells the spec's `ItemID` as "ItemId", so the casing of
+      // `DocumentId` is not settled either: both spellings are read.
+      const documentId =
+        nonEmptyString(body.DocumentId) ?? nonEmptyString(body.DocumentID)
       if (!documentId) {
         this.logger.warn(
           `OneSystems ${operation} reported success without a DocumentId, treating it as sent`,
-          { ...this.meta(operation), status: response.status },
+          {
+            ...this.meta(operation),
+            status: response.status,
+            errorsShape: shapeOf(body.Errors),
+          },
+        )
+      }
+      // TODO(OneSystems): whether a repeated send ("Færsla þegar skráð.")
+      // answers `Success: true` with `Errors` is unconfirmed. Kept visible
+      // until it is: the shape only, since `Errors` may echo the recipient.
+      if (errorsText(body.Errors) !== null) {
+        this.logger.warn(
+          `OneSystems ${operation} reported success with Errors, treating it as sent`,
+          {
+            ...this.meta(operation),
+            status: response.status,
+            errorsShape: shapeOf(body.Errors),
+          },
         )
       }
       return { itemId: documentId, body }

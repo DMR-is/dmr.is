@@ -212,6 +212,16 @@ function createStore() {
         return row ? { ...row } : null
       },
     ),
+    findAll: jest.fn(
+      async (options: {
+        where: Record<string | symbol, unknown>
+        limit?: number
+      }) =>
+        [...rows.values()]
+          .filter((r) => matches(r, options.where))
+          .slice(0, options.limit)
+          .map((r) => ({ ...r })),
+    ),
     update: jest.fn(
       async (
         values: Record<string, unknown>,
@@ -400,6 +410,136 @@ describe('MailboxDeliveryService', () => {
     })
   })
 
+  describe('quarantine', () => {
+    it('delivers nothing to a quarantined company, and writes no row', async () => {
+      companies.findOne.mockResolvedValue({ ...COMPANY, quarantined: true })
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'QUARANTINED',
+      })
+
+      expect(companies.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({
+          attributes: expect.arrayContaining(['quarantined']),
+        }),
+      )
+      expect(store.model.bulkCreate).not.toHaveBeenCalled()
+      expect(store.rows.size).toBe(0)
+      expect(pdf).not.toHaveBeenCalled()
+      expect(oneCalls()).toBe(0)
+    })
+
+    it('leaves a delivery already under way where it stopped', async () => {
+      store.seed({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        oneCaseItemId: 'case-1',
+        oneDocumentItemId: 'doc-1',
+        attempts: 1,
+      })
+      companies.findOne.mockResolvedValue({ ...COMPANY, quarantined: true })
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'QUARANTINED',
+      })
+
+      expect(onlyRow()).toEqual(
+        expect.objectContaining({
+          status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+          attempts: 1,
+        }),
+      )
+      expect(oneCalls()).toBe(0)
+    })
+  })
+
+  describe('findDelivery', () => {
+    it('is null for a key with no row', async () => {
+      await expect(service.findDelivery(KEY)).resolves.toBeNull()
+    })
+
+    it('says how far the delivery got, with the flag off too', async () => {
+      delete process.env.ONESYSTEMS_ENABLED
+      const row = store.seed({
+        status: MailboxDeliveryStatusEnum.FAILED,
+        oneCaseItemId: 'case-1',
+        oneDocumentItemId: 'doc-1',
+      })
+
+      await expect(service.findDelivery(KEY)).resolves.toEqual({
+        deliveryId: row.id,
+        status: MailboxDeliveryStatusEnum.FAILED,
+        documentFiled: true,
+        sent: false,
+      })
+      expect(store.model.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({ transaction: null }),
+      )
+    })
+  })
+
+  describe('findStuckDeliveries', () => {
+    it('lists UNCERTAIN, interrupted and exhausted rows, and nothing that can still move', async () => {
+      const lapsed = new Date(Date.now() - MINUTE)
+      const live = new Date(Date.now() + MINUTE)
+      const uncertain = store.seed({
+        idempotencyKey: keyFor('A'),
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+      })
+      const interrupted = store.seed({
+        idempotencyKey: keyFor('B'),
+        status: MailboxDeliveryStatusEnum.CASE_CREATED,
+        inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+        leaseToken: 'gone',
+        leaseExpiresAt: lapsed,
+      })
+      const exhausted = store.seed({
+        idempotencyKey: keyFor('C'),
+        status: MailboxDeliveryStatusEnum.FAILED,
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+      })
+      // Still moving: a live call, a row with attempts left, a last attempt
+      // still holding its lease, and a sent row.
+      store.seed({
+        idempotencyKey: keyFor('D'),
+        status: MailboxDeliveryStatusEnum.CASE_CREATED,
+        inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+        leaseToken: 'live',
+        leaseExpiresAt: live,
+      })
+      store.seed({
+        idempotencyKey: keyFor('E'),
+        status: MailboxDeliveryStatusEnum.FAILED,
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS - 1,
+      })
+      store.seed({
+        idempotencyKey: keyFor('F'),
+        status: MailboxDeliveryStatusEnum.FAILED,
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        leaseToken: 'live',
+        leaseExpiresAt: live,
+      })
+      store.seed({
+        idempotencyKey: keyFor('G'),
+        status: MailboxDeliveryStatusEnum.SENT,
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        sentAt: lapsed,
+      })
+
+      const stuck = await service.findStuckDeliveries(50)
+
+      expect(
+        stuck.map(({ deliveryId, reason }) => ({ deliveryId, reason })),
+      ).toEqual([
+        { deliveryId: uncertain.id, reason: 'UNCERTAIN' },
+        { deliveryId: interrupted.id, reason: 'INTERRUPTED' },
+        { deliveryId: exhausted.id, reason: 'ATTEMPTS_EXHAUSTED' },
+      ])
+      expect(store.model.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({ limit: 50, transaction: null }),
+      )
+    })
+  })
+
   describe('kind config', () => {
     it('throws before any row or call for a real kind without a case template', async () => {
       service = build(MAILBOX_DELIVERY_KINDS)
@@ -443,32 +583,40 @@ describe('MailboxDeliveryService', () => {
       })
     })
 
-    it.each([
-      [MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED, 'SKYRSLA'],
-      [MailboxDeliveryKindEnum.SALARY_REPORT_APPROVED, 'SKYRSLA'],
-      [MailboxDeliveryKindEnum.SALARY_REPORT_DENIED, 'SKYRSLA'],
-      [MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER, 'SKYRSLA'],
-      [MailboxDeliveryKindEnum.EQUALITY_REPORT_SUBMITTED, 'J-AAETLUN'],
-      [MailboxDeliveryKindEnum.EQUALITY_REPORT_APPROVED, 'J-AAETLUN'],
-      [MailboxDeliveryKindEnum.EQUALITY_REPORT_DENIED, 'J-AAETLUN'],
-      [MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER, 'J-AAETLUN'],
-    ])('%s files under %s, unclassified', (kind, caseType) => {
-      expect(resolveKindConfig(kind)).toEqual({
-        caseType,
-        docCategory: '',
-        docType: '',
-        author: '',
-        islandIsCategory: '',
-        islandIsType: '',
-      })
-    })
+    /*
+     * ⚠️ Pins the guard: no case type is confirmed, and a guessed one files
+     * real mail under the wrong case (which find-or-create then reuses). When
+     * one is confirmed, this is the test to change, on purpose.
+     */
+    it.each(Object.values(MailboxDeliveryKindEnum))(
+      '%s has no confirmed case template, so it cannot reach One',
+      (kind) => {
+        expect(() => resolveKindConfig(kind)).toThrow(/missing caseType/)
+      },
+    )
 
     it.each([
-      MailboxDeliveryKindEnum.OVERDUE_NOTICE,
-      MailboxDeliveryKindEnum.FINES_PRECURSOR,
-    ])('%s has no case template yet', (kind) => {
-      expect(() => resolveKindConfig(kind)).toThrow(/missing caseType/)
-    })
+      MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+      MailboxDeliveryKindEnum.EQUALITY_REPORT_APPROVED,
+      MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+      MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+    ])(
+      'refuses a real %s delivery before any row, render or call',
+      async (kind) => {
+        service = build(MAILBOX_DELIVERY_KINDS)
+
+        await expect(
+          service.deliverToMailbox(
+            input({ kind, idempotencyKey: keyFor('REPORT-1', kind) }),
+          ),
+        ).rejects.toThrow(/missing caseType/)
+
+        expect(companies.findOne).not.toHaveBeenCalled()
+        expect(store.rows.size).toBe(0)
+        expect(pdf).not.toHaveBeenCalled()
+        expect(oneCalls()).toBe(0)
+      },
+    )
 
     it('returns a complete config', () => {
       expect(

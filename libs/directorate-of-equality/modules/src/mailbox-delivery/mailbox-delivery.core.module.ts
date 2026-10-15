@@ -14,7 +14,8 @@ import { IMailboxDeliveryService } from './mailbox-delivery.service.interface'
 
 /**
  * Binds `IMailboxDeliveryService`. Talks to OneSystems, so only doe-api
- * imports it (through `NoticeDispatchCoreModule`).
+ * imports it: through `NoticeDispatchCoreModule`, and directly in its
+ * `TasksModule` for the deadline reminders and the stuck-delivery alert.
  */
 @Module({
   imports: [

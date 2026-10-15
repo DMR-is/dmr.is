@@ -36,12 +36,21 @@ Login -> CreateCase -> CreateDocument -> SendDocToIslandIs (-> CloseCase)
 
 `SendDocToIslandIs` does not answer with the spec's `GeneralResponse`. It
 returns `{ Kennitala, DocumentId, Success, Errors }`, where `DocumentId` is the
-document's `ItemId` (OneSystems, 9 Oct 2026). `sendDocToIslandIs` returns
-`DocumentId` as `islandIsDocumentId`. `Success: true` without one still counts
-as sent: it resolves with `islandIsDocumentId: null` and logs a warning. On a
-failure, `Errors` becomes the error's `errorMessage`. The body carries the
-recipient's kennitala, so it is never logged or stored. Every other action
-requires an `ItemID`.
+document's `ItemId` in One (OneSystems, 9 Oct 2026), not an id island.is
+assigns. `sendDocToIslandIs` returns it as `islandIsDocumentId`, reading
+`DocumentID` too, since One's casing of ids is not consistent, and warns when
+it differs from the `ItemID` sent. `Success: true` without one still counts
+as sent: it resolves with `islandIsDocumentId: null` and logs a warning.
+`Success: true` with a non-empty `Errors` also counts as sent and logs a
+warning with `Errors`' JSON type only (whether a repeated send answers that
+way is still open). On a failure, `Errors` becomes the error's
+`errorMessage`.
+
+The body carries the recipient's kennitala, so the body itself is never logged
+or stored. The error's `errorMessage` is One's own `ErrorMessage` or the
+flattened `Errors`, which may echo it: it is never logged, but a caller may
+store it (`mailbox_delivery.last_error` does, cut to 500 characters, and must
+never show it unfiltered). Every other action requires an `ItemID`.
 
 `closeCase` takes the case `ItemID` (`caseItemId`), not the `CaseNumber`
 (OneSystems, 29 Sep 2026).

@@ -734,6 +734,53 @@ describe('OneSystemsService', () => {
       },
     )
 
+    // One's own message spells the spec's `ItemID` as "ItemId", so the
+    // casing of `DocumentId` is not settled either.
+    it('sendDocToIslandIs reads DocumentID too', async () => {
+      actionReplies = [
+        () => sendDocResponse({ DocumentId: undefined, DocumentID: 'doc-1' }),
+      ]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'doc-1',
+      })
+      expect(logger.warn).not.toHaveBeenCalled()
+    })
+
+    it('sendDocToIslandIs warns when DocumentId names another document', async () => {
+      actionReplies = [() => sendDocResponse({ DocumentId: 'doc-9' })]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'doc-9',
+      })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('DocumentId other than the ItemID sent'),
+        expect.objectContaining({
+          sentItemId: 'doc-1',
+          returnedDocumentId: 'doc-9',
+        }),
+      )
+    })
+
+    // Whether a repeated send answers this way is still open, so it is kept
+    // visible: the JSON type only, never the text.
+    it('sendDocToIslandIs: Success:true with Errors is sent, with a warning naming only their shape', async () => {
+      actionReplies = [
+        () => sendDocResponse({ Errors: ['Færsla þegar skráð.'] }),
+      ]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'doc-1',
+      })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('reported success with Errors'),
+        expect.objectContaining({ errorsShape: 'array' }),
+      )
+      expect(JSON.stringify(logger.warn.mock.calls)).not.toContain(
+        'Færsla þegar skráð',
+      )
+    })
+
     it.each([
       ['an empty DocumentId', { DocumentId: '' }],
       ['a null DocumentId', { DocumentId: null }],

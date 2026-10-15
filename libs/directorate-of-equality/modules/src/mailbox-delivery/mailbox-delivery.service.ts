@@ -42,7 +42,9 @@ import {
   DeliverToMailboxResult,
   IMailboxDeliveryService,
   isMailboxDeliveryEnabled,
+  type MailboxDeliveryState,
   type MailboxDeliveryUnsettledStatus,
+  type StuckMailboxDelivery,
 } from './mailbox-delivery.service.interface'
 
 const LOGGING_CONTEXT = 'MailboxDeliveryService'
@@ -146,7 +148,10 @@ type StepResult =
   | { oneDocumentItemId: string }
   | { islandIsDocumentId: string | null; sentAt: Date }
 
-type DeliveryCompany = Pick<CompanyModel, 'id' | 'name' | 'nationalId'>
+type DeliveryCompany = Pick<
+  CompanyModel,
+  'id' | 'name' | 'nationalId' | 'quarantined'
+>
 
 /**
  * Delivers notices to island.is mailboxes through One, resumably.
@@ -213,7 +218,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     const companyId = input.companyId.toLowerCase()
     const company = await this.companyModel.findOne({
       where: { id: companyId },
-      attributes: ['id', 'name', 'nationalId'],
+      attributes: ['id', 'name', 'nationalId', 'quarantined'],
       transaction: null,
     })
     if (!company) {
@@ -222,6 +227,18 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
 
     // Again against the id the DB handed back, which is the one stored.
     assertCanonicalKey(input, company.id)
+
+    // Quarantine halts every outbound touchpoint (`CompanyService
+    // .updateQuarantine`). Checked before the row, so nothing is written for a
+    // company nobody may contact; a delivery already under way stops where it
+    // is and resumes by its key once the quarantine is lifted.
+    if (company.quarantined) {
+      this.logger.warn(
+        `Not delivering ${input.kind} to company ${company.id}: it is quarantined`,
+        { context: LOGGING_CONTEXT, companyId: company.id, kind: input.kind },
+      )
+      return { status: 'QUARANTINED' }
+    }
 
     const row = await this.findOrInsert(input, company)
 
@@ -269,6 +286,71 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     }
 
     return this.run(claimed, leaseToken, input, company, config)
+  }
+
+  async findDelivery(
+    idempotencyKey: string,
+  ): Promise<MailboxDeliveryState | null> {
+    const row = await this.deliveryModel.findOne({
+      where: { idempotencyKey },
+      attributes: ['id', 'status', 'oneDocumentItemId', 'sentAt'],
+      transaction: null,
+    })
+    if (!row) {
+      return null
+    }
+    return {
+      deliveryId: row.id,
+      status: row.status,
+      documentFiled: Boolean(row.oneDocumentItemId),
+      sent: Boolean(row.sentAt),
+    }
+  }
+
+  async findStuckDeliveries(limit: number): Promise<StuckMailboxDelivery[]> {
+    const rows = await this.deliveryModel.findAll({
+      where: {
+        status: { [Op.ne]: MailboxDeliveryStatusEnum.SENT },
+        [Op.or]: [
+          { status: MailboxDeliveryStatusEnum.UNCERTAIN },
+          { inFlightStep: { [Op.ne]: null }, [Op.or]: LEASE_FREE },
+          // The same test as `findExhausted`: a row whose last attempt still
+          // holds its lease is not stuck yet.
+          {
+            status: { [Op.notIn]: SETTLED_STATUSES },
+            attempts: { [Op.gte]: MAILBOX_DELIVERY_MAX_ATTEMPTS },
+            inFlightStep: null,
+            [Op.or]: LEASE_FREE,
+          },
+        ],
+      },
+      attributes: [
+        'id',
+        'kind',
+        'companyId',
+        'status',
+        'attempts',
+        'inFlightStep',
+        'lastAttemptAt',
+      ],
+      order: [['lastAttemptAt', 'ASC']],
+      limit,
+      transaction: null,
+    })
+
+    return rows.map((row) => ({
+      deliveryId: row.id,
+      kind: row.kind,
+      companyId: row.companyId,
+      reason:
+        row.status === MailboxDeliveryStatusEnum.UNCERTAIN
+          ? 'UNCERTAIN'
+          : row.inFlightStep
+            ? 'INTERRUPTED'
+            : 'ATTEMPTS_EXHAUSTED',
+      attempts: row.attempts,
+      lastAttemptAt: row.lastAttemptAt,
+    }))
   }
 
   /**

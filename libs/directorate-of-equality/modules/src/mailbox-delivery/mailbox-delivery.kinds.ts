@@ -46,13 +46,20 @@ export const MAILBOX_DELIVERY_KIND_CONFIGS = Symbol(
 )
 
 /**
- * The case template of each report type.
+ * The case template of each report type: `undefined` until confirmed, so
+ * `resolveKindConfig` throws for every report kind and nothing reaches One.
  *
- * TODO(Jafnréttisstofa): Úlfhildur to confirm `SKYRSLA` for salary reports and
- * `J-AAETLUN` for equality reports.
+ * ⚠️ Deliberate. A wrong `CaseType` files real mail under the wrong case, and
+ * CreateCase finds-or-creates by `IDNumber` + `CaseType`, so the wrong case is
+ * then reused by every later notice to that company. There is no documented
+ * test environment to find out in.
+ *
+ * TODO(Jafnréttisstofa): the proposed keys are `SKYRSLA` for salary reports
+ * and `J-AAETLUN` for equality reports. Set each here, with who confirmed it
+ * and when, once Jafnréttisstofa's case-system administrator confirms it.
  */
-const SALARY_CASE_TYPE = 'SKYRSLA'
-const EQUALITY_CASE_TYPE = 'J-AAETLUN'
+const SALARY_CASE_TYPE: string | undefined = undefined
+const EQUALITY_CASE_TYPE: string | undefined = undefined
 
 /** No classification: One and island.is accept empty strings. */
 const UNCLASSIFIED = {
@@ -69,9 +76,10 @@ const equality = { caseType: EQUALITY_CASE_TYPE, ...UNCLASSIFIED }
 /**
  * The classification of each notice kind.
  *
- * `OVERDUE_NOTICE` and `FINES_PRECURSOR` have no case template, so
- * `resolveKindConfig` throws for them and they cannot reach One. Whether those
- * notices go to the mailbox at all is still open.
+ * No kind has a confirmed case template yet (see `SALARY_CASE_TYPE`), so
+ * `resolveKindConfig` throws for every one and none can reach One.
+ * `OVERDUE_NOTICE` and `FINES_PRECURSOR` have no template at all: whether
+ * those notices go to the mailbox is still open.
  */
 export const MAILBOX_DELIVERY_KINDS: MailboxDeliveryKindConfigs = {
   [MailboxDeliveryKindEnum.OVERDUE_NOTICE]: {},

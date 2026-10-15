@@ -523,7 +523,15 @@ describe('ReportDeadlineReminderService', () => {
 
     it('skips a company already reminded for that tier and due date', async () => {
       returnCompanyAtCall(CALL.equalitySixMonths, company())
-      hasDeadlineReminderEvent.mockResolvedValue(true)
+      // Only the exact (company, SENT type, tier, due date) counts as sent.
+      hasDeadlineReminderEvent.mockImplementation(
+        async (companyId, eventType, tier, dueDateIso) =>
+          companyId === COMPANY_ID &&
+          eventType ===
+            CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT &&
+          tier === CompanyReminderTierEnum.SIX_MONTHS &&
+          dueDateIso === EQUALITY_DUE.toISOString(),
+      )
 
       await service.run()
 
@@ -531,17 +539,97 @@ describe('ReportDeadlineReminderService', () => {
     })
 
     it.each([
-      [{ status: 'UNCERTAIN', deliveryId: 'delivery-7' }],
-      [{ status: 'IN_PROGRESS', deliveryId: 'delivery-7' }],
       [
-        {
-          status: 'FAILED',
-          deliveryId: 'delivery-7',
-          attempts: 5,
-          skipped: 'ATTEMPTS_EXHAUSTED',
-        },
+        ReportTypeEnum.EQUALITY,
+        CALL.equalitySixMonths,
+        MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+        CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+        EQUALITY_DUE,
       ],
-    ])('records no SENT event when the delivery answers %o', async (result) => {
+      [
+        ReportTypeEnum.SALARY,
+        CALL.salarySixMonths,
+        MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
+        CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT,
+        SALARY_DUE,
+      ],
+    ])(
+      'files a %s reminder as its own mailbox kind and event type',
+      async (_type, call, mailboxKind, sentEventType, due) => {
+        returnCompanyAtCall(call, company())
+
+        await service.run()
+
+        expect(deliverToMailbox.mock.calls[0][0].kind).toBe(mailboxKind)
+        expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+          COMPANY_ID,
+          CompanyStatusEnum.ACTIVE,
+          sentEventType,
+          CompanyReminderTierEnum.SIX_MONTHS,
+          due.toISOString(),
+        )
+      },
+    )
+
+    const exhausted = {
+      status: 'FAILED',
+      deliveryId: 'delivery-7',
+      attempts: 5,
+      skipped: 'ATTEMPTS_EXHAUSTED',
+    }
+
+    // No later run finishes these on its own, so the gap goes on the timeline.
+    it.each([
+      ['UNCERTAIN', { status: 'UNCERTAIN', deliveryId: 'delivery-7' }],
+      ['out of attempts', exhausted],
+    ])(
+      'records an UNDELIVERED event, not SENT, when the delivery is %s',
+      async (_label, result) => {
+        returnCompanyAtCall(CALL.salarySixMonths, company())
+        deliverToMailbox.mockResolvedValue(result)
+
+        await service.run()
+
+        expect(hasDeadlineReminderEvent).toHaveBeenCalledWith(
+          COMPANY_ID,
+          CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+          CompanyReminderTierEnum.SIX_MONTHS,
+          SALARY_DUE.toISOString(),
+        )
+        expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+        expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+          COMPANY_ID,
+          CompanyStatusEnum.ACTIVE,
+          CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+          CompanyReminderTierEnum.SIX_MONTHS,
+          SALARY_DUE.toISOString(),
+        )
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining(result.status),
+          expect.objectContaining({ deliveryId: 'delivery-7' }),
+        )
+      },
+    )
+
+    it('records the UNDELIVERED event once per tier and due date, not every run', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValue(exhausted)
+      hasDeadlineReminderEvent.mockImplementation(
+        async (_companyId, eventType) =>
+          eventType ===
+          CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+      )
+
+      await service.run()
+
+      expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      [{ status: 'IN_PROGRESS', deliveryId: 'delivery-7' }],
+      [{ status: 'QUARANTINED' }],
+      [{ status: 'DISABLED' }],
+    ])('records no event when the delivery answers %o', async (result) => {
       returnCompanyAtCall(CALL.equalitySixMonths, company())
       deliverToMailbox.mockResolvedValue(result)
 
@@ -550,7 +638,20 @@ describe('ReportDeadlineReminderService', () => {
       expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(result.status),
-        expect.objectContaining({ deliveryId: 'delivery-7' }),
+        expect.anything(),
+      )
+    })
+
+    it('names the render a letter, for the failure log', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+
+      await service.run()
+      await deliverToMailbox.mock.calls[0][0].pdf()
+
+      expect(renderHtml).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        'letter',
       )
     })
 

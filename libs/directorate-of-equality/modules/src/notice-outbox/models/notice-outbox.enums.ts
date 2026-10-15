@@ -10,7 +10,10 @@ export enum NoticeOutboxStatusEnum {
   PENDING = 'PENDING',
   /** Sent through `channel`. */
   DONE = 'DONE',
-  /** Nothing to send for this kind on this channel (a receipt with mailbox delivery off). */
+  /**
+   * Not written any more. A receipt with mailbox delivery off used to settle
+   * here; it now waits PENDING for the flag. Kept for rows written before.
+   */
   SKIPPED = 'SKIPPED',
   /** Gave up: no recipient, the report is gone, or every attempt failed. */
   FAILED = 'FAILED',
