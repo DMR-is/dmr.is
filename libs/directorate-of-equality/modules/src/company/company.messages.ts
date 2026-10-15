@@ -1,3 +1,4 @@
+import { REPORT_VALIDITY_YEARS } from '../constants'
 import { ReportTypeEnum } from '../report/models/report.enums'
 
 /**
@@ -83,6 +84,10 @@ export const companyMessages = {
       reportType === ReportTypeEnum.SALARY
         ? 'Fyrirtækinu ber ekki að skila skýrslu'
         : 'Fyrirtækinu ber ekki að skila jafnréttisáætlun',
+  }),
+  dueDateTooFar: (value: string, latest: string): ErrorMessage => ({
+    message: `dueDate "${value}" is after the latest allowed day "${latest}"`,
+    translatedMessage: `Skiladagur má ekki vera meira en ${REPORT_VALIDITY_YEARS} ár fram í tímann`,
   }),
   dueDateInPast: (value: string): ErrorMessage => ({
     message: `dueDate "${value}" is in the past`,

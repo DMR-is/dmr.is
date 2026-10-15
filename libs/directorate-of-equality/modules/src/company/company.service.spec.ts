@@ -1381,6 +1381,35 @@ describe('CompanyService', () => {
       })
     })
 
+    it('allows a day exactly REPORT_VALIDITY_YEARS from today', async () => {
+      const update = stubCompany({})
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2029-10-14' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextEqualityReportDueAt: new Date('2029-10-14T23:59:59.999Z'),
+      })
+    })
+
+    it('rejects a day past REPORT_VALIDITY_YEARS from today', async () => {
+      const update = stubCompany({})
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.EQUALITY, dueDate: '2029-10-15' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
     it('rejects a day that does not exist instead of rolling it over', async () => {
       const update = stubCompany({})
 

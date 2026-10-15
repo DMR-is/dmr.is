@@ -45,12 +45,13 @@ const toIsoDate = (date: Date): string => {
 
 /**
  * Inline-editable next-due date for one report kind, following
- * `CompanyEmailField`. Never clearable. Without a salary obligation, reads "Á
- * ekki við" instead of an editor for both dates on SMALL and the salary date on
- * MEDIUM. Never moves backwards or into the past: the
- * earliest pickable day is the later of the current due date and today (the API
- * enforces the same). The change and its optional reason land on the company timeline, and
- * the next approval overwrites the date again.
+ * `CompanyEmailField`. Never clearable. Reads "Á ekki við" instead of an editor
+ * where the report is not owed (see `isReportRequired` in the API).
+ *
+ * Pickable days run from the later of the current due date and today, to
+ * `REPORT_VALIDITY_YEARS` (3) years from today (the API enforces the same). The
+ * change and its optional reason land on the company timeline, and the next
+ * approval overwrites the date again.
  */
 export const CompanyDueDateField = ({ company, reportType }: Props) => {
   const trpc = useTRPC()
@@ -146,6 +147,9 @@ export const CompanyDueDateField = ({ company, reportType }: Props) => {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   // An overdue date is earlier than today; never offer a day that is still past.
   const minDate = currentDay && currentDay > today ? currentDay : today
+  // The API's REPORT_VALIDITY_YEARS cap: no further out than an approval today.
+  const maxDate = new Date(today)
+  maxDate.setFullYear(maxDate.getFullYear() + 3)
 
   const nextDueDate = value ? toIsoDate(value) : null
   const isUnchanged =
@@ -163,6 +167,7 @@ export const CompanyDueDateField = ({ company, reportType }: Props) => {
         size="xs"
         icon={{ name: 'calendar', type: 'outline' }}
         minDate={minDate}
+        maxDate={maxDate}
         selected={value}
         handleChange={(date) => setValue(date ?? null)}
       />

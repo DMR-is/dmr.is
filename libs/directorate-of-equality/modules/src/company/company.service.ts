@@ -24,6 +24,7 @@ import {
 
 import { ICompanyCommentService } from '../company-comment/company-comment.service.interface'
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
+import { REPORT_VALIDITY_YEARS } from '../constants'
 import { PostcodeModel } from '../location/models/postcode.model'
 import { endOfUtcDay } from '../report/lib/day-boundaries'
 import { ReportTypeEnum } from '../report/models/report.enums'
@@ -884,6 +885,8 @@ export class CompanyService implements ICompanyService {
    * Never moves backwards, and never into the past: the new day may be neither
    * before the current due date nor before today. A past day would put the
    * company straight into the reminder task's DUE band and leave it overdue.
+   * Capped at `REPORT_VALIDITY_YEARS` from today, the date an approval made
+   * today would set.
    */
   async updateDueDate(
     id: string,
@@ -941,9 +944,20 @@ export class CompanyService implements ICompanyService {
       )
     }
 
-    const today = new Date().toISOString().slice(0, 10)
+    const now = new Date()
+    const today = now.toISOString().slice(0, 10)
     if (dto.dueDate < today) {
       throw new BadRequestException(companyMessages.dueDateInPast(dto.dueDate))
+    }
+
+    // No further out than an approval made today would set it.
+    const latest = new Date(now)
+    latest.setUTCFullYear(latest.getUTCFullYear() + REPORT_VALIDITY_YEARS)
+    const latestDay = latest.toISOString().slice(0, 10)
+    if (dto.dueDate > latestDay) {
+      throw new BadRequestException(
+        companyMessages.dueDateTooFar(dto.dueDate, latestDay),
+      )
     }
 
     this.logger.info(
