@@ -40,9 +40,10 @@ export class SubmitSalaryReportDto {
    * plan exists only on the Directorate's retired register has no report id to
    * send — `GET reports/equality/active` answers `source: LEGACY` with a null
    * `id` for exactly those companies — and requiring the field left them unable
-   * to submit at all. Omit it and the server resolves the same coverage the
-   * eligibility route reported, which is also what the partner API does on
-   * every submission.
+   * to submit at all. Omit it and the server resolves the same filing basis the
+   * eligibility route reported — coverage, or EXEMPT for an uncovered
+   * sveitarfélag — which is also what the partner API does on every
+   * submission.
    */
   @ApiOptionalUUID({
     // `nullable`, not just optional, and for a concrete reason: the value comes
@@ -53,7 +54,7 @@ export class SubmitSalaryReportDto {
     // server has always accepted rather than widening it.
     nullable: true,
     description:
-      'FK to the approved EQUALITY report this salary was audited against. Send null, or omit it, when `GET reports/equality/active` answered `source: LEGACY` (there is no id to send) — or to have the server resolve the company’s current coverage, which is the same answer that route gave.',
+      'FK to the approved EQUALITY report this salary was audited against. Send null, or omit it, when `GET reports/equality/active` answered `source: LEGACY` (there is no id to send), or when it answered 404 — or to have the server resolve the company’s filing basis itself, the same answer `GET reports/salary/eligibility` gives. That answer can be yes where `GET reports/equality/active` 404s: a company whose sector is SVEITARFELAG may file with no equality coverage, so do not refuse a salary submission on that 404.',
   })
   equalityReportId?: string | null
 

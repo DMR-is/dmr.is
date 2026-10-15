@@ -956,8 +956,11 @@ export class CompanyService implements ICompanyService {
    * ours, and keeping them lets a corrected mapping be re-derived later.
    *
    * Audited via a structured log line rather than a `company_event`, matching
-   * `updateIsat`: sector is admin-owned classification data, not part of the
-   * company's regulatory timeline.
+   * `updateIsat`. That no longer fits sector alone: a sector of SVEITARFELAG
+   * waives the equality precondition on a salary filing
+   * (`SALARY_EQUALITY_EXEMPT_SECTORS`), so a change into or out of it changes
+   * what the company may file. Recording that crossing on the timeline is a
+   * known gap, left for a follow-up because the RSK refresh moves sector too.
    */
   async updateSector(
     id: string,

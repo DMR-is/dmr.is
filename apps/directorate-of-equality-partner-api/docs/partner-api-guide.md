@@ -436,9 +436,11 @@ Returns `{ eligible, reason, dueAt, earliestNewDueAt }`.
 
 A company registered with the Directorate as a sveitarfélag (sector
 `SVEITARFELAG`) is exempt: it may file a salary report whatever the state of
-its equality report, and this route does not refuse it for that reason. A
-municipality whose sector the Directorate has not classified yet is still gated
-until it is — ask the Directorate if one is refused.
+its equality report, and this route does not refuse it for that reason. That
+includes an inter-municipal body (byggðasamlag) registered with that sector. In
+a group filing the subsidiaries share the parent's exemption. A municipality
+whose sector the Directorate has not classified yet is still gated until it is
+— ask the Directorate if one is refused.
 
 Cheaper than discovering it from a rejected submission after building the
 payload.

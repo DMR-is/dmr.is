@@ -29,7 +29,7 @@ Invariants the FK implies (enforce via CHECK + trigger, not by plain FK alone):
 - `equality_source = 'LEGACY'` ⇒ `type = 'SALARY'` AND `equality_report_id IS NULL` AND `equality_legacy_valid_until IS NOT NULL`.
 - `equality_source = 'REPORT'` ⇒ `equality_legacy_valid_until IS NULL`. This is the default and covers every row written before the legacy basis was accepted.
 
-**The exception: sveitarfélög file without coverage.** A company whose `sector` is `SVEITARFELAG` may file a salary report whatever the state of its equality report. Coverage still wins when there is some: a municipality with a plan links it as `REPORT` or `LEGACY`. Only when nothing covers it does the salary row record `equality_source = 'EXEMPT'`, with no link and no date. The sector is read from `company` at filing (`ReportService.resolveSalaryFilingBasis`), never from the submission. The exemption waives the precondition only: the obligation and the `MISSING_EQUALITY_REPORT` status are unchanged. See m-20261015.
+**The exception: sveitarfélög file without coverage.** A company whose `sector` is `SVEITARFELAG` may file a salary report whatever the state of its equality report. That includes byggðasamlög, which RSK's legal form maps to `SVEITARFELAG` (`LEGAL_FORM_SECTOR`). In a group filing the subsidiaries share the parent's exemption, since the filing is judged on the parent alone. Coverage still wins when there is some: a municipality with a plan links it as `REPORT` or `LEGACY`. Only when nothing covers it does the salary row record `equality_source = 'EXEMPT'`, with no link and no date. The sector is read from `company` at filing (`ReportService.resolveSalaryFilingBasis`), never from the submission. The exemption waives the precondition only: the obligation and the `MISSING_EQUALITY_REPORT` status are unchanged. See m-20261015.
 
 - `equality_source = 'EXEMPT'` ⇒ `type = 'SALARY'` AND `equality_report_id IS NULL` AND `equality_legacy_valid_until IS NULL`.
 
@@ -362,7 +362,7 @@ Anchoring the next deadline to the _previous_ deadline instead, so the cadence h
 
 Read together they are the size of the trade. There is deliberately **no** "should we warn" boolean: the obvious one (`earliestNewDueAt < dueAt`) is never true for a deadline an approval set, since that is itself an approval plus three years and so can never be more than three years out — and every seeded launch deadline sat inside three years too (the furthest of 531 was 2029-07-23). Consumers have both dates and the current date, which is all the arithmetic needs.
 
-`reason` now has one member, `MISSING_EQUALITY_REPORT` — a salary report must be filed against an APPROVED, in-force equality report or an unexpired legacy certificate. That is the only remaining refusal on the eligibility route, and a 404 on submit.
+`reason` now has one member, `MISSING_EQUALITY_REPORT` — a salary report must be filed against an APPROVED, in-force equality report or an unexpired legacy certificate, unless the company's sector is exempt (see "The exception: sveitarfélög file without coverage"). That is the only remaining refusal on the eligibility route, and a 404 on submit.
 
 `earliestNewDueAt` is computed by the same `computeReportValidUntil` that `approve()` uses, deliberately: the portal quotes the figure before submission and the approval is what makes it true, so a second copy of `+ 3 years` is how they would come to disagree.
 
