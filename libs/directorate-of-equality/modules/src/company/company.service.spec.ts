@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
@@ -14,6 +14,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICompanyCommentService } from '../company-comment/company-comment.service.interface'
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
 import { PostcodeModel } from '../location/models/postcode.model'
+import { ReportTypeEnum } from '../report/models/report.enums'
 import { CompanyTimelineItemKindEnum } from './dto/company-timeline-item.dto'
 import {
   CompanySectorEnum,
@@ -21,6 +22,7 @@ import {
   CompanyStatusEnum,
 } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
+import { CompanyEventTypeEnum } from './models/company-event.model'
 import { IsatCategoryModel } from './models/isat-category.model'
 import { IsatSectionModel } from './models/isat-section.model'
 import { LegacyReportModel } from './models/legacy-report.model'
@@ -54,6 +56,7 @@ describe('CompanyService', () => {
   let emitFinesStopped: jest.Mock
   let emitQuarantined: jest.Mock
   let emitUnquarantined: jest.Mock
+  let emitDueDateChanged: jest.Mock
   let eventsByCompanyId: jest.Mock
   let commentsByCompanyId: jest.Mock
   let isatFindByPk: jest.Mock
@@ -82,6 +85,7 @@ describe('CompanyService', () => {
     emitFinesStopped = jest.fn()
     emitQuarantined = jest.fn()
     emitUnquarantined = jest.fn()
+    emitDueDateChanged = jest.fn()
     eventsByCompanyId = jest.fn().mockResolvedValue([])
     commentsByCompanyId = jest.fn().mockResolvedValue([])
 
@@ -137,6 +141,7 @@ describe('CompanyService', () => {
             emitFinesStopped,
             emitQuarantined,
             emitUnquarantined,
+            emitDueDateChanged,
             getByCompanyId: eventsByCompanyId,
           },
         },
@@ -1046,6 +1051,392 @@ describe('CompanyService', () => {
       ).rejects.toThrow(NotFoundException)
 
       expect(emitQuarantined).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('updateDueDate', () => {
+    const OLD_DUE = new Date('2026-10-10T23:59:59.999Z')
+
+    beforeEach(() => {
+      jest.useFakeTimers({ now: new Date('2026-10-14T12:00:00.000Z') })
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    // Stubbed twice: the loaded row, then the `loadCompanyDto` reload.
+    const stubCompany = (fields: Record<string, unknown>) => {
+      const update = jest.fn()
+      findOneOrThrow
+        .mockResolvedValueOnce({
+          id: 'company-30',
+          status: CompanyStatusEnum.ACTIVE,
+          employeeCountCategory: CompanySizeEnum.LARGE,
+          salaryReportRequired: true,
+          salaryReportRequiredOverride: false,
+          nextEqualityReportDueAt: null,
+          nextSalaryReportDueAt: null,
+          update,
+          fromModel: () => ({ id: 'company-30' }),
+          ...fields,
+        })
+        .mockResolvedValueOnce({ fromModel: () => ({ id: 'company-30' }) })
+      return update
+    }
+
+    it('moves the equality date to the end of the picked day and records old and new', async () => {
+      const update = stubCompany({ nextEqualityReportDueAt: OLD_DUE })
+      const newDue = new Date('2026-11-20T23:59:59.999Z')
+
+      await service.updateDueDate(
+        'company-30',
+        {
+          reportType: ReportTypeEnum.EQUALITY,
+          dueDate: '2026-11-20',
+          reason: '  extension granted  ',
+        },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({ nextEqualityReportDueAt: newDue })
+      expect(emitDueDateChanged).toHaveBeenCalledWith(
+        'company-30',
+        CompanyStatusEnum.ACTIVE,
+        CompanyEventTypeEnum.EQUALITY_REPORT_DUE_DATE_CHANGED,
+        OLD_DUE,
+        newDue,
+        'admin-1',
+        'extension granted',
+      )
+    })
+
+    it('moves the salary date and leaves the equality date alone', async () => {
+      const update = stubCompany({ nextEqualityReportDueAt: OLD_DUE })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.SALARY, dueDate: '2027-01-05' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextSalaryReportDueAt: new Date('2027-01-05T23:59:59.999Z'),
+      })
+      expect(emitDueDateChanged).toHaveBeenCalledWith(
+        'company-30',
+        CompanyStatusEnum.ACTIVE,
+        CompanyEventTypeEnum.SALARY_REPORT_DUE_DATE_CHANGED,
+        null,
+        new Date('2027-01-05T23:59:59.999Z'),
+        'admin-1',
+        null,
+      )
+    })
+
+    it('is a no-op when the date is unchanged', async () => {
+      const update = stubCompany({ nextEqualityReportDueAt: OLD_DUE })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-10-10' },
+        'admin-1',
+      )
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('treats the same calendar day as unchanged whatever the stored time of day', async () => {
+      // The register load seeded dates at 23:59:59, not 23:59:59.999.
+      const update = stubCompany({
+        nextEqualityReportDueAt: new Date('2026-10-10T23:59:59.000Z'),
+      })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-10-10' },
+        'admin-1',
+      )
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('rejects a day before the current due date, even one still in the future', async () => {
+      const update = stubCompany({
+        nextEqualityReportDueAt: new Date('2026-12-01T23:59:59.999Z'),
+      })
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-11-30' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('rejects a past day even when it is later than an overdue current date', async () => {
+      // Overdue since 10.10; 12.10 is later than that but still before today
+      // (14.10), so it would land in the reminder task's DUE band.
+      const update = stubCompany({ nextEqualityReportDueAt: OLD_DUE })
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-10-12' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('allows today when the current date is overdue', async () => {
+      const update = stubCompany({ nextEqualityReportDueAt: OLD_DUE })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-10-14' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextEqualityReportDueAt: new Date('2026-10-14T23:59:59.999Z'),
+      })
+    })
+
+    it('reads the company FOR UPDATE so a concurrent approval cannot interleave', async () => {
+      stubCompany({ nextEqualityReportDueAt: OLD_DUE })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-11-20' },
+        'admin-1',
+      )
+
+      expect(findOneOrThrow).toHaveBeenNthCalledWith(
+        1,
+        { where: { id: 'company-30' }, lock: Transaction.LOCK.UPDATE },
+        expect.anything(),
+      )
+    })
+
+    it('rejects a past day when the company has no due date yet', async () => {
+      const update = stubCompany({})
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.SALARY, dueDate: '2026-10-13' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('allows today when the company has no due date yet', async () => {
+      const update = stubCompany({})
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.SALARY, dueDate: '2026-10-14' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextSalaryReportDueAt: new Date('2026-10-14T23:59:59.999Z'),
+      })
+    })
+
+    it('rejects an equality date for a SMALL company that owes no plan', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.SMALL,
+        salaryReportRequired: false,
+      })
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-11-20' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('rejects a salary date for a SMALL company that owes no report', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.SMALL,
+        salaryReportRequired: false,
+      })
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.SALARY, dueDate: '2026-11-20' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('rejects a salary date for a MEDIUM company without the salary obligation', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.MEDIUM,
+        salaryReportRequired: false,
+      })
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.SALARY, dueDate: '2026-11-20' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('allows the salary date on a MEDIUM company with the admin salary override', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.MEDIUM,
+        salaryReportRequired: false,
+        salaryReportRequiredOverride: true,
+      })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.SALARY, dueDate: '2026-11-20' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextSalaryReportDueAt: new Date('2026-11-20T23:59:59.999Z'),
+      })
+    })
+
+    it('allows the salary date on a SMALL company with the admin salary override', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.SMALL,
+        salaryReportRequired: false,
+        salaryReportRequiredOverride: true,
+      })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.SALARY, dueDate: '2026-11-20' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextSalaryReportDueAt: new Date('2026-11-20T23:59:59.999Z'),
+      })
+    })
+
+    it('allows the equality date on a SMALL company with the admin salary override', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.SMALL,
+        salaryReportRequired: false,
+        salaryReportRequiredOverride: true,
+      })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-11-20' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextEqualityReportDueAt: new Date('2026-11-20T23:59:59.999Z'),
+      })
+    })
+
+    it('keeps the equality date editable on an UNKNOWN-size company', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.UNKNOWN,
+        salaryReportRequired: false,
+      })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-11-20' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextEqualityReportDueAt: new Date('2026-11-20T23:59:59.999Z'),
+      })
+    })
+
+    it('allows a day exactly REPORT_VALIDITY_YEARS from today', async () => {
+      const update = stubCompany({})
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.EQUALITY, dueDate: '2029-10-14' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextEqualityReportDueAt: new Date('2029-10-14T23:59:59.999Z'),
+      })
+    })
+
+    it('rejects a day past REPORT_VALIDITY_YEARS from today', async () => {
+      const update = stubCompany({})
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.EQUALITY, dueDate: '2029-10-15' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('rejects a day that does not exist instead of rolling it over', async () => {
+      const update = stubCompany({})
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-02-30' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('throws NotFoundException when the company does not exist', async () => {
+      findOneOrThrow.mockRejectedValue(new NotFoundException())
+
+      await expect(
+        service.updateDueDate(
+          'missing',
+          { reportType: ReportTypeEnum.EQUALITY, dueDate: '2026-11-20' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
     })
   })
 

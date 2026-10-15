@@ -1,4 +1,4 @@
-import { getOsBody } from './OpenSearch'
+import { getOsBody } from './advert-search-query'
 
 const mustOf = (search: string) => getOsBody({ search }).body.query.bool.must
 const shouldOf = (search: string) =>

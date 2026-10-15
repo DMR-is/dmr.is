@@ -1,5 +1,4 @@
 import dynamic from 'next/dynamic'
-import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 
 import debounce from 'lodash/debounce'
@@ -127,7 +126,9 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
               </Button>
             }
           />
-          <Link
+          {/* A plain anchor, not next/link: Link prefetches when it scrolls into
+              view, and prefetching this route generates the whole PDF. */}
+          <a
             href={`/api/cases/${currentCase.id}/previewPdf`}
             target="_blank"
             rel="noopener noreferrer"
@@ -142,7 +143,7 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
             >
               Skoða PDF forskoðun
             </Button>
-          </Link>
+          </a>
         </Inline>
       </Stack>
     </AccordionItem>

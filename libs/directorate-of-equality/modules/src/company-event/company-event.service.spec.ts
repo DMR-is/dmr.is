@@ -75,6 +75,31 @@ describe('CompanyEventService', () => {
     })
   })
 
+  it('emitDueDateChanged records the actor, the old and new date and the reason', async () => {
+    const from = new Date('2026-10-10T23:59:59.999Z')
+    const to = new Date('2026-11-20T23:59:59.999Z')
+
+    await service.emitDueDateChanged(
+      'company-1',
+      CompanyStatusEnum.ACTIVE,
+      CompanyEventTypeEnum.EQUALITY_REPORT_DUE_DATE_CHANGED,
+      from,
+      to,
+      'admin-1',
+      'extension granted',
+    )
+
+    expect(create).toHaveBeenCalledWith({
+      companyId: 'company-1',
+      eventType: CompanyEventTypeEnum.EQUALITY_REPORT_DUE_DATE_CHANGED,
+      actorUserId: 'admin-1',
+      status: CompanyStatusEnum.ACTIVE,
+      fromDueAt: from,
+      toDueAt: to,
+      reason: 'extension granted',
+    })
+  })
+
   it('getByCompanyId returns mapped DTOs ordered oldest first', async () => {
     findAll.mockResolvedValue([
       { fromModel: () => ({ id: 'e1' }) },

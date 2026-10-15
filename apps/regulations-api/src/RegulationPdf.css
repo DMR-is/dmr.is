@@ -427,6 +427,28 @@
     text-decoration-color: rgba(245, 240, 240, 0.5);
     background-color: #9fc;
   }
+  /* Formatting changed, text did not — so not shown as added text. */
+  ins.mod {
+    background-color: transparent;
+    text-decoration: underline dotted 2px #d39200;
+  }
+  /* Moved: highlighted at both ends, struck through where it left. */
+  ins.diffmove,
+  del.diffmove {
+    background-color: #d6e2f7;
+  }
+  del.diffmove {
+    text-decoration: line-through;
+  }
+  /* A rule has no text to wrap in ins/del; the differ marks the element itself. */
+  hr[data-diff='insert'] {
+    border-style: none;
+    border-top: 3px solid #2e9e6a;
+  }
+  hr[data-diff='delete'] {
+    border-style: none;
+    border-top: 3px dashed #d64545;
+  }
 
   /* ======================================================================= */
 

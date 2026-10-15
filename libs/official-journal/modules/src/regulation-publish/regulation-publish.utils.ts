@@ -1,9 +1,11 @@
-import { RegulationDraft } from '@dmr.is/shared-dto'
+import { RegulationAppendix, RegulationDraft } from '@dmr.is/shared-dto'
 
 export type RegulationPublishPayload = {
   name: string
   title: string
   text: string
+  appendixes?: RegulationAppendix[]
+  comments?: string
   signatureDate: string
   publishedDate: string
   effectiveDate: string
@@ -16,29 +18,26 @@ export type RegulationPublishPayload = {
     date: string
     title?: string
     text?: string
-    diff?: string
+    appendixes?: RegulationAppendix[]
+    comments?: string
   }>
 }
 
 /**
- * Concatenate the main regulation text with appendixes.
- * The regulation DB stores everything as a single HTML blob.
+ * Only the title and text are sent. island.is also keeps a per-appendix
+ * `diff`, but regulations-api computes the changeset itself.
  */
-function buildFullText(draft: RegulationDraft): string {
-  let fullText = draft.text
-
-  if (draft.appendixes?.length) {
-    for (const appendix of draft.appendixes) {
-      fullText += `<h2>${appendix.title}</h2>${appendix.text}`
-    }
-  }
-
-  return fullText
-}
+const toPublishAppendixes = (
+  appendixes: RegulationAppendix[] | undefined,
+): RegulationAppendix[] | undefined =>
+  appendixes?.map(({ title, text }) => ({ title, text }))
 
 /**
  * Transform a RegulationDraft (from regulations-admin API) into the payload
  * expected by the regulations-api publish endpoint.
+ *
+ * Text, appendixes and comments are sent apart. regulations-api combines them
+ * into the single stored HTML blob, in the format its readers split back.
  */
 export function convertDraftToPublishPayload(
   draft: RegulationDraft,
@@ -47,7 +46,9 @@ export function convertDraftToPublishPayload(
   const payload: RegulationPublishPayload = {
     name: draft.name ?? '',
     title: draft.title,
-    text: buildFullText(draft),
+    text: draft.text,
+    appendixes: toPublishAppendixes(draft.appendixes),
+    comments: draft.comments,
     signatureDate: draft.signatureDate ?? '',
     publishedDate: publishedDate.toISOString().split('T')[0],
     effectiveDate: draft.effectiveDate ?? '',
@@ -65,7 +66,8 @@ export function convertDraftToPublishPayload(
         date: impact.date,
         title: impact.title,
         text: impact.text,
-        diff: impact.diff,
+        appendixes: toPublishAppendixes(impact.appendixes),
+        comments: impact.comments,
       }))
   }
 

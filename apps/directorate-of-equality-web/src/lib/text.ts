@@ -910,6 +910,24 @@ export const reportText = {
     reminderTierTwoWeeks: 'Tveggja vikna áminning',
     reminderTierDue: 'Áminning á skiladegi',
     reminderDueDatePrefix: 'skiladagur',
+    // Manual due-date change. {from} and {to} are filled with dd.mm.yyyy; the
+    // "set" wording is for a company that had no date before.
+    dueDateChanged: {
+      EQUALITY: 'breytti skiladegi jafnréttisáætlunar úr {from} í {to}',
+      SALARY: 'breytti skiladegi skýrslu úr {from} í {to}',
+    },
+    dueDateChangedNoActor: {
+      EQUALITY: 'Skiladegi jafnréttisáætlunar breytt úr {from} í {to}',
+      SALARY: 'Skiladegi skýrslu breytt úr {from} í {to}',
+    },
+    dueDateSet: {
+      EQUALITY: 'setti skiladag jafnréttisáætlunar á {to}',
+      SALARY: 'setti skiladag skýrslu á {to}',
+    },
+    dueDateSetNoActor: {
+      EQUALITY: 'Skiladagur jafnréttisáætlunar settur á {to}',
+      SALARY: 'Skiladagur skýrslu settur á {to}',
+    },
     // ⚠️ The renderer bolds the FIRST and LAST word of these two headlines
     // (see `timelineEntryText`), so the actor has to open the sentence and the
     // status word has to close it. Keep that shape when rewording.
@@ -1236,6 +1254,17 @@ export const companiesText = {
     emailCancelButton: 'Hætta við',
     emailSavedToast: 'Netfang uppfært',
     emailErrorToast: 'Villa við að uppfæra netfang',
+
+    dueDateEditButton: 'Breyta',
+    dueDateEditEquality: 'Breyta skiladegi jafnréttisáætlunar',
+    dueDateEditSalary: 'Breyta skiladegi skýrslu',
+    dueDatePlaceholder: 'Veldu dagsetningu',
+    dueDateReasonLabel: 'Skýring (valkvæð)',
+    dueDateReasonPlaceholder: 'T.d. veittur frestur',
+    dueDateSaveButton: 'Vista',
+    dueDateCancelButton: 'Hætta við',
+    dueDateSavedToast: 'Skiladagur uppfærður',
+    dueDateErrorToast: 'Villa við að uppfæra skiladag',
 
     // The retired SharePoint register ("Adda eftirlit Gagnasafn"), archived
     // verbatim on `legacy_report`. Labels are the sheet's own column headings

@@ -1,5 +1,5 @@
 import { isCompanyKennitala, isValid as isValidKennitala } from 'kennitala'
-import { literal, Op, Order } from 'sequelize'
+import { literal, Op, Order, Transaction } from 'sequelize'
 
 import {
   BadRequestException,
@@ -24,7 +24,10 @@ import {
 
 import { ICompanyCommentService } from '../company-comment/company-comment.service.interface'
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
+import { REPORT_VALIDITY_YEARS } from '../constants'
 import { PostcodeModel } from '../location/models/postcode.model'
+import { endOfUtcDay } from '../report/lib/day-boundaries'
+import { ReportTypeEnum } from '../report/models/report.enums'
 import { CompanyDto } from './dto/company.dto'
 import { CompanyLookupDto } from './dto/company-lookup.dto'
 import { CompanyRskPreviewDto } from './dto/company-rsk-preview.dto'
@@ -41,6 +44,7 @@ import { IsatCategoryDto } from './dto/isat-category.dto'
 import { IsatSectionDto } from './dto/isat-section.dto'
 import { LegacyReportDto } from './dto/legacy-report.dto'
 import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
+import { UpdateCompanyDueDateDto } from './dto/update-company-due-date.dto'
 import { UpdateCompanyEmailDto } from './dto/update-company-email.dto'
 import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
 import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
@@ -53,11 +57,13 @@ import {
   CompanyStatusEnum,
 } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
+import { CompanyEventTypeEnum } from './models/company-event.model'
 import { IsatCategoryModel } from './models/isat-category.model'
 import { IsatSectionModel } from './models/isat-section.model'
 import { LegacyReportModel } from './models/legacy-report.model'
 import { buildCompanyListQuery } from './utils/filters'
 import { ResolvedSector, resolveSector } from './utils/legal-form-sector'
+import { isReportRequired } from './utils/report-status'
 import { mapRskLegalEntity } from './utils/rsk-company-mapping'
 import { leadingIsatDigits, leadingPostcode } from './utils/snapshot-codes'
 import { companyMessages } from './company.messages'
@@ -860,6 +866,126 @@ export class CompanyService implements ICompanyService {
     }
 
     return company.fromModel()
+  }
+
+  /**
+   * Move a company's next-due date by hand, e.g. to grant an extension.
+   *
+   * The reminder task reads only the current column, and dedupes on the due
+   * date it reminded about, so the old date stops mattering the moment this
+   * lands and the new one gets its own full set of reminders. The next
+   * approval overwrites the date again (`advanceCompanyReportDueDate`).
+   *
+   * Never cleared. Refused where the report is not owed and there is no salary
+   * obligation: both dates on SMALL (the equality values
+   * m-20260911-doe-clear-unowed-equality-due-dates cleared), and the salary
+   * date on MEDIUM. UNKNOWN stays editable, since its size is an open question,
+   * not "owes nothing".
+   *
+   * Never moves backwards, and never into the past: the new day may be neither
+   * before the current due date nor before today. A past day would put the
+   * company straight into the reminder task's DUE band and leave it overdue.
+   * Capped at `REPORT_VALIDITY_YEARS` from today, the date an approval made
+   * today would set.
+   */
+  async updateDueDate(
+    id: string,
+    dto: UpdateCompanyDueDateDto,
+    actorUserId: string,
+  ): Promise<CompanyDto> {
+    // `FOR UPDATE` in the request's CLS transaction, so a concurrent approval
+    // (`advanceCompanyReportDueDate`) cannot slip between this read and the
+    // write, and the event's from-date is the one actually replaced.
+    const company = await this.companyModel.findOneOrThrow(
+      { where: { id }, lock: Transaction.LOCK.UPDATE },
+      companyMessages.notFound(id),
+    )
+
+    // UNKNOWN passes: an unclassified size is an open question, not "owes
+    // nothing", even though the obligation rule reads it as not required.
+    if (
+      company.employeeCountCategory !== CompanySizeEnum.UNKNOWN &&
+      !isReportRequired(company, dto.reportType)
+    ) {
+      throw new BadRequestException(
+        companyMessages.reportNotOwed(id, dto.reportType),
+      )
+    }
+
+    const day = new Date(`${dto.dueDate}T00:00:00.000Z`)
+
+    // `new Date` rolls 2026-02-30 over to 2 March instead of failing.
+    if (
+      Number.isNaN(day.getTime()) ||
+      day.toISOString().slice(0, 10) !== dto.dueDate
+    ) {
+      throw new BadRequestException(companyMessages.invalidDueDate(dto.dueDate))
+    }
+
+    // End of day, like every other next-due date — see `day-boundaries.ts`.
+    const toDueAt = endOfUtcDay(day)
+    const isSalary = dto.reportType === ReportTypeEnum.SALARY
+    const fromDueAt = isSalary
+      ? company.nextSalaryReportDueAt
+      : company.nextEqualityReportDueAt
+
+    // Compared as UTC calendar days (Iceland is UTC): stored dates carry
+    // varying end-of-day times (23:59:59 from the register load, .999 here).
+    const fromDay = fromDueAt ? fromDueAt.toISOString().slice(0, 10) : null
+
+    // No-op when unchanged — avoids a spurious timeline event.
+    if (fromDay === dto.dueDate) {
+      return this.loadCompanyDto(id)
+    }
+
+    if (fromDay && dto.dueDate < fromDay) {
+      throw new BadRequestException(
+        companyMessages.dueDateBeforeCurrent(dto.dueDate, fromDay),
+      )
+    }
+
+    const now = new Date()
+    const today = now.toISOString().slice(0, 10)
+    if (dto.dueDate < today) {
+      throw new BadRequestException(companyMessages.dueDateInPast(dto.dueDate))
+    }
+
+    // No further out than an approval made today would set it.
+    const latest = new Date(now)
+    latest.setUTCFullYear(latest.getUTCFullYear() + REPORT_VALIDITY_YEARS)
+    const latestDay = latest.toISOString().slice(0, 10)
+    if (dto.dueDate > latestDay) {
+      throw new BadRequestException(
+        companyMessages.dueDateTooFar(dto.dueDate, latestDay),
+      )
+    }
+
+    this.logger.info(
+      `Updating company ${id} ${dto.reportType} due date: ${
+        fromDueAt?.toISOString() ?? '∅'
+      } → ${toDueAt.toISOString()} (by ${actorUserId})`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    await company.update(
+      isSalary
+        ? { nextSalaryReportDueAt: toDueAt }
+        : { nextEqualityReportDueAt: toDueAt },
+    )
+    await this.companyEventService.emitDueDateChanged(
+      id,
+      company.status,
+      isSalary
+        ? CompanyEventTypeEnum.SALARY_REPORT_DUE_DATE_CHANGED
+        : CompanyEventTypeEnum.EQUALITY_REPORT_DUE_DATE_CHANGED,
+      fromDueAt,
+      toDueAt,
+      actorUserId,
+      dto.reason?.trim() || null,
+    )
+
+    // Re-read: the overdue flags are derived from the column just written.
+    return this.loadCompanyDto(id)
   }
 
   /**

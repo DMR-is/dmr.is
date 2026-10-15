@@ -23,16 +23,28 @@ describe('GET /api/auth/access-denied', () => {
   })
 
   it('sends a request without a logout hint straight to the login page', async () => {
+    process.env.NEXTAUTH_URL = 'https://lg.example.is'
     const request = new NextRequest(
-      'http://localhost:4200/api/auth/access-denied',
+      'http://10.0.0.1:4200/api/auth/access-denied',
     )
 
     const response = GET(request)
 
     expect(response.headers.get('location')).toBe(
-      'http://localhost:4200/innskraning',
+      'https://lg.example.is/innskraning',
     )
     expect(setCookies(response)).toEqual([])
+  })
+
+  it('falls back to the request host when NEXTAUTH_URL is not set', async () => {
+    delete process.env.NEXTAUTH_URL
+    const request = new NextRequest(
+      'http://localhost:4200/api/auth/access-denied',
+    )
+
+    expect(GET(request).headers.get('location')).toBe(
+      'http://localhost:4200/innskraning',
+    )
   })
 
   it('ends the identity server session for a refused sign-in', async () => {

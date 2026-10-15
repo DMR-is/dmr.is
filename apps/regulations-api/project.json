@@ -37,11 +37,6 @@
             "input": "apps/regulations-api/static",
             "glob": "*",
             "output": "static"
-          },
-          {
-            "input": "apps/regulations-api/static-diffs",
-            "glob": "*",
-            "output": "static-diffs"
           }
         ],
         "external": ["@dmr.is/regulations-tools"],
