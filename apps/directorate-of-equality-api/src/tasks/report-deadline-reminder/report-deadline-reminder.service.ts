@@ -154,7 +154,8 @@ const addDays = (date: Date, days: number): Date => {
 
 @Injectable()
 export class ReportDeadlineReminderService
-  implements IReportDeadlineReminderService {
+  implements IReportDeadlineReminderService
+{
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CompanyModel)
@@ -461,12 +462,13 @@ export class ReportDeadlineReminderService
     tier: CompanyReminderTierEnum,
     dueDateIso: string,
   ): Promise<void> {
-    const alreadyFlagged = await this.companyEventService.hasDeadlineReminderEvent(
-      company.id,
-      kind.noEmailEventType,
-      tier,
-      dueDateIso,
-    )
+    const alreadyFlagged =
+      await this.companyEventService.hasDeadlineReminderEvent(
+        company.id,
+        kind.noEmailEventType,
+        tier,
+        dueDateIso,
+      )
     if (alreadyFlagged) return
 
     this.logger.warn(
