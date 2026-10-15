@@ -13,9 +13,8 @@ import { MailboxDeliveryService } from './mailbox-delivery.service'
 import { IMailboxDeliveryService } from './mailbox-delivery.service.interface'
 
 /**
- * Binds `IMailboxDeliveryService`. Nothing imports this yet: no cron, task or
- * app module triggers a delivery, and every kind is still unconfigured (see
- * `mailbox-delivery.kinds.ts`).
+ * Binds `IMailboxDeliveryService`. Talks to OneSystems, so only doe-api
+ * imports it (through `NoticeDispatchCoreModule`).
  */
 @Module({
   imports: [

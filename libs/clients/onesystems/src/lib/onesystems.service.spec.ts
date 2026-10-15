@@ -52,6 +52,19 @@ const json = (
 const success = (extra: Record<string, unknown> = {}) =>
   json({ Success: true, ItemID: 'item-1', ErrorMessage: null, ...extra })
 
+/**
+ * What SendDocToIslandIs actually answers with (OneSystems, 9 Oct 2026), not
+ * the spec's `GeneralResponse`. It carries the recipient's kennitala.
+ */
+const sendDocResponse = (extra: Record<string, unknown> = {}) =>
+  json({
+    Kennitala: COMPANY_NATIONAL_ID,
+    DocumentId: 'doc-1',
+    Success: true,
+    Errors: null,
+    ...extra,
+  })
+
 /** ASP.NET's model-validation body: rejected before the action ran. */
 const problemDetails = (status = 400) =>
   json(
@@ -613,8 +626,8 @@ describe('OneSystemsService', () => {
       })
     })
 
-    it('sendDocToIslandIs maps the input and returns the island.is document id', async () => {
-      actionReplies = [() => success({ ItemID: 'island-doc-1' })]
+    it('sendDocToIslandIs maps the input and returns the DocumentId', async () => {
+      actionReplies = [() => sendDocResponse({ DocumentId: 'island-doc-1' })]
 
       await expect(
         service.sendDocToIslandIs({
@@ -722,23 +735,133 @@ describe('OneSystemsService', () => {
     )
 
     it.each([
-      ['an empty ItemID', { Success: true, ItemID: '' }],
-      ['a null ItemID', { Success: true, ItemID: null }],
-      ['no ItemID', { Success: true, ResultText: 'Sent' }],
+      ['an empty DocumentId', { DocumentId: '' }],
+      ['a null DocumentId', { DocumentId: null }],
+      ['no DocumentId', { DocumentId: undefined }],
+      ['only the spec’s ItemID', { DocumentId: undefined, ItemID: 'item-9' }],
     ])(
       'sendDocToIslandIs: Success:true with %s is sent, with a null id and a warning',
-      async (_label, body) => {
-        actionReplies = [() => json(body)]
+      async (_label, extra) => {
+        actionReplies = [() => sendDocResponse(extra)]
 
         await expect(sendDocToIslandIs()).resolves.toEqual({
           islandIsDocumentId: null,
         })
         expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('without an ItemID'),
+          expect.stringContaining('without a DocumentId'),
           expect.objectContaining({ operation: 'SendDocToIslandIs' }),
         )
       },
     )
+
+    it.each<[string, unknown, string, string]>([
+      ['a string', 'Færsla þegar skráð.', 'Færsla þegar skráð.', 'string'],
+      [
+        'an array of strings',
+        ['Færsla þegar skráð.', 'Önnur villa'],
+        'Færsla þegar skráð.; Önnur villa',
+        'array',
+      ],
+      [
+        'an array of objects',
+        [{ Code: 'E1', Message: 'Færsla þegar skráð.' }],
+        '{"Code":"E1","Message":"Færsla þegar skráð."}',
+        'array',
+      ],
+      [
+        'an object',
+        { ItemID: ['Færsla þegar skráð.'] },
+        '{"ItemID":["Færsla þegar skráð."]}',
+        'object',
+      ],
+    ])(
+      'sendDocToIslandIs: Success:false with Errors as %s is REJECTED, not definitive, with Errors as the errorMessage',
+      async (_label, errors, errorMessage, errorsShape) => {
+        actionReplies = [
+          () =>
+            sendDocResponse({
+              DocumentId: null,
+              Success: false,
+              Errors: errors,
+            }),
+        ]
+
+        const error = await caught(sendDocToIslandIs())
+
+        expect(error).toMatchObject({
+          reason: 'REJECTED',
+          upstreamStatus: 200,
+          errorNumber: null,
+          errorMessage,
+        })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('was rejected'),
+          expect.objectContaining({
+            operation: 'SendDocToIslandIs',
+            errorsShape,
+          }),
+        )
+        expect(loggedText()).not.toContain('Færsla')
+      },
+    )
+
+    it.each([
+      ['null', null, 'null'],
+      ['absent', undefined, 'absent'],
+      ['an empty array', [], 'array'],
+    ])(
+      'sendDocToIslandIs: Success:false with Errors %s leaves errorMessage null',
+      async (_label, errors, errorsShape) => {
+        actionReplies = [
+          () => sendDocResponse({ Success: false, Errors: errors }),
+        ]
+
+        const error = await caught(sendDocToIslandIs())
+
+        expect(error).toMatchObject({ reason: 'REJECTED', errorMessage: null })
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({ errorsShape }),
+        )
+      },
+    )
+
+    it('reads Errors off a non-2xx SendDocToIslandIs body', async () => {
+      actionReplies = [
+        () =>
+          json(
+            {
+              Kennitala: COMPANY_NATIONAL_ID,
+              DocumentId: null,
+              Success: false,
+              Errors: ['Færsla þegar skráð.'],
+            },
+            { status: 400 },
+          ),
+      ]
+
+      const error = await caught(sendDocToIslandIs())
+
+      expect(error).toMatchObject({
+        reason: 'HTTP',
+        upstreamStatus: 400,
+        hasGeneralResponseBody: true,
+        errorMessage: 'Færsla þegar skráð.',
+      })
+      expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+    })
+
+    it('prefers ErrorMessage over Errors when both are present', async () => {
+      actionReplies = [
+        () =>
+          json({ Success: false, ErrorMessage: 'Villa', Errors: ['Önnur'] }),
+      ]
+
+      await expect(caught(createDocument())).resolves.toMatchObject({
+        errorMessage: 'Villa',
+      })
+    })
 
     it.each(actions)(
       '%s: a fetch rejection is an unclear TRANSPORT failure',
@@ -1464,6 +1587,10 @@ describe('OneSystemsService', () => {
       )
       await caught(sendDocToIslandIs())
 
+      // SendDocToIslandIs's success body carries the recipient's kennitala.
+      actionReplies = [() => sendDocResponse()]
+      await sendDocToIslandIs()
+
       // Force a fresh Login whose body is an unrecognised shape.
       service = new OneSystemsService(logger as never)
       loginReplies = [() => json({ unexpected: TOKEN_2 })]
@@ -1473,6 +1600,7 @@ describe('OneSystemsService', () => {
       expect(logger.info).toHaveBeenCalled()
       expect(logger.error).toHaveBeenCalled()
       for (const secret of [
+        COMPANY_NATIONAL_ID,
         PASSWORD,
         TOKEN_1,
         TOKEN_2,

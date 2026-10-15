@@ -3,6 +3,14 @@ import {
   MailboxDeliveryStatusEnum,
 } from './models/mailbox-delivery.enums'
 
+/**
+ * Whether notices go to the island.is mailbox through One. The one reading of
+ * `ONESYSTEMS_ENABLED`: `deliverToMailbox` gates on it, and a caller that has
+ * an email fallback branches on it.
+ */
+export const isMailboxDeliveryEnabled = (): boolean =>
+  process.env.ONESYSTEMS_ENABLED === 'true'
+
 export interface DeliverToMailboxInput {
   /**
    * One per company per notice per period: build it with
@@ -38,7 +46,7 @@ export interface DeliverToMailboxInput {
  *   rather than returning DISABLED.
  * - `SENT`: One confirmed the send. `alreadySent` is true when an earlier call
  *   had done it and this one made no call to One. `islandIsDocumentId` is null
- *   when One confirmed the send without an `ItemID` (the spec allows it).
+ *   when One confirmed the send without a `DocumentId`.
  * - `UNCERTAIN`: a call's outcome is unknown (an earlier one, a crash mid-call
  *   found just now, or a late reply saved into a row already UNCERTAIN). Needs
  *   a person to check One before anything is repeated; see the module README.
@@ -105,10 +113,9 @@ export type MailboxDeliveryUnsettledStatus = Exclude<
  * Gated by `ONESYSTEMS_ENABLED`: the OneSystems client itself is not, so this
  * service is where the kill switch lives.
  *
- * CreateCase is repeated after any failure on the assumption that One
- * finds-or-creates the case (TODO(OneSystems): unconfirmed). If it does not, a
- * retry leaves an orphan case in One, never a second send; a case id that
- * loses the race to be saved is logged.
+ * CreateCase is repeated after any failure: One finds-or-creates the case
+ * (OneSystems, 29 Sep 2026). A case id that loses the race to be saved is
+ * logged.
  */
 export interface IMailboxDeliveryService {
   deliverToMailbox(

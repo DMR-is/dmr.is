@@ -513,6 +513,7 @@ function downSql() {
   return `
 BEGIN;
 
+DELETE FROM notice_outbox       WHERE report_id IN (${escStr(SAL_REPORT_ID)}, ${escStr(EQ_REPORT_ID)});
 DELETE FROM report_comment      WHERE report_id IN (${escStr(SAL_REPORT_ID)}, ${escStr(EQ_REPORT_ID)});
 DELETE FROM report_event        WHERE company_id = ${escStr(COMPANY_ID)};
 DELETE FROM report_employee_personal_criterion_step

@@ -34,6 +34,15 @@ type NoticeOutboxCreateAttributes = {
  * out for a change that did not land nor be lost after one that did. That is
  * the durable record `ReportWorkflowService.runAfterCommit` used to lack.
  *
+ * With OneSystems on, a row is sent through `mailbox_delivery`, and the two
+ * tables split the work: this row records what the report is owed,
+ * `mailbox_delivery` how far one send through One got. The delivery is keyed
+ * (mailbox kind, filing company, report id), so a retried row resumes the same
+ * delivery rather than starting another. A delivery left UNCERTAIN is terminal
+ * here, never retried: the row becomes FAILED naming the delivery to check.
+ * Company-scoped notices (the deadline reminders) do not use this outbox; they
+ * go to `mailbox_delivery` directly, which is why `report_id` is NOT NULL.
+ *
  * Ids only. The recipient, the text and the documents are all read from the
  * report when the row is sent, so nothing personal is copied here.
  * `lastError` is written by the dispatcher from its own messages, never from a

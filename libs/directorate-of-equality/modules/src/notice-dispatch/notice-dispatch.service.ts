@@ -14,12 +14,27 @@ import {
   ReportMailAttachment,
   ReportMailOutcome,
 } from '../mail/doe-mail.service.interface'
+import { buildReportApprovedSubject } from '../mail/templates/report-approved.template'
+import { buildMailboxDeliveryIdempotencyKey } from '../mailbox-delivery/mailbox-delivery.idempotency-key'
+import {
+  DeliverToMailboxResult,
+  IMailboxDeliveryService,
+  isMailboxDeliveryEnabled,
+} from '../mailbox-delivery/mailbox-delivery.service.interface'
+import { MailboxDeliveryKindEnum } from '../mailbox-delivery/models/mailbox-delivery.enums'
+import {
+  buildApprovedLetter,
+  buildDeniedLetter,
+  buildSubmittedLetter,
+  noticeLetterStyles,
+} from '../notice-letter/notice-letter.template'
 import {
   NoticeOutboxChannelEnum,
   NoticeOutboxKindEnum,
   NoticeOutboxStatusEnum,
 } from '../notice-outbox/models/notice-outbox.enums'
 import { NoticeOutboxModel } from '../notice-outbox/models/notice-outbox.model'
+import { IPdfRenderService } from '../pdf-render/pdf-render.service.interface'
 import {
   ReportModel,
   ReportStatusEnum,
@@ -29,6 +44,7 @@ import {
   ReportEventModel,
   ReportEventTypeEnum,
 } from '../report/models/report-event.model'
+import { mergePdfs } from '../report-pdf/lib/merge'
 import {
   IReportPdfService,
   ReportPdfResult,
@@ -82,22 +98,62 @@ export const offersServiceSurvey = (
     ? size === CompanySizeEnum.SMALL || size === CompanySizeEnum.MEDIUM
     : type === ReportTypeEnum.SALARY && size === CompanySizeEnum.LARGE
 
+/** The mailbox kind of each notice, by report type: each has its own case template. */
+const MAILBOX_KINDS: Record<
+  NoticeOutboxKindEnum,
+  Record<ReportTypeEnum, MailboxDeliveryKindEnum>
+> = {
+  [NoticeOutboxKindEnum.REPORT_SUBMITTED]: {
+    [ReportTypeEnum.SALARY]: MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+    [ReportTypeEnum.EQUALITY]:
+      MailboxDeliveryKindEnum.EQUALITY_REPORT_SUBMITTED,
+  },
+  [NoticeOutboxKindEnum.REPORT_APPROVED]: {
+    [ReportTypeEnum.SALARY]: MailboxDeliveryKindEnum.SALARY_REPORT_APPROVED,
+    [ReportTypeEnum.EQUALITY]: MailboxDeliveryKindEnum.EQUALITY_REPORT_APPROVED,
+  },
+  [NoticeOutboxKindEnum.REPORT_DENIED]: {
+    [ReportTypeEnum.SALARY]: MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+    [ReportTypeEnum.EQUALITY]: MailboxDeliveryKindEnum.EQUALITY_REPORT_DENIED,
+  },
+}
+
+/** A notice ready for the mailbox. The PDF is rendered only if One needs it. */
+type MailboxNotice = {
+  subject: string
+  pdf: () => Promise<Buffer>
+  /** Runs once the row is recorded DONE. Never throws. */
+  afterDone?: () => Promise<void>
+}
+
+type Gone = { outcome: 'GONE'; reason: string }
+
 type SendResult =
   | {
-      outcome: ReportMailOutcome
+      outcome: ReportMailOutcome.SENT
       channel: NoticeOutboxChannelEnum
       /** Runs once the row is recorded DONE. Never throws. */
       afterDone?: () => Promise<void>
     }
+  | {
+      outcome: ReportMailOutcome.NO_RECIPIENT | ReportMailOutcome.FAILED
+      channel: NoticeOutboxChannelEnum
+    }
   | { outcome: 'SKIPPED' }
-  | { outcome: 'GONE'; reason: string }
+  | Gone
 
 /**
  * Sends what the notice outbox says a company is owed.
  *
- * Phase 1 of the OneSystems work: email only, exactly the notices the workflow
- * sent before (approved, denied), and nothing for a submission, which never had
- * an email. Mailbox delivery through One replaces the email per kind later.
+ * With `ONESYSTEMS_ENABLED` on, every notice goes to the company's island.is
+ * mailbox through One as a PDF letter, and no email is sent: the receipt, the
+ * approval (letter, report and úrbótaáætlun merged into one PDF) and the
+ * denial. With it off, the approval and denial are emailed as before, and the
+ * receipt, which never had an email, is SKIPPED.
+ *
+ * A mailbox delivery is idempotent by its key (kind, company, report), so a
+ * retried row resumes the same delivery. One left UNCERTAIN is never retried:
+ * the row is given up as FAILED, naming the delivery a person must check.
  *
  * ⚠️ **Every outbox write is `transaction: null`.** The dispatcher runs inside
  * the advisory-lock transaction (`runWithDistributedLock`), which every query
@@ -116,8 +172,16 @@ type SendResult =
  * ⚠️ **A process that dies between the send and the DONE write mails twice.**
  * Email has no idempotency key, so the next run cannot tell the send happened.
  * The DONE write follows the send directly — archiving the approval documents
- * to S3 waits until after it — so the window is one UPDATE; the gap it replaces
- * (a notice lost outright when the process died after commit) was not.
+ * to S3 waits until after it — so the window is one UPDATE on a fresh pool
+ * connection: under contention that includes the wait for one (`max: 5`, up to
+ * 30 s), and an acquire timeout leaves the row PENDING to be sent again. The gap
+ * it replaces (a notice lost outright when the process died after commit) was
+ * wider.
+ *
+ * ⚠️ **A process that dies between the DONE write and the archive keeps no
+ * copy.** The company has the documents and the row says DONE, but nothing in
+ * S3 or the database records the missing archive. That is the price of never
+ * mailing twice; a missing archive is not evidence the notice failed.
  */
 @Injectable()
 export class NoticeDispatchService implements INoticeDispatchService {
@@ -128,6 +192,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
     private readonly reportPdfService: IReportPdfService,
     @Inject(ICompanyFileService)
     private readonly companyFileService: ICompanyFileService,
+    @Inject(IMailboxDeliveryService)
+    private readonly mailboxDeliveryService: IMailboxDeliveryService,
+    @Inject(IPdfRenderService)
+    private readonly pdfRenderService: IPdfRenderService,
     @InjectModel(NoticeOutboxModel)
     private readonly noticeOutboxModel: typeof NoticeOutboxModel,
     @InjectModel(ReportModel)
@@ -177,8 +245,11 @@ export class NoticeDispatchService implements INoticeDispatchService {
     let result: SendResult
 
     try {
-      result = await this.inSavepoint(lockTransaction, (rowTransaction) =>
-        this.send(row, rowTransaction),
+      // `send` opens its render savepoints on the lock's transaction, not on
+      // the row's: Sequelize numbers a savepoint by its direct parent, so a
+      // render savepoint on the row's would reuse an earlier row's name.
+      result = await this.inSavepoint(lockTransaction, () =>
+        this.send(row, lockTransaction),
       )
     } catch (error) {
       // Anything `send` did not turn into an outcome itself: a failed load, a
@@ -215,7 +286,13 @@ export class NoticeDispatchService implements INoticeDispatchService {
       return false
     }
 
-    if (result.outcome === ReportMailOutcome.SENT && result.afterDone) {
+    // Not when `settled` is false: some other path settled the row first, so
+    // the follow-up is that path's, and archiving here could file a second copy.
+    if (
+      settled &&
+      result.outcome === ReportMailOutcome.SENT &&
+      result.afterDone
+    ) {
       try {
         await result.afterDone()
       } catch (error) {
@@ -234,9 +311,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
 
   /**
    * Runs `work` in a savepoint on `parent`. A DB error inside rolls back to the
-   * savepoint and leaves `parent` usable. `sequelize.transaction(cb)` without
-   * `{ transaction: parent }` would open a second top-level transaction on its
-   * own connection instead of nesting.
+   * savepoint and leaves `parent` usable. Always pass the lock's transaction:
+   * savepoint names are numbered per parent, so nesting would repeat them.
+   * `sequelize.transaction(cb)` without `{ transaction: parent }` would open a
+   * second top-level transaction on its own connection instead of nesting.
    */
   private inSavepoint<T>(
     parent: Transaction,
@@ -247,19 +325,203 @@ export class NoticeDispatchService implements INoticeDispatchService {
 
   private async send(
     row: NoticeOutboxModel,
-    rowTransaction: Transaction,
+    lockTransaction: Transaction,
   ): Promise<SendResult> {
+    if (isMailboxDeliveryEnabled()) {
+      return this.sendToMailbox(row, lockTransaction)
+    }
+
     switch (row.kind) {
       case NoticeOutboxKindEnum.REPORT_SUBMITTED:
         // No email for a submission has ever existed. The receipt goes out
-        // only through the mailbox, which is not wired yet.
+        // only through the mailbox.
         return { outcome: 'SKIPPED' }
       case NoticeOutboxKindEnum.REPORT_APPROVED:
-        return this.sendApproved(row.reportId, rowTransaction)
+        return this.sendApproved(row.reportId, lockTransaction)
       case NoticeOutboxKindEnum.REPORT_DENIED:
         return this.sendDenied(row.reportId)
       default:
         return { outcome: 'GONE', reason: `unknown kind ${row.kind}` }
+    }
+  }
+
+  /**
+   * Delivers the notice to the filing company's mailbox. A group report's
+   * subsidiaries get nothing: the notice goes to the company that filed.
+   */
+  private async sendToMailbox(
+    row: NoticeOutboxModel,
+    lockTransaction: Transaction,
+  ): Promise<SendResult> {
+    const report = await this.reportModel.findOne({
+      where: { id: row.reportId },
+      attributes: [
+        'id',
+        'type',
+        'validUntil',
+        'approvedAt',
+        'companyNationalId',
+      ],
+    })
+
+    if (!report) {
+      return { outcome: 'GONE', reason: 'report not found' }
+    }
+
+    const company = await this.companyReportModel.findOne({
+      where: { reportId: row.reportId, parentCompanyId: null },
+      attributes: ['companyId', 'name', 'employeeCountCategory'],
+    })
+
+    if (!company) {
+      return { outcome: 'GONE', reason: 'filing company not found' }
+    }
+
+    const notice = await this.prepareMailboxNotice(
+      row,
+      report,
+      company,
+      lockTransaction,
+    )
+
+    if ('outcome' in notice) {
+      return notice
+    }
+
+    const kind = MAILBOX_KINDS[row.kind][report.type]
+    const result = await this.mailboxDeliveryService.deliverToMailbox({
+      idempotencyKey: buildMailboxDeliveryIdempotencyKey({
+        kind,
+        companyId: company.companyId,
+        // A UUID: hex, so the key's upper-casing cannot fold two into one.
+        discriminator: report.id,
+      }),
+      kind,
+      companyId: company.companyId,
+      subject: notice.subject,
+      pdf: notice.pdf,
+    })
+
+    return this.mailboxResult(result, notice.afterDone)
+  }
+
+  private async prepareMailboxNotice(
+    row: NoticeOutboxModel,
+    report: ReportModel,
+    company: Pick<CompanyReportModel, 'name' | 'employeeCountCategory'>,
+    lockTransaction: Transaction,
+  ): Promise<MailboxNotice | Gone> {
+    const companyName = company.name
+
+    switch (row.kind) {
+      case NoticeOutboxKindEnum.REPORT_SUBMITTED: {
+        // The row is written in the submit transaction, so its creation is
+        // when the report was received.
+        const letter = buildSubmittedLetter(report, companyName, row.createdAt)
+        return {
+          subject: letter.subject,
+          pdf: () => this.renderLetter(letter.html),
+        }
+      }
+
+      case NoticeOutboxKindEnum.REPORT_APPROVED: {
+        // Filled by `pdf`, so only documents actually sent are archived. A
+        // resume past CreateDocument renders nothing and archives nothing.
+        let sent: ReportMailAttachment[] = []
+
+        return {
+          subject: buildReportApprovedSubject(report),
+          pdf: async () => {
+            const attachments = await this.buildApprovalAttachments(
+              report.type,
+              report.id,
+              lockTransaction,
+            )
+            const letter = buildApprovedLetter(
+              report,
+              companyName,
+              report.approvedAt ?? row.createdAt,
+              attachments.map((attachment) => attachment.label),
+              {
+                // Same rule as the email: the mailbox letter replaces it.
+                serviceSurvey: offersServiceSurvey(
+                  report.type,
+                  company.employeeCountCategory ?? null,
+                ),
+              },
+            )
+            const merged = await mergePdfs([
+              await this.renderLetter(letter.html),
+              ...attachments.map((attachment) => attachment.content),
+            ])
+            sent = attachments
+            return merged
+          },
+          afterDone: () => this.archiveApprovalDocuments(report, sent),
+        }
+      }
+
+      case NoticeOutboxKindEnum.REPORT_DENIED: {
+        const denied = await this.findDenial(report.id)
+
+        if (!denied?.reason) {
+          return { outcome: 'GONE', reason: 'denial reason not found' }
+        }
+
+        const letter = buildDeniedLetter(
+          report,
+          companyName,
+          denied.createdAt,
+          denied.reason,
+        )
+        return {
+          subject: letter.subject,
+          pdf: () => this.renderLetter(letter.html),
+        }
+      }
+
+      default:
+        return { outcome: 'GONE', reason: `unknown kind ${row.kind}` }
+    }
+  }
+
+  private renderLetter(html: string): Promise<Buffer> {
+    return this.pdfRenderService.renderHtml(html, noticeLetterStyles)
+  }
+
+  /**
+   * A thrown delivery never reaches here: `dispatchRow` treats it as a failed
+   * send, and the next run resumes the same delivery by its key.
+   */
+  private mailboxResult(
+    result: DeliverToMailboxResult,
+    afterDone?: () => Promise<void>,
+  ): SendResult {
+    switch (result.status) {
+      case 'SENT':
+        return {
+          outcome: ReportMailOutcome.SENT,
+          channel: NoticeOutboxChannelEnum.MAILBOX,
+          afterDone,
+        }
+      case 'UNCERTAIN':
+        return {
+          outcome: 'GONE',
+          reason: `mailbox delivery ${result.deliveryId} is UNCERTAIN; check One before repeating anything`,
+        }
+      case 'IN_PROGRESS':
+      case 'DISABLED':
+        // Another worker holds the delivery, or the flag went off between the
+        // check and the call. Either way, try again next run.
+        return {
+          outcome: ReportMailOutcome.FAILED,
+          channel: NoticeOutboxChannelEnum.MAILBOX,
+        }
+      default:
+        return {
+          outcome: 'GONE',
+          reason: `mailbox delivery ${result.deliveryId} used all its attempts`,
+        }
     }
   }
 
@@ -270,11 +532,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
     const now = new Date()
 
     if (result.outcome === 'SKIPPED') {
-      await this.settle(row, NoticeOutboxStatusEnum.SKIPPED, now, {
+      return this.settle(row, NoticeOutboxStatusEnum.SKIPPED, now, {
         channel: null,
         lastError: null,
       })
-      return true
     }
 
     if (result.outcome === 'GONE') {
@@ -282,23 +543,21 @@ export class NoticeDispatchService implements INoticeDispatchService {
         `Gave up on notice ${row.kind} for report ${row.reportId}: ${result.reason}`,
         { context: LOGGING_CONTEXT, noticeId: row.id },
       )
-      await this.settle(row, NoticeOutboxStatusEnum.FAILED, now, {
+      return this.settle(row, NoticeOutboxStatusEnum.FAILED, now, {
         channel: null,
         lastError: result.reason,
       })
-      return true
     }
 
     const attempts = row.attempts + 1
 
     switch (result.outcome) {
       case ReportMailOutcome.SENT:
-        await this.settle(row, NoticeOutboxStatusEnum.DONE, now, {
+        return this.settle(row, NoticeOutboxStatusEnum.DONE, now, {
           channel: result.channel,
           lastError: null,
           attempts,
         })
-        return true
 
       case ReportMailOutcome.NO_RECIPIENT:
         // Logged at error, not left to the mail service's warn: a decision
@@ -307,12 +566,11 @@ export class NoticeDispatchService implements INoticeDispatchService {
           `Notice ${row.kind} for report ${row.reportId} has no usable contact or admin email — giving up`,
           { context: LOGGING_CONTEXT, noticeId: row.id },
         )
-        await this.settle(row, NoticeOutboxStatusEnum.FAILED, now, {
+        return this.settle(row, NoticeOutboxStatusEnum.FAILED, now, {
           channel: null,
           lastError: 'no usable contact or admin email',
           attempts,
         })
-        return true
 
       case ReportMailOutcome.FAILED:
         if (attempts >= NOTICE_DISPATCH_MAX_ATTEMPTS) {
@@ -320,12 +578,11 @@ export class NoticeDispatchService implements INoticeDispatchService {
             `Notice ${row.kind} for report ${row.reportId} failed ${attempts} times — giving up`,
             { context: LOGGING_CONTEXT, noticeId: row.id },
           )
-          await this.settle(row, NoticeOutboxStatusEnum.FAILED, now, {
+          return this.settle(row, NoticeOutboxStatusEnum.FAILED, now, {
             channel: null,
             lastError: 'send failed',
             attempts,
           })
-          return true
         }
 
         await this.noticeOutboxModel.update(
@@ -340,6 +597,11 @@ export class NoticeDispatchService implements INoticeDispatchService {
     }
   }
 
+  /**
+   * Returns whether this call moved the row out of PENDING. False means some
+   * other path — a hand re-drive, a second dispatcher after the lock's
+   * connection died — settled it first.
+   */
   private async settle(
     row: NoticeOutboxModel,
     status: NoticeOutboxStatusEnum,
@@ -349,8 +611,8 @@ export class NoticeDispatchService implements INoticeDispatchService {
       lastError: string | null
       attempts?: number
     },
-  ): Promise<void> {
-    await this.noticeOutboxModel.update(
+  ): Promise<boolean> {
+    const [affected] = await this.noticeOutboxModel.update(
       {
         status,
         channel: fields.channel,
@@ -366,6 +628,16 @@ export class NoticeDispatchService implements INoticeDispatchService {
         transaction: null,
       },
     )
+
+    if (affected === 0) {
+      this.logger.warn(
+        `Notice ${row.id} was no longer PENDING when recorded ${status} — left as it was`,
+        { context: LOGGING_CONTEXT, noticeId: row.id },
+      )
+      return false
+    }
+
+    return true
   }
 
   /**
@@ -379,7 +651,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
    */
   private async sendApproved(
     reportId: string,
-    rowTransaction: Transaction,
+    lockTransaction: Transaction,
   ): Promise<SendResult> {
     const report = await this.reportModel.findOne({
       where: { id: reportId },
@@ -402,7 +674,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
     const attachments = await this.buildApprovalAttachments(
       report.type,
       reportId,
-      rowTransaction,
+      lockTransaction,
     )
 
     // The filing company's own snapshot row; a group report also has one per
@@ -428,14 +700,19 @@ export class NoticeDispatchService implements INoticeDispatchService {
      * the company having its documents is the point, keeping our own copy is the
      * record. Uploading first would let an unset or misconfigured bucket stop
      * the notification. And the archive is the Directorate's copy of what the
-     * company received, so writing it after a failed send puts a false yes
-     * where someone will later look for proof of delivery.
+     * company received, so writing it after a failed send would put a false yes
+     * in it. The reverse does not hold: a missing archive does not mean the
+     * send failed (see the class note on dying after DONE).
      *
      * ⚠️ **After the DONE write, too.** Up to two S3 uploads with SDK retries
      * take seconds; run before the write, a deploy landing in them would kill
      * the process after the mail and before DONE, and the next run would mail
      * the company again. `archive` never throws.
      */
+    if (outcome !== ReportMailOutcome.SENT) {
+      return { outcome, channel: NoticeOutboxChannelEnum.EMAIL }
+    }
+
     return {
       outcome,
       channel: NoticeOutboxChannelEnum.EMAIL,
@@ -506,18 +783,19 @@ export class NoticeDispatchService implements INoticeDispatchService {
    * them together would bury it.
    *
    * Each render is guarded on its own, and runs in its own savepoint, so one
-   * failing — even on a DB error — costs only its own attachment. Empty means every render failed: the notice still goes, and
-   * `buildReportApprovedHtml` omits the "Skjalið er í viðhengi" line.
+   * failing — even on a DB error — costs only its own attachment. Empty means
+   * every render failed: the notice still goes, and `buildReportApprovedHtml`
+   * omits the "Skjalið er í viðhengi" line.
    */
   private async buildApprovalAttachments(
     type: ReportTypeEnum,
     reportId: string,
-    rowTransaction: Transaction,
+    lockTransaction: Transaction,
   ): Promise<ReportMailAttachment[]> {
     let reportAttachment: ReportMailAttachment | null = null
 
     try {
-      const { pdf, fileName } = await this.inSavepoint(rowTransaction, () =>
+      const { pdf, fileName } = await this.inSavepoint(lockTransaction, () =>
         this.reportPdfService.generateReportPdf(reportId),
       )
 
@@ -548,7 +826,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
     let plan: ReportPdfResult | null = null
 
     try {
-      plan = await this.inSavepoint(rowTransaction, () =>
+      plan = await this.inSavepoint(lockTransaction, () =>
         this.reportPdfService.generateImprovementPlanPdf(reportId),
       )
     } catch (error) {
@@ -585,15 +863,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
       return { outcome: 'GONE', reason: 'report not found' }
     }
 
-    const deniedEvent = await this.reportEventModel.findOne({
-      where: {
-        reportId,
-        eventType: ReportEventTypeEnum.STATUS_CHANGED,
-        toStatus: ReportStatusEnum.DENIED,
-      },
-      attributes: ['reason'],
-      order: [['createdAt', 'DESC']],
-    })
+    const deniedEvent = await this.findDenial(reportId)
 
     // `deny` refuses a blank reason, so a missing one means the event is gone,
     // not that the reviewer gave none. Sending a denial with no reason would
@@ -608,5 +878,18 @@ export class NoticeDispatchService implements INoticeDispatchService {
     )
 
     return { outcome, channel: NoticeOutboxChannelEnum.EMAIL }
+  }
+
+  /** The denial's STATUS_CHANGED event, which holds the reviewer's reason. */
+  private findDenial(reportId: string): Promise<ReportEventModel | null> {
+    return this.reportEventModel.findOne({
+      where: {
+        reportId,
+        eventType: ReportEventTypeEnum.STATUS_CHANGED,
+        toStatus: ReportStatusEnum.DENIED,
+      },
+      attributes: ['reason', 'createdAt'],
+      order: [['createdAt', 'DESC']],
+    })
   }
 }
