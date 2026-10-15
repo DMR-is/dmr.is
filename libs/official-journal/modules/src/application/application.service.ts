@@ -280,11 +280,19 @@ export class ApplicationService implements IApplicationService {
     )
 
     if (!res.ok) {
-      const info = await res.json()
+      // A response body can only be consumed once, and error bodies are not
+      // guaranteed to be JSON — read it as text and parse it ourselves.
+      const resInfo = await res.text()
+      let details: unknown = resInfo
+      try {
+        details = JSON.parse(resInfo)
+      } catch {
+        // Not JSON; log the raw text.
+      }
       const { status, statusText } = res
       this.logger.warn(`Could not update application<${id}>`, {
         category: LOGGING_CATEGORY,
-        details: info,
+        details,
         statusCode: status,
         statusText,
       })
@@ -297,7 +305,6 @@ export class ApplicationService implements IApplicationService {
           throw new NotFoundException(`Application<${id}> not found`)
         }
         default: {
-          const resInfo = await res.text()
           throw new InternalServerErrorException(
             `Could not update application<${id}>, ${resInfo}`,
           )

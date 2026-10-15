@@ -1,5 +1,6 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript'
 
+import type { ChangeSuggestionReport } from '../db/ChangeSuggestion'
 import type { HTMLText, PlainText } from '../routes/types'
 
 type RegulationChangeSuggestionStatus =
@@ -15,6 +16,7 @@ type RegulationChangeSuggestionAttributes = {
   title: PlainText
   text: HTMLText
   changeset: string | null
+  report: ChangeSuggestionReport | null
   status: RegulationChangeSuggestionStatus
   appliedChangeId: number | null
   createdAt: Date
@@ -73,6 +75,13 @@ export class DB_RegulationChangeSuggestion
     comment: 'Diff from current version to suggested version',
   })
   changeset!: string | null
+
+  @Column({
+    type: DataType.JSONB,
+    allowNull: true,
+    comment: 'Report from the change suggestion process (versioned JSON)',
+  })
+  report!: ChangeSuggestionReport | null
 
   @Column({
     type: DataType.ENUM('pending', 'applied', 'rejected', 'superseded'),

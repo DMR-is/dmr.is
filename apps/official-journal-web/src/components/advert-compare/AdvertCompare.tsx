@@ -19,7 +19,7 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatDate } from '../../lib/utils'
 import * as styles from './AdvertCompare.css'
-import { unwrapContainers } from './unwrapContainers'
+import { normalizeForDiff } from './normalizeForDiff'
 
 import { keepPreviousData } from '@tanstack/react-query'
 
@@ -287,8 +287,8 @@ const CompareView = ({
           import('@dmr.is/utils-server/cleanLegacyHtml'),
         ])
       const { diff } = getStructuredDiff(
-        unwrapContainers(simpleSanitize(publishedHtml)) as HTMLText,
-        unwrapContainers(simpleSanitize(currentCase.html)) as HTMLText,
+        normalizeForDiff(simpleSanitize(publishedHtml)) as HTMLText,
+        normalizeForDiff(simpleSanitize(currentCase.html)) as HTMLText,
       )
       if (!cancelled) setDiffHtml(diff)
     }
