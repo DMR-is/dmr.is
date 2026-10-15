@@ -8,6 +8,7 @@ import { CompanyStatusEnum } from '../company/models/company.enums'
 import {
   CompanyCustomEmailEventType,
   CompanyDeadlineReminderEventType,
+  CompanyDueDateChangedEventType,
   CompanyEventModel,
   CompanyEventTypeEnum,
   CompanyReminderTierEnum,
@@ -142,6 +143,33 @@ export class CompanyEventService implements ICompanyEventService {
       eventType: CompanyEventTypeEnum.UNQUARANTINED,
       actorUserId: actorUserId ?? null,
       status,
+      reason: reason ?? null,
+    })
+  }
+
+  async emitDueDateChanged(
+    companyId: string,
+    status: CompanyStatusEnum,
+    eventType: CompanyDueDateChangedEventType,
+    fromDueAt: Date | null,
+    toDueAt: Date,
+    actorUserId: string,
+    reason?: string | null,
+  ): Promise<void> {
+    this.logger.info(
+      `Emitting ${eventType} event for company ${companyId}: ${
+        fromDueAt?.toISOString() ?? '∅'
+      } → ${toDueAt.toISOString()}`,
+      { context: LOGGING_CONTEXT, companyId, eventType },
+    )
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType,
+      actorUserId,
+      status,
+      fromDueAt,
+      toDueAt,
       reason: reason ?? null,
     })
   }

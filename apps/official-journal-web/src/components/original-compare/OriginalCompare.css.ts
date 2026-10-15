@@ -1,8 +1,7 @@
-import {
-  diffStyling,
-  regulationContentStyling,
-} from '@dmr.is/island-regulations/styling'
+import { regulationContentStyling } from '@dmr.is/island-regulations/styling'
 import { spacing, theme } from '@dmr.is/island-ui-theme'
+
+import { diffMarkStyling } from '../../lib/diffMarkStyling'
 
 import { style, StyleRule } from '@vanilla-extract/css'
 const { color, typography, border } = theme
@@ -83,7 +82,7 @@ export const editor = style({
 })
 
 export const diff = style({})
-diffStyling(diff)
+diffMarkStyling(diff)
 
 // ---------------------------------------------------------------------------
 ;[editor].forEach((wrapper) => {

@@ -115,11 +115,12 @@ export const EditChangeModal = ({
       setDiffHtml(null)
       return
     }
-    const [{ getDiff }, { simpleSanitize }] = await Promise.all([
-      import('@dmr.is/regulations-tools/html'),
-      import('@dmr.is/utils-server/cleanLegacyHtml'),
-    ])
-    const result = getDiff(
+    const [{ default: getStructuredDiff }, { simpleSanitize }] =
+      await Promise.all([
+        import('@dmr.is/regulations-tools/structuredDiff-browser'),
+        import('@dmr.is/utils-server/cleanLegacyHtml'),
+      ])
+    const result = getStructuredDiff(
       simpleSanitize(originalText) as HTMLText,
       simpleSanitize(editorText) as HTMLText,
     )
@@ -170,11 +171,12 @@ export const EditChangeModal = ({
     const originalText = originalRegulationRef.current?.text
     if (originalText && text) {
       try {
-        const [{ getDiff }, { simpleSanitize }] = await Promise.all([
-          import('@dmr.is/regulations-tools/html'),
-          import('@dmr.is/utils-server/cleanLegacyHtml'),
-        ])
-        const result = getDiff(
+        const [{ default: getStructuredDiff }, { simpleSanitize }] =
+          await Promise.all([
+            import('@dmr.is/regulations-tools/structuredDiff-browser'),
+            import('@dmr.is/utils-server/cleanLegacyHtml'),
+          ])
+        const result = getStructuredDiff(
           simpleSanitize(originalText) as HTMLText,
           simpleSanitize(text) as HTMLText,
         )

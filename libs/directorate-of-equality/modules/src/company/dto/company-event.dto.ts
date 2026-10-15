@@ -1,6 +1,7 @@
 import {
   ApiDateTime,
   ApiEnum,
+  ApiOptionalDateTime,
   ApiOptionalEnum,
   ApiOptionalString,
   ApiOptionalUuid,
@@ -59,6 +60,20 @@ export class CompanyEventDto {
       'The custom-email batch this event belongs to, on CUSTOM_EMAIL_* events only; null otherwise. The timeline uses it to fetch the message that was actually sent.',
   })
   companyEmailId!: string | null
+
+  @ApiOptionalDateTime({
+    nullable: true,
+    description:
+      'The next-due date before the change, on *_DUE_DATE_CHANGED events only; null when the company had none, and on every other event.',
+  })
+  fromDueAt!: Date | null
+
+  @ApiOptionalDateTime({
+    nullable: true,
+    description:
+      'The next-due date after the change, on *_DUE_DATE_CHANGED events only; null otherwise.',
+  })
+  toDueAt!: Date | null
 
   @ApiDateTime()
   createdAt!: Date

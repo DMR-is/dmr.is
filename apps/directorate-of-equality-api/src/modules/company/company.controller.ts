@@ -28,6 +28,7 @@ import {
   IsatSectionDto,
   LegacyReportDto,
   SearchIsatCategoriesQueryDto,
+  UpdateCompanyDueDateDto,
   UpdateCompanyEmailDto,
   UpdateCompanyFinesDto,
   UpdateCompanyIsatDto,
@@ -214,6 +215,23 @@ export class CompanyController {
     @CurrentAdminUser() admin: UserModel,
   ): Promise<CompanyDto> {
     return this.companyService.updateQuarantine(id, dto, admin.id)
+  }
+
+  // Manual next-due date, e.g. an extension. Recorded on the timeline; the next
+  // approval overwrites it again.
+  @Patch(':id/due-date')
+  @ApiParam({ name: 'id', type: String })
+  @DoeResponse({
+    operationId: 'updateCompanyDueDate',
+    type: CompanyDto,
+    include404: true,
+  })
+  async updateDueDate(
+    @Param('id') id: string,
+    @Body() dto: UpdateCompanyDueDateDto,
+    @CurrentAdminUser() admin: UserModel,
+  ): Promise<CompanyDto> {
+    return this.companyService.updateDueDate(id, dto, admin.id)
   }
 
   @Get(':id')

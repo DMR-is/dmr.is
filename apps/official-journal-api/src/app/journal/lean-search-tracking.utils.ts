@@ -1,12 +1,12 @@
 import { createHash } from 'crypto'
 
-import { GetAdvertsQueryParams } from '@dmr.is/shared-dto'
-
-import { extractPhrase } from '../../util/phrase'
 import {
+  extractPhrase,
   matchPublicationNumber,
   matchPublicationNumberPrefix,
-} from '../../util/query-shape'
+} from '@dmr.is/ojoi-modules/search/query'
+import { GetAdvertsQueryParams } from '@dmr.is/shared-dto'
+
 import {
   LeanSearchQueryKind,
   LeanSearchTrackingEventDto,

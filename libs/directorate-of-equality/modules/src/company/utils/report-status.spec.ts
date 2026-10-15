@@ -1,3 +1,5 @@
+import { ReportTypeEnum } from '../../report/models/report.enums'
+import { CompanySizeEnum } from '../models/company.enums'
 import {
   actionPlanMissingSql,
   companyHasLegacyReportsSql,
@@ -7,6 +9,7 @@ import {
   equalityReportOverdueSql,
   equalityRequiredSql,
   hiddenFromDefaultRegisterSql,
+  isReportRequired,
   notLegallyObligedSql,
   salaryObligationStatusCaseSql,
   salaryReportMissingSql,
@@ -56,6 +59,66 @@ describe('obligation predicates', () => {
       // employee_count_category = 'LARGE'. Duplicating that here is how the two
       // come to disagree after a bucket is added or moved.
       expect(salaryRequiredSql).not.toContain('employee_count_category')
+    })
+  })
+
+  describe('isReportRequired', () => {
+    const company = (
+      employeeCountCategory: CompanySizeEnum,
+      salaryReportRequired = false,
+      salaryReportRequiredOverride = false,
+    ) => ({
+      employeeCountCategory,
+      salaryReportRequired,
+      salaryReportRequiredOverride,
+    })
+
+    it('owes the salary report on the flag or the override, not on size', () => {
+      expect(
+        isReportRequired(
+          company(CompanySizeEnum.LARGE, true),
+          ReportTypeEnum.SALARY,
+        ),
+      ).toBe(true)
+      expect(
+        isReportRequired(
+          company(CompanySizeEnum.SMALL, false, true),
+          ReportTypeEnum.SALARY,
+        ),
+      ).toBe(true)
+      expect(
+        isReportRequired(
+          company(CompanySizeEnum.MEDIUM),
+          ReportTypeEnum.SALARY,
+        ),
+      ).toBe(false)
+    })
+
+    it('owes the equality plan at 25+ or with a salary obligation', () => {
+      expect(
+        isReportRequired(
+          company(CompanySizeEnum.MEDIUM),
+          ReportTypeEnum.EQUALITY,
+        ),
+      ).toBe(true)
+      expect(
+        isReportRequired(
+          company(CompanySizeEnum.SMALL, false, true),
+          ReportTypeEnum.EQUALITY,
+        ),
+      ).toBe(true)
+      expect(
+        isReportRequired(
+          company(CompanySizeEnum.SMALL),
+          ReportTypeEnum.EQUALITY,
+        ),
+      ).toBe(false)
+      expect(
+        isReportRequired(
+          company(CompanySizeEnum.UNKNOWN),
+          ReportTypeEnum.EQUALITY,
+        ),
+      ).toBe(false)
     })
   })
 

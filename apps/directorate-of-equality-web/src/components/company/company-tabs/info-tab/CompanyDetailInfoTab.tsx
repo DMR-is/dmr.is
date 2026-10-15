@@ -2,7 +2,11 @@
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 
-import { CompanyDto, CompanySizeEnum } from '../../../../gen/fetch'
+import {
+  CompanyDto,
+  CompanySizeEnum,
+  ReportTypeEnum,
+} from '../../../../gen/fetch'
 import { companiesText, reportText, sharedText } from '../../../../lib/text'
 import {
   COMPANY_SIZE_LABEL,
@@ -11,6 +15,7 @@ import {
 } from '../../../../lib/utils'
 import { InfoItems } from '../../../report/report-tabs/company-tab/InfoItems'
 import { CompanyTimeline } from '../../company-timeline/CompanyTimeline'
+import { CompanyDueDateField } from './CompanyDueDateField'
 import { CompanyEmailField } from './CompanyEmailField'
 import { CompanyRegisterStatusField } from './CompanyRegisterStatusField'
 import { CompanySectorField } from './CompanySectorField'
@@ -93,6 +98,24 @@ export const CompanyDetailInfoTab = ({ company }: Props) => {
             children: company.salaryReportRequired
               ? sharedText.yesLabel
               : sharedText.noLabel,
+          },
+          {
+            label: companiesText.expandedRow.equalityDueAt,
+            children: (
+              <CompanyDueDateField
+                company={company}
+                reportType={ReportTypeEnum.EQUALITY}
+              />
+            ),
+          },
+          {
+            label: companiesText.expandedRow.salaryDueAt,
+            children: (
+              <CompanyDueDateField
+                company={company}
+                reportType={ReportTypeEnum.SALARY}
+              />
+            ),
           },
         ]}
       />
