@@ -191,7 +191,10 @@ describe('NoticeDispatchService', () => {
     companyReportModel.findOne.mockResolvedValue({
       companyId: COMPANY_ID,
       name: 'Fyrirtæki ehf.',
-      company: { salaryReportRequired: false },
+      company: {
+        salaryReportRequired: false,
+        salaryReportRequiredOverride: false,
+      },
     })
     mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
       status: 'SENT',
@@ -576,7 +579,10 @@ describe('NoticeDispatchService', () => {
       reportModel.findOne.mockResolvedValue(report)
       companyReportModel.findOne.mockResolvedValue({
         companyId: COMPANY_ID,
-        company: { salaryReportRequired: true },
+        company: {
+          salaryReportRequired: true,
+          salaryReportRequiredOverride: false,
+        },
       })
       reportPdfService.generateReportPdf.mockResolvedValue({
         pdf: Buffer.from('report-bytes'),
@@ -609,28 +615,50 @@ describe('NoticeDispatchService', () => {
 
     describe('service survey', () => {
       /*
-       * Asked only by the approval that completes the company's obligations,
-       * which follow `salary_report_required` (override included), not size:
+       * Asked only by the approval that completes the company's obligations:
        * the equality report when no salary report is owed, else the salary
-       * report.
+       * report. "Owed" is `owesSalaryReport`, the twin of `salaryRequiredSql`:
+       * `salary_report_required` OR `salary_report_required_override`.
+       *
+       * The size column is not read; each row says what the size trigger
+       * leaves in `salary_report_required` for it (true for LARGE only, and an
+       * override leaves the flag as it was).
        */
+      const owes = (required: boolean, override: boolean) => ({
+        salaryReportRequired: required,
+        salaryReportRequiredOverride: override,
+      })
+
       it.each([
-        [ReportTypeEnum.EQUALITY, false, true],
-        // A salary report is still owed, whatever the size bucket says.
-        [ReportTypeEnum.EQUALITY, true, false],
+        // SMALL or MEDIUM: only the equality report is owed.
+        ['EQUALITY', 'under 50', owes(false, false), true],
+        [
+          'SALARY',
+          'under 50, filed though not owed',
+          owes(false, false),
+          false,
+        ],
+        // LARGE: the salary report comes last.
+        ['EQUALITY', 'LARGE', owes(true, false), false],
+        ['SALARY', 'LARGE', owes(true, false), true],
+        // Under 50 with the override: owes a salary report, like LARGE.
+        ['EQUALITY', 'under 50, override on', owes(false, true), false],
+        ['SALARY', 'under 50, override on', owes(false, true), true],
+        // UNKNOWN: the trigger leaves the flag off, so no salary report is
+        // owed and the equality approval asks, as for SMALL or MEDIUM. If
+        // later classified LARGE, the salary approval asks again.
+        ['EQUALITY', 'UNKNOWN', owes(false, false), true],
+        ['SALARY', 'UNKNOWN, filed though not owed', owes(false, false), false],
+        ['EQUALITY', 'UNKNOWN, override on', owes(false, true), false],
+        ['SALARY', 'UNKNOWN, override on', owes(false, true), true],
         // No filing company found.
-        [ReportTypeEnum.EQUALITY, null, false],
-        // The salary report is the last filing when one is owed.
-        [ReportTypeEnum.SALARY, true, true],
-        // Filed though not owed: the equality approval already asked.
-        [ReportTypeEnum.SALARY, false, false],
-        [ReportTypeEnum.SALARY, null, false],
-      ])(
-        '%s approval, salary report required %s: %s',
-        (type, salaryReportRequired, expected) => {
-          expect(offersServiceSurvey(type, salaryReportRequired)).toBe(expected)
-        },
-      )
+        ['EQUALITY', 'no filing company', null, false],
+        ['SALARY', 'no filing company', null, false],
+      ] as const)('%s approval, %s: %s', (type, _label, company, expected) => {
+        expect(offersServiceSurvey(ReportTypeEnum[type], company)).toBe(
+          expected,
+        )
+      })
 
       // The filing company's own row, not a subsidiary's on a group report,
       // with the company's current obligation joined in.
@@ -643,17 +671,42 @@ describe('NoticeDispatchService', () => {
             include: [
               expect.objectContaining({
                 as: 'company',
-                attributes: expect.arrayContaining(['salaryReportRequired']),
+                attributes: expect.arrayContaining([
+                  'salaryReportRequired',
+                  'salaryReportRequiredOverride',
+                ]),
               }),
             ],
           }),
         )
       })
 
+      // The override forces the obligation on; the flag stays off under 50.
+      it('asks on a salary approval when the obligation is only an override', async () => {
+        reportModel.findOne.mockResolvedValue(
+          approvedReport({ type: ReportTypeEnum.SALARY }),
+        )
+        companyReportModel.findOne.mockResolvedValue({
+          companyId: COMPANY_ID,
+          company: owes(false, true),
+        })
+
+        await service.dispatchPending(lockTransaction)
+
+        expect(mailService.sendReportApproved).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          { serviceSurvey: true },
+        )
+      })
+
       it('asks nothing on an equality approval while a salary report is owed', async () => {
         companyReportModel.findOne.mockResolvedValue({
           companyId: COMPANY_ID,
-          company: { salaryReportRequired: true },
+          company: {
+            salaryReportRequired: true,
+            salaryReportRequiredOverride: false,
+          },
         })
 
         await service.dispatchPending(lockTransaction)
@@ -1480,7 +1533,10 @@ describe('NoticeDispatchService', () => {
         expect.objectContaining({
           include: [
             expect.objectContaining({
-              attributes: expect.arrayContaining(['salaryReportRequired']),
+              attributes: expect.arrayContaining([
+                'salaryReportRequired',
+                'salaryReportRequiredOverride',
+              ]),
             }),
           ],
         }),
