@@ -53,7 +53,10 @@ describe('notice letters', () => {
       { serviceSurvey: true },
     )
 
-    expect(letter.html).toContain(`<a href="${SERVICE_SURVEY_URL}">`)
+    // Printed as text too: a printed letter has no href to follow.
+    expect(letter.html).toContain(
+      `<a href="${SERVICE_SURVEY_URL}">${SERVICE_SURVEY_URL}</a>`,
+    )
   })
 
   it('an approval with nothing enclosed has no enclosure line', () => {

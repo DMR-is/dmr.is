@@ -1,6 +1,5 @@
 import { Op } from 'sequelize'
 
-import { CompanySizeEnum } from '../company/models/company.enums'
 import { ReportMailOutcome } from '../mail/doe-mail.service.interface'
 import { buildMailboxDeliveryIdempotencyKey } from '../mailbox-delivery/mailbox-delivery.idempotency-key'
 import {
@@ -152,11 +151,11 @@ describe('NoticeDispatchService', () => {
     mailService.sendReportDenied.mockResolvedValue(ReportMailOutcome.SENT)
     delete process.env.ONESYSTEMS_ENABLED
     // The filing company's snapshot: the mailbox reads its id and name, the
-    // survey decision its size.
+    // survey decision whether the company owes a salary report.
     companyReportModel.findOne.mockResolvedValue({
       companyId: COMPANY_ID,
       name: 'Fyrirtæki ehf.',
-      employeeCountCategory: CompanySizeEnum.MEDIUM,
+      company: { salaryReportRequired: false },
     })
     mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
       status: 'SENT',
@@ -525,7 +524,7 @@ describe('NoticeDispatchService', () => {
             label: 'jafnréttisáætlun',
           },
         ],
-        // A MEDIUM company's equality approval completes its obligations.
+        // With no salary report owed, the equality approval completes them.
         { serviceSurvey: true },
       )
     })
@@ -535,7 +534,7 @@ describe('NoticeDispatchService', () => {
       reportModel.findOne.mockResolvedValue(report)
       companyReportModel.findOne.mockResolvedValue({
         companyId: COMPANY_ID,
-        employeeCountCategory: CompanySizeEnum.LARGE,
+        company: { salaryReportRequired: true },
       })
       reportPdfService.generateReportPdf.mockResolvedValue({
         pdf: Buffer.from('report-bytes'),
@@ -568,34 +567,58 @@ describe('NoticeDispatchService', () => {
 
     describe('service survey', () => {
       /*
-       * Asked only by the approval that completes the company's obligations:
-       * the equality report under 50 employees, the salary report at 50+.
+       * Asked only by the approval that completes the company's obligations,
+       * which follow `salary_report_required` (override included), not size:
+       * the equality report when no salary report is owed, else the salary
+       * report.
        */
       it.each([
-        [ReportTypeEnum.EQUALITY, CompanySizeEnum.SMALL, true],
-        [ReportTypeEnum.EQUALITY, CompanySizeEnum.MEDIUM, true],
-        // A salary report is still owed.
-        [ReportTypeEnum.EQUALITY, CompanySizeEnum.LARGE, false],
-        [ReportTypeEnum.EQUALITY, CompanySizeEnum.UNKNOWN, false],
-        [ReportTypeEnum.SALARY, CompanySizeEnum.LARGE, true],
-        // Filed under an admin override, outside the size rule.
-        [ReportTypeEnum.SALARY, CompanySizeEnum.MEDIUM, false],
-        [ReportTypeEnum.SALARY, CompanySizeEnum.SMALL, false],
-        [ReportTypeEnum.SALARY, CompanySizeEnum.UNKNOWN, false],
+        [ReportTypeEnum.EQUALITY, false, true],
+        // A salary report is still owed, whatever the size bucket says.
+        [ReportTypeEnum.EQUALITY, true, false],
+        // No filing company found.
         [ReportTypeEnum.EQUALITY, null, false],
-        [ReportTypeEnum.SALARY, null, false],
-      ])('%s approval at size %s: %s', (type, size, expected) => {
-        expect(offersServiceSurvey(type, size)).toBe(expected)
-      })
+        // The salary report is always the last filing.
+        [ReportTypeEnum.SALARY, true, true],
+        [ReportTypeEnum.SALARY, false, true],
+        [ReportTypeEnum.SALARY, null, true],
+      ])(
+        '%s approval, salary report required %s: %s',
+        (type, salaryReportRequired, expected) => {
+          expect(offersServiceSurvey(type, salaryReportRequired)).toBe(expected)
+        },
+      )
 
-      // The filing company's own row, not a subsidiary's on a group report.
-      it("reads the filing company's size snapshot", async () => {
+      // The filing company's own row, not a subsidiary's on a group report,
+      // with the company's current obligation joined in.
+      it("reads the filing company's salary obligation", async () => {
         await service.dispatchPending(lockTransaction)
 
         expect(companyReportModel.findOne).toHaveBeenCalledWith(
           expect.objectContaining({
             where: { reportId: 'report-1', parentCompanyId: null },
+            include: [
+              expect.objectContaining({
+                as: 'company',
+                attributes: expect.arrayContaining(['salaryReportRequired']),
+              }),
+            ],
           }),
+        )
+      })
+
+      it('asks nothing on an equality approval while a salary report is owed', async () => {
+        companyReportModel.findOne.mockResolvedValue({
+          companyId: COMPANY_ID,
+          company: { salaryReportRequired: true },
+        })
+
+        await service.dispatchPending(lockTransaction)
+
+        expect(mailService.sendReportApproved).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          { serviceSurvey: false },
         )
       })
 
@@ -1109,7 +1132,7 @@ describe('NoticeDispatchService', () => {
     )
 
     it('links the service survey in the letter when the approval completes reporting', async () => {
-      // EQUALITY at the default MEDIUM snapshot: the last filing it owes.
+      // EQUALITY with no salary report owed (the default): the last filing.
       mailboxDeliveryService.deliverToMailbox.mockImplementation(
         async (input: { pdf: () => Promise<Buffer> }) => {
           await input.pdf()
@@ -1127,7 +1150,11 @@ describe('NoticeDispatchService', () => {
 
       expect(companyReportModel.findOne).toHaveBeenCalledWith(
         expect.objectContaining({
-          attributes: expect.arrayContaining(['employeeCountCategory']),
+          include: [
+            expect.objectContaining({
+              attributes: expect.arrayContaining(['salaryReportRequired']),
+            }),
+          ],
         }),
       )
       expect(renderedHtml()).toContain('Svara könnun')

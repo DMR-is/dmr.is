@@ -9,13 +9,6 @@ export const buildReportApprovedSubject = (
   report: Pick<ReportModel, 'type'>,
 ): string => `${reportKindLabel(report.type)} samþykkt`
 
-/**
- * Names the attached documents in the body.
- *
- * A salary approval carries two PDFs — the report and the úrbótaáætlun, which is
- * its own document — and an unnamed second attachment reads as a duplicate of
- * the first.
- */
 export const SERVICE_SURVEY_URL =
   'https://haskoliislands.eu.qualtrics.com/jfe/form/SV_1FH0p5glq6huJXE?Q_Language=ISL'
 
@@ -36,6 +29,13 @@ export type ReportApprovedMailOptions = {
   serviceSurvey: boolean
 }
 
+/**
+ * Names the attached documents in the body.
+ *
+ * A salary approval carries two PDFs — the report and the úrbótaáætlun, which is
+ * its own document — and an unnamed second attachment reads as a duplicate of
+ * the first.
+ */
 const attachmentLine = (labels: string[]): string =>
   labels.length === 0
     ? ''
@@ -73,7 +73,9 @@ export const buildReportApprovedHtml = (
           ...SERVICE_SURVEY_PARAGRAPHS.map(
             (paragraph) => `<p>${escapeHtml(paragraph)}</p>`,
           ),
-          `<p><a href="${escapeHtml(SERVICE_SURVEY_URL)}">Svara könnun</a></p>`,
+          // The URL is the link text too: the mailbox letter reuses this body,
+          // and a printed PDF has no href to follow.
+          `<p>Svara könnun: <a href="${escapeHtml(SERVICE_SURVEY_URL)}">${escapeHtml(SERVICE_SURVEY_URL)}</a></p>`,
         ]
       : []),
   ].join('')
@@ -94,8 +96,8 @@ export const buildReportApprovedText = (
     ...(attachments ? ['', attachments] : []),
     ...(options.serviceSurvey
       ? [
+          ...SERVICE_SURVEY_PARAGRAPHS.flatMap((paragraph) => ['', paragraph]),
           '',
-          ...SERVICE_SURVEY_PARAGRAPHS,
           `Svara könnun: ${SERVICE_SURVEY_URL}`,
         ]
       : []),

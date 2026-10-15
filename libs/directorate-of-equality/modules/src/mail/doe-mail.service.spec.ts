@@ -516,10 +516,15 @@ describe('DoeMailService', () => {
       )
 
       const [message] = aws.sendMail.mock.calls[0]
-      expect(message.text).toContain(`Svara könnun: ${SERVICE_SURVEY_URL}`)
-      expect(message.text).toContain('Svörin eru ekki persónugreinanleg.')
+      // Each paragraph and the link line stand apart in plain text.
+      expect(message.text).toContain(
+        `Svörin eru ekki persónugreinanleg.\n\nÞitt svar`,
+      )
+      expect(message.text).toContain(
+        `þjónustu okkar.\n\nSvara könnun: ${SERVICE_SURVEY_URL}`,
+      )
       expect(message.html).toContain(
-        `<a href="${SERVICE_SURVEY_URL}">Svara könnun</a>`,
+        `<a href="${SERVICE_SURVEY_URL}">${SERVICE_SURVEY_URL}</a>`,
       )
     })
 

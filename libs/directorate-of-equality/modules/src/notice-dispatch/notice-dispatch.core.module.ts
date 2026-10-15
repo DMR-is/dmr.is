@@ -25,7 +25,6 @@ import { INoticeDispatchService } from './notice-dispatch.service.interface'
       NoticeOutboxModel,
       ReportModel,
       ReportEventModel,
-      CompanyReportModel,
     ]),
     DoeMailModule,
     ReportPdfCoreModule,

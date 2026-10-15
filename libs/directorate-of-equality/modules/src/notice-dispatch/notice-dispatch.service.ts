@@ -6,7 +6,7 @@ import { InjectConnection, InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { CompanySizeEnum } from '../company/models/company.enums'
+import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ICompanyFileService } from '../company-file/company-file.service.interface'
 import {
@@ -79,27 +79,36 @@ export const NOTICE_DISPATCH_RETRY_DELAY_MS = 5 * 60 * 1000
  * obligations, which is when Jafnréttisstofa asks it to answer the service
  * survey.
  *
- * - Under 50 employees (SMALL, MEDIUM) the equality report is the only filing,
- *   so its approval completes them.
- * - At 50+ (LARGE) the salary report comes after the equality report, and its
- *   approval is the last step: approval requires every outlier explained, so
- *   any úrbótaáætlun is in by then.
+ * - An equality report completes them when no salary report is owed, that is
+ *   when `company.salary_report_required` is off.
+ * - A salary report is always the last filing: it cannot be submitted before
+ *   the equality obligation is met, and its approval requires every outlier
+ *   explained, so any úrbótaáætlun is in by then.
  *
- * Every other pairing is a filing with another one still owed (a LARGE
- * company's equality report) or a salary report filed outside the size rule (an
- * admin override), and gets no survey. UNKNOWN is not a size, so it gets none
- * either.
- *
- * The size is the one snapshotted on the report at submission, not the
- * company's current bucket: it is the size the filing was made under.
+ * The obligation is `salary_report_required`, not the size bucket, because an
+ * admin can pin it either way (`salary_report_required_override`): a company
+ * under 50 forced on owes a salary report after its equality report, and one
+ * at 50+ forced off owes only the equality report. The flag is not snapshotted
+ * on `company_report` (admin state, not filing data; see doe-api's
+ * `db/README.md`), so it is read off `company` when the notice is sent. Null,
+ * a filing company not found, gets no survey on an equality approval.
  */
 export const offersServiceSurvey = (
   type: ReportTypeEnum,
-  size: CompanySizeEnum | null,
+  salaryReportRequired: boolean | null,
 ): boolean =>
-  type === ReportTypeEnum.EQUALITY
-    ? size === CompanySizeEnum.SMALL || size === CompanySizeEnum.MEDIUM
-    : type === ReportTypeEnum.SALARY && size === CompanySizeEnum.LARGE
+  type === ReportTypeEnum.SALARY ||
+  (type === ReportTypeEnum.EQUALITY && salaryReportRequired === false)
+
+/**
+ * Loads the filing company's `salary_report_required` alongside its snapshot,
+ * for `offersServiceSurvey`.
+ */
+const FILING_COMPANY_OBLIGATION = {
+  model: CompanyModel,
+  as: 'company',
+  attributes: ['id', 'salaryReportRequired'],
+}
 
 /**
  * No new row is started once a run has taken this long. The run holds the
@@ -523,7 +532,8 @@ export class NoticeDispatchService implements INoticeDispatchService {
 
     const company = await this.companyReportModel.findOne({
       where: { reportId: row.reportId, parentCompanyId: null },
-      attributes: ['companyId', 'name', 'employeeCountCategory'],
+      attributes: ['companyId', 'name'],
+      include: [FILING_COMPANY_OBLIGATION],
     })
 
     if (!company) {
@@ -561,7 +571,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
   private async prepareMailboxNotice(
     row: NoticeOutboxModel,
     report: ReportModel,
-    company: Pick<CompanyReportModel, 'name' | 'employeeCountCategory'>,
+    company: Pick<CompanyReportModel, 'name' | 'company'>,
     lockTransaction: Transaction,
   ): Promise<MailboxNotice | Gone> {
     const companyName = company.name
@@ -600,7 +610,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
                 // Same rule as the email: the mailbox letter replaces it.
                 serviceSurvey: offersServiceSurvey(
                   report.type,
-                  company.employeeCountCategory ?? null,
+                  company.company?.salaryReportRequired ?? null,
                 ),
               },
             )
@@ -852,7 +862,8 @@ export class NoticeDispatchService implements INoticeDispatchService {
     // subsidiary, each with `parentCompanyId` set.
     const snapshot = await this.companyReportModel.findOne({
       where: { reportId, parentCompanyId: null },
-      attributes: ['employeeCountCategory'],
+      attributes: ['companyId'],
+      include: [FILING_COMPANY_OBLIGATION],
     })
 
     const outcome = await this.mailService.sendReportApproved(
@@ -861,7 +872,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
       {
         serviceSurvey: offersServiceSurvey(
           report.type,
-          snapshot?.employeeCountCategory ?? null,
+          snapshot?.company?.salaryReportRequired ?? null,
         ),
       },
     )
