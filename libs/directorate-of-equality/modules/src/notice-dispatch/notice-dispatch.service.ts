@@ -82,9 +82,12 @@ export const NOTICE_DISPATCH_RETRY_DELAY_MS = 5 * 60 * 1000
  *
  * - An equality report completes them when no salary report is owed, that is
  *   when `company.salary_report_required` is off.
- * - A salary report is always the last filing: it cannot be submitted before
- *   the equality obligation is met, and its approval requires every outlier
- *   explained, so any úrbótaáætlun is in by then.
+ * - A salary report completes them when one is owed: it cannot be submitted
+ *   before the equality obligation is met, and its approval requires every
+ *   outlier explained, so any úrbótaáætlun is in by then.
+ *
+ * A salary report filed when none is owed gets no survey. Nothing stops such a
+ * filing, and its company was already asked with its equality approval.
  *
  * The obligation is `salary_report_required`, not the size bucket, because an
  * admin can pin it either way (`salary_report_required_override`): a company
@@ -98,8 +101,9 @@ export const offersServiceSurvey = (
   type: ReportTypeEnum,
   salaryReportRequired: boolean | null,
 ): boolean =>
-  type === ReportTypeEnum.SALARY ||
-  (type === ReportTypeEnum.EQUALITY && salaryReportRequired === false)
+  type === ReportTypeEnum.SALARY
+    ? salaryReportRequired === true
+    : type === ReportTypeEnum.EQUALITY && salaryReportRequired === false
 
 /**
  * Loads the filing company's `salary_report_required` alongside its snapshot,

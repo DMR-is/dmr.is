@@ -611,10 +611,11 @@ describe('NoticeDispatchService', () => {
         [ReportTypeEnum.EQUALITY, true, false],
         // No filing company found.
         [ReportTypeEnum.EQUALITY, null, false],
-        // The salary report is always the last filing.
+        // The salary report is the last filing when one is owed.
         [ReportTypeEnum.SALARY, true, true],
-        [ReportTypeEnum.SALARY, false, true],
-        [ReportTypeEnum.SALARY, null, true],
+        // Filed though not owed: the equality approval already asked.
+        [ReportTypeEnum.SALARY, false, false],
+        [ReportTypeEnum.SALARY, null, false],
       ])(
         '%s approval, salary report required %s: %s',
         (type, salaryReportRequired, expected) => {
