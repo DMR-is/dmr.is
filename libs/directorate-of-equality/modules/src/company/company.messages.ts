@@ -1,3 +1,6 @@
+import { REPORT_VALIDITY_YEARS } from '../constants'
+import { ReportTypeEnum } from '../report/models/report.enums'
+
 /**
  * Error messages for the company module.
  *
@@ -66,5 +69,28 @@ export const companyMessages = {
   unknownSnapshotPostcode: (value: string): ErrorMessage => ({
     message: `company.postcode "${value}" does not lead with a known Icelandic postcode`,
     translatedMessage: `Póstnúmerið „${value}“ er ekki til`,
+  }),
+  invalidDueDate: (value: string): ErrorMessage => ({
+    message: `dueDate "${value}" is not a real calendar day`,
+    translatedMessage: `Dagsetningin „${value}“ er ekki gild`,
+  }),
+  dueDateBeforeCurrent: (value: string, current: string): ErrorMessage => ({
+    message: `dueDate "${value}" is before the current due date "${current}"`,
+    translatedMessage: 'Ekki er hægt að færa skiladag aftur í tímann',
+  }),
+  reportNotOwed: (id: string, reportType: ReportTypeEnum): ErrorMessage => ({
+    message: `company ${id} owes no ${reportType} report, so it has no ${reportType} due date`,
+    translatedMessage:
+      reportType === ReportTypeEnum.SALARY
+        ? 'Fyrirtækinu ber ekki að skila skýrslu'
+        : 'Fyrirtækinu ber ekki að skila jafnréttisáætlun',
+  }),
+  dueDateTooFar: (value: string, latest: string): ErrorMessage => ({
+    message: `dueDate "${value}" is after the latest allowed day "${latest}"`,
+    translatedMessage: `Skiladagur má ekki vera meira en ${REPORT_VALIDITY_YEARS} ár fram í tímann`,
+  }),
+  dueDateInPast: (value: string): ErrorMessage => ({
+    message: `dueDate "${value}" is in the past`,
+    translatedMessage: 'Skiladagur getur ekki verið liðinn',
   }),
 } as const

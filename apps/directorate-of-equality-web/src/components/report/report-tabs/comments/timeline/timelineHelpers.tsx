@@ -14,6 +14,7 @@ import {
   ReportStatusTranslatedEnum,
 } from '../../../../../lib/constants'
 import { reportText } from '../../../../../lib/text'
+import { formatTimestampDate } from '../../../../../lib/utils'
 
 export function formatRelativeDate(dateStr: string): string {
   const d = new Date(dateStr)
@@ -144,6 +145,9 @@ export type TimelineItem = Omit<ReportTimelineItemDto, 'comment' | 'event'> & {
          * arrangement as `scope` and `isSystem`.
          */
         companyEmailId?: string | null
+        /** Old and new date on *_DUE_DATE_CHANGED company events only. */
+        fromDueAt?: string | null
+        toDueAt?: string | null
       })
     | null
 }
@@ -169,6 +173,11 @@ const forReportType = (
   reportType?: ReportTypeEnum | null,
 ): string =>
   reportType === ReportTypeEnum.EQUALITY ? labels.EQUALITY : labels.SALARY
+
+const DUE_DATE_CHANGED_KIND: Record<string, 'EQUALITY' | 'SALARY'> = {
+  EQUALITY_REPORT_DUE_DATE_CHANGED: 'EQUALITY',
+  SALARY_REPORT_DUE_DATE_CHANGED: 'SALARY',
+}
 
 export function timelineEntryText(
   item: TimelineItem,
@@ -365,6 +374,24 @@ export function timelineEntryText(
   // Company-specific event types are cast as `never` in the adapter but
   // arrive as plain strings at runtime.
   const eventTypeStr = eventType as unknown as string
+
+  const dueDateKind = DUE_DATE_CHANGED_KIND[eventTypeStr]
+  if (dueDateKind) {
+    const t = reportText.timeline
+    const { fromDueAt, toDueAt } = item.event
+    const [withActor, withoutActor] = fromDueAt
+      ? [t.dueDateChanged, t.dueDateChangedNoActor]
+      : [t.dueDateSet, t.dueDateSetNoActor]
+    const fill = (template: string) =>
+      template
+        .replace('{from}', formatTimestampDate(fromDueAt))
+        .replace('{to}', formatTimestampDate(toDueAt))
+
+    return actorLine(
+      fill(withActor[dueDateKind]),
+      fill(withoutActor[dueDateKind]),
+    )
+  }
   // Events whose wording works with or without a name in front of it: the
   // fines and quarantine switches are always admin-driven, and the reminder
   // events are always the system's. Anything that can arrive both ways belongs

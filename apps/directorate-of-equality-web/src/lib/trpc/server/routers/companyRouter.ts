@@ -10,6 +10,8 @@ import {
   zGetCompanyLegacyReportsPath,
   zGetCompanyTimelinePath,
   zGetRskCompanyPreviewPath,
+  zUpdateCompanyDueDateBody,
+  zUpdateCompanyDueDatePath,
   zUpdateCompanyEmailBody,
   zUpdateCompanyEmailPath,
   zUpdateCompanyFinesBody,
@@ -218,6 +220,21 @@ export const companyRouter = router({
       ctx.api.updateCompanyEmail({
         path: { id: input.id },
         body: { email: input.email },
+      }),
+    ),
+
+  // Manual next-due date (e.g. an extension), recorded on the company
+  // timeline. The next approval overwrites it again.
+  updateDueDate: protectedProcedure
+    .input(zUpdateCompanyDueDatePath.extend(zUpdateCompanyDueDateBody.shape))
+    .mutation(({ ctx, input }) =>
+      ctx.api.updateCompanyDueDate({
+        path: { id: input.id },
+        body: {
+          reportType: input.reportType,
+          dueDate: input.dueDate,
+          reason: input.reason,
+        },
       }),
     ),
 

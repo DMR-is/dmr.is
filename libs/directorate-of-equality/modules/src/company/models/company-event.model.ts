@@ -47,6 +47,13 @@ import { CompanyModel } from './company.model'
  *                    `reason` holds the subject and `companyEmailId` points at
  *                    the batch. All three outcomes are recorded: a mail that
  *                    never went out is the one an admin most needs to see.
+ *   EQUALITY_REPORT_DUE_DATE_CHANGED / SALARY_REPORT_DUE_DATE_CHANGED
+ *                  → an admin moved the company's next-due date by hand.
+ *                    `fromDueAt`/`toDueAt` carry the old and new date;
+ *                    `fromDueAt` is null when the company had no date yet.
+ *                    Carries an optional reason.
+ *                    Approval overwrites the date again without an event of
+ *                    this type — the report's own STATUS_CHANGED covers that.
  */
 export enum CompanyEventTypeEnum {
   CREATED = 'CREATED',
@@ -66,7 +73,14 @@ export enum CompanyEventTypeEnum {
   CUSTOM_EMAIL_SENT = 'CUSTOM_EMAIL_SENT',
   CUSTOM_EMAIL_FAILED = 'CUSTOM_EMAIL_FAILED',
   CUSTOM_EMAIL_SKIPPED = 'CUSTOM_EMAIL_SKIPPED',
+  EQUALITY_REPORT_DUE_DATE_CHANGED = 'EQUALITY_REPORT_DUE_DATE_CHANGED',
+  SALARY_REPORT_DUE_DATE_CHANGED = 'SALARY_REPORT_DUE_DATE_CHANGED',
 }
+
+/** The two manual due-date moves, one per report kind. */
+export type CompanyDueDateChangedEventType =
+  | CompanyEventTypeEnum.EQUALITY_REPORT_DUE_DATE_CHANGED
+  | CompanyEventTypeEnum.SALARY_REPORT_DUE_DATE_CHANGED
 
 /** The three outcomes one company can have within a custom-email batch. */
 export type CompanyCustomEmailEventType =
@@ -116,6 +130,8 @@ type CompanyEventAttributes = {
   reason: string | null
   reminderTier: CompanyReminderTierEnum | null
   companyEmailId: string | null
+  fromDueAt: Date | null
+  toDueAt: Date | null
 }
 
 type CompanyEventCreateAttributes = {
@@ -128,6 +144,8 @@ type CompanyEventCreateAttributes = {
   reason?: string | null
   reminderTier?: CompanyReminderTierEnum | null
   companyEmailId?: string | null
+  fromDueAt?: Date | null
+  toDueAt?: Date | null
 }
 
 @ImmutableTable({ tableName: DoeModels.COMPANY_EVENT })
@@ -190,6 +208,13 @@ export class CompanyEventModel extends ImmutableModel<
   @Column({ type: DataType.UUID, allowNull: true, field: 'company_email_id' })
   companyEmailId!: string | null
 
+  // Old and new date on a *_DUE_DATE_CHANGED event, null on every other type.
+  @Column({ type: DataType.DATE, allowNull: true, field: 'from_due_at' })
+  fromDueAt!: Date | null
+
+  @Column({ type: DataType.DATE, allowNull: true, field: 'to_due_at' })
+  toDueAt!: Date | null
+
   @BelongsTo(() => CompanyModel, { foreignKey: 'companyId', as: 'company' })
   company?: CompanyModelRef
 
@@ -211,6 +236,8 @@ export class CompanyEventModel extends ImmutableModel<
       reason: model.reason,
       reminderTier: model.reminderTier,
       companyEmailId: model.companyEmailId,
+      fromDueAt: model.fromDueAt,
+      toDueAt: model.toDueAt,
       createdAt: model.createdAt,
     }
   }
