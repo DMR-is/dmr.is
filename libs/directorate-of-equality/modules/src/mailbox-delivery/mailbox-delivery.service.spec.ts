@@ -513,6 +513,21 @@ describe('MailboxDeliveryService', () => {
         { interrupted: false, inProgress: false, exhausted: true },
       ],
       [
+        'none of them: a SENT row is settled, even under a live lease',
+        {
+          status: MailboxDeliveryStatusEnum.SENT,
+          sentAt: new Date(Date.now() - MINUTE),
+          inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+          leaseExpiresAt: new Date(Date.now() + 5 * MINUTE),
+        },
+        {
+          sent: true,
+          interrupted: false,
+          inProgress: false,
+          exhausted: false,
+        },
+      ],
+      [
         'none of them: UNCERTAIN is settled, whatever its attempts',
         {
           status: MailboxDeliveryStatusEnum.UNCERTAIN,
@@ -603,6 +618,44 @@ describe('MailboxDeliveryService', () => {
       for (const [options] of store.model.count.mock.calls) {
         expect(options).toEqual(expect.objectContaining({ transaction: null }))
       }
+    })
+
+    /*
+     * The filters are meant to be disjoint: the counts are summed into one
+     * total. Rows that would match two if a filter lost a clause: an UNCERTAIN
+     * row still carrying a lapsed marker, and an exhausted row with one.
+     */
+    it('counts a row that fits two descriptions once', async () => {
+      const lapsed = new Date(Date.now() - MINUTE)
+      store.seed({
+        idempotencyKey: keyFor('A'),
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        leaseExpiresAt: lapsed,
+      })
+      store.seed({
+        idempotencyKey: keyFor('B'),
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        leaseExpiresAt: lapsed,
+      })
+
+      const stuck = await service.findStuckDeliveries(50)
+      const counts = await service.countStuckDeliveries()
+
+      expect(stuck.map(({ reason }) => reason)).toEqual([
+        'UNCERTAIN',
+        'INTERRUPTED',
+      ])
+      expect(counts).toEqual({
+        UNCERTAIN: 1,
+        INTERRUPTED: 1,
+        ATTEMPTS_EXHAUSTED: 0,
+      })
+      expect(Object.values(counts).reduce((sum, n) => sum + n, 0)).toBe(
+        stuck.length,
+      )
     })
 
     it('counts past the limit it names', async () => {

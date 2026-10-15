@@ -46,10 +46,12 @@ export interface DeliverToMailboxInput {
  *   rather than returning DISABLED.
  * - `UNCONFIGURED`: `kind` has no case template in `mailbox-delivery.kinds.ts`
  *   (`isKindConfigured`). Nothing was written, rendered or sent, and it is
- *   logged at error. Not a failure of this delivery: the caller holds the
- *   notice, uncounted, until the template is set, so switching the flag on
- *   before the templates are confirmed loses nothing. doe-api's daily mailbox
- *   alert names every unconfigured kind while the flag is on.
+ *   logged at error. Not a failure of this delivery: the notice dispatcher
+ *   holds the notice, uncounted, until the template is set, and the reminder
+ *   task emails the reminder instead, so switching the flag on before the
+ *   templates are confirmed loses nothing. doe-api logs every unconfigured
+ *   kind at boot and names them in its daily mailbox alert while the flag is
+ *   on.
  * - `QUARANTINED`: the company is quarantined (`company.quarantined`), which
  *   halts every outbound touchpoint. Nothing was written, rendered or sent,
  *   and a delivery already under way is left where it stopped. Call again

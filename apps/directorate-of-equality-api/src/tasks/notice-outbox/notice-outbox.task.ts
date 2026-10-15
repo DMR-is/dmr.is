@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 
 import {
@@ -24,6 +24,9 @@ const LOGGING_CONTEXT = NOTICE_OUTBOX_LOGGING_CONTEXT
  */
 export const MAILBOX_DELIVERY_ALERT_LIMIT = 50
 
+const plural = (n: number, one: string, many: string) =>
+  `${n} ${n === 1 ? one : many}`
+
 /**
  * Sends the notices the outbox holds: the submission receipt (mailbox only),
  * the approval and the denial. Also raises the daily alert for mailbox
@@ -38,7 +41,7 @@ export const MAILBOX_DELIVERY_ALERT_LIMIT = 50
  * containers firing a few seconds apart, never a real run.
  */
 @Injectable()
-export class NoticeOutboxTask {
+export class NoticeOutboxTask implements OnModuleInit {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(AdvisoryLockService)
@@ -48,6 +51,15 @@ export class NoticeOutboxTask {
     @Inject(IMailboxDeliveryService)
     private readonly mailboxDeliveryService: IMailboxDeliveryService,
   ) {}
+
+  /**
+   * Names the unconfigured kinds at deploy rather than at the first 08:00
+   * alert. Logs only: refusing to boot would also stop the approval and
+   * denial emails, and the dispatcher already holds what it cannot send.
+   */
+  onModuleInit(): void {
+    this.alertUnconfiguredKinds('at boot')
+  }
 
   @Cron(CronExpression.EVERY_MINUTE, {
     timeZone: 'Atlantic/Reykjavik',
@@ -105,8 +117,8 @@ export class NoticeOutboxTask {
    *   of attempts. The dispatcher gives its outbox row up as FAILED and moves
    *   on, and a reminder only records a timeline event;
    * - with `ONESYSTEMS_ENABLED` on, every mailbox kind in use with no case
-   *   template. Its notices are held and its reminders not sent until the
-   *   template is set;
+   *   template. Its notices are held, and its reminders emailed, until the
+   *   template is set (also logged at boot);
    * - every outbox row overdue (`findOverdueNotices`): held on a document One
    *   has filed but not sent while the flag is off, held on an unconfigured
    *   kind, or failing on every run.
@@ -114,7 +126,9 @@ export class NoticeOutboxTask {
    *
    * Daily, so a stuck delivery is raised every morning until it is settled,
    * and not behind `ONESYSTEMS_ENABLED`: rows left from before the flag went
-   * off still need a person. Caught like `run`, for the same reason.
+   * off still need a person. Caught like `run`, for the same reason, and each
+   * alert on its own, so a failure in one does not silence the others: the
+   * overdue alert is the only place a held decision is named.
    */
   async alertStuckMailboxDeliveries(): Promise<void> {
     try {
@@ -122,9 +136,15 @@ export class NoticeOutboxTask {
         DOE_TASK_NAMESPACE,
         DOE_TASK_JOB_IDS.mailboxDeliveryAlert,
         async () => {
-          await this.alertStuckDeliveries()
-          this.alertUnconfiguredKinds()
-          await this.alertOverdueNotices()
+          await this.guarded('stuck deliveries', () =>
+            this.alertStuckDeliveries(),
+          )
+          await this.guarded('unconfigured kinds', async () =>
+            this.alertUnconfiguredKinds('daily'),
+          )
+          await this.guarded('overdue notices', () =>
+            this.alertOverdueNotices(),
+          )
         },
         {
           // Long enough to absorb every container's 08:00 firing, far
@@ -135,6 +155,24 @@ export class NoticeOutboxTask {
       )
     } catch (error) {
       this.logger.error('Mailbox delivery alert failed — aborting this run', {
+        context: LOGGING_CONTEXT,
+        message: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
+  /**
+   * Every alert query is `transaction: null`, so one that fails leaves the
+   * lock's transaction usable for the next.
+   */
+  private async guarded(
+    alert: string,
+    work: () => Promise<void>,
+  ): Promise<void> {
+    try {
+      await work()
+    } catch (error) {
+      this.logger.error(`Mailbox delivery alert: ${alert} failed`, {
         context: LOGGING_CONTEXT,
         message: error instanceof Error ? error.message : String(error),
       })
@@ -168,7 +206,7 @@ export class NoticeOutboxTask {
   }
 
   /** Only while the flag is on: with it off, no kind is used. */
-  private alertUnconfiguredKinds(): void {
+  private alertUnconfiguredKinds(when: 'at boot' | 'daily'): void {
     if (!isMailboxDeliveryEnabled()) {
       return
     }
@@ -179,8 +217,8 @@ export class NoticeOutboxTask {
     }
 
     this.logger.error(
-      `ONESYSTEMS_ENABLED is on but ${kinds.length} mailbox kinds have no case template: their notices are held and their reminders not sent`,
-      { context: LOGGING_CONTEXT, kinds },
+      `ONESYSTEMS_ENABLED is on but ${plural(kinds.length, 'mailbox kind has', 'mailbox kinds have')} no case template: their notices are held and their reminders emailed`,
+      { context: LOGGING_CONTEXT, kinds, when },
     )
   }
 
@@ -194,7 +232,7 @@ export class NoticeOutboxTask {
     }
 
     this.logger.error(
-      `Notice outbox: ${total} notices overdue${total > notices.length ? ` (oldest ${notices.length} shown)` : ''}`,
+      `Notice outbox: ${plural(total, 'notice', 'notices')} overdue${total > notices.length ? ` (oldest ${notices.length} shown)` : ''}`,
       {
         context: LOGGING_CONTEXT,
         notices: notices.map((notice) => ({
@@ -203,6 +241,7 @@ export class NoticeOutboxTask {
           reportId: notice.reportId,
           attempts: notice.attempts,
           lastError: notice.lastError,
+          createdAt: notice.createdAt,
         })),
       },
     )

@@ -24,6 +24,7 @@ import {
   IMailboxDeliveryService,
   isMailboxDeliveryEnabled,
   MailboxDeliveryKindEnum,
+  MailboxDeliveryState,
   MailboxDeliveryStatusEnum,
 } from '@dmr.is/doe-modules/mailbox-delivery'
 import {
@@ -237,8 +238,13 @@ export class ReportDeadlineReminderService
     }
 
     for (const company of companies) {
-      if (isMailboxDeliveryEnabled()) {
-        await this.remindCompanyByMailbox(company, kind, tier.tier, now)
+      // A kind with no case template yet falls back to email, so a band that
+      // closes before the template is set is not lost. Both channels write
+      // `kind.sentEventType`, so the mailbox does not send it again later.
+      if (
+        isMailboxDeliveryEnabled() &&
+        (await this.remindCompanyByMailbox(company, kind, tier.tier, now))
+      ) {
         continue
       }
 
@@ -385,9 +391,10 @@ export class ReportDeadlineReminderService
    * delivery's row is read back: waiting for a later run would miss a failure
    * on the band's last day, or before the due date moves.
    *
-   * `UNCONFIGURED` (the flag on before the kind's case template is set) sends
-   * nothing and writes no event: `deliverToMailbox` logged it, the daily alert
-   * names the kind, and the next run after the template is set sends it.
+   * Returns false only for `UNCONFIGURED` (the flag on before the kind's case
+   * template is set): nothing went to One and no row was written, so
+   * `processTier` emails the reminder instead. `deliverToMailbox` logged it at
+   * error, and the daily alert and the boot check name the kind.
    *
    * ⚠️ **Flipping the flags.** Both channels need `EMAIL_REMINDER_JOB_ENABLED`
    * (the task does not run without it), so with it off nothing is sent by
@@ -400,18 +407,19 @@ export class ReportDeadlineReminderService
    * database fault on the lock's transaction: `deliverToMailbox` records its own
    * state outside every ambient transaction (`transaction: null`) and rethrows
    * only after recording it. Letting it out would abort the run at the first
-   * company One rejects, every day, and withhold every reminder behind it. The
-   * SENT event insert stays outside the catch, so a fault there still aborts
-   * the run as `processTier` requires.
+   * company One rejects, every day, and withhold every reminder behind it. So
+   * is a failure to read that state back (`findDelivery`, its own pool
+   * connection). The event inserts stay outside the catch, so a fault there
+   * still aborts the run as `processTier` requires.
    */
   private async remindCompanyByMailbox(
     company: CompanyModel,
     kind: DeadlineKind,
     tier: CompanyReminderTierEnum,
     now: Date,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const dueDate = company[kind.dueField]
-    if (!dueDate) return
+    if (!dueDate) return true
 
     const dueDateIso = dueDate.toISOString()
 
@@ -421,7 +429,7 @@ export class ReportDeadlineReminderService
       tier,
       dueDateIso,
     )
-    if (alreadySent) return
+    if (alreadySent) return true
 
     const letter = buildDeadlineReminderLetter(
       {
@@ -479,7 +487,16 @@ export class ReportDeadlineReminderService
         tier,
         dueDateIso,
       )
-      return
+      return true
+    }
+
+    // Already logged at error by `deliverToMailbox`.
+    if (result?.status === 'UNCONFIGURED') {
+      this.logger.info(
+        `${kind.reportType} ${tier} reminder for company ${company.id} goes by email: mailbox kind ${result.kind} has no case template`,
+        meta,
+      )
+      return false
     }
 
     if (result) {
@@ -492,24 +509,37 @@ export class ReportDeadlineReminderService
       )
     }
 
-    // Outside the catch: a fault on the lock's transaction must abort the
+    const eventType = await this.stoppedEventType(
+      kind,
+      result,
+      idempotencyKey,
+      meta,
+    )
+    // Outside any catch: a fault on the lock's transaction must abort the
     // run, as for the SENT event.
-    const eventType = await this.stoppedEventType(kind, result, idempotencyKey)
     if (eventType) {
       await this.flagStopped(company, eventType, tier, dueDateIso)
     }
+    return true
   }
 
   /**
    * The event for a delivery no later run will finish, or null. IN_PROGRESS
-   * is another worker's, and DISABLED, QUARANTINED or UNCONFIGURED send
-   * nothing by design. A thrown call (`result` null) recorded its outcome on
-   * the row before rethrowing, so the row is read.
+   * is another worker's, and DISABLED or QUARANTINED send nothing by design.
+   * A thrown call (`result` null) recorded its outcome on the row before
+   * rethrowing, so the row is read.
+   *
+   * The read is on its own pool connection (`transaction: null`), and the
+   * fault that made the call throw (a pool timeout, a DB blip) will often
+   * fail it too. That is caught here, per company, like the call itself: no
+   * event this run, and the next run reads the row again. Letting it out
+   * would abort the run and roll back every SENT event already written.
    */
   private async stoppedEventType(
     kind: DeadlineKind,
     result: DeliverToMailboxResult | null,
     idempotencyKey: string,
+    meta: Record<string, unknown>,
   ): Promise<CompanyDeadlineReminderEventType | null> {
     if (result) {
       if (result.status === 'UNCERTAIN') {
@@ -521,11 +551,24 @@ export class ReportDeadlineReminderService
       return null
     }
 
-    const delivery =
-      await this.mailboxDeliveryService.findDelivery(idempotencyKey)
+    let delivery: MailboxDeliveryState | null
+    try {
+      delivery = await this.mailboxDeliveryService.findDelivery(idempotencyKey)
+    } catch (error) {
+      this.logger.error(
+        `Could not read back mailbox delivery ${idempotencyKey} after it failed — the next run reads it again`,
+        {
+          ...meta,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
+      return null
+    }
     if (!delivery) {
       return null
     }
+    // `interrupted` only when recording the failure itself failed: a call
+    // that throws clears its in-flight marker before rethrowing.
     if (
       delivery.status === MailboxDeliveryStatusEnum.UNCERTAIN ||
       delivery.interrupted
