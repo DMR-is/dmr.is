@@ -41,8 +41,8 @@ describe('StatisticsController', () => {
         },
       ],
     })
-      // The controller is under test, not the guard, which needs a client id
-      // that CI's empty environment does not have
+      // The controller is under test, not the guard: keep the guard and its
+      // environment out of these specs
       .overrideGuard(StaffTokenGuard)
       .useValue({ canActivate: () => true })
       .compile()

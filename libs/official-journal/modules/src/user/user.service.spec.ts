@@ -10,10 +10,10 @@ import { UserRoleEnum } from '@dmr.is/constants'
 import { CreateUserDto, UpdateUserDto, UserDto } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import type { AdvertInvolvedPartyModel } from '../journal/models'
+import { AdvertInvolvedPartyModel } from '../journal/models'
 import type { UserModel } from './models/user.model'
 import type { UserInvolvedPartiesModel } from './models/user-involved-parties.model'
-import type { UserRoleModel } from './models/user-role.model'
+import { UserRoleModel } from './models/user-role.model'
 import { UserService } from './user.service'
 
 const ROLES = {
@@ -32,7 +32,11 @@ describe('UserService authorization', () => {
     create: jest.Mock
     findAndCountAll: jest.Mock
   }
-  let userInvolvedPartiesModel: { destroy: jest.Mock; bulkCreate: jest.Mock }
+  let userInvolvedPartiesModel: {
+    destroy: jest.Mock
+    bulkCreate: jest.Mock
+    findAll: jest.Mock
+  }
   let service: UserService
 
   const dbUser = (
@@ -79,6 +83,7 @@ describe('UserService authorization', () => {
     userInvolvedPartiesModel = {
       destroy: jest.fn(),
       bulkCreate: jest.fn(),
+      findAll: jest.fn().mockResolvedValue([]),
     }
     const userRoleModel = {
       findByPk: jest.fn((id: string) =>
@@ -100,7 +105,7 @@ describe('UserService authorization', () => {
       logger as never,
       userModel as unknown as typeof UserModel,
       userRoleModel as unknown as typeof UserRoleModel,
-      {} as typeof AdvertInvolvedPartyModel,
+      {} as unknown as typeof AdvertInvolvedPartyModel,
       userInvolvedPartiesModel as unknown as typeof UserInvolvedPartiesModel,
       sequelize as never,
     )
@@ -281,6 +286,36 @@ describe('UserService authorization', () => {
       )
     })
 
+    it.each([
+      ['the admin role', ROLES.admin.id],
+      ['the user role', ROLES.user.id],
+    ])(
+      'creates a user-role account whatever role it names: %s',
+      async (_, roleId) => {
+        const result = await create(
+          { roleId },
+          caller(ROLES.editor, ['party-a']),
+        )
+        expect(result.result.ok).toBe(true)
+        expect(userModel.create).toHaveBeenCalledWith(
+          expect.objectContaining({ roleId: ROLES.user.id }),
+          expect.anything(),
+        )
+      },
+    )
+
+    it("uses the editor's own parties when involvedParties is null", async () => {
+      const result = await create(
+        { roleId: ROLES.editor.id, involvedParties: null as never },
+        caller(ROLES.editor, ['party-a']),
+      )
+      expect(result.result.ok).toBe(true)
+      expect(userInvolvedPartiesModel.bulkCreate).toHaveBeenCalledWith(
+        [{ userId: 'created', involvedPartyId: 'party-a' }],
+        expect.anything(),
+      )
+    })
+
     it('assigns the named parties when they are all its own', async () => {
       const result = await create(
         { roleId: ROLES.editor.id, involvedParties: ['party-b'] },
@@ -316,13 +351,45 @@ describe('UserService authorization', () => {
     })
   })
 
+  type Include = {
+    model: unknown
+    where: Record<PropertyKey, Record<PropertyKey, unknown>>
+  }
+  const partyInclude = (include: Include[]) =>
+    include.find(({ model }) => model === AdvertInvolvedPartyModel) as Include
+  const roleInclude = (include: Include[]) =>
+    include.find(({ model }) => model === UserRoleModel) as Include
+
   it("lists only users in the editor's parties, whichever shape they arrive in", async () => {
     await service.getUsersByUserInvolvedParties(
       { page: 1, pageSize: 10 } as never,
       caller(ROLES.editor, ['party-a', { id: 'party-b' }]),
     )
     const [{ include }] = userModel.findAndCountAll.mock.calls[0]
-    expect(include[0].where.id[Op.in]).toEqual(['party-a', 'party-b'])
+    expect(partyInclude(include).where.id[Op.in]).toEqual([
+      'party-a',
+      'party-b',
+    ])
+  })
+
+  it('does not list users who also belong to a party outside the editor', async () => {
+    userInvolvedPartiesModel.findAll.mockResolvedValue([
+      { userId: 'user-ab' },
+      { userId: 'user-ab' },
+      { userId: 'user-b' },
+    ])
+    await service.getUsersByUserInvolvedParties(
+      { page: 1, pageSize: 10, search: 'x' } as never,
+      caller(ROLES.editor, ['party-a']),
+    )
+    expect(userInvolvedPartiesModel.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { involvedPartyId: { [Op.notIn]: ['party-a'] } },
+      }),
+    )
+    const [{ where }] = userModel.findAndCountAll.mock.calls[0]
+    expect(where.id).toEqual({ [Op.notIn]: ['user-ab', 'user-b'] })
+    expect(where[Op.or]).toBeDefined()
   })
 
   it('counts each listed user once, and never lists admin accounts', async () => {
@@ -337,10 +404,10 @@ describe('UserService authorization', () => {
 
     const [[unfiltered], [filtered]] = userModel.findAndCountAll.mock.calls
     expect(unfiltered.distinct).toBe(true)
-    expect(unfiltered.include[1].where).toEqual({
+    expect(roleInclude(unfiltered.include).where).toEqual({
       title: { [Op.ne]: UserRoleEnum.Admin },
     })
-    expect(filtered.include[1].where).toEqual({
+    expect(roleInclude(filtered.include).where).toEqual({
       title: { [Op.ne]: UserRoleEnum.Admin },
       slug: { [Op.eq]: 'fulltrui' },
     })

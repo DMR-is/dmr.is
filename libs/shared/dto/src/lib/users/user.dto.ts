@@ -1,3 +1,5 @@
+import { IsArray, IsOptional, IsUUID } from 'class-validator'
+
 import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 
 import { Institution } from '../institutions'
@@ -112,15 +114,21 @@ export class CreateUserDto extends PickType(UserDto, [
   'lastName',
   'email',
 ] as const) {
+  // Validated because the OJ user service authorizes on these two fields; a
+  // malformed shape is a 400 here rather than a TypeError there
   @ApiProperty({
     type: String,
   })
+  @IsUUID('all')
   roleId!: string
 
   @ApiProperty({
     type: [String],
     required: false,
   })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('all', { each: true })
   involvedParties?: string[]
 
   @ApiProperty({

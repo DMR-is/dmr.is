@@ -89,28 +89,15 @@ export class UserService implements IUserService {
       ? (body.involvedParties ?? [])
       : (body.involvedParties ?? currentUserPartyIds)
 
+    // A non-admin always creates an Innsendandi (`roleId` below), so the role
+    // named in `body.roleId` is not checked here; the route admits only admins
+    // and editors.
     if (!isAdmin) {
-      const role = await this.userRoleModel.findByPk(body.roleId, {
-        transaction,
-      })
-
-      const hasPermission = role?.title !== UserRoleEnum.User
       const hasAnyInvolvedParties = currentUserPartyIds.length > 0
       const hasInvolvedParties = canManagePartiesOf(
         involedPartyIds,
         currentUserPartyIds,
       )
-
-      if (!hasPermission) {
-        this.logger.warn(
-          `User without a sufficent role tried to create a user`,
-          {
-            context: LOGGING_CONTEXT,
-            category: LOGGING_CATEGORY,
-            userId: currentUser.id,
-          },
-        )
-      }
 
       if (!hasAnyInvolvedParties) {
         this.logger.warn(
@@ -134,7 +121,7 @@ export class UserService implements IUserService {
         )
       }
 
-      if (!hasPermission || !hasAnyInvolvedParties || !hasInvolvedParties) {
+      if (!hasAnyInvolvedParties || !hasInvolvedParties) {
         return ResultWrapper.err({
           code: 403,
           message: 'Forbidden',
@@ -324,8 +311,8 @@ export class UserService implements IUserService {
       // The target must belong to the caller's parties, and so must any
       // parties the caller assigns. An empty assignment is refused: it would
       // orphan the account, which this same rule then locks the caller out of.
-      // `null` leaves the parties as they are, like the write below; the DTO
-      // does not validate the field, so it can arrive.
+      // `null` leaves the parties as they are, like the write below; the DTO's
+      // `@IsOptional()` lets it through.
       const hasInvoledParty =
         canManagePartiesOf(targetPartyIds, currentUserPartyIds) &&
         (body.involvedParties == null ||
@@ -646,29 +633,46 @@ export class UserService implements IUserService {
       pageSize: query.pageSize,
     })
 
+    // List only the accounts the caller may update and delete: every one of
+    // their parties must be the caller's (`canManagePartiesOf`). A user who
+    // shares one party but also has another would otherwise be listed, with
+    // the include below trimming away the foreign party, and refuse every edit.
+    const usersOutsideCallerParties = involedPartyIds.length
+      ? await this.userInvolvedPartiesModel.findAll({
+          attributes: ['userId'],
+          where: { involvedPartyId: { [Op.notIn]: involedPartyIds } },
+        })
+      : []
+    const excludedUserIds = [
+      ...new Set(usersOutsideCallerParties.map((row) => row.userId)),
+    ]
+
     const users = await this.userModel.findAndCountAll({
       limit,
       offset,
       // The party join yields a row per matching party; count users, not rows
       distinct: true,
-      where: query.search
-        ? {
-            [Op.or]: {
-              displayName: {
-                [Op.iLike]: `%${query.search}%`,
-              },
-              email: {
-                [Op.iLike]: `%${query.search}%`,
-              },
-              firstName: {
-                [Op.iLike]: `%${query.search}%`,
-              },
-              lastName: {
-                [Op.iLike]: `%${query.search}%`,
-              },
+      where: {
+        ...(excludedUserIds.length > 0 && {
+          id: { [Op.notIn]: excludedUserIds },
+        }),
+        ...(query.search && {
+          [Op.or]: {
+            displayName: {
+              [Op.iLike]: `%${query.search}%`,
             },
-          }
-        : {},
+            email: {
+              [Op.iLike]: `%${query.search}%`,
+            },
+            firstName: {
+              [Op.iLike]: `%${query.search}%`,
+            },
+            lastName: {
+              [Op.iLike]: `%${query.search}%`,
+            },
+          },
+        }),
+      },
       include: [
         {
           model: AdvertInvolvedPartyModel,
