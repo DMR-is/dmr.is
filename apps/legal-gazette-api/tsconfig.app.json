@@ -7,7 +7,7 @@
     "jest.config.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.ts",
-    "src/**/*.fixture.ts"
+    "src/**/*.testing.ts"
   ],
   "include": ["src/**/*.ts"]
 }

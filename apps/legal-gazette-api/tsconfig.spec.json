@@ -8,7 +8,7 @@
     "jest.config.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
-    "src/**/*.fixture.ts",
+    "src/**/*.testing.ts",
     "src/**/*.d.ts"
   ]
 }

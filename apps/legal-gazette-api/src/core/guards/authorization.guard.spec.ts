@@ -17,7 +17,7 @@ import { SCOPES_KEY } from './scope-guards/scopes.decorator'
 import {
   asStaffToken,
   STAFF_CLIENT_ID,
-} from './token-surface/staff-token.fixture'
+} from './token-surface/staff-token.testing'
 import { AuthorizationGuard } from './authorization.guard'
 
 // One logger for every category, so a spec can count the refusal logs
@@ -737,26 +737,27 @@ describe('AuthorizationGuard', () => {
       },
     )
 
-    // Presence, not a truthy check: a falsy value that is present still names
-    // a delegated session
-    it.each([
-      ['an empty object', {}],
-      ['an empty string', ''],
-      ['null', null],
-      ['0', 0],
-      ['false', false],
-    ])(
-      'should refuse any actor claim that is present, even %s',
-      async (_, actor) => {
-        adminOnly()
-        const context = createMockContext({ nationalId: '1234567890', actor })
-        usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
-        await expect(guard.canActivate(context)).rejects.toThrow(
-          ForbiddenException,
-        )
-        expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
-      },
-    )
+    // TokenJwtAuthGuard always sets the actor key, to undefined when the token
+    // has none, so a key-presence check would refuse every staff member
+    it('should accept the actor: undefined that TokenJwtAuthGuard always sets', async () => {
+      adminOnly()
+      const context = createMockContext({
+        nationalId: '1234567890',
+        actor: undefined,
+      })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).resolves.toBe(true)
+    })
+
+    it('should refuse any actor that is present, even an empty object', async () => {
+      adminOnly()
+      const context = createMockContext({ nationalId: '1234567890', actor: {} })
+      usersService.getUserByNationalId.mockResolvedValue(createMockUserDto())
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
 
     it('should not split a string aud on spaces', async () => {
       adminOnly()

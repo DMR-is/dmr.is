@@ -16,7 +16,10 @@ import { IUsersService } from '../../modules/users/users.service.interface'
 import { UserContext } from '../context/user/user.context'
 import { ADMIN_KEY } from '../decorators/admin.decorator'
 import { SCOPES_KEY } from './scope-guards/scopes.decorator'
-import { assertStaffToken } from './token-surface/token-surface'
+import {
+  ADMIN_ACCESS_REQUIRED,
+  assertStaffToken,
+} from './token-surface/token-surface'
 import { scopeValues } from './claim-values'
 
 const logger = getLogger('AuthorizationGuard')
@@ -138,37 +141,40 @@ export class AuthorizationGuard implements CanActivate {
       // Scope check failed, fall through to admin check
     }
 
-    // Before the try, so a refusal (403, logged with its reason) or a missing
-    // client id (500) is not logged again as a missing admin row. A user with
-    // no nationalId is refused by checkAdminAccess first, as before. The route
-    // is the matched pattern or the path, never the query string.
-    if (user?.nationalId) {
+    // Identity, then token, then admin row. A user with no nationalId skips
+    // both and is refused below. The token check is outside the try so its
+    // refusal (403, logged with its reason) is not logged again as a missing
+    // admin row. The route is the matched pattern or the path, never the
+    // query string.
+    if (!user?.nationalId) {
+      logger.debug('Admin check skipped: No nationalId in request')
+    } else {
       assertStaffToken(
         user,
         `${request.method} ${request.route?.path ?? request.path}`,
       )
-    }
 
-    // Check admin access (expensive database lookup)
-    try {
-      const adminUser = await this.checkAdminAccess(user)
+      // Check admin access (expensive database lookup)
+      try {
+        const adminUser = await this.checkAdminAccess(user.nationalId)
 
-      request.user = {
-        ...request.user,
-        adminUserId: adminUser.id,
-      }
+        request.user = {
+          ...request.user,
+          adminUserId: adminUser.id,
+        }
 
-      logger.debug('Admin access granted', {
-        nationalId: user?.nationalId,
-      })
+        logger.debug('Admin access granted', {
+          nationalId: user.nationalId,
+        })
 
-      this.userContext.user = request.user
+        this.userContext.user = request.user
 
-      return true
-    } catch (error) {
-      // A lookup failure is an outage, not a refusal, so it must not become a 403
-      if (!(error instanceof ForbiddenException)) {
-        throw error
+        return true
+      } catch (error) {
+        // A lookup failure is an outage, not a refusal, so it must not become a 403
+        if (!(error instanceof ForbiddenException)) {
+          throw error
+        }
       }
     }
 
@@ -186,7 +192,7 @@ export class AuthorizationGuard implements CanActivate {
       })
     }
 
-    throw new ForbiddenException('Admin access required')
+    throw new ForbiddenException(ADMIN_ACCESS_REQUIRED)
   }
 
   /**
@@ -221,31 +227,24 @@ export class AuthorizationGuard implements CanActivate {
   }
 
   /**
-   * Check that the user exists in the UserModel table (admin check). The token
-   * itself is checked by `assertStaffToken` before this runs. Throws
-   * ForbiddenException when the user is not an admin.
+   * Look the nationalId up in the UserModel table (admin check). Identity and
+   * the token are checked before this runs. Throws ForbiddenException when the
+   * user is not an admin.
    */
-  private async checkAdminAccess(
-    user: { nationalId?: string } | undefined,
-  ): Promise<UserDto> {
-    if (!user?.nationalId) {
-      logger.debug('Admin check skipped: No nationalId in request')
-      throw new ForbiddenException('Admin access required')
-    }
-
+  private async checkAdminAccess(nationalId: string): Promise<UserDto> {
     try {
       const dbUser = await this.usersService.getUserByNationalId(
-        user.nationalId,
+        nationalId,
         true,
       )
 
       return dbUser
     } catch (error) {
       if (error instanceof NotFoundException) {
-        throw new ForbiddenException('Admin access required')
+        throw new ForbiddenException(ADMIN_ACCESS_REQUIRED)
       }
       logger.error('Admin lookup failed', {
-        nationalId: user.nationalId,
+        nationalId,
         error: error instanceof Error ? error.message : 'Unknown error',
       })
       throw new InternalServerErrorException('Admin lookup failed')

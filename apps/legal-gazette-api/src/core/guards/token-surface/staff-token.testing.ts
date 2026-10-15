@@ -1,6 +1,6 @@
 /**
  * Spec fixtures for tokens that reach `assertStaffToken`. Not imported by
- * application code, and excluded from the app build (`*.fixture.ts` in
+ * application code, and excluded from the app build (`*.testing.ts` in
  * tsconfig.app.json).
  */
 

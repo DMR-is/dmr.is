@@ -19,6 +19,13 @@ import { audienceValues } from '../claim-values'
 const logger = getLogger('TokenSurface')
 
 /**
+ * The body of every admin refusal, here and in `AuthorizationGuard`. One body
+ * is what keeps a caller from telling which check it failed, so every refusal
+ * throws with this constant rather than its own copy of the text.
+ */
+export const ADMIN_ACCESS_REQUIRED = 'Admin access required'
+
+/**
  * legal-gazette-web's IDS client id. legal-gazette-web sends its id_token,
  * whose `aud` is the client it was issued to, so a token issued to any other
  * client fails here.
@@ -49,7 +56,7 @@ const refuse = (
 
   // The same body as every other admin refusal, so a caller cannot tell which
   // check it failed; the reason is in the log above.
-  throw new ForbiddenException('Admin access required')
+  throw new ForbiddenException(ADMIN_ACCESS_REQUIRED)
 }
 
 /**
@@ -88,7 +95,10 @@ export const assertStaffToken = (user: unknown, route?: string): void => {
     }
   }
 
-  // Any `actor` at all, falsy or not: only a delegated session carries one.
+  // The value, never the key: `TokenJwtAuthGuard` always sets `actor`, to
+  // `undefined` when the token has none, so `'actor' in claims` would refuse
+  // every staff member. That guard also turns a falsy `actor` into `undefined`,
+  // so what arrives here is either a delegated session's actor or nothing.
   if (claims.actor !== undefined) {
     refuse(claims, 'delegated session on a staff route', route)
   }

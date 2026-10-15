@@ -1,10 +1,13 @@
+const stringItems = (value: unknown[]): string[] =>
+  value.filter((item): item is string => typeof item === 'string')
+
 /**
  * `scope` as a list. IDS emits several scopes as an array, and a scope string
  * is space-delimited (RFC 6749 §3.3); anything else reads as no scopes.
  */
 export const scopeValues = (value: unknown): string[] => {
   if (Array.isArray(value)) {
-    return value.filter((item): item is string => typeof item === 'string')
+    return stringItems(value)
   }
 
   return typeof value === 'string' ? value.split(' ').filter(Boolean) : []
@@ -17,7 +20,7 @@ export const scopeValues = (value: unknown): string[] => {
  */
 export const audienceValues = (value: unknown): string[] => {
   if (Array.isArray(value)) {
-    return value.filter((item): item is string => typeof item === 'string')
+    return stringItems(value)
   }
 
   return typeof value === 'string' ? [value] : []
