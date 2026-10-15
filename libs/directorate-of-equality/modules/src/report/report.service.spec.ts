@@ -1578,6 +1578,9 @@ describe('ReportService.resolveSalaryFilingBasis', () => {
     companyFindByPk.mockResolvedValueOnce({ id: COMPANY_ID, sector })
 
     expect(await service.resolveSalaryFilingBasis(COMPANY_ID)).toBeNull()
+    expect(companyFindByPk).toHaveBeenCalledWith(COMPANY_ID, {
+      attributes: ['id', 'sector'],
+    })
   })
 
   it('refuses when the company row is missing', async () => {
@@ -1587,6 +1590,9 @@ describe('ReportService.resolveSalaryFilingBasis', () => {
     companyFindByPk.mockResolvedValueOnce(null)
 
     expect(await service.resolveSalaryFilingBasis(COMPANY_ID)).toBeNull()
+    expect(companyFindByPk).toHaveBeenCalledWith(COMPANY_ID, {
+      attributes: ['id', 'sector'],
+    })
   })
 })
 

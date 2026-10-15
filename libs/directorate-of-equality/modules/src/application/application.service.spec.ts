@@ -1130,6 +1130,33 @@ describe('ApplicationService', () => {
       expect(reportFindOne).toHaveBeenCalledTimes(1)
     })
 
+    // A sveitarfélag that filed with nothing covering it. There is no coverage
+    // to describe, so the detail carries no equality block and makes no second
+    // lookup.
+    it('reports no equality coverage for an EXEMPT salary report, without a second lookup', async () => {
+      const salaryReport = makeReportRow({
+        id: REPORT_ID,
+        providerId: PROVIDER_ID,
+        type: ReportTypeEnum.SALARY,
+        status: ReportStatusEnum.SUBMITTED,
+        identifier: 'SAL-2026-003',
+        equalityReportId: null,
+        equalitySource: EqualityCoverageSourceEnum.EXEMPT,
+        equalityLegacyValidUntil: null,
+        outliersPostponed: false,
+      })
+
+      reportFindOne.mockResolvedValueOnce(salaryReport)
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      const result = await service.getReport(PROVIDER_ID, COMPANY)
+
+      expect(result.equalityReport).toBeNull()
+      expect(reportFindOne).toHaveBeenCalledTimes(1)
+    })
+
     it('returns equality report detail with narrative content and no salary-only data', async () => {
       const equalityReport = makeReportRow({
         id: REPORT_ID,
