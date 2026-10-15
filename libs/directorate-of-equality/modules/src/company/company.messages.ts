@@ -1,3 +1,5 @@
+import { ReportTypeEnum } from '../report/models/report.enums'
+
 /**
  * Error messages for the company module.
  *
@@ -75,9 +77,12 @@ export const companyMessages = {
     message: `dueDate "${value}" is before the current due date "${current}"`,
     translatedMessage: 'Ekki er hægt að færa skiladag aftur í tímann',
   }),
-  equalityPlanNotOwed: (id: string): ErrorMessage => ({
-    message: `company ${id} owes no equality plan, so it has no equality due date`,
-    translatedMessage: 'Fyrirtækinu ber ekki að skila jafnréttisáætlun',
+  reportNotOwed: (id: string, reportType: ReportTypeEnum): ErrorMessage => ({
+    message: `company ${id} owes no ${reportType} report, so it has no ${reportType} due date`,
+    translatedMessage:
+      reportType === ReportTypeEnum.SALARY
+        ? 'Fyrirtækinu ber ekki að skila skýrslu'
+        : 'Fyrirtækinu ber ekki að skila jafnréttisáætlun',
   }),
   dueDateInPast: (value: string): ErrorMessage => ({
     message: `dueDate "${value}" is in the past`,

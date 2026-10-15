@@ -874,10 +874,11 @@ export class CompanyService implements ICompanyService {
    * lands and the new one gets its own full set of reminders. The next
    * approval overwrites the date again (`advanceCompanyReportDueDate`).
    *
-   * Never cleared. The equality date is refused for a SMALL company with no
-   * salary obligation: it owes no plan, and those are exactly the values
-   * m-20260911-doe-clear-unowed-equality-due-dates cleared. UNKNOWN stays
-   * editable, since its size is an open question, not "owes nothing".
+   * Never cleared. Refused where the report is not owed and there is no salary
+   * obligation: both dates on SMALL (the equality values
+   * m-20260911-doe-clear-unowed-equality-due-dates cleared), and the salary
+   * date on MEDIUM. UNKNOWN stays editable, since its size is an open question,
+   * not "owes nothing".
    *
    * Never moves backwards, and never into the past: the new day may be neither
    * before the current due date nor before today. A past day would put the
@@ -896,13 +897,18 @@ export class CompanyService implements ICompanyService {
       companyMessages.notFound(id),
     )
 
-    if (
-      dto.reportType === ReportTypeEnum.EQUALITY &&
-      company.employeeCountCategory === CompanySizeEnum.SMALL &&
-      !company.salaryReportRequired &&
-      !company.salaryReportRequiredOverride
-    ) {
-      throw new BadRequestException(companyMessages.equalityPlanNotOwed(id))
+    // Without a salary obligation, SMALL owes neither report and MEDIUM owes
+    // no salary report. The admin override brings both back. UNKNOWN passes.
+    const owesSalary =
+      company.salaryReportRequired || company.salaryReportRequiredOverride
+    const notOwedSizes =
+      dto.reportType === ReportTypeEnum.SALARY
+        ? [CompanySizeEnum.SMALL, CompanySizeEnum.MEDIUM]
+        : [CompanySizeEnum.SMALL]
+    if (!owesSalary && notOwedSizes.includes(company.employeeCountCategory)) {
+      throw new BadRequestException(
+        companyMessages.reportNotOwed(id, dto.reportType),
+      )
     }
 
     const day = new Date(`${dto.dueDate}T00:00:00.000Z`)

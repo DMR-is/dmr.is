@@ -45,8 +45,9 @@ const toIsoDate = (date: Date): string => {
 
 /**
  * Inline-editable next-due date for one report kind, following
- * `CompanyEmailField`. Never clearable. The equality date reads "Á ekki við"
- * instead of an editor for a SMALL company with no salary obligation. Never moves backwards or into the past: the
+ * `CompanyEmailField`. Never clearable. Without a salary obligation, reads "Á
+ * ekki við" instead of an editor for both dates on SMALL and the salary date on
+ * MEDIUM. Never moves backwards or into the past: the
  * earliest pickable day is the later of the current due date and today (the API
  * enforces the same). The change and its optional reason land on the company timeline, and
  * the next approval overwrites the date again.
@@ -100,15 +101,17 @@ export const CompanyDueDateField = ({ company, reportType }: Props) => {
 
   const editLabel = isSalary ? t.dueDateEditSalary : t.dueDateEditEquality
 
-  // Mirrors the API: a SMALL company owes no plan unless it owes the salary
-  // report. UNKNOWN stays editable.
-  const equalityNotOwed =
-    !isSalary &&
-    company.employeeCountCategory === CompanySizeEnum.SMALL &&
-    !company.salaryReportRequired &&
-    !company.salaryReportRequiredOverride
+  // Mirrors the API: without a salary obligation, SMALL owes neither report and
+  // MEDIUM owes no salary report. UNKNOWN stays editable.
+  const owesSalary =
+    company.salaryReportRequired || company.salaryReportRequiredOverride
+  const notOwedSizes: CompanySizeEnum[] = isSalary
+    ? [CompanySizeEnum.SMALL, CompanySizeEnum.MEDIUM]
+    : [CompanySizeEnum.SMALL]
+  const reportNotOwed =
+    !owesSalary && notOwedSizes.includes(company.employeeCountCategory)
 
-  if (equalityNotOwed) {
+  if (reportNotOwed) {
     return <Text>{companiesText.obligationNotRequired}</Text>
   }
 

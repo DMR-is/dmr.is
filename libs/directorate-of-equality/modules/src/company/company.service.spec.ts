@@ -1072,8 +1072,8 @@ describe('CompanyService', () => {
         .mockResolvedValueOnce({
           id: 'company-30',
           status: CompanyStatusEnum.ACTIVE,
-          employeeCountCategory: CompanySizeEnum.MEDIUM,
-          salaryReportRequired: false,
+          employeeCountCategory: CompanySizeEnum.LARGE,
+          salaryReportRequired: true,
           salaryReportRequiredOverride: false,
           nextEqualityReportDueAt: null,
           nextSalaryReportDueAt: null,
@@ -1259,6 +1259,7 @@ describe('CompanyService', () => {
     it('rejects an equality date for a SMALL company that owes no plan', async () => {
       const update = stubCompany({
         employeeCountCategory: CompanySizeEnum.SMALL,
+        salaryReportRequired: false,
       })
 
       await expect(
@@ -1273,9 +1274,65 @@ describe('CompanyService', () => {
       expect(emitDueDateChanged).not.toHaveBeenCalled()
     })
 
-    it('allows the salary date on a SMALL company', async () => {
+    it('rejects a salary date for a SMALL company that owes no report', async () => {
       const update = stubCompany({
         employeeCountCategory: CompanySizeEnum.SMALL,
+        salaryReportRequired: false,
+      })
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.SALARY, dueDate: '2026-11-20' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('rejects a salary date for a MEDIUM company without the salary obligation', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.MEDIUM,
+        salaryReportRequired: false,
+      })
+
+      await expect(
+        service.updateDueDate(
+          'company-30',
+          { reportType: ReportTypeEnum.SALARY, dueDate: '2026-11-20' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitDueDateChanged).not.toHaveBeenCalled()
+    })
+
+    it('allows the salary date on a MEDIUM company with the admin salary override', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.MEDIUM,
+        salaryReportRequired: false,
+        salaryReportRequiredOverride: true,
+      })
+
+      await service.updateDueDate(
+        'company-30',
+        { reportType: ReportTypeEnum.SALARY, dueDate: '2026-11-20' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        nextSalaryReportDueAt: new Date('2026-11-20T23:59:59.999Z'),
+      })
+    })
+
+    it('allows the salary date on a SMALL company with the admin salary override', async () => {
+      const update = stubCompany({
+        employeeCountCategory: CompanySizeEnum.SMALL,
+        salaryReportRequired: false,
+        salaryReportRequiredOverride: true,
       })
 
       await service.updateDueDate(
@@ -1292,6 +1349,7 @@ describe('CompanyService', () => {
     it('allows the equality date on a SMALL company with the admin salary override', async () => {
       const update = stubCompany({
         employeeCountCategory: CompanySizeEnum.SMALL,
+        salaryReportRequired: false,
         salaryReportRequiredOverride: true,
       })
 
@@ -1309,6 +1367,7 @@ describe('CompanyService', () => {
     it('keeps the equality date editable on an UNKNOWN-size company', async () => {
       const update = stubCompany({
         employeeCountCategory: CompanySizeEnum.UNKNOWN,
+        salaryReportRequired: false,
       })
 
       await service.updateDueDate(
