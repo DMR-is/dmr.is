@@ -26,7 +26,7 @@ import {
 } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
-import { RoleGuard } from '../../guards/auth'
+import { RoleGuard, StaffTokenGuard } from '../../guards/auth'
 import { IInstitutionService } from '../institution.service.interface'
 
 @Controller({
@@ -34,7 +34,7 @@ import { IInstitutionService } from '../institution.service.interface'
   path: 'institutions',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@UseGuards(TokenJwtAuthGuard, StaffTokenGuard, RoleGuard)
 @Roles(UserRoleEnum.Admin)
 export class InstitutionAdminController {
   constructor(

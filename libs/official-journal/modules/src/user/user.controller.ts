@@ -36,7 +36,7 @@ import {
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { RoleGuard } from '../guards/auth'
+import { RoleGuard, StaffTokenGuard } from '../guards/auth'
 import { IUserService } from './user.service.interface'
 
 @Controller({
@@ -44,7 +44,7 @@ import { IUserService } from './user.service.interface'
   version: '1',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@UseGuards(TokenJwtAuthGuard, StaffTokenGuard, RoleGuard)
 @Roles(UserRoleEnum.Admin, UserRoleEnum.Editor)
 export class UserController {
   constructor(

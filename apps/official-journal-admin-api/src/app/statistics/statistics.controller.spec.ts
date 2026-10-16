@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
 import { IUserService } from '@dmr.is/ojoi-modules'
+import { StaffTokenGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import {
   DepartmentSlugEnum,
   SearchAnalyticsQueryTableType,
@@ -39,7 +40,12 @@ describe('StatisticsController', () => {
           useClass: MockStatisticsService,
         },
       ],
-    }).compile()
+    })
+      // The controller is under test, not the guard: keep the guard and its
+      // environment out of these specs
+      .overrideGuard(StaffTokenGuard)
+      .useValue({ canActivate: () => true })
+      .compile()
     controller = statistics.get<StatisticsController>(StatisticsController)
   })
   describe('department', () => {

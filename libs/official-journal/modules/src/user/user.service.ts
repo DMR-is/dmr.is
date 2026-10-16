@@ -38,6 +38,28 @@ import { IUserService } from './user.service.interface'
 const LOGGING_CONTEXT = 'UserService'
 const LOGGING_CATEGORY = 'user-service'
 
+/**
+ * Involved-party ids of a user. `RoleGuard` replaces `currentUser.involvedParties`
+ * with an array of id strings, while a user loaded from the DB carries
+ * objects, so compare by id whichever shape arrives.
+ */
+const partyIds = (
+  parties: ReadonlyArray<string | { id: string }> | undefined,
+): string[] =>
+  (parties ?? []).map((party) => (typeof party === 'string' ? party : party.id))
+
+/**
+ * A non-admin may manage an account only when every one of its parties is one
+ * of the caller's. An account with no parties belongs to no one, so only an
+ * admin may manage it.
+ */
+const canManagePartiesOf = (
+  targetPartyIds: string[],
+  callerPartyIds: string[],
+): boolean =>
+  targetPartyIds.length > 0 &&
+  targetPartyIds.every((id) => callerPartyIds.includes(id))
+
 @Injectable()
 export class UserService implements IUserService {
   constructor(
@@ -60,31 +82,22 @@ export class UserService implements IUserService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetUserResponse>> {
     const isAdmin = currentUser.role.title === UserRoleEnum.Admin
+    const currentUserPartyIds = partyIds(currentUser.involvedParties)
+    // A non-admin who names no parties creates the account in all of their
+    // own; named parties must all be the caller's, as in `updateUser`.
     const involedPartyIds: string[] = isAdmin
       ? (body.involvedParties ?? [])
-      : currentUser.involvedParties.map((involvedParty) => involvedParty.id)
+      : (body.involvedParties ?? currentUserPartyIds)
 
+    // A non-admin always creates an Innsendandi (`roleId` below), so the role
+    // named in `body.roleId` is not checked here; the route admits only admins
+    // and editors.
     if (!isAdmin) {
-      const role = await this.userRoleModel.findByPk(body.roleId, {
-        transaction,
-      })
-
-      const hasPermission = role?.title !== UserRoleEnum.User
-      const hasAnyInvolvedParties = involedPartyIds.length > 0
-      const hasInvolvedParties = currentUser.involvedParties.every(
-        (involvedParty) => involedPartyIds.includes(involvedParty.id),
+      const hasAnyInvolvedParties = currentUserPartyIds.length > 0
+      const hasInvolvedParties = canManagePartiesOf(
+        involedPartyIds,
+        currentUserPartyIds,
       )
-
-      if (!hasPermission) {
-        this.logger.warn(
-          `User without a sufficent role tried to create a user`,
-          {
-            context: LOGGING_CONTEXT,
-            category: LOGGING_CATEGORY,
-            userId: currentUser.id,
-          },
-        )
-      }
 
       if (!hasAnyInvolvedParties) {
         this.logger.warn(
@@ -97,9 +110,9 @@ export class UserService implements IUserService {
         )
       }
 
-      if (!hasInvolvedParties) {
+      if (hasAnyInvolvedParties && !hasInvolvedParties) {
         this.logger.warn(
-          'User tried to create a user with different involved parties',
+          'User tried to create a user outside their involved parties',
           {
             context: LOGGING_CONTEXT,
             category: LOGGING_CATEGORY,
@@ -108,7 +121,7 @@ export class UserService implements IUserService {
         )
       }
 
-      if (!hasPermission || !hasAnyInvolvedParties || !hasInvolvedParties) {
+      if (!hasAnyInvolvedParties || !hasInvolvedParties) {
         return ResultWrapper.err({
           code: 403,
           message: 'Forbidden',
@@ -280,13 +293,30 @@ export class UserService implements IUserService {
     }
 
     if (!isAdmin) {
-      const hasUpdatePermission = userToUpdate.role.title !== UserRoleEnum.User
-      const hasInvoledParty = userToUpdate.involvedParties.every(
-        (involvedParty) =>
-          currentUser.involvedParties.find(
-            (userInvolvedParty) => userInvolvedParty.id === involvedParty.id,
-          ),
-      )
+      const currentUserPartyIds = partyIds(currentUser.involvedParties)
+      const targetPartyIds = partyIds(userToUpdate.involvedParties)
+
+      // Only an admin may touch an admin account or hand out the admin role
+      const newRole = body.roleId
+        ? await this.userRoleModel.findByPk(body.roleId, { transaction })
+        : null
+      const touchesAdmin =
+        userToUpdate.role.title === UserRoleEnum.Admin ||
+        (!!body.roleId &&
+          newRole?.title !== UserRoleEnum.Editor &&
+          newRole?.title !== UserRoleEnum.User)
+
+      const hasUpdatePermission =
+        userToUpdate.role.title !== UserRoleEnum.User && !touchesAdmin
+      // The target must belong to the caller's parties, and so must any
+      // parties the caller assigns. An empty assignment is refused: it would
+      // orphan the account, which this same rule then locks the caller out of.
+      // `null` leaves the parties as they are, like the write below; the DTO's
+      // `@IsOptional()` lets it through.
+      const hasInvoledParty =
+        canManagePartiesOf(targetPartyIds, currentUserPartyIds) &&
+        (body.involvedParties == null ||
+          canManagePartiesOf(body.involvedParties, currentUserPartyIds))
 
       if (!hasUpdatePermission || !hasInvoledParty) {
         if (!hasUpdatePermission) {
@@ -390,12 +420,14 @@ export class UserService implements IUserService {
     }
 
     if (!isAdmin) {
-      const hasDeletePermission = userToDelete?.role.title !== UserRoleEnum.User
-      const hasInvoledParty = userToDelete?.involvedParties.some(
-        (involvedParty) =>
-          currentUser.involvedParties.find(
-            (userInvolvedParty) => userInvolvedParty.id === involvedParty.id,
-          ),
+      const currentUserPartyIds = partyIds(currentUser.involvedParties)
+      const hasDeletePermission =
+        userToDelete.role.title !== UserRoleEnum.User &&
+        userToDelete.role.title !== UserRoleEnum.Admin
+      // The same rule as update: deleting is the more destructive of the two
+      const hasInvoledParty = canManagePartiesOf(
+        partyIds(userToDelete.involvedParties),
+        currentUserPartyIds,
       )
 
       if (!hasDeletePermission || !hasInvoledParty) {
@@ -594,36 +626,53 @@ export class UserService implements IUserService {
     query: GetUsersQuery,
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUsersResponse>> {
-    const involedPartyIds = currentUser.involvedParties.map(
-      (involvedParty) => involvedParty.id,
-    )
+    const involedPartyIds = partyIds(currentUser.involvedParties)
 
     const { limit, offset } = getLimitAndOffset({
       page: query.page,
       pageSize: query.pageSize,
     })
 
+    // List only the accounts the caller may update and delete: every one of
+    // their parties must be the caller's (`canManagePartiesOf`). A user who
+    // shares one party but also has another would otherwise be listed, with
+    // the include below trimming away the foreign party, and refuse every edit.
+    const usersOutsideCallerParties = involedPartyIds.length
+      ? await this.userInvolvedPartiesModel.findAll({
+          attributes: ['userId'],
+          where: { involvedPartyId: { [Op.notIn]: involedPartyIds } },
+        })
+      : []
+    const excludedUserIds = [
+      ...new Set(usersOutsideCallerParties.map((row) => row.userId)),
+    ]
+
     const users = await this.userModel.findAndCountAll({
       limit,
       offset,
-      where: query.search
-        ? {
-            [Op.or]: {
-              displayName: {
-                [Op.iLike]: `%${query.search}%`,
-              },
-              email: {
-                [Op.iLike]: `%${query.search}%`,
-              },
-              firstName: {
-                [Op.iLike]: `%${query.search}%`,
-              },
-              lastName: {
-                [Op.iLike]: `%${query.search}%`,
-              },
+      // The party join yields a row per matching party; count users, not rows
+      distinct: true,
+      where: {
+        ...(excludedUserIds.length > 0 && {
+          id: { [Op.notIn]: excludedUserIds },
+        }),
+        ...(query.search && {
+          [Op.or]: {
+            displayName: {
+              [Op.iLike]: `%${query.search}%`,
             },
-          }
-        : {},
+            email: {
+              [Op.iLike]: `%${query.search}%`,
+            },
+            firstName: {
+              [Op.iLike]: `%${query.search}%`,
+            },
+            lastName: {
+              [Op.iLike]: `%${query.search}%`,
+            },
+          },
+        }),
+      },
       include: [
         {
           model: AdvertInvolvedPartyModel,
@@ -636,18 +685,18 @@ export class UserService implements IUserService {
         },
         {
           model: UserRoleModel,
-          where: query.role
-            ? {
-                [Op.and]: {
-                  slug: {
-                    [Op.eq]: query.role,
-                  },
-                  title: {
-                    [Op.ne]: UserRoleEnum.Admin,
-                  },
-                },
-              }
-            : {},
+          // Admin accounts are never listed to a non-admin, who can neither
+          // update nor delete them, whether or not a role filter is set
+          where: {
+            title: {
+              [Op.ne]: UserRoleEnum.Admin,
+            },
+            ...(query.role && {
+              slug: {
+                [Op.eq]: query.role,
+              },
+            }),
+          },
         },
       ],
     })

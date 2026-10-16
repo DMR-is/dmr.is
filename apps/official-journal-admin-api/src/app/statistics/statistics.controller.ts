@@ -16,7 +16,7 @@ import {
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { RoleGuard } from '@dmr.is/ojoi-modules/guards/auth'
+import { RoleGuard, StaffTokenGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import {
   DepartmentSlugEnum,
@@ -42,7 +42,7 @@ import { IStatisticsService } from './statistics.service.interface'
 @Controller({
   version: '1',
 })
-@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@UseGuards(TokenJwtAuthGuard, StaffTokenGuard, RoleGuard)
 @Roles(UserRoleEnum.Admin)
 export class StatisticsController {
   constructor(
