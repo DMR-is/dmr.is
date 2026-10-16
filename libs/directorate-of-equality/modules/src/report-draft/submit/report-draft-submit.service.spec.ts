@@ -4,6 +4,7 @@ import { UniqueConstraintError } from 'sequelize'
 
 import {
   BadRequestException,
+  ConflictException,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common'
@@ -115,9 +116,11 @@ describe('ReportDraftSubmitService', () => {
     return {
       id: REPORT_ID,
       type,
+      status: ReportStatusEnum.DRAFT,
       salaryDataBasis: salaryData.salaryDataBasis ?? null,
       salaryDataPeriod: salaryData.salaryDataPeriod ?? null,
       update: reportUpdate,
+      reload: jest.fn().mockResolvedValue(undefined),
     }
   }
 
@@ -367,6 +370,26 @@ describe('ReportDraftSubmitService', () => {
         }),
       ]),
     )
+  })
+
+  // Two submits of one draft: the second waits on the row lock, then finds
+  // the first already committed.
+  it('locks the draft and 409s when it was submitted in the meantime', async () => {
+    const report = makeReport(ReportTypeEnum.EQUALITY)
+    report.reload.mockImplementation(async () => {
+      report.status = ReportStatusEnum.SUBMITTED
+    })
+    findOwnedDraft.mockResolvedValueOnce(report)
+
+    await expect(
+      service.submitDraft(PROVIDER_ID, COMPANY, {
+        company: salaryBody().company,
+      }),
+    ).rejects.toThrow(ConflictException)
+
+    expect(report.reload).toHaveBeenCalledWith({ lock: 'UPDATE' })
+    expect(createCompanyReportSnapshots).not.toHaveBeenCalled()
+    expect(reportUpdate).not.toHaveBeenCalled()
   })
 
   it('submits an equality draft as SUBMITTED without touching scores/result', async () => {

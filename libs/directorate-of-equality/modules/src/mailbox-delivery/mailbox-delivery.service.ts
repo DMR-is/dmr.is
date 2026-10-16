@@ -23,6 +23,7 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyModel } from '../company/models/company.model'
 import {
+  MailboxDeliveryKindEnum,
   MailboxDeliveryStatusEnum,
   MailboxDeliveryStepEnum,
 } from './models/mailbox-delivery.enums'
@@ -32,7 +33,9 @@ import {
   mailboxDeliveryIdempotencyKeyPrefix,
 } from './mailbox-delivery.idempotency-key'
 import {
+  isKindConfigured,
   MAILBOX_DELIVERY_KIND_CONFIGS,
+  MAILBOX_DELIVERY_KINDS_IN_USE,
   MailboxDeliveryKindConfig,
   type MailboxDeliveryKindConfigs,
   resolveKindConfig,
@@ -41,7 +44,11 @@ import {
   DeliverToMailboxInput,
   DeliverToMailboxResult,
   IMailboxDeliveryService,
+  isMailboxDeliveryEnabled,
+  type MailboxDeliveryState,
   type MailboxDeliveryUnsettledStatus,
+  type StuckMailboxDelivery,
+  type StuckMailboxDeliveryReason,
 } from './mailbox-delivery.service.interface'
 
 const LOGGING_CONTEXT = 'MailboxDeliveryService'
@@ -90,11 +97,10 @@ export const MAILBOX_DELIVERY_LEASE_MINUTES = Math.ceil(
  * it. Every claim counts, whatever it then does.
  *
  * Without a cap a FAILED row is retried forever. CreateCase is repeated on any
- * failure, on the unconfirmed assumption that One finds-or-creates the case
- * (TODO(OneSystems)), so a permanent rejection (a bad classification, a
- * recipient One refuses) would retry on every call, and if the assumption is
- * wrong each claim may leave another orphan case in One. Five is enough to ride
- * out a brief outage and few enough to bound that.
+ * failure (One finds-or-creates the case by `IDNumber` + `CaseType`, OneSystems,
+ * 29 Sep 2026), so a permanent rejection (a case template One does not know, a
+ * recipient One refuses) would retry on every call. Five is enough to ride out
+ * a brief outage and few enough to bound that.
  *
  * An exhausted row is left as it is and reported as `ATTEMPTS_EXHAUSTED`. A
  * person fixes the cause and re-arms it by resetting `attempts` (see the
@@ -128,9 +134,33 @@ const SETTLED_STATUSES = [
 ]
 
 /**
+ * The rows that need a person, one filter per reason. A row matches at most
+ * one: UNCERTAIN is settled, and an exhausted row has no marker.
+ */
+const STUCK_WHERE: Record<
+  StuckMailboxDeliveryReason,
+  WhereOptions<MailboxDeliveryModel>
+> = {
+  UNCERTAIN: { status: MailboxDeliveryStatusEnum.UNCERTAIN },
+  INTERRUPTED: {
+    status: { [Op.notIn]: SETTLED_STATUSES },
+    inFlightStep: { [Op.ne]: null },
+    [Op.or]: LEASE_FREE,
+  },
+  // The same test as `findExhausted`: a row whose last attempt still holds its
+  // lease is not stuck yet.
+  ATTEMPTS_EXHAUSTED: {
+    status: { [Op.notIn]: SETTLED_STATUSES },
+    attempts: { [Op.gte]: MAILBOX_DELIVERY_MAX_ATTEMPTS },
+    inFlightStep: null,
+    [Op.or]: LEASE_FREE,
+  },
+}
+
+/**
  * The column that says a step's result is saved. For the send it is `sentAt`,
- * never `islandIsDocumentId`: One may confirm a send without an `ItemID`, so a
- * SENT row can have a NULL `island_is_document_id`.
+ * never `islandIsDocumentId`: One may confirm a send without a `DocumentId`,
+ * so a SENT row can have a NULL `island_is_document_id`.
  */
 const SAVED_WHEN_SET = {
   [MailboxDeliveryStepEnum.CREATE_DOCUMENT]: 'oneDocumentItemId',
@@ -146,7 +176,10 @@ type StepResult =
   | { oneDocumentItemId: string }
   | { islandIsDocumentId: string | null; sentAt: Date }
 
-type DeliveryCompany = Pick<CompanyModel, 'id' | 'name' | 'nationalId'>
+type DeliveryCompany = Pick<
+  CompanyModel,
+  'id' | 'name' | 'nationalId' | 'quarantined'
+>
 
 /**
  * Delivers notices to island.is mailboxes through One, resumably.
@@ -159,11 +192,10 @@ type DeliveryCompany = Pick<CompanyModel, 'id' | 'name' | 'nationalId'>
  * a second connection with a real COMMIT, not a nested savepoint.
  *
  * Resume is driven by the saved ids and `sent_at`, not by `status`:
- * - CreateCase is assumed to find-or-create, so repeating it is taken to be
- *   harmless and it has no marker. Any failure of it leaves the row FAILED
- *   (retryable). TODO(OneSystems): the spec does not document find-or-create;
- *   if it is not, a retry leaves an orphan case in One (never a second send).
- *   A case id that loses the race to be saved is logged for that reason.
+ * - CreateCase finds-or-creates the case (OneSystems, 29 Sep 2026), so
+ *   repeating it is harmless and it has no marker. Any failure of it leaves
+ *   the row FAILED (retryable). A case id that loses the race to be saved is
+ *   logged.
  * - CreateDocument and SendDocToIslandIs are not safe to repeat. Each is
  *   preceded by an `in_flight_step` marker. A failure that
  *   `isDefinitiveOneSystemsFailure` says never reached the action leaves the
@@ -201,12 +233,21 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     // environment, not first on the day delivery is switched on.
     assertCanonicalKey(input, input.companyId.toLowerCase())
 
-    if (process.env.ONESYSTEMS_ENABLED !== 'true') {
+    if (!isMailboxDeliveryEnabled()) {
       return { status: 'DISABLED' }
     }
 
-    // Before any row or call, so a missing classification never leaves a
-    // half-started delivery behind.
+    // Before any row or call, so a kind without a case template never leaves
+    // a half-started delivery behind. A result, not a throw: a throw is a
+    // failed attempt to every caller, and the flag going on before the
+    // templates are confirmed would spend every notice's attempts.
+    if (!isKindConfigured(input.kind, this.kindConfigs)) {
+      this.logger.error(
+        `Mailbox delivery kind ${input.kind} has no case template; nothing sent while ONESYSTEMS_ENABLED is on`,
+        { context: LOGGING_CONTEXT, kind: input.kind },
+      )
+      return { status: 'UNCONFIGURED', kind: input.kind }
+    }
     const config = resolveKindConfig(input.kind, this.kindConfigs)
 
     // UUIDs compare case-insensitively in Postgres; lowercase it to match the
@@ -214,7 +255,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     const companyId = input.companyId.toLowerCase()
     const company = await this.companyModel.findOne({
       where: { id: companyId },
-      attributes: ['id', 'name', 'nationalId'],
+      attributes: ['id', 'name', 'nationalId', 'quarantined'],
       transaction: null,
     })
     if (!company) {
@@ -223,6 +264,18 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
 
     // Again against the id the DB handed back, which is the one stored.
     assertCanonicalKey(input, company.id)
+
+    // Quarantine halts every outbound touchpoint (`CompanyService
+    // .updateQuarantine`). Checked before the row, so nothing is written for a
+    // company nobody may contact; a delivery already under way stops where it
+    // is and resumes by its key once the quarantine is lifted.
+    if (company.quarantined) {
+      this.logger.warn(
+        `Not delivering ${input.kind} to company ${company.id}: it is quarantined`,
+        { context: LOGGING_CONTEXT, companyId: company.id, kind: input.kind },
+      )
+      return { status: 'QUARANTINED' }
+    }
 
     const row = await this.findOrInsert(input, company)
 
@@ -270,6 +323,108 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     }
 
     return this.run(claimed, leaseToken, input, company, config)
+  }
+
+  async findDelivery(
+    idempotencyKey: string,
+  ): Promise<MailboxDeliveryState | null> {
+    const row = await this.deliveryModel.findOne({
+      where: { idempotencyKey },
+      attributes: [
+        'id',
+        'status',
+        'oneDocumentItemId',
+        'sentAt',
+        'attempts',
+        'inFlightStep',
+        'leaseExpiresAt',
+      ],
+      transaction: null,
+    })
+    if (!row) {
+      return null
+    }
+
+    // On this process's clock, not Postgres's as the claim uses: close enough
+    // for a caller deciding whether to wait, and a lease is minutes long.
+    const leaseLive = Boolean(
+      row.leaseExpiresAt && row.leaseExpiresAt.getTime() > Date.now(),
+    )
+    const unsettled = !SETTLED_STATUSES.includes(row.status)
+
+    return {
+      deliveryId: row.id,
+      status: row.status,
+      documentFiled: Boolean(row.oneDocumentItemId),
+      sent: Boolean(row.sentAt),
+      interrupted: unsettled && Boolean(row.inFlightStep) && !leaseLive,
+      inProgress: unsettled && leaseLive,
+      exhausted:
+        unsettled &&
+        !row.inFlightStep &&
+        !leaseLive &&
+        row.attempts >= MAILBOX_DELIVERY_MAX_ATTEMPTS,
+    }
+  }
+
+  unconfiguredKinds(): MailboxDeliveryKindEnum[] {
+    return MAILBOX_DELIVERY_KINDS_IN_USE.filter(
+      (kind) => !isKindConfigured(kind, this.kindConfigs),
+    )
+  }
+
+  async countStuckDeliveries(): Promise<
+    Record<StuckMailboxDeliveryReason, number>
+  > {
+    const count = (reason: StuckMailboxDeliveryReason) =>
+      this.deliveryModel.count({
+        where: STUCK_WHERE[reason],
+        transaction: null,
+      })
+    // One after another: each takes its own pool connection.
+    return {
+      UNCERTAIN: await count('UNCERTAIN'),
+      INTERRUPTED: await count('INTERRUPTED'),
+      ATTEMPTS_EXHAUSTED: await count('ATTEMPTS_EXHAUSTED'),
+    }
+  }
+
+  async findStuckDeliveries(limit: number): Promise<StuckMailboxDelivery[]> {
+    const rows = await this.deliveryModel.findAll({
+      where: {
+        [Op.or]: [
+          STUCK_WHERE.UNCERTAIN,
+          STUCK_WHERE.INTERRUPTED,
+          STUCK_WHERE.ATTEMPTS_EXHAUSTED,
+        ],
+      },
+      attributes: [
+        'id',
+        'kind',
+        'companyId',
+        'status',
+        'attempts',
+        'inFlightStep',
+        'lastAttemptAt',
+      ],
+      order: [['lastAttemptAt', 'ASC']],
+      limit,
+      transaction: null,
+    })
+
+    return rows.map((row) => ({
+      deliveryId: row.id,
+      kind: row.kind,
+      companyId: row.companyId,
+      reason:
+        row.status === MailboxDeliveryStatusEnum.UNCERTAIN
+          ? 'UNCERTAIN'
+          : row.inFlightStep
+            ? 'INTERRUPTED'
+            : 'ATTEMPTS_EXHAUSTED',
+      attempts: row.attempts,
+      lastAttemptAt: row.lastAttemptAt,
+    }))
   }
 
   /**
@@ -623,8 +778,8 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
 
   /**
    * Saves the case. If another worker saved one first, its case is kept and
-   * used. That assumes CreateCase finds-or-creates, so both name the same case
-   * (unconfirmed, TODO(OneSystems)); ours is logged in case it does not.
+   * used. CreateCase finds-or-creates, so both name the same case; ours is
+   * logged all the same.
    */
   private async saveCase(
     id: string,

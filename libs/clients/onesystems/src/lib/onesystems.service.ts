@@ -87,9 +87,11 @@ type SendAction = (
  * This service is NOT gated by `ONESYSTEMS_ENABLED`; see
  * {@link IOneSystemsService}.
  *
- * Logs carry the operation, HTTP status, One's `ErrorNumber`, body lengths and
- * One's ids. They never carry the token, the password, a kennitala, a name, a
- * subject, the document bytes, a response body or One's `ErrorMessage`.
+ * Logs carry the operation, HTTP status, One's `ErrorNumber`, the JSON type of
+ * `Errors`, body lengths and One's ids. They never carry the token, the
+ * password, a kennitala, a name, a subject, the document bytes, a response body
+ * (SendDocToIslandIs's carries the recipient's `Kennitala`), One's
+ * `ErrorMessage` or its `Errors`.
  */
 @Injectable()
 export class OneSystemsService implements IOneSystemsService {
@@ -162,6 +164,19 @@ export class OneSystemsService implements IOneSystemsService {
     const { itemId } = await this.callAction(operation, (common) =>
       postApiActionsSendDocToIslandIs({ ...common, body }),
     )
+    // `DocumentId` is the document's own `ItemId`, so it should name the
+    // document just sent. One's ids, not personal data. Compared without
+    // case: One's GUIDs may come back in another casing than they were sent.
+    if (itemId !== null && itemId.toLowerCase() !== body.ItemID.toLowerCase()) {
+      this.logger.warn(
+        `OneSystems ${operation} answered with a DocumentId other than the ItemID sent`,
+        {
+          ...this.meta(operation),
+          sentItemId: body.ItemID,
+          returnedDocumentId: itemId,
+        },
+      )
+    }
     return { islandIsDocumentId: itemId }
   }
 
@@ -196,7 +211,7 @@ export class OneSystemsService implements IOneSystemsService {
    * re-sent: the 401 is thrown as it is, and `isDefinitiveOneSystemsFailure`
    * treats it as unclear.
    *
-   * Only SendDocToIslandIs may resolve without an `ItemID`.
+   * Only SendDocToIslandIs may resolve without an id.
    */
   private callAction(
     operation: Exclude<ActionOperation, 'SendDocToIslandIs'>,
@@ -285,9 +300,7 @@ export class OneSystemsService implements IOneSystemsService {
           hasEmptyBody: emptyBody,
           hasBearerChallenge: bearerChallenge,
           errorNumber,
-          errorMessage: generalResponse
-            ? nonEmptyString(generalResponse.ErrorMessage)
-            : null,
+          errorMessage: generalResponse ? oneErrorText(generalResponse) : null,
         },
       )
     }
@@ -319,6 +332,7 @@ export class OneSystemsService implements IOneSystemsService {
         ...this.meta(operation),
         status: response.status,
         errorNumber: shownErrorNumber,
+        errorsShape: shapeOf(body.Errors),
       })
       throw new OneSystemsError(
         // Only a code-shaped ErrorNumber goes in the message, which callers
@@ -330,22 +344,48 @@ export class OneSystemsService implements IOneSystemsService {
           reason: 'REJECTED',
           upstreamStatus: response.status,
           errorNumber,
-          errorMessage: nonEmptyString(body.ErrorMessage),
+          errorMessage: oneErrorText(body),
         },
       )
     }
 
-    const itemId = nonEmptyString(body.ItemID)
-    if (!itemId && operation === 'SendDocToIslandIs') {
-      // `ItemID` is nullable in the spec and what SendDocToIslandIs puts there
-      // is undocumented. One said the send succeeded, so it counts as sent.
-      // TODO(OneSystems): what does SendDocToIslandIs put in `ItemID`?
-      this.logger.warn(
-        `OneSystems ${operation} reported success without an ItemID, treating it as sent`,
-        { ...this.meta(operation), status: response.status },
-      )
-      return { itemId: null, body }
+    if (operation === 'SendDocToIslandIs') {
+      // One answers SendDocToIslandIs with `DocumentId` (the document's
+      // `ItemId`), not the spec's `ItemID` (OneSystems, 9 Oct 2026). One said
+      // the send succeeded, so it counts as sent even without the id. Its own
+      // message spells the spec's `ItemID` as "ItemId", so the casing of
+      // `DocumentId` is not settled either: both spellings are read.
+      const documentId =
+        nonEmptyString(body.DocumentId) ?? nonEmptyString(body.DocumentID)
+      if (!documentId) {
+        this.logger.warn(
+          `OneSystems ${operation} reported success without a DocumentId, treating it as sent`,
+          {
+            ...this.meta(operation),
+            status: response.status,
+            errorsShape: shapeOf(body.Errors),
+          },
+        )
+      }
+      // TODO(OneSystems): whether a repeated send ("Færsla þegar skráð.")
+      // answers `Success: true` with `Errors` is unconfirmed. Kept visible
+      // until it is: the shape only, since `Errors` may echo the recipient.
+      if (errorsText(body.Errors) !== null) {
+        this.logger.warn(
+          `OneSystems ${operation} reported success with Errors, treating it as sent`,
+          {
+            ...this.meta(operation),
+            status: response.status,
+            errorsShape: shapeOf(body.Errors),
+          },
+        )
+      }
+      return { itemId: documentId, body }
     }
+
+    // The spec's `ItemID`, and `ItemId` as One spells the same field in its
+    // own messages and in `DocumentId`: the casing is not settled.
+    const itemId = nonEmptyString(body.ItemID) ?? nonEmptyString(body.ItemId)
     if (!itemId) {
       // One reported success, so it may well have acted, but without the id
       // the result cannot be tracked. The outcome is unknown, not rejected.
@@ -654,6 +694,62 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function nonEmptyString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() !== '' ? value : null
+}
+
+/**
+ * One's explanation of a failure: `ErrorMessage` (the spec's
+ * `GeneralResponse`) or `Errors` (what SendDocToIslandIs actually returns,
+ * OneSystems, 9 Oct 2026). Either may echo input, such as a kennitala, so the
+ * result goes on the error's non-enumerable `errorMessage` only.
+ *
+ * TODO(OneSystems): the shape of `Errors` is undocumented. A string, an array
+ * or an object is accepted and flattened to text.
+ */
+function oneErrorText(body: Record<string, unknown>): string | null {
+  return nonEmptyString(body.ErrorMessage) ?? errorsText(body.Errors)
+}
+
+/**
+ * Null for no errors: absent, null, blank, or an empty array or object, at any
+ * depth (`[{}]`, `[null]`). `{}` would otherwise read as text, and a success
+ * carrying it warn on every send.
+ */
+function errorsText(value: unknown): string | null {
+  if (Array.isArray(value)) {
+    const parts = value
+      .map(errorsText)
+      .filter((entry): entry is string => entry !== null)
+    return parts.length > 0 ? parts.join('; ') : null
+  }
+  if (isRecord(value)) {
+    return Object.keys(value).length > 0 ? stringify(value) : null
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+  return nonEmptyString(value)
+}
+
+function stringify(value: unknown): string | null {
+  try {
+    return JSON.stringify(value) ?? null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * The JSON type of `Errors`, for the log. Says what One sends without saying
+ * what it contains.
+ */
+function shapeOf(value: unknown): string {
+  if (value === undefined) {
+    return 'absent'
+  }
+  if (value === null) {
+    return 'null'
+  }
+  return Array.isArray(value) ? 'array' : typeof value
 }
 
 /**

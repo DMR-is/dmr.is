@@ -335,7 +335,9 @@ DELETE FROM scoring_model WHERE company_id = ${escStr(COMPANY_ID)};
 DELETE FROM doe_api_key WHERE company_id = ${escStr(COMPANY_ID)};
 DELETE FROM company_comment WHERE company_id = ${escStr(COMPANY_ID)};
 DELETE FROM company_event WHERE company_id = ${escStr(COMPANY_ID)};
+DELETE FROM mailbox_delivery WHERE company_id = ${escStr(COMPANY_ID)};
 
+DELETE FROM notice_outbox WHERE report_id = ${escStr(EQ_REPORT_ID)};
 DELETE FROM report_event WHERE report_id = ${escStr(EQ_REPORT_ID)};
 DELETE FROM company_report WHERE report_id = ${escStr(EQ_REPORT_ID)};
 DELETE FROM report WHERE id = ${escStr(EQ_REPORT_ID)};

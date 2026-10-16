@@ -229,6 +229,15 @@ erDiagram
         uuid lease_token "nullable"
         timestamptz sent_at "nullable"
     }
+    notice_outbox {
+        uuid id PK
+        NoticeOutboxKindEnum kind "unique with report_id"
+        uuid report_id FK
+        NoticeOutboxStatusEnum status
+        NoticeOutboxChannelEnum channel "nullable, set on DONE"
+        int attempts
+        timestamptz processed_at "nullable, set when it leaves PENDING"
+    }
     job_runs {
         int job_key PK
         timestamp last_run_at
@@ -323,6 +332,7 @@ erDiagram
     company ||--o{ company_comment : "company_id"
     doe_user |o--o{ company_comment : "author_user_id"
     company ||--o{ mailbox_delivery : "(company_id, national_id)"
+    report ||--o{ notice_outbox : "report_id"
 
     company ||--o{ scoring_model : "company_id"
     scoring_model ||--o{ scoring_criterion : "scoring_model_id"

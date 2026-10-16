@@ -577,29 +577,29 @@ deleting the company must not quietly erase it.
 companies, also unprefixed); `doe_` is for service-level tables such as `doe_api_key` and
 `doe_partner_*`.
 
-| Column                  | Type                                                                                                     |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| `id`                    | `uuid` PK                                                                                                |
-| `company_id`            | `fk → company`                                                                                           |
-| `national_id`           | `text` (the recipient's kennitala as sent; pinned to `company_id` by the composite FK)                   |
-| `kind`                  | `mailbox_delivery_kind_enum` (`OVERDUE_NOTICE`/`FINES_PRECURSOR`)                                        |
-| `idempotency_key`       | `text` (unique — the caller's key; a repeat call resumes this row)                                       |
-| `subject`               | `text` (the document's title in One and in the mailbox)                                                  |
-| `status`                | `mailbox_delivery_status_enum` (`PENDING`/`CASE_CREATED`/`DOCUMENT_CREATED`/`SENT`/`FAILED`/`UNCERTAIN`) |
-| `in_flight_step`        | `mailbox_delivery_step_enum` (nullable — `CREATE_DOCUMENT`/`SEND_DOC_TO_ISLAND_IS` while in a call)      |
-| `one_case_number`       | `text` (nullable — One's human-facing case number)                                                       |
-| `one_case_item_id`      | `text` (nullable — the case CreateDocument files under)                                                  |
-| `one_document_item_id`  | `text` (nullable — the filed document)                                                                   |
-| `island_is_document_id` | `text` (nullable — may stay NULL on a SENT row: One can confirm a send without an `ItemID`)              |
-| `pdf_sha256`            | `text` (nullable — lowercase hex; both or neither with `pdf_size_bytes`)                                 |
-| `pdf_size_bytes`        | `integer` (nullable)                                                                                     |
-| `attempts`              | `integer` (default `0`; claims so far, capped by the service)                                            |
-| `last_attempt_at`       | `timestamptz` (nullable)                                                                                 |
-| `last_error`            | `text` (nullable — may echo recipient details; never surface unfiltered)                                 |
-| `last_error_number`     | `text` (nullable — loggable form only)                                                                   |
-| `lease_token`           | `uuid` (nullable — both or neither with `lease_expires_at`)                                              |
-| `lease_expires_at`      | `timestamptz` (nullable)                                                                                 |
-| `sent_at`               | `timestamptz` (nullable — set means One confirmed the send; the row is then SENT or UNCERTAIN)           |
+| Column                  | Type                                                                                                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                    | `uuid` PK                                                                                                                                                 |
+| `company_id`            | `fk → company`                                                                                                                                            |
+| `national_id`           | `text` (the recipient's kennitala as sent; pinned to `company_id` by the composite FK)                                                                    |
+| `kind`                  | `mailbox_delivery_kind_enum` (`OVERDUE_NOTICE`/`FINES_PRECURSOR`, and `SALARY_`/`EQUALITY_REPORT_` + `SUBMITTED`/`APPROVED`/`DENIED`/`DEADLINE_REMINDER`) |
+| `idempotency_key`       | `text` (unique — the caller's key; a repeat call resumes this row)                                                                                        |
+| `subject`               | `text` (the document's title in One and in the mailbox)                                                                                                   |
+| `status`                | `mailbox_delivery_status_enum` (`PENDING`/`CASE_CREATED`/`DOCUMENT_CREATED`/`SENT`/`FAILED`/`UNCERTAIN`)                                                  |
+| `in_flight_step`        | `mailbox_delivery_step_enum` (nullable — `CREATE_DOCUMENT`/`SEND_DOC_TO_ISLAND_IS` while in a call)                                                       |
+| `one_case_number`       | `text` (nullable — One's human-facing case number)                                                                                                        |
+| `one_case_item_id`      | `text` (nullable — the case CreateDocument files under)                                                                                                   |
+| `one_document_item_id`  | `text` (nullable — the filed document)                                                                                                                    |
+| `island_is_document_id` | `text` (nullable — SendDocToIslandIs's `DocumentId`, which is One's document `ItemId`, not an island.is id; may stay NULL on a SENT row)                  |
+| `pdf_sha256`            | `text` (nullable — lowercase hex; both or neither with `pdf_size_bytes`)                                                                                  |
+| `pdf_size_bytes`        | `integer` (nullable)                                                                                                                                      |
+| `attempts`              | `integer` (default `0`; claims so far, capped by the service)                                                                                             |
+| `last_attempt_at`       | `timestamptz` (nullable)                                                                                                                                  |
+| `last_error`            | `text` (nullable — may echo recipient details; never surface unfiltered)                                                                                  |
+| `last_error_number`     | `text` (nullable — loggable form only)                                                                                                                    |
+| `lease_token`           | `uuid` (nullable — both or neither with `lease_expires_at`)                                                                                               |
+| `lease_expires_at`      | `timestamptz` (nullable)                                                                                                                                  |
+| `sent_at`               | `timestamptz` (nullable — set means One confirmed the send; the row is then SENT or UNCERTAIN)                                                            |
 
 CHECK constraints keep a forward status from outrunning its ids (`CASE_CREATED` needs the
 case, `DOCUMENT_CREATED` the case and document, `SENT` those and `sent_at`), forbid a
@@ -607,6 +607,148 @@ marker on a settled row or a send marker without a document, and keep `sent_at` 
 status but `SENT` and `UNCERTAIN`. Indexes: a partial `mailbox_delivery_status_idx`
 (`WHERE status <> 'SENT'`) for the retry scan and the operator's UNCERTAIN and exhausted
 lists, and `mailbox_delivery_company_id_idx`.
+
+## Notice outbox
+
+`notice_outbox` holds the notices a company is owed: its report was submitted
+(`REPORT_SUBMITTED`), approved (`REPORT_APPROVED`) or denied (`REPORT_DENIED`). Each row is
+written in the same transaction as the change that owes it, so it commits or rolls back
+with that change. doe-api's `NoticeOutboxTask` (every minute, under advisory lock
+`DOE_TASK_JOB_IDS.noticeOutbox`) sends it afterwards; the logic is
+`libs/directorate-of-equality/modules/src/notice-dispatch/`.
+
+**Why an outbox.** The approve/deny emails used to go out from an after-commit hook. A
+process that died between the commit and the send left an approved report the company
+was never told about, with nothing to retry from. The row closes that: the notice is as
+durable as the decision. It also keeps PDF rendering and sending in doe-api only. The
+partner API submits reports too, but only writes the row; it has no Chromium and no mail
+or OneSystems credentials.
+
+**Channels.** With `ONESYSTEMS_ENABLED` off, approve and deny are emailed as before, and a
+submission (which never had an email) waits `PENDING`: it is not picked until the flag is
+on, so switching the flag off during a One incident holds receipts instead of dropping
+them. With the flag on, every kind goes to the island.is mailbox through One (see "Mailbox
+delivery" above) and the row records `channel = MAILBOX`. An approval or denial whose
+mailbox delivery already got somewhere is not emailed when the flag goes off: one One
+sent is recorded `DONE` by mailbox, an UNCERTAIN or interrupted one is `FAILED` for a person,
+and one whose document One holds unsent waits `PENDING` for the flag. With the flag on, a
+mailbox kind with no case template holds its rows `PENDING` without counting an attempt.
+
+**Still owed.** A row is sent only while the report has a status its notice is owed in,
+checked when it is sent: a receipt while the report is `SUBMITTED`, `POSTPONED` or
+`IN_REVIEW`, an approval while it is `APPROVED`, a denial while it is `DENIED`. Otherwise
+it is settled `SKIPPED`, `last_error` naming the status. That stops receipts held while
+the flag was off from arriving after the decision once it goes on, and a decision held by
+a quarantine from going out after the report was superseded. With the flag on, a row whose
+mailbox delivery One may already have acted on is `FAILED` for a person instead, and one
+whose delivery another worker is still running is held until it finishes. With the flag off,
+a receipt is not picked at all, and an approval's or denial's delivery is checked before the
+status (see "Channels"): one whose document One holds unsent stays `PENDING` whatever the
+report's status. `SKIPPED` rows from before this rule are receipts settled with the flag off.
+
+**Overdue rows.** Every `PENDING` row older than an hour that does not wait by design (a
+quarantined company's, or a receipt while the flag is off) is named in doe-api's daily
+mailbox alert, `Notice outbox: N notices overdue`, with its `last_error`.
+
+**Before turning the flag on.** Every receipt held while the flag was off goes out on the
+first run, however old, if its report is still `SUBMITTED`, `POSTPONED` or `IN_REVIEW`.
+List them first, and settle the ones too old to send `SKIPPED` (the cut-off is a decision for
+Jafnréttisstofa, not a constant):
+
+```sql
+SELECT n.id, n.report_id, n.created_at, r.status
+  FROM notice_outbox n JOIN report r ON r.id = n.report_id
+ WHERE n.kind = 'REPORT_SUBMITTED' AND n.status = 'PENDING'
+ ORDER BY n.created_at;
+
+UPDATE notice_outbox
+   SET status = 'SKIPPED', processed_at = now(),
+       last_error = 'receipt held past the cut-off; settled before ONESYSTEMS_ENABLED went on'
+ WHERE kind = 'REPORT_SUBMITTED' AND status = 'PENDING'
+   AND created_at < '<cut-off>';
+```
+
+**Quarantine.** A row whose filing company is quarantined is not picked; it waits
+`PENDING` and goes once the quarantine is lifted.
+
+**Retries.** A failed send keeps the row `PENDING`, counts the attempt and waits five
+minutes; after five attempts it becomes `FAILED`. A report with no usable contact or admin
+email, or a report or denial event that is gone, is `FAILED` at once, because no retry will
+change it. Every outcome is written outside the lock's transaction, so a failure later in
+the run cannot roll back a row whose mail has already gone.
+
+**Ids only.** The recipient, the text (the denial reason comes from the report's
+`STATUS_CHANGED` event) and the documents are read from the report at send time.
+`last_error` is the dispatcher's own short message, never a provider response, so unlike
+`mailbox_delivery.last_error` it holds nothing personal.
+
+**One row per kind per report.** `notice_outbox_report_kind_uq (report_id, kind)`: a report
+is submitted once and decided once (approve is a compare-and-swap from `IN_REVIEW`, deny
+from `IN_REVIEW`/`POSTPONED`; `DENIED` is final, and `APPROVED` only ever moves on to
+`SUPERSEDED` when a newer report of the type is approved, which owes no notice), so a
+second row is a bug, and the constraint fails the transaction that tried instead of mailing twice.
+A report that lands `POSTPONED` gets its receipt at submission; the explanations that later
+move it to `SUBMITTED` do not owe a second one.
+
+| Column            | Type                                                                             |
+| ----------------- | -------------------------------------------------------------------------------- |
+| `id`              | `uuid` PK                                                                        |
+| `kind`            | `notice_outbox_kind_enum` (`REPORT_SUBMITTED`/`REPORT_APPROVED`/`REPORT_DENIED`) |
+| `report_id`       | `fk → report`                                                                    |
+| `status`          | `notice_outbox_status_enum` (`PENDING`/`DONE`/`SKIPPED`/`FAILED`)                |
+| `channel`         | `notice_outbox_channel_enum` (nullable — `EMAIL`/`MAILBOX`, set only on DONE)    |
+| `attempts`        | `integer` (default `0`; sends tried)                                             |
+| `last_attempt_at` | `timestamptz` (nullable)                                                         |
+| `last_error`      | `text` (nullable — the dispatcher's own message)                                 |
+| `processed_at`    | `timestamptz` (nullable — set exactly when the row leaves PENDING)               |
+
+CHECK constraints: `channel` is set if and only if the row is `DONE`, `processed_at` if and
+only if it is not `PENDING`, and `attempts` is non-negative. Indexes: partial
+`notice_outbox_pending_idx` on `created_at` `WHERE status = 'PENDING'`, which narrows the
+dispatcher's pick to the few `PENDING` rows (it orders them by `last_attempt_at` `NULLS FIRST`,
+then `created_at`, so a held row, re-stamped on every look, goes to the back); the unique constraint leads with `report_id`, so it also serves the FK check
+when a report is deleted.
+
+**Re-driving a FAILED row.** A send is retried five times five minutes apart, so an outage
+longer than ~20 minutes (a bad credential shipped and fixed an hour later) leaves its notices
+`FAILED`. A re-driven row whose report has moved on since is settled `SKIPPED` rather than sent
+(see "Still owed"), so a stale approval is not mailed. The exception is a decision whose document
+One holds unsent while the flag is off: it stays `PENDING` until the flag is back on.
+
+The dispatcher reads the row's `mailbox_delivery` row, keyed by the mailbox kind, the filing
+company and the report id: with the flag on it resumes it, with it off it checks an approval's
+or denial's before emailing (a receipt is not picked while the flag is off). Settle that row first, or the re-driven notice resumes the same
+stuck delivery and fails again. The lookup returns the receipt's and the decision's deliveries
+for the report, so match `kind` to the row:
+
+```sql
+SELECT id, kind, idempotency_key, status, attempts, in_flight_step,
+       one_document_item_id, sent_at
+  FROM mailbox_delivery
+ WHERE idempotency_key LIKE 'mailbox-delivery:v1:%:' || (
+         SELECT company_id FROM company_report
+          WHERE report_id = '<report id>' AND parent_company_id IS NULL
+       ) || ':' || upper('<report id>');
+```
+
+- `UNCERTAIN`, or `in_flight_step` set: reconcile it first, under "Reconciling an UNCERTAIN
+  row" in the mailbox-delivery module README. If One sent it, the row becomes `SENT` and the
+  re-driven notice is recorded `DONE` without a second send.
+- `attempts` at 5: fix the cause and re-arm it ("Exhausted rows" in the same README).
+- No row, or `SENT`: nothing to do first.
+
+Then put the outbox row back to the state it was born in. Three CHECKs tie columns to `status`:
+`processed_at` is set exactly when the row is not `PENDING` (`notice_outbox_processed_chk`), and
+`channel` exactly when it is `DONE` (`notice_outbox_done_chk`, `notice_outbox_channel_chk`). A
+`FAILED` row has no channel, so only `processed_at` needs clearing. `attempts = 0` is what restores
+the five retries, and clearing `last_attempt_at` lets the next run pick the row up at once:
+
+```sql
+UPDATE notice_outbox
+   SET status = 'PENDING', processed_at = NULL, attempts = 0,
+       last_attempt_at = NULL, last_error = NULL
+ WHERE id = '<notice id>' AND status = 'FAILED';
+```
 
 ## Report identifier
 
@@ -700,7 +842,7 @@ So admins know **when** to consider starting the fines process, the company list
 - The "when" + an optional reason are captured on the emitted `company_event` (`QUARANTINED` / `UNQUARANTINED`) so the company timeline carries the full audit. The flag itself stores no timestamp.
 - The list endpoint exposes a `quarantined` filter.
 
-**Enforcement is the caller's responsibility.** This database/flag only records the decision; every outbound code path (mail service, future scheduled jobs, notification hooks) must check `company.quarantined` and skip quarantined companies. Those gates are added per touchpoint as they are built — there are no automated outbound jobs gated on it yet.
+**Enforcement is the caller's responsibility.** This database/flag only records the decision; every outbound code path (mail service, scheduled jobs, notification hooks) must check `company.quarantined` and skip quarantined companies. The gates so far: the deadline-reminder task leaves quarantined companies out of its query; the notice dispatcher does not pick a `notice_outbox` row whose filing company is quarantined, so the receipt, approval or denial waits until it is lifted; and `deliverToMailbox` refuses a quarantined company before it writes anything.
 
 ## Application-facing reads and writes
 
@@ -800,24 +942,24 @@ Bucket placement is informational only, and always was. Compliance is decided by
 
 ## Enums
 
-| Enum                      | Values                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GenderEnum`              | `MALE`, `FEMALE`, `NEUTRAL`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`, `WITHDRAWN`                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `SalaryDataBasisEnum`     | `MONTH`, `AVERAGE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`, `WITHDRAWN`, `SYSTEM_AUTO_REVIEW`                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `AutoReviewDecisionEnum`  | `AUTO_APPROVE`, `NEEDS_REVIEW`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `CompanyStatusEnum`       | `ACTIVE`, `INACTIVE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `CompanySizeEnum`         | `UNKNOWN`, `SMALL`, `MEDIUM`, `LARGE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `CompanyEventTypeEnum`    | `CREATED`, `STATUS_CHANGED`, `FINES_STARTED`, `FINES_STOPPED`, `QUARANTINED`, `UNQUARANTINED`, `EQUALITY_REPORT_DEADLINE_REMINDER_SENT`, `SALARY_REPORT_DEADLINE_REMINDER_SENT`, `EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `API_KEY_ISSUED`, `API_KEY_REVOKED`, `PARTNER_DELEGATION_GRANTED`, `PARTNER_DELEGATION_REVOKED`, `CUSTOM_EMAIL_SENT`, `CUSTOM_EMAIL_FAILED`, `CUSTOM_EMAIL_SKIPPED`, `EQUALITY_REPORT_DUE_DATE_CHANGED`, `SALARY_REPORT_DUE_DATE_CHANGED` |
-| `ApiKeyOriginEnum`        | `ISLAND_IS`, `ADMIN`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `ApiKeyScopeEnum`         | `salary:submit`, `equality:submit`, `report:read`, `scoring:write`                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Enum                      | Values                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GenderEnum`              | `MALE`, `FEMALE`, `NEUTRAL`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`, `WITHDRAWN`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `SalaryDataBasisEnum`     | `MONTH`, `AVERAGE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`, `WITHDRAWN`, `SYSTEM_AUTO_REVIEW`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `AutoReviewDecisionEnum`  | `AUTO_APPROVE`, `NEEDS_REVIEW`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `CompanyStatusEnum`       | `ACTIVE`, `INACTIVE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `CompanySizeEnum`         | `UNKNOWN`, `SMALL`, `MEDIUM`, `LARGE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `CompanyEventTypeEnum`    | `CREATED`, `STATUS_CHANGED`, `FINES_STARTED`, `FINES_STOPPED`, `QUARANTINED`, `UNQUARANTINED`, `EQUALITY_REPORT_DEADLINE_REMINDER_SENT`, `SALARY_REPORT_DEADLINE_REMINDER_SENT`, `EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED`, `SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED`, `EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED`, `SALARY_REPORT_DEADLINE_REMINDER_UNCONFIRMED`, `API_KEY_ISSUED`, `API_KEY_REVOKED`, `PARTNER_DELEGATION_GRANTED`, `PARTNER_DELEGATION_REVOKED`, `CUSTOM_EMAIL_SENT`, `CUSTOM_EMAIL_FAILED`, `CUSTOM_EMAIL_SKIPPED`, `EQUALITY_REPORT_DUE_DATE_CHANGED`, `SALARY_REPORT_DUE_DATE_CHANGED` |
+| `ApiKeyOriginEnum`        | `ISLAND_IS`, `ADMIN`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `ApiKeyScopeEnum`         | `salary:submit`, `equality:submit`, `report:read`, `scoring:write`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 ## Naming conventions
 
@@ -1151,7 +1293,7 @@ next due dates; admins act on them via the derived `equalityReportOverdue` /
 
 ### `company_event`
 
-Immutable, append-only timeline of company-lifecycle events. Mirrors `report_event` but scoped to the company. Insert-only (`created_at` only). Carries `CREATED` (registration), `STATUS_CHANGED` (`ACTIVE`/`INACTIVE` move, with `from_status`/`to_status`), the fines/quarantine toggles (`FINES_STARTED`/`FINES_STOPPED`/`QUARANTINED`/`UNQUARANTINED`, each with an optional `reason` and no status move), the four deadline-reminder outcomes emitted by the report-deadline-reminder task, `API_KEY_ISSUED`/`API_KEY_REVOKED` for the third-party integration credentials, and `PARTNER_DELEGATION_GRANTED`/`PARTNER_DELEGATION_REVOKED` when the company allows a vendor client to act for it or withdraws that (the firm named in `reason`), and `EQUALITY_REPORT_DUE_DATE_CHANGED`/`SALARY_REPORT_DUE_DATE_CHANGED` when an admin moves a next-due date by hand (old and new date in `from_due_at`/`to_due_at`; `from_due_at` is null when there was none). For reminder events, `reason` holds the ISO due date being reminded about and `reminder_tier` records which milestone fired — together they form the idempotency key (one row per company per report-kind per tier per due date).
+Immutable, append-only timeline of company-lifecycle events. Mirrors `report_event` but scoped to the company. Insert-only (`created_at` only). Carries `CREATED` (registration), `STATUS_CHANGED` (`ACTIVE`/`INACTIVE` move, with `from_status`/`to_status`), the fines/quarantine toggles (`FINES_STARTED`/`FINES_STOPPED`/`QUARANTINED`/`UNQUARANTINED`, each with an optional `reason` and no status move), the eight deadline-reminder outcomes emitted by the report-deadline-reminder task (`…_SENT`, `…_NO_EMAIL` when no usable email is on file, `…_UNDELIVERED` when a mailbox delivery ran out of attempts without being sent, added in `m-20261015-company-event-reminder-undelivered`, and `…_UNCONFIRMED` when whether One sent it is unknown — UNCERTAIN or interrupted mid-call — added in `m-20261015-company-event-reminder-unconfirmed`), `API_KEY_ISSUED`/`API_KEY_REVOKED` for the third-party integration credentials, `PARTNER_DELEGATION_GRANTED`/`PARTNER_DELEGATION_REVOKED` when the company allows a vendor client to act for it or withdraws that (the firm named in `reason`), and `EQUALITY_REPORT_DUE_DATE_CHANGED`/`SALARY_REPORT_DUE_DATE_CHANGED` when an admin moves a next-due date by hand (old and new date in `from_due_at`/`to_due_at`; `from_due_at` is null when there was none). For reminder events, `reason` holds the ISO due date being reminded about and `reminder_tier` records which milestone fired — together they form the idempotency key (one row per company per report-kind per tier per due date).
 
 | Column          | Type                                                                                                      |
 | --------------- | --------------------------------------------------------------------------------------------------------- |
@@ -1568,6 +1710,7 @@ No FKs, no relationships. Standalone bookkeeping table.
 - `company` 1:N `company_event`; `doe_user` 1:N `company_event` via `actor_user_id` (nullable).
 - `company` 1:N `company_comment`; `doe_user` 1:N `company_comment` via `author_user_id` (nullable).
 - `company` 1:N `mailbox_delivery` via `(company_id, national_id)` → `company(id, national_id)`.
+- `report` 1:N `notice_outbox` via `report_id` (at most one row per `kind`).
 - `company` N:1 `postcode` N:1 `region`; `company` N:1 `isat_category` via `isat_category_code`.
 - `job_runs` standalone (no FKs).
 

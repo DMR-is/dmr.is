@@ -7,6 +7,8 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanySizeEnum } from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
+import { NoticeOutboxKindEnum } from '../notice-outbox/models/notice-outbox.enums'
+import { INoticeOutboxService } from '../notice-outbox/notice-outbox.service.interface'
 import {
   EqualityCoverageSourceEnum,
   ReportStatusEnum,
@@ -44,6 +46,7 @@ describe('ReportFinalizeService', () => {
   let companyReportFindAll: jest.Mock
   let autoReviewEvaluate: jest.Mock
   let resolveEqualityCoverage: jest.Mock
+  let noticeEnqueue: jest.Mock
 
   beforeEach(async () => {
     reportFindAll = jest.fn().mockResolvedValue([])
@@ -65,6 +68,7 @@ describe('ReportFinalizeService', () => {
     })
 
     resolveEqualityCoverage = jest.fn().mockResolvedValue(null)
+    noticeEnqueue = jest.fn().mockResolvedValue(undefined)
 
     const module = await Test.createTestingModule({
       providers: [
@@ -100,6 +104,10 @@ describe('ReportFinalizeService', () => {
         {
           provide: IReportService,
           useValue: { resolveEqualityCoverage },
+        },
+        {
+          provide: INoticeOutboxService,
+          useValue: { enqueue: noticeEnqueue },
         },
       ],
     }).compile()
@@ -286,6 +294,21 @@ describe('ReportFinalizeService', () => {
           actorUserId: null,
           companyId: COMPANY_ID,
         }),
+      )
+    })
+
+    // Every channel submits through here, so this one call is what owes the
+    // company its receipt on all of them.
+    it('queues the submission receipt', async () => {
+      await service.emitSubmittedEvent(
+        REPORT_ID,
+        ReportStatusEnum.POSTPONED,
+        COMPANY_ID,
+      )
+
+      expect(noticeEnqueue).toHaveBeenCalledWith(
+        NoticeOutboxKindEnum.REPORT_SUBMITTED,
+        REPORT_ID,
       )
     })
   })

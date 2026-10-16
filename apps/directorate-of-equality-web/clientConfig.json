@@ -6015,6 +6015,9 @@
               "Unauthorized",
               "Forbidden",
               "BadRequest",
+              "Conflict",
+              "PayloadTooLarge",
+              "TooManyRequests",
               "InternalServerError",
               "ConnectionAcquireTimeoutError",
               "UnknownError"
@@ -6028,6 +6031,9 @@
               "Unauthorized",
               "Forbidden",
               "BadRequest",
+              "Conflict",
+              "PayloadTooLarge",
+              "TooManyRequests",
               "InternalServerError",
               "ConnectionAcquireTimeoutError",
               "UnknownError"
@@ -6783,7 +6789,7 @@
             "description": "Job title (starfsheiti) of the company contact (tengiliður)."
           },
           "contactEmail": { "type": "string" },
-          "contactPhone": { "type": "string" },
+          "contactPhone": { "type": "string", "minLength": 1 },
           "averageEmployeeMaleCount": { "type": "number" },
           "averageEmployeeFemaleCount": { "type": "number" },
           "averageEmployeeNeutralCount": { "type": "number" },
@@ -6794,7 +6800,7 @@
           "salaryDataPeriod": {
             "type": "string",
             "nullable": true,
-            "description": "The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; the day is normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that has already happened, no earlier than 36 months ago."
+            "description": "The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; the day is normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that is over — last month at the latest — and no earlier than 36 months ago."
           },
           "parsed": {
             "description": "Parsed workbook payload from the excel import endpoint. Contains the criteria tree, role list, and employee rows.",
@@ -6884,7 +6890,7 @@
             "description": "Job title (starfsheiti) of the company contact (tengiliður)."
           },
           "contactEmail": { "type": "string" },
-          "contactPhone": { "type": "string" },
+          "contactPhone": { "type": "string", "minLength": 1 },
           "equalityReportContent": {
             "type": "string",
             "description": "Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`. Mutually exclusive with `equalityReportPdf`."
@@ -7505,6 +7511,10 @@
           "SALARY_REPORT_DEADLINE_REMINDER_SENT",
           "EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL",
           "SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL",
+          "EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED",
+          "SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED",
+          "EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED",
+          "SALARY_REPORT_DEADLINE_REMINDER_UNCONFIRMED",
           "API_KEY_ISSUED",
           "API_KEY_REVOKED",
           "PARTNER_DELEGATION_GRANTED",

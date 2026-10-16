@@ -4,12 +4,10 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { ApplicationSystemCoreModule } from '../application-system/application-system.core.module'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
-import { CompanyFileCoreModule } from '../company-file/company-file.core.module'
-import { DoeMailModule } from '../mail/doe-mail.module'
+import { NoticeOutboxCoreModule } from '../notice-outbox/notice-outbox.core.module'
 import { ReportModel } from '../report/models/report.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ReportEventCoreModule } from '../report-event/report-event.core.module'
-import { ReportPdfCoreModule } from '../report-pdf/report-pdf.core.module'
 import { UserModel } from '../user/models/user.model'
 import { ReportWorkflowService } from './report-workflow.service'
 import { IReportWorkflowService } from './report-workflow.service.interface'
@@ -25,9 +23,7 @@ import { IReportWorkflowService } from './report-workflow.service.interface'
     ]),
     ReportEventCoreModule,
     ApplicationSystemCoreModule,
-    DoeMailModule,
-    ReportPdfCoreModule,
-    CompanyFileCoreModule,
+    NoticeOutboxCoreModule,
   ],
   providers: [
     {

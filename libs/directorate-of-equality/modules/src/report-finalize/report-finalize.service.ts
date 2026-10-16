@@ -13,6 +13,8 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
+import { NoticeOutboxKindEnum } from '../notice-outbox/models/notice-outbox.enums'
+import { INoticeOutboxService } from '../notice-outbox/notice-outbox.service.interface'
 import {
   ReportModel,
   ReportStatusEnum,
@@ -49,6 +51,8 @@ export class ReportFinalizeService implements IReportFinalizeService {
     private readonly autoReviewService: IReportAutoReviewService,
     @Inject(IReportService)
     private readonly reportService: IReportService,
+    @Inject(INoticeOutboxService)
+    private readonly noticeOutboxService: INoticeOutboxService,
   ) {}
 
   /**
@@ -383,6 +387,12 @@ export class ReportFinalizeService implements IReportFinalizeService {
    * SUBMITTED audit event — actorUserId null = company admin. reportStatus
    * snapshots the actual landing status so the event log captures whether
    * outliers were postponed at submit time.
+   *
+   * Also owes the company its receipt, in the same transaction. Every channel
+   * (island.is, workbook, draft submit, partner API) submits through here, so
+   * this is the one place the receipt is queued. A report that lands POSTPONED
+   * gets its receipt now; the explanations that later move it to SUBMITTED do
+   * not get a second one.
    */
   async emitSubmittedEvent(
     reportId: string,
@@ -396,5 +406,10 @@ export class ReportFinalizeService implements IReportFinalizeService {
       actorUserId: null,
       companyId,
     })
+
+    await this.noticeOutboxService.enqueue(
+      NoticeOutboxKindEnum.REPORT_SUBMITTED,
+      reportId,
+    )
   }
 }
