@@ -322,6 +322,36 @@ describe('AuthorizationGuard', () => {
         }
         expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
       })
+      // No lookup ran, so the log must not claim the admin table was checked;
+      // the response is the same as for a missing admin row
+      it.each([
+        ['an empty user', {}],
+        ['a null user', null],
+      ])(
+        'should log the missing nationalId, not a missing admin row, for %s',
+        async (_, user) => {
+          const context = createMockContext(user)
+          await expect(guard.canActivate(context)).rejects.toThrow(
+            new ForbiddenException('Admin access required'),
+          )
+          expect(logger.warn).toHaveBeenCalledTimes(1)
+          expect(logger.warn).toHaveBeenCalledWith(
+            'Admin access denied: No nationalId in request',
+          )
+        },
+      )
+      it('should log a missing admin row only after a lookup', async () => {
+        const context = createMockContext({ nationalId: '1234567890' })
+        usersService.getUserByNationalId.mockRejectedValue(userNotFoundError)
+        await expect(guard.canActivate(context)).rejects.toThrow(
+          new ForbiddenException('Admin access required'),
+        )
+        expect(logger.warn).toHaveBeenCalledTimes(1)
+        expect(logger.warn).toHaveBeenCalledWith(
+          'Admin access denied: User not in admin table',
+          { nationalId: '1234567890' },
+        )
+      })
     })
   })
   // ==========================================

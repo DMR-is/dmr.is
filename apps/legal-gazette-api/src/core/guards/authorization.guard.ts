@@ -185,10 +185,13 @@ export class AuthorizationGuard implements CanActivate {
         nationalId: user?.nationalId,
         requiredScopes,
       })
+    } else if (!user?.nationalId) {
+      // Case 3: Admin only, no identity, so no lookup ran
+      logger.warn('Admin access denied: No nationalId in request')
     } else {
       // Case 3: Admin only, admin check failed
       logger.warn('Admin access denied: User not in admin table', {
-        nationalId: user?.nationalId,
+        nationalId: user.nationalId,
       })
     }
 
