@@ -13,7 +13,8 @@
  * is honest about the size being unknown rather than asserting it is small.
  *
  * The LARGE bucket is the threshold that triggers a required salary report
- * (see the `company_sync_salary_report_required` DB trigger).
+ * (see the `company_sync_salary_report_required` DB trigger). A RADUNEYTI
+ * company owes one whatever its bucket.
  *
  * Declaration order is load-bearing: Postgres orders enum values by
  * declaration order, so `ORDER BY employee_count_category` yields
@@ -62,7 +63,8 @@ export enum CompanyStatusEnum {
  *                 ÍSAT (a ministry's rekstrarform and ÍSAT code look exactly
  *                 like any other central-government office), so this value is
  *                 always set by hand via `updateSector` — see
- *                 `utils/legal-form-sector.ts`.
+ *                 `utils/legal-form-sector.ts`. Owes a salary report
+ *                 whatever its size (`company_sync_salary_report_required`).
  *   RIKISADILI  → central government other than a ministry: state agencies,
  *                 state-owned companies (ohf.), state institutions.
  *   SVEITARFELAG → a municipality or inter-municipal body (byggðasamlag).

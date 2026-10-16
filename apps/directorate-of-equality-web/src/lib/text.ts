@@ -918,6 +918,9 @@ export const reportText = {
       EQUALITY: 'Skiladagur jafnréttisáætlunar settur á {to}',
       SALARY: 'Skiladagur skýrslu settur á {to}',
     },
+    // Manual sector change. {from} and {to} are filled with the sector labels.
+    sectorChanged: 'breytti rekstrarformi úr {from} í {to}',
+    sectorChangedNoActor: 'Rekstrarformi breytt úr {from} í {to}',
     // ⚠️ The renderer bolds the FIRST and LAST word of these two headlines
     // (see `timelineEntryText`), so the actor has to open the sentence and the
     // status word has to close it. Keep that shape when rewording.
