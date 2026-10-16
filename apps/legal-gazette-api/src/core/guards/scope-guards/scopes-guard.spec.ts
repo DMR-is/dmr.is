@@ -5,9 +5,9 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { ACTOR_SCOPES_KEY, SCOPES_KEY } from './scopes.decorator'
 import { ScopesGuard } from './scopes-guard'
 interface MockUser {
-  scope?: string
+  scope?: unknown
   actor?: {
-    scope?: string
+    scope?: unknown
   }
 }
 describe('ScopesGuard', () => {
@@ -83,6 +83,15 @@ describe('ScopesGuard', () => {
         })
         const result = guard.canActivate(context)
         expect(result).toBe(true)
+      })
+      it('should allow access when scope is an array', () => {
+        const context = createMockContext({
+          scope: [
+            '@dmr.is/other-scope',
+            '@logbirtingablad.is/logbirtingabladid',
+          ],
+        })
+        expect(guard.canActivate(context)).toBe(true)
       })
     })
     describe('and user does NOT have matching scope', () => {

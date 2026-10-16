@@ -1,4 +1,8 @@
-import { ExecutionContext, NotFoundException } from '@nestjs/common'
+import {
+  ExecutionContext,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
@@ -6,6 +10,7 @@ import { UserContext } from '../../../core/context/user/user.context'
 import { ADMIN_KEY } from '../../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { SCOPES_KEY } from '../../../core/guards/scope-guards/scopes.decorator'
+import { asStaffToken } from '../../../core/guards/token-surface/staff-token.testing'
 import { UserDto } from '../../../models/users.model'
 import { IUsersService } from '../../users/users.service.interface'
 import { AdvertPublicationController } from './publication.controller'
@@ -17,6 +22,7 @@ const RANDOM_NATIONAL_ID = '5566778899'
 interface MockUser {
   nationalId?: string
   scope?: string
+  aud?: string
 }
 // User factories
 const createAdminUser = (): MockUser => ({
@@ -53,7 +59,8 @@ describe('AdvertPublicationController - Guard Authorization', () => {
     user: MockUser | null,
     methodName: keyof AdvertPublicationController,
   ): ExecutionContext => {
-    const mockRequest = { user }
+    // A legal-gazette-web token unless the test sets `aud`
+    const mockRequest = { user: user && asStaffToken(user) }
     return {
       switchToHttp: () => ({
         getRequest: () => mockRequest,
@@ -292,6 +299,18 @@ describe('AdvertPublicationController - Guard Authorization', () => {
   // =============================================================================
   // Combined guard chain tests - simulating actual request flow
   // =============================================================================
+  describe('createAdvertPublication - staff token surface', () => {
+    it('should DENY an admin whose token was issued to another client', async () => {
+      const context = createMockContext(
+        { ...createAdminUser(), aud: '@logbirtingablad.is/application-web' },
+        'createAdvertPublication',
+      )
+      await expect(authorizationGuard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
+  })
   describe('Combined guard chain simulation', () => {
     /**
      * Simulates the guard chain: TokenJwtAuthGuard -> ScopesGuard -> AdminGuard
