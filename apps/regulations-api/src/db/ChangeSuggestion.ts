@@ -4,6 +4,7 @@ import { QueryTypes } from 'sequelize'
 import type {
   CurrentRegulationChange,
   HTMLText,
+  ISODate,
   PlainText,
   RegName,
   SkippedRegulationChange,
@@ -33,6 +34,13 @@ export type ChangeSuggestionReportChange = {
   [key: string]: unknown
 }
 
+export type ChangeSuggestionReportMissingChange = {
+  changingName: RegName
+  /** `regulationchange` id */
+  changeId: number
+  date: ISODate
+}
+
 /**
  * Report produced by the change suggestion process, stored as-is in the
  * `report` jsonb column. Fields without a value are omitted, and when the
@@ -49,6 +57,11 @@ export type ChangeSuggestionReport = {
   minConfidence?: number
   changes?: ChangeSuggestionReportChange[]
   skippedInstructions?: unknown[]
+  /**
+   * Version 2. Earlier changes the base text is missing, taken from
+   * `skippedChanges`; present only when that list is not empty.
+   */
+  missingEarlierChanges?: ChangeSuggestionReportMissingChange[]
   error?: string
 }
 
