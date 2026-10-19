@@ -15,9 +15,9 @@
  * with no date, which the coherence CHECK forbids.
  *
  * EXEMPT is recorded only when nothing covers the company. A municipality that
- * holds a plan still links it as REPORT or LEGACY, so the sector the rule was
- * applied under does not need its own column: it is the company's sector at
- * filing, and `company_report` already snapshots the company.
+ * holds a plan still links it as REPORT or LEGACY. The sector the rule was
+ * applied under is the company's sector at filing, which m-20261019 snapshots
+ * on `company_report.sector`.
  *
  * The coherence CHECK gains an EXEMPT arm that mirrors LEGACY: SALARY only, no
  * link and no legacy date. The two existing arms are unchanged.

@@ -337,6 +337,9 @@ export class ReportFinalizeService implements IReportFinalizeService {
           postcode: company.postcode,
           employeeCountCategory: stored.employeeCountCategory,
           isatCategory: company.isatCategory,
+          // From the stored row, never the payload: the sector decides the
+          // salary filing exemption, and this is the record of it.
+          sector: stored.sector,
         }
       }),
     )

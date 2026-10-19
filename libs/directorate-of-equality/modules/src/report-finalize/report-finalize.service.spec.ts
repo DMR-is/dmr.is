@@ -4,7 +4,10 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { CompanySizeEnum } from '../company/models/company.enums'
+import {
+  CompanySectorEnum,
+  CompanySizeEnum,
+} from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import {
@@ -266,6 +269,7 @@ describe('ReportFinalizeService', () => {
         companyId: COMPANY_ID,
         parentCompanyId: null,
         employeeCountCategory: CompanySizeEnum.LARGE,
+        sector: CompanySectorEnum.SVEITARFELAG,
       })
     })
   })
@@ -443,5 +447,6 @@ function makeCompanyRow(
   return {
     id,
     employeeCountCategory,
+    sector: CompanySectorEnum.SVEITARFELAG,
   } as CompanyModel
 }

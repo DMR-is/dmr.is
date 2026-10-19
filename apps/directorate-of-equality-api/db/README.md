@@ -1199,21 +1199,22 @@ Reference table of ÍSAT2008 industry classifications, seeded from `ISAT_2008.js
 
 ### `company_report`
 
-Submission-time snapshot of a company participating in a report. `company_id` points to the current (mutable) row in `company`; all submitted identity and detail fields are frozen at submission so audits reflect the company data supplied then, not later third-party values. `parent_company_id` allows a parent company to be linked alongside a subsidiary. The `salary_report_required*` flags are admin/gating state, not historical data, and are intentionally not snapshotted — read them off `company`.
+Submission-time snapshot of a company participating in a report. `company_id` points to the current (mutable) row in `company`; all submitted identity and detail fields are frozen at submission so audits reflect the company data supplied then, not later third-party values. `parent_company_id` allows a parent company to be linked alongside a subsidiary. The `salary_report_required*` flags are admin/gating state, not historical data, and are intentionally not snapshotted — read them off `company`. `sector` is snapshotted from the live `company` row, never the payload, because it decides whether a salary report may be filed without equality coverage (`equality_source = EXEMPT`) and `company.sector` can change afterwards; rows filed before m-20261019 hold null.
 
-| Column                            | Type                            |
-| --------------------------------- | ------------------------------- |
-| `id`                              | `uuid` PK                       |
-| `company_id`                      | `fk → company`                  |
-| `report_id`                       | `fk → report`                   |
-| `parent_company_id`               | `fk → company` (nullable)       |
-| `name`                            | `text` (snapshot at submission) |
-| `national_id`                     | `text` (snapshot at submission) |
-| `address`                         | `text` (snapshot at submission) |
-| `city`                            | `text` (snapshot at submission) |
-| `postcode`                        | `text` (snapshot at submission) |
-| `average_employee_count_from_rsk` | `int` (snapshot at submission)  |
-| `isat_category`                   | `text` (snapshot at submission) |
+| Column                            | Type                                                                     |
+| --------------------------------- | ------------------------------------------------------------------------ |
+| `id`                              | `uuid` PK                                                                |
+| `company_id`                      | `fk → company`                                                           |
+| `report_id`                       | `fk → report`                                                            |
+| `parent_company_id`               | `fk → company` (nullable)                                                |
+| `name`                            | `text` (snapshot at submission)                                          |
+| `national_id`                     | `text` (snapshot at submission)                                          |
+| `address`                         | `text` (snapshot at submission)                                          |
+| `city`                            | `text` (snapshot at submission)                                          |
+| `postcode`                        | `text` (snapshot at submission)                                          |
+| `average_employee_count_from_rsk` | `int` (snapshot at submission)                                           |
+| `isat_category`                   | `text` (snapshot at submission)                                          |
+| `sector`                          | `company_sector_enum` (nullable; snapshot at submission, from `company`) |
 
 ### `report`
 
