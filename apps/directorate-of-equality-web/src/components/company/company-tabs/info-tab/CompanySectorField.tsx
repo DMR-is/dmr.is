@@ -55,6 +55,10 @@ export const CompanySectorField = ({ company }: Props) => {
         queryKey: trpc.company.get.queryKey({ id: company.id }),
       })
       queryClient.invalidateQueries({ queryKey: trpc.company.list.queryKey() })
+      // Recorded as a SECTOR_CHANGED event.
+      queryClient.invalidateQueries({
+        queryKey: trpc.company.getTimeline.queryKey({ id: company.id }),
+      })
       toast.success(t.sectorSavedToast)
       setIsEditing(false)
     },
