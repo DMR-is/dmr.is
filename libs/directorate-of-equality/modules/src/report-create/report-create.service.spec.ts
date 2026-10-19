@@ -124,7 +124,7 @@ describe('ReportCreateService', () => {
   let subCriterionStepBulkCreate: jest.Mock
   let reportResultCreateForReport: jest.Mock
   let autoReviewEvaluate: jest.Mock
-  let resolveEqualityCoverage: jest.Mock
+  let resolveSalaryFilingBasis: jest.Mock
   let configGetByKey: jest.Mock
 
   beforeEach(async () => {
@@ -183,7 +183,7 @@ describe('ReportCreateService', () => {
     reportResultCreateForReport = jest
       .fn()
       .mockResolvedValue({ id: 'result-1' })
-    resolveEqualityCoverage = jest.fn().mockResolvedValue(null)
+    resolveSalaryFilingBasis = jest.fn().mockResolvedValue(null)
     autoReviewEvaluate = jest.fn().mockResolvedValue({
       decision: AutoReviewDecisionEnum.AUTO_APPROVE,
       reason: 'Engin frávik greind.',
@@ -281,7 +281,7 @@ describe('ReportCreateService', () => {
         },
         {
           provide: IReportService,
-          useValue: { resolveEqualityCoverage },
+          useValue: { resolveSalaryFilingBasis },
         },
         {
           provide: IConfigService,
@@ -1207,7 +1207,7 @@ describe('ReportCreateService', () => {
       const input = withoutEqualityReportId()
       // Resolution delegates to the same lookup the eligibility routes answer
       // from; the remaining `findOne` is the schema invariant check.
-      resolveEqualityCoverage.mockResolvedValue({
+      resolveSalaryFilingBasis.mockResolvedValue({
         source: EqualityCoverageSourceEnum.REPORT,
         report: { id: RESOLVED_EQUALITY_ID },
         legacyValidUntil: null,
@@ -1233,7 +1233,7 @@ describe('ReportCreateService', () => {
     // wholesale.
     it('files against legacy coverage, recording the basis and the stated expiry', async () => {
       const input = withoutEqualityReportId()
-      resolveEqualityCoverage.mockResolvedValue({
+      resolveSalaryFilingBasis.mockResolvedValue({
         source: EqualityCoverageSourceEnum.LEGACY,
         report: null,
         legacyValidUntil: '2028-03-31',
@@ -1254,7 +1254,7 @@ describe('ReportCreateService', () => {
       // There is no report to check. Running it would look up `null` and 404 a
       // submission the eligibility route had just approved.
       const input = withoutEqualityReportId()
-      resolveEqualityCoverage.mockResolvedValue({
+      resolveSalaryFilingBasis.mockResolvedValue({
         source: EqualityCoverageSourceEnum.LEGACY,
         report: null,
         legacyValidUntil: '2028-03-31',
@@ -1271,9 +1271,38 @@ describe('ReportCreateService', () => {
       )
     })
 
+    // A sveitarfélag with no plan in force. It may file, and the row records
+    // EXEMPT with neither a link nor a date — the coherence CHECK in
+    // m-20261015 rejects any other combination.
+    it('files under the municipal exemption with no link and no date', async () => {
+      const input = withoutEqualityReportId()
+      resolveSalaryFilingBasis.mockResolvedValue({
+        source: EqualityCoverageSourceEnum.EXEMPT,
+        report: null,
+        legacyValidUntil: null,
+      })
+
+      await service.createSalary(input)
+
+      expect(reportCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          equalityReportId: null,
+          equalitySource: EqualityCoverageSourceEnum.EXEMPT,
+          equalityLegacyValidUntil: null,
+        }),
+      )
+      expect(reportFindOne).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            type: ReportTypeEnum.EQUALITY,
+          }),
+        }),
+      )
+    })
+
     it('refuses a new submission when nothing covers the company', async () => {
       const input = withoutEqualityReportId()
-      resolveEqualityCoverage.mockResolvedValue(null)
+      resolveSalaryFilingBasis.mockResolvedValue(null)
 
       await expect(service.createSalary(input)).rejects.toThrow(
         NotFoundException,

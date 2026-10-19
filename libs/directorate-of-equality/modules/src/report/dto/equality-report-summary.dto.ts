@@ -6,6 +6,25 @@ import {
 } from '@dmr.is/decorators'
 
 import { EqualityCoverageSourceEnum } from '../models/report.enums'
+import type { EqualityCoverage } from '../types/equality-coverage'
+
+/**
+ * The values coverage can take. Narrower than `EqualityCoverageSourceEnum`,
+ * which also carries EXEMPT for the `report.equality_source` column: an
+ * exemption is not coverage, and this DTO is only ever built from coverage
+ * (`GET reports/equality/active`, and the plan a salary report links). Kept
+ * under the `EqualityCoverageSourceEnum` schema name so the island.is and
+ * partner contracts see exactly the two values they can receive.
+ *
+ * ⚠️ The TS and schema names are crossed: the 3-value TS enum publishes as
+ * `ReportEqualitySourceEnum`. Never pass the TS enum itself with
+ * `enumName: 'EqualityCoverageSourceEnum'` — Nest keeps one schema per name
+ * without complaint, and EXEMPT would land in the public documents.
+ */
+const EQUALITY_COVERAGE_SOURCES = {
+  REPORT: EqualityCoverageSourceEnum.REPORT,
+  LEGACY: EqualityCoverageSourceEnum.LEGACY,
+} as const
 
 /**
  * Slim view of whatever currently meets a company's equality obligation.
@@ -30,12 +49,12 @@ export class EqualityReportSummaryDto {
    * answer for the wrong reason and will keep working only until something else
    * nulls the id.
    */
-  @ApiEnum(EqualityCoverageSourceEnum, {
+  @ApiEnum(EQUALITY_COVERAGE_SOURCES, {
     enumName: 'EqualityCoverageSourceEnum',
     description:
       'Where the coverage comes from: `REPORT` (an approved, in-force equality report filed in this system) or `LEGACY` (an unexpired certificate from the Directorate’s retired register, which has no report row behind it).',
   })
-  source!: EqualityCoverageSourceEnum
+  source!: EqualityCoverage['source']
 
   /**
    * The DoE-side primary key. Pass it back as `equalityReportId` when

@@ -91,7 +91,7 @@ const TABLE: Array<{
   {
     icelandic: 'Byggðasamlag',
     expectedKey: 'byggdasamlag',
-    sector: CompanySectorEnum.SVEITARFELAG,
+    sector: CompanySectorEnum.FYRIRTAEKI,
   },
   {
     icelandic: 'Opinber stofnun',
@@ -188,7 +188,7 @@ describe('resolveSector', () => {
     // NFD gives these three no decomposition, so a strip-only normalizer
     // silently drops them and no table key spelled with d/th/ae can be reached.
     expect(resolveSector({ id: null, name: 'Byggðasamlag' }).sector).toBe(
-      CompanySectorEnum.SVEITARFELAG,
+      CompanySectorEnum.FYRIRTAEKI,
     )
     expect(resolveSector({ id: null, name: 'Opinber þjónusta' }).sector).toBe(
       CompanySectorEnum.RIKISADILI,

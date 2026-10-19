@@ -7,7 +7,7 @@ import { DoeModels } from '../../constants'
 import type { ReportModel as ReportModelRef } from '../../report/models/report.model'
 import { ReportModel } from '../../report/models/report.model'
 import type { CompanyReportDto } from '../dto/company-report.dto'
-import { CompanySizeEnum } from './company.enums'
+import { CompanySectorEnum, CompanySizeEnum } from './company.enums'
 import type { CompanyModel as CompanyModelRef } from './company.model'
 import { CompanyModel } from './company.model'
 
@@ -23,6 +23,7 @@ type CompanyReportAttributes = {
   postcode: string
   employeeCountCategory: CompanySizeEnum
   isatCategory: string
+  sector: CompanySectorEnum | null
 }
 
 type CompanyReportCreateAttributes = {
@@ -37,6 +38,7 @@ type CompanyReportCreateAttributes = {
   postcode: string
   employeeCountCategory: CompanySizeEnum
   isatCategory: string
+  sector?: CompanySectorEnum | null
 }
 
 @ImmutableTable({ tableName: DoeModels.COMPANY_REPORT })
@@ -80,6 +82,16 @@ export class CompanyReportModel extends ImmutableModel<
 
   @Column({ type: DataType.TEXT, allowNull: false, field: 'isat_category' })
   isatCategory!: string
+
+  // The company's sector at submission, copied from the live `company` row
+  // like `employeeCountCategory`. It is what an EXEMPT salary filing was
+  // allowed under (`SALARY_EQUALITY_EXEMPT_SECTORS`), and `company.sector` can
+  // change afterwards. Null on rows filed before m-20261019.
+  @Column({
+    type: DataType.ENUM(...Object.values(CompanySectorEnum)),
+    allowNull: true,
+  })
+  sector!: CompanySectorEnum | null
 
   @BelongsTo(() => CompanyModel, { foreignKey: 'companyId', as: 'company' })
   company?: CompanyModelRef

@@ -3,7 +3,7 @@ import {
   ReportStatusEnum,
   ReportTypeEnum,
 } from '../report/models/report.model'
-import { EqualityCoverage } from '../report/types/equality-coverage'
+import { SalaryFilingBasis } from '../report/types/equality-coverage'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
 
 /**
@@ -35,7 +35,11 @@ export interface WithdrawInflightSiblingOptions {
 }
 
 export interface IReportFinalizeService {
-  resolveEqualityCoverage(companyId: string): Promise<EqualityCoverage>
+  /**
+   * `IReportService.resolveSalaryFilingBasis`, with null turned into the 404
+   * a salary submission refuses with.
+   */
+  resolveSalaryFilingBasis(companyId: string): Promise<SalaryFilingBasis>
   /**
    * Throws 404 unless `equalityReportId` is an APPROVED, in-force EQUALITY
    * report that covers `companyId`.
