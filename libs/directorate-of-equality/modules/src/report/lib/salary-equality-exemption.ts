@@ -6,10 +6,11 @@ import { CompanySectorEnum } from '../../company/models/company.enums'
  *
  * The rule is the sector and nothing else. Byggðasamlög (Strætó bs., SORPA
  * bs., …) are not exempt: they file on their own and are gated like any other
- * employer. That holds because none of them is SVEITARFELAG — the register
- * files them as FYRIRTAEKI, `LEGAL_FORM_SECTOR` maps an RSK `byggdasamlag` to
- * FYRIRTAEKI, and m-20261016 moved the rows m-20260915 had put in
- * SVEITARFELAG.
+ * employer. That holds only while none of them is SVEITARFELAG — the register
+ * files them as FYRIRTAEKI and `LEGAL_FORM_SECTOR` maps an RSK `byggdasamlag`
+ * to FYRIRTAEKI. Production held none in SVEITARFELAG when the exemption
+ * shipped (checked 19 Oct 2026); one that turns up there is reclassified by
+ * an admin (`PATCH /company/:id/sector`).
  *
  * Sveitarfélög are under a different rule from every other employer: their
  * salary report is not gated on the state of their equality report. Every
