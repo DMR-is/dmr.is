@@ -29,22 +29,31 @@ Login -> CreateCase -> CreateDocument -> SendDocToIslandIs (-> CloseCase)
 
 `createCase` finds the party's open case for the template (by `IDNumber` +
 `CaseType`) or creates one, so repeating it is safe (OneSystems, 29 Sep 2026).
-**`createDocument` and `sendDocToIslandIs` are not idempotent**: a repeated
-`CreateDocument` files a second document with a new `ItemId`, and a repeated
-`SendDocToIslandIs` is answered with "Færsla þegar skráð." (OneSystems,
-9 Oct 2026).
+**`createDocument` is not idempotent**: a repeated `CreateDocument` files a
+second document with a new `ItemId` (OneSystems, 9 Oct 2026). A repeated
+`SendDocToIslandIs` is refused by island.is with "Færsla þegar skráð.", so the
+document is not delivered twice (OneSystems, 20 Oct 2026); see below.
 
 `SendDocToIslandIs` does not answer with the spec's `GeneralResponse`. It
 returns `{ Kennitala, DocumentId, Success, Errors }`, where `DocumentId` is the
 document's `ItemId` in One (OneSystems, 9 Oct 2026), not an id island.is
-assigns. `sendDocToIslandIs` returns it as `islandIsDocumentId`, reading
-`DocumentID` too, since One's casing of ids is not consistent, and warns when
-it differs from the `ItemID` sent. `Success: true` without one still counts
-as sent: it resolves with `islandIsDocumentId: null` and logs a warning.
-`Success: true` with a non-empty `Errors` also counts as sent and logs a
-warning with `Errors`' JSON type only (whether a repeated send answers that
-way is still open). On a failure, `Errors` becomes the error's
-`errorMessage`.
+assigns. The field is always spelled `DocumentId` (OneSystems, 20 Oct 2026).
+`sendDocToIslandIs` returns it as `islandIsDocumentId` and warns when it
+differs from the `ItemID` sent. `Success: true` without one still counts as
+sent: it resolves with `islandIsDocumentId: null` and logs a warning.
+
+`Errors` is an array of strings or `null`. `Success` and `Errors` are passed
+through from island.is, which may answer `Success: true` with errors
+(OneSystems, 20 Oct 2026). That counts as sent and logs a warning with
+`Errors`' JSON type only.
+
+A repeated send is answered `Success: false`, `Errors: ["Færsla þegar
+skráð."]`, with the `DocumentId`. The document is already in the mailbox, so
+it resolves as sent with `alreadyInMailbox: true` and logs a warning. It is
+matched on that text alone (no error code exists); any other `Errors` is a
+rejection, and `Errors` becomes the error's `errorMessage`. Whether a document
+was sent can otherwise only be checked by a person, in OneCRM's list of
+documents sent to the mailbox.
 
 The body carries the recipient's kennitala, so the body itself is never logged
 or stored. The error's `errorMessage` is One's own `ErrorMessage` or the
@@ -229,9 +238,9 @@ code.
   ends UNCERTAIN instead of being retried.
 - Which `ErrorNumber`s are raised before a document is filed or sent
   (`ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS`)?
-- What does a failed `SendDocToIslandIs` look like: the shape of `Errors`, and
-  is it a 200 with `Success: false` or a 4xx? In particular the duplicate
-  ("Færsla þegar skráð.").
+- ~~What does a failed `SendDocToIslandIs` look like?~~ A 200 with
+  `Success: false` and `Errors` as an array of strings; the duplicate is
+  `["Færsla þegar skráð."]` (OneSystems, 20 Oct 2026).
 - Do `CreateCase` and `CreateDocument` still answer with the spec's
   `CaseResponse` / `GeneralResponse`?
 - Do `CreateCase`, `CreateDocument` and `SendDocToIslandIs` need the same One
