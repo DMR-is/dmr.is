@@ -418,9 +418,10 @@ export async function deleteChangeSuggestion(
  * `skippedChanges` lists the earlier changes that text is missing because
  * their rows have no consolidated text.
  *
- * A pair with no row yet is a change not registered on the base, so every
- * existing row counts as earlier: the walk starts from the newest and `date`
- * is left out. The robot in prod halts on any error, so this stays a 200.
+ * A pair with no row yet is a change not registered on the base: rows dated on
+ * or before the changing regulation's `effectivedate` count as earlier, and
+ * `date` is left out. Without that date every row counts as earlier. The robot
+ * in prod halts on any error, so this stays a 200.
  */
 export async function getChangeHistoryCurrent(
   baseRegId: number,
@@ -441,12 +442,28 @@ export async function getChangeHistoryCurrent(
 
   // A changing regulation can have several rows on one base (parts taking
   // effect on different dates); "before the change" is before the oldest.
-  // -1 when the pair has no row, which makes the walk below start at 0.
   const ownIndex = history.findLastIndex(
     ({ changingid }) => changingid === changingRegId,
   )
 
   const ownChange = history[ownIndex]
+
+  let start = ownIndex + 1
+
+  // No row for the pair: start at the first row not dated after the change
+  // takes effect, so a later change already consolidated is not taken as
+  // the text before it.
+  if (!ownChange) {
+    const changing = await getRegulationById(changingRegId, ['effectivedate'])
+    const effectiveDate = changing?.effectivedate
+
+    if (effectiveDate) {
+      const firstEarlier = history.findIndex(
+        ({ date }) => date <= effectiveDate,
+      )
+      start = firstEarlier === -1 ? history.length : firstEarlier
+    }
+  }
 
   // Walk back from the change to the newest version with text. Textless rows
   // passed on the way are changes that text is missing; anything older is
@@ -454,7 +471,7 @@ export async function getChangeHistoryCurrent(
   const skippedChanges: Array<SkippedRegulationChange> = []
   let previous: (typeof history)[number] | undefined
 
-  for (const change of history.slice(ownIndex + 1)) {
+  for (const change of history.slice(start)) {
     if (change.changingid === changingRegId) {
       continue
     }
