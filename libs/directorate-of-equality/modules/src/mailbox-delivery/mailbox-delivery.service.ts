@@ -718,6 +718,14 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         this.logReturnedId(row.id, 'SendDocToIslandIs', {
           islandIsDocumentId,
         })
+        if (sent.alreadyInMailbox) {
+          // island.is refused the send as a repeat: the document is already
+          // in the mailbox, so the row is SENT like any other send.
+          this.logger.warn(
+            `Mailbox delivery ${row.id}: island.is already had the document, recording it as sent`,
+            { context: LOGGING_CONTEXT, deliveryId: row.id, kind: row.kind },
+          )
+        }
         const saved = await this.saveResult(
           row.id,
           MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,

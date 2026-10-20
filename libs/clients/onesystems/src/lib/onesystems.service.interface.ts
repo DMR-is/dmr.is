@@ -63,6 +63,12 @@ export interface OneSystemsSendDocToIslandIsResult {
    * sent.
    */
   islandIsDocumentId: string | null
+  /**
+   * True when island.is refused the send as a repeat ("Færsla þegar skráð."):
+   * the document was already in the mailbox, so it counts as sent
+   * (OneSystems, 20 Oct 2026).
+   */
+  alreadyInMailbox: boolean
 }
 
 export interface OneSystemsCloseCaseInput {
@@ -119,9 +125,10 @@ export interface IOneSystemsService {
   ): Promise<OneSystemsCreateDocumentResult>
 
   /**
-   * Publishes a document to the recipient's island.is digital mailbox. Not
-   * idempotent: One answers a repeat with "Færsla þegar skráð.". `Success:
-   * true` without a `DocumentId` resolves with `islandIsDocumentId: null`.
+   * Publishes a document to the recipient's island.is digital mailbox.
+   * island.is refuses a repeat with "Færsla þegar skráð.", which resolves as
+   * sent with `alreadyInMailbox: true`. `Success: true` without a
+   * `DocumentId` resolves with `islandIsDocumentId: null`.
    */
   sendDocToIslandIs(
     input: OneSystemsSendDocToIslandIsInput,

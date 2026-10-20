@@ -346,7 +346,10 @@ describe('MailboxDeliveryService', () => {
       caseNumber: 'JAF-2026-1',
     })
     one.createDocument.mockResolvedValue({ documentItemId: 'doc-1' })
-    one.sendDocToIslandIs.mockResolvedValue({ islandIsDocumentId: 'island-1' })
+    one.sendDocToIslandIs.mockResolvedValue({
+      islandIsDocumentId: 'island-1',
+      alreadyInMailbox: false,
+    })
     pdf = jest.fn().mockResolvedValue(PDF)
     service = build()
   })
@@ -848,7 +851,10 @@ describe('MailboxDeliveryService', () => {
       })
       one.sendDocToIslandIs.mockImplementation(async () => {
         markers.push(onlyRow().inFlightStep)
-        return { islandIsDocumentId: 'island-1' }
+        return {
+          islandIsDocumentId: 'island-1',
+          alreadyInMailbox: false,
+        }
       })
 
       await service.deliverToMailbox(input())
@@ -1818,9 +1824,39 @@ describe('MailboxDeliveryService', () => {
     })
   })
 
+  describe('a send island.is already had', () => {
+    it('is SENT, with a warning', async () => {
+      one.sendDocToIslandIs.mockResolvedValueOnce({
+        islandIsDocumentId: 'island-1',
+        alreadyInMailbox: true,
+      })
+
+      const result = await service.deliverToMailbox(input())
+
+      const row = onlyRow()
+      expect(result).toMatchObject({
+        status: 'SENT',
+        islandIsDocumentId: 'island-1',
+        alreadySent: false,
+      })
+      expect(row).toMatchObject({
+        status: MailboxDeliveryStatusEnum.SENT,
+        islandIsDocumentId: 'island-1',
+        sentAt: expect.any(Date),
+      })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('island.is already had the document'),
+        expect.objectContaining({ deliveryId: row.id }),
+      )
+    })
+  })
+
   describe('a send confirmed without an ItemID', () => {
     it('is SENT, with a null island.is id', async () => {
-      one.sendDocToIslandIs.mockResolvedValueOnce({ islandIsDocumentId: null })
+      one.sendDocToIslandIs.mockResolvedValueOnce({
+        islandIsDocumentId: null,
+        alreadyInMailbox: false,
+      })
 
       const result = await service.deliverToMailbox(input())
 
@@ -1863,7 +1899,10 @@ describe('MailboxDeliveryService', () => {
     })
 
     it('stays SENT when the save committed but its reply was lost', async () => {
-      one.sendDocToIslandIs.mockResolvedValueOnce({ islandIsDocumentId: null })
+      one.sendDocToIslandIs.mockResolvedValueOnce({
+        islandIsDocumentId: null,
+        alreadyInMailbox: false,
+      })
       interceptUpdate(async (values, apply) => {
         if (values.status === MailboxDeliveryStatusEnum.SENT) {
           await apply()
@@ -1902,7 +1941,7 @@ describe('MailboxDeliveryService', () => {
           islandIsDocumentId: null,
           inFlightStep: null,
         })
-        return { islandIsDocumentId: null }
+        return { islandIsDocumentId: null, alreadyInMailbox: false }
       })
 
       await expect(service.deliverToMailbox(input())).rejects.toThrow(
@@ -1954,7 +1993,10 @@ describe('MailboxDeliveryService', () => {
     it('saves a late send into an UNCERTAIN row but keeps it UNCERTAIN', async () => {
       one.sendDocToIslandIs.mockImplementation(async () => {
         markUncertainByAnotherWorker()
-        return { islandIsDocumentId: 'island-1' }
+        return {
+          islandIsDocumentId: 'island-1',
+          alreadyInMailbox: false,
+        }
       })
 
       const result = await service.deliverToMailbox(input())
