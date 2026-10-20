@@ -1,6 +1,5 @@
 import type { CompanyFilters } from '../../components/companies/CompanyFilter'
 import {
-  COMPANY_STATUS_LABEL,
   EXPIRES_FILTER_OPTIONS,
   FLAG_FILTER_OPTIONS,
   REPORT_STATUS_LABEL,
@@ -24,7 +23,6 @@ import {
 import type {
   CompanyReportStatusEnum,
   CompanySectorEnum,
-  CompanyStatusEnum,
 } from '../../gen/fetch'
 import { dataExportText } from '../../lib/text'
 import { EMPLOYEE_RANGES } from '../../lib/utils'
@@ -78,12 +76,6 @@ export const buildFilterSummary = ({
       'Staða',
       filters.status.map(
         (value) => REPORT_STATUS_LABEL[value as CompanyReportStatusEnum],
-      ),
-    ),
-    line(
-      'Staða í skrá',
-      filters.registerStatus.map(
-        (value) => COMPANY_STATUS_LABEL[value as CompanyStatusEnum],
       ),
     ),
     line(

@@ -14,7 +14,6 @@ import { useIsTablet } from '../../hooks/useIsTablet'
 import { companiesText, sharedText } from '../../lib/text'
 import { EMPLOYEE_RANGES } from '../../lib/utils'
 import {
-  COMPANY_STATUS_FILTER_OPTIONS,
   EXPIRES_FILTER_OPTIONS,
   FLAG_FILTER_OPTIONS,
   SECTOR_FILTER_OPTIONS,
@@ -31,13 +30,6 @@ export type CompanyFilters = {
   employees: string[]
   /** Compliance — what the company still owes (`CompanyReportStatusEnum`). */
   status: string[]
-  /**
-   * Register lifecycle — whether the company is on the books at all
-   * (`CompanyStatusEnum`). A separate key from `status` above because they are
-   * separate axes and the panel offers both; collapsing them into one control
-   * would ask a single question that has two answers.
-   */
-  registerStatus: string[]
   expires: string[]
   flags: string[]
   regionCode: string[]
@@ -46,9 +38,9 @@ export type CompanyFilters = {
   isatSection: string[]
   sector: string[]
   /**
-   * Opt-in reveals for the three groups the list hides by default — companies
-   * with no reporting obligation, companies off the register, and quarantined
-   * companies. Empty means all three remain hidden.
+   * Opt-in reveals for the two groups the list hides by default — companies
+   * with no reporting obligation and quarantined companies. Empty means both
+   * remain hidden.
    */
   visibility: string[]
 }
@@ -129,7 +121,6 @@ export const CompanyFilter = ({
               labelVariant="h5"
               labelColor={labelColor(
                 filters.employees,
-                filters.registerStatus,
                 filters.sector,
                 filters.isatSection,
                 filters.isatCategoryCode,
@@ -149,16 +140,6 @@ export const CompanyFilter = ({
                   // default question is "everyone the law reaches", which is
                   // 25–49 AND 50+ and was unaskable as a single value.
                   onChange={(val) => onFiltersChange('employees', val)}
-                />
-                <MultiSelectFilter
-                  name="registerStatus"
-                  label={companiesText.registerStatus}
-                  placeholder={companiesText.registerStatusPlaceholder}
-                  noOptionsMessage={companiesText.filterNoResults}
-                  isSearchable={false}
-                  options={COMPANY_STATUS_FILTER_OPTIONS}
-                  selected={filters.registerStatus}
-                  onChange={(val) => onFiltersChange('registerStatus', val)}
                 />
                 <MultiSelectFilter
                   name="sector"

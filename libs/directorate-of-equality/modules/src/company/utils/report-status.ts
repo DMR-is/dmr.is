@@ -9,6 +9,7 @@ import {
   CompanyObligationStatusEnum,
   CompanyReportStatusEnum,
   CompanySizeEnum,
+  CompanyStatusEnum,
 } from '../models/company.enums'
 
 /**
@@ -281,6 +282,21 @@ export const salaryRequiredSql = `("${COMPANY_QUERY_ALIAS}"."salary_report_requi
  */
 export const equalityRequiredSql = `("${COMPANY_QUERY_ALIAS}"."employee_count_category" IN ('${CompanySizeEnum.MEDIUM}', '${CompanySizeEnum.LARGE}') OR ${salaryRequiredSql})`
 
+/** SQL boolean: the company is on the Directorate's register (ACTIVE). */
+export const companyActiveSql = `("${COMPANY_QUERY_ALIAS}"."status" = '${CompanyStatusEnum.ACTIVE}')`
+
+/**
+ * The obligation as the register shows it: owed AND the company is ACTIVE. An
+ * INACTIVE company reads as "Á ekki við" in both columns, and drops out of the
+ * "Vantar …" and overdue filters.
+ *
+ * ⚠️ Deliberately NOT folded into `equalityRequiredSql` / `salaryRequiredSql`.
+ * Those are the legal rule, shared with `ReportDeadlineReminderTask` (which
+ * filters on ACTIVE itself), the register load and `isReportRequired`.
+ */
+const equalityOwedSql = `(${equalityRequiredSql} AND ${companyActiveSql})`
+const salaryOwedSql = `(${salaryRequiredSql} AND ${companyActiveSql})`
+
 /**
  * `salaryRequiredSql` / `equalityRequiredSql` for a company already in memory.
  * Keep the three in step: a change to the rule belongs in all of them.
@@ -326,7 +342,7 @@ export const notLegallyObligedSql = `("${COMPANY_QUERY_ALIAS}"."employee_count_c
  * SQL boolean: the company owes an equality plan and nothing covers it.
  */
 export function equalityReportMissingSql(): string {
-  return `(${equalityRequiredSql} AND NOT ${reportCovered(
+  return `(${equalityOwedSql} AND NOT ${reportCovered(
     ReportTypeEnum.EQUALITY,
   )})`
 }
@@ -353,7 +369,7 @@ export function actionPlanMissingSql(): string {
  * launagreining it has actually filed.
  */
 export function salaryReportMissingSql(): string {
-  return `(${salaryRequiredSql} AND NOT ${reportCovered(
+  return `(${salaryOwedSql} AND NOT ${reportCovered(
     ReportTypeEnum.SALARY,
   )} AND NOT ${actionPlanMissingSql()})`
 }
@@ -400,7 +416,7 @@ export function companyReportStatusLiteral() {
  */
 export function equalityObligationStatusCaseSql(): string {
   return `(CASE
-    WHEN NOT ${equalityRequiredSql} THEN '${
+    WHEN NOT ${equalityOwedSql} THEN '${
       CompanyObligationStatusEnum.NOT_REQUIRED
     }'
     WHEN ${equalityReportMissingSql()} THEN '${
@@ -437,9 +453,7 @@ export function salaryObligationStatusCaseSql(): string {
     WHEN ${actionPlanMissingSql()} THEN '${
       CompanyObligationStatusEnum.ACTION_PLAN_MISSING
     }'
-    WHEN NOT ${salaryRequiredSql} THEN '${
-      CompanyObligationStatusEnum.NOT_REQUIRED
-    }'
+    WHEN NOT ${salaryOwedSql} THEN '${CompanyObligationStatusEnum.NOT_REQUIRED}'
     WHEN ${salaryReportMissingSql()} THEN '${
       CompanyObligationStatusEnum.MISSING
     }'
@@ -487,7 +501,7 @@ export function salaryObligationStatusLiteral() {
  * "Fullnægjandi" in the admin list.
  */
 export function equalityReportOverdueSql(): string {
-  return `(${equalityRequiredSql} AND "${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" < NOW())`
+  return `(${equalityOwedSql} AND "${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" < NOW())`
 }
 
 /**
@@ -497,7 +511,7 @@ export function equalityReportOverdueSql(): string {
  * `salary_report_required_override` must not leave a live overdue flag behind.
  */
 export function salaryReportOverdueSql(): string {
-  return `(${salaryRequiredSql} AND "${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" < NOW())`
+  return `(${salaryOwedSql} AND "${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" < NOW())`
 }
 
 export function equalityReportOverdueLiteral() {

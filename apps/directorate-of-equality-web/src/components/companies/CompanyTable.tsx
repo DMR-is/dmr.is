@@ -14,7 +14,6 @@ import { type TableCellItem } from '@dmr.is/ui/components/Tables/Table'
 import {
   type CompanyDto,
   type CompanyObligationStatusEnum,
-  CompanyStatusEnum,
   type Paging,
 } from '../../gen/fetch/types.gen'
 import { NAV_PATHS } from '../../lib/constants'
@@ -76,40 +75,25 @@ const ObligationCell = ({
 }
 
 /**
- * The flag icons, at most one per axis.
+ * The activity flag icon: var, else dagsektir, else nothing.
  *
- * ⚠️ TWO independent axes, not three states in one slot:
+ * ⚠️ The precedence is domain logic and must not be "fixed" into two icons:
+ * var is an admin halt on all activity for the company, so the daily-fines
+ * process is stopped or never started while it is on. Showing only the var
+ * when both flags are set is the correct answer, not a lost fact.
  *
- *   register — INACTIVE, or nothing. This used to be a tag in the status
- *     column; it moved here when that column split in two. The icon is always
- *     rendered when it applies (only its label needs hover), which is what
- *     keeps the register-status filter from returning a page of rows that look
- *     identical.
- *
- *   activity — var, else dagsektir, else nothing. ⚠️ The precedence is domain
- *     logic and must not be "fixed" into two icons: var is an admin halt on all
- *     activity for the company, so the daily-fines process is stopped or never
- *     started while it is on. Showing only the var when both flags are set is
- *     the correct answer, not a lost fact.
+ * Register status (virkt/óvirkt) used to have an icon here too. The admins
+ * asked for it to be left out of the lists; it is shown on the detail page.
  */
 const CompanyFlagIcons = ({ company }: { company: CompanyDto }) => {
-  const { status, quarantined, finesStarted } = company
+  const { quarantined, finesStarted } = company
 
   const icons: {
     key: string
-    icon: 'closeCircle' | 'informationCircle' | 'warning'
-    color: 'red600' | 'blue400' | 'yellow600'
+    icon: 'informationCircle' | 'warning'
+    color: 'blue400' | 'yellow600'
     text: string
   }[] = []
-
-  if (status === CompanyStatusEnum.INACTIVE) {
-    icons.push({
-      key: 'register',
-      icon: 'closeCircle',
-      color: 'red600',
-      text: companiesText.companyInactive,
-    })
-  }
 
   if (quarantined) {
     icons.push({

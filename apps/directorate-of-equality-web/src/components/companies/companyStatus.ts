@@ -132,12 +132,17 @@ export const SALARY_OBLIGATION_TAG_VARIANT: typeof OBLIGATION_STATUS_TAG_VARIANT
   }
 
 /**
- * The three default-on hides, as opt-in reveals.
+ * The two default-on hides, as opt-in reveals.
  *
  * The admin register is a working list of who owes what, so companies that owe
- * nothing ("ekki lagaskylt"), companies off the register, and companies under
- * an admin halt ("í vari") are hidden unless asked for. Each value maps to its
- * own boolean server param — the same shape as FLAG_FILTER_OPTIONS below.
+ * nothing ("ekki lagaskylt") and companies under an admin halt ("í vari") are
+ * hidden unless asked for. Each value maps to its own boolean server param —
+ * the same shape as FLAG_FILTER_OPTIONS below.
+ *
+ * ⚠️ Companies off the register are NOT a reveal any more. The admins asked
+ * for virkt/óvirkt to be left out of the lists, so the lists always send
+ * `includeInactive` and show both. The status itself is still shown and
+ * edited on the company detail page.
  *
  * ⚠️ "Ekki lagaskylt" is NOT "0–24". Some companies under 25 employees are
  * required to report by arrangement, recorded on the company as
@@ -152,7 +157,6 @@ export const SALARY_OBLIGATION_TAG_VARIANT: typeof OBLIGATION_STATUS_TAG_VARIANT
  */
 export const VISIBILITY_FILTER_OPTIONS = [
   { value: 'notObliged', label: companiesText.showNotObliged },
-  { value: 'inactive', label: companiesText.showInactive },
   { value: 'quarantined', label: companiesText.showQuarantined },
 ]
 

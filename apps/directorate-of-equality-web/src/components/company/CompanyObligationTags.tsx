@@ -3,9 +3,14 @@
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 
-import { type CompanyDto, CompanySizeEnum } from '../../gen/fetch/types.gen'
+import {
+  type CompanyDto,
+  CompanySizeEnum,
+  CompanyStatusEnum,
+} from '../../gen/fetch/types.gen'
 import { companiesText } from '../../lib/text'
 import {
+  COMPANY_STATUS_LABEL,
   EQUALITY_DETAIL_LABEL,
   OBLIGATION_STATUS_TAG_VARIANT,
   SALARY_DETAIL_LABEL,
@@ -40,6 +45,10 @@ type Props = {
  * is SMALL-only) and in the migration that refuses to clear due dates on
  * UNKNOWN: unreadable is not "owes nothing".
  *
+ * ⚠️ …and an INACTIVE company says "Óvirkt". The server reads both obligations
+ * as NOT_REQUIRED for it whatever its size, so "Ekki lagaskylt" would be
+ * wrong for a 50+ company that is merely off the register.
+ *
  * `light` throughout, matching the list.
  */
 export const CompanyObligationTags = ({ company }: Props) => {
@@ -47,6 +56,14 @@ export const CompanyObligationTags = ({ company }: Props) => {
   const salaryLabel = SALARY_DETAIL_LABEL[company.salaryObligationStatus]
 
   if (!equalityLabel && !salaryLabel) {
+    if (company.status === CompanyStatusEnum.INACTIVE) {
+      return (
+        <Tag variant="red" outlined disabled light>
+          {COMPANY_STATUS_LABEL[CompanyStatusEnum.INACTIVE]}
+        </Tag>
+      )
+    }
+
     const unclassified =
       company.employeeCountCategory === CompanySizeEnum.UNKNOWN
 

@@ -2,6 +2,7 @@ import { ReportTypeEnum } from '../../report/models/report.enums'
 import { CompanySizeEnum } from '../models/company.enums'
 import {
   actionPlanMissingSql,
+  companyActiveSql,
   companyHasLegacyReportsSql,
   companyReportStatusCaseSql,
   equalityObligationStatusCaseSql,
@@ -297,7 +298,9 @@ describe('obligation status expressions', () => {
 
     it('answers NOT_REQUIRED before anything else', () => {
       expect(sql.indexOf('NOT_REQUIRED')).toBeLessThan(sql.indexOf('MISSING'))
-      expect(sql).toContain(`NOT ${equalityRequiredSql}`)
+      expect(sql).toContain(
+        `NOT (${equalityRequiredSql} AND ${companyActiveSql})`,
+      )
     })
 
     it('never yields ACTION_PLAN_MISSING', () => {
@@ -318,7 +321,9 @@ describe('obligation status expressions', () => {
       // ⚠️ NOT "before anything else", which is what this asserted until the
       // ordering bug above was found — the assertion encoded the defect. The
       // obligation is checked after the action plan; see the test below.
-      expect(sql).toContain(`NOT ${salaryRequiredSql}`)
+      expect(sql).toContain(
+        `NOT (${salaryRequiredSql} AND ${companyActiveSql})`,
+      )
       expect(sql.indexOf('NOT_REQUIRED')).toBeLessThan(
         sql.indexOf("THEN 'MISSING'"),
       )
@@ -392,6 +397,40 @@ describe('overdue predicates', () => {
     expect(salaryReportOverdueSql()).not.toContain(
       'next_equality_report_due_at',
     )
+  })
+})
+
+/**
+ * An INACTIVE company owes nothing as far as the register is concerned: both
+ * columns read "Á ekki við" and it drops out of the "Vantar …" and overdue
+ * filters. The legal rule itself is untouched — the reminder task and
+ * `isReportRequired` share it and answer a different question.
+ */
+describe('inactive companies', () => {
+  it('pins the register status column and value', () => {
+    expect(companyActiveSql).toBe(`("CompanyModel"."status" = 'ACTIVE')`)
+  })
+
+  it.each([
+    ['equalityReportMissingSql', equalityReportMissingSql],
+    ['salaryReportMissingSql', salaryReportMissingSql],
+    ['equalityObligationStatusCaseSql', equalityObligationStatusCaseSql],
+    ['salaryObligationStatusCaseSql', salaryObligationStatusCaseSql],
+    ['equalityReportOverdueSql', equalityReportOverdueSql],
+    ['salaryReportOverdueSql', salaryReportOverdueSql],
+  ])('%s is gated on the company being ACTIVE', (_, build) => {
+    expect(build()).toContain(companyActiveSql)
+  })
+
+  it('leaves the legal obligation rule alone', () => {
+    expect(equalityRequiredSql).not.toContain('"status"')
+    expect(salaryRequiredSql).not.toContain('"status"')
+  })
+
+  it('keeps an outstanding action plan visible', () => {
+    // Same reason it outlives a reclassification: the company has filed, and
+    // the roll-up would otherwise say MISSING_ACTION_PLAN beside "Á ekki við".
+    expect(actionPlanMissingSql()).not.toContain(companyActiveSql)
   })
 })
 

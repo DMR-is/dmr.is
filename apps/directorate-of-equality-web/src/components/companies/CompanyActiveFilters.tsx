@@ -15,7 +15,6 @@ import { useTRPC } from '../../lib/trpc/client/trpc'
 import { EMPLOYEE_RANGES } from '../../lib/utils'
 import { type CompanyFilters, type FilterOption } from './CompanyFilter'
 import {
-  COMPANY_STATUS_FILTER_OPTIONS,
   EXPIRES_FILTER_OPTIONS,
   FLAG_FILTER_OPTIONS,
   SECTOR_FILTER_OPTIONS,
@@ -92,16 +91,16 @@ const labelFor = (options: FilterOption[], value: string) =>
  *
  * The filter panel already turns a card's heading blue when something inside it
  * is set, but that tells an admin only that *some* filter in *some* collapsed
- * accordion is on — and the register arrives pre-filtered often enough (three
+ * accordion is on — and the register arrives pre-filtered often enough (two
  * hides on by default, plus the links in from the front page) that "why am I
  * seeing 212 companies" is the normal question rather than an unusual one. The
  * count above the table answers "how many"; this answers "why".
  *
- * ⚠️ Every axis the panel can set is represented, including the three reveals
- * under "Engin skilaskylda". A reveal widens the result set rather than
- * narrowing it, but it is still an answer the admin gave and still explains the
- * rows on screen — leaving them out would make "Sýna óvirk" the one filter with
- * no visible trace.
+ * ⚠️ Every axis the panel can set is represented, including the reveals under
+ * "Engin skilaskylda". A reveal widens the result set rather than narrowing it,
+ * but it is still an answer the admin gave and still explains the rows on
+ * screen — leaving them out would make "Sýna í vari" the one filter with no
+ * visible trace.
  */
 export const CompanyActiveFilters = ({
   query,
@@ -179,11 +178,6 @@ export const CompanyActiveFilters = ({
       key: 'employees' as const,
       value,
       label: labelFor(EMPLOYEE_RANGES, value),
-    })),
-    ...filters.registerStatus.map((value) => ({
-      key: 'registerStatus' as const,
-      value,
-      label: labelFor(COMPANY_STATUS_FILTER_OPTIONS, value),
     })),
     ...filters.sector.map((value) => ({
       key: 'sector' as const,

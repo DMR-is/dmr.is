@@ -19,11 +19,11 @@ export function useCompanies(fixedQuery?: Partial<GetCompaniesInput>) {
     Object.entries(filter).filter(([, v]) => v !== null),
   )
 
+  // `undefined` in `fixedQuery` drops the key, so it can also clear a URL param.
   const query = Object.fromEntries(
-    Object.entries({ ...activeFilter, ...fixedQuery }).map(([k, v]) => [
-      k,
-      v ?? undefined,
-    ]),
+    Object.entries({ ...activeFilter, ...fixedQuery }).filter(
+      ([, v]) => v !== undefined,
+    ),
   )
 
   const { data, isLoading, isFetching, isError } = useQuery(
@@ -46,8 +46,11 @@ export function useCompanies(fixedQuery?: Partial<GetCompaniesInput>) {
    * an email to everyone matching this filter", where `page`/`pageSize` are
    * ignored but would still land in the batch's audit snapshot, reading as
    * though the send had been limited to a page.
+   *
+   * Built from `query` rather than the URL so `fixedQuery` reaches the send
+   * too — otherwise the list and the recipients could disagree.
    */
-  const { page: _page, pageSize: _pageSize, ...recipientFilter } = activeFilter
+  const { page: _page, pageSize: _pageSize, ...recipientFilter } = query
 
   return {
     data,

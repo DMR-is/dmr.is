@@ -24,7 +24,6 @@ import {
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
-  CompanyStatusEnum,
 } from '../../gen/fetch'
 import { useCompanies } from '../../hooks/useCompanies'
 import { useIsTablet } from '../../hooks/useIsTablet'
@@ -49,13 +48,15 @@ export const CompaniesContainer = () => {
     unknown
   > | null>(null)
 
+  // The admins asked for virkt/óvirkt to be left out of the list, so both are
+  // always shown and an old bookmark's `status` narrowing is dropped — there
+  // is no longer a control that could show or clear it.
   const { data, isError, filter, setFilter, resetFilter, recipientFilter } =
-    useCompanies({ pageSize: 10 })
+    useCompanies({ pageSize: 10, includeInactive: true, status: undefined })
 
   const [filters, setFilters] = useState<CompanyFilters>({
     employees: filter.employeeCountCategory ?? [],
     status: (filter.companyStatus ?? []) as CompanyReportStatusEnum[],
-    registerStatus: (filter.status ?? []) as CompanyStatusEnum[],
     expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
     flags: [
       ...(filter.finesStarted ? ['fines'] : []),
@@ -76,7 +77,6 @@ export const CompaniesContainer = () => {
     sector: (filter.sector ?? []) as CompanySectorEnum[],
     visibility: [
       ...(filter.includeNotObliged ? ['notObliged'] : []),
-      ...(filter.includeInactive ? ['inactive'] : []),
       ...(filter.includeQuarantined ? ['quarantined'] : []),
     ],
   })
@@ -144,13 +144,6 @@ export const CompaniesContainer = () => {
     setFilters((prev) => ({ ...prev, [key]: val }))
     if (key === 'status') {
       setFilter({ companyStatus: val as CompanyReportStatusEnum[], page: 1 })
-    } else if (key === 'registerStatus') {
-      // Empty selection clears the param rather than sending both values —
-      // same result, but an unfiltered URL stays unfiltered.
-      setFilter({
-        status: val.length ? (val as CompanyStatusEnum[]) : null,
-        page: 1,
-      })
     } else if (key === 'employees') {
       // A list since the API was widened: "25–49 and 50+" — everyone the law
       // reaches — is one selection rather than two searches. Empty clears the
@@ -167,7 +160,6 @@ export const CompaniesContainer = () => {
       // the server hides by default, so absence already means "hidden".
       setFilter({
         includeNotObliged: val.includes('notObliged') ? true : null,
-        includeInactive: val.includes('inactive') ? true : null,
         includeQuarantined: val.includes('quarantined') ? true : null,
         // An old bookmark's narrowing must not override the reveal control.
         quarantined: null,
@@ -213,7 +205,6 @@ export const CompaniesContainer = () => {
     setFilters({
       employees: [],
       status: [],
-      registerStatus: [],
       expires: [],
       flags: [],
       regionCode: [],

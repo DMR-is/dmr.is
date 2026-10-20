@@ -35,7 +35,6 @@ import {
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
-  CompanyStatusEnum,
 } from '../../gen/fetch'
 import { dataExportText, serverErrorText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
@@ -87,7 +86,6 @@ const improvementPlanQuery = (
 const EMPTY_FILTERS: CompanyFilters = {
   employees: [],
   status: [],
-  registerStatus: [],
   expires: [],
   flags: [],
   regionCode: [],
@@ -202,9 +200,6 @@ export const DataExportContainer = () => {
       ...(filters.status.length
         ? { companyStatus: filters.status as CompanyReportStatusEnum[] }
         : {}),
-      ...(filters.registerStatus.length
-        ? { status: filters.registerStatus as CompanyStatusEnum[] }
-        : {}),
       ...(filters.expires.length
         ? { expiresWithin: filters.expires as CompanyExpiryFilterEnum[] }
         : {}),
@@ -227,9 +222,8 @@ export const DataExportContainer = () => {
       ...(filters.visibility.includes('notObliged')
         ? { includeNotObliged: true }
         : {}),
-      ...(filters.visibility.includes('inactive')
-        ? { includeInactive: true }
-        : {}),
+      // Virkt/óvirkt is left out of the lists, so both are always included.
+      includeInactive: true,
       // "Í vari" is a reveal here, not a narrowing — it moved out of `flags`.
       ...(filters.visibility.includes('quarantined')
         ? { includeQuarantined: true }

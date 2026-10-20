@@ -974,15 +974,12 @@ export const companiesText = {
   obligationMissing: 'Vantar',
   obligationActionPlanMissing: 'Vantar úrbótaáætlun',
   obligationCovered: 'Í gildi',
-  // Register status, moved off the row and onto an icon.
-  companyInactive: 'Fyrirtæki er ekki í skrá',
   // The default-hide escape hatch. Labelled by what it REVEALS, because the
   // hiding is the default state and a label naming the hidden group would read
   // as "filter down to these".
   visibility: 'Engin skilaskylda',
   visibilityPlaceholder: 'Fela',
   showNotObliged: 'Sýna óskyldug',
-  showInactive: 'Sýna óvirk',
   showQuarantined: 'Sýna í vari',
   onlyQuarantined: 'Aðeins fyrirtæki í vari',
   excludeQuarantined: 'Fyrirtæki utan vars',
@@ -1029,11 +1026,6 @@ export const companiesText = {
   // the detail view shows it beneath this field. See `sectorLegalFormHint`.
   sector: 'Rekstrarform',
   sectorPlaceholder: 'Veldu rekstrarform',
-  // Deliberately NOT `statusLabel`, which the compliance filter already uses in
-  // the same panel. Selecting nothing means both, which is also what the list
-  // shows unfiltered.
-  registerStatus: 'Staða í skrá',
-  registerStatusPlaceholder: 'Virkt eða óvirkt',
   resultsText: 'fyrirtæki fundust',
   noData: 'Engin fyrirtæki skráð',
   expandedRow: {
