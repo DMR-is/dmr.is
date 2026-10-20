@@ -1085,6 +1085,11 @@ export class CompanyService implements ICompanyService {
    * `updateIsat`: sector decides an obligation (a RADUNEYTI company owes a
    * salary report whatever its size), so it belongs on the timeline. An
    * override-only change (same sector, now pinned) emits nothing.
+   *
+   * No salary due date is written here. A ministry under 50 gets none from the
+   * register load either (it seeds LARGE only), so until an admin sets one via
+   * `updateDueDate` it owes the report but is never overdue or reminded. That
+   * is deliberate: the Directorate sets ministry deadlines by hand.
    */
   async updateSector(
     id: string,

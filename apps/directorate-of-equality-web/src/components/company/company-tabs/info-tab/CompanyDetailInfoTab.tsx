@@ -29,6 +29,10 @@ type Props = {
 }
 
 export const CompanyDetailInfoTab = ({ company }: Props) => {
+  // Mirrors `isReportRequired` in the API's report-status.ts.
+  const owesSalary =
+    company.salaryReportRequired || company.salaryReportRequiredOverride
+
   return (
     <Box marginBottom={6} marginTop={4}>
       <InfoItems
@@ -87,7 +91,8 @@ export const CompanyDetailInfoTab = ({ company }: Props) => {
             label: companiesText.expandedRow.equalityRequired,
             children:
               company.employeeCountCategory === CompanySizeEnum.MEDIUM ||
-              company.employeeCountCategory === CompanySizeEnum.LARGE
+              company.employeeCountCategory === CompanySizeEnum.LARGE ||
+              owesSalary
                 ? sharedText.yesLabel
                 : company.employeeCountCategory === CompanySizeEnum.UNKNOWN
                   ? sharedText.unknown
@@ -95,7 +100,7 @@ export const CompanyDetailInfoTab = ({ company }: Props) => {
           },
           {
             label: companiesText.expandedRow.salaryRequired,
-            children: company.salaryReportRequired
+            children: owesSalary
               ? sharedText.yesLabel
               : sharedText.noLabel,
           },

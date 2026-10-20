@@ -43,6 +43,8 @@ Every company must submit an `EQUALITY` report — no gating column, no exceptio
 - `sector = 'RADUNEYTI'` (ministry) → trigger sets `salary_report_required = true`, whatever the size.
 - Otherwise → trigger sets `salary_report_required = false`.
 
+The flag does not set a deadline. The register load seeds `next_salary_report_due_at` for `LARGE` companies only, so a ministry under 50 (or a company with `salary_report_required_override`) has no salary due date until a DoE admin sets one. Until then it is never overdue and gets no reminders. This is deliberate: the Directorate sets those deadlines by hand.
+
 `salary_report_required_override` marks rows whose flag has been set manually (e.g. institutions that must report regardless of headcount, or any other case where the law-by-headcount rule doesn't apply). When `salary_report_required_override = true`, the trigger skips the row entirely — the manual value stands even as the size bucket crosses the 50-threshold in either direction.
 
 ## Industry classification (ÍSAT2008)
