@@ -276,10 +276,97 @@ describe('getChangeHistoryCurrent', () => {
     })
   })
 
-  it('reports not found when the pair has no change row', async () => {
+  it('returns the newest text when the pair has no change row yet', async () => {
     getRegulationChanges.mockResolvedValue([
+      row(6900, 24500, '2024-05-01'),
+      row(6766, 24000, '2022-09-15', 'samsteypt 2022', 'Titill 2022'),
+      row(5000, 23000, '2021-01-01', 'samsteypt 2021'),
+    ])
+
+    await expect(getChangeHistoryCurrent(22278, 25027)).resolves.toEqual({
+      date: undefined,
+      currentTitle: 'Titill 2022',
+      currentText: 'samsteypt 2022',
+      sourceChangeId: 6766,
+      sourceChangingName: '24000/name',
+      sourceDate: '2022-09-15',
+      skippedChanges: [
+        {
+          id: 6900,
+          changingId: 24500,
+          changingName: '24500/name',
+          date: '2024-05-01',
+        },
+      ],
+    })
+  })
+
+  it('passes over rows dated after the change when the pair has no row', async () => {
+    getRegulationById.mockImplementation(async (id: number) =>
+      id === 25027 ? { id, effectivedate: '2026-11-01' } : base,
+    )
+    getRegulationChanges.mockResolvedValue([
+      row(8000, 26000, '2027-01-01', 'samsteypt 2027'),
+      row(7500, 25500, '2026-11-01'),
       row(6766, 24000, '2022-09-15', 'samsteypt 2022'),
     ])
+
+    const result = await getChangeHistoryCurrent(22278, 25027)
+
+    expect(result).toMatchObject({
+      date: undefined,
+      currentText: 'samsteypt 2022',
+      sourceChangeId: 6766,
+    })
+    expect(result.skippedChanges.map(({ id }) => id)).toEqual([7500])
+  })
+
+  it('returns the original text when every row is after the change', async () => {
+    getRegulationById.mockImplementation(async (id: number) =>
+      id === 25027 ? { id, effectivedate: '2026-11-01' } : base,
+    )
+    getRegulationChanges.mockResolvedValue([
+      row(8000, 26000, '2027-01-01', 'samsteypt 2027'),
+    ])
+
+    const result = await getChangeHistoryCurrent(22278, 25027)
+
+    expect(result).toMatchObject({
+      currentText: 'upprunalegt',
+      sourceChangeId: null,
+      skippedChanges: [],
+    })
+  })
+
+  it('counts every row as earlier when the changing regulation is not found', async () => {
+    getRegulationById.mockImplementation(async (id: number) =>
+      id === 25027 ? undefined : base,
+    )
+    getRegulationChanges.mockResolvedValue([
+      row(8000, 26000, '2027-01-01', 'samsteypt 2027'),
+    ])
+
+    const result = await getChangeHistoryCurrent(22278, 25027)
+
+    expect(result.sourceChangeId).toBe(8000)
+  })
+
+  it('returns the original text when the base has no change rows', async () => {
+    getRegulationChanges.mockResolvedValue([])
+
+    await expect(getChangeHistoryCurrent(22278, 25027)).resolves.toEqual({
+      date: undefined,
+      currentTitle: 'Upprunalegur titill',
+      currentText: 'upprunalegt',
+      sourceChangeId: null,
+      sourceChangingName: null,
+      sourceDate: undefined,
+      skippedChanges: [],
+    })
+  })
+
+  it('reports not found when the base regulation does not exist', async () => {
+    getRegulationById.mockResolvedValue(undefined)
 
     await expect(getChangeHistoryCurrent(22278, 25027)).rejects.toThrow(
       'not found',
