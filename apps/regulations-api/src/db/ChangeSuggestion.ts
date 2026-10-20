@@ -417,6 +417,10 @@ export async function deleteChangeSuggestion(
  * and one built on anything older would drop the changes in between.
  * `skippedChanges` lists the earlier changes that text is missing because
  * their rows have no consolidated text.
+ *
+ * A pair with no row yet is a change not registered on the base, so every
+ * existing row counts as earlier: the walk starts from the newest and `date`
+ * is left out. The robot in prod halts on any error, so this stays a 200.
  */
 export async function getChangeHistoryCurrent(
   baseRegId: number,
@@ -437,17 +441,12 @@ export async function getChangeHistoryCurrent(
 
   // A changing regulation can have several rows on one base (parts taking
   // effect on different dates); "before the change" is before the oldest.
+  // -1 when the pair has no row, which makes the walk below start at 0.
   const ownIndex = history.findLastIndex(
     ({ changingid }) => changingid === changingRegId,
   )
 
   const ownChange = history[ownIndex]
-
-  if (!ownChange) {
-    throw new Error(
-      `Change not found for regulation ${changingRegId} on base regulation ${baseRegId}`,
-    )
-  }
 
   // Walk back from the change to the newest version with text. Textless rows
   // passed on the way are changes that text is missing; anything older is
@@ -472,7 +471,7 @@ export async function getChangeHistoryCurrent(
   }
 
   return {
-    date: ownChange.date ?? undefined,
+    date: ownChange?.date ?? undefined,
     currentTitle: previous?.title || baseRegulation.title,
     currentText: previous?.text ?? baseRegulation.text,
     sourceChangeId: previous?.id ?? null,
