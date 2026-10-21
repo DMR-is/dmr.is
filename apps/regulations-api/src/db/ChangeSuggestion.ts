@@ -4,6 +4,7 @@ import { QueryTypes } from 'sequelize'
 import type {
   CurrentRegulationChange,
   HTMLText,
+  ISODate,
   PlainText,
   RegName,
   SkippedRegulationChange,
@@ -33,6 +34,13 @@ export type ChangeSuggestionReportChange = {
   [key: string]: unknown
 }
 
+export type ChangeSuggestionReportMissingChange = {
+  changingName: RegName
+  /** `regulationchange` id */
+  changeId: number
+  date: ISODate
+}
+
 /**
  * Report produced by the change suggestion process, stored as-is in the
  * `report` jsonb column. Fields without a value are omitted, and when the
@@ -49,6 +57,11 @@ export type ChangeSuggestionReport = {
   minConfidence?: number
   changes?: ChangeSuggestionReportChange[]
   skippedInstructions?: unknown[]
+  /**
+   * Version 2. Earlier changes the base text is missing, taken from
+   * `skippedChanges`; present only when that list is not empty.
+   */
+  missingEarlierChanges?: ChangeSuggestionReportMissingChange[]
   error?: string
 }
 
@@ -404,6 +417,11 @@ export async function deleteChangeSuggestion(
  * and one built on anything older would drop the changes in between.
  * `skippedChanges` lists the earlier changes that text is missing because
  * their rows have no consolidated text.
+ *
+ * A pair with no row yet is a change not registered on the base: rows dated on
+ * or before the changing regulation's `effectivedate` count as earlier, and
+ * `date` is left out. Without that date every row counts as earlier. The robot
+ * in prod halts on any error, so this stays a 200.
  */
 export async function getChangeHistoryCurrent(
   baseRegId: number,
@@ -430,10 +448,21 @@ export async function getChangeHistoryCurrent(
 
   const ownChange = history[ownIndex]
 
+  let start = ownIndex + 1
+
+  // No row for the pair: start at the first row not dated after the change
+  // takes effect, so a later change already consolidated is not taken as
+  // the text before it.
   if (!ownChange) {
-    throw new Error(
-      `Change not found for regulation ${changingRegId} on base regulation ${baseRegId}`,
-    )
+    const changing = await getRegulationById(changingRegId, ['effectivedate'])
+    const effectiveDate = changing?.effectivedate
+
+    if (effectiveDate) {
+      const firstEarlier = history.findIndex(
+        ({ date }) => date <= effectiveDate,
+      )
+      start = firstEarlier === -1 ? history.length : firstEarlier
+    }
   }
 
   // Walk back from the change to the newest version with text. Textless rows
@@ -442,7 +471,7 @@ export async function getChangeHistoryCurrent(
   const skippedChanges: Array<SkippedRegulationChange> = []
   let previous: (typeof history)[number] | undefined
 
-  for (const change of history.slice(ownIndex + 1)) {
+  for (const change of history.slice(start)) {
     if (change.changingid === changingRegId) {
       continue
     }
@@ -459,7 +488,7 @@ export async function getChangeHistoryCurrent(
   }
 
   return {
-    date: ownChange.date ?? undefined,
+    date: ownChange?.date ?? undefined,
     currentTitle: previous?.title || baseRegulation.title,
     currentText: previous?.text ?? baseRegulation.text,
     sourceChangeId: previous?.id ?? null,

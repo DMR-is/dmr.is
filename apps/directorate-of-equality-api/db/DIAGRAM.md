@@ -42,6 +42,7 @@ erDiagram
         uuid parent_company_id FK "nullable"
         text name "snapshot"
         text national_id "snapshot"
+        company_sector_enum sector "nullable, snapshot"
     }
     report {
         uuid id PK

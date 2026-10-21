@@ -70,12 +70,13 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
      * unexpired certificate from the retired register has no id to send. Those
      * ~540 companies could not submit through this route at all: the field they
      * were told was required names a `report` row the register load never
-     * created for them. `resolveEqualityCoverage` 404s when nothing covers the
-     * company, which is the honest refusal the 400 was standing in for.
+     * created for them. `resolveSalaryFilingBasis` 404s when nothing covers the
+     * company and its sector is not exempt, which is the honest refusal the 400
+     * was standing in for.
      */
-    const coverage =
+    const basis =
       isSalary && !input.equalityReportId
-        ? await this.finalizeService.resolveEqualityCoverage(company.id)
+        ? await this.finalizeService.resolveSalaryFilingBasis(company.id)
         : null
 
     // Outliers are a salary-only concept, so the flag has no meaning on an
@@ -101,8 +102,8 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
 
     const equalityReportId = isSalary
       ? (input.equalityReportId ??
-        (coverage?.source === EqualityCoverageSourceEnum.REPORT
-          ? coverage.report.id
+        (basis?.source === EqualityCoverageSourceEnum.REPORT
+          ? basis.report.id
           : null))
       : null
 
@@ -115,17 +116,18 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       )
     }
 
-    // Read off the coverage rather than inferred from `!equalityReportId`, so
+    // Read off the basis rather than inferred from `!equalityReportId`, so
     // the basis and the date below come from one fact — see the CHECK in
     // m-20260916, which constrains the three columns together and would reject
-    // any row where the two derivations drifted. Coverage is only resolved for
-    // a salary report that named none, so an equality draft and a caller-named
-    // report both fall to REPORT, which is what each of them is.
-    const equalitySource = coverage?.source ?? EqualityCoverageSourceEnum.REPORT
+    // any row where the two derivations drifted. The basis — coverage, or
+    // EXEMPT — is only resolved for a salary report that named no report, so
+    // an equality draft and a caller-named report both fall to REPORT, which
+    // is what each of them is.
+    const equalitySource = basis?.source ?? EqualityCoverageSourceEnum.REPORT
 
     const equalityLegacyValidUntil =
-      coverage?.source === EqualityCoverageSourceEnum.LEGACY
-        ? coverage.legacyValidUntil
+      basis?.source === EqualityCoverageSourceEnum.LEGACY
+        ? basis.legacyValidUntil
         : null
 
     // Retire any still-SUBMITTED sibling of the same type before this one takes

@@ -1090,6 +1090,7 @@ export class CompanyService implements ICompanyService {
    * register load either (it seeds LARGE only), so until an admin sets one via
    * `updateDueDate` it owes the report but is never overdue or reminded. That
    * is deliberate: the Directorate sets ministry deadlines by hand.
+
    */
   async updateSector(
     id: string,

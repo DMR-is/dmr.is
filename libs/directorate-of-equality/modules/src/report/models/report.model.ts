@@ -404,8 +404,10 @@ export class ReportModel extends MutableModel<
    * What met the equality obligation this salary report was audited against.
    * REPORT on every equality report and on every salary report that links one;
    * LEGACY when the company was covered by an unexpired certificate from the
-   * retired register, which mints no `report` row to link. See the CHECK in
-   * m-20260916 — the three columns are constrained together.
+   * retired register, which mints no `report` row to link; EXEMPT when nothing
+   * covered the company and its sector (sveitarfélag) may file without
+   * coverage. See the CHECKs in m-20260916 and m-20261015 — the three columns
+   * are constrained together.
    */
   @Column({
     type: DataType.TEXT,

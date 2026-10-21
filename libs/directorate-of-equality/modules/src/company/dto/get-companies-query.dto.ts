@@ -341,11 +341,11 @@ export class GetCompaniesQueryDto extends PagingQuery {
 
   @ApiProperty({
     enum: EqualityCoverageSourceEnum,
-    enumName: 'EqualityCoverageSourceEnum',
+    enumName: 'ReportEqualitySourceEnum',
     isArray: true,
     required: false,
     description:
-      'Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here) or LEGACY (carried over from the retired register).',
+      'Return only companies whose approved filing drew its equality coverage from the given source — REPORT (filed here), LEGACY (carried over from the retired register) or EXEMPT (a municipality that filed a salary report with no equality coverage).',
   })
   @Transform(({ value }) => {
     if (value == null) return undefined

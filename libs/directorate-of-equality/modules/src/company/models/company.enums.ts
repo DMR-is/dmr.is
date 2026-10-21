@@ -67,7 +67,7 @@ export enum CompanyStatusEnum {
  *                 whatever its size (`company_sync_salary_report_required`).
  *   RIKISADILI  → central government other than a ministry: state agencies,
  *                 state-owned companies (ohf.), state institutions.
- *   SVEITARFELAG → a municipality or inter-municipal body (byggðasamlag).
+ *   SVEITARFELAG → a municipality. Not a byggðasamlag, which is FYRIRTAEKI.
  *
  * UNKNOWN is deliberately its own value and must never be folded into
  * FYRIRTAEKI: an admin filtering for private companies must not silently be

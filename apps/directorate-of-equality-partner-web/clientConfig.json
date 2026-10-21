@@ -412,7 +412,7 @@
     },
     "/api/v1/application/reports/salary/eligibility": {
       "get": {
-        "description": "Pre-flight check of whether the resolved company may submit a salary report right now, with a machine-readable `reason` when blocked so the application portal can gate entry into the flow. One precondition is checked: the company’s equality obligation must be met (`MISSING_EQUALITY_REPORT`) — by an APPROVED, in-force equality report filed here **or** by an unexpired certificate from the Directorate’s retired register, the same two the admin register counts and the same answer `GET reports/equality/active` gives. Enforced as a 404 on `POST reports/salary`.\n\nThere is no longer any timing restriction: the 6-month renewal window was removed and a company may file however far out its current deadline is. Filing early is not free, though — a report’s three years run from APPROVAL, so whatever is left on the current certificate is absorbed rather than added, and a company with a year still to run gets three years from today instead of four. `earliestNewDueAt` (what filing now would earn) against `dueAt` (what they have) is the size of that trade, returned whether or not `eligible` is true so the portal can put it to the applicant before they start.",
+        "description": "Pre-flight check of whether the resolved company may submit a salary report right now, with a machine-readable `reason` when blocked so the application portal can gate entry into the flow. One precondition is checked: the company’s equality obligation must be met (`MISSING_EQUALITY_REPORT`) — by an APPROVED, in-force equality report filed here **or** by an unexpired certificate from the Directorate’s retired register, the same two the admin register counts. A company registered as a sveitarfélag (sector `SVEITARFELAG`) is exempt and is never refused for this reason — so for a plan-less municipality this route says `eligible: true` while `GET reports/equality/active` still 404s; do not gate the submission on the latter. Enforced as a 404 on `POST reports/salary`.\n\nThere is no longer any timing restriction: the 6-month renewal window was removed and a company may file however far out its current deadline is. Filing early is not free, though — a report’s three years run from APPROVAL, so whatever is left on the current certificate is absorbed rather than added, and a company with a year still to run gets three years from today instead of four. `earliestNewDueAt` (what filing now would earn) against `dueAt` (what they have) is the size of that trade, returned whether or not `eligible` is true so the portal can put it to the applicant before they start.",
         "operationId": "getApplicationSalaryReportEligibility",
         "parameters": [],
         "responses": {
@@ -466,7 +466,7 @@
     },
     "/api/v1/application/reports/salary": {
       "post": {
-        "description": "Files a salary report for the resolved company. There is no timing restriction — the 6-month renewal window was removed, and a company may file however far out its current deadline is. See `GET reports/salary/eligibility` for what filing early costs.\n\n404 when the company has no equality coverage to file against — neither an APPROVED, in-force equality report nor an unexpired certificate on the retired register (`GET reports/salary/eligibility` reports the same as `MISSING_EQUALITY_REPORT`).\n\n409 on two distinct refusals: (1) the company already has a SALARY report in IN_REVIEW or POSTPONED, which a reviewer is mid-workflow on (a merely SUBMITTED predecessor is withdrawn silently instead, and does not 409); (2) the `(providerType, providerId)` tuple is already registered to a different company, or to a report of the other type. The two are not distinguished in the response body today; the reason is in `message`.",
+        "description": "Files a salary report for the resolved company. There is no timing restriction — the 6-month renewal window was removed, and a company may file however far out its current deadline is. See `GET reports/salary/eligibility` for what filing early costs.\n\n404 when the company has no equality coverage to file against — neither an APPROVED, in-force equality report nor an unexpired certificate on the retired register — and is not an exempt sveitarfélag (`GET reports/salary/eligibility` reports the same as `MISSING_EQUALITY_REPORT`). An exempt company files with `equalityReportId` omitted.\n\n409 on two distinct refusals: (1) the company already has a SALARY report in IN_REVIEW or POSTPONED, which a reviewer is mid-workflow on (a merely SUBMITTED predecessor is withdrawn silently instead, and does not 409); (2) the `(providerType, providerId)` tuple is already registered to a different company, or to a report of the other type. The two are not distinguished in the response body today; the reason is in `message`.",
         "operationId": "submitApplicationSalaryReport",
         "parameters": [],
         "requestBody": {
@@ -2248,7 +2248,7 @@
     },
     "/api/v1/application/reports/{providerId}/draft/submit": {
       "post": {
-        "description": "Finalises a DRAFT (DRAFT → SUBMITTED, or POSTPONED when a salary report's outliers are acknowledged but not yet explained). Freezes derived scores + the result snapshot, creates the company_report snapshot from the payload (parent + subsidiaries), and makes the report visible to reviewers. For salary reports, `equalityReportId` must reference an APPROVED equality report if it is sent at all; omit it and the server resolves the company's current coverage — which is the only option when that coverage is a legacy certificate, since it has no report row to name. A 404 means nothing covers the company.",
+        "description": "Finalises a DRAFT (DRAFT → SUBMITTED, or POSTPONED when a salary report's outliers are acknowledged but not yet explained). Freezes derived scores + the result snapshot, creates the company_report snapshot from the payload (parent + subsidiaries), and makes the report visible to reviewers. For salary reports, `equalityReportId` must reference an APPROVED equality report if it is sent at all; omit it and the server resolves the company's current coverage — which is the only option when that coverage is a legacy certificate, since it has no report row to name. A 404 means nothing covers the company and it is not a municipality — municipalities may file without coverage.",
         "operationId": "submitApplicationReportDraft",
         "parameters": [
           {
@@ -3662,6 +3662,9 @@
               "Unauthorized",
               "Forbidden",
               "BadRequest",
+              "Conflict",
+              "PayloadTooLarge",
+              "TooManyRequests",
               "InternalServerError",
               "ConnectionAcquireTimeoutError",
               "UnknownError"
@@ -3675,6 +3678,9 @@
               "Unauthorized",
               "Forbidden",
               "BadRequest",
+              "Conflict",
+              "PayloadTooLarge",
+              "TooManyRequests",
               "InternalServerError",
               "ConnectionAcquireTimeoutError",
               "UnknownError"
@@ -4482,7 +4488,7 @@
             "type": "string",
             "enum": ["MISSING_EQUALITY_REPORT"],
             "nullable": true,
-            "description": "Machine-readable reason when `eligible` is false; null when eligible. Only `MISSING_EQUALITY_REPORT` today — no approved, in-force equality report and no unexpired legacy certificate."
+            "description": "Machine-readable reason when `eligible` is false; null when eligible. Only `MISSING_EQUALITY_REPORT` today — no approved, in-force equality report and no unexpired legacy certificate. Never returned for a municipality (sector `SVEITARFELAG`), which may file a salary report regardless of its equality report."
           },
           "dueAt": {
             "type": "string",
@@ -4568,7 +4574,7 @@
             "type": "string",
             "format": "uuid",
             "nullable": true,
-            "description": "FK to the approved EQUALITY report this salary was audited against. Send null, or omit it, when `GET reports/equality/active` answered `source: LEGACY` (there is no id to send) — or to have the server resolve the company’s current coverage, which is the same answer that route gave."
+            "description": "FK to the approved EQUALITY report this salary was audited against. Send null, or omit it, when `GET reports/equality/active` answered `source: LEGACY` (there is no id to send), or when it answered 404 — or to have the server resolve the company’s filing basis itself, the same answer `GET reports/salary/eligibility` gives. That answer can be yes where `GET reports/equality/active` 404s: a company whose sector is SVEITARFELAG may file with no equality coverage, so do not refuse a salary submission on that 404."
           },
           "importedFromExcel": { "type": "boolean" },
           "providerId": {
@@ -4597,7 +4603,7 @@
             "description": "Job title (starfsheiti) of the company contact (tengiliður)."
           },
           "contactEmail": { "type": "string" },
-          "contactPhone": { "type": "string" },
+          "contactPhone": { "type": "string", "minLength": 1 },
           "averageEmployeeMaleCount": { "type": "number" },
           "averageEmployeeFemaleCount": { "type": "number" },
           "averageEmployeeNeutralCount": { "type": "number" },
@@ -4608,7 +4614,7 @@
           "salaryDataPeriod": {
             "type": "string",
             "nullable": true,
-            "description": "The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that has already happened, no earlier than 36 months ago. When the basis is `AVERAGE` there is no single month to name: island.is clears any value sent, and the partner API refuses it with a 400 — so do not send one."
+            "description": "The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that is over — last month at the latest — and no earlier than 36 months ago. When the basis is `AVERAGE` there is no single month to name: island.is clears any value sent, and the partner API refuses it with a 400 — so do not send one."
           },
           "parsed": {
             "description": "Parsed workbook payload from `POST /reports/excel/import`. Contains the criteria tree, role list, and employee rows.",
@@ -4713,7 +4719,7 @@
             "description": "Job title (starfsheiti) of the company contact (tengiliður)."
           },
           "contactEmail": { "type": "string" },
-          "contactPhone": { "type": "string" },
+          "contactPhone": { "type": "string", "minLength": 1 },
           "equalityReportContent": {
             "type": "string",
             "description": "Narrative gender-equality plan as plain HTML. Persisted as `report.equality_report_content` and rendered into the approved PDF, so send the markup itself — not a base64 blob, not a document. Mutually exclusive with `equalityReportPdf`."
@@ -5768,7 +5774,7 @@
           "salaryDataPeriod": {
             "type": "string",
             "nullable": true,
-            "description": "The payroll month the salary data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Must name a month that has already happened, no earlier than 36 months ago. Required alongside `salaryDataBasis: MONTH` by submit time; ignored while the stored basis is `AVERAGE`."
+            "description": "The payroll month the salary data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Must name a month that is over — last month at the latest — and no earlier than 36 months ago. Required alongside `salaryDataBasis: MONTH` by submit time; ignored while the stored basis is `AVERAGE`."
           },
           "equalityReportContent": {
             "type": "string",
@@ -5802,7 +5808,7 @@
             "type": "string",
             "format": "uuid",
             "nullable": true,
-            "description": "SALARY only: the APPROVED equality report this salary submission is audited against. Omit it to have the server resolve the company’s current coverage — the same answer `GET reports/equality/active` gives, and the only option for a company covered by a legacy certificate, which has no id to send. A 404 on submit means nothing covers the company."
+            "description": "SALARY only: the APPROVED equality report this salary submission is audited against. Omit it to have the server resolve the company’s filing basis — the same answer `GET reports/salary/eligibility` gives, and the only option for a company covered by a legacy certificate, which has no id to send. A 404 on submit means nothing covers the company and it is not a municipality — municipalities may file without coverage."
           },
           "outliersPostponed": {
             "type": "boolean",

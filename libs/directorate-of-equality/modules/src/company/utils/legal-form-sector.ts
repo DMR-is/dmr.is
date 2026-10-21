@@ -33,9 +33,14 @@ export const LEGAL_FORM_SECTOR: Record<string, CompanySectorEnum> = {
   hlutafelag: CompanySectorEnum.FYRIRTAEKI,
   einkahlutafelag: CompanySectorEnum.FYRIRTAEKI,
 
-  // Municipalities and inter-municipal bodies.
+  // Municipalities.
   sveitarfelag: CompanySectorEnum.SVEITARFELAG,
-  byggdasamlag: CompanySectorEnum.SVEITARFELAG,
+  // Inter-municipal bodies (Strætó bs., SORPA bs., …) are not municipalities:
+  // they file on their own, as employers in their own right, and the
+  // Directorate's register files them as FYRIRTAEKI. SVEITARFELAG waives the
+  // equality precondition on a salary filing (`SALARY_EQUALITY_EXEMPT_SECTORS`),
+  // which byggðasamlög do not get, so mapping them there would exempt them.
+  byggdasamlag: CompanySectorEnum.FYRIRTAEKI,
 
   // Central government other than a ministry — state agencies, state-owned
   // companies, state institutions.

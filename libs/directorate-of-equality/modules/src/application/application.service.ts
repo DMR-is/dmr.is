@@ -249,10 +249,13 @@ export class ApplicationService implements IApplicationService {
     // they had no plan, and no route let them file anything. A salary report
     // filed on legacy coverage now records that in `equality_source` instead of
     // borrowing an id that does not exist.
-    const coverage = await this.reportService.resolveEqualityCoverage(
-      company.id,
-    )
-    if (!coverage) {
+    //
+    // Sveitarfélög are exempt: they may file whatever the state of their
+    // equality report, and the submission records EXEMPT. Resolved through the
+    // same `resolveSalaryFilingBasis` the submission reads, so this route can
+    // never say yes to a filing that is then refused, or the reverse.
+    const basis = await this.reportService.resolveSalaryFilingBasis(company.id)
+    if (!basis) {
       return {
         eligible: false,
         reason: SalaryReportEligibilityReasonEnum.MISSING_EQUALITY_REPORT,
@@ -1200,16 +1203,24 @@ export class ApplicationService implements IApplicationService {
    * The equality coverage a salary report was filed against, as the applicant
    * sees it.
    *
-   * Two shapes, discriminated by `source`, and the LEGACY one is answered from
-   * the salary row's own columns rather than a lookup: the certificate lived on
-   * `legacy_report`, which the next register load replaces wholesale, so the
-   * snapshot taken at filing is the only stable record of what covered this
-   * submission.
+   * Three cases, discriminated by `source`. REPORT is looked up by its link.
+   * LEGACY is answered from the salary row's own columns rather than a lookup:
+   * the certificate lived on `legacy_report`, which the next register load
+   * replaces wholesale, so the snapshot taken at filing is the only stable
+   * record of what covered this submission.
+   *
+   * EXEMPT is null, and said so explicitly rather than reached by falling
+   * through on a null `equalityReportId`: a sveitarfélag that filed with no
+   * plan in force has no coverage to describe.
    */
   private async loadLinkedEqualityReport(
     report: ReportModel,
   ): Promise<EqualityReportSummaryDto | null> {
     if (report.type !== ReportTypeEnum.SALARY) {
+      return null
+    }
+
+    if (report.equalitySource === EqualityCoverageSourceEnum.EXEMPT) {
       return null
     }
 
