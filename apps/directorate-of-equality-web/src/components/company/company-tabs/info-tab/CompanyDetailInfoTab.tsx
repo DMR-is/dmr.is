@@ -100,9 +100,7 @@ export const CompanyDetailInfoTab = ({ company }: Props) => {
           },
           {
             label: companiesText.expandedRow.salaryRequired,
-            children: owesSalary
-              ? sharedText.yesLabel
-              : sharedText.noLabel,
+            children: owesSalary ? sharedText.yesLabel : sharedText.noLabel,
           },
           {
             label: companiesText.expandedRow.equalityDueAt,
