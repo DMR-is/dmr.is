@@ -609,9 +609,12 @@ export class CaseService implements ICaseService {
 
     const advertData = advertLookup.result.value.advert
 
-    ResultWrapper.unwrap(
+    const { id } = ResultWrapper.unwrap(
       await this.createService.createCaseByAdvert(advertData, transaction),
     )
+
+    // The published text is the case's baseline for "Breytingarsaga"
+    ResultWrapper.unwrap(await this.createCaseHistory(id, transaction))
 
     return ResultWrapper.ok()
   }
