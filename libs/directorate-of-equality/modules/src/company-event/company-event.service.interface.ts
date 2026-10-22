@@ -1,5 +1,8 @@
 import { CompanyEventDto } from '../company/dto/company-event.dto'
-import { CompanyStatusEnum } from '../company/models/company.enums'
+import {
+  CompanySectorEnum,
+  CompanyStatusEnum,
+} from '../company/models/company.enums'
 import {
   CompanyCustomEmailEventType,
   CompanyDeadlineReminderEventType,
@@ -68,6 +71,15 @@ export interface ICompanyEventService {
     toDueAt: Date,
     actorUserId: string,
     reason?: string | null,
+  ): Promise<void>
+
+  /** Records an admin reclassifying the company's sector by hand. */
+  emitSectorChanged(
+    companyId: string,
+    status: CompanyStatusEnum,
+    fromSector: CompanySectorEnum,
+    toSector: CompanySectorEnum,
+    actorUserId: string,
   ): Promise<void>
 
   /**

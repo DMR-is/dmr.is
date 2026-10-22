@@ -152,6 +152,9 @@ function adaptTimeline(
           // Set on *_DUE_DATE_CHANGED only; rendered into the headline.
           fromDueAt: item.event.fromDueAt ?? null,
           toDueAt: item.event.toDueAt ?? null,
+          // Set on SECTOR_CHANGED only; rendered into the headline.
+          fromSector: item.event.fromSector ?? null,
+          toSector: item.event.toSector ?? null,
           createdAt: item.event.createdAt,
         }
       : null,

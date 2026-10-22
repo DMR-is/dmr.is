@@ -271,6 +271,13 @@ describe('COMPANY_ON_CONFLICT', () => {
     )
   })
 
+  it('never clears a ministry’s salary deadline', () => {
+    // A ministry owes the report whatever size the sheet states.
+    expect(COMPANY_ON_CONFLICT).toContain(
+      "company.sector IS DISTINCT FROM 'RADUNEYTI'",
+    )
+  })
+
   it('reads sector_override but never assigns it', () => {
     // It means "an admin corrected this in the admin UI". Setting it here made
     // a re-run silently revert those corrections — the exact thing the column

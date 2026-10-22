@@ -6,7 +6,7 @@ import { ImmutableModel, ImmutableTable } from '@dmr.is/shared-models-base'
 import { DoeModels } from '../../constants'
 import { UserModel } from '../../user/models/user.model'
 import type { CompanyEventDto } from '../dto/company-event.dto'
-import { CompanyStatusEnum } from './company.enums'
+import { CompanySectorEnum, CompanyStatusEnum } from './company.enums'
 import type { CompanyModel as CompanyModelRef } from './company.model'
 import { CompanyModel } from './company.model'
 
@@ -54,6 +54,10 @@ import { CompanyModel } from './company.model'
  *                    Carries an optional reason.
  *                    Approval overwrites the date again without an event of
  *                    this type — the report's own STATUS_CHANGED covers that.
+ *   SECTOR_CHANGED → an admin reclassified the company's sector by hand.
+ *                    `fromSector`/`toSector` carry the old and new value.
+ *                    Recorded because sector decides an obligation (a
+ *                    RADUNEYTI company owes a salary report whatever its size).
  */
 export enum CompanyEventTypeEnum {
   CREATED = 'CREATED',
@@ -75,6 +79,7 @@ export enum CompanyEventTypeEnum {
   CUSTOM_EMAIL_SKIPPED = 'CUSTOM_EMAIL_SKIPPED',
   EQUALITY_REPORT_DUE_DATE_CHANGED = 'EQUALITY_REPORT_DUE_DATE_CHANGED',
   SALARY_REPORT_DUE_DATE_CHANGED = 'SALARY_REPORT_DUE_DATE_CHANGED',
+  SECTOR_CHANGED = 'SECTOR_CHANGED',
 }
 
 /** The two manual due-date moves, one per report kind. */
@@ -132,6 +137,8 @@ type CompanyEventAttributes = {
   companyEmailId: string | null
   fromDueAt: Date | null
   toDueAt: Date | null
+  fromSector: CompanySectorEnum | null
+  toSector: CompanySectorEnum | null
 }
 
 type CompanyEventCreateAttributes = {
@@ -146,6 +153,8 @@ type CompanyEventCreateAttributes = {
   companyEmailId?: string | null
   fromDueAt?: Date | null
   toDueAt?: Date | null
+  fromSector?: CompanySectorEnum | null
+  toSector?: CompanySectorEnum | null
 }
 
 @ImmutableTable({ tableName: DoeModels.COMPANY_EVENT })
@@ -215,6 +224,21 @@ export class CompanyEventModel extends ImmutableModel<
   @Column({ type: DataType.DATE, allowNull: true, field: 'to_due_at' })
   toDueAt!: Date | null
 
+  // Old and new sector on a SECTOR_CHANGED event, null on every other type.
+  @Column({
+    type: DataType.ENUM(...Object.values(CompanySectorEnum)),
+    allowNull: true,
+    field: 'from_sector',
+  })
+  fromSector!: CompanySectorEnum | null
+
+  @Column({
+    type: DataType.ENUM(...Object.values(CompanySectorEnum)),
+    allowNull: true,
+    field: 'to_sector',
+  })
+  toSector!: CompanySectorEnum | null
+
   @BelongsTo(() => CompanyModel, { foreignKey: 'companyId', as: 'company' })
   company?: CompanyModelRef
 
@@ -238,6 +262,8 @@ export class CompanyEventModel extends ImmutableModel<
       companyEmailId: model.companyEmailId,
       fromDueAt: model.fromDueAt,
       toDueAt: model.toDueAt,
+      fromSector: model.fromSector,
+      toSector: model.toSector,
       createdAt: model.createdAt,
     }
   }

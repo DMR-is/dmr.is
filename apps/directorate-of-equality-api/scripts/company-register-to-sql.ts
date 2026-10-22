@@ -987,7 +987,9 @@ const COMPANY_COLUMNS = [
  *                           reads neither column, would keep mailing about,
  *                           while the generator's summary called the date
  *                           withheld. An admin's
- *                           `salary_report_required_override` still wins.
+ *                           `salary_report_required_override` still wins, and
+ *                           so does a stored RADUNEYTI sector: a ministry owes
+ *                           the report whatever its size.
  *
  *                           ⚠️ UNKNOWN is carved out of that clearing, and the
  *                           carve-out is load-bearing. UNKNOWN is not "the
@@ -1035,6 +1037,7 @@ export const COMPANY_ON_CONFLICT = `ON CONFLICT (national_id) DO UPDATE SET
   next_salary_report_due_at   = CASE
                                   WHEN EXCLUDED.employee_count_category NOT IN ('LARGE', 'UNKNOWN')
                                    AND company.salary_report_required_override IS NOT TRUE
+                                   AND company.sector IS DISTINCT FROM 'RADUNEYTI'
                                   THEN NULL
                                   ELSE COALESCE(company.next_salary_report_due_at, EXCLUDED.next_salary_report_due_at)
                                 END,
@@ -1187,7 +1190,8 @@ const dueTimestamp = (d: Day | null): string =>
  * Same rule as `company_sync_salary_report_required()`, which derives
  * `salary_report_required` from `employee_count_category = 'LARGE'` — deliberately
  * restated here rather than inferred, because this decides whether a date is
- * written and the trigger only decides a boolean.
+ * written and the trigger only decides a boolean. The trigger's RADUNEYTI case
+ * is not mirrored: `readSector` never produces it.
  *
  * The `salary_report_required_override` case is not mirrored: the load never
  * sets it, and where an admin has, the upsert's COALESCE already leaves that
@@ -1938,8 +1942,8 @@ const main = async (): Promise<void> => {
 -- Re-running this file never rolls a company back to its seeded deadline.
 --
 -- next_salary_report_due_at has one exception: it is CLEARED when the register
--- states a size below LARGE and no admin has set salary_report_required_override,
--- so a corrected 50+ → 25-49 export stops the reminder task mailing about a
+-- states a size below LARGE, no admin has set salary_report_required_override
+-- and the company is not a ministry (RADUNEYTI), so a corrected 50+ → 25-49 export stops the reminder task mailing about a
 -- deadline the company no longer owes. A size we could NOT read (UNKNOWN) is
 -- carved out of that and changes nothing — "unreadable" is not "owes nothing",
 -- and clearing on it would destroy a deadline an approval had advanced.

@@ -4,7 +4,10 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyEventDto } from '../company/dto/company-event.dto'
-import { CompanyStatusEnum } from '../company/models/company.enums'
+import {
+  CompanySectorEnum,
+  CompanyStatusEnum,
+} from '../company/models/company.enums'
 import {
   CompanyCustomEmailEventType,
   CompanyDeadlineReminderEventType,
@@ -171,6 +174,32 @@ export class CompanyEventService implements ICompanyEventService {
       fromDueAt,
       toDueAt,
       reason: reason ?? null,
+    })
+  }
+
+  async emitSectorChanged(
+    companyId: string,
+    status: CompanyStatusEnum,
+    fromSector: CompanySectorEnum,
+    toSector: CompanySectorEnum,
+    actorUserId: string,
+  ): Promise<void> {
+    this.logger.info(
+      `Emitting SECTOR_CHANGED event for company ${companyId}: ${fromSector} → ${toSector}`,
+      {
+        context: LOGGING_CONTEXT,
+        companyId,
+        eventType: CompanyEventTypeEnum.SECTOR_CHANGED,
+      },
+    )
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType: CompanyEventTypeEnum.SECTOR_CHANGED,
+      actorUserId,
+      status,
+      fromSector,
+      toSector,
     })
   }
 

@@ -256,8 +256,8 @@ function postponedSalaryExists(): string {
 }
 
 /**
- * SQL boolean: the company owes a salary report — the size-driven flag (LARGE,
- * set by the `company_sync_salary_report_required` trigger) or an admin
+ * SQL boolean: the company owes a salary report — the trigger-derived flag (LARGE
+ * or RADUNEYTI, set by the `company_sync_salary_report_required` trigger) or an admin
  * override.
  *
  * Exported because four separate things have to agree on who owes what: the

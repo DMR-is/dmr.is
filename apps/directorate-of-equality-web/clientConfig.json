@@ -7519,7 +7519,8 @@
           "CUSTOM_EMAIL_FAILED",
           "CUSTOM_EMAIL_SKIPPED",
           "EQUALITY_REPORT_DUE_DATE_CHANGED",
-          "SALARY_REPORT_DUE_DATE_CHANGED"
+          "SALARY_REPORT_DUE_DATE_CHANGED",
+          "SECTOR_CHANGED"
         ]
       },
       "CompanyReminderTierEnum": {
@@ -7577,6 +7578,16 @@
             "example": "2026-02-19T10:30:00.000Z",
             "nullable": true,
             "description": "The next-due date after the change, on *_DUE_DATE_CHANGED events only; null otherwise."
+          },
+          "fromSector": {
+            "nullable": true,
+            "description": "The sector before the change, on SECTOR_CHANGED events only; null otherwise.",
+            "allOf": [{ "$ref": "#/components/schemas/CompanySectorEnum" }]
+          },
+          "toSector": {
+            "nullable": true,
+            "description": "The sector after the change, on SECTOR_CHANGED events only; null otherwise.",
+            "allOf": [{ "$ref": "#/components/schemas/CompanySectorEnum" }]
           },
           "createdAt": {
             "type": "string",

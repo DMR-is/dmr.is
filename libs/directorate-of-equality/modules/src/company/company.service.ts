@@ -1081,14 +1081,16 @@ export class CompanyService implements ICompanyService {
    * The raw `legalForm*` values are left untouched — they are RSK's data, not
    * ours, and keeping them lets a corrected mapping be re-derived later.
    *
-   * Audited via a structured log line rather than a `company_event`, matching
-   * `updateIsat`. That no longer fits sector alone: a sector of SVEITARFELAG
-   * waives the equality precondition on a salary filing
-   * (`SALARY_EQUALITY_EXEMPT_SECTORS`), so a change into or out of it changes
-   * what the company may file. Recording that crossing on the timeline is a
-   * known gap, left for a follow-up: it needs a new event type, an enum
-   * migration and timeline rendering, and the register load also writes sector
-   * without going through here.
+   * A changed sector is recorded as a SECTOR_CHANGED `company_event`, unlike
+   * `updateIsat`: sector decides an obligation (a RADUNEYTI company owes a
+   * salary report whatever its size), so it belongs on the timeline. An
+   * override-only change (same sector, now pinned) emits nothing.
+   *
+   * No salary due date is written here. A ministry under 50 gets none from the
+   * register load either (it seeds LARGE only), so until an admin sets one via
+   * `updateDueDate` it owes the report but is never overdue or reminded. That
+   * is deliberate: the Directorate sets ministry deadlines by hand.
+
    */
   async updateSector(
     id: string,
@@ -1111,7 +1113,19 @@ export class CompanyService implements ICompanyService {
       { context: LOGGING_CONTEXT },
     )
 
+    const fromSector = company.sector
+
     await company.update({ sector: dto.sector, sectorOverride: override })
+
+    if (fromSector !== dto.sector) {
+      await this.companyEventService.emitSectorChanged(
+        id,
+        company.status,
+        fromSector,
+        dto.sector,
+        actorUserId,
+      )
+    }
 
     return this.loadCompanyDto(id)
   }
