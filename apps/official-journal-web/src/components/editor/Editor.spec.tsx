@@ -101,6 +101,25 @@ describe('HTMLEditor', () => {
     root = createRoot(container)
   })
 
+  it('calls the latest onChange prop', () => {
+    const nextOnChange = jest.fn()
+    type('abc')
+    act(() =>
+      root.render(
+        <HTMLEditor
+          onChange={nextOnChange}
+          onBlur={onBlur}
+          handleUpload={jest.fn()}
+        />,
+      ),
+    )
+
+    act(() => jest.advanceTimersByTime(250))
+
+    expect(onChange).not.toHaveBeenCalled()
+    expect(nextOnChange).toHaveBeenCalledWith('abc')
+  })
+
   it('passes the default toolbar when editable and none when readonly', () => {
     expect(mockEditor.toolbar).toBeUndefined()
 
