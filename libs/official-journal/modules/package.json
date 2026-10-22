@@ -25,6 +25,7 @@
     "@dmr.is/logging": "*",
     "@dmr.is/mocks": "*",
     "@dmr.is/pipelines": "*",
+    "@dmr.is/regulations-tools": "1.0.0-next.4",
     "@dmr.is/shared-dto": "*",
     "@dmr.is/shared-modules": "*",
     "@dmr.is/types": "*",

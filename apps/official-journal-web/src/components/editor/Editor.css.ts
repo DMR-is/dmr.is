@@ -122,7 +122,6 @@ export const classes: EditorClasses = {
     zIndex: 1,
     margin: 0,
     borderTopLeftRadius: 8,
-    padding: 0,
     boxShadow: '0 3px 9px 0px rgba(0,0,0, 0.18)',
 
     selectors: {
