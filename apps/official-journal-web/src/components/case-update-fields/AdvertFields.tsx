@@ -83,6 +83,9 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
     [currentCase.id],
   )
 
+  // A save still waiting on the debounce goes out when the case is left
+  useEffect(() => () => onChangeHandler.flush(), [onChangeHandler])
+
   const fileUploader = useFileUploader(
     currentCase.applicationId ?? 'no-application-id',
     currentCase.id,

@@ -10,6 +10,7 @@ type EditorProps = {
   valueRef: { current: () => HTMLText }
   onChange: () => void
   onBlur: () => void
+  toolbar?: unknown
 }
 
 // Stands in for EditorV2: holds the text it would serialize, and exposes the
@@ -69,7 +70,10 @@ describe('HTMLEditor', () => {
     type('abc')
     expect(onChange).not.toHaveBeenCalled()
 
-    act(() => jest.advanceTimersByTime(250))
+    act(() => jest.advanceTimersByTime(249))
+    expect(onChange).not.toHaveBeenCalled()
+
+    act(() => jest.advanceTimersByTime(1))
 
     expect(onChange).toHaveBeenCalledTimes(1)
     expect(onChange).toHaveBeenCalledWith('abc')
@@ -95,6 +99,18 @@ describe('HTMLEditor', () => {
 
     expect(onChange).toHaveBeenCalledWith('abc')
     root = createRoot(container)
+  })
+
+  it('passes the default toolbar when editable and none when readonly', () => {
+    expect(mockEditor.toolbar).toBeUndefined()
+
+    act(() =>
+      root.render(
+        <HTMLEditor readonly onChange={onChange} handleUpload={jest.fn()} />,
+      ),
+    )
+
+    expect(mockEditor.toolbar).toBe(false)
   })
 
   it('does not call onChange on blur when nothing changed', () => {

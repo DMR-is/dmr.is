@@ -3,7 +3,7 @@ import {
   regulationContentStyling,
 } from '@dmr.is/island-regulations/styling'
 import { spacing, theme } from '@dmr.is/island-ui-theme'
-import type { EditorClasses } from '@dmr.is/regulations-tools/Editor'
+import type { EditorClasses } from '@dmr.is/regulations-tools/EditorV2'
 
 import {
   containerDisabled,
