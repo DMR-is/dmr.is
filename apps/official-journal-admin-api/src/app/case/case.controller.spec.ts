@@ -83,6 +83,8 @@ describe('CaseController', () => {
           provide: ICaseService,
           useClass: jest.fn(() => ({
             createCase: () => ({}),
+            updateAdvertByHtml: () => ({}),
+            createCaseHistory: () => ({}),
           })),
         },
         {
@@ -184,6 +186,23 @@ describe('CaseController', () => {
         { comment: 'Hello world' },
       )
       expect(createSpy).toHaveBeenCalled()
+    })
+  })
+  describe('updateAdvertHtml', () => {
+    it('saves the html without writing case history', async () => {
+      const updateSpy = jest
+        .spyOn(caseService, 'updateAdvertByHtml')
+        .mockImplementation(() => Promise.resolve(ResultWrapper.ok()))
+      const historySpy = jest.spyOn(caseService, 'createCaseHistory')
+
+      await caseController.updateAdvertHtml(activeCase.id, {
+        advertHtml: '<p>Text</p>',
+      })
+
+      expect(updateSpy).toHaveBeenCalledWith(activeCase.id, {
+        advertHtml: '<p>Text</p>',
+      })
+      expect(historySpy).not.toHaveBeenCalled()
     })
   })
   describe('searchAdverts', () => {

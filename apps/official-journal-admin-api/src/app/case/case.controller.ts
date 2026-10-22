@@ -637,17 +637,9 @@ export class CaseController {
       )
     }
 
-    const historyResults = await this.caseService.createCaseHistory(id)
-
-    if (!historyResults.result.ok) {
-      this.logger.warn('Failed to create case history', {
-        caseId: id,
-        error: historyResults.result.error,
-        category: LOG_CATEGORY,
-        context: 'CaseController',
-      })
-    }
-
+    // No case history here: the editor saves after every pause in typing, and
+    // each history row copies the whole advert. History is written on
+    // submission and on status changes.
     return
   }
 
