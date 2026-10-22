@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 
-import { EditorFileUploader } from '@dmr.is/regulations-tools/Editor'
+import type { EditorFileUploader } from '@dmr.is/regulations-tools/EditorV2'
 import { EditorV2 } from '@dmr.is/regulations-tools/EditorV2'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
 
