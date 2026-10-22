@@ -1,9 +1,18 @@
-import { useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
-import { Editor, EditorFileUploader } from '@dmr.is/regulations-tools/Editor'
+import { EditorFileUploader } from '@dmr.is/regulations-tools/Editor'
+import { EditorV2 } from '@dmr.is/regulations-tools/EditorV2'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
 
 import { classes } from './Editor.css'
+
+import '@dmr.is/regulations-tools/editorV2.css'
+
+/**
+ * Reading the value serializes the whole text, which on long adverts costs
+ * more than the keystroke itself, so onChange waits for a pause in typing.
+ */
+const CHANGE_DELAY_MS = 250
 
 type Props = {
   defaultValue?: HTMLText | string
@@ -21,25 +30,44 @@ export const HTMLEditor = ({
   onBlur,
 }: Props) => {
   const valueRef = useRef(() => defaultValue as HTMLText)
+  const onChangeRef = useRef(onChange)
+  const pendingChange = useRef<ReturnType<typeof setTimeout>>(undefined)
 
-  const handleChange = (value: HTMLText) => {
-    onChange && onChange(value)
+  useEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
+
+  const flushChange = useCallback(() => {
+    if (pendingChange.current === undefined) return
+    clearTimeout(pendingChange.current)
+    pendingChange.current = undefined
+    onChangeRef.current?.(valueRef.current())
+  }, [])
+
+  // Unmounting must not drop the last edit
+  useEffect(() => flushChange, [flushChange])
+
+  const handleChange = () => {
+    clearTimeout(pendingChange.current)
+    pendingChange.current = setTimeout(flushChange, CHANGE_DELAY_MS)
+  }
+
+  const handleBlur = () => {
+    flushChange()
+    onBlur?.(valueRef.current())
   }
 
   return (
-    <Editor
+    <EditorV2
       readOnly={readonly}
       valueRef={valueRef}
       fileUploader={handleUpload}
       classes={classes}
       key={readonly ? 'readonly' : 'editable'}
-      config={readonly ? { toolbar: `` } : {}}
+      toolbar={readonly ? false : undefined}
       disabledWarnings={['nonEmTitleContent']}
-      /**
-       * Delayed onChange to prevent the editor from reading the value before it has been updated
-       */
-      onChange={() => setTimeout(() => handleChange(valueRef.current()), 100)}
-      onBlur={() => onBlur?.(valueRef.current())}
+      onChange={handleChange}
+      onBlur={handleBlur}
     />
   )
 }
