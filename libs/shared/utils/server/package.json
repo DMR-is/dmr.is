@@ -13,7 +13,7 @@
   "dependencies": {
     "@dmr.is/constants": "*",
     "@dmr.is/logging": "*",
-    "@dmr.is/regulations-tools": "1.0.0-next.5",
+    "@dmr.is/regulations-tools": "1.0.0-next.6",
     "@dmr.is/shared-dto": "*",
     "@dmr.is/types": "*",
     "@keyv/redis": "5.1.3",

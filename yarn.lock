@@ -4649,7 +4649,7 @@ __metadata:
     "@dmr.is/island-regulations": "npm:*"
     "@dmr.is/island-ui-theme": "npm:*"
     "@dmr.is/logging-next": "npm:*"
-    "@dmr.is/regulations-tools": "npm:1.0.0-next.5"
+    "@dmr.is/regulations-tools": "npm:1.0.0-next.6"
     "@dmr.is/shared-dto": "npm:*"
     "@dmr.is/trpc": "npm:*"
     "@dmr.is/ui": "npm:*"
@@ -4707,7 +4707,7 @@ __metadata:
     "@dmr.is/logging": "npm:*"
     "@dmr.is/mocks": "npm:*"
     "@dmr.is/pipelines": "npm:*"
-    "@dmr.is/regulations-tools": "npm:1.0.0-next.5"
+    "@dmr.is/regulations-tools": "npm:1.0.0-next.6"
     "@dmr.is/shared-dto": "npm:*"
     "@dmr.is/shared-modules": "npm:*"
     "@dmr.is/types": "npm:*"
@@ -4761,7 +4761,7 @@ __metadata:
     "@aws-sdk/client-s3": "npm:3.744.0"
     "@aws-sdk/lib-storage": "npm:3.744.0"
     "@aws-sdk/s3-presigned-post": "npm:3.744.0"
-    "@dmr.is/regulations-tools": "npm:1.0.0-next.5"
+    "@dmr.is/regulations-tools": "npm:1.0.0-next.6"
     "@fastify/basic-auth": "npm:6.3.0"
     "@fastify/compress": "npm:9.2.0"
     "@fastify/multipart": "npm:10.1.0"
@@ -4785,9 +4785,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dmr.is/regulations-tools@npm:1.0.0-next.5":
-  version: 1.0.0-next.5
-  resolution: "@dmr.is/regulations-tools@npm:1.0.0-next.5"
+"@dmr.is/regulations-tools@npm:1.0.0-next.6":
+  version: 1.0.0-next.6
+  resolution: "@dmr.is/regulations-tools@npm:1.0.0-next.6"
   dependencies:
     "@hugsmidjan/htmldiff-js": "npm:^1.3.0"
     "@hugsmidjan/qj": "npm:^4.10.2"
@@ -4822,7 +4822,7 @@ __metadata:
   peerDependencies:
     react: ^18 || ^19
     react-dom: ^18 || ^19
-  checksum: 10c0/e9bddda0dbcaefb75cb29f265ee94817845cef6f7f47330c3fa9926ce6e5b94e3d287d351685ca35fafcf4b9748a048bc3c52882223f8f3b93df14ebf121651f
+  checksum: 10c0/275c2a99816ece87167f800e477296ffc6f30ae9224aa279599f62ab7ba216ba07278757a5682138105d965d82f6730fd28aa5e5bcf3dd8684b613a63c8b42a4
   languageName: node
   linkType: hard
 
@@ -4966,7 +4966,7 @@ __metadata:
     "@dmr.is/constants": "npm:*"
     "@dmr.is/island-regulations": "npm:*"
     "@dmr.is/island-ui-theme": "npm:*"
-    "@dmr.is/regulations-tools": "npm:1.0.0-next.5"
+    "@dmr.is/regulations-tools": "npm:1.0.0-next.6"
     "@dmr.is/shared-dto": "npm:*"
     "@dmr.is/utils-shared": "npm:*"
     "@tanstack/react-table": "npm:8.21.3"
@@ -5006,7 +5006,7 @@ __metadata:
   dependencies:
     "@dmr.is/constants": "npm:*"
     "@dmr.is/logging": "npm:*"
-    "@dmr.is/regulations-tools": "npm:1.0.0-next.5"
+    "@dmr.is/regulations-tools": "npm:1.0.0-next.6"
     "@dmr.is/shared-dto": "npm:*"
     "@dmr.is/types": "npm:*"
     "@keyv/redis": "npm:5.1.3"
