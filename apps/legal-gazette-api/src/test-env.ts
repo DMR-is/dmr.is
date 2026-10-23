@@ -47,3 +47,10 @@ process.env.LG_TBR_PATH = 'https://tbr.invalid/api'
 process.env.LG_TBR_CHARGE_CATEGORY_PERSON = 'test-charge-category-person'
 process.env.LG_TBR_CHARGE_CATEGORY_COMPANY = 'test-charge-category-company'
 process.env.XROAD_DMR_CLIENT = 'test-xroad-client'
+
+/*
+ * `assertStaffToken` (`core/guards/token-surface`) refuses every admin request
+ * with a 500 when this is unset. Specs that build staff tokens read it back
+ * from here as the token's `aud`.
+ */
+process.env.LEGAL_GAZETTE_WEB_CLIENT_ID = '@logbirtingablad.is/test-web'

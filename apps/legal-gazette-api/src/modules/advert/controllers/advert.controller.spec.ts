@@ -1,4 +1,4 @@
-import { ExecutionContext } from '@nestjs/common'
+import { ExecutionContext, ForbiddenException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
@@ -7,6 +7,7 @@ import { ADMIN_KEY } from '../../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { SCOPES_KEY } from '../../../core/guards/scope-guards/scopes.decorator'
 import { ScopesGuard } from '../../../core/guards/scope-guards/scopes-guard'
+import { asStaffToken } from '../../../core/guards/token-surface/staff-token.testing'
 import { UserDto } from '../../../models/users.model'
 import { IUsersService } from '../../users/users.service.interface'
 import { AdvertController } from './advert.controller'
@@ -18,6 +19,7 @@ const RANDOM_NATIONAL_ID = '5566778899'
 interface MockUser {
   nationalId?: string
   scope?: string
+  aud?: string
 }
 // User factories
 const createAdminUser = (): MockUser => ({
@@ -54,7 +56,8 @@ describe('AdvertController - Guard Authorization', () => {
     user: MockUser | null,
     methodName: keyof AdvertController,
   ): ExecutionContext => {
-    const mockRequest = { user }
+    // A legal-gazette-web token unless the test sets `aud`
+    const mockRequest = { user: user && asStaffToken(user) }
     return {
       switchToHttp: () => ({
         getRequest: () => mockRequest,
@@ -193,6 +196,18 @@ describe('AdvertController - Guard Authorization', () => {
   // getAdvertByCaseId - @AdminAccess() (class) + @ApplicationWebScopes() (method)
   // Expected: Admin users OR application-web users can access (OR logic)
   // =============================================================================
+  describe('getAdvertsCount - staff token surface', () => {
+    it('should DENY an admin whose token was issued to another client', async () => {
+      const context = createMockContext(
+        { ...createAdminUser(), aud: '@logbirtingablad.is/application-web' },
+        'getAdvertsCount',
+      )
+      await expect(authorizationGuard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+    })
+  })
   describe('getAdvertByCaseId - @AdminAccess() + @ApplicationWebScopes()', () => {
     describe('ScopesGuard', () => {
       it('should ALLOW application-web users', async () => {

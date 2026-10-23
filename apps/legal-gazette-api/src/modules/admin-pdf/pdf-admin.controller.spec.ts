@@ -1,10 +1,11 @@
-import { ExecutionContext } from '@nestjs/common'
+import { ExecutionContext, ForbiddenException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { UserContext } from '../../core/context/user/user.context'
 import { ADMIN_KEY } from '../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
+import { asStaffToken } from '../../core/guards/token-surface/staff-token.testing'
 import { UserDto } from '../../models/users.model'
 import { IUsersService } from '../users/users.service.interface'
 import { PdfAdminController } from './pdf-admin.controller'
@@ -14,6 +15,7 @@ const NON_ADMIN_NATIONAL_ID = '0987654321'
 interface MockUser {
   nationalId?: string
   scope?: string
+  aud?: string
 }
 const createAdminUser = (): MockUser => ({
   nationalId: ADMIN_NATIONAL_ID,
@@ -39,7 +41,8 @@ describe('PdfAdminController - Guard Authorization', () => {
     user: MockUser | null,
     methodName: keyof PdfAdminController,
   ): ExecutionContext => {
-    const mockRequest = { user }
+    // A legal-gazette-web token unless the test sets `aud`
+    const mockRequest = { user: user && asStaffToken(user) }
     return {
       switchToHttp: () => ({
         getRequest: () => mockRequest,
@@ -115,6 +118,18 @@ describe('PdfAdminController - Guard Authorization', () => {
     it('should DENY unauthenticated requests', async () => {
       const context = createMockContext(null, 'regeneratePdf')
       await expect(authorizationGuard.canActivate(context)).rejects.toThrow()
+    })
+  })
+  describe('regeneratePdf - staff token surface', () => {
+    it('should DENY an admin whose token was issued to another client', async () => {
+      const context = createMockContext(
+        { ...createAdminUser(), aud: '@logbirtingablad.is/application-web' },
+        'regeneratePdf',
+      )
+      await expect(authorizationGuard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      )
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
     })
   })
   describe('Service delegation', () => {

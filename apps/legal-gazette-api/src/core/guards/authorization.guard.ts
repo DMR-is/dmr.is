@@ -16,6 +16,11 @@ import { IUsersService } from '../../modules/users/users.service.interface'
 import { UserContext } from '../context/user/user.context'
 import { ADMIN_KEY } from '../decorators/admin.decorator'
 import { SCOPES_KEY } from './scope-guards/scopes.decorator'
+import {
+  ADMIN_ACCESS_REQUIRED,
+  assertStaffToken,
+} from './token-surface/token-surface'
+import { scopeValues } from './claim-values'
 
 const logger = getLogger('AuthorizationGuard')
 
@@ -38,6 +43,13 @@ const logger = getLogger('AuthorizationGuard')
  * - **OR logic for mixed access**: When both decorators present, scope check happens first (cheap), admin lookup only if scope check fails
  * - **Single guard in chain**: Simplifies controller guard configuration
  *
+ * ## Admin check
+ * The admin check first requires an id_token issued to legal-gazette-web
+ * (`aud` = `LEGAL_GAZETTE_WEB_CLIENT_ID`, and `azp` / `client_id` when present)
+ * with no `actor`, so a token from another IDS client or a delegated session
+ * never reaches the user lookup.
+ * See `token-surface.ts`.
+ *
  * ## Usage:
  *
  * @example
@@ -53,7 +65,7 @@ const logger = getLogger('AuthorizationGuard')
  * @Controller('public')
  * export class PublicController { ... }
  *
- * // Admin-only - requires user in UserModel table
+ * // Admin-only - requires a legal-gazette-web token and a user in UserModel table
  * @UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
  * @AdminAccess()
  * @Controller('admin')
@@ -129,26 +141,40 @@ export class AuthorizationGuard implements CanActivate {
       // Scope check failed, fall through to admin check
     }
 
-    // Check admin access (expensive database lookup)
-    try {
-      const adminUser = await this.checkAdminAccess(user)
+    // Identity, then token, then admin row. A user with no nationalId skips
+    // both and is refused below. The token check is outside the try so its
+    // refusal (403, logged with its reason) is not logged again as a missing
+    // admin row. The route is the matched pattern or the path, never the
+    // query string.
+    if (!user?.nationalId) {
+      logger.debug('Admin check skipped: No nationalId in request')
+    } else {
+      assertStaffToken(
+        user,
+        `${request.method} ${request.route?.path ?? request.path}`,
+      )
 
-      request.user = {
-        ...request.user,
-        adminUserId: adminUser.id,
-      }
+      // Check admin access (expensive database lookup)
+      try {
+        const adminUser = await this.checkAdminAccess(user.nationalId)
 
-      logger.debug('Admin access granted', {
-        nationalId: user?.nationalId,
-      })
+        request.user = {
+          ...request.user,
+          adminUserId: adminUser.id,
+        }
 
-      this.userContext.user = request.user
+        logger.debug('Admin access granted', {
+          nationalId: user.nationalId,
+        })
 
-      return true
-    } catch (error) {
-      // A lookup failure is an outage, not a refusal, so it must not become a 403
-      if (!(error instanceof ForbiddenException)) {
-        throw error
+        this.userContext.user = request.user
+
+        return true
+      } catch (error) {
+        // A lookup failure is an outage, not a refusal, so it must not become a 403
+        if (!(error instanceof ForbiddenException)) {
+          throw error
+        }
       }
     }
 
@@ -159,14 +185,17 @@ export class AuthorizationGuard implements CanActivate {
         nationalId: user?.nationalId,
         requiredScopes,
       })
+    } else if (!user?.nationalId) {
+      // Case 3: Admin only, no identity, so no lookup ran
+      logger.warn('Admin access denied: No nationalId in request')
     } else {
       // Case 3: Admin only, admin check failed
       logger.warn('Admin access denied: User not in admin table', {
-        nationalId: user?.nationalId,
+        nationalId: user.nationalId,
       })
     }
 
-    throw new ForbiddenException('Admin access required')
+    throw new ForbiddenException(ADMIN_ACCESS_REQUIRED)
   }
 
   /**
@@ -174,7 +203,7 @@ export class AuthorizationGuard implements CanActivate {
    * Used when only @Scopes() decorator is present.
    */
   private checkScopes(
-    user: { scope?: string; nationalId?: string } | undefined,
+    user: { scope?: unknown; nationalId?: string } | undefined,
     requiredScopes: string[],
   ): boolean {
     if (!user) {
@@ -188,7 +217,7 @@ export class AuthorizationGuard implements CanActivate {
       logger.warn('Scope check failed: Missing required scope', {
         nationalId: user.nationalId,
         requiredScopes,
-        userScopes: user.scope?.split(' ') || [],
+        userScopes: scopeValues(user.scope),
       })
       return false
     }
@@ -201,30 +230,24 @@ export class AuthorizationGuard implements CanActivate {
   }
 
   /**
-   * Check if user exists in the UserModel table (admin check).
-   * Returns false on error or if user not found.
+   * Look the nationalId up in the UserModel table (admin check). Identity and
+   * the token are checked before this runs. Throws ForbiddenException when the
+   * user is not an admin.
    */
-  private async checkAdminAccess(
-    user: { nationalId?: string } | undefined,
-  ): Promise<UserDto> {
-    if (!user?.nationalId) {
-      logger.debug('Admin check skipped: No nationalId in request')
-      throw new ForbiddenException('Admin access required')
-    }
-
+  private async checkAdminAccess(nationalId: string): Promise<UserDto> {
     try {
       const dbUser = await this.usersService.getUserByNationalId(
-        user.nationalId,
+        nationalId,
         true,
       )
 
       return dbUser
     } catch (error) {
       if (error instanceof NotFoundException) {
-        throw new ForbiddenException('Admin access required')
+        throw new ForbiddenException(ADMIN_ACCESS_REQUIRED)
       }
       logger.error('Admin lookup failed', {
-        nationalId: user.nationalId,
+        nationalId,
         error: error instanceof Error ? error.message : 'Unknown error',
       })
       throw new InternalServerErrorException('Admin lookup failed')
@@ -235,10 +258,10 @@ export class AuthorizationGuard implements CanActivate {
    * Check if user has at least one of the required scopes.
    */
   private hasMatchingScope(
-    user: { scope?: string } | undefined,
+    user: { scope?: unknown } | undefined,
     requiredScopes: string[],
   ): boolean {
-    const userScopes = user?.scope?.split(' ') || []
+    const userScopes = scopeValues(user?.scope)
     return requiredScopes.some((scope) => userScopes.includes(scope))
   }
 
@@ -246,10 +269,10 @@ export class AuthorizationGuard implements CanActivate {
    * Get the scopes that match between user and required scopes.
    */
   private getMatchingScopes(
-    user: { scope?: string } | undefined,
+    user: { scope?: unknown } | undefined,
     requiredScopes: string[],
   ): string[] {
-    const userScopes = user?.scope?.split(' ') || []
+    const userScopes = scopeValues(user?.scope)
     return requiredScopes.filter((scope) => userScopes.includes(scope))
   }
 }
