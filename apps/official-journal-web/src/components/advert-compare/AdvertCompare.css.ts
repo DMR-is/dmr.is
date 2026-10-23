@@ -57,3 +57,9 @@ globalStyle(
     display: 'block',
   },
 )
+
+globalStyle(`${bodyText} .compare-title`, {
+  fontSize: '1.25em',
+  fontWeight: theme.typography.semiBold,
+  marginBottom: theme.spacing[3],
+})

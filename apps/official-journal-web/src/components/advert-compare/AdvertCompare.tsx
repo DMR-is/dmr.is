@@ -20,6 +20,7 @@ import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatDate } from '../../lib/utils'
 import * as styles from './AdvertCompare.css'
 import { normalizeForDiff } from './normalizeForDiff'
+import { withTitle } from './withTitle'
 
 import { keepPreviousData } from '@tanstack/react-query'
 
@@ -111,7 +112,7 @@ const AdvertCompareContent = ({ closeModal }: { closeModal: () => void }) => {
             <CompareSubtitle advert={selected} />
           ) : (
             <Text variant="small">
-              Meginmál borið saman við birta auglýsingu
+              Heiti og meginmál borin saman við birta auglýsingu
             </Text>
           )}
         </Stack>
@@ -138,7 +139,7 @@ const CompareSubtitle = ({ advert }: { advert: SelectedAdvert }) => {
 
   return (
     <Text variant="small">
-      {`Meginmál borið saman við ${publicationNumber ?? ''} ${title}`}
+      {`Heiti og meginmál borin saman við ${publicationNumber ?? ''} ${title}`}
     </Text>
   )
 }
@@ -273,6 +274,10 @@ const CompareView = ({
   // undefined while loading; null when the advert has no HTML body (some
   // legacy adverts were published as PDF only).
   const publishedHtml = data ? data.advert.document.html : undefined
+  // The published title is the type and subject joined; build the case's the
+  // same way so an unchanged title diffs clean.
+  const publishedTitle = data?.advert.title ?? ''
+  const caseTitle = `${currentCase.advertType?.title ?? ''} ${currentCase.advertTitle ?? ''}`
 
   useEffect(() => {
     if (!publishedHtml) return
@@ -287,8 +292,14 @@ const CompareView = ({
           import('@dmr.is/utils-server/cleanLegacyHtml'),
         ])
       const { diff } = getStructuredDiff(
-        normalizeForDiff(simpleSanitize(publishedHtml)) as HTMLText,
-        normalizeForDiff(simpleSanitize(currentCase.html)) as HTMLText,
+        withTitle(
+          publishedTitle,
+          normalizeForDiff(simpleSanitize(publishedHtml)),
+        ) as HTMLText,
+        withTitle(
+          caseTitle,
+          normalizeForDiff(simpleSanitize(currentCase.html)),
+        ) as HTMLText,
       )
       if (!cancelled) setDiffHtml(diff)
     }
@@ -308,7 +319,14 @@ const CompareView = ({
     return () => {
       cancelled = true
     }
-  }, [publishedHtml, currentCase.html, currentCase.id, advert.id])
+  }, [
+    publishedHtml,
+    publishedTitle,
+    currentCase.html,
+    caseTitle,
+    currentCase.id,
+    advert.id,
+  ])
 
   const diffShowing = view === 'diff'
 
@@ -338,7 +356,7 @@ const CompareView = ({
       return (
         <HTMLDump
           className={styles.bodyText}
-          html={publishedHtml as HTMLText}
+          html={withTitle(publishedTitle, publishedHtml) as HTMLText}
         />
       )
     }
