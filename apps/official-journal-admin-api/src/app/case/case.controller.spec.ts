@@ -13,6 +13,7 @@ import {
   IPriceService,
   IUserService,
 } from '@dmr.is/ojoi-modules'
+import { StaffTokenGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import {
   Case,
   CaseCommentTypeTitleEnum,
@@ -122,7 +123,12 @@ describe('CaseController', () => {
           },
         },
       ],
-    }).compile()
+    })
+      // The controller is under test, not the guard: keep the guard and its
+      // environment out of these specs
+      .overrideGuard(StaffTokenGuard)
+      .useValue({ canActivate: () => true })
+      .compile()
     caseService = moduleRef.get<ICaseService>(ICaseService)
     commentService = moduleRef.get<ICommentServiceV2>(ICommentServiceV2)
     caseController = moduleRef.get<CaseController>(CaseController)

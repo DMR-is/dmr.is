@@ -29,7 +29,7 @@ import {
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { RoleGuard } from '../guards/auth'
+import { RoleGuard, StaffTokenGuard } from '../guards/auth'
 import { MemberTypeEnum } from './lib/types'
 import { ISignatureService } from './signature.service.interface'
 
@@ -49,7 +49,7 @@ import { ISignatureService } from './signature.service.interface'
   path: 'signatures',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@UseGuards(TokenJwtAuthGuard, StaffTokenGuard, RoleGuard)
 @Roles(UserRoleEnum.Admin)
 export class SignatureController {
   constructor(
