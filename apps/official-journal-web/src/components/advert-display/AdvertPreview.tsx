@@ -27,7 +27,7 @@ export const AdvertPreview = ({ disclosure }: Props) => {
   const { html: signatureHtml } = currentCase.signature
 
   return (
-    <ModalBase baseId={baseId} disclosure={disclosure}>
+    <ModalBase baseId={baseId} disclosure={disclosure} removeOnClose>
       {({ closeModal }) => (
         <GridContainer>
           <GridRow>

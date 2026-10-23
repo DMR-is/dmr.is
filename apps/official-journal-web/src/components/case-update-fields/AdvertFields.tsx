@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 
 import debounce from 'lodash/debounce'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
@@ -43,6 +43,28 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
 
   const { currentCase, refetch, canEdit } = useCaseContext()
 
+  // The editor is expensive to start on long adverts, so it does not hold up
+  // the page: it starts once the browser is idle after load, which usually
+  // has it ready before anyone expands this item, or right away on an earlier
+  // expand. It then stays mounted, keeping its undo history across collapse
+  // and expand.
+  const [editorMounted, setEditorMounted] = useState(toggle)
+  if (toggle && !editorMounted) {
+    setEditorMounted(true)
+  }
+
+  useEffect(() => {
+    if (editorMounted) return
+    const mount = () => setEditorMounted(true)
+    // Safari has no requestIdleCallback
+    if (typeof window.requestIdleCallback !== 'function') {
+      const timer = setTimeout(mount, 1000)
+      return () => clearTimeout(timer)
+    }
+    const handle = window.requestIdleCallback(mount)
+    return () => window.cancelIdleCallback(handle)
+  }, [editorMounted])
+
   const updateAdvertHtml = useMutation(
     trpc.updateAdvertHtml.mutationOptions({
       onSuccess: () => {
@@ -82,12 +104,14 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
           border="standard"
           borderRadius="large"
         >
-          <HTMLEditor
-            readonly={!canEdit}
-            defaultValue={currentCase.html}
-            onChange={(val) => onChangeHandler({ advertHtml: val })}
-            handleUpload={fileUploader()}
-          />
+          {editorMounted && (
+            <HTMLEditor
+              readonly={!canEdit}
+              defaultValue={currentCase.html}
+              onChange={(val) => onChangeHandler({ advertHtml: val })}
+              handleUpload={fileUploader()}
+            />
+          )}
         </Box>
         <Inline space={2} justifyContent="flexEnd">
           <OriginalCompare

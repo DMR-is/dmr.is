@@ -29,7 +29,7 @@ export const AdvertDisplay = ({ disclosure }: Props) => {
   const { requestedPublicationDate } = currentCase
 
   return (
-    <ModalBase baseId={baseId} disclosure={disclosure}>
+    <ModalBase baseId={baseId} disclosure={disclosure} removeOnClose>
       {({ closeModal }) => (
         <GridContainer>
           <GridRow>
