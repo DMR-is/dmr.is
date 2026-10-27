@@ -1081,16 +1081,21 @@ export class CompanyService implements ICompanyService {
    * The raw `legalForm*` values are left untouched — they are RSK's data, not
    * ours, and keeping them lets a corrected mapping be re-derived later.
    *
-   * A changed sector is recorded as a SECTOR_CHANGED `company_event`, unlike
-   * `updateIsat`: sector decides an obligation (a RADUNEYTI company owes a
-   * salary report whatever its size), so it belongs on the timeline. An
-   * override-only change (same sector, now pinned) emits nothing.
+   * An admin's sector change is recorded as a SECTOR_CHANGED `company_event`,
+   * unlike `updateIsat`, because sector decides what the company owes and may
+   * file: a RADUNEYTI company owes a salary report whatever its size, and a
+   * SVEITARFELAG company may file one without equality coverage
+   * (`SALARY_EQUALITY_EXEMPT_SECTORS`). An override-only change (same sector,
+   * now pinned) emits nothing.
+   *
+   * Known gap: the register load (`COMPANY_ON_CONFLICT` in
+   * company-register-to-sql.ts) writes `sector` directly, without going
+   * through here, so a sheet-driven sector change leaves no event.
    *
    * No salary due date is written here. A ministry under 50 gets none from the
    * register load either (it seeds LARGE only), so until an admin sets one via
    * `updateDueDate` it owes the report but is never overdue or reminded. That
    * is deliberate: the Directorate sets ministry deadlines by hand.
-
    */
   async updateSector(
     id: string,

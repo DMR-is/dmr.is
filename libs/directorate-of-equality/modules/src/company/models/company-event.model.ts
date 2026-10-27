@@ -56,8 +56,10 @@ import { CompanyModel } from './company.model'
  *                    this type — the report's own STATUS_CHANGED covers that.
  *   SECTOR_CHANGED → an admin reclassified the company's sector by hand.
  *                    `fromSector`/`toSector` carry the old and new value.
- *                    Recorded because sector decides an obligation (a
- *                    RADUNEYTI company owes a salary report whatever its size).
+ *                    Recorded because sector decides what the company owes
+ *                    and may file: a RADUNEYTI company owes a salary report
+ *                    whatever its size, and a SVEITARFELAG company may file
+ *                    one without equality coverage.
  */
 export enum CompanyEventTypeEnum {
   CREATED = 'CREATED',

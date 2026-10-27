@@ -7,8 +7,9 @@ module.exports = {
     // BEGIN/COMMIT — the same as m-20261014-company-event-due-date-changed.
     //
     // An admin reclassifying a company's sector by hand. Recorded on the
-    // timeline because sector now decides an obligation: a RADUNEYTI company
-    // owes a salary report whatever its size.
+    // timeline because sector now decides what a company owes and may file: a
+    // RADUNEYTI company owes a salary report whatever its size, and a
+    // SVEITARFELAG company may file one without equality coverage.
     await queryInterface.sequelize.query(`
       ALTER TYPE company_event_type_enum ADD VALUE IF NOT EXISTS 'SECTOR_CHANGED';
     `)
