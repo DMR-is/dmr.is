@@ -3,7 +3,10 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { CompanyStatusEnum } from '../company/models/company.enums'
+import {
+  CompanySectorEnum,
+  CompanyStatusEnum,
+} from '../company/models/company.enums'
 import {
   CompanyEventModel,
   CompanyEventTypeEnum,
@@ -97,6 +100,25 @@ describe('CompanyEventService', () => {
       fromDueAt: from,
       toDueAt: to,
       reason: 'extension granted',
+    })
+  })
+
+  it('emitSectorChanged records the actor and the old and new sector', async () => {
+    await service.emitSectorChanged(
+      'company-1',
+      CompanyStatusEnum.ACTIVE,
+      CompanySectorEnum.UNKNOWN,
+      CompanySectorEnum.RADUNEYTI,
+      'admin-1',
+    )
+
+    expect(create).toHaveBeenCalledWith({
+      companyId: 'company-1',
+      eventType: CompanyEventTypeEnum.SECTOR_CHANGED,
+      actorUserId: 'admin-1',
+      status: CompanyStatusEnum.ACTIVE,
+      fromSector: CompanySectorEnum.UNKNOWN,
+      toSector: CompanySectorEnum.RADUNEYTI,
     })
   })
 

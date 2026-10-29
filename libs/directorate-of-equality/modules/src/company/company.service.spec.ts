@@ -57,6 +57,7 @@ describe('CompanyService', () => {
   let emitQuarantined: jest.Mock
   let emitUnquarantined: jest.Mock
   let emitDueDateChanged: jest.Mock
+  let emitSectorChanged: jest.Mock
   let eventsByCompanyId: jest.Mock
   let commentsByCompanyId: jest.Mock
   let isatFindByPk: jest.Mock
@@ -86,6 +87,7 @@ describe('CompanyService', () => {
     emitQuarantined = jest.fn()
     emitUnquarantined = jest.fn()
     emitDueDateChanged = jest.fn()
+    emitSectorChanged = jest.fn()
     eventsByCompanyId = jest.fn().mockResolvedValue([])
     commentsByCompanyId = jest.fn().mockResolvedValue([])
 
@@ -142,6 +144,7 @@ describe('CompanyService', () => {
             emitQuarantined,
             emitUnquarantined,
             emitDueDateChanged,
+            emitSectorChanged,
             getByCompanyId: eventsByCompanyId,
           },
         },
@@ -1527,6 +1530,45 @@ describe('CompanyService', () => {
         sector: CompanySectorEnum.FYRIRTAEKI,
         sectorOverride: true,
       })
+      // Same sector, so nothing for the timeline.
+      expect(emitSectorChanged).not.toHaveBeenCalled()
+    })
+
+    it('records a changed sector on the timeline with the old and new value', async () => {
+      stubCompany({
+        sector: CompanySectorEnum.UNKNOWN,
+        sectorOverride: false,
+        status: CompanyStatusEnum.ACTIVE,
+      })
+
+      await service.updateSector(
+        'company-20',
+        { sector: CompanySectorEnum.RADUNEYTI },
+        'admin-1',
+      )
+
+      expect(emitSectorChanged).toHaveBeenCalledWith(
+        'company-20',
+        CompanyStatusEnum.ACTIVE,
+        CompanySectorEnum.UNKNOWN,
+        CompanySectorEnum.RADUNEYTI,
+        'admin-1',
+      )
+    })
+
+    it('records nothing on a no-op', async () => {
+      stubCompany({
+        sector: CompanySectorEnum.RADUNEYTI,
+        sectorOverride: true,
+      })
+
+      await service.updateSector(
+        'company-20',
+        { sector: CompanySectorEnum.RADUNEYTI },
+        'admin-1',
+      )
+
+      expect(emitSectorChanged).not.toHaveBeenCalled()
     })
 
     it('leaves the raw RSK legal form untouched', async () => {

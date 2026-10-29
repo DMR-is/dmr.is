@@ -3,6 +3,7 @@
 import {
   AutoReviewDecisionEnum,
   CommentVisibilityEnum,
+  CompanySectorEnum,
   ReportEventTypeEnum,
   ReportRoleEnum,
   ReportTimelineItemDto,
@@ -15,6 +16,7 @@ import {
 } from '../../../../../lib/constants'
 import { reportText } from '../../../../../lib/text'
 import { formatTimestampDate } from '../../../../../lib/utils'
+import { SECTOR_LABEL } from '../../../../companies/companyStatus'
 
 export function formatRelativeDate(dateStr: string): string {
   const d = new Date(dateStr)
@@ -148,6 +150,9 @@ export type TimelineItem = Omit<ReportTimelineItemDto, 'comment' | 'event'> & {
         /** Old and new date on *_DUE_DATE_CHANGED company events only. */
         fromDueAt?: string | null
         toDueAt?: string | null
+        /** Old and new sector on SECTOR_CHANGED company events only. */
+        fromSector?: CompanySectorEnum | null
+        toSector?: CompanySectorEnum | null
       })
     | null
 }
@@ -390,6 +395,19 @@ export function timelineEntryText(
     return actorLine(
       fill(withActor[dueDateKind]),
       fill(withoutActor[dueDateKind]),
+    )
+  }
+
+  if (eventTypeStr === 'SECTOR_CHANGED') {
+    const { fromSector, toSector } = item.event
+    const fill = (template: string) =>
+      template
+        .replace('{from}', fromSector ? SECTOR_LABEL[fromSector] : '')
+        .replace('{to}', toSector ? SECTOR_LABEL[toSector] : '')
+
+    return actorLine(
+      fill(reportText.timeline.sectorChanged),
+      fill(reportText.timeline.sectorChangedNoActor),
     )
   }
   // Events whose wording works with or without a name in front of it: the
