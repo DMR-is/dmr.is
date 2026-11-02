@@ -15,20 +15,20 @@ import { useTRPC } from '../../lib/trpc/client/trpc'
 import { EMPLOYEE_RANGES } from '../../lib/utils'
 import { type CompanyFilters, type FilterOption } from './CompanyFilter'
 import {
-  COMPANY_STATUS_FILTER_OPTIONS,
   EXPIRES_FILTER_OPTIONS,
   FLAG_FILTER_OPTIONS,
+  OBLIGATION_FILTER_OPTIONS,
   SECTOR_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
   VISIBILITY_FILTER_OPTIONS,
 } from './companyStatus'
 
 /**
- * One removable chip. Search and the legacy quarantine constraint live
- * outside `CompanyFilters`, but still affect the results and must be visible.
+ * One removable chip. Search lives outside `CompanyFilters`, but still affects
+ * the results and must be visible.
  */
 type Chip = {
-  key: keyof CompanyFilters | 'q' | 'quarantined'
+  key: keyof CompanyFilters | 'q'
   value: string
   label: string
 }
@@ -45,14 +45,11 @@ export type ExtraChip = {
 
 type Props = {
   query: string
-  /** Only the register has the legacy quarantine constraint. */
-  quarantined?: boolean | null
   filters: CompanyFilters
   regionOptions: FilterOption[]
   postcodeOptions: FilterOption[]
   onFiltersChange: (key: keyof CompanyFilters, val: string[]) => void
   onQueryClear: () => void
-  onQuarantinedClear?: () => void
   onReset: () => void
   /** Appended after the company chips, matching where their cards sit. */
   extraChips?: ExtraChip[]
@@ -97,21 +94,17 @@ const labelFor = (options: FilterOption[], value: string) =>
  * seeing 212 companies" is the normal question rather than an unusual one. The
  * count above the table answers "how many"; this answers "why".
  *
- * ⚠️ Every axis the panel can set is represented, including the three reveals
- * under "Engin skilaskylda". A reveal widens the result set rather than
- * narrowing it, but it is still an answer the admin gave and still explains the
- * rows on screen — leaving them out would make "Sýna óvirk" the one filter with
- * no visible trace.
+ * ⚠️ Every axis the panel can set is represented, including the "Sýna óvirk
+ * fyrirtæki" reveal. It widens the result set rather than narrowing it, but it
+ * is still an answer the admin gave and still explains the rows on screen.
  */
 export const CompanyActiveFilters = ({
   query,
-  quarantined = null,
   filters,
   regionOptions,
   postcodeOptions,
   onFiltersChange,
   onQueryClear,
-  onQuarantinedClear,
   onReset,
   extraChips = [],
 }: Props) => {
@@ -163,27 +156,15 @@ export const CompanyActiveFilters = ({
           },
         ]
       : []),
-    // Preserve old bookmarks' narrower result set until explicitly cleared.
-    ...(quarantined !== null
-      ? [
-          {
-            key: 'quarantined' as const,
-            value: String(quarantined),
-            label: quarantined
-              ? companiesText.onlyQuarantined
-              : companiesText.excludeQuarantined,
-          },
-        ]
-      : []),
     ...filters.employees.map((value) => ({
       key: 'employees' as const,
       value,
       label: labelFor(EMPLOYEE_RANGES, value),
     })),
-    ...filters.registerStatus.map((value) => ({
-      key: 'registerStatus' as const,
+    ...filters.obligation.map((value) => ({
+      key: 'obligation' as const,
       value,
-      label: labelFor(COMPANY_STATUS_FILTER_OPTIONS, value),
+      label: labelFor(OBLIGATION_FILTER_OPTIONS, value),
     })),
     ...filters.sector.map((value) => ({
       key: 'sector' as const,
@@ -237,10 +218,6 @@ export const CompanyActiveFilters = ({
   const remove = ({ key, value }: Chip) => {
     if (key === 'q') {
       onQueryClear()
-      return
-    }
-    if (key === 'quarantined') {
-      onQuarantinedClear?.()
       return
     }
     // Routed through the same handler the panel uses rather than setting the

@@ -1,11 +1,10 @@
 import type { CompanyFilters } from '../../components/companies/CompanyFilter'
 import {
-  COMPANY_STATUS_LABEL,
   EXPIRES_FILTER_OPTIONS,
   FLAG_FILTER_OPTIONS,
-  REPORT_STATUS_LABEL,
+  OBLIGATION_FILTER_OPTIONS,
   SECTOR_LABEL,
-  VISIBILITY_FILTER_OPTIONS,
+  STATUS_FILTER_OPTIONS,
 } from '../../components/companies/companyStatus'
 import type {
   ReportCriteria,
@@ -16,16 +15,11 @@ import type {
 } from '../../components/data-export/ReportCriteriaCards'
 import {
   ADMIN_GENDER_OPTIONS,
-  EQUALITY_SOURCE_OPTIONS,
   IMPROVEMENT_PLAN_OPTIONS,
   REPORT_TYPE_OPTIONS,
   type ReportFilterOption,
 } from '../../components/data-export/reportExportOptions'
-import type {
-  CompanyReportStatusEnum,
-  CompanySectorEnum,
-  CompanyStatusEnum,
-} from '../../gen/fetch'
+import type { CompanySectorEnum } from '../../gen/fetch'
 import { dataExportText } from '../../lib/text'
 import { EMPLOYEE_RANGES } from '../../lib/utils'
 
@@ -75,24 +69,16 @@ export const buildFilterSummary = ({
     query.trim() ? `Leitarorð: ${query.trim()}` : null,
     line('Starfsmannafjöldi', labelFor(EMPLOYEE_RANGES, filters.employees)),
     line(
-      'Staða',
-      filters.status.map(
-        (value) => REPORT_STATUS_LABEL[value as CompanyReportStatusEnum],
-      ),
+      'Skilaskylda',
+      labelFor(OBLIGATION_FILTER_OPTIONS, filters.obligation),
     ),
-    line(
-      'Staða í skrá',
-      filters.registerStatus.map(
-        (value) => COMPANY_STATUS_LABEL[value as CompanyStatusEnum],
-      ),
-    ),
+    line('Staða', labelFor(STATUS_FILTER_OPTIONS, filters.status)),
     line(
       'Rekstrarform',
       filters.sector.map((value) => SECTOR_LABEL[value as CompanySectorEnum]),
     ),
     line('Gildistími', labelFor(EXPIRES_FILTER_OPTIONS, filters.expires)),
-    line('Flögg', labelFor(FLAG_FILTER_OPTIONS, filters.flags)),
-    line('Sýnileiki', labelFor(VISIBILITY_FILTER_OPTIONS, filters.visibility)),
+    line('Annað', labelFor(FLAG_FILTER_OPTIONS, filters.flags)),
     line('ÍSAT-bálkur', filters.isatSection),
     line('ÍSAT atvinnugrein', filters.isatCategoryCode),
     line('Landshluti', filters.regionCode),
@@ -201,10 +187,6 @@ const reportSummary = (
     line(
       `${prefix}kyn æðsta stjórnanda`,
       labelFor(ADMIN_GENDER_OPTIONS, criteria.companyAdminGender),
-    ),
-    line(
-      `${prefix}grundvöllur jafnréttisáætlunar`,
-      labelFor(EQUALITY_SOURCE_OPTIONS, criteria.equalitySource),
     ),
     line(
       `${prefix}úrbótaáætlun`,

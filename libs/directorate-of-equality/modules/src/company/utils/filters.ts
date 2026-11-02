@@ -9,6 +9,7 @@ import { ReportTypeEnum } from '../../report/models/report.enums'
 // would close a require cycle.
 import type { GetCompaniesQueryDto } from '../dto/get-companies-query.dto'
 import {
+  CompanyObligationStatusEnum,
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanyStatusEnum,
@@ -17,16 +18,39 @@ import { IsatCategoryModel } from '../models/isat-category.model'
 import { buildCompanyReportCriteriaWhere } from './report-criteria'
 import {
   actionPlanMissingSql,
+  activeActionPlanExistsSql,
   COMPANY_QUERY_ALIAS,
+  equalityObligationStatusCaseSql,
   equalityReportMissingSql,
   equalityReportOverdueSql,
+  equalityRequiredSql,
   hiddenFromDefaultRegisterSql,
   legacyCertificationExpiringSql,
   neverFiledAnywhereSql,
   neverFiledReportSql,
+  salaryObligationStatusCaseSql,
   salaryReportMissingSql,
   salaryReportOverdueSql,
+  salaryRequiredSql,
 } from './report-status'
+
+/**
+ * "Gild …" — the in-force counterparts of the "Vantar …" statuses. Filter-only:
+ * the displayed roll-up (`CompanyReportStatusEnum`) is unchanged.
+ */
+export enum CompanyValidReportFilterEnum {
+  VALID_EQUALITY_REPORT = 'VALID_EQUALITY_REPORT',
+  VALID_ACTION_PLAN = 'VALID_ACTION_PLAN',
+  VALID_SALARY_REPORT = 'VALID_SALARY_REPORT',
+}
+
+/** Whether the company owes each report ("skylda" / "EKKI skylda"). */
+export enum CompanyObligationFilterEnum {
+  EQUALITY_REQUIRED = 'EQUALITY_REQUIRED',
+  SALARY_REQUIRED = 'SALARY_REQUIRED',
+  EQUALITY_NOT_REQUIRED = 'EQUALITY_NOT_REQUIRED',
+  SALARY_NOT_REQUIRED = 'SALARY_NOT_REQUIRED',
+}
 
 /**
  * The predicate behind each selectable compliance status — the very same
@@ -49,23 +73,73 @@ const STATUS_PREDICATE: Record<CompanyReportStatusEnum, () => string> = {
 /**
  * Filter the company list by compliance status.
  *
- * ⚠️ An OR over the per-obligation predicates, NOT a test against the roll-up
- * `reportStatus`. The list shows each missing obligation as its own column
- * value, so a company missing both reports carries both. Matching the roll-up
- * would return only the companies whose *highest-priority* problem is the one
- * selected — filtering "Vantar launagreiningu" would silently skip every
- * company that is also missing its jafnréttisáætlun, while the list visibly
- * shows them missing the launagreining.
+ * ⚠️ Tests the per-obligation predicates, NOT the roll-up `reportStatus`. The
+ * list shows each missing obligation as its own column value, so a company
+ * missing both reports carries both. Matching the roll-up would return only
+ * the companies whose *highest-priority* problem is the one selected —
+ * filtering "Vantar launagreiningu" would silently skip every company that is
+ * also missing its jafnréttisáætlun, while the list visibly shows them missing
+ * the launagreining.
  *
- * Selecting several statuses therefore means "missing any of these", which is
- * what a multi-select reads as.
+ * Several statuses AND together — "in all of these states" — matching the
+ * "Gild …" options beside them in the same control. Mutually exclusive picks
+ * (e.g. both salary states) therefore return nothing.
  */
 export function buildCompanyStatusWhere(
   statuses: CompanyReportStatusEnum[],
 ): WhereOptions {
   if (!statuses.length) return {}
   const predicates = statuses.map((status) => STATUS_PREDICATE[status]())
-  return literal(`(${predicates.join(' OR ')})`)
+  return literal(`(${predicates.join(' AND ')})`)
+}
+
+/**
+ * "Gild jafnréttisáætlun" / "Gild skýrslugjöf" read the same CASE as the list's
+ * columns, so they match exactly the rows tagged "Í gildi" — owed and covered.
+ */
+const VALID_REPORT_PREDICATE: Record<
+  CompanyValidReportFilterEnum,
+  () => string
+> = {
+  [CompanyValidReportFilterEnum.VALID_EQUALITY_REPORT]: () =>
+    `(${equalityObligationStatusCaseSql()} = '${CompanyObligationStatusEnum.COVERED}')`,
+  [CompanyValidReportFilterEnum.VALID_SALARY_REPORT]: () =>
+    `(${salaryObligationStatusCaseSql()} = '${CompanyObligationStatusEnum.COVERED}')`,
+  [CompanyValidReportFilterEnum.VALID_ACTION_PLAN]: activeActionPlanExistsSql,
+}
+
+/** Filter to companies holding every selected in-force report (AND). */
+export function buildCompanyValidReportWhere(
+  values: CompanyValidReportFilterEnum[],
+): WhereOptions {
+  if (!values.length) return {}
+  const predicates = values.map((value) => VALID_REPORT_PREDICATE[value]())
+  return literal(`(${predicates.join(' AND ')})`)
+}
+
+/**
+ * The obligation rule itself (`equalityRequiredSql` / `salaryRequiredSql`), so
+ * sector rules come along unrestated: RADUNEYTI owes a salary report at any
+ * size, and SVEITARFELAG keeps its equality obligation — its exemption is only
+ * the salary-filing precondition.
+ *
+ * ⚠️ "EKKI skylda" includes UNKNOWN-size companies, matching the "Á ekki við"
+ * column they show.
+ */
+const OBLIGATION_PREDICATE: Record<CompanyObligationFilterEnum, string> = {
+  [CompanyObligationFilterEnum.EQUALITY_REQUIRED]: equalityRequiredSql,
+  [CompanyObligationFilterEnum.SALARY_REQUIRED]: salaryRequiredSql,
+  [CompanyObligationFilterEnum.EQUALITY_NOT_REQUIRED]: `NOT ${equalityRequiredSql}`,
+  [CompanyObligationFilterEnum.SALARY_NOT_REQUIRED]: `NOT ${salaryRequiredSql}`,
+}
+
+/** Filter by reporting obligation; several selections AND together. */
+export function buildCompanyObligationWhere(
+  values: CompanyObligationFilterEnum[],
+): WhereOptions {
+  if (!values.length) return {}
+  const predicates = values.map((value) => OBLIGATION_PREDICATE[value])
+  return literal(`(${predicates.join(' AND ')})`)
 }
 
 /**
@@ -283,6 +357,14 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
     conditions.push(buildCompanyStatusWhere(query.companyStatus))
   }
 
+  if (query.validReport?.length) {
+    conditions.push(buildCompanyValidReportWhere(query.validReport))
+  }
+
+  if (query.obligation?.length) {
+    conditions.push(buildCompanyObligationWhere(query.obligation))
+  }
+
   if (query.status?.length) {
     conditions.push(buildCompanyLifecycleStatusWhere(query.status))
   }
@@ -330,14 +412,18 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   // same axis. The admin register is a working list of who owes what, and
   // roughly 250 companies that owe nothing, every deregistered company and
   // every company under an admin halt crowd it out — but a default that cannot
-  // be escaped is worse than no default. `employeeCountCategory`, `status` and
-  // `quarantined` are the controls for these three axes, so setting any of them
+  // be escaped is worse than no default. `employeeCountCategory` / `obligation`,
+  // `status` and `quarantined` are the controls for these three axes, so setting any of them
   // means the admin has already answered the question the default was guessing
   // at: filtering to Óvirkt has to return óvirk companies, not an empty page.
   //
   // Ordered after the explicit filters purely for readability; `conditions`
   // is AND-ed, so position carries no meaning.
-  if (!query.includeNotObliged && !query.employeeCountCategory?.length) {
+  if (
+    !query.includeNotObliged &&
+    !query.employeeCountCategory?.length &&
+    !query.obligation?.length
+  ) {
     conditions.push(literal(`NOT ${hiddenFromDefaultRegisterSql()}`))
   }
 
