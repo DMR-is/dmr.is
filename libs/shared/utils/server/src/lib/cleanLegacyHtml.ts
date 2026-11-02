@@ -308,6 +308,29 @@ export const simpleSanitize = (html: string) => {
   return sanitizeHtml(html, baseOptions)
 }
 
+/**
+ * For showing stored HTML inside the page itself, where it shares the DOM with
+ * the app. Stricter than `simpleSanitize`: every `style` keeps only alignment
+ * and width (no positioning, no `url()`), and `data:` is allowed on images only.
+ */
+const displayOptions: sanitizeHtml.IOptions = {
+  ...baseOptions,
+  allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+  allowedSchemesByTag: { img: ['http', 'https', 'data'] },
+  allowedStyles: {
+    ...baseOptions.allowedStyles,
+    '*': {
+      'text-align': [/^(left|right|center|justify)$/i],
+      'vertical-align': [/^(top|middle|bottom|baseline)$/i],
+      width: [/^\d+(\.\d+)?(px|%|em|rem|pt)?$/i],
+    },
+  },
+}
+
+export const sanitizeForDisplay = (html: string) => {
+  return sanitizeHtml(html, displayOptions)
+}
+
 export function cleanLegacyHtml(input: string): string {
   const src = despaceIfSpacedOut(input ?? '')
 

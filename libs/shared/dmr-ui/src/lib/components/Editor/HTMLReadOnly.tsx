@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import { simpleSanitize } from '@dmr.is/utils-server/cleanLegacyHtml'
+import { sanitizeForDisplay } from '@dmr.is/utils-server/cleanLegacyHtml'
 
 import { classes } from './Editor.css'
 
@@ -14,10 +14,11 @@ type Props = {
  * An editor reads its input through its own schema, so a read-only editor can
  * render something other than what was stored, and warns that saving would
  * change it on a page where nothing can be saved. This renders the stored HTML
- * itself, run through the same sanitiser the APIs apply on the way in.
+ * itself, sanitised for display: the HTML can come from outside (a company's
+ * report), and here it shares the page with the app.
  */
 export const HTMLReadOnly = ({ html }: Props) => {
-  const sanitized = useMemo(() => simpleSanitize(html ?? ''), [html])
+  const sanitized = useMemo(() => sanitizeForDisplay(html ?? ''), [html])
 
   return (
     <div className={classes.wrapper}>

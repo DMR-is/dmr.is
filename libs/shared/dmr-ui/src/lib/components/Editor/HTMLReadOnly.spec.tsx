@@ -51,6 +51,14 @@ describe('HTMLReadOnly', () => {
     expect(text.textContent).toBe('ab')
   })
 
+  it('drops positioning and background images from table styles', () => {
+    const cell = render(
+      '<table><tbody><tr><td style="position:fixed;inset:0;background:url(https://example.com/x.png);text-align:center">a</td></tr></tbody></table>',
+    ).querySelector('td')
+
+    expect(cell?.getAttribute('style')).toBe('text-align:center')
+  })
+
   it('renders nothing for an empty body', () => {
     expect(render(null).innerHTML).toBe('')
     expect(render(undefined).innerHTML).toBe('')
