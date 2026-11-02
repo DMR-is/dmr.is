@@ -22,6 +22,12 @@ describe('simpleSanitize', () => {
     const fragment = '<p>Halló</p><table><tr><td>a</td></tr></table>'
     expect(simpleSanitize(fragment)).toBe(fragment)
   })
+
+  it('preserves authored link attributes for ingestion', () => {
+    const html =
+      '<a href="https://example.com" name="section" target="namedWindow" rel="opener">a</a>'
+    expect(simpleSanitize(html)).toBe(html)
+  })
 })
 
 describe('sanitizeForDisplay', () => {
@@ -48,23 +54,79 @@ describe('sanitizeForDisplay', () => {
     )
   })
 
+  it.each(['9999px', '9999pt', '9999', '999%'])(
+    'keeps the cell width %s',
+    (width) => {
+      const html = `<table><tbody><tr><td style="width:${width}">a</td></tr></tbody></table>`
+      expect(sanitizeForDisplay(html)).toBe(html)
+    },
+  )
+
+  it.each(['10000px', '1000%', '20em', '20rem'])(
+    'drops the cell width %s',
+    (width) => {
+      expect(
+        sanitizeForDisplay(
+          `<table><tbody><tr><td style="width:${width}">a</td></tr></tbody></table>`,
+        ),
+      ).toBe('<table><tbody><tr><td>a</td></tr></tbody></table>')
+    },
+  )
+
   it('keeps only the content classes the editor styling targets', () => {
     expect(
       sanitizeForDisplay(
         '<div class="regtools-dialog--panel">a</div>' +
           '<p class="indented MsoNormal">b</p>' +
-          '<table class="layout"><tbody><tr><td>c</td></tr></tbody></table>',
+          '<p class="Dags">c</p>' +
+          '<table class="layout"><tbody><tr><td>d</td></tr></tbody></table>',
       ),
     ).toBe(
-      '<div>a</div><p class="indented">b</p>' +
-        '<table class="layout"><tbody><tr><td>c</td></tr></tbody></table>',
+      '<div>a</div><p class="indented">b</p><p class="Dags">c</p>' +
+        '<table class="layout"><tbody><tr><td>d</td></tr></tbody></table>',
     )
   })
 
   it('drops id and name', () => {
     expect(
       sanitizeForDisplay('<p id="main">a</p><a name="x" href="#y">b</a>'),
-    ).toBe('<p>a</p><a href="#y">b</a>')
+    ).toBe('<p>a</p><a href="#y" rel="noopener noreferrer">b</a>')
+  })
+
+  it('replaces authored opener relationships with safe link attributes', () => {
+    expect(
+      sanitizeForDisplay(
+        '<a href="https://example.com" target="_blank" rel="opener">a</a>',
+      ),
+    ).toBe(
+      '<a href="https://example.com" target="_blank" rel="noopener noreferrer">a</a>',
+    )
+  })
+
+  it.each(['_self', '_blank', '_SELF', '_BLANK'])(
+    'allows the supported link target %s',
+    (target) => {
+      expect(sanitizeForDisplay(`<a href="/x" target="${target}">a</a>`)).toBe(
+        `<a href="/x" target="${target.toLowerCase()}" rel="noopener noreferrer">a</a>`,
+      )
+    },
+  )
+
+  it.each(['namedWindow', '_top', '_parent'])(
+    'drops the unsupported link target %s',
+    (target) => {
+      expect(sanitizeForDisplay(`<a href="/x" target="${target}">a</a>`)).toBe(
+        '<a href="/x" rel="noopener noreferrer">a</a>',
+      )
+    },
+  )
+
+  it('preserves the existing content transforms in display mode', () => {
+    expect(
+      sanitizeForDisplay(
+        '<div class="advertSubSerial" style="position:fixed">a</div>',
+      ),
+    ).toBe('<p style="text-align:center">a</p>')
   })
 
   it('keeps list styles', () => {
@@ -74,7 +136,7 @@ describe('sanitizeForDisplay', () => {
 
   it('allows data: on images only', () => {
     expect(sanitizeForDisplay('<a href="data:text/html,x">a</a>')).toBe(
-      '<a>a</a>',
+      '<a rel="noopener noreferrer">a</a>',
     )
     expect(sanitizeForDisplay('<img src="data:image/png;base64,AAAA" />')).toBe(
       '<img src="data:image/png;base64,AAAA" />',
@@ -86,7 +148,7 @@ describe('sanitizeForDisplay', () => {
       sanitizeForDisplay(
         '<a href=" JaVaScRiPt:alert(1)" onclick="x()">a</a><img src="x" onerror="x()" />',
       ),
-    ).toBe('<a>a</a><img src="x" />')
+    ).toBe('<a rel="noopener noreferrer">a</a><img src="x" />')
   })
 })
 

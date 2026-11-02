@@ -308,8 +308,11 @@ export const simpleSanitize = (html: string) => {
   return sanitizeHtml(html, baseOptions)
 }
 
-// A width bounded to four digits, so a cell can't force the page to overflow
-const boundedWidth = { width: [/^\d{1,4}(\.\d+)?(px|%|em|rem|pt)?$/i] }
+// The frame scrolls, so a wide table can't break the page, but an absurd width
+// still makes it unreadable. Pasted widths are px, pt or %.
+const boundedWidth = {
+  width: [/^\d{1,4}(\.\d+)?(px|pt)?$/i, /^\d{1,3}(\.\d+)?%$/],
+}
 
 /**
  * For showing stored HTML inside the page itself, where it shares the DOM with
@@ -320,6 +323,7 @@ const boundedWidth = { width: [/^\d{1,4}(\.\d+)?(px|%|em|rem|pt)?$/i] }
  *   stored HTML can't borrow the app's global ones (`editorV2.css` has fixed
  *   positioned classes);
  * - `id` and `name` are dropped, so stored HTML can't collide with the app's;
+ * - links keep only `_self`/`_blank` targets and use `noopener noreferrer`;
  * - `data:` is allowed on images only. Remote images still load, as they did
  *   in the editor.
  */
@@ -348,10 +352,29 @@ const displayOptions: sanitizeHtml.IOptions = {
       'article__title',
       'article__title--provisional',
       'article__name',
+      'doc__title',
+      'Dags',
+      'FHUndirskr',
+      'Undirritun',
     ],
   },
   allowedSchemes: ['http', 'https', 'mailto', 'tel'],
   allowedSchemesByTag: { img: ['http', 'https', 'data'] },
+  transformTags: {
+    ...baseOptions.transformTags,
+    a: (tagName, attribs) => {
+      const target = attribs.target?.toLowerCase()
+      if (target === '_self' || target === '_blank') {
+        attribs.target = target
+      } else {
+        delete attribs.target
+      }
+      return {
+        tagName,
+        attribs: { ...attribs, rel: 'noopener noreferrer' },
+      }
+    },
+  },
   allowedStyles: {
     ...baseOptions.allowedStyles,
     '*': {
