@@ -127,6 +127,44 @@ describe('HTMLEditor', () => {
     expect(onBlur).toHaveBeenCalledWith('abc')
   })
 
+  it('counts focus moving outside as leaving when focus was lost without a blur', () => {
+    focus(get('text'))
+    type('abc')
+    focus(get('control'))
+    act(() => get('control').remove())
+
+    focus(outside)
+    act(() => jest.runOnlyPendingTimers())
+
+    expect(onBlur).toHaveBeenCalledTimes(1)
+    expect(onBlur).toHaveBeenCalledWith('abc')
+  })
+
+  it('does not count an outside press that leaves focus in the editor', () => {
+    // A scrollbar, or a control that prevents default on mousedown
+    focus(get('text'))
+    act(() => {
+      outside.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    })
+    act(() => jest.runOnlyPendingTimers())
+
+    expect(onBlur).not.toHaveBeenCalled()
+  })
+
+  it('drops a pending outside check when the editor unmounts', () => {
+    focus(get('text'))
+    focus(get('control'))
+    act(() => get('control').remove())
+    act(() => {
+      outside.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    })
+    act(() => root.unmount())
+    act(() => jest.runOnlyPendingTimers())
+
+    expect(onBlur).not.toHaveBeenCalled()
+    root = createRoot(container)
+  })
+
   it('does not count an outside interaction twice after a normal blur', () => {
     focus(get('text'))
     focus(outside)

@@ -89,16 +89,19 @@ export const HTMLEditor = ({
   // <body>. So the next interaction outside the editor counts as leaving it,
   // once that interaction has moved focus.
   useEffect(() => {
+    let focusCheck: ReturnType<typeof setTimeout> | undefined
     const onOutside = (event: Event) => {
       const wrapper = wrapperRef.current
       if (!hasFocus.current || wrapper?.contains(event.target as Node)) return
-      setTimeout(() => {
+      clearTimeout(focusCheck)
+      focusCheck = setTimeout(() => {
         if (!wrapper?.contains(document.activeElement)) leave()
       })
     }
     document.addEventListener('pointerdown', onOutside, true)
     document.addEventListener('focusin', onOutside, true)
     return () => {
+      clearTimeout(focusCheck)
       document.removeEventListener('pointerdown', onOutside, true)
       document.removeEventListener('focusin', onOutside, true)
     }
