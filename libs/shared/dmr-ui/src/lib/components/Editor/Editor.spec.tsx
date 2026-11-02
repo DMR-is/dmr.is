@@ -130,22 +130,12 @@ describe('HTMLEditor', () => {
     expect(nextOnChange).toHaveBeenCalledWith('abc')
   })
 
-  it('passes the toolbar through when editable and none when readonly', () => {
+  it('passes the toolbar and disabled through', () => {
     expect(mockEditor.toolbar).toBeUndefined()
-    expect(mockEditor.readOnly).toBe(false)
-
-    act(() =>
-      root.render(
-        <HTMLEditor toolbar={['bold', 'italic']} onChange={onChange} />,
-      ),
-    )
-
-    expect(mockEditor.toolbar).toEqual(['bold', 'italic'])
 
     act(() =>
       root.render(
         <HTMLEditor
-          readonly
           disabled
           toolbar={['bold', 'italic']}
           onChange={onChange}
@@ -153,8 +143,7 @@ describe('HTMLEditor', () => {
       ),
     )
 
-    expect(mockEditor.toolbar).toBe(false)
-    expect(mockEditor.readOnly).toBe(true)
+    expect(mockEditor.toolbar).toEqual(['bold', 'italic'])
     expect(mockEditor.disabled).toBe(true)
   })
 

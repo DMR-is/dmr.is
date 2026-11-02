@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
+import { HTMLReadOnly } from '@dmr.is/ui/components/Editor/HTMLReadOnly'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
@@ -79,13 +79,11 @@ export const CompanyEmailDetail = ({ companyEmailId }: Props) => {
               </Text>
 
               {/*
-                Rendered through the editor in read-only mode, the same way
-                `EqualityReportTab` renders a stored report body. Not
-                `dangerouslySetInnerHTML`: the HTML was sanitised once on the way
-                in, and keeping the render path identical to the rest of the app
-                means there is one place where stored HTML meets the DOM.
+                Rendered as stored, the same way `EqualityReportTab` renders a
+                report body: `HTMLReadOnly` is the one place where stored HTML
+                meets the DOM, and it sanitises again on the way out.
               */}
-              <HTMLEditor readonly disabled defaultValue={data.bodyHtml} />
+              <HTMLReadOnly html={data.bodyHtml} />
 
               {/*
                 Part of the record of what went out: one copy of this message

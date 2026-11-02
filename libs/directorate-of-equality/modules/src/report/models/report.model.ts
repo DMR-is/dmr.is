@@ -601,13 +601,12 @@ export class ReportModel extends MutableModel<
    * column must be treated as untrusted on the way out. Every admin-facing
    * consumer of the narrative goes through this one projection:
    *
-   * - `EqualityReportTab` hands it to `HTMLEditor` as `defaultValue`, and the
-   *   editor runs it through `asDiv()` — a bare `div.innerHTML = html` —
-   *   before the editor ever sees it. `<script>` does not execute from
-   *   `innerHTML`, but an `onerror`/`onload` handler does, even on a detached
-   *   node, and it would run in a Jafnréttisstofa reviewer's session with
-   *   their `/api/trpc` rights (approve/deny, daily fines, every company's
-   *   data).
+   * - `EqualityReportTab` hands it to `HTMLReadOnly`, which renders it with
+   *   `innerHTML`. `<script>` does not execute from `innerHTML`, but an
+   *   `onerror`/`onload` handler does, and it would run in a Jafnréttisstofa
+   *   reviewer's session with their `/api/trpc` rights (approve/deny, daily
+   *   fines, every company's data). `HTMLReadOnly` sanitises again as a second
+   *   line of defence.
    * - `report-pdf` renders it into headless Chromium.
    *
    * Sanitising the projection rather than each consumer means a new one cannot

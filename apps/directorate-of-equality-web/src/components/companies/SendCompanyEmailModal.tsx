@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { HTMLEditor, ToolbarItem } from '@dmr.is/ui/components/Editor/Editor'
+import { HTMLReadOnly } from '@dmr.is/ui/components/Editor/HTMLReadOnly'
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -781,11 +782,7 @@ export const SendCompanyEmailModal = ({ isOpen, onClose, target }: Props) => {
                     the body already sanitised, so anything stripped is gone before
                     the admin approves it rather than after.
                   */}
-                  <HTMLEditor
-                    readonly
-                    disabled
-                    defaultValue={approved.preview.bodyHtml}
-                  />
+                  <HTMLReadOnly html={approved.preview.bodyHtml} />
                 </Box>
                 {!!approved.payload.attachments?.length && (
                   <Box marginTop={2}>

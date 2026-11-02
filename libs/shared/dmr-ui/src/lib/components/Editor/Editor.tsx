@@ -28,7 +28,6 @@ const noUpload: EditorFileUploader = (_blobInfo, _success, failure) =>
 
 type Props = {
   defaultValue?: HTMLText | string
-  readonly?: boolean
   handleUpload?: EditorFileUploader
   toolbar?: Array<ToolbarItem>
   onChange?: (value: HTMLText) => void
@@ -38,7 +37,6 @@ type Props = {
 
 export const HTMLEditor = ({
   defaultValue = '',
-  readonly = false,
   onChange,
   onBlur,
   handleUpload = noUpload,
@@ -80,12 +78,10 @@ export const HTMLEditor = ({
     <div onBlur={handleBlur}>
       <EditorV2
         disabled={disabled}
-        readOnly={readonly}
         valueRef={valueRef}
         fileUploader={handleUpload}
         classes={classes}
-        key={readonly ? 'readonly' : 'editable'}
-        toolbar={readonly ? false : toolbar}
+        toolbar={toolbar}
         onChange={handleChange}
       />
     </div>
