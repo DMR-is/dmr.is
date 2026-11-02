@@ -420,12 +420,12 @@ globalStyle(`${classes.warnings__item_high}::marker`, {
   const global = regulationContentStyling(wrapper)
 
   global('table', {
-    border: `0 !important`, // Override TinyMCE
+    border: `0 !important`, // Override the stored table styling
   })
 
   global('th, td', {
     minWidth: '1.5em !important',
-    border: `1px solid ${color.dark300} !important`, // Override TinyMCE
+    border: `1px solid ${color.dark300} !important`, // Override the stored table styling
   })
   global(
     `
@@ -433,7 +433,7 @@ globalStyle(`${classes.warnings__item_high}::marker`, {
     tr:not(:first-child) > td
     `,
     {
-      borderTop: '0 !important', // Override TinyMCE
+      borderTop: '0 !important', // Override the stored table styling
     },
   )
   global(
@@ -442,7 +442,7 @@ globalStyle(`${classes.warnings__item_high}::marker`, {
     tr > td:not(:first-child)
     `,
     {
-      borderLeft: '0', // Override TinyMCE
+      borderLeft: '0', // Override the stored table styling
     },
   )
 
@@ -452,7 +452,7 @@ globalStyle(`${classes.warnings__item_high}::marker`, {
     .layout > * > * > td,
     `,
     {
-      border: `2px dashed ${border.color.standard} !important`, // Override TinyMCE
+      border: `2px dashed ${border.color.standard} !important`, // Override the stored table styling
     },
   )
 

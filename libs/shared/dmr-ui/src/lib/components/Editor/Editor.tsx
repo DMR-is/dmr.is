@@ -45,11 +45,15 @@ export const HTMLEditor = ({
 }: Props) => {
   const valueRef = useRef(() => defaultValue as HTMLText)
   const onChangeRef = useRef(onChange)
+  const onBlurRef = useRef(onBlur)
   const pendingChange = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const hasFocus = useRef(false)
 
   useEffect(() => {
     onChangeRef.current = onChange
-  }, [onChange])
+    onBlurRef.current = onBlur
+  }, [onChange, onBlur])
 
   const flushChange = useCallback(() => {
     if (pendingChange.current === undefined) return
@@ -66,16 +70,48 @@ export const HTMLEditor = ({
     pendingChange.current = setTimeout(flushChange, CHANGE_DELAY_MS)
   }
 
+  const leave = useCallback(() => {
+    if (!hasFocus.current) return
+    hasFocus.current = false
+    flushChange()
+    onBlurRef.current?.(valueRef.current())
+  }, [flushChange])
+
   // The editor's own dialogs and menus take focus, and EditorV2 reports that
   // as a blur. Only focus leaving the whole editor counts.
   const handleBlur = (event: FocusEvent<HTMLDivElement>) => {
     if (event.currentTarget.contains(event.relatedTarget)) return
-    flushChange()
-    onBlur?.(valueRef.current())
+    leave()
   }
 
+  // Focus can also leave with no blur at all: dismissing the table menu by
+  // clicking outside it removes the focused menu button, and focus drops to
+  // <body>. So the next interaction outside the editor counts as leaving it,
+  // once that interaction has moved focus.
+  useEffect(() => {
+    const onOutside = (event: Event) => {
+      const wrapper = wrapperRef.current
+      if (!hasFocus.current || wrapper?.contains(event.target as Node)) return
+      setTimeout(() => {
+        if (!wrapper?.contains(document.activeElement)) leave()
+      })
+    }
+    document.addEventListener('pointerdown', onOutside, true)
+    document.addEventListener('focusin', onOutside, true)
+    return () => {
+      document.removeEventListener('pointerdown', onOutside, true)
+      document.removeEventListener('focusin', onOutside, true)
+    }
+  }, [leave])
+
   return (
-    <div onBlur={handleBlur}>
+    <div
+      ref={wrapperRef}
+      onFocus={() => {
+        hasFocus.current = true
+      }}
+      onBlur={handleBlur}
+    >
       <EditorV2
         disabled={disabled}
         valueRef={valueRef}

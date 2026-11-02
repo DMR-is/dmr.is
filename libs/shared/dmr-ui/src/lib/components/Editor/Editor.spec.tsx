@@ -109,6 +109,35 @@ describe('HTMLEditor', () => {
     expect(onBlur).toHaveBeenCalledWith('abc')
   })
 
+  it('counts the next outside interaction as leaving when focus was lost without a blur', () => {
+    focus(get('text'))
+    type('abc')
+    focus(get('control'))
+    // Closing the table menu removes its focused button; jsdom, like some
+    // browsers, fires no blur for that.
+    act(() => get('control').remove())
+    expect(onBlur).not.toHaveBeenCalled()
+
+    act(() => {
+      outside.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    })
+    act(() => jest.runOnlyPendingTimers())
+
+    expect(onBlur).toHaveBeenCalledTimes(1)
+    expect(onBlur).toHaveBeenCalledWith('abc')
+  })
+
+  it('does not count an outside interaction twice after a normal blur', () => {
+    focus(get('text'))
+    focus(outside)
+    act(() => {
+      outside.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    })
+    act(() => jest.runOnlyPendingTimers())
+
+    expect(onBlur).toHaveBeenCalledTimes(1)
+  })
+
   it('flushes a pending change on unmount', () => {
     type('abc')
     act(() => root.unmount())
@@ -155,6 +184,13 @@ describe('HTMLEditor', () => {
 
     expect(failure).toHaveBeenCalledTimes(1)
     expect(success).not.toHaveBeenCalled()
+  })
+
+  it("uses the caller's uploader when given", () => {
+    const handleUpload = jest.fn()
+    act(() => root.render(<HTMLEditor handleUpload={handleUpload} />))
+
+    expect(mockEditor.fileUploader).toBe(handleUpload)
   })
 
   it('does not call onChange on blur when nothing changed', () => {
