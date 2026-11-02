@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from 'react'
 
 import type {
   EditorFileUploader,
-  EditorV2Props,
+  ToolbarItem,
 } from '@dmr.is/regulations-tools/EditorV2'
 import { EditorV2 } from '@dmr.is/regulations-tools/EditorV2'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
@@ -10,6 +10,8 @@ import { HTMLText } from '@dmr.is/regulations-tools/types'
 import { classes } from './Editor.css'
 
 import '@dmr.is/regulations-tools/editorV2.css'
+
+export type { ToolbarItem }
 
 /**
  * Reading the value serializes the whole text, so onChange waits for a pause
@@ -21,7 +23,7 @@ type Props = {
   defaultValue?: HTMLText | string
   readonly?: boolean
   handleUpload: EditorFileUploader
-  toolbar?: EditorV2Props['toolbar']
+  toolbar?: Array<ToolbarItem>
   onChange?: (value: HTMLText) => void
   onBlur?: (value: HTMLText) => void
   disabled?: boolean

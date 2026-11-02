@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
+import { HTMLEditor, ToolbarItem } from '@dmr.is/ui/components/Editor/Editor'
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -59,7 +59,17 @@ const ALLOWED_EXTENSIONS = [
   'jpeg',
 ]
 
-const EDITOR_TOOLBAR = 'bold italic underline | align numlist bullist | link'
+const EDITOR_TOOLBAR: Array<ToolbarItem> = [
+  'bold',
+  'italic',
+  'underline',
+  '|',
+  'align',
+  'numlist',
+  'bullist',
+  '|',
+  'link',
+]
 
 const SKIP_REASON_LABEL: Record<string, string> = {
   [CompanyEmailRecipientStatusEnum.SKIPPED_NO_EMAIL]: t.skippedNoEmail,

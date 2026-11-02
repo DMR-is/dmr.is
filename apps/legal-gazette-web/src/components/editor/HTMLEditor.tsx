@@ -19,7 +19,20 @@ export const Editor = ({ onChange, onBlur, defaultValue, disabled }: Props) => {
         handleUpload={() => new Error('File upload not implemented')}
         onChange={onChange}
         onBlur={onBlur}
-        toolbar="bold italic underline | align numlist bullist table | link | customInsertButton"
+        toolbar={[
+          'bold',
+          'italic',
+          'underline',
+          '|',
+          'align',
+          'numlist',
+          'bullist',
+          'table',
+          '|',
+          'link',
+          '|',
+          'customInsertButton',
+        ]}
       />
     </Box>
   )

@@ -125,20 +125,20 @@ describe('HTMLEditor', () => {
     act(() =>
       root.render(
         <HTMLEditor
-          toolbar="bold italic"
+          toolbar={['bold', 'italic']}
           onChange={onChange}
           handleUpload={jest.fn()}
         />,
       ),
     )
 
-    expect(mockEditor.toolbar).toBe('bold italic')
+    expect(mockEditor.toolbar).toEqual(['bold', 'italic'])
 
     act(() =>
       root.render(
         <HTMLEditor
           readonly
-          toolbar="bold italic"
+          toolbar={['bold', 'italic']}
           onChange={onChange}
           handleUpload={jest.fn()}
         />,

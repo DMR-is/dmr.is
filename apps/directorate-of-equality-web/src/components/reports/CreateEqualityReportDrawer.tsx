@@ -478,7 +478,17 @@ export const CreateEqualityReportDrawer = () => {
                   defaultValue={form.equalityReportContent}
                   handleUpload={() => new Error('File upload not supported')}
                   onChange={(value) => set('equalityReportContent')(value)}
-                  toolbar="bold italic underline | align numlist bullist | link"
+                  toolbar={[
+                    'bold',
+                    'italic',
+                    'underline',
+                    '|',
+                    'align',
+                    'numlist',
+                    'bullist',
+                    '|',
+                    'link',
+                  ]}
                 />
               </Box>
             )}
