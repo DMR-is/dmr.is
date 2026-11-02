@@ -308,13 +308,48 @@ export const simpleSanitize = (html: string) => {
   return sanitizeHtml(html, baseOptions)
 }
 
+// A width bounded to four digits, so a cell can't force the page to overflow
+const boundedWidth = { width: [/^\d{1,4}(\.\d+)?(px|%|em|rem|pt)?$/i] }
+
 /**
  * For showing stored HTML inside the page itself, where it shares the DOM with
- * the app. Stricter than `simpleSanitize`: every `style` keeps only alignment
- * and width (no positioning, no `url()`), and `data:` is allowed on images only.
+ * the app. Stricter than `simpleSanitize`:
+ * - styles keep alignment, list types and bounded table widths, so no
+ *   positioning and no `url()`;
+ * - classes are limited to the content classes the editor styling targets, so
+ *   stored HTML can't borrow the app's global ones (`editorV2.css` has fixed
+ *   positioned classes);
+ * - `id` and `name` are dropped, so stored HTML can't collide with the app's;
+ * - `data:` is allowed on images only. Remote images still load, as they did
+ *   in the editor.
  */
 const displayOptions: sanitizeHtml.IOptions = {
   ...baseOptions,
+  allowedAttributes: Object.fromEntries(
+    Object.entries(baseOptions.allowedAttributes || {}).map(([tag, attrs]) => [
+      tag,
+      attrs.filter((attr) => attr !== 'id' && attr !== 'name'),
+    ]),
+  ),
+  allowedClasses: {
+    '*': [
+      'layout',
+      'indented',
+      'footnote',
+      'footnote-reference',
+      'footnote__marker',
+      'appendix__title',
+      'section__title',
+      'section__name',
+      'chapter__title',
+      'chapter__name',
+      'subchapter__title',
+      'subchapter__name',
+      'article__title',
+      'article__title--provisional',
+      'article__name',
+    ],
+  },
   allowedSchemes: ['http', 'https', 'mailto', 'tel'],
   allowedSchemesByTag: { img: ['http', 'https', 'data'] },
   allowedStyles: {
@@ -322,8 +357,10 @@ const displayOptions: sanitizeHtml.IOptions = {
     '*': {
       'text-align': [/^(left|right|center|justify)$/i],
       'vertical-align': [/^(top|middle|bottom|baseline)$/i],
-      width: [/^\d+(\.\d+)?(px|%|em|rem|pt)?$/i],
     },
+    table: boundedWidth,
+    td: boundedWidth,
+    th: boundedWidth,
   },
 }
 

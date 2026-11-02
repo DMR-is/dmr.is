@@ -37,6 +37,36 @@ describe('sanitizeForDisplay', () => {
     )
   })
 
+  it('keeps width on tables and cells only, up to four digits', () => {
+    expect(
+      sanitizeForDisplay(
+        '<p style="width:50%">a</p><table style="width:9999999px"><tbody><tr>' +
+          '<td style="width:120px">b</td></tr></tbody></table>',
+      ),
+    ).toBe(
+      '<p>a</p><table><tbody><tr><td style="width:120px">b</td></tr></tbody></table>',
+    )
+  })
+
+  it('keeps only the content classes the editor styling targets', () => {
+    expect(
+      sanitizeForDisplay(
+        '<div class="regtools-dialog--panel">a</div>' +
+          '<p class="indented MsoNormal">b</p>' +
+          '<table class="layout"><tbody><tr><td>c</td></tr></tbody></table>',
+      ),
+    ).toBe(
+      '<div>a</div><p class="indented">b</p>' +
+        '<table class="layout"><tbody><tr><td>c</td></tr></tbody></table>',
+    )
+  })
+
+  it('drops id and name', () => {
+    expect(
+      sanitizeForDisplay('<p id="main">a</p><a name="x" href="#y">b</a>'),
+    ).toBe('<p>a</p><a href="#y">b</a>')
+  })
+
   it('keeps list styles', () => {
     const html = '<ol style="list-style-type:lower-alpha"><li>a</li></ol>'
     expect(sanitizeForDisplay(html)).toBe(html)
