@@ -3,7 +3,7 @@ import {
   regulationContentStyling,
 } from '@dmr.is/island-regulations/styling'
 import { spacing, theme } from '@dmr.is/island-ui-theme'
-import type { EditorClasses } from '@dmr.is/regulations-tools/Editor'
+import type { EditorClasses } from '@dmr.is/regulations-tools/EditorV2'
 
 import {
   containerDisabled,
@@ -122,7 +122,6 @@ export const classes: EditorClasses = {
     zIndex: 1,
     margin: 0,
     borderTopLeftRadius: 8,
-    padding: 0,
     boxShadow: '0 3px 9px 0px rgba(0,0,0, 0.18)',
 
     selectors: {
@@ -410,17 +409,6 @@ export const classes: EditorClasses = {
 
 const { wrapper: _wrapperClass } = classes
 // ---------------------------------------------------------------------------
-
-globalStyle(`${classes.toolbar} .tox .tox-menu`, {
-  width: 'max-content',
-})
-globalStyle(`${classes.toolbar} .tox .tox-editor-container`, {
-  borderTopRightRadius: theme.border.radius.large,
-  borderTopLeftRadius: theme.border.radius.large,
-})
-globalStyle(`${classes.toolbar} .tox .tox-editor-header`, {
-  border: 'none',
-})
 
 globalStyle(`${classes.warnings__item_high}::marker`, {
   fontSize: '1.1em',

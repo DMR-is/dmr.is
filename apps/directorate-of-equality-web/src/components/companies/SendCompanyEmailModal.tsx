@@ -649,7 +649,7 @@ export const SendCompanyEmailModal = ({ isOpen, onClose, target }: Props) => {
                 defaultValue={bodyHtml}
                 handleUpload={() => new Error('File upload not supported')}
                 onChange={setBodyHtml}
-                config={{ toolbar: EDITOR_TOOLBAR }}
+                toolbar={EDITOR_TOOLBAR}
               />
             </Box>
           </Box>
