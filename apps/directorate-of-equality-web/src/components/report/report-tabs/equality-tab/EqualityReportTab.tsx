@@ -158,7 +158,6 @@ export const EqualityReportTab = ({
             <HTMLEditor
               key={editorKey.current}
               defaultValue={report.content ?? ''}
-              handleUpload={() => new Error('File upload not supported')}
               disabled
               readonly
             />

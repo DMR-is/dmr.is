@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { FocusEvent, useCallback, useEffect, useRef } from 'react'
 
 import type {
   EditorFileUploader,
@@ -19,10 +19,17 @@ export type { ToolbarItem }
  */
 const CHANGE_DELAY_MS = 250
 
+/**
+ * No app here uploads files. The editor waits on one of the two callbacks, so
+ * a pasted image must fail explicitly, or the paste never completes.
+ */
+const noUpload: EditorFileUploader = (_blobInfo, _success, failure) =>
+  failure('File upload not supported')
+
 type Props = {
   defaultValue?: HTMLText | string
   readonly?: boolean
-  handleUpload: EditorFileUploader
+  handleUpload?: EditorFileUploader
   toolbar?: Array<ToolbarItem>
   onChange?: (value: HTMLText) => void
   onBlur?: (value: HTMLText) => void
@@ -34,7 +41,7 @@ export const HTMLEditor = ({
   readonly = false,
   onChange,
   onBlur,
-  handleUpload,
+  handleUpload = noUpload,
   toolbar,
   disabled,
 }: Props) => {
@@ -61,22 +68,26 @@ export const HTMLEditor = ({
     pendingChange.current = setTimeout(flushChange, CHANGE_DELAY_MS)
   }
 
-  const handleBlur = () => {
+  // The editor's own dialogs and menus take focus, and EditorV2 reports that
+  // as a blur. Only focus leaving the whole editor counts.
+  const handleBlur = (event: FocusEvent<HTMLDivElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget)) return
     flushChange()
     onBlur?.(valueRef.current())
   }
 
   return (
-    <EditorV2
-      disabled={disabled}
-      readOnly={readonly}
-      valueRef={valueRef}
-      fileUploader={handleUpload}
-      classes={classes}
-      key={readonly ? 'readonly' : 'editable'}
-      toolbar={readonly ? false : toolbar}
-      onChange={handleChange}
-      onBlur={handleBlur}
-    />
+    <div onBlur={handleBlur}>
+      <EditorV2
+        disabled={disabled}
+        readOnly={readonly}
+        valueRef={valueRef}
+        fileUploader={handleUpload}
+        classes={classes}
+        key={readonly ? 'readonly' : 'editable'}
+        toolbar={readonly ? false : toolbar}
+        onChange={handleChange}
+      />
+    </div>
   )
 }

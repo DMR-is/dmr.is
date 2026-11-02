@@ -603,7 +603,7 @@ export class ReportModel extends MutableModel<
    *
    * - `EqualityReportTab` hands it to `HTMLEditor` as `defaultValue`, and the
    *   editor runs it through `asDiv()` — a bare `div.innerHTML = html` —
-   *   before TinyMCE ever sees it. `<script>` does not execute from
+   *   before the editor ever sees it. `<script>` does not execute from
    *   `innerHTML`, but an `onerror`/`onload` handler does, even on a detached
    *   node, and it would run in a Jafnréttisstofa reviewer's session with
    *   their `/api/trpc` rights (approve/deny, daily fines, every company's

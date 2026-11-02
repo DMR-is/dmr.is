@@ -30,7 +30,6 @@ export const Editor = ({
       >
         <HTMLEditor
           defaultValue={defaultValue}
-          handleUpload={() => new Error('File upload not implemented')}
           onChange={onChange}
           onBlur={onBlur}
           toolbar={[

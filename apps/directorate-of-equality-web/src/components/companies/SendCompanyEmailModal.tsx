@@ -173,7 +173,7 @@ export const SendCompanyEmailModal = ({ isOpen, onClose, target }: Props) => {
    * any moment where reakit still considers the dialog visible while `isOpen` is
    * false would render the title and close button over an empty box.
    *
-   * It still keeps TinyMCE from booting on every company page load.
+   * It still keeps the editor from booting on every company page load.
    */
   const [hasOpened, setHasOpened] = useState(false)
   useEffect(() => {
@@ -657,7 +657,6 @@ export const SendCompanyEmailModal = ({ isOpen, onClose, target }: Props) => {
               <HTMLEditor
                 key={editorKey.current}
                 defaultValue={bodyHtml}
-                handleUpload={() => new Error('File upload not supported')}
                 onChange={setBodyHtml}
                 toolbar={EDITOR_TOOLBAR}
               />
@@ -786,7 +785,6 @@ export const SendCompanyEmailModal = ({ isOpen, onClose, target }: Props) => {
                     readonly
                     disabled
                     defaultValue={approved.preview.bodyHtml}
-                    handleUpload={() => new Error('File upload not supported')}
                   />
                 </Box>
                 {!!approved.payload.attachments?.length && (

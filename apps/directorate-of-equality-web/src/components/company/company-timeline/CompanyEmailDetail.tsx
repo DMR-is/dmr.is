@@ -85,12 +85,7 @@ export const CompanyEmailDetail = ({ companyEmailId }: Props) => {
                 in, and keeping the render path identical to the rest of the app
                 means there is one place where stored HTML meets the DOM.
               */}
-              <HTMLEditor
-                readonly
-                disabled
-                defaultValue={data.bodyHtml}
-                handleUpload={() => new Error('File upload not supported')}
-              />
+              <HTMLEditor readonly disabled defaultValue={data.bodyHtml} />
 
               {/*
                 Part of the record of what went out: one copy of this message
