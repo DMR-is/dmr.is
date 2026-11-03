@@ -1589,8 +1589,7 @@ describe('NoticeDispatchService', () => {
 
     it('gives up as FAILED after the last allowed attempt on the mailbox channel', async () => {
       mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
-        status: 'IN_PROGRESS',
-        deliveryId: 'delivery-1',
+        status: 'DISABLED',
       })
 
       await dispatch(NoticeOutboxKindEnum.REPORT_DENIED, {
@@ -1750,14 +1749,10 @@ describe('NoticeDispatchService', () => {
       )
     })
 
-    it.each([
-      [
-        'a delivery held by another worker',
-        { status: 'IN_PROGRESS', deliveryId: 'd' },
-      ],
-      ['delivery switched off mid-run', { status: 'DISABLED' }],
-    ])('retries %s next run', async (_label, result) => {
-      mailboxDeliveryService.deliverToMailbox.mockResolvedValue(result)
+    it('retries delivery switched off mid-run next run, as an attempt', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: 'DISABLED',
+      })
 
       await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
 
@@ -1765,6 +1760,30 @@ describe('NoticeDispatchService', () => {
         attempts: 1,
         lastAttemptAt: NOW,
         lastError: 'send failed',
+      })
+    })
+
+    // Another worker holds a live lease and may be sending it right now. The
+    // row is not failing: spending its attempts could give up a notice the
+    // other worker is about to send.
+    it('holds the row, not an attempt, while another worker holds the delivery', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: 'IN_PROGRESS',
+        deliveryId: 'delivery-7',
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED, {
+        attempts: NOTICE_DISPATCH_MAX_ATTEMPTS - 1,
+      })
+
+      expect(noticeOutboxModel.update).toHaveBeenCalledTimes(1)
+      expect(lastOutboxUpdate()[0]).toEqual({
+        lastAttemptAt: NOW,
+        lastError: 'mailbox delivery delivery-7 is in progress',
+      })
+      expect(lastOutboxUpdate()[1].where).toEqual({
+        id: 'notice-1',
+        status: NoticeOutboxStatusEnum.PENDING,
       })
     })
 

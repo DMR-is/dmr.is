@@ -824,9 +824,23 @@ export class NoticeDispatchService implements INoticeDispatchService {
           reason: `mailbox delivery ${result.deliveryId} is UNCERTAIN; check One before repeating anything`,
         }
       case 'IN_PROGRESS':
+        // Another worker holds a live lease and may be calling One right now,
+        // as `startedInMailbox` and `notOwed` treat it. Not an attempt: the
+        // row is not failing, and spending attempts on it could give up a
+        // notice that the other worker is about to send. Held, the row is
+        // looked at again after the retry delay. A lease lapses within
+        // `MAILBOX_DELIVERY_LEASE_MINUTES` unless its holder renews it, so a
+        // hold cannot outlast a live worker; if one does last, the row is
+        // named in the daily overdue alert after `NOTICE_OVERDUE_AFTER_MS`,
+        // and a lease that lapsed mid-call leaves the delivery in the
+        // stuck-deliveries alert as interrupted.
+        return {
+          outcome: 'HELD',
+          reason: `mailbox delivery ${result.deliveryId} is in progress`,
+        }
       case 'DISABLED':
-        // Another worker holds the delivery, or the flag went off between the
-        // check and the call. Either way, try again next run.
+        // The flag went off between the check and the call. Try again next
+        // run.
         return {
           outcome: ReportMailOutcome.FAILED,
           channel: NoticeOutboxChannelEnum.MAILBOX,
