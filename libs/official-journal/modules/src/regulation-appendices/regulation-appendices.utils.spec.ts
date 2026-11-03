@@ -14,6 +14,19 @@ describe('parsePublicationNumbers', () => {
     })
   })
 
+  it('accepts a five-digit serial, the largest allowed', () => {
+    expect(parsePublicationNumbers(['99999/2026'])).toEqual({
+      ok: true,
+      value: [{ full: '99999/2026', number: 99999, year: 2026 }],
+    })
+  })
+
+  it('counts the serial length after dropping leading zeros', () => {
+    expect(parsePublicationNumbers(['0099999/2026'])).toMatchObject({
+      ok: true,
+    })
+  })
+
   it('collapses duplicates to their first position', () => {
     const result = parsePublicationNumbers([
       '1000/2026',

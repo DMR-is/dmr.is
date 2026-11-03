@@ -1,5 +1,11 @@
 import { Transform } from 'class-transformer'
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsString } from 'class-validator'
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsString,
+  MaxLength,
+} from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -35,6 +41,9 @@ export class GetRegulationAppendicesQuery {
   @ArrayMinSize(1)
   @ArrayMaxSize(MAX_REGULATION_APPENDICES_LOOKUP)
   @IsString({ each: true })
+  // Bounds how much of each raw value a 400 echoes back. A valid number is at
+  // most 5 + 1 + 4 characters plus whitespace around the slash.
+  @MaxLength(32, { each: true })
   publicationNumber!: string[]
 }
 
@@ -70,7 +79,7 @@ export class RegulationAppendicesItem {
     type: String,
     nullable: true,
     description:
-      'Status of the advert (`Útgefin`, `Afturkölluð`, ...), or null when none was found. Revoked adverts are returned with their appendices.',
+      'Status of the advert (`Útgefin`, `Afturkölluð`, ...), or null when none was found. Revoked adverts are returned with their status but without appendices (see `appendices`).',
   })
   status!: string | null
 
@@ -88,8 +97,13 @@ export class RegulationAppendicesItem {
     description: [
       'Appendices of the advert in publication order. Always HTML; image sources uploaded through the editor are absolute CDN URLs.',
       '',
+      'This is the current state of the appendices, the same as the public advert page shows, not a snapshot taken at publication: an appendix edited after publication is returned as edited.',
+      '',
       '- `[]`: the advert was published through the case system and has no appendices recorded as such.',
-      '- `null`: unknown - the advert was not found, or was published without a case (older adverts), in which case any appendices are part of the advert body.',
+      '- `null`: unknown, for one of three reasons:',
+      '  - the advert was not found;',
+      '  - it is revoked (`Afturkölluð`): its case can be reworked and republished under a new number, so its appendices are no longer reliable for this one;',
+      '  - it was published without a case (older adverts), in which case any appendices are part of the advert body.',
       '',
       'Even `[]` cannot rule out an appendix written into the advert body rather than added as an appendix.',
     ].join('\n'),

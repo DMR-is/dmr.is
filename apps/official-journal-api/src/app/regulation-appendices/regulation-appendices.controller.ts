@@ -19,7 +19,7 @@ import { ResultWrapper } from '@dmr.is/types'
  * exposes for published adverts, and the batch cap on the query bounds the
  * cost of a call.
  *
- * TEMPORARY - remove this controller, `RegulationsModule`, the
+ * TEMPORARY - remove this controller, `RegulationAppendicesControllerModule`, the
  * `regulation-appendices` module in `@dmr.is/ojoi-modules` and
  * `regulation-appendices.dto.ts` once all three hold:
  *
@@ -37,7 +37,7 @@ import { ResultWrapper } from '@dmr.is/types'
   path: 'regulations',
   version: '1',
 })
-export class RegulationsController {
+export class RegulationAppendicesController {
   constructor(
     @Inject(IRegulationAppendicesService)
     private readonly regulationAppendicesService: IRegulationAppendicesService,
@@ -48,6 +48,8 @@ export class RegulationsController {
     operationId: 'getRegulationAppendices',
     summary:
       'Appendices of published B-deild adverts, looked up by publication number.',
+    description:
+      'Temporary: a bridge for the regulation importer while regulations are published through Eplica, which drops their appendices. It will be removed once regulations are published directly from the Official Journal. Not for other consumers.',
   })
   @ApiResponse({ status: 200, type: GetRegulationAppendicesResponse })
   @ApiResponse({

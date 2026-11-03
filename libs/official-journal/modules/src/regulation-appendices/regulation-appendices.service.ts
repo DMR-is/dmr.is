@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { LogAndHandle } from '@dmr.is/decorators'
 import {
   AdvertStatus,
+  DepartmentSlugEnum,
   GetRegulationAppendicesResponse,
   RegulationAppendicesItem,
 } from '@dmr.is/shared-dto'
@@ -26,13 +27,14 @@ import {
 } from './regulation-appendices.utils'
 
 /** Regulations are published in B-deild. */
-export const REGULATION_DEPARTMENT_SLUG = 'b-deild'
+export const REGULATION_DEPARTMENT_SLUG = DepartmentSlugEnum.B
 
 /**
  * Statuses an advert is publicly visible in. The route is unauthenticated, so
  * this is an allow-list: an advert in any other status is reported as not
  * found rather than having its appendices returned. Revoked adverts are
- * included on purpose - the importer decides what to do with them.
+ * returned with their status so the importer can decide, but without
+ * appendices - see `getAppendices`.
  */
 export const PUBLIC_ADVERT_STATUSES = [
   AdvertStatus.Published,
@@ -122,14 +124,19 @@ export class RegulationAppendicesService
         }
       }
 
-      // Appendices are case additions, so an advert published without a case
-      // (older adverts) has nothing to report: null, meaning unknown, rather
-      // than [] which would read as "has no appendices".
-      const appendices = advert.case
-        ? (advert.case.additions ?? [])
-            .map((addition) => caseAdditionMigrate(addition))
-            .sort((a, b) => a.order - b.order)
-        : null
+      // null means unknown, as opposed to [] for "has no appendices":
+      // - No case (older adverts): appendices are case additions, so there is
+      //   nothing to report.
+      // - Revoked: the case stays editable after it is taken out of
+      //   publication, so its additions may no longer be what was published
+      //   under this number, and publishing it again moves the case to the new
+      //   advert altogether.
+      const appendices =
+        advert.case && advert.status.title !== AdvertStatus.Revoked
+          ? (advert.case.additions ?? [])
+              .map((addition) => caseAdditionMigrate(addition))
+              .sort((a, b) => a.order - b.order)
+          : null
 
       return {
         publicationNumber: full,

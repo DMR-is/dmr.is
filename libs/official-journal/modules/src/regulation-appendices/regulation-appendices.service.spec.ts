@@ -17,12 +17,14 @@ import {
   MAX_REGULATION_APPENDICES_LOOKUP,
 } from '@dmr.is/shared-dto'
 
-import { AdvertModel } from '../journal/models'
+import { AdvertTypeModel } from '../advert-type/models'
+import { CaseModel } from '../case/models'
 import {
-  PUBLIC_ADVERT_STATUSES,
-  REGULATION_DEPARTMENT_SLUG,
-  RegulationAppendicesService,
-} from './regulation-appendices.service'
+  AdvertDepartmentModel,
+  AdvertModel,
+  AdvertStatusModel,
+} from '../journal/models'
+import { RegulationAppendicesService } from './regulation-appendices.service'
 
 type FakeAddition = {
   id: string
@@ -44,6 +46,7 @@ const advertRow = (
   options: {
     status?: string
     additions?: FakeAddition[]
+    noAdditions?: boolean
     noCase?: boolean
     noType?: boolean
   } = {},
@@ -57,7 +60,10 @@ const advertRow = (
     : { slug: 'b-deild-reglugerd', title: 'Reglugerð' },
   case: options.noCase
     ? null
-    : { id: 'case', additions: options.additions ?? [] },
+    : {
+        id: 'case',
+        additions: options.noAdditions ? undefined : (options.additions ?? []),
+      },
 })
 
 describe('RegulationAppendicesService', () => {
@@ -121,7 +127,7 @@ describe('RegulationAppendicesService', () => {
     })
   })
 
-  it('returns a revoked advert with its status, for the importer to decide', async () => {
+  it('returns a revoked advert with its status but its appendices as unknown (null)', async () => {
     findAll.mockResolvedValue([
       advertRow(5, 2026, {
         status: AdvertStatus.Revoked,
@@ -131,8 +137,17 @@ describe('RegulationAppendicesService', () => {
 
     const [item] = (await service.getAppendices(['5/2026'])).unwrap().items
 
-    expect(item.status).toBe(AdvertStatus.Revoked)
-    expect(item.appendices).toHaveLength(1)
+    expect(item.advertId).toBe('advert-5-2026')
+    expect(item.status).toBe('Afturkölluð')
+    expect(item.appendices).toBeNull()
+  })
+
+  it('treats a case whose additions were not loaded as having none ([])', async () => {
+    findAll.mockResolvedValue([advertRow(5, 2026, { noAdditions: true })])
+
+    const [item] = (await service.getAppendices(['5/2026'])).unwrap().items
+
+    expect(item.appendices).toEqual([])
   })
 
   it('reports appendices of an advert without a case as unknown (null), not none', async () => {
@@ -178,28 +193,27 @@ describe('RegulationAppendicesService', () => {
       { publicationYear: 2026, serialNumber: { [Op.in]: [2] } },
     ])
 
-    const [department, status] = options.include
-    expect(department).toMatchObject({
-      where: { slug: REGULATION_DEPARTMENT_SLUG },
-      required: true,
-    })
-    expect(status).toMatchObject({
-      where: { title: { [Op.in]: PUBLIC_ADVERT_STATUSES } },
-      required: true,
-    })
-  })
+    // Located by model rather than position, and pinned to literals rather
+    // than the service's own constants: the department and status filters
+    // are the route's only access control, so changing either has to fail
+    // here.
+    const include = (model: unknown) =>
+      options.include.find((i: { model: unknown }) => i.model === model)
 
-  it('never lets a non-public status through the allow-list', () => {
-    for (const hidden of [
-      AdvertStatus.Draft,
-      AdvertStatus.Rejected,
-      AdvertStatus.Waiting,
-      AdvertStatus.InProgress,
-      AdvertStatus.Submitted,
-      AdvertStatus.ReadyForPublication,
-    ]) {
-      expect(PUBLIC_ADVERT_STATUSES).not.toContain(hidden)
-    }
+    expect(include(AdvertDepartmentModel)).toMatchObject({
+      where: { slug: 'b-deild' },
+      required: true,
+    })
+
+    const status = include(AdvertStatusModel)
+    expect(status.required).toBe(true)
+    expect(new Set(status.where.title[Op.in])).toEqual(
+      new Set(['Útgefin', 'Virk', 'Afturkölluð', 'Eldri auglýsing']),
+    )
+
+    // Optional joins: an advert without a type or a case must still be found.
+    expect(include(AdvertTypeModel)).toMatchObject({ required: false })
+    expect(include(CaseModel)).toMatchObject({ required: false })
   })
 
   it('rejects the whole request with 400 when a number is malformed, without querying', async () => {
@@ -248,5 +262,22 @@ describe('GetRegulationAppendicesQuery', () => {
 
   it('rejects a missing parameter', async () => {
     expect(await errorsFor(undefined)).not.toHaveLength(0)
+  })
+
+  it('rejects an empty list', async () => {
+    expect(await errorsFor([])).not.toHaveLength(0)
+  })
+
+  it('rejects a non-string value', async () => {
+    expect(await errorsFor([1])).not.toHaveLength(0)
+  })
+
+  it('leaves an empty string to the service, which rejects it as malformed', async () => {
+    expect(await errorsFor([''])).toHaveLength(0)
+  })
+
+  it('rejects a value longer than 32 characters', async () => {
+    expect(await errorsFor(['1/2026', 'x'.repeat(33)])).not.toHaveLength(0)
+    expect(await errorsFor(['x'.repeat(32)])).toHaveLength(0)
   })
 })
