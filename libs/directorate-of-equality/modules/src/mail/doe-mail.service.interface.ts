@@ -1,5 +1,6 @@
 import { ReportModel } from '../report/models/report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
+import { ReportApprovedMailOptions } from './templates/report-approved.template'
 import { ReportDeadlineReminderInput } from './templates/report-deadline-reminder.template'
 
 /**
@@ -60,10 +61,14 @@ export interface IDoeMailService {
    * attachments to S3 as the Directorate's record of what the company received,
    * only on `SENT`. Archiving a send that never happened puts a false yes in
    * front of an auditor.
+   *
+   * `options.serviceSurvey` appends Jafnréttisstofa's service survey link;
+   * off when omitted.
    */
   sendReportApproved(
     report: ReportModel,
     attachments: ReportMailAttachment[],
+    options?: ReportApprovedMailOptions,
   ): Promise<ReportMailOutcome>
 
   /**
