@@ -8,6 +8,7 @@ import { LogRequestMiddleware } from '@dmr.is/shared-middleware'
 import { HealthModule } from '@dmr.is/shared-modules'
 
 import { JournalModule } from './journal/journal.module'
+import { RegulationsModule } from './regulations/regulations.module'
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { JournalModule } from './journal/journal.module'
       inject: [DMRSequelizeConfigService],
     }),
     JournalModule,
+    RegulationsModule,
     HealthModule,
   ],
   providers: [
