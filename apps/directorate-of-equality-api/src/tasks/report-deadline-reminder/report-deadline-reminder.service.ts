@@ -375,7 +375,11 @@ export class ReportDeadlineReminderService
   /**
    * Delivers the reminder to the company's island.is mailbox through One, in
    * place of the email. The mailbox is addressed by kennitala, so the company's
-   * email address plays no part and no NO_EMAIL event is written.
+   * email address plays no part and this path writes no NO_EMAIL event. The
+   * email fallback (see below) is the flag-off path in full, so it does write
+   * NO_EMAIL for a company with no usable address: that reminder reached no
+   * one. The mailbox still sends it once the kind's template is set, since
+   * only the SENT event stops it.
    *
    * The SENT event is written only when One confirms the send. The delivery's
    * key (kind, company, tier, due date) is what stops a second send: an
@@ -392,9 +396,12 @@ export class ReportDeadlineReminderService
    * on the band's last day, or before the due date moves.
    *
    * Returns false only for `UNCONFIGURED` (the flag on before the kind's case
-   * template is set): nothing went to One and no row was written, so
-   * `processTier` emails the reminder instead. `deliverToMailbox` logged it at
-   * error, and the daily alert and the boot check name the kind.
+   * template is set): nothing went to One and no delivery with this key
+   * reached it, so `processTier` emails the reminder instead.
+   * `deliverToMailbox` logged it at error, and the daily alert and the boot
+   * check name the kind. A delivery that did reach One before its template
+   * was unset answers `skipped: 'UNCONFIGURED'` instead, and is neither
+   * emailed nor recorded: it waits for the template.
    *
    * ⚠️ **Flipping the flags.** Both channels need `EMAIL_REMINDER_JOB_ENABLED`
    * (the task does not run without it), so with it off nothing is sent by
@@ -568,8 +575,12 @@ export class ReportDeadlineReminderService
     if (!delivery) {
       return null
     }
-    // `interrupted` only when recording the failure itself failed: a call
-    // that throws clears its in-flight marker before rethrowing.
+    // `interrupted` needs two things: recording the failure itself failed (a
+    // call that throws clears its in-flight marker before rethrowing), and
+    // the lease has lapsed since. Read straight after the throw the lease is
+    // usually still live, so such a row reads `inProgress` and gets no event
+    // this run; the next run's call claims it, marks it UNCERTAIN, and the
+    // UNCONFIRMED event is written then.
     if (
       delivery.status === MailboxDeliveryStatusEnum.UNCERTAIN ||
       delivery.interrupted

@@ -20,7 +20,9 @@ export type OverdueNotice = {
 
 export interface INoticeDispatchService {
   /**
-   * Sends the oldest PENDING outbox rows that are due, one at a time.
+   * Sends the PENDING outbox rows that are due, one at a time, at most
+   * `NOTICE_DISPATCH_BATCH_SIZE` per run: never-tried rows first, then the
+   * least recently tried. A held row is re-stamped, so it goes to the back.
    *
    * Never throws for a single row: a row's failure is recorded on the row and
    * the run moves on. Throws only when the outbox itself cannot be read.

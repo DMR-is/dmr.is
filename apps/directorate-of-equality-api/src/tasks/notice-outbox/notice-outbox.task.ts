@@ -54,8 +54,9 @@ export class NoticeOutboxTask implements OnModuleInit {
 
   /**
    * Names the unconfigured kinds at deploy rather than at the first 08:00
-   * alert. Logs only: refusing to boot would also stop the approval and
-   * denial emails, and the dispatcher already holds what it cannot send.
+   * alert. Logs only: refusing to boot would take the whole API down, and
+   * with it the reminder emails the unconfigured kinds fall back to, while
+   * the dispatcher already holds what it cannot send.
    */
   onModuleInit(): void {
     this.alertUnconfiguredKinds('at boot')

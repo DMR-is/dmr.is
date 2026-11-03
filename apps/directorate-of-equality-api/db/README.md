@@ -556,7 +556,12 @@ open across the calls to One.
 
 **UNCERTAIN is terminal.** When the outcome of CreateDocument or SendDocToIslandIs is
 unknown (a timeout, a 5xx, a `Success: false`, a process that died mid-call) the row
-becomes `UNCERTAIN` and no code path moves it on. A person reconciles it by hand against
+becomes `UNCERTAIN` and no code path moves it on. One `Success: false` is not unknown:
+island.is's duplicate answer to SendDocToIslandIs (`Errors: ["Færsla þegar skráð."]`
+and nothing else) whose `DocumentId` is the document's own `ItemID` (case aside), with no
+`ErrorNumber` or `ErrorMessage`, means the document is already in the mailbox, and the row
+is `SENT`. A duplicate answer missing any of those is a rejection like any other, and
+`UNCERTAIN`. A person reconciles it by hand against
 One, following the runbook in the module README. Retrying it automatically could put the
 same statutory notice in the mailbox twice. A CreateCase failure of any kind, and a
 definitive failure of either later call, leaves the row `FAILED` and retryable instead.
@@ -616,6 +621,11 @@ status but `SENT` and `UNCERTAIN`. Indexes: a partial `mailbox_delivery_status_i
 (`WHERE status <> 'SENT'`) for the retry scan and the operator's UNCERTAIN and exhausted
 lists, and `mailbox_delivery_company_id_idx`.
 
+A row settled by island.is's duplicate answer looks like any other `SENT` row: `sent_at` is
+when the repeat was confirmed, not when the document first reached the mailbox, and no
+column marks it. Only the warn line `Mailbox delivery <id>: island.is already had the
+document, recording it as sent` does.
+
 ## Notice outbox
 
 `notice_outbox` holds the notices a company is owed: its report was submitted
@@ -658,9 +668,11 @@ report's status. `SKIPPED` rows from before this rule are receipts settled with 
 quarantined company's, or a receipt while the flag is off) is named in doe-api's daily
 mailbox alert, `Notice outbox: N notices overdue`, with its `last_error`.
 
-**Before turning the flag on.** Every receipt held while the flag was off goes out on the
-first run, however old, if its report is still `SUBMITTED`, `POSTPONED` or `IN_REVIEW`.
-List them first, and settle the ones too old to send `SKIPPED` (the cut-off is a decision for
+**Before turning the flag on.** Every receipt held while the flag was off goes out once its
+kind has a case template (none has yet, so until then they stay held), however old, if its
+report is still `SUBMITTED`, `POSTPONED` or `IN_REVIEW`. They go
+`NOTICE_DISPATCH_BATCH_SIZE` (20) rows per run, with the approvals and denials, once a
+minute. List them first, and settle the ones too old to send `SKIPPED` (the cut-off is a decision for
 Jafnréttisstofa, not a constant):
 
 ```sql
