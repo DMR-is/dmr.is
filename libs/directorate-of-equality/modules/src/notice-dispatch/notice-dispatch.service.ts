@@ -803,8 +803,14 @@ export class NoticeDispatchService implements INoticeDispatchService {
     switch (row.kind) {
       case NoticeOutboxKindEnum.REPORT_SUBMITTED: {
         // The row is written in the submit transaction, so its creation is
-        // when the report was received.
-        const letter = buildSubmittedLetter(report, companyName, row.createdAt)
+        // when the report was received: the body says so. The letter itself
+        // is dated now, since a held receipt can go out months later.
+        const letter = buildSubmittedLetter(
+          report,
+          companyName,
+          row.createdAt,
+          new Date(),
+        )
         return {
           subject: letter.subject,
           pdf: () => this.renderLetter(letter.html),

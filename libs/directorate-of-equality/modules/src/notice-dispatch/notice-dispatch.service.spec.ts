@@ -1726,6 +1726,31 @@ describe('NoticeDispatchService', () => {
       expect(renderedHtml()).toContain('08.10.2026')
     })
 
+    // Held for months while the flag was off: the letter is dated when it
+    // goes, and the day the report arrived stays in the body.
+    it('dates a held receipt letter when it is sent, naming the day it arrived', async () => {
+      reportModel.findOne.mockResolvedValue(
+        approvedReport({
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.IN_REVIEW,
+        }),
+      )
+      noticeOutboxModel.findAll.mockResolvedValue([
+        {
+          ...outboxRow(NoticeOutboxKindEnum.REPORT_SUBMITTED),
+          createdAt: new Date('2026-06-02T12:00:00.000Z'),
+        },
+      ])
+
+      await service.dispatchPending(lockTransaction)
+      await delivered().pdf()
+
+      expect(renderedHtml()).toContain('<p class="letter__date">08.10.2026</p>')
+      expect(renderedHtml()).toContain(
+        'Jafnréttisstofu barst skýrslugjöf fyrirtækisins 02.06.2026.',
+      )
+    })
+
     it('merges the approval letter, the report and the úrbótaáætlun into one PDF, then archives the documents', async () => {
       reportModel.findOne.mockResolvedValue(
         approvedReport({ type: ReportTypeEnum.SALARY }),

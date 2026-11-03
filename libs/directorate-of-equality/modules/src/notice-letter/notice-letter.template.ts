@@ -34,10 +34,16 @@ export type NoticeLetter = {
   html: string
 }
 
+/**
+ * Dated the day it is sent, like every letter: a receipt held for months (the
+ * flag off, a quarantine) must not arrive dated months back. The day the
+ * report arrived is in the body.
+ */
 export const buildSubmittedLetter = (
   report: Pick<ReportModel, 'type'>,
   companyName: string,
   receivedAt: Date,
+  sentAt: Date,
 ): NoticeLetter => {
   const kind = reportKindLabel(report.type)
   const subject = `${kind} móttekin`
@@ -47,7 +53,7 @@ export const buildSubmittedLetter = (
     html: letterDocument({
       subject,
       companyName,
-      date: receivedAt,
+      date: sentAt,
       body: [
         `<h2>${escapeHtml(subject)}</h2>`,
         `<p>Jafnréttisstofu barst ${escapeHtml(

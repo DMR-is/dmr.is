@@ -16,6 +16,7 @@ describe('notice letters', () => {
       { type: ReportTypeEnum.EQUALITY },
       COMPANY,
       DATE,
+      DATE,
     )
 
     expect(letter.subject).toBe('Jafnréttisáætlun móttekin')
@@ -24,6 +25,24 @@ describe('notice letters', () => {
     expect(letter.html).not.toContain(COMPANY)
     expect(letter.html).toContain(
       'Jafnréttisstofu barst jafnréttisáætlun fyrirtækisins 08.10.2026.',
+    )
+  })
+
+  // A receipt held for months (the flag off, a quarantine) must not arrive
+  // dated months back: the letter is dated when it is sent, and the day the
+  // report arrived stays in the body.
+  it('a receipt is dated the day it is sent, not the day the report arrived', () => {
+    const letter = buildSubmittedLetter(
+      { type: ReportTypeEnum.SALARY },
+      COMPANY,
+      DATE,
+      new Date('2027-02-15T09:00:00.000Z'),
+    )
+
+    expect(letter.html).toContain('<p class="letter__date">15.02.2027</p>')
+    expect(letter.html).not.toContain('<p class="letter__date">08.10.2026</p>')
+    expect(letter.html).toContain(
+      'Jafnréttisstofu barst skýrslugjöf fyrirtækisins 08.10.2026.',
     )
   })
 
