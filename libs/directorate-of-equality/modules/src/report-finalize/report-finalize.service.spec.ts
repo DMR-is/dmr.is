@@ -49,7 +49,6 @@ describe('ReportFinalizeService', () => {
   let companyReportFindAll: jest.Mock
   let autoReviewEvaluate: jest.Mock
   let resolveSalaryFilingBasis: jest.Mock
-  let resolveEqualityCoverage: jest.Mock
   let noticeEnqueue: jest.Mock
 
   beforeEach(async () => {
@@ -72,7 +71,6 @@ describe('ReportFinalizeService', () => {
     })
 
     resolveSalaryFilingBasis = jest.fn().mockResolvedValue(null)
-    resolveEqualityCoverage = jest.fn().mockResolvedValue(null)
     noticeEnqueue = jest.fn().mockResolvedValue(undefined)
 
     const module = await Test.createTestingModule({

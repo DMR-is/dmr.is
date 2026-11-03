@@ -688,6 +688,96 @@ describe('ReportDeadlineReminderService', () => {
       expect(findDelivery).not.toHaveBeenCalled()
     })
 
+    const unconfigured = {
+      status: 'UNCONFIGURED',
+      kind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+    }
+
+    /*
+     * The email fallback is the flag-off path in full, so a company with no
+     * usable address gets the NO_EMAIL event even with the flag on: the
+     * reminder did not reach it, which is what an admin needs to see. Once
+     * the template is set the mailbox still sends, since only the SENT event
+     * stops it.
+     */
+    it('records NO_EMAIL, and sends nothing, when the kind has no case template and no email is on file', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company({ email: null }))
+      deliverToMailbox.mockResolvedValue(unconfigured)
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+        COMPANY_ID,
+        CompanyStatusEnum.ACTIVE,
+        CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+        CompanyReminderTierEnum.SIX_MONTHS,
+        EQUALITY_DUE.toISOString(),
+      )
+    })
+
+    // Both channels write the one SENT event, so a reminder emailed while the
+    // kind had no template is not sent again by the mailbox once it has one.
+    it('does not deliver to the mailbox a reminder the email fallback already sent', async () => {
+      const events: Array<Array<unknown>> = []
+      emitDeadlineReminderEvent.mockImplementation(async (...args) => {
+        events.push(args)
+      })
+      hasDeadlineReminderEvent.mockImplementation(
+        async (companyId, eventType, tier, dueDateIso) =>
+          events.some(
+            ([c, , e, t, d]) =>
+              c === companyId &&
+              e === eventType &&
+              t === tier &&
+              d === dueDateIso,
+          ),
+      )
+
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValueOnce(unconfigured)
+      await service.run()
+
+      expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(1)
+      expect(deliverToMailbox).toHaveBeenCalledTimes(1)
+
+      // The template is set by the next run: the mailbox would send.
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      await service.run()
+
+      expect(deliverToMailbox).toHaveBeenCalledTimes(1)
+      expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(1)
+      expect(events).toHaveLength(1)
+    })
+
+    /*
+     * The template was unset (a rollback) after this reminder's delivery
+     * reached One. Emailing it would put the reminder in front of the company
+     * twice if One sends or sent it, so it waits for the template.
+     */
+    it('neither emails nor records an event when a delivery that reached One lost its template', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValue({
+        status: 'DOCUMENT_CREATED',
+        deliveryId: 'delivery-7',
+        attempts: 1,
+        skipped: 'UNCONFIGURED',
+      })
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+      expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('was not delivered to the mailbox'),
+        expect.objectContaining({
+          deliveryId: 'delivery-7',
+          skipped: 'UNCONFIGURED',
+        }),
+      )
+    })
+
     it('names the render a letter, for the failure log', async () => {
       returnCompanyAtCall(CALL.equalitySixMonths, company())
 

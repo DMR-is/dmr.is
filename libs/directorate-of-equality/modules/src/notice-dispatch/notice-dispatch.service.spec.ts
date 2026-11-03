@@ -251,6 +251,142 @@ describe('NoticeDispatchService', () => {
       ])
     })
 
+    /*
+     * The pick order as behaviour, not as the `order` literal: a fake outbox
+     * that sorts, filters and limits by the query it is handed. A full batch
+     * of held receipts (unconfigured kind) is older than a denial that can
+     * go. The first run takes the held batch; the next takes the denial
+     * first, because the holds re-stamped their rows. Ordered by age alone,
+     * the denial would wait behind the held rows forever.
+     */
+    it('takes a row that can go ahead of a full batch of held rows on the next run', async () => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+
+      type FakeRow = ReturnType<typeof outboxRow> & {
+        lastAttemptAt: Date | null
+      }
+      const rows: Array<FakeRow> = Array.from(
+        { length: NOTICE_DISPATCH_BATCH_SIZE },
+        (_, i) => ({
+          ...outboxRow(NoticeOutboxKindEnum.REPORT_SUBMITTED),
+          id: `held-${i}`,
+          reportId: `held-report-${i}`,
+          createdAt: new Date(NOW.getTime() - (100 - i) * 60_000),
+        }),
+      )
+      rows.push({
+        ...outboxRow(NoticeOutboxKindEnum.REPORT_DENIED),
+        id: 'denial',
+        reportId: 'denied-report',
+        createdAt: new Date(NOW.getTime() - 60_000),
+      })
+
+      const compare = (
+        a: FakeRow,
+        b: FakeRow,
+        [field, direction]: [keyof FakeRow, string],
+      ) => {
+        const x = a[field] as Date | null
+        const y = b[field] as Date | null
+        if (x === null || y === null) {
+          if (x === y) return 0
+          // Postgres: ASC puts NULLs last unless told otherwise.
+          const nullsFirst = direction.includes('NULLS FIRST')
+          return (x === null ? -1 : 1) * (nullsFirst ? 1 : -1)
+        }
+        return (
+          (x.getTime() - y.getTime()) * (direction.startsWith('DESC') ? -1 : 1)
+        )
+      }
+      noticeOutboxModel.findAll.mockImplementation(
+        async (query: {
+          where: Record<string | symbol, unknown>
+          order: Array<[keyof FakeRow, string]>
+          limit: number
+        }) => {
+          const due = query.where[Op.or] as Array<{
+            lastAttemptAt: null | { [Op.lt]: Date }
+          }>
+          return rows
+            .filter((row) => row.status === query.where.status)
+            .filter((row) =>
+              due.some(({ lastAttemptAt }) =>
+                lastAttemptAt === null
+                  ? row.lastAttemptAt === null
+                  : row.lastAttemptAt !== null &&
+                    row.lastAttemptAt < lastAttemptAt[Op.lt],
+              ),
+            )
+            .sort((a, b) => {
+              for (const term of query.order) {
+                const order = compare(a, b, term)
+                if (order !== 0) return order
+              }
+              return 0
+            })
+            .slice(0, query.limit)
+            .map((row) => ({ ...row }))
+        },
+      )
+      noticeOutboxModel.update.mockImplementation(
+        async (
+          values: Partial<FakeRow>,
+          options: { where: { id: string; status?: string } },
+        ) => {
+          const hit = rows.filter(
+            (row) =>
+              row.id === options.where.id &&
+              (options.where.status === undefined ||
+                row.status === options.where.status),
+          )
+          hit.forEach((row) => Object.assign(row, values))
+          return [hit.length]
+        },
+      )
+      reportModel.findOne.mockImplementation(
+        async ({ where }: { where: { id: string } }) =>
+          approvedReport({
+            id: where.id,
+            status:
+              where.id === 'denied-report'
+                ? ReportStatusEnum.DENIED
+                : ReportStatusEnum.SUBMITTED,
+          }),
+      )
+      mailboxDeliveryService.deliverToMailbox.mockImplementation(
+        async ({ kind }: { kind: MailboxDeliveryKindEnum }) =>
+          kind === MailboxDeliveryKindEnum.EQUALITY_REPORT_SUBMITTED
+            ? { status: 'UNCONFIGURED', kind }
+            : {
+                status: 'SENT',
+                deliveryId: 'delivery-1',
+                islandIsDocumentId: 'doc-1',
+                sentAt: new Date(),
+                alreadySent: false,
+              },
+      )
+      const denial = () => rows.find((row) => row.id === 'denial')
+
+      await expect(service.dispatchPending(lockTransaction)).resolves.toEqual({
+        picked: NOTICE_DISPATCH_BATCH_SIZE,
+        settled: 0,
+      })
+      expect(denial()).toMatchObject({
+        status: NoticeOutboxStatusEnum.PENDING,
+        lastAttemptAt: null,
+      })
+
+      jest.setSystemTime(
+        new Date(NOW.getTime() + NOTICE_DISPATCH_RETRY_DELAY_MS + 1_000),
+      )
+      await service.dispatchPending(lockTransaction)
+
+      expect(denial()).toMatchObject({
+        status: NoticeOutboxStatusEnum.DONE,
+        channel: NoticeOutboxChannelEnum.MAILBOX,
+      })
+    })
+
     it('reports what it picked and settled', async () => {
       noticeOutboxModel.findAll.mockResolvedValue([
         outboxRow(NoticeOutboxKindEnum.REPORT_DENIED),
@@ -1614,8 +1750,6 @@ describe('NoticeDispatchService', () => {
       )
     })
 
-    // The delivery recorded FAILED or UNCERTAIN on its own row; the next run
-    // resumes it by the same key.
     it.each([
       [
         'a delivery held by another worker',
@@ -1733,6 +1867,8 @@ describe('NoticeDispatchService', () => {
       )
     })
 
+    // The delivery recorded FAILED or UNCERTAIN on its own row; the next run
+    // resumes it by the same key.
     it('retries a delivery that threw', async () => {
       mailboxDeliveryService.deliverToMailbox.mockRejectedValue(
         new Error('OneSystems CreateDocument failed with HTTP 503'),
