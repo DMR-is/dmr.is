@@ -700,6 +700,41 @@ describe('MailboxDeliveryService', () => {
       expect(oneCalls()).toBe(0)
     })
 
+    /*
+     * The dispatcher asks every minute, a batch of rows at a time. An error
+     * line per answer would flood the alerting; the boot check and the daily
+     * alert name the kind again.
+     */
+    it('logs an unconfigured kind at error once per kind, however often it is asked', async () => {
+      service = build(MAILBOX_DELIVERY_KINDS)
+      const denied = input({
+        kind: MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+        idempotencyKey: keyFor(
+          'REPORT-1',
+          MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+        ),
+      })
+
+      for (let i = 0; i < 3; i += 1) {
+        await expect(service.deliverToMailbox(input())).resolves.toEqual({
+          status: 'UNCONFIGURED',
+          kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+        })
+        await expect(service.deliverToMailbox(denied)).resolves.toEqual({
+          status: 'UNCONFIGURED',
+          kind: MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+        })
+      }
+
+      const unconfiguredLogs = logger.error.mock.calls.filter(([message]) =>
+        String(message).includes('has no case template'),
+      )
+      expect(unconfiguredLogs.map(([, meta]) => meta.kind)).toEqual([
+        MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+        MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+      ])
+    })
+
     it.each([
       ['missing', undefined],
       ['blank', '  '],

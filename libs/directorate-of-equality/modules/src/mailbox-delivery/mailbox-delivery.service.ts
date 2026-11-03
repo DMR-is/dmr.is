@@ -214,6 +214,15 @@ type DeliveryCompany = Pick<
  */
 @Injectable()
 export class MailboxDeliveryService implements IMailboxDeliveryService {
+  /**
+   * The kinds already logged as unconfigured by this process. The dispatcher
+   * asks every minute, up to a batch of rows each time, so logging every
+   * answer at error would bury the alerting in one line repeated. Once per
+   * kind per process is enough: the boot check and the daily alert name the
+   * kind again.
+   */
+  private readonly unconfiguredKindsLogged = new Set<MailboxDeliveryKindEnum>()
+
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(MailboxDeliveryModel)
@@ -477,10 +486,13 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       }
     }
 
-    this.logger.error(
-      `Mailbox delivery kind ${input.kind} has no case template; nothing sent while ONESYSTEMS_ENABLED is on`,
-      { context: LOGGING_CONTEXT, kind: input.kind },
-    )
+    if (!this.unconfiguredKindsLogged.has(input.kind)) {
+      this.unconfiguredKindsLogged.add(input.kind)
+      this.logger.error(
+        `Mailbox delivery kind ${input.kind} has no case template; nothing sent while ONESYSTEMS_ENABLED is on (logged once per kind until restart)`,
+        { context: LOGGING_CONTEXT, kind: input.kind },
+      )
+    }
     return { status: 'UNCONFIGURED', kind: input.kind }
   }
 

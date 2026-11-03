@@ -398,10 +398,11 @@ export class ReportDeadlineReminderService
    * Returns false only for `UNCONFIGURED` (the flag on before the kind's case
    * template is set): nothing went to One and no delivery with this key
    * reached it, so `processTier` emails the reminder instead.
-   * `deliverToMailbox` logged it at error, and the daily alert and the boot
-   * check name the kind. A delivery that did reach One before its template
-   * was unset answers `skipped: 'UNCONFIGURED'` instead, and is neither
-   * emailed nor recorded: it waits for the template.
+   * `deliverToMailbox` logged it at error (once per kind per process), and
+   * the daily alert and the boot check name the kind. A delivery that did
+   * reach One before its template was unset answers
+   * `skipped: 'UNCONFIGURED'` instead, and is neither emailed nor recorded: it
+   * waits for the template.
    *
    * ⚠️ **Flipping the flags.** Both channels need `EMAIL_REMINDER_JOB_ENABLED`
    * (the task does not run without it), so with it off nothing is sent by
@@ -497,7 +498,7 @@ export class ReportDeadlineReminderService
       return true
     }
 
-    // Already logged at error by `deliverToMailbox`.
+    // Logged at error by `deliverToMailbox`, once per kind per process.
     if (result?.status === 'UNCONFIGURED') {
       this.logger.info(
         `${kind.reportType} ${tier} reminder for company ${company.id} goes by email: mailbox kind ${result.kind} has no case template`,

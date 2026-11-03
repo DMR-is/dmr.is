@@ -838,8 +838,9 @@ export class NoticeDispatchService implements INoticeDispatchService {
       case 'UNCONFIGURED':
         // The flag is on before the kind's case template is set. Not an
         // attempt, so nothing is spent and the row goes once the template
-        // is; `deliverToMailbox` logged it at error, and the daily alert
-        // names the kind and, once overdue, the row.
+        // is; `deliverToMailbox` logged it at error (once per kind per
+        // process), and the daily alert names the kind and, once overdue,
+        // the row.
         return {
           outcome: 'HELD',
           reason: `mailbox kind ${result.kind} has no case template; waiting for it in mailbox-delivery.kinds.ts`,
