@@ -134,8 +134,10 @@ The same run, with the flag on, names every kind in use with no case
 template, and names every `notice_outbox` row overdue (an hour old and still
 `PENDING`, not waiting on a quarantine or, with the flag off, a receipt): one
 held on a document One has filed but not sent, one held on an unconfigured
-kind, or one failing every run. The counts are taken over every row; at most
-50 rows of each are named.
+kind, or one failing every run. It also names every `notice_outbox` row
+given up as `FAILED` in the last week (by `processed_at`): nothing retries
+those, so the company has not been told. The counts are taken over every
+row; at most 50 rows of each are named.
 
 A deadline reminder that stops this way also leaves an event on the
 company's timeline, on the run that stopped it: `…_UNCONFIRMED` for an

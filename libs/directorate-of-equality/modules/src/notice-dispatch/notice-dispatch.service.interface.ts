@@ -18,6 +18,12 @@ export type OverdueNotice = {
   createdAt: Date
 }
 
+/** An outbox row given up as FAILED: ids and our own text only, as above. */
+export type FailedNotice = OverdueNotice & {
+  /** When the dispatcher gave it up (`processed_at`). */
+  failedAt: Date
+}
+
 export interface INoticeDispatchService {
   /**
    * Sends the PENDING outbox rows that are due, one at a time, at most
@@ -44,6 +50,19 @@ export interface INoticeDispatchService {
   findOverdueNotices(
     limit: number,
   ): Promise<{ total: number; notices: OverdueNotice[] }>
+
+  /**
+   * Rows the dispatcher gave up as FAILED within the last
+   * `NOTICE_FAILED_ALERT_WINDOW_MS`: out of attempts, no usable recipient, or
+   * a mailbox delivery a person must check. Nothing retries them, so the
+   * company was not told until a person acts. The window keeps a row a person
+   * has already dealt with from being raised forever; a re-driven row is
+   * PENDING again and drops out at once. Oldest give-up first, at most
+   * `limit`; `total` counts them all. Reads only, outside any transaction.
+   */
+  findFailedNotices(
+    limit: number,
+  ): Promise<{ total: number; notices: FailedNotice[] }>
 }
 
 export const INoticeDispatchService = Symbol('INoticeDispatchService')

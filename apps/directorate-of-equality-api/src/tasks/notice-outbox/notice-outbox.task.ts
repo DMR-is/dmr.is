@@ -122,7 +122,12 @@ export class NoticeOutboxTask implements OnModuleInit {
    *   template is set (also logged at boot);
    * - every outbox row overdue (`findOverdueNotices`): held on a document One
    *   has filed but not sent while the flag is off, held on an unconfigured
-   *   kind, or failing on every run.
+   *   kind, or failing on every run;
+   * - every outbox row given up as FAILED in the last
+   *   `NOTICE_FAILED_ALERT_WINDOW_MS` (`findFailedNotices`): out of attempts,
+   *   no usable recipient, or a delivery a person must check. Nothing retries
+   *   it, so the company has not been told; a week of mornings, then it drops
+   *   out, so a row a person has already dealt with is not raised forever.
    * Nothing else tells anyone. See the mailbox-delivery README's "Alerting".
    *
    * Daily, so a stuck delivery is raised every morning until it is settled,
@@ -130,8 +135,9 @@ export class NoticeOutboxTask implements OnModuleInit {
    * off still need a person. Caught like `run`, for the same reason.
    *
    * Each alert is tried on its own, so a failure in one does not silence the
-   * others: the overdue alert is the only place a held decision is named.
-   * Once all three have been tried, any failure is rethrown inside the lock.
+   * others: the overdue alert is the only place a held decision is named, and
+   * the failed alert the only place a given-up one is after its error log.
+   * Once all four have been tried, any failure is rethrown inside the lock.
    * That rolls back the lock's `job_runs` write, so the 1h cooldown is not
    * committed and a container firing after this one, or the next day's run,
    * tries again. A container whose 08:00 firing found the lock held while
@@ -152,6 +158,7 @@ export class NoticeOutboxTask implements OnModuleInit {
               async () => this.alertUnconfiguredKinds('daily'),
             ],
             ['overdue notices', () => this.alertOverdueNotices()],
+            ['failed notices', () => this.alertFailedNotices()],
           ] as const) {
             if (!(await this.guarded(alert, work))) {
               failed.push(alert)
@@ -262,6 +269,32 @@ export class NoticeOutboxTask implements OnModuleInit {
           attempts: notice.attempts,
           lastError: notice.lastError,
           createdAt: notice.createdAt,
+        })),
+      },
+    )
+  }
+
+  private async alertFailedNotices(): Promise<void> {
+    const { total, notices } =
+      await this.noticeDispatchService.findFailedNotices(
+        MAILBOX_DELIVERY_ALERT_LIMIT,
+      )
+    if (total === 0) {
+      return
+    }
+
+    this.logger.error(
+      `Notice outbox: ${plural(total, 'notice', 'notices')} given up as FAILED and not re-driven${total > notices.length ? ` (oldest ${notices.length} shown)` : ''}`,
+      {
+        context: LOGGING_CONTEXT,
+        notices: notices.map((notice) => ({
+          noticeId: notice.noticeId,
+          kind: notice.kind,
+          reportId: notice.reportId,
+          attempts: notice.attempts,
+          lastError: notice.lastError,
+          createdAt: notice.createdAt,
+          failedAt: notice.failedAt,
         })),
       },
     )

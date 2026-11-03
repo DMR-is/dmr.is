@@ -19,6 +19,7 @@ import {
   NOTICE_DISPATCH_MAX_ATTEMPTS,
   NOTICE_DISPATCH_RETRY_DELAY_MS,
   NOTICE_DISPATCH_TIME_BUDGET_MS,
+  NOTICE_FAILED_ALERT_WINDOW_MS,
   NOTICE_OVERDUE_AFTER_MS,
   NoticeDispatchService,
 } from './notice-dispatch.service'
@@ -1241,6 +1242,109 @@ describe('NoticeDispatchService', () => {
       ).toBeUndefined()
       expect(noticeOutboxModel.findAll).not.toHaveBeenCalled()
     })
+  })
+
+  /*
+   * Nothing retries a FAILED row. It is named in the daily alert for a window
+   * after it was given up, then drops out, so a row a person has dealt with is
+   * not raised forever.
+   */
+  describe('failed notices', () => {
+    const FAILED_AT = new Date(NOW.getTime() - 25 * 60_000)
+
+    it('counts and names the rows given up within the window, outside any transaction', async () => {
+      noticeOutboxModel.count.mockResolvedValue(2)
+      noticeOutboxModel.findAll.mockResolvedValue([
+        {
+          ...outboxRow(NoticeOutboxKindEnum.REPORT_DENIED, {
+            attempts: NOTICE_DISPATCH_MAX_ATTEMPTS,
+          }),
+          status: NoticeOutboxStatusEnum.FAILED,
+          lastError: 'send failed',
+          processedAt: FAILED_AT,
+        },
+      ])
+
+      await expect(service.findFailedNotices(1)).resolves.toEqual({
+        total: 2,
+        notices: [
+          {
+            noticeId: 'notice-1',
+            kind: NoticeOutboxKindEnum.REPORT_DENIED,
+            reportId: 'report-1',
+            attempts: NOTICE_DISPATCH_MAX_ATTEMPTS,
+            lastError: 'send failed',
+            createdAt: NOW,
+            failedAt: FAILED_AT,
+          },
+        ],
+      })
+
+      const [countQuery] = noticeOutboxModel.count.mock.calls[0]
+      const [query] = noticeOutboxModel.findAll.mock.calls[0]
+      for (const options of [countQuery, query]) {
+        expect(options.transaction).toBeNull()
+        // Only FAILED and only by when it was given up: a re-driven row is
+        // PENDING again, and one given up longer ago has been seen all week.
+        expect(options.where).toEqual({
+          status: NoticeOutboxStatusEnum.FAILED,
+          processedAt: {
+            [Op.gte]: new Date(NOW.getTime() - NOTICE_FAILED_ALERT_WINDOW_MS),
+          },
+        })
+      }
+      expect(query.order).toEqual([['processedAt', 'ASC']])
+      expect(query.limit).toBe(1)
+    })
+
+    it('keeps the window at a week', () => {
+      expect(NOTICE_FAILED_ALERT_WINDOW_MS).toBe(7 * 24 * 60 * 60 * 1000)
+    })
+
+    it('reads no rows when none failed', async () => {
+      noticeOutboxModel.count.mockResolvedValue(0)
+
+      await expect(service.findFailedNotices(50)).resolves.toEqual({
+        total: 0,
+        notices: [],
+      })
+      expect(noticeOutboxModel.findAll).not.toHaveBeenCalled()
+    })
+
+    // Both ways the dispatcher gives up write `processed_at`; the window
+    // reads it, so a give-up that was not an attempt is not missed.
+    it.each([
+      [
+        'out of attempts',
+        () =>
+          mailService.sendReportDenied.mockResolvedValue(
+            ReportMailOutcome.FAILED,
+          ),
+        NOTICE_DISPATCH_MAX_ATTEMPTS - 1,
+      ],
+      [
+        'with nothing left to send',
+        () => reportEventModel.findOne.mockResolvedValue(null),
+        0,
+      ],
+    ])(
+      'stamps processed_at when a row is given up %s',
+      async (_label, arrange, attempts) => {
+        arrange()
+        noticeOutboxModel.findAll.mockResolvedValue([
+          outboxRow(NoticeOutboxKindEnum.REPORT_DENIED, { attempts }),
+        ])
+
+        await service.dispatchPending(lockTransaction)
+
+        expect(lastOutboxUpdate()[0]).toEqual(
+          expect.objectContaining({
+            status: NoticeOutboxStatusEnum.FAILED,
+            processedAt: NOW,
+          }),
+        )
+      },
+    )
   })
 
   /*

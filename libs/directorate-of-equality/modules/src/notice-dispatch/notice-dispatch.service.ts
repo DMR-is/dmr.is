@@ -52,6 +52,7 @@ import {
   ReportPdfResult,
 } from '../report-pdf/report-pdf.service.interface'
 import {
+  FailedNotice,
   INoticeDispatchService,
   NoticeDispatchSummary,
   OverdueNotice,
@@ -69,8 +70,9 @@ export const NOTICE_DISPATCH_MAX_ATTEMPTS = 5
  * Wait between attempts on one row. Five attempts five minutes apart ride out a
  * short SES outage without mailing the company late by more than ~20 minutes.
  *
- * A longer outage leaves its notices FAILED. They are re-driven by hand: see
- * "Re-driving a FAILED row" under `notice_outbox` in doe-api's `db/README.md`.
+ * A longer outage leaves its notices FAILED, named in the daily alert
+ * (`findFailedNotices`). They are re-driven by hand: see "Re-driving a FAILED
+ * row" under `notice_outbox` in doe-api's `db/README.md`.
  */
 export const NOTICE_DISPATCH_RETRY_DELAY_MS = 5 * 60 * 1000
 
@@ -89,6 +91,17 @@ export const NOTICE_DISPATCH_TIME_BUDGET_MS = 5 * 60 * 1000
  * daily alert (`findOverdueNotices`) unless it waits by design.
  */
 export const NOTICE_OVERDUE_AFTER_MS = 60 * 60 * 1000
+
+/**
+ * How long a FAILED row is named in the daily alert after it was given up
+ * (`processed_at`). Nothing retries a FAILED row, so until a person acts the
+ * company has not been told, and one error log at the moment of giving up is
+ * easy to miss. A week of mornings is enough for it to be seen, and bounded so
+ * that a row a person has looked at and decided to leave is not raised
+ * forever. A re-driven row is PENDING again and drops out; if it fails again,
+ * its new give-up starts a new window.
+ */
+export const NOTICE_FAILED_ALERT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
 /**
  * The report statuses a notice of each kind is still owed in, checked when the
@@ -224,6 +237,11 @@ type SendResult =
  * A mailbox delivery is idempotent by its key (kind, company, report), so a
  * retried row resumes the same delivery. One left UNCERTAIN is never retried:
  * the row is given up as FAILED, naming the delivery a person must check.
+ *
+ * Nothing retries a FAILED row, whatever gave it up. The daily alert names
+ * every row given up in the last `NOTICE_FAILED_ALERT_WINDOW_MS`
+ * (`findFailedNotices`), so a notice the company never got is raised every
+ * morning for a week rather than once in one error log.
  *
  * ⚠️ **Every outbox write is `transaction: null`.** The dispatcher runs inside
  * the advisory-lock transaction (`runWithDistributedLock`), which every query
@@ -374,6 +392,59 @@ export class NoticeDispatchService implements INoticeDispatchService {
         attempts: row.attempts,
         lastError: row.lastError,
         createdAt: row.createdAt,
+      })),
+    }
+  }
+
+  async findFailedNotices(
+    limit: number,
+  ): Promise<{ total: number; notices: FailedNotice[] }> {
+    // `processed_at`, not `last_attempt_at`: every settle writes it, while a
+    // give-up that was not an attempt (GONE) leaves `last_attempt_at` as it
+    // was. Not `notWaitingByDesign()`: a FAILED row is not waiting for
+    // anything, whoever filed it.
+    const where: WhereOptions<NoticeOutboxModel> = {
+      status: NoticeOutboxStatusEnum.FAILED,
+      processedAt: {
+        [Op.gte]: new Date(Date.now() - NOTICE_FAILED_ALERT_WINDOW_MS),
+      },
+    }
+
+    const total = await this.noticeOutboxModel.count({
+      where,
+      transaction: null,
+    })
+    if (total === 0) {
+      return { total, notices: [] }
+    }
+
+    const rows = await this.noticeOutboxModel.findAll({
+      where,
+      attributes: [
+        'id',
+        'kind',
+        'reportId',
+        'attempts',
+        'lastError',
+        'createdAt',
+        'processedAt',
+      ],
+      order: [['processedAt', 'ASC']],
+      limit,
+      transaction: null,
+    })
+
+    return {
+      total,
+      notices: rows.map((row) => ({
+        noticeId: row.id,
+        kind: row.kind,
+        reportId: row.reportId,
+        attempts: row.attempts,
+        lastError: row.lastError,
+        createdAt: row.createdAt,
+        // Matched on it above, so never null here.
+        failedAt: row.processedAt as Date,
       })),
     }
   }

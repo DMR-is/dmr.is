@@ -668,6 +668,13 @@ report's status. `SKIPPED` rows from before this rule are receipts settled with 
 quarantined company's, or a receipt while the flag is off) is named in doe-api's daily
 mailbox alert, `Notice outbox: N notices overdue`, with its `last_error`.
 
+**Failed rows.** Nothing retries a `FAILED` row, so the company has not been told until a
+person acts. Every row whose `processed_at` (written by every give-up) is within the last
+week (`NOTICE_FAILED_ALERT_WINDOW_MS`) is named in the same daily alert,
+`Notice outbox: N notices given up as FAILED and not re-driven`, with its `last_error`. The
+window keeps a row someone has looked at and chosen to leave from being raised forever; a
+re-driven row is `PENDING` again and drops out, and a fresh give-up starts a new week.
+
 **Before turning the flag on.** Every receipt held while the flag was off goes out once its
 kind has a case template (none has yet, so until then they stay held), however old, if its
 report is still `SUBMITTED`, `POSTPONED` or `IN_REVIEW`. They go

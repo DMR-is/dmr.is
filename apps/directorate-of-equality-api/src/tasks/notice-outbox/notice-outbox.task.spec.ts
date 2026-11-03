@@ -29,6 +29,7 @@ describe('NoticeOutboxTask', () => {
   let countStuckDeliveries: jest.Mock
   let unconfiguredKinds: jest.Mock
   let findOverdueNotices: jest.Mock
+  let findFailedNotices: jest.Mock
   const lockTransaction = { id: 'lock-tx' }
   const originalEnabled = process.env.ONESYSTEMS_ENABLED
 
@@ -55,6 +56,7 @@ describe('NoticeOutboxTask', () => {
     countStuckDeliveries = jest.fn().mockResolvedValue(counts())
     unconfiguredKinds = jest.fn().mockReturnValue([])
     findOverdueNotices = jest.fn().mockResolvedValue({ total: 0, notices: [] })
+    findFailedNotices = jest.fn().mockResolvedValue({ total: 0, notices: [] })
     runWithDistributedLock = jest
       .fn()
       .mockImplementation(async (_ns, _id, work) => {
@@ -72,7 +74,11 @@ describe('NoticeOutboxTask', () => {
         },
         {
           provide: INoticeDispatchService,
-          useValue: { dispatchPending, findOverdueNotices },
+          useValue: {
+            dispatchPending,
+            findOverdueNotices,
+            findFailedNotices,
+          },
         },
         {
           provide: IMailboxDeliveryService,
@@ -315,6 +321,48 @@ describe('NoticeOutboxTask', () => {
       )
     })
 
+    // Nothing retries a FAILED row, so the company was never told: it is
+    // named every morning for the window, not only in the one error log
+    // written when it was given up.
+    it('names every outbox row given up as FAILED, with its reason', async () => {
+      findFailedNotices.mockResolvedValue({
+        total: 3,
+        notices: [
+          {
+            noticeId: 'n-2',
+            kind: 'REPORT_DENIED',
+            reportId: 'r-2',
+            attempts: 5,
+            lastError: 'send failed',
+            createdAt: new Date('2026-10-14T10:00:00.000Z'),
+            failedAt: new Date('2026-10-14T10:25:00.000Z'),
+          },
+        ],
+      })
+
+      await task.alertStuckMailboxDeliveries()
+
+      expect(findFailedNotices).toHaveBeenCalledWith(
+        MAILBOX_DELIVERY_ALERT_LIMIT,
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Notice outbox: 3 notices given up as FAILED and not re-driven (oldest 1 shown)',
+        expect.objectContaining({
+          notices: [
+            {
+              noticeId: 'n-2',
+              kind: 'REPORT_DENIED',
+              reportId: 'r-2',
+              attempts: 5,
+              lastError: 'send failed',
+              createdAt: new Date('2026-10-14T10:00:00.000Z'),
+              failedAt: new Date('2026-10-14T10:25:00.000Z'),
+            },
+          ],
+        }),
+      )
+    })
+
     it('catches a failed run instead of letting it escape', async () => {
       runWithDistributedLock.mockRejectedValue(new Error('db is down'))
 
@@ -325,10 +373,11 @@ describe('NoticeOutboxTask', () => {
       )
     })
 
-    // The overdue alert is the only place a held decision is named, and a
-    // failure must not commit the lock's cooldown: each alert in turn fails,
-    // the other two are still raised, and the lock's work rejects, which
-    // rolls back the `job_runs` write so the next firing tries again.
+    // The overdue alert is the only place a held decision is named, the
+    // failed alert the only place a given-up one is, and a failure must not
+    // commit the lock's cooldown: each alert in turn fails, the other three
+    // are still raised, and the lock's work rejects, which rolls back the
+    // `job_runs` write so the next firing tries again.
     describe.each<{
       alert: string
       fail: () => void
@@ -341,6 +390,7 @@ describe('NoticeOutboxTask', () => {
         othersRaised: [
           'has no case template',
           'Notice outbox: 2 notices overdue',
+          'Notice outbox: 4 notices given up as FAILED',
         ],
       },
       {
@@ -352,6 +402,7 @@ describe('NoticeOutboxTask', () => {
         othersRaised: [
           'Mailbox deliveries need a person: 1 UNCERTAIN',
           'Notice outbox: 2 notices overdue',
+          'Notice outbox: 4 notices given up as FAILED',
         ],
       },
       {
@@ -361,6 +412,17 @@ describe('NoticeOutboxTask', () => {
         othersRaised: [
           'Mailbox deliveries need a person: 1 UNCERTAIN',
           'has no case template',
+          'Notice outbox: 4 notices given up as FAILED',
+        ],
+      },
+      {
+        alert: 'failed notices',
+        fail: () =>
+          findFailedNotices.mockRejectedValue(new Error('db is down')),
+        othersRaised: [
+          'Mailbox deliveries need a person: 1 UNCERTAIN',
+          'has no case template',
+          'Notice outbox: 2 notices overdue',
         ],
       },
     ])('when the $alert alert fails', ({ alert, fail, othersRaised }) => {
@@ -374,6 +436,7 @@ describe('NoticeOutboxTask', () => {
           MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
         ])
         findOverdueNotices.mockResolvedValue({ total: 2, notices: [] })
+        findFailedNotices.mockResolvedValue({ total: 4, notices: [] })
         fail()
         work = undefined
         runWithDistributedLock.mockImplementation(async (_ns, _id, fn) => {
@@ -383,7 +446,7 @@ describe('NoticeOutboxTask', () => {
         })
       })
 
-      it('still raises the other two', async () => {
+      it('still raises the other three', async () => {
         await expect(
           task.alertStuckMailboxDeliveries(),
         ).resolves.toBeUndefined()
@@ -420,6 +483,7 @@ describe('NoticeOutboxTask', () => {
     it('names every alert that failed in the one rethrow', async () => {
       countStuckDeliveries.mockRejectedValue(new Error('db is down'))
       findOverdueNotices.mockRejectedValue(new Error('db is down'))
+      findFailedNotices.mockRejectedValue(new Error('db is down'))
 
       await task.alertStuckMailboxDeliveries()
 
@@ -427,7 +491,7 @@ describe('NoticeOutboxTask', () => {
         'Mailbox delivery alert failed — aborting this run',
         expect.objectContaining({
           message: expect.stringContaining(
-            'stuck deliveries, overdue notices failed',
+            'stuck deliveries, overdue notices, failed notices failed',
           ),
         }),
       )
