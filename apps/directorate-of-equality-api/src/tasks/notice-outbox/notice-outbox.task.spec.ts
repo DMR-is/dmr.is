@@ -325,29 +325,125 @@ describe('NoticeOutboxTask', () => {
       )
     })
 
-    // The overdue alert is the only place a held decision is named.
-    it('still raises the other alerts when one fails', async () => {
-      process.env.ONESYSTEMS_ENABLED = 'true'
+    // The overdue alert is the only place a held decision is named, and a
+    // failure must not commit the lock's cooldown: each alert in turn fails,
+    // the other two are still raised, and the lock's work rejects, which
+    // rolls back the `job_runs` write so the next firing tries again.
+    describe.each<{
+      alert: string
+      fail: () => void
+      othersRaised: Array<string>
+    }>([
+      {
+        alert: 'stuck deliveries',
+        fail: () =>
+          countStuckDeliveries.mockRejectedValue(new Error('db is down')),
+        othersRaised: [
+          'has no case template',
+          'Notice outbox: 2 notices overdue',
+        ],
+      },
+      {
+        alert: 'unconfigured kinds',
+        fail: () =>
+          unconfiguredKinds.mockImplementation(() => {
+            throw new Error('db is down')
+          }),
+        othersRaised: [
+          'Mailbox deliveries need a person: 1 UNCERTAIN',
+          'Notice outbox: 2 notices overdue',
+        ],
+      },
+      {
+        alert: 'overdue notices',
+        fail: () =>
+          findOverdueNotices.mockRejectedValue(new Error('db is down')),
+        othersRaised: [
+          'Mailbox deliveries need a person: 1 UNCERTAIN',
+          'has no case template',
+        ],
+      },
+    ])('when the $alert alert fails', ({ alert, fail, othersRaised }) => {
+      let work: Promise<void> | undefined
+
+      beforeEach(() => {
+        process.env.ONESYSTEMS_ENABLED = 'true'
+        countStuckDeliveries.mockResolvedValue(counts({ UNCERTAIN: 1 }))
+        findStuckDeliveries.mockResolvedValue([stuck('d-1', 'UNCERTAIN')])
+        unconfiguredKinds.mockReturnValue([
+          MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+        ])
+        findOverdueNotices.mockResolvedValue({ total: 2, notices: [] })
+        fail()
+        work = undefined
+        runWithDistributedLock.mockImplementation(async (_ns, _id, fn) => {
+          work = fn(lockTransaction)
+          await work
+          return { ran: true }
+        })
+      })
+
+      it('still raises the other two', async () => {
+        await expect(
+          task.alertStuckMailboxDeliveries(),
+        ).resolves.toBeUndefined()
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          `Mailbox delivery alert: ${alert} failed`,
+          expect.objectContaining({ message: 'db is down' }),
+        )
+        for (const raised of othersRaised) {
+          expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining(raised),
+            expect.anything(),
+          )
+        }
+      })
+
+      it('rejects inside the lock, so the cooldown is rolled back', async () => {
+        await expect(
+          task.alertStuckMailboxDeliveries(),
+        ).resolves.toBeUndefined()
+
+        await expect(work).rejects.toThrow(
+          `Mailbox delivery alert: ${alert} failed`,
+        )
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Mailbox delivery alert failed — aborting this run',
+          expect.objectContaining({
+            message: expect.stringContaining(alert),
+          }),
+        )
+      })
+    })
+
+    it('names every alert that failed in the one rethrow', async () => {
       countStuckDeliveries.mockRejectedValue(new Error('db is down'))
-      unconfiguredKinds.mockReturnValue([
-        MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
-      ])
-      findOverdueNotices.mockResolvedValue({ total: 2, notices: [] })
+      findOverdueNotices.mockRejectedValue(new Error('db is down'))
 
-      await expect(task.alertStuckMailboxDeliveries()).resolves.toBeUndefined()
+      await task.alertStuckMailboxDeliveries()
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Mailbox delivery alert: stuck deliveries failed',
-        expect.objectContaining({ message: 'db is down' }),
+        'Mailbox delivery alert failed — aborting this run',
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'stuck deliveries, overdue notices failed',
+          ),
+        }),
       )
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('has no case template'),
-        expect.anything(),
-      )
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Notice outbox: 2 notices overdue'),
-        expect.anything(),
-      )
+    })
+
+    it('resolves inside the lock when every alert ran, so the cooldown is kept', async () => {
+      let work: Promise<void> | undefined
+      runWithDistributedLock.mockImplementation(async (_ns, _id, fn) => {
+        work = fn(lockTransaction)
+        await work
+        return { ran: true }
+      })
+
+      await task.alertStuckMailboxDeliveries()
+
+      await expect(work).resolves.toBeUndefined()
     })
   })
 

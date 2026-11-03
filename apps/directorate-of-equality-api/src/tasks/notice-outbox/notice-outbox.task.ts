@@ -126,9 +126,16 @@ export class NoticeOutboxTask implements OnModuleInit {
    *
    * Daily, so a stuck delivery is raised every morning until it is settled,
    * and not behind `ONESYSTEMS_ENABLED`: rows left from before the flag went
-   * off still need a person. Caught like `run`, for the same reason, and each
-   * alert on its own, so a failure in one does not silence the others: the
-   * overdue alert is the only place a held decision is named.
+   * off still need a person. Caught like `run`, for the same reason.
+   *
+   * Each alert is tried on its own, so a failure in one does not silence the
+   * others: the overdue alert is the only place a held decision is named.
+   * Once all three have been tried, any failure is rethrown inside the lock.
+   * That rolls back the lock's `job_runs` write, so the 1h cooldown is not
+   * committed and a container firing after this one, or the next day's run,
+   * tries again. A container whose 08:00 firing found the lock held while
+   * this one ran has already skipped; the retry is only as good as the next
+   * firing. The alerts that did succeed are raised again by the retry.
    */
   async alertStuckMailboxDeliveries(): Promise<void> {
     try {
@@ -136,15 +143,24 @@ export class NoticeOutboxTask implements OnModuleInit {
         DOE_TASK_NAMESPACE,
         DOE_TASK_JOB_IDS.mailboxDeliveryAlert,
         async () => {
-          await this.guarded('stuck deliveries', () =>
-            this.alertStuckDeliveries(),
-          )
-          await this.guarded('unconfigured kinds', async () =>
-            this.alertUnconfiguredKinds('daily'),
-          )
-          await this.guarded('overdue notices', () =>
-            this.alertOverdueNotices(),
-          )
+          const failed: string[] = []
+          for (const [alert, work] of [
+            ['stuck deliveries', () => this.alertStuckDeliveries()],
+            [
+              'unconfigured kinds',
+              async () => this.alertUnconfiguredKinds('daily'),
+            ],
+            ['overdue notices', () => this.alertOverdueNotices()],
+          ] as const) {
+            if (!(await this.guarded(alert, work))) {
+              failed.push(alert)
+            }
+          }
+          if (failed.length > 0) {
+            throw new Error(
+              `Mailbox delivery alert: ${failed.join(', ')} failed; the cooldown is not kept, so the next run retries`,
+            )
+          }
         },
         {
           // Long enough to absorb every container's 08:00 firing, far
@@ -162,20 +178,23 @@ export class NoticeOutboxTask implements OnModuleInit {
   }
 
   /**
-   * Every alert query is `transaction: null`, so one that fails leaves the
-   * lock's transaction usable for the next.
+   * Runs one alert, logging its failure. False when it failed. Every alert
+   * query is `transaction: null`, so one that fails leaves the lock's
+   * transaction usable for the next.
    */
   private async guarded(
     alert: string,
     work: () => Promise<void>,
-  ): Promise<void> {
+  ): Promise<boolean> {
     try {
       await work()
+      return true
     } catch (error) {
       this.logger.error(`Mailbox delivery alert: ${alert} failed`, {
         context: LOGGING_CONTEXT,
         message: error instanceof Error ? error.message : String(error),
       })
+      return false
     }
   }
 
