@@ -1,4 +1,5 @@
 import { CompanyReminderTierEnum } from '../company/models/company-event.model'
+import { SERVICE_SURVEY_URL } from '../mail/templates/report-approved.template'
 import { ReportTypeEnum } from '../report/models/report.enums'
 import {
   buildApprovedLetter,
@@ -33,12 +34,29 @@ describe('notice letters', () => {
       COMPANY,
       DATE,
       ['jafnlaunaúttekt', 'úrbótaáætlun'],
+      { serviceSurvey: false },
     )
 
     expect(letter.subject).toBe('Skýrslugjöf samþykkt')
     expect(letter.html).toContain('Samþykktin gildir til 08.10.2029.')
     expect(letter.html).toContain('Fylgiskjöl: jafnlaunaúttekt, úrbótaáætlun.')
     expect(letter.html).not.toContain('viðhengi')
+    expect(letter.html).not.toContain(SERVICE_SURVEY_URL)
+  })
+
+  it('an approval that completes reporting links the service survey', () => {
+    const letter = buildApprovedLetter(
+      { type: ReportTypeEnum.EQUALITY, validUntil: null },
+      COMPANY,
+      DATE,
+      [],
+      { serviceSurvey: true },
+    )
+
+    // Printed as text too: a printed letter has no href to follow.
+    expect(letter.html).toContain(
+      `<a href="${SERVICE_SURVEY_URL}">${SERVICE_SURVEY_URL}</a>`,
+    )
   })
 
   it('an approval with nothing enclosed has no enclosure line', () => {
@@ -47,6 +65,7 @@ describe('notice letters', () => {
       COMPANY,
       DATE,
       [],
+      { serviceSurvey: false },
     )
 
     expect(letter.html).not.toContain('Fylgiskjöl')
