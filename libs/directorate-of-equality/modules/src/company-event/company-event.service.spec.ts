@@ -169,12 +169,35 @@ describe('CompanyEventService', () => {
       '2026-12-01T00:00:00.000Z',
     )
 
-    expect(create).toHaveBeenCalledWith({
-      companyId: 'company-1',
-      eventType: CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
-      status: CompanyStatusEnum.ACTIVE,
-      reason: '2026-12-01T00:00:00.000Z',
-      reminderTier: CompanyReminderTierEnum.DUE,
-    })
+    expect(create).toHaveBeenCalledWith(
+      {
+        companyId: 'company-1',
+        eventType:
+          CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+        status: CompanyStatusEnum.ACTIVE,
+        reason: '2026-12-01T00:00:00.000Z',
+        reminderTier: CompanyReminderTierEnum.DUE,
+      },
+      expect.anything(),
+    )
+  })
+
+  /*
+   * The reminder task runs on its advisory lock's transaction for the whole
+   * run. On it, the event (the record that a reminder went out) would roll
+   * back with any later failure while the send stands, and its foreign key
+   * would hold a lock on the company until the run ends.
+   */
+  it('emitDeadlineReminderEvent writes outside the caller’s transaction', async () => {
+    await service.emitDeadlineReminderEvent(
+      'company-1',
+      CompanyStatusEnum.ACTIVE,
+      CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+      CompanyReminderTierEnum.TWO_WEEKS,
+      '2026-12-01T00:00:00.000Z',
+    )
+
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(create.mock.calls[0][1]).toEqual({ transaction: null })
   })
 })

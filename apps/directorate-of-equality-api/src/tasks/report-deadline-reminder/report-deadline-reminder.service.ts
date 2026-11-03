@@ -268,14 +268,16 @@ export class ReportDeadlineReminderService
        *
        * ⚠️ **Only a `MailSendError`.** Everything else rethrows, and it has to:
        * `AdvisoryLockService` runs this whole task in one transaction and CLS is
-       * live for this app, so the model queries here enlist in it. A DB error
-       * therefore aborts the transaction — every later statement fails `25P02`,
-       * a blanket catch swallows each one, and Postgres answers the eventual
-       * `COMMIT` on an aborted transaction with a silent `ROLLBACK`. The task
-       * would report success having mailed every company in the band while every
-       * `SENT` event and the `job_runs` cooldown were discarded, and the next run
-       * would mail them all again. A deterministic fault on the event insert
-       * turns that into a repeating storm.
+       * live for this app, so the model reads here enlist in it. A DB error
+       * there aborts the transaction — every later statement fails `25P02`, a
+       * blanket catch swallows each one, and Postgres answers the eventual
+       * `COMMIT` on an aborted transaction with a silent `ROLLBACK`, discarding
+       * the `job_runs` cooldown. The reminder events are written outside that
+       * transaction (`emitDeadlineReminderEvent`, `transaction: null`), so
+       * they do not roll back with it; but a fault on the event insert itself
+       * leaves a sent reminder unrecorded, and a deterministic one swallowed
+       * per company would mail every company in the band on every run with
+       * nothing recorded.
        *
        * So a database fault must stay loud, exactly as it did before this catch
        * existed.
@@ -289,12 +291,12 @@ export class ReportDeadlineReminderService
        * introduced here, and `report-deadline-reminder.task.ts` now catches at
        * the `@Cron` boundary so the run aborts without taking the API with it.
        *
-       * The `job_runs` row rolls back with the abort. That is the right trade,
-       * but it is not free: SES is not transactional, so any company already
-       * emailed in this run WILL be emailed again on the next one, because its
-       * `SENT` event rolled back too. Bounded by where the fault hits, and far
-       * better than the blanket catch it replaced, which mailed the entire band
-       * with nothing recorded.
+       * The `job_runs` row rolls back with the abort; the reminder events do
+       * not. A company reminded earlier in this run keeps its committed `SENT`
+       * event and is not mailed again. Only a company whose own event write
+       * failed after its send is mailed again on the next run, which is far
+       * better than the blanket catch this replaced, which mailed the entire
+       * band with nothing recorded.
        */
       try {
         await this.remindCompany(company, kind, tier.tier)
@@ -418,7 +420,9 @@ export class ReportDeadlineReminderService
    * company One rejects, every day, and withhold every reminder behind it. So
    * is a failure to read that state back (`findDelivery`, its own pool
    * connection). The event inserts stay outside the catch, so a fault there
-   * still aborts the run as `processTier` requires.
+   * still aborts the run as `processTier` requires. They are written outside
+   * the lock's transaction (`emitDeadlineReminderEvent`), so one written for
+   * an earlier company stands whatever happens later in the run.
    */
   private async remindCompanyByMailbox(
     company: CompanyModel,
@@ -524,8 +528,8 @@ export class ReportDeadlineReminderService
       idempotencyKey,
       meta,
     )
-    // Outside any catch: a fault on the lock's transaction must abort the
-    // run, as for the SENT event.
+    // Outside any catch: a failed event write must abort the run, as for the
+    // SENT event.
     if (eventType) {
       await this.flagStopped(company, eventType, tier, dueDateIso)
     }
@@ -542,7 +546,8 @@ export class ReportDeadlineReminderService
    * fault that made the call throw (a pool timeout, a DB blip) will often
    * fail it too. That is caught here, per company, like the call itself: no
    * event this run, and the next run reads the row again. Letting it out
-   * would abort the run and roll back every SENT event already written.
+   * would abort the run and withhold the reminder of every company after
+   * this one.
    */
   private async stoppedEventType(
     kind: DeadlineKind,

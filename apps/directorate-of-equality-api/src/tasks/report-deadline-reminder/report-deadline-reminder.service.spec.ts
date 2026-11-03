@@ -395,14 +395,13 @@ describe('ReportDeadlineReminderService', () => {
      * ⚠️ **The other half of the containment, and the reason it is typed.**
      *
      * `AdvisoryLockService` runs this whole task inside one transaction and CLS
-     * is live for this app, so every query here enlists in it. A DB error
-     * therefore aborts the transaction: if the catch were blanket, each later
-     * statement would fail `25P02` and be swallowed the same way, the loop would
-     * keep calling SES for every remaining company, and Postgres would answer
-     * the eventual COMMIT on an aborted transaction with a silent ROLLBACK. The
-     * task would report success having mailed everyone while every SENT event
-     * and the `job_runs` cooldown were discarded — and the next run would mail
-     * them all again.
+     * is live for this app, so the reads here enlist in it. A DB error there
+     * aborts the transaction: if the catch were blanket, each later statement
+     * would fail `25P02` and be swallowed the same way, and the loop would keep
+     * calling SES for every remaining company. The events are autocommitted
+     * outside that transaction, but a failing event write swallowed the same
+     * way would leave every one of those reminders unrecorded, so the next run
+     * would mail them all again.
      *
      * So anything that is not a mail failure has to come back out. Widen the
      * catch to `catch (error)` and this test fails.
@@ -897,7 +896,7 @@ describe('ReportDeadlineReminderService', () => {
     /*
      * The read-back is on its own pool connection, and the fault that made the
      * call throw will often fail it too. That is a per-company skip, not an
-     * abort that would roll back the run's SENT events.
+     * abort that would withhold every later company's reminder.
      */
     it('carries on with the batch when the read-back after a throw fails', async () => {
       const second = company({
@@ -925,7 +924,8 @@ describe('ReportDeadlineReminderService', () => {
       )
     })
 
-    // A fault on the lock's transaction must still abort the run.
+    // A failed event write must still abort the run: swallowed, a fault that
+    // repeats would mail the band every run with nothing recorded.
     it('rethrows a failure to record the SENT event', async () => {
       returnCompanyAtCall(CALL.equalitySixMonths, company())
       emitDeadlineReminderEvent.mockRejectedValue(new Error('25P02'))

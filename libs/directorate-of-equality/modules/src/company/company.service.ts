@@ -888,15 +888,11 @@ export class CompanyService implements ICompanyService {
    * Capped at `REPORT_VALIDITY_YEARS` from today, the date an approval made
    * today would set.
    *
-   * ⚠️ **Waits behind a running reminder run.** The deadline-reminder task
-   * (06:00 in production) writes its reminder events on its advisory lock's
-   * transaction, which stays open for the whole run, and each insert's
-   * `company_event.company_id` foreign key holds FOR KEY SHARE on the reminded
-   * company until that run commits. The FOR UPDATE below conflicts with it, so
-   * saving a due date for a company the run has already reminded waits until
-   * the run ends. With the mailbox case templates set, the run renders a PDF
-   * and calls One for each company, so the wait can be minutes. The structural
-   * fix is to write the events outside the lock's transaction.
+   * The FOR UPDATE below does not wait on a running deadline-reminder task:
+   * its reminder events, whose `company_event.company_id` foreign key takes
+   * FOR KEY SHARE on the company, are autocommitted one by one
+   * (`emitDeadlineReminderEvent`), not held on the task's long advisory-lock
+   * transaction.
    */
   async updateDueDate(
     id: string,
