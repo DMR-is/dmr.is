@@ -49,9 +49,19 @@ through from island.is, which may answer `Success: true` with errors
 
 A repeated send is answered `Success: false`, `Errors: ["Færsla þegar
 skráð."]`, with the `DocumentId`. The document is already in the mailbox, so
-it resolves as sent with `alreadyInMailbox: true` and logs a warning. It is
-matched on that text alone (no error code exists); any other `Errors` is a
-rejection, and `Errors` becomes the error's `errorMessage`. Whether a document
+it resolves as sent with `alreadyInMailbox: true` and logs a warning, but only
+when all of these hold:
+
+- `Errors` holds that text and nothing else (compared trimmed and in NFC; no
+  error code exists for it);
+- `DocumentId` is present and is the `ItemID` sent, compared without case;
+- there is no `ErrorNumber` and no `ErrorMessage`.
+
+A false "sent" is never retried, so the company would silently miss the
+notice. Any other duplicate answer logs a warning (with both ids and which
+condition failed) and is thrown as `REJECTED`, which is not definitive: the
+delivery ends UNCERTAIN for a person. Any other `Errors` is a rejection too,
+and `Errors` becomes the error's `errorMessage`. Whether a document
 was sent can otherwise only be checked by a person, in OneCRM's list of
 documents sent to the mailbox.
 

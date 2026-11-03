@@ -168,11 +168,16 @@ export class OneSystemsService implements IOneSystemsService {
     const { itemId, alreadyInMailbox } = await this.callAction(
       operation,
       (common) => postApiActionsSendDocToIslandIs({ ...common, body }),
+      body.ItemID,
     )
+    if (alreadyInMailbox) {
+      // `readActionResponse` accepts the duplicate only with this document's
+      // own id, so `itemId` is set and matches.
+      return { islandIsDocumentId: itemId as string, alreadyInMailbox: true }
+    }
     // `DocumentId` is the document's own `ItemId`, so it should name the
-    // document just sent. One's ids, not personal data. Compared without
-    // case: One's GUIDs may come back in another casing than they were sent.
-    if (itemId !== null && itemId.toLowerCase() !== body.ItemID.toLowerCase()) {
+    // document just sent. One's ids, not personal data.
+    if (itemId !== null && !isSameItemId(itemId, body.ItemID)) {
       this.logger.warn(
         `OneSystems ${operation} answered with a DocumentId other than the ItemID sent`,
         {
@@ -182,10 +187,7 @@ export class OneSystemsService implements IOneSystemsService {
         },
       )
     }
-    return {
-      islandIsDocumentId: itemId,
-      alreadyInMailbox: alreadyInMailbox ?? false,
-    }
+    return { islandIsDocumentId: itemId, alreadyInMailbox: false }
   }
 
   async closeCase(
@@ -219,7 +221,8 @@ export class OneSystemsService implements IOneSystemsService {
    * re-sent: the 401 is thrown as it is, and `isDefinitiveOneSystemsFailure`
    * treats it as unclear.
    *
-   * Only SendDocToIslandIs may resolve without an id.
+   * Only SendDocToIslandIs may resolve without an id. It passes the `ItemID`
+   * it sent, which its duplicate answer must name (`readActionResponse`).
    */
   private callAction(
     operation: Exclude<ActionOperation, 'SendDocToIslandIs'>,
@@ -228,10 +231,12 @@ export class OneSystemsService implements IOneSystemsService {
   private callAction(
     operation: 'SendDocToIslandIs',
     send: SendAction,
+    sentItemId: string,
   ): Promise<ActionResponse<string | null>>
   private async callAction(
     operation: ActionOperation,
     send: SendAction,
+    sentItemId?: string,
   ): Promise<ActionResponse<string | null>> {
     const baseUrl = this.requireConfig(operation, 'ONESYSTEMS_API_URL')
 
@@ -261,7 +266,7 @@ export class OneSystemsService implements IOneSystemsService {
       result = await send(actionRequestOptions(operation, baseUrl, token))
     }
 
-    const response = this.readActionResponse(operation, result)
+    const response = this.readActionResponse(operation, result, sentItemId)
 
     this.logger.info(`OneSystems ${operation} succeeded`, {
       ...this.meta(operation),
@@ -274,6 +279,7 @@ export class OneSystemsService implements IOneSystemsService {
   private readActionResponse(
     operation: ActionOperation,
     { data, error, response }: SdkResult,
+    sentItemId?: string,
   ): ActionResponse<string | null> {
     this.assertResponded(operation, error, response)
 
@@ -336,22 +342,43 @@ export class OneSystemsService implements IOneSystemsService {
     // A repeated send: island.is refuses it with "Færsla þegar skráð.", so the
     // document is already in the mailbox (OneSystems, 20 Oct 2026). One
     // answers `Success: false`, `Errors: ["Færsla þegar skráð."]` and the
-    // `DocumentId`. Only that error alone counts; anything else is a rejection.
+    // `DocumentId`. A false SENT is never retried, so it counts as sent only
+    // when all of it holds: that error alone, a `DocumentId` naming the
+    // document sent, and no `ErrorNumber` or `ErrorMessage`. Anything else
+    // is a rejection, which leaves the delivery UNCERTAIN for a person.
     if (
       operation === 'SendDocToIslandIs' &&
       !body.Success &&
       isAlreadySentErrors(body.Errors)
     ) {
       const documentId = nonEmptyString(body.DocumentId)
+      const namesSentDocument =
+        documentId !== null &&
+        sentItemId !== undefined &&
+        isSameItemId(documentId, sentItemId)
+      const hasErrorNumber = errorCode(body.ErrorNumber) !== null
+      const hasErrorMessage = nonEmptyString(body.ErrorMessage) !== null
+      if (namesSentDocument && !hasErrorNumber && !hasErrorMessage) {
+        this.logger.warn(
+          `OneSystems ${operation} answered that the document was already sent, treating it as sent`,
+          { ...this.meta(operation), status: response.status },
+        )
+        return { itemId: documentId, body, alreadyInMailbox: true }
+      }
+      // One's ids, not personal data.
       this.logger.warn(
-        `OneSystems ${operation} answered that the document was already sent, treating it as sent`,
+        `OneSystems ${operation} answered that the document was already sent, but not for certain of this document, treating it as rejected`,
         {
           ...this.meta(operation),
           status: response.status,
           hasDocumentId: documentId !== null,
+          documentIdMatches: namesSentDocument,
+          sentItemId,
+          returnedDocumentId: documentId,
+          hasErrorNumber,
+          hasErrorMessage,
         },
       )
-      return { itemId: documentId, body, alreadyInMailbox: true }
     }
 
     if (!body.Success) {
@@ -752,18 +779,16 @@ function errorsText(value: unknown): string | null {
   if (isRecord(value)) {
     return Object.keys(value).length > 0 ? stringify(value) : null
   }
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value)
-  }
   return nonEmptyString(value)
 }
 
 /** island.is's answer to a document it already has. */
-const ALREADY_SENT_ERROR = 'Færsla þegar skráð.'
+const ALREADY_SENT_ERROR = 'Færsla þegar skráð.'.normalize('NFC')
 
 /**
  * True when `Errors` holds island.is's duplicate error and nothing else.
- * Matched on the text: OneSystems gives no error code for it.
+ * Matched on the text: OneSystems gives no error code for it. Compared in
+ * NFC, so it still matches when it arrives decomposed (`á` as `a` + U+0301).
  */
 function isAlreadySentErrors(value: unknown): boolean {
   if (!Array.isArray(value)) {
@@ -774,8 +799,18 @@ function isAlreadySentErrors(value: unknown): boolean {
     .filter((entry): entry is string => entry !== null)
   return (
     entries.length > 0 &&
-    entries.every((entry) => entry.trim() === ALREADY_SENT_ERROR)
+    entries.every(
+      (entry) => entry.trim().normalize('NFC') === ALREADY_SENT_ERROR,
+    )
   )
+}
+
+/**
+ * One's ids are GUIDs, compared without case: they may come back in another
+ * casing than they were sent.
+ */
+function isSameItemId(returned: string, sent: string): boolean {
+  return returned.toLowerCase() === sent.toLowerCase()
 }
 
 function stringify(value: unknown): string | null {

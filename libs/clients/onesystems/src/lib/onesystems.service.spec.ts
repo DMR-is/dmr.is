@@ -761,6 +761,10 @@ describe('OneSystemsService', () => {
         islandIsDocumentId: null,
         alreadyInMailbox: false,
       })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('without a DocumentId'),
+        expect.objectContaining({ operation: 'SendDocToIslandIs' }),
+      )
     })
 
     it('sendDocToIslandIs warns when DocumentId names another document', async () => {
@@ -796,6 +800,11 @@ describe('OneSystemsService', () => {
       ['an array of an empty object', [{}]],
       ['an array of null', [null]],
       ['an array of blanks', ['', [], {}]],
+      // `Errors` is string[] or null (OneSystems, 20 Oct 2026): a scalar is
+      // not error text.
+      ['false', false],
+      ['0', 0],
+      ['an array of false and 0', [false, 0]],
     ])(
       'sendDocToIslandIs: Success:true with Errors as %s is no errors, and does not warn',
       async (_label, errors) => {
@@ -921,17 +930,90 @@ describe('OneSystemsService', () => {
       })
       expect(logger.error).not.toHaveBeenCalled()
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('already sent'),
-        expect.objectContaining({
-          operation: 'SendDocToIslandIs',
-          hasDocumentId: true,
-        }),
+        expect.stringContaining('already sent, treating it as sent'),
+        expect.objectContaining({ operation: 'SendDocToIslandIs' }),
       )
       expect(loggedText()).not.toContain('Færsla')
       expect(loggedText()).not.toContain(COMPANY_NATIONAL_ID)
     })
 
-    it('sendDocToIslandIs: the duplicate answer without a DocumentId is sent with a null id', async () => {
+    it('sendDocToIslandIs: the duplicate answer naming the ItemID in another casing is sent', async () => {
+      actionReplies = [
+        () =>
+          sendDocResponse({
+            DocumentId: 'DOC-1',
+            Success: false,
+            Errors: ['Færsla þegar skráð.'],
+          }),
+      ]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'DOC-1',
+        alreadyInMailbox: true,
+      })
+    })
+
+    it('sendDocToIslandIs: the duplicate text decomposed (NFD) is still the duplicate', async () => {
+      const decomposed = 'Færsla þegar skráð.'.normalize('NFD')
+      expect(decomposed).not.toBe('Færsla þegar skráð.')
+      actionReplies = [
+        () => sendDocResponse({ Success: false, Errors: [decomposed] }),
+      ]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'doc-1',
+        alreadyInMailbox: true,
+      })
+    })
+
+    // A false SENT is never retried, so the company would silently miss the
+    // notice: without the sent document's id, or with any other sign of
+    // failure, the duplicate text alone proves nothing.
+    it.each<[string, Record<string, unknown>]>([
+      ['no DocumentId', { DocumentId: undefined }],
+      ['a null DocumentId', { DocumentId: null }],
+      ['an empty DocumentId', { DocumentId: '' }],
+      ['a blank DocumentId', { DocumentId: '  ' }],
+      ['a DocumentId naming another document', { DocumentId: 'doc-9' }],
+      ['an ErrorNumber alongside', { ErrorNumber: '42' }],
+      ['a numeric ErrorNumber alongside', { ErrorNumber: 42 }],
+      ['an ErrorMessage alongside', { ErrorMessage: 'Villa' }],
+    ])(
+      'sendDocToIslandIs: the duplicate answer with %s is REJECTED, not definitive',
+      async (_label, extra) => {
+        actionReplies = [
+          () =>
+            sendDocResponse({
+              Success: false,
+              Errors: ['Færsla þegar skráð.'],
+              ...extra,
+            }),
+        ]
+
+        const error = await caught(sendDocToIslandIs())
+
+        expect(error).toBeInstanceOf(OneSystemsError)
+        expect(error).toMatchObject({ reason: 'REJECTED', upstreamStatus: 200 })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('treating it as rejected'),
+          expect.objectContaining({ operation: 'SendDocToIslandIs' }),
+        )
+        expect(logger.warn).not.toHaveBeenCalledWith(
+          expect.stringContaining('treating it as sent'),
+          expect.anything(),
+        )
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('was rejected'),
+          expect.objectContaining({ operation: 'SendDocToIslandIs' }),
+        )
+        expect(loggedText()).not.toContain('Færsla')
+        expect(loggedText()).not.toContain('Villa')
+        expect(loggedText()).not.toContain(COMPANY_NATIONAL_ID)
+      },
+    )
+
+    it('sendDocToIslandIs: a rejected duplicate answer keeps the duplicate text as the errorMessage', async () => {
       actionReplies = [
         () =>
           sendDocResponse({
@@ -941,10 +1023,20 @@ describe('OneSystemsService', () => {
           }),
       ]
 
-      await expect(sendDocToIslandIs()).resolves.toEqual({
-        islandIsDocumentId: null,
-        alreadyInMailbox: true,
+      await expect(caught(sendDocToIslandIs())).resolves.toMatchObject({
+        reason: 'REJECTED',
+        errorNumber: null,
+        errorMessage: 'Færsla þegar skráð.',
       })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('treating it as rejected'),
+        expect.objectContaining({
+          hasDocumentId: false,
+          documentIdMatches: false,
+          sentItemId: 'doc-1',
+          returnedDocumentId: null,
+        }),
+      )
     })
 
     it('the duplicate answer only counts for SendDocToIslandIs', async () => {

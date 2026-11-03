@@ -55,21 +55,29 @@ export interface OneSystemsSendDocToIslandIsInput {
   sendNotification?: boolean
 }
 
-export interface OneSystemsSendDocToIslandIsResult {
-  /**
-   * The response `DocumentId`, which is the document's `ItemId` in One, the
-   * same id passed in as `documentItemId` (OneSystems, 9 Oct 2026). `null` when
-   * One answered `Success: true` without one: `Success: true` alone counts as
-   * sent.
-   */
-  islandIsDocumentId: string | null
-  /**
-   * True when island.is refused the send as a repeat ("Færsla þegar skráð."):
-   * the document was already in the mailbox, so it counts as sent
-   * (OneSystems, 20 Oct 2026).
-   */
-  alreadyInMailbox: boolean
-}
+export type OneSystemsSendDocToIslandIsResult =
+  | {
+      /**
+       * The response `DocumentId`, which is the document's `ItemId` in One,
+       * the same id passed in as `documentItemId` (OneSystems, 9 Oct 2026).
+       * `null` when One answered `Success: true` without one: `Success: true`
+       * alone counts as sent.
+       */
+      islandIsDocumentId: string | null
+      alreadyInMailbox: false
+    }
+  | {
+      /** The response `DocumentId`, always the `documentItemId` sent. */
+      islandIsDocumentId: string
+      /**
+       * island.is refused the send as a repeat ("Færsla þegar skráð."): the
+       * document was already in the mailbox, so it counts as sent (OneSystems,
+       * 20 Oct 2026). Only with a `DocumentId` naming the document sent and
+       * no `ErrorNumber` or `ErrorMessage`; any other such answer is thrown
+       * as REJECTED.
+       */
+      alreadyInMailbox: true
+    }
 
 export interface OneSystemsCloseCaseInput {
   /**
@@ -127,8 +135,11 @@ export interface IOneSystemsService {
   /**
    * Publishes a document to the recipient's island.is digital mailbox.
    * island.is refuses a repeat with "Færsla þegar skráð.", which resolves as
-   * sent with `alreadyInMailbox: true`. `Success: true` without a
-   * `DocumentId` resolves with `islandIsDocumentId: null`.
+   * sent with `alreadyInMailbox: true` only when the answer's `DocumentId`
+   * is `documentItemId` (case aside) and it carries no `ErrorNumber` or
+   * `ErrorMessage`; otherwise it is thrown as REJECTED, which is not
+   * definitive. `Success: true` without a `DocumentId` resolves with
+   * `islandIsDocumentId: null`.
    */
   sendDocToIslandIs(
     input: OneSystemsSendDocToIslandIsInput,
