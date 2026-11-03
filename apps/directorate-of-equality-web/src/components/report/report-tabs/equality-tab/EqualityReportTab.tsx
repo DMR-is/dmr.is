@@ -1,8 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
-
-import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
+import { HTMLReadOnly } from '@dmr.is/ui/components/Editor/HTMLReadOnly'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 
@@ -45,8 +43,6 @@ export const EqualityReportTab = ({
   source,
   legacyValidUntil,
 }: EqualityReportTabProps) => {
-  const editorKey = useRef(0)
-
   const isPdf = report?.contentType === EqualityContentTypeEnum.PDF
 
   /*
@@ -155,13 +151,7 @@ export const EqualityReportTab = ({
             marginTop={4}
             marginBottom={3}
           >
-            <HTMLEditor
-              key={editorKey.current}
-              defaultValue={report.content ?? ''}
-              handleUpload={() => new Error('File upload not supported')}
-              disabled
-              readonly
-            />
+            <HTMLReadOnly html={report.content} />
           </Box>
         )}
         <Box marginBottom={6}>

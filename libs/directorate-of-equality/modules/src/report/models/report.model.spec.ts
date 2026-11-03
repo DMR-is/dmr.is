@@ -9,8 +9,8 @@ import { ReportModel } from './report.model'
 /**
  * `fromModelToEqualityReport` is the single choke point where the untrusted
  * `equality_report_content` column becomes a rendered field — the admin's
- * `HTMLEditor` (via `asDiv`, a raw `innerHTML` assignment) and the PDF renderer
- * both consume it. These pin the sanitising so a change to the projection
+ * `HTMLReadOnly` (a raw `innerHTML` render) and the PDF renderer both consume
+ * it. These pin the sanitising so a change to the projection
  * cannot quietly reopen that path.
  *
  * The model is a sequelize-typescript class; the projection only reads plain

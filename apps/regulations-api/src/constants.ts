@@ -45,8 +45,9 @@ export const API_URL = API_SERVER + '/api/v1/regulation'
 /**
  * Cached PDFs rendered before this timestamp are regenerated on next request.
  *
- * Bump this whenever the PDF template or `RegulationPdf.css` changes, otherwise
- * the cache keeps serving documents rendered with the old styling.
+ * Bump this whenever the PDF template or `RegulationPdf.css` changes, or the
+ * `getStructuredDiff` output does (a regulations-tools bump), otherwise the
+ * cache keeps serving documents rendered the old way.
  *
  * Compared lexicographically against `toISODateTime()`, which yields
  * `YYYY-MM-DDTHH:mm:ss` — keep this in the same format.
@@ -55,7 +56,7 @@ export const API_URL = API_SERVER + '/api/v1/regulation'
  * the bucket holds objects seeded 2025-02-14, so nothing would ever have been
  * invalidated. That was harmless only because the cache itself was broken.
  */
-export const PDF_TEMPLATE_UPDATED = '2026-08-10T00:00:00'
+export const PDF_TEMPLATE_UPDATED = '2026-11-02T00:00:00'
 
 export { FILE_SERVER } from '@dmr.is/regulations-tools/constants'
 

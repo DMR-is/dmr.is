@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
+import { HTMLEditor, ToolbarItem } from '@dmr.is/ui/components/Editor/Editor'
+import { HTMLReadOnly } from '@dmr.is/ui/components/Editor/HTMLReadOnly'
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -59,7 +60,17 @@ const ALLOWED_EXTENSIONS = [
   'jpeg',
 ]
 
-const EDITOR_TOOLBAR = 'bold italic underline | align numlist bullist | link'
+const EDITOR_TOOLBAR: Array<ToolbarItem> = [
+  'bold',
+  'italic',
+  'underline',
+  '|',
+  'align',
+  'numlist',
+  'bullist',
+  '|',
+  'link',
+]
 
 const SKIP_REASON_LABEL: Record<string, string> = {
   [CompanyEmailRecipientStatusEnum.SKIPPED_NO_EMAIL]: t.skippedNoEmail,
@@ -163,7 +174,7 @@ export const SendCompanyEmailModal = ({ isOpen, onClose, target }: Props) => {
    * any moment where reakit still considers the dialog visible while `isOpen` is
    * false would render the title and close button over an empty box.
    *
-   * It still keeps TinyMCE from booting on every company page load.
+   * It still keeps the editor from booting on every company page load.
    */
   const [hasOpened, setHasOpened] = useState(false)
   useEffect(() => {
@@ -647,9 +658,8 @@ export const SendCompanyEmailModal = ({ isOpen, onClose, target }: Props) => {
               <HTMLEditor
                 key={editorKey.current}
                 defaultValue={bodyHtml}
-                handleUpload={() => new Error('File upload not supported')}
                 onChange={setBodyHtml}
-                config={{ toolbar: EDITOR_TOOLBAR }}
+                toolbar={EDITOR_TOOLBAR}
               />
             </Box>
           </Box>
@@ -772,12 +782,7 @@ export const SendCompanyEmailModal = ({ isOpen, onClose, target }: Props) => {
                     the body already sanitised, so anything stripped is gone before
                     the admin approves it rather than after.
                   */}
-                  <HTMLEditor
-                    readonly
-                    disabled
-                    defaultValue={approved.preview.bodyHtml}
-                    handleUpload={() => new Error('File upload not supported')}
-                  />
+                  <HTMLReadOnly html={approved.preview.bodyHtml} />
                 </Box>
                 {!!approved.payload.attachments?.length && (
                   <Box marginTop={2}>

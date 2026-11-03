@@ -308,6 +308,89 @@ export const simpleSanitize = (html: string) => {
   return sanitizeHtml(html, baseOptions)
 }
 
+// The frame scrolls, so a wide table can't break the page, but an absurd width
+// still makes it unreadable. Pasted widths are px, pt or %.
+const boundedWidth = {
+  width: [/^\d{1,4}(\.\d+)?(px|pt)?$/i, /^\d{1,3}(\.\d+)?%$/],
+}
+
+/**
+ * For showing stored HTML inside the page itself, where it shares the DOM with
+ * the app. Stricter than `simpleSanitize`:
+ * - styles keep alignment, list types and bounded table widths, so no
+ *   positioning and no `url()`;
+ * - classes are limited to the content classes the editor styling targets, so
+ *   stored HTML can't borrow the app's global ones (`editorV2.css` has fixed
+ *   positioned classes);
+ * - `id` and `name` are dropped, so stored HTML can't collide with the app's;
+ * - links keep only `_self`/`_blank` targets and use `noopener noreferrer`;
+ * - `data:` is allowed on images only. Remote images still load, as they did
+ *   in the editor.
+ */
+const displayOptions: sanitizeHtml.IOptions = {
+  ...baseOptions,
+  allowedAttributes: Object.fromEntries(
+    Object.entries(baseOptions.allowedAttributes || {}).map(([tag, attrs]) => [
+      tag,
+      attrs.filter((attr) => attr !== 'id' && attr !== 'name'),
+    ]),
+  ),
+  allowedClasses: {
+    '*': [
+      'layout',
+      'indented',
+      'footnote',
+      'footnote-reference',
+      'footnote__marker',
+      'appendix__title',
+      'section__title',
+      'section__name',
+      'chapter__title',
+      'chapter__name',
+      'subchapter__title',
+      'subchapter__name',
+      'article__title',
+      'article__title--provisional',
+      'article__name',
+      'doc__title',
+      'Dags',
+      'FHUndirskr',
+      'Undirritun',
+    ],
+  },
+  allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+  allowedSchemesByTag: { img: ['http', 'https', 'data'] },
+  transformTags: {
+    ...baseOptions.transformTags,
+    a: (tagName, attribs) => {
+      const target = attribs.target?.toLowerCase()
+      if (target === '_self' || target === '_blank') {
+        attribs.target = target
+      } else {
+        delete attribs.target
+      }
+      return {
+        tagName,
+        attribs: { ...attribs, rel: 'noopener noreferrer' },
+      }
+    },
+  },
+  allowedStyles: {
+    ...baseOptions.allowedStyles,
+    '*': {
+      'text-align': [/^(left|right|center|justify)$/i],
+      'vertical-align': [/^(top|middle|bottom|baseline)$/i],
+    },
+    table: boundedWidth,
+    td: boundedWidth,
+    th: boundedWidth,
+  },
+}
+
+export const sanitizeForDisplay = (html: string) => {
+  return sanitizeHtml(html, displayOptions)
+}
+
 export function cleanLegacyHtml(input: string): string {
   const src = despaceIfSpacedOut(input ?? '')
 

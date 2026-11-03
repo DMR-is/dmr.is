@@ -16,13 +16,22 @@ export const Editor = ({ onChange, onBlur, defaultValue, disabled }: Props) => {
       <HTMLEditor
         disabled={disabled}
         defaultValue={defaultValue}
-        handleUpload={() => new Error('File upload not implemented')}
         onChange={onChange}
         onBlur={onBlur}
-        config={{
-          toolbar:
-            'bold italic underline | align numlist bullist table | link | customInsertButton',
-        }}
+        toolbar={[
+          'bold',
+          'italic',
+          'underline',
+          '|',
+          'align',
+          'numlist',
+          'bullist',
+          'table',
+          '|',
+          'link',
+          '|',
+          'customInsertButton',
+        ]}
       />
     </Box>
   )
