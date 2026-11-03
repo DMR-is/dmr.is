@@ -237,16 +237,12 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       return { status: 'DISABLED' }
     }
 
-    // Before any row or call, so a kind without a case template never leaves
-    // a half-started delivery behind. A result, not a throw: a throw is a
-    // failed attempt to every caller, and the flag going on before the
+    // Before any write or call, so a kind without a case template never
+    // leaves a half-started delivery behind. A result, not a throw: a throw
+    // is a failed attempt to every caller, and the flag going on before the
     // templates are confirmed would spend every notice's attempts.
     if (!isKindConfigured(input.kind, this.kindConfigs)) {
-      this.logger.error(
-        `Mailbox delivery kind ${input.kind} has no case template; nothing sent while ONESYSTEMS_ENABLED is on`,
-        { context: LOGGING_CONTEXT, kind: input.kind },
-      )
-      return { status: 'UNCONFIGURED', kind: input.kind }
+      return this.unconfiguredResult(input)
     }
     const config = resolveKindConfig(input.kind, this.kindConfigs)
 
@@ -425,6 +421,67 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       attempts: row.attempts,
       lastAttemptAt: row.lastAttemptAt,
     }))
+  }
+
+  /**
+   * The answer for a kind with no case template. `UNCONFIGURED` only when no
+   * delivery with this key has reached One, since a caller may then send the
+   * notice another way (the reminder task emails it). A template that is
+   * unset after a delivery started (a deploy that rolls back
+   * `mailbox-delivery.kinds.ts`) must not get that notice emailed on top, so
+   * a row that already reached One answers as it stands, with no write and no
+   * call:
+   * - SENT or UNCERTAIN, as `settledResult` says;
+   * - `IN_PROGRESS` while its lease is live: a worker, perhaps on a container
+   *   that still has the template, may be calling One right now;
+   * - its own status with `skipped: 'UNCONFIGURED'` when it holds a filed
+   *   document or the marker of a call that may have reached One. It resumes
+   *   from its saved ids once the template is back.
+   *
+   * A row that got no further than CreateCase has nothing filed or sent, and
+   * One finds-or-creates the case, so it answers `UNCONFIGURED`.
+   */
+  private async unconfiguredResult(
+    input: DeliverToMailboxInput,
+  ): Promise<DeliverToMailboxResult> {
+    const row = await this.deliveryModel.findOne({
+      where: { idempotencyKey: input.idempotencyKey },
+      transaction: null,
+    })
+    if (row) {
+      const settled = this.settledResult(row)
+      if (settled) {
+        return settled
+      }
+      // On this process's clock, as in `findDelivery`.
+      if (row.leaseExpiresAt && row.leaseExpiresAt.getTime() > Date.now()) {
+        return { status: 'IN_PROGRESS', deliveryId: row.id }
+      }
+      if (row.oneDocumentItemId || row.inFlightStep) {
+        this.logger.warn(
+          `Mailbox delivery ${row.id} already reached One but kind ${input.kind} has no case template; it waits for the template`,
+          {
+            context: LOGGING_CONTEXT,
+            deliveryId: row.id,
+            kind: input.kind,
+            status: row.status,
+            inFlightStep: row.inFlightStep,
+          },
+        )
+        return {
+          status: row.status as MailboxDeliveryUnsettledStatus,
+          deliveryId: row.id,
+          attempts: row.attempts,
+          skipped: 'UNCONFIGURED',
+        }
+      }
+    }
+
+    this.logger.error(
+      `Mailbox delivery kind ${input.kind} has no case template; nothing sent while ONESYSTEMS_ENABLED is on`,
+      { context: LOGGING_CONTEXT, kind: input.kind },
+    )
+    return { status: 'UNCONFIGURED', kind: input.kind }
   }
 
   /**

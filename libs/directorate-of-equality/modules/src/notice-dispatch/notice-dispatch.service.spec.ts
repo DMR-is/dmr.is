@@ -1658,6 +1658,33 @@ describe('NoticeDispatchService', () => {
       )
     })
 
+    // The template was unset (a rollback) after the delivery reached One: it
+    // waits for the template like an unconfigured kind, uncounted, and is
+    // not given up as out of attempts.
+    it('holds the row, not an attempt, at warn, when a delivery that reached One lost its case template', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        deliveryId: 'delivery-7',
+        attempts: 1,
+        skipped: 'UNCONFIGURED',
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED, {
+        attempts: NOTICE_DISPATCH_MAX_ATTEMPTS - 1,
+      })
+
+      expect(lastOutboxUpdate()[0]).toEqual({
+        lastAttemptAt: NOW,
+        lastError: expect.stringContaining(
+          'delivery-7 already reached One but its kind has no case template',
+        ),
+      })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('has no case template'),
+        expect.objectContaining({ noticeId: 'notice-1' }),
+      )
+    })
+
     it('renders every letter as a letter', async () => {
       mailboxDeliveryService.deliverToMailbox.mockImplementation(
         async (input: { pdf: () => Promise<Buffer> }) => {

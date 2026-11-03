@@ -54,6 +54,11 @@ export const MAILBOX_DELIVERY_KIND_CONFIGS = Symbol(
  * then reused by every later notice to that company. There is no documented
  * test environment to find out in.
  *
+ * Unsetting one again (a deploy that rolls this file back) does not get a
+ * notice sent twice: `deliverToMailbox` reads the delivery's row before it
+ * answers `UNCONFIGURED`, and a delivery that already reached One answers as
+ * it stands and waits for the template instead of being emailed on top.
+ *
  * TODO(Jafnréttisstofa): the proposed keys are `SKYRSLA` for salary reports
  * and `J-AAETLUN` for equality reports. Set each here, with who confirmed it
  * and when, once Jafnréttisstofa's case-system administrator confirms it.

@@ -505,6 +505,7 @@ export class ReportDeadlineReminderService
         {
           ...meta,
           deliveryId: 'deliveryId' in result ? result.deliveryId : undefined,
+          skipped: 'skipped' in result ? result.skipped : undefined,
         },
       )
     }

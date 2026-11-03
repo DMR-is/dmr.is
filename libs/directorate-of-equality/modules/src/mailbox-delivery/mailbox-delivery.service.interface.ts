@@ -45,13 +45,17 @@ export interface DeliverToMailboxInput {
  *   rendered or sent. The key is checked first, so a malformed key throws
  *   rather than returning DISABLED.
  * - `UNCONFIGURED`: `kind` has no case template in `mailbox-delivery.kinds.ts`
- *   (`isKindConfigured`). Nothing was written, rendered or sent, and it is
- *   logged at error. Not a failure of this delivery: the notice dispatcher
- *   holds the notice, uncounted, until the template is set, and the reminder
- *   task emails the reminder instead, so switching the flag on before the
- *   templates are confirmed loses nothing. doe-api logs every unconfigured
- *   kind at boot and names them in its daily mailbox alert while the flag is
- *   on.
+ *   (`isKindConfigured`), and no delivery with this key has reached One.
+ *   Nothing was written, rendered or sent, and it is logged at error. Not a
+ *   failure of this delivery: the notice dispatcher holds the notice,
+ *   uncounted, until the template is set, and the reminder task emails the
+ *   reminder instead, so switching the flag on before the templates are
+ *   confirmed loses nothing. doe-api logs every unconfigured kind at boot and
+ *   names them in its daily mailbox alert while the flag is on. When the
+ *   kind has no template but its delivery already reached One (the template
+ *   was unset by a rollback), the row answers as it stands instead: `SENT`,
+ *   `UNCERTAIN`, `IN_PROGRESS` under a live lease, or `skipped:
+ *   'UNCONFIGURED'` when it holds a filed document or an in-flight marker.
  * - `QUARANTINED`: the company is quarantined (`company.quarantined`), which
  *   halts every outbound touchpoint. Nothing was written, rendered or sent,
  *   and a delivery already under way is left where it stopped. Call again
@@ -71,6 +75,11 @@ export interface DeliverToMailboxInput {
  *     `MAILBOX_DELIVERY_MAX_ATTEMPTS` times without being sent. Nothing
  *     retries it until a person fixes the cause and resets `attempts` (see
  *     the module README). Logged as an error on every call.
+ *   - `UNCONFIGURED`: the kind has no case template, but the row already
+ *     holds a filed document or an in-flight marker, so One may hold or have
+ *     sent the notice. Not claimed and not counted; it resumes once the
+ *     template is back. Never send the notice another way on this answer.
+ *     Logged at warn.
  *
  * A failure during this call is not a result: it is recorded on the row
  * (FAILED or UNCERTAIN) and the error is rethrown.
@@ -96,7 +105,7 @@ export type DeliverToMailboxResult =
     }
 
 /** Why a delivery was left alone without a call to One. */
-export type MailboxDeliverySkipReason = 'ATTEMPTS_EXHAUSTED'
+export type MailboxDeliverySkipReason = 'ATTEMPTS_EXHAUSTED' | 'UNCONFIGURED'
 
 /** A row status that still has work left: neither SENT nor UNCERTAIN. */
 export type MailboxDeliveryUnsettledStatus = Exclude<

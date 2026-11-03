@@ -846,6 +846,16 @@ export class NoticeDispatchService implements INoticeDispatchService {
           alert: true,
         }
       default:
+        if (result.skipped === 'UNCONFIGURED') {
+          // The template was unset after this delivery reached One (a
+          // rollback). Held like UNCONFIGURED, uncounted, and resumed from
+          // its saved ids once the template is back.
+          return {
+            outcome: 'HELD',
+            reason: `mailbox delivery ${result.deliveryId} already reached One but its kind has no case template; waiting for it in mailbox-delivery.kinds.ts`,
+            alert: true,
+          }
+        }
         return {
           outcome: 'GONE',
           reason: `mailbox delivery ${result.deliveryId} used all its attempts`,
