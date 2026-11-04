@@ -966,7 +966,7 @@ export const companiesText = {
   validPeriod: 'Gildistími',
   validPeriodPlaceholder: 'Veldu gildistíma',
   statusPlaceholder: 'Veldu stöðu',
-  showDailyFines: 'Sýna dagsektir í gangi',
+  showDailyFines: 'Aðeins dagsektir í gangi',
   dailyFines: 'Dagsektir',
   overdue: 'Skiladagur',
   overdueTag: 'Skiladagur liðinn',
@@ -984,8 +984,8 @@ export const companiesText = {
   // Register status, moved off the row and onto an icon.
   companyInactive: 'Fyrirtæki er ekki í skrá',
   // Each narrows the list to only those companies.
-  showInactive: 'Sýna óvirk',
-  showQuarantined: 'Sýna í vari',
+  showInactive: 'Aðeins óvirk',
+  showQuarantined: 'Aðeins í vari',
   obligation: 'Skilaskylda',
   obligationPlaceholder: 'Veldu skilaskyldu',
   equalityRequired: 'Jafnréttisáætlun skylda',

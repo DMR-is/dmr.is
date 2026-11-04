@@ -94,9 +94,9 @@ const labelFor = (options: FilterOption[], value: string) =>
  * seeing 212 companies" is the normal question rather than an unusual one. The
  * count above the table answers "how many"; this answers "why".
  *
- * ⚠️ Every axis the panel can set is represented, including the "Sýna óvirk
- * fyrirtæki" reveal. It widens the result set rather than narrowing it, but it
- * is still an answer the admin gave and still explains the rows on screen.
+ * ⚠️ Every axis the panel can set is represented, including the "Aðeins óvirk"
+ * / "Aðeins í vari" checkboxes — answers the admin gave that explain the rows
+ * on screen.
  */
 export const CompanyActiveFilters = ({
   query,
