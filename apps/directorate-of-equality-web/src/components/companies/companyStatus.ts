@@ -1,9 +1,11 @@
 import {
+  CompanyObligationFilterEnum,
   CompanyObligationStatusEnum,
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
   CompanyStatusEnum,
+  CompanyValidReportFilterEnum,
 } from '../../gen/fetch/types.gen'
 import { companiesText } from '../../lib/text'
 
@@ -28,17 +30,73 @@ export const REPORT_STATUS_TAG_VARIANT: Record<
   [CompanyReportStatusEnum.SATISFACTORY]: 'mint',
 }
 
-// Priority order — most critical first — matching the server's evaluation
-// (see `companyReportStatusCaseSql`): equality, then the action plan, then the
-// salary report. The action plan precedes the salary report because a postponed
-// report is filed but not approved; getting this order wrong here would show
-// the filter in an order the results do not follow.
+export const VALID_REPORT_LABEL: Record<CompanyValidReportFilterEnum, string> =
+  {
+    [CompanyValidReportFilterEnum.VALID_EQUALITY_REPORT]:
+      companiesText.validEqualityReport,
+    [CompanyValidReportFilterEnum.VALID_ACTION_PLAN]:
+      companiesText.validActionPlan,
+    [CompanyValidReportFilterEnum.VALID_SALARY_REPORT]:
+      companiesText.validSalaryReport,
+  }
+
+/**
+ * The "Staða" multi-select: the three "Vantar …" states, then their "Gild …"
+ * counterparts. One control over two server params (`companyStatus`,
+ * `validReport`); every selection ANDs, so split with `splitStatusFilter`.
+ *
+ * "Fullnægjandi" (SATISFACTORY) is no longer offered; it is still the roll-up
+ * value shown on a company.
+ */
 export const STATUS_FILTER_OPTIONS = [
-  CompanyReportStatusEnum.MISSING_EQUALITY_REPORT,
-  CompanyReportStatusEnum.MISSING_ACTION_PLAN,
-  CompanyReportStatusEnum.MISSING_SALARY_REPORT,
-  CompanyReportStatusEnum.SATISFACTORY,
-].map((value) => ({ value, label: REPORT_STATUS_LABEL[value] }))
+  ...[
+    CompanyReportStatusEnum.MISSING_EQUALITY_REPORT,
+    CompanyReportStatusEnum.MISSING_ACTION_PLAN,
+    CompanyReportStatusEnum.MISSING_SALARY_REPORT,
+  ].map((value) => ({ value, label: REPORT_STATUS_LABEL[value] })),
+  ...[
+    CompanyValidReportFilterEnum.VALID_EQUALITY_REPORT,
+    CompanyValidReportFilterEnum.VALID_ACTION_PLAN,
+    CompanyValidReportFilterEnum.VALID_SALARY_REPORT,
+  ].map((value) => ({ value, label: VALID_REPORT_LABEL[value] })),
+]
+
+const VALID_REPORT_VALUES = new Set<string>(
+  Object.values(CompanyValidReportFilterEnum),
+)
+
+/** Splits a "Staða" selection into its two server params. */
+export const splitStatusFilter = (values: string[]) => ({
+  companyStatus: values.filter(
+    (v) => !VALID_REPORT_VALUES.has(v),
+  ) as CompanyReportStatusEnum[],
+  validReport: values.filter((v) =>
+    VALID_REPORT_VALUES.has(v),
+  ) as CompanyValidReportFilterEnum[],
+})
+
+/**
+ * Whether the company owes each report. Selections AND together on the server,
+ * so contradictory picks (skylda + EKKI skylda) return nothing.
+ */
+export const OBLIGATION_FILTER_OPTIONS = [
+  {
+    value: CompanyObligationFilterEnum.EQUALITY_REQUIRED,
+    label: companiesText.equalityRequired,
+  },
+  {
+    value: CompanyObligationFilterEnum.SALARY_REQUIRED,
+    label: companiesText.salaryRequired,
+  },
+  {
+    value: CompanyObligationFilterEnum.EQUALITY_NOT_REQUIRED,
+    label: companiesText.equalityNotRequired,
+  },
+  {
+    value: CompanyObligationFilterEnum.SALARY_NOT_REQUIRED,
+    label: companiesText.salaryNotRequired,
+  },
+]
 
 // ---------------------------------------------------------------------------
 // Per-obligation columns
@@ -132,26 +190,10 @@ export const SALARY_OBLIGATION_TAG_VARIANT: typeof OBLIGATION_STATUS_TAG_VARIANT
   }
 
 /**
- * The three default-on hides, as opt-in reveals.
- *
- * The admin register is a working list of who owes what, so companies that owe
- * nothing ("ekki lagaskylt"), companies off the register, and companies under
- * an admin halt ("í vari") are hidden unless asked for. Each value maps to its
- * own boolean server param — the same shape as FLAG_FILTER_OPTIONS below.
- *
- * ⚠️ "Ekki lagaskylt" is NOT "0–24". Some companies under 25 employees are
- * required to report by arrangement, recorded on the company as
- * `salaryReportRequiredOverride`, and they stay visible. The server owns that
- * rule (`notLegallyObligedSql`); do not restate it here.
- *
- * ⚠️ "Í vari" belongs HERE and not in FLAG_FILTER_OPTIONS, where it used to
- * sit. The two groups ask opposite questions — this one reveals a hidden group,
- * that one narrows to a flagged one — and offering the same axis in both let an
- * admin set "sýna í vari" and "er í vari" at once, two controls contradicting
- * each other over the same rows.
+ * The two register toggles under "Fyrirtæki", rendered as checkboxes. Both
+ * narrow: "inactive" sends `status=INACTIVE`, "quarantined" `quarantined=true`.
  */
 export const VISIBILITY_FILTER_OPTIONS = [
-  { value: 'notObliged', label: companiesText.showNotObliged },
   { value: 'inactive', label: companiesText.showInactive },
   { value: 'quarantined', label: companiesText.showQuarantined },
 ]
@@ -162,40 +204,9 @@ export const EXPIRES_FILTER_OPTIONS = [
   { value: 'soon', label: 'Rennur út innan 6 mánaða' },
 ]
 
-/**
- * Combined boolean flags — each selected value maps to its own boolean server
- * param (see CompaniesContainer). Grouped into a single multi-select so the
- * filter panel stays compact.
- *
- * ⚠️ Selections here AND together, unlike the compliance status filter above:
- * picking two narrows, it does not widen. That is what makes the two
- * "aldrei skilað" pairs combinable into "has sent us nothing at all".
- *
- * ⚠️ The four never-filed options carry NO obligation gate — they ask what the
- * company has ever sent, not what it owes — so they combine with any status
- * selection rather than being a status of their own. They do not lift the
- * register's default hides either: a 0–24 company that never filed still needs
- * "Sýna óskyldug" to appear, same as everywhere else in this panel.
- *
- * ⚠️ The in-system / legacy distinction in each pair is load-bearing, not
- * pedantry. 1 507 of 1 753 companies were loaded from the retired SharePoint
- * register with no report row here at all, so the "(í kerfinu)" options match
- * nearly the whole list while the "(né eldri gögn)" ones return the companies
- * the Directorate has genuinely never heard from.
- */
+/** The daily-fines toggle under "Staða" — narrows to `finesStarted=true`. */
 export const FLAG_FILTER_OPTIONS = [
-  { value: 'fines', label: 'Dagsektir í gangi' },
-  { value: 'overdue', label: 'Skiladagur liðinn' },
-  { value: 'neverFiledEquality', label: companiesText.neverFiledEquality },
-  {
-    value: 'neverFiledEqualityIncludingLegacy',
-    label: companiesText.neverFiledEqualityIncludingLegacy,
-  },
-  { value: 'neverFiledSalary', label: companiesText.neverFiledSalary },
-  {
-    value: 'neverFiledSalaryIncludingLegacy',
-    label: companiesText.neverFiledSalaryIncludingLegacy,
-  },
+  { value: 'fines', label: companiesText.showDailyFines },
 ]
 
 // Ownership sector, derived server-side mostly from the RSK legal form

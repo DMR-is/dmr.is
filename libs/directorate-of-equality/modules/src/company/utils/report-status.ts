@@ -241,6 +241,28 @@ function reportCovered(type: ReportTypeEnum): string {
 }
 
 /**
+ * SQL boolean: the company holds an in-force úrbótaáætlun — an APPROVED, unexpired
+ * salary report with at least one pay-gap outlier. Same outlier test as the
+ * export's `reportHasImprovementPlan` criterion.
+ *
+ * A legacy certificate never matches: the retired register recorded no outliers.
+ */
+export function activeActionPlanExistsSql(): string {
+  return `EXISTS (
+    SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" cr
+    JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
+    WHERE cr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+    AND ${reportInForceSql(ReportTypeEnum.SALARY)}
+    AND EXISTS (
+      SELECT 1 FROM "${DoeModels.REPORT_EMPLOYEE}" re
+      JOIN "${DoeModels.REPORT_EMPLOYEE_OUTLIER}" reo
+        ON reo.report_employee_id = re.id
+      WHERE re.report_id = r.id
+    )
+  )`
+}
+
+/**
  * Whether the company has a salary report still in POSTPONED — i.e. with
  * pay-gap outliers whose explanations are deferred. This is the signal for an
  * outstanding úrbótaáætlun.
@@ -354,6 +376,26 @@ export function actionPlanMissingSql(): string {
  */
 export function salaryReportMissingSql(): string {
   return `(${salaryRequiredSql} AND NOT ${reportCovered(
+    ReportTypeEnum.SALARY,
+  )} AND NOT ${actionPlanMissingSql()})`
+}
+
+/**
+ * SQL boolean: the equality obligation reads "Í gildi" — owed and covered.
+ * Equivalent to `equalityObligationStatusCaseSql() = 'COVERED'`, without
+ * evaluating the whole CASE in a WHERE.
+ */
+export function equalityReportValidSql(): string {
+  return `(${equalityRequiredSql} AND ${reportCovered(ReportTypeEnum.EQUALITY)})`
+}
+
+/**
+ * SQL boolean: the salary obligation reads "Í gildi" — owed, covered and no
+ * úrbótaáætlun outstanding. Equivalent to
+ * `salaryObligationStatusCaseSql() = 'COVERED'`; keep the two in step.
+ */
+export function salaryReportValidSql(): string {
+  return `(${salaryRequiredSql} AND ${reportCovered(
     ReportTypeEnum.SALARY,
   )} AND NOT ${actionPlanMissingSql()})`
 }

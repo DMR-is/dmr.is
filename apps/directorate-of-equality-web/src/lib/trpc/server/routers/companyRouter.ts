@@ -1,7 +1,9 @@
 import { z } from 'zod'
 
 import {
+  zCompanyObligationFilterEnum,
   zCompanySectorEnum,
+  zCompanyValidReportFilterEnum,
   zCreateCompanyBody,
   zCreateCompanyCommentBody,
   zCreateCompanyCommentPath,
@@ -42,6 +44,10 @@ const zGetCompaniesQuery = z.object({
       ]),
     )
     .optional(),
+  // "Gild …" and "skylda" filters. Named here because this schema strips
+  // anything it does not name.
+  validReport: z.array(zCompanyValidReportFilterEnum).optional(),
+  obligation: z.array(zCompanyObligationFilterEnum).optional(),
   // Register lifecycle, not compliance — see `companyStatus` directly above.
   // Omitted means both, which is what the list has always shown.
   status: z.array(z.enum(['ACTIVE', 'INACTIVE'])).optional(),

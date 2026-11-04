@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -16,11 +16,13 @@ import {
   type CompanyFilters,
 } from '../../components/companies/CompanyFilter'
 import { CompanyImportModal } from '../../components/companies/CompanyImportModal'
+import { splitStatusFilter } from '../../components/companies/companyStatus'
 import { CompanyTable } from '../../components/companies/CompanyTable'
 import { CreateCompanyModal } from '../../components/companies/CreateCompanyModal'
 import { SendCompanyEmailModal } from '../../components/companies/SendCompanyEmailModal'
 import {
   CompanyExpiryFilterEnum,
+  CompanyObligationFilterEnum,
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
@@ -52,34 +54,73 @@ export const CompaniesContainer = () => {
   const { data, isError, filter, setFilter, resetFilter, recipientFilter } =
     useCompanies({ pageSize: 10 })
 
+  // Retired values an old bookmark may carry. Worked out before the initial
+  // state so the panel never shows a filter the mount cleanup below drops.
+  // "Staða í skrá" is gone; only the óvirk checkbox's `status` survives.
+  const staleStatus = filter.status?.includes(CompanyStatusEnum.ACTIVE) ?? false
+  // "Fullnægjandi" is no longer offered.
+  const companyStatus = (filter.companyStatus ?? []).filter(
+    (s) => s !== CompanyReportStatusEnum.SATISFACTORY,
+  )
+  const staleCompanyStatus =
+    companyStatus.length !== (filter.companyStatus?.length ?? 0)
+
   const [filters, setFilters] = useState<CompanyFilters>({
     employees: filter.employeeCountCategory ?? [],
-    status: (filter.companyStatus ?? []) as CompanyReportStatusEnum[],
-    registerStatus: (filter.status ?? []) as CompanyStatusEnum[],
+    obligation: filter.obligation ?? [],
+    status: [...companyStatus, ...(filter.validReport ?? [])],
     expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
-    flags: [
-      ...(filter.finesStarted ? ['fines'] : []),
-      ...(filter.overdue ? ['overdue'] : []),
-      ...(filter.neverFiledEquality ? ['neverFiledEquality'] : []),
-      ...(filter.neverFiledEqualityIncludingLegacy
-        ? ['neverFiledEqualityIncludingLegacy']
-        : []),
-      ...(filter.neverFiledSalary ? ['neverFiledSalary'] : []),
-      ...(filter.neverFiledSalaryIncludingLegacy
-        ? ['neverFiledSalaryIncludingLegacy']
-        : []),
-    ],
+    flags: filter.finesStarted ? ['fines'] : [],
     regionCode: filter.regionCode ?? [],
     postcode: filter.postcode ?? [],
     isatCategoryCode: filter.isatCategoryCode ?? [],
     isatSection: filter.isatSection ?? [],
     sector: (filter.sector ?? []) as CompanySectorEnum[],
     visibility: [
-      ...(filter.includeNotObliged ? ['notObliged'] : []),
-      ...(filter.includeInactive ? ['inactive'] : []),
-      ...(filter.includeQuarantined ? ['quarantined'] : []),
+      ...(!staleStatus && filter.status?.includes(CompanyStatusEnum.INACTIVE)
+        ? ['inactive']
+        : []),
+      ...(filter.quarantined ? ['quarantined'] : []),
     ],
   })
+
+  // Params the panel no longer offers. An old bookmark carrying one would
+  // filter the list with no control or chip to undo it, so drop them once.
+  useEffect(() => {
+    const retired = [
+      filter.overdue,
+      filter.neverFiledEquality,
+      filter.neverFiledEqualityIncludingLegacy,
+      filter.neverFiledSalary,
+      filter.neverFiledSalaryIncludingLegacy,
+      filter.includeNotObliged,
+      filter.includeQuarantined,
+      filter.includeInactive,
+    ]
+    if (
+      retired.some((v) => v !== null) ||
+      filter.quarantined === false ||
+      staleStatus ||
+      staleCompanyStatus
+    ) {
+      setFilter({
+        overdue: null,
+        neverFiledEquality: null,
+        neverFiledEqualityIncludingLegacy: null,
+        neverFiledSalary: null,
+        neverFiledSalaryIncludingLegacy: null,
+        includeNotObliged: null,
+        includeQuarantined: null,
+        includeInactive: null,
+        ...(filter.quarantined === false ? { quarantined: null } : {}),
+        ...(staleStatus ? { status: null } : {}),
+        ...(staleCompanyStatus
+          ? { companyStatus: companyStatus.length ? companyStatus : null }
+          : {}),
+      })
+    }
+    // Mount only: this cleans up what the page was opened with.
+  }, [])
 
   const trpc = useTRPC()
 
@@ -143,12 +184,15 @@ export const CompaniesContainer = () => {
 
     setFilters((prev) => ({ ...prev, [key]: val }))
     if (key === 'status') {
-      setFilter({ companyStatus: val as CompanyReportStatusEnum[], page: 1 })
-    } else if (key === 'registerStatus') {
-      // Empty selection clears the param rather than sending both values —
-      // same result, but an unfiltered URL stays unfiltered.
+      const { companyStatus, validReport } = splitStatusFilter(val)
       setFilter({
-        status: val.length ? (val as CompanyStatusEnum[]) : null,
+        companyStatus: companyStatus.length ? companyStatus : null,
+        validReport: validReport.length ? validReport : null,
+        page: 1,
+      })
+    } else if (key === 'obligation') {
+      setFilter({
+        obligation: val.length ? (val as CompanyObligationFilterEnum[]) : null,
         page: 1,
       })
     } else if (key === 'employees') {
@@ -162,37 +206,15 @@ export const CompaniesContainer = () => {
     } else if (key === 'expires') {
       setFilter({ expiresWithin: val as CompanyExpiryFilterEnum[], page: 1 })
     } else if (key === 'visibility') {
-      // Combined multi-select; each value maps to its own boolean server param.
-      // `null` rather than `false` so an unset reveal leaves the URL clean —
-      // the server hides by default, so absence already means "hidden".
+      // Both narrow: only óvirk, only í vari. `null` keeps the URL clean.
       setFilter({
-        includeNotObliged: val.includes('notObliged') ? true : null,
-        includeInactive: val.includes('inactive') ? true : null,
-        includeQuarantined: val.includes('quarantined') ? true : null,
-        // An old bookmark's narrowing must not override the reveal control.
-        quarantined: null,
+        status: val.includes('inactive') ? [CompanyStatusEnum.INACTIVE] : null,
+        quarantined: val.includes('quarantined') ? true : null,
         page: 1,
       })
     } else if (key === 'flags') {
-      // Combined multi-select; each value maps to its own boolean server param.
-      // ⚠️ `quarantined` is NOT among them any more — it moved to `visibility`
-      // above, where it is a reveal rather than a narrowing. Setting it from
-      // both places let the two controls contradict each other.
       setFilter({
         finesStarted: val.includes('fines') ? true : null,
-        overdue: val.includes('overdue') ? true : null,
-        neverFiledEquality: val.includes('neverFiledEquality') ? true : null,
-        neverFiledEqualityIncludingLegacy: val.includes(
-          'neverFiledEqualityIncludingLegacy',
-        )
-          ? true
-          : null,
-        neverFiledSalary: val.includes('neverFiledSalary') ? true : null,
-        neverFiledSalaryIncludingLegacy: val.includes(
-          'neverFiledSalaryIncludingLegacy',
-        )
-          ? true
-          : null,
         page: 1,
       })
     } else if (key === 'postcode') {
@@ -212,8 +234,8 @@ export const CompaniesContainer = () => {
     resetFilter()
     setFilters({
       employees: [],
+      obligation: [],
       status: [],
-      registerStatus: [],
       expires: [],
       flags: [],
       regionCode: [],
@@ -301,13 +323,11 @@ export const CompaniesContainer = () => {
           )}
           <CompanyActiveFilters
             query={filter.q ?? ''}
-            quarantined={filter.quarantined}
             filters={filters}
             regionOptions={regionOptions}
             postcodeOptions={postcodeOptions}
             onFiltersChange={handleFiltersChange}
             onQueryClear={() => setFilter({ q: null, page: 1 })}
-            onQuarantinedClear={() => setFilter({ quarantined: null, page: 1 })}
             onReset={handleReset}
           />
           {data?.paging && (
