@@ -142,7 +142,7 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
   }
 
   const preview = getAdvertHTMLMarkup(
-    ApplicationTypeEnum.RECALLBANKRUPTCY
+    application?.type === ApplicationTypeEnum.RECALLBANKRUPTCY
       ? {
           templateType: LegalGazetteHTMLTemplates.DIVISION_MEETING_BANKRUPTCY,
 
