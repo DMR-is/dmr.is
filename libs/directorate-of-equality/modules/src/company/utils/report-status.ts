@@ -381,6 +381,26 @@ export function salaryReportMissingSql(): string {
 }
 
 /**
+ * SQL boolean: the equality obligation reads "Í gildi" — owed and covered.
+ * Equivalent to `equalityObligationStatusCaseSql() = 'COVERED'`, without
+ * evaluating the whole CASE in a WHERE.
+ */
+export function equalityReportValidSql(): string {
+  return `(${equalityRequiredSql} AND ${reportCovered(ReportTypeEnum.EQUALITY)})`
+}
+
+/**
+ * SQL boolean: the salary obligation reads "Í gildi" — owed, covered and no
+ * úrbótaáætlun outstanding. Equivalent to
+ * `salaryObligationStatusCaseSql() = 'COVERED'`; keep the two in step.
+ */
+export function salaryReportValidSql(): string {
+  return `(${salaryRequiredSql} AND ${reportCovered(
+    ReportTypeEnum.SALARY,
+  )} AND NOT ${actionPlanMissingSql()})`
+}
+
+/**
  * The roll-up compliance status, as a SQL `CASE` yielding
  * `CompanyReportStatusEnum` values in priority order (most critical first).
  * Populates the `reportStatus` column via the model's `withReportStatus` scope;

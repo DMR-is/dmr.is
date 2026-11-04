@@ -58,6 +58,19 @@ const line = (label: string, values: string[]): string | null =>
 const labelFor = (options: ReportFilterOption[], values: string[]): string[] =>
   values.map((value) => options.find((o) => o.value === value)?.label ?? value)
 
+/**
+ * Always present: the export reaches companies the register hides by default,
+ * so the workbook has to say so, or name the narrowing that replaced it.
+ */
+const scopeLine = (visibility: string[]): string => {
+  const inactive = visibility.includes('inactive')
+  const quarantined = visibility.includes('quarantined')
+  if (inactive && quarantined) return 'Umfang: aðeins óvirk fyrirtæki í vari'
+  if (inactive) return 'Umfang: aðeins óvirk fyrirtæki'
+  if (quarantined) return 'Umfang: aðeins fyrirtæki í vari'
+  return 'Umfang: öll fyrirtæki, líka óvirk, í vari og án skilaskyldu'
+}
+
 export const buildFilterSummary = ({
   filters,
   criteria,
@@ -66,6 +79,7 @@ export const buildFilterSummary = ({
   query,
 }: Submission): string[] => {
   return [
+    scopeLine(filters.visibility),
     query.trim() ? `Leitarorð: ${query.trim()}` : null,
     line('Starfsmannafjöldi', labelFor(EMPLOYEE_RANGES, filters.employees)),
     line(

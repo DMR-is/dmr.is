@@ -35,6 +35,7 @@ import {
   CompanyExpiryFilterEnum,
   CompanySectorEnum,
   CompanySizeEnum,
+  CompanyStatusEnum,
 } from '../../gen/fetch'
 import { dataExportText, serverErrorText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
@@ -215,6 +216,13 @@ export const DataExportContainer = () => {
         includeInactive: true,
         includeQuarantined: true,
         includeNotObliged: true,
+        // Same narrowing as the register's checkboxes: only óvirk, only í vari.
+        ...(filters.visibility.includes('inactive')
+          ? { status: [CompanyStatusEnum.INACTIVE] }
+          : {}),
+        ...(filters.visibility.includes('quarantined')
+          ? { quarantined: true }
+          : {}),
         ...(filters.isatCategoryCode.length
           ? { isatCategoryCode: filters.isatCategoryCode }
           : {}),
@@ -542,7 +550,6 @@ export const DataExportContainer = () => {
             onReset={handleReset}
             regionOptions={regionOptions}
             postcodeOptions={postcodeOptions}
-            showVisibilityToggles={false}
           >
             {/*
               Called, not rendered as `<ReportCriteriaCards />`. The cards have

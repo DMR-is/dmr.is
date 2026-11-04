@@ -22,9 +22,11 @@ import {
   activeActionPlanExistsSql,
   equalityObligationStatusCaseSql,
   equalityReportMissingSql,
+  equalityReportValidSql,
   equalityRequiredSql,
   salaryObligationStatusCaseSql,
   salaryReportMissingSql,
+  salaryReportValidSql,
   salaryRequiredSql,
 } from './report-status'
 
@@ -187,13 +189,24 @@ describe('buildCompanyValidReportWhere', () => {
     expect(buildCompanyValidReportWhere([])).toEqual({})
   })
 
-  it('reads the column CASE, so it matches exactly the rows tagged "Í gildi"', () => {
-    expect(
-      sqlFor([CompanyValidReportFilterEnum.VALID_EQUALITY_REPORT]),
-    ).toContain(`${equalityObligationStatusCaseSql()} = 'COVERED'`)
-    expect(
-      sqlFor([CompanyValidReportFilterEnum.VALID_SALARY_REPORT]),
-    ).toContain(`${salaryObligationStatusCaseSql()} = 'COVERED'`)
+  it('uses the "Í gildi" predicates rather than evaluating the column CASE', () => {
+    const equality = sqlFor([
+      CompanyValidReportFilterEnum.VALID_EQUALITY_REPORT,
+    ])
+    const salary = sqlFor([CompanyValidReportFilterEnum.VALID_SALARY_REPORT])
+
+    expect(equality).toContain(equalityReportValidSql())
+    expect(salary).toContain(salaryReportValidSql())
+    expect(equality).not.toContain(equalityObligationStatusCaseSql())
+    expect(salary).not.toContain(salaryObligationStatusCaseSql())
+  })
+
+  it('requires the obligation, and excludes an outstanding úrbótaáætlun from a valid salary report', () => {
+    expect(equalityReportValidSql()).toContain(equalityRequiredSql)
+    expect(salaryReportValidSql()).toContain(salaryRequiredSql)
+    expect(salaryReportValidSql()).toContain(
+      `AND NOT ${actionPlanMissingSql()}`,
+    )
   })
 
   it('reads an in-force approved salary report with outliers for the action plan', () => {
@@ -210,7 +223,9 @@ describe('buildCompanyValidReportWhere', () => {
       CompanyValidReportFilterEnum.VALID_SALARY_REPORT,
     ])
 
-    expect(sql).toMatch(/'COVERED'\) AND \(/)
+    expect(sql).toBe(
+      `(${equalityReportValidSql()} AND ${salaryReportValidSql()})`,
+    )
   })
 })
 

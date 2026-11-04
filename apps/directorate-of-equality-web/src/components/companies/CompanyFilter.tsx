@@ -65,8 +65,6 @@ type Props = {
   onReset: () => void
   regionOptions: FilterOption[]
   postcodeOptions: FilterOption[]
-  /** "Sýna óvirk" / "Sýna í vari". Off where every company is fetched anyway. */
-  showVisibilityToggles?: boolean
 }
 
 export const CompanyFilter = ({
@@ -78,7 +76,6 @@ export const CompanyFilter = ({
   onReset,
   regionOptions,
   postcodeOptions,
-  showVisibilityToggles = true,
 }: Props) => {
   const { isMobile } = useIsMobile()
   const { isTablet } = useIsTablet()
@@ -204,8 +201,7 @@ export const CompanyFilter = ({
                     onFiltersChange('isatCategoryCode', codes)
                   }
                 />
-                {showVisibilityToggles &&
-                  checkboxes('visibility', VISIBILITY_FILTER_OPTIONS)}
+                {checkboxes('visibility', VISIBILITY_FILTER_OPTIONS)}
               </Stack>
             </AccordionItem>
 

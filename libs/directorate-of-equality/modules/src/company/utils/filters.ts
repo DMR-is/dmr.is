@@ -9,7 +9,6 @@ import { ReportTypeEnum } from '../../report/models/report.enums'
 // would close a require cycle.
 import type { GetCompaniesQueryDto } from '../dto/get-companies-query.dto'
 import {
-  CompanyObligationStatusEnum,
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanyStatusEnum,
@@ -20,17 +19,17 @@ import {
   actionPlanMissingSql,
   activeActionPlanExistsSql,
   COMPANY_QUERY_ALIAS,
-  equalityObligationStatusCaseSql,
   equalityReportMissingSql,
   equalityReportOverdueSql,
+  equalityReportValidSql,
   equalityRequiredSql,
   hiddenFromDefaultRegisterSql,
   legacyCertificationExpiringSql,
   neverFiledAnywhereSql,
   neverFiledReportSql,
-  salaryObligationStatusCaseSql,
   salaryReportMissingSql,
   salaryReportOverdueSql,
+  salaryReportValidSql,
   salaryRequiredSql,
 } from './report-status'
 
@@ -94,17 +93,15 @@ export function buildCompanyStatusWhere(
 }
 
 /**
- * "Gild jafnréttisáætlun" / "Gild skýrslugjöf" read the same CASE as the list's
- * columns, so they match exactly the rows tagged "Í gildi" — owed and covered.
+ * "Gild jafnréttisáætlun" / "Gild skýrslugjöf" match exactly the rows the
+ * list's columns tag "Í gildi" — owed and covered. See `report-status.ts`.
  */
 const VALID_REPORT_PREDICATE: Record<
   CompanyValidReportFilterEnum,
   () => string
 > = {
-  [CompanyValidReportFilterEnum.VALID_EQUALITY_REPORT]: () =>
-    `(${equalityObligationStatusCaseSql()} = '${CompanyObligationStatusEnum.COVERED}')`,
-  [CompanyValidReportFilterEnum.VALID_SALARY_REPORT]: () =>
-    `(${salaryObligationStatusCaseSql()} = '${CompanyObligationStatusEnum.COVERED}')`,
+  [CompanyValidReportFilterEnum.VALID_EQUALITY_REPORT]: equalityReportValidSql,
+  [CompanyValidReportFilterEnum.VALID_SALARY_REPORT]: salaryReportValidSql,
   [CompanyValidReportFilterEnum.VALID_ACTION_PLAN]: activeActionPlanExistsSql,
 }
 
