@@ -329,6 +329,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       typeId: TypeIdEnum.DIVISION_MEETING,
       title: `Skiptafundur - ${application.settlement.name}`,
       additionalText: body.additionalText,
+      content: body.content,
       settlement: this.cloneSettlement(application.settlement),
       communicationChannels: application.answers.communicationChannels,
       scheduledAt: [body.meetingDate],

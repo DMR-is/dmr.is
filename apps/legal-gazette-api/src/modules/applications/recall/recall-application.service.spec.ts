@@ -437,6 +437,7 @@ describe('RecallApplicationService', () => {
 
       const body = {
         additionalText: 'Additional note',
+        content: '<p>Division meeting content</p>',
         meetingDate: new Date('2026-04-08T10:00:00.000Z'),
         meetingLocation: 'Court House',
         signature: {
@@ -458,6 +459,8 @@ describe('RecallApplicationService', () => {
           categoryId: CategoryDefaultIdEnum.DIVISION_MEETINGS,
           templateType: AdvertTemplateType.DIVISION_MEETING_BANKRUPTCY,
           title: 'Skiptafundur - Original Settlement',
+          additionalText: 'Additional note',
+          content: '<p>Division meeting content</p>',
           settlement: {
             settlementType: SettlementType.DEFAULT,
             liquidatorName: 'Jane Liquidator',
