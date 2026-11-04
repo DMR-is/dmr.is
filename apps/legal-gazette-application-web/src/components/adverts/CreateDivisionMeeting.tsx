@@ -141,18 +141,22 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
     nationalId: settlementInfo?.nationalId,
   }
 
-  const preview = getAdvertHTMLMarkup(
-    application?.type === ApplicationTypeEnum.RECALLBANKRUPTCY
-      ? {
-          templateType: LegalGazetteHTMLTemplates.DIVISION_MEETING_BANKRUPTCY,
-
-          ...sharedMeetingProps,
-        }
-      : {
-          templateType: LegalGazetteHTMLTemplates.DIVISION_MEETING_DECEASED,
-          ...sharedMeetingProps,
-        },
-  )
+  // The template depends on the application type, so there is no preview
+  // until the application has loaded.
+  const preview = application
+    ? getAdvertHTMLMarkup(
+        application.type === ApplicationTypeEnum.RECALLBANKRUPTCY
+          ? {
+              templateType:
+                LegalGazetteHTMLTemplates.DIVISION_MEETING_BANKRUPTCY,
+              ...sharedMeetingProps,
+            }
+          : {
+              templateType: LegalGazetteHTMLTemplates.DIVISION_MEETING_DECEASED,
+              ...sharedMeetingProps,
+            },
+      )
+    : null
 
   return (
     <Modal
@@ -266,7 +270,7 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
         </FormGroup>
         <FormGroup title="Forskoðun">
           <GridColumn span="12/12">
-            <AdvertDisplay html={preview} />
+            {preview && <AdvertDisplay html={preview} />}
           </GridColumn>
         </FormGroup>
         <FormGroup>
