@@ -5236,6 +5236,10 @@
         "type": "object",
         "properties": {
           "additionalText": { "type": "string" },
+          "content": {
+            "type": "string",
+            "description": "HTML content encoded as base64"
+          },
           "meetingDate": { "type": "string" },
           "meetingLocation": { "type": "string" },
           "signature": { "$ref": "#/components/schemas/CreateSignatureDto" }
