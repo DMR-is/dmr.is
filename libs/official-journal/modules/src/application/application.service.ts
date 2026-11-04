@@ -203,11 +203,22 @@ export class ApplicationService implements IApplicationService {
     )
 
     if (!res.ok) {
+      // The status alone does not say why island.is refused: the reason is in
+      // the body. Error bodies are not guaranteed to be JSON, so read text.
+      const resInfo = await res.text().catch(() => '')
+      let details: unknown = resInfo
+      try {
+        details = JSON.parse(resInfo)
+      } catch {
+        // Not JSON; log the raw text.
+      }
       this.logger.error(
         `Appliction.service.getApplication, could not get application<${id}>`,
         {
           applicationId: id,
           statusCode: res.status,
+          statusText: res.statusText,
+          details,
           category: LOGGING_CATEGORY,
         },
       )
