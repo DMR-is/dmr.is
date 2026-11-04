@@ -332,9 +332,10 @@ export const classes: EditorClasses = {
 
     selectors: {
       '&:last-child': {
-        marginBottom: -spacing[1],
         borderBottomWidth: 0,
         borderTopWidth: 1,
+        borderBottomLeftRadius: theme.border.radius.large,
+        borderBottomRightRadius: theme.border.radius.large,
       },
     },
   }),
