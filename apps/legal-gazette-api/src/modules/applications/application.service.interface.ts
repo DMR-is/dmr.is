@@ -39,6 +39,11 @@ export interface IApplicationService {
     body: UpdateApplicationDto,
   ): Promise<ApplicationDetailedDto>
 
+  deleteAdvertFromApplication(
+    applicationId: string,
+    advertId: string,
+  ): Promise<void>
+
   deleteApplication(applicationId: string): Promise<void>
 }
 

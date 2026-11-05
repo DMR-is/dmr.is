@@ -35,7 +35,6 @@ import {
   GetApplicationsDto,
   UpdateApplicationDto,
 } from '../../modules/applications/dto/application-extra.dto'
-import { IAdvertService } from '../advert/advert.service.interface'
 import { IPriceCalculatorService } from '../advert/calculator/price-calculator.service.interface'
 import { IApplicationService } from './application.service.interface'
 
@@ -48,7 +47,6 @@ import { IApplicationService } from './application.service.interface'
 })
 export class ApplicationController {
   constructor(
-    @Inject(IAdvertService) private readonly advertService: IAdvertService,
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
     @Inject(IPriceCalculatorService)
@@ -159,10 +157,13 @@ export class ApplicationController {
   @UseGuards(OwnershipGuard)
   @LGResponse({ operationId: 'deleteAdvertFromApplication' })
   async deleteAdvertFromApplication(
-    @Param('applicationId') _applicationId: string, // USED FOR OWNERSHIP GUARD TO VERIFY OWNERSHIP
+    @Param('applicationId') applicationId: string,
     @Param('advertId') advertId: string,
   ): Promise<void> {
-    return this.advertService.deleteAdvert(advertId)
+    return this.applicationService.deleteAdvertFromApplication(
+      applicationId,
+      advertId,
+    )
   }
 
   @Delete(':applicationId')

@@ -8,6 +8,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -65,6 +66,38 @@ export class ApplicationService implements IApplicationService {
     @InjectModel(CategoryModel)
     private readonly categoryModel: typeof CategoryModel,
   ) {}
+
+  async deleteAdvertFromApplication(
+    applicationId: string,
+    advertId: string,
+  ): Promise<void> {
+    // OwnershipGuard only checks the application, so the advert has to be
+    // looked up through it, not by its id alone.
+    const application = await this.applicationModel.findOne({
+      attributes: ['id'],
+      where: { id: applicationId },
+      include: [
+        {
+          model: AdvertModel,
+          attributes: ['id'],
+          where: { id: advertId },
+          required: true,
+        },
+      ],
+    })
+
+    if (!application) {
+      this.logger.warn('Advert not found on application', {
+        context: LOGGER_CONTEXT,
+        applicationId: applicationId,
+        advertId: advertId,
+      })
+
+      throw new NotFoundException('Advert not found')
+    }
+
+    await this.advertService.deleteAdvert(advertId)
+  }
 
   async deleteApplication(applicationId: string): Promise<void> {
     const application = await this.applicationModel.findByPkOrThrow(

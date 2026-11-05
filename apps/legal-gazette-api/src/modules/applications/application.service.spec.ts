@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
@@ -468,6 +468,41 @@ describe('ApplicationService - Status Validation', () => {
 
       expect(advertService.deleteAdvert).not.toHaveBeenCalled()
       expect(application.destroy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('deleteAdvertFromApplication', () => {
+    beforeEach(() => {
+      advertService.deleteAdvert = jest.fn().mockResolvedValue(undefined)
+    })
+
+    it('deletes the advert when it belongs to the application', async () => {
+      applicationModel.findOne.mockResolvedValue({ id: 'app-123' })
+
+      await service.deleteAdvertFromApplication('app-123', 'advert-1')
+
+      expect(applicationModel.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'app-123' },
+          include: [
+            expect.objectContaining({
+              where: { id: 'advert-1' },
+              required: true,
+            }),
+          ],
+        }),
+      )
+      expect(advertService.deleteAdvert).toHaveBeenCalledWith('advert-1')
+    })
+
+    it('deletes nothing when the advert belongs to another application', async () => {
+      applicationModel.findOne.mockResolvedValue(null)
+
+      await expect(
+        service.deleteAdvertFromApplication('app-123', 'someone-elses-advert'),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(advertService.deleteAdvert).not.toHaveBeenCalled()
     })
   })
 })
