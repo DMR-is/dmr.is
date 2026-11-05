@@ -19,6 +19,7 @@ import {
   buildReportApprovedHtml,
   buildReportApprovedSubject,
   buildReportApprovedText,
+  ReportApprovedMailOptions,
 } from './templates/report-approved.template'
 import {
   buildReportDeadlineReminderHtml,
@@ -94,6 +95,7 @@ export class DoeMailService implements IDoeMailService {
   async sendReportApproved(
     report: ReportModel,
     attachments: ReportMailAttachment[],
+    options: ReportApprovedMailOptions = { serviceSurvey: false },
   ): Promise<ReportMailOutcome> {
     const labels = attachments.map((attachment) => attachment.label)
 
@@ -101,8 +103,8 @@ export class DoeMailService implements IDoeMailService {
       report,
       {
         subject: buildReportApprovedSubject(report),
-        text: buildReportApprovedText(report, labels),
-        html: buildReportApprovedHtml(report, labels),
+        text: buildReportApprovedText(report, labels, options),
+        html: buildReportApprovedHtml(report, labels, options),
         attachments: attachments.map(({ filename, content }) => ({
           filename,
           content,
@@ -113,6 +115,7 @@ export class DoeMailService implements IDoeMailService {
         reportId: report.id,
         reportType: report.type,
         attachmentCount: attachments.length,
+        serviceSurvey: options.serviceSurvey,
       },
     )
   }

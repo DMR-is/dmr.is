@@ -10,6 +10,7 @@ import {
   CompanyReportStatusEnum,
   CompanySizeEnum,
 } from '../models/company.enums'
+import type { CompanyModel } from '../models/company.model'
 
 /**
  * Alias under which Sequelize references the `company` table in the queries
@@ -270,6 +271,20 @@ function postponedSalaryExists(): string {
  * "CompanyModel"`), so this is usable outside the `withReportStatus` scope.
  */
 export const salaryRequiredSql = `("${COMPANY_QUERY_ALIAS}"."salary_report_required" = true OR "${COMPANY_QUERY_ALIAS}"."salary_report_required_override" = true)`
+
+/**
+ * The TS twin of `salaryRequiredSql`, for a company row already loaded: the
+ * size-driven flag or an admin override. The override only forces the
+ * obligation on; nothing forces it off. Change the two together.
+ */
+export const owesSalaryReport = (
+  company: Pick<
+    CompanyModel,
+    'salaryReportRequired' | 'salaryReportRequiredOverride'
+  >,
+): boolean =>
+  company.salaryReportRequired === true ||
+  company.salaryReportRequiredOverride === true
 
 /**
  * SQL boolean: the company owes an equality plan — 25+ employees (MEDIUM|LARGE),
