@@ -1,5 +1,7 @@
 import addDays from 'date-fns/addDays'
 import addYears from 'date-fns/addYears'
+import isAfter from 'date-fns/isAfter'
+import startOfDay from 'date-fns/startOfDay'
 import { getHolidays, Holiday } from 'fridagar'
 
 import { toISODate } from '@dmr.is/regulations-tools/utils'
@@ -96,4 +98,21 @@ export const getDefaultDate = (requestedDate?: string) => {
   }
   const date = new Date(requestedDate)
   return getDateString(getNextWorkday(date))
+}
+
+/**
+ * A regulation taking effect on or before its publication date is only done
+ * in exceptional cases, so editors get a soft warning. No effective date means
+ * it takes effect on publication, i.e. the same day.
+ */
+export const isEffectiveOnOrBeforePublication = (
+  effectiveDate: string | undefined,
+  publicationDate: string | undefined,
+) => {
+  if (!publicationDate) return false
+  if (!effectiveDate) return true
+  return !isAfter(
+    startOfDay(new Date(effectiveDate)),
+    startOfDay(new Date(publicationDate)),
+  )
 }
