@@ -34,6 +34,7 @@ import {
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import { CategoryModel } from '../../models/category.model'
+import { DELETABLE_ADVERT_STATUS_IDS } from '../../models/status.model'
 import { TypeIdEnum, TypeModel } from '../../models/type.model'
 import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
 import {
@@ -72,6 +73,22 @@ export class ApplicationService implements IApplicationService {
         include: [{ model: AdvertModel }],
       },
     )
+
+    // Check every advert first: the deletes below are not in a transaction, so
+    // failing halfway would leave the application with some of its adverts gone.
+    const undeletable = (application.adverts ?? []).filter(
+      (ad) => !DELETABLE_ADVERT_STATUS_IDS.includes(ad.statusId),
+    )
+
+    if (undeletable.length > 0) {
+      this.logger.warn('Application has adverts that cannot be deleted', {
+        context: LOGGER_CONTEXT,
+        applicationId: applicationId,
+        advertIds: undeletable.map((ad) => ad.id),
+      })
+
+      throw new BadRequestException('Advert cannot be deleted')
+    }
 
     const deletePromises = application.adverts?.map((ad) =>
       this.advertService.deleteAdvert(ad.id),

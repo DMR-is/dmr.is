@@ -7,6 +7,14 @@ export enum StatusIdEnum {
   REJECTED = 'f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
   WITHDRAWN = 'e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
 }
+
+/** Statuses an advert can still be withdrawn (deleted) from. */
+export const DELETABLE_ADVERT_STATUS_IDS: ReadonlyArray<StatusIdEnum> = [
+  StatusIdEnum.SUBMITTED,
+  StatusIdEnum.IN_PROGRESS,
+  StatusIdEnum.READY_FOR_PUBLICATION,
+]
+
 export enum StatusEnum {
   SUBMITTED = 'Innsent',
   IN_PROGRESS = 'Í vinnslu',

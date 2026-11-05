@@ -12,6 +12,7 @@ import {
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import { CategoryModel } from '../../models/category.model'
+import { StatusIdEnum } from '../../models/status.model'
 import { IAdvertService } from '../advert/advert.service.interface'
 import { UpdateApplicationDto } from './dto/application-extra.dto'
 import { IRecallApplicationService } from './recall/recall-application.service.interface'
@@ -422,6 +423,51 @@ describe('ApplicationService - Status Validation', () => {
         service.updateApplication('app-123', updateDto),
       ).rejects.toThrow(/Cannot modify application with status 'FINISHED'/)
       expect(finishedApplication.update).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('deleteApplication', () => {
+    const createApplication = (statusIds: Array<StatusIdEnum>) => ({
+      id: 'app-123',
+      adverts: statusIds.map((statusId, i) => ({
+        id: `advert-${i}`,
+        statusId,
+      })),
+      destroy: jest.fn().mockResolvedValue(undefined),
+    })
+
+    beforeEach(() => {
+      advertService.deleteAdvert = jest.fn().mockResolvedValue(undefined)
+    })
+
+    it('deletes every advert and the application when all can be deleted', async () => {
+      const application = createApplication([
+        StatusIdEnum.SUBMITTED,
+        StatusIdEnum.READY_FOR_PUBLICATION,
+      ])
+      applicationModel.findByPkOrThrow.mockResolvedValue(application)
+
+      await service.deleteApplication('app-123')
+
+      expect(advertService.deleteAdvert).toHaveBeenCalledTimes(2)
+      expect(application.destroy).toHaveBeenCalled()
+    })
+
+    it('deletes nothing when one advert is already published', async () => {
+      // An estate whose innköllun is out: deleting its other adverts first
+      // and then failing would leave it half gone.
+      const application = createApplication([
+        StatusIdEnum.PUBLISHED,
+        StatusIdEnum.SUBMITTED,
+      ])
+      applicationModel.findByPkOrThrow.mockResolvedValue(application)
+
+      await expect(service.deleteApplication('app-123')).rejects.toThrow(
+        BadRequestException,
+      )
+
+      expect(advertService.deleteAdvert).not.toHaveBeenCalled()
+      expect(application.destroy).not.toHaveBeenCalled()
     })
   })
 })
