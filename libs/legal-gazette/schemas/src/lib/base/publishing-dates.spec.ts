@@ -1,11 +1,16 @@
 import {
   createDivisionEndingInput,
+  createDivisionMeetingFields,
   createDivisionMeetingInput,
+  createDivisionMeetingWithIdInput,
 } from '../inputs/division-meetings'
 import {
+  DIVISION_MEETING_NOTICE_MESSAGE,
   editorPublishingDatesRecallSchemaRefined,
   editorPublishingDatesSchemaRefined,
   getEarliestPublishingDay,
+  getLatestDivisionMeetingPublishingDay,
+  isDivisionMeetingNoticeSufficient,
   isOnOrAfterEarliestPublishingDay,
   PUBLISHING_DATE_CUTOFF_MESSAGE,
   publishingDatesRecallSchemaRefined,
@@ -158,12 +163,11 @@ describe('publishing date schemas', () => {
     )
   })
 
-  it('reject a Skiptafundur meeting today after noon', () => {
-    // The meeting date doubles as the publishing date.
+  it('reject a Skiptafundur published today after noon', () => {
     pinClock(at('12:30:00.000'))
 
-    const result = createDivisionMeetingInput.shape.meetingDate.safeParse(
-      '2026-05-05T14:00:00.000Z',
+    const result = createDivisionMeetingFields.shape.scheduledAt.safeParse(
+      new Date(TUESDAY),
     )
 
     expect(result.success).toBe(false)
@@ -172,11 +176,20 @@ describe('publishing date schemas', () => {
     )
   })
 
-  it('accept a Skiptafundur meeting today before noon', () => {
+  it('accept a Skiptafundur published today before noon', () => {
     pinClock(at('09:00:00.000'))
 
     expect(
-      createDivisionMeetingInput.shape.meetingDate.safeParse(
+      createDivisionMeetingFields.shape.scheduledAt.safeParse(new Date(TUESDAY))
+        .success,
+    ).toBe(true)
+  })
+
+  it('no longer apply the cutoff to the Skiptafundur meeting date', () => {
+    pinClock(at('12:30:00.000'))
+
+    expect(
+      createDivisionMeetingFields.shape.meetingDate.safeParse(
         '2026-05-05T14:00:00.000Z',
       ).success,
     ).toBe(true)
@@ -232,6 +245,107 @@ describe('editor publishing date schemas', () => {
     ).toBe(false)
     expect(
       editorPublishingDatesRecallSchemaRefined.safeParse([TUESDAY]).success,
+    ).toBe(false)
+  })
+})
+
+describe('skiptafundur notice', () => {
+  const pinClock = (date: Date) =>
+    jest.useFakeTimers({ now: date, doNotFake: ['nextTick', 'setImmediate'] })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  const validMeeting = {
+    meetingDate: '2026-05-12T14:00:00.000Z',
+    scheduledAt: new Date(TUESDAY),
+    meetingLocation: 'Skrifstofa skiptastjóra',
+    signature: { name: 'Jón Jónsson', location: 'Reykjavík' },
+  }
+
+  it('accept exactly seven days between publication and meeting', () => {
+    expect(
+      isDivisionMeetingNoticeSufficient(TUESDAY, '2026-05-12T14:00:00.000Z'),
+    ).toBe(true)
+  })
+
+  it('reject six days between publication and meeting', () => {
+    expect(
+      isDivisionMeetingNoticeSufficient(TUESDAY, '2026-05-11T23:59:00.000Z'),
+    ).toBe(false)
+  })
+
+  it('count calendar days, not hours, for a late-evening meeting', () => {
+    // 6 days and 23 hours after midnight is still the sixth day.
+    expect(
+      isDivisionMeetingNoticeSufficient(
+        '2026-05-05T00:00:00.000Z',
+        '2026-05-11T23:00:00.000Z',
+      ),
+    ).toBe(false)
+    expect(
+      isDivisionMeetingNoticeSufficient(
+        '2026-05-05T00:00:00.000Z',
+        '2026-05-12T00:30:00.000Z',
+      ),
+    ).toBe(true)
+  })
+
+  it('reject an unparseable date', () => {
+    expect(isDivisionMeetingNoticeSufficient('not a date', TUESDAY)).toBe(false)
+  })
+
+  it('give the last publishing day a week before the meeting', () => {
+    expect(
+      getLatestDivisionMeetingPublishingDay(
+        '2026-05-12T14:00:00.000Z',
+      ).toISOString(),
+    ).toBe(TUESDAY)
+  })
+
+  it('reject a skiptafundur input with less than a week of notice', () => {
+    pinClock(at('09:00:00.000'))
+
+    const result = createDivisionMeetingInput.safeParse({
+      ...validMeeting,
+      meetingDate: '2026-05-11T14:00:00.000Z',
+    })
+
+    expect(result.success).toBe(false)
+    expect(result.error?.issues).toEqual([
+      expect.objectContaining({
+        path: ['scheduledAt'],
+        message: DIVISION_MEETING_NOTICE_MESSAGE,
+      }),
+    ])
+  })
+
+  it('accept a skiptafundur input with a week of notice', () => {
+    pinClock(at('09:00:00.000'))
+
+    expect(createDivisionMeetingInput.safeParse(validMeeting).success).toBe(
+      true,
+    )
+  })
+
+  it('apply the notice rule to the tRPC input too', () => {
+    pinClock(at('09:00:00.000'))
+
+    const applicationId = '6f1c1f0e-1b7a-4c1e-9a7e-2f0f6f1f6f1f'
+
+    expect(
+      createDivisionMeetingWithIdInput.safeParse({
+        ...validMeeting,
+        applicationId,
+      }).success,
+    ).toBe(true)
+    expect(
+      createDivisionMeetingWithIdInput.safeParse({
+        ...validMeeting,
+        applicationId,
+        meetingDate: '2026-05-11T14:00:00.000Z',
+      }).success,
     ).toBe(false)
   })
 })

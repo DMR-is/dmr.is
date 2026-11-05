@@ -5241,10 +5241,20 @@
             "description": "HTML content encoded as base64"
           },
           "meetingDate": { "type": "string" },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "meetingLocation": { "type": "string" },
           "signature": { "$ref": "#/components/schemas/CreateSignatureDto" }
         },
-        "required": ["meetingDate", "meetingLocation", "signature"]
+        "required": [
+          "meetingDate",
+          "scheduledAt",
+          "meetingLocation",
+          "signature"
+        ]
       },
       "CreateDivisionEndingDto": {
         "type": "object",

@@ -64,6 +64,9 @@ export class CreateDivisionMeetingDto {
   @IsDate()
   meetingDate!: Date
 
+  @ApiDateTime()
+  scheduledAt!: Date
+
   @ApiString()
   meetingLocation!: string
 

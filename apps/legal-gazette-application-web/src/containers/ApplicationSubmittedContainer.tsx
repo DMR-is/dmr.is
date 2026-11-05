@@ -61,6 +61,7 @@ export const ApplicationSubmittedContainer = ({ applicationId }: Props) => {
                 showToggle={application.type !== ApplicationTypeEnum.COMMON}
                 applicationId={applicationId}
                 adverts={application.adverts}
+                type={application.type}
               />
             </Stack>
           </Box>

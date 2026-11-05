@@ -3,12 +3,16 @@ import { Column, DataType, HasMany } from 'sequelize-typescript'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { StatusEnum, StatusIdEnum } from '../core/enums/status.enum'
+import {
+  DELETABLE_ADVERT_STATUS_IDS,
+  StatusEnum,
+  StatusIdEnum,
+} from '../core/enums/status.enum'
 import { BaseEntityDto } from '../modules/base-entity/dto/base-entity.dto'
 import { AdvertModel } from './advert.model'
 
 // Re-export enums for backwards compatibility - circular dependency issues
-export { StatusIdEnum, StatusEnum }
+export { DELETABLE_ADVERT_STATUS_IDS, StatusIdEnum, StatusEnum }
 
 type StatusAttributes = {
   id: StatusIdEnum

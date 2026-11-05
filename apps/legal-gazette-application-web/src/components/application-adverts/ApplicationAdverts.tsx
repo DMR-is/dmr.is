@@ -6,6 +6,7 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Problem } from '@dmr.is/ui/components/Problem/Problem'
 
+import { ApplicationTypeEnum } from '../../gen/fetch'
 import { ApplicationAdvert } from '../../lib/trpc/types'
 import { AdvertList } from '../adverts/AdvertList'
 import { AdvertTable } from '../adverts/AdvertTable'
@@ -14,12 +15,16 @@ type Props = {
   adverts?: ApplicationAdvert[]
   applicationId: string
   showToggle?: boolean
+  // Without it the table treats every application as COMMON, so recalling
+  // one advert of an estate tries to delete the whole application.
+  type?: ApplicationTypeEnum
 }
 
 export const ApplicationAdverts = ({
   applicationId,
   adverts = [],
   showToggle = true,
+  type,
 }: Props) => {
   const [showAsCards, setShowAsCards] = useState(false)
 
@@ -49,7 +54,11 @@ export const ApplicationAdverts = ({
       {showAsCards ? (
         <AdvertList adverts={adverts} />
       ) : (
-        <AdvertTable adverts={adverts} applicationId={applicationId} />
+        <AdvertTable
+          adverts={adverts}
+          applicationId={applicationId}
+          type={type}
+        />
       )}
     </Stack>
   )

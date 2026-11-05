@@ -142,6 +142,7 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
   describe('addDivisionMeeting', () => {
     const createMeetingDto: CreateDivisionMeetingDto = {
       meetingDate: new Date('2026-01-15T00:00:00.000Z'),
+      scheduledAt: new Date('2026-01-08T00:00:00.000Z'),
       meetingLocation: 'Test Location',
       signature: {
         date: new Date('2026-01-15'),
