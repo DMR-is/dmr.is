@@ -173,6 +173,32 @@ describe('RecallApplicationService', () => {
       advertModel.findOne.mock.calls.forEach(excludesTerminatedAdverts)
     })
 
+    // Both look for the most recent skiptafundur advert, and only skiptafundur
+    // adverts: an innköllun with an embedded meeting is handled further down.
+    const findsLatestDivisionMeeting = (call: any) => {
+      expect(call[0].where.typeId).toBe(TypeIdEnum.DIVISION_MEETING)
+      expect(call[0].order).toEqual([
+        ['divisionMeetingDate', 'DESC NULLS LAST'],
+        ['createdAt', 'DESC'],
+      ])
+    }
+
+    it('should look for the latest division meeting for the next meeting date', async () => {
+      advertModel.findOne.mockResolvedValue(null)
+
+      await service.getMinDateForDivisionMeeting(APPLICATION_ID)
+
+      findsLatestDivisionMeeting(advertModel.findOne.mock.calls[0])
+    })
+
+    it('should look for the latest division meeting for the division ending date', async () => {
+      advertModel.findOne.mockResolvedValue(null)
+
+      await service.getMinDateForDivisionEnding(APPLICATION_ID)
+
+      findsLatestDivisionMeeting(advertModel.findOne.mock.calls[0])
+    })
+
     it('should exclude rejected adverts when finding the division ending date', async () => {
       advertModel.findOne.mockResolvedValue(null)
 

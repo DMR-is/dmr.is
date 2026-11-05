@@ -1,5 +1,5 @@
 import addDays from 'date-fns/addDays'
-import { Op } from 'sequelize'
+import { Op, Order } from 'sequelize'
 import * as z from 'zod'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
@@ -52,6 +52,12 @@ import {
 import { IRecallApplicationService } from './recall-application.service.interface'
 
 const LOGGING_CONTEXT = 'RecallApplicationService'
+
+/** The most recent skiptafundur first; any without a meeting date last. */
+const LATEST_DIVISION_MEETING_FIRST: Order = [
+  ['divisionMeetingDate', 'DESC NULLS LAST'],
+  ['createdAt', 'DESC'],
+]
 
 /**
  * When an earlier skiptafundur was held: its meeting date, or its publication
@@ -171,8 +177,10 @@ export class RecallApplicationService implements IRecallApplicationService {
       attributes: ['id', 'createdAt', 'divisionMeetingDate'],
       where: {
         applicationId: applicationId,
+        typeId: TypeIdEnum.DIVISION_MEETING,
         ...notTerminatedWhere,
       },
+      order: LATEST_DIVISION_MEETING_FIRST,
       include: [
         {
           model: AdvertPublicationModel,
@@ -514,7 +522,7 @@ export class RecallApplicationService implements IRecallApplicationService {
         typeId: TypeIdEnum.DIVISION_MEETING,
         ...notTerminatedWhere,
       },
-      order: [['createdAt', 'ASC']],
+      order: LATEST_DIVISION_MEETING_FIRST,
       include: [
         {
           required: true,
