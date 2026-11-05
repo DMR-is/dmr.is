@@ -48,6 +48,49 @@ export const isOnOrAfterEarliestPublishingDay = (
   return day >= toReykjavikDay(getEarliestPublishingDay(now))
 }
 
+/**
+ * A skiptafundur advertised in Lögbirtingablaðið must run at least a week
+ * before the meeting (lög 21/1991 um gjaldþrotaskipti, 79. gr. 3. mgr.). The
+ * same rule is applied to dánarbú. Meetings on a nauðasamningur or a frumvarp
+ * til úthlutunar need two weeks (151. and 159. gr.), but the form does not ask
+ * what the meeting is for, so that is left to the skiptastjóri.
+ */
+export const DIVISION_MEETING_MIN_NOTICE_DAYS = 7
+
+export const DIVISION_MEETING_NOTICE_MESSAGE =
+  'Auglýsing um skiptafund skal birt með minnst viku fyrirvara'
+
+/**
+ * Whether a skiptafundur published on `publishingDate` gives at least
+ * {@link DIVISION_MEETING_MIN_NOTICE_DAYS} days' notice of a meeting at
+ * `meetingDate`, counted in Reykjavik calendar days.
+ */
+export const isDivisionMeetingNoticeSufficient = (
+  publishingDate: Date | string,
+  meetingDate: Date | string,
+): boolean => {
+  const publishingDay = toReykjavikDay(new Date(publishingDate))
+  const meetingDay = toReykjavikDay(new Date(meetingDate))
+
+  if (Number.isNaN(publishingDay) || Number.isNaN(meetingDay)) {
+    return false
+  }
+
+  return meetingDay - publishingDay >= DIVISION_MEETING_MIN_NOTICE_DAYS
+}
+
+/**
+ * The last calendar day (as UTC midnight) a skiptafundur at `meetingDate` can
+ * be published on.
+ */
+export const getLatestDivisionMeetingPublishingDay = (
+  meetingDate: Date | string,
+): Date =>
+  new Date(
+    (toReykjavikDay(new Date(meetingDate)) - DIVISION_MEETING_MIN_NOTICE_DAYS) *
+      MS_PER_DAY,
+  )
+
 const validateFuture = (dates: string[]) => {
   const now = new Date()
   return dates.every((date) => isOnOrAfterEarliestPublishingDay(date, now))

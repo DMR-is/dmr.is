@@ -6,10 +6,12 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import {
   ApplicationTypeEnum,
+  DIVISION_MEETING_NOTICE_MESSAGE,
   PUBLISHING_DATE_CUTOFF_MESSAGE,
   SettlementType,
 } from '@dmr.is/legal-gazette-schemas'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
+import { addBusinessDays } from '@dmr.is/utils-server/dateUtils'
 
 import { AdvertModel, AdvertTemplateType } from '../../../models/advert.model'
 import {
@@ -218,6 +220,27 @@ describe('RecallApplicationService', () => {
         new Date('2026-01-10').getTime(),
       )
     })
+    it('should count from the previous meeting date, not its publication', async () => {
+      // Published a week and a half before the meeting it announced.
+      const meetingDate = new Date('2026-03-02T14:00:00.000Z')
+      const publishedAt = new Date('2026-02-20T00:00:00.000Z')
+
+      advertModel.findOne.mockResolvedValueOnce({
+        id: 'advert-123',
+        createdAt: new Date('2026-02-10'),
+        divisionMeetingDate: meetingDate,
+        publications: [
+          { id: 'pub-123', scheduledAt: publishedAt, publishedAt: publishedAt },
+        ],
+      } as any)
+
+      const result = await service.getMinDateForDivisionMeeting(APPLICATION_ID)
+
+      expect(result.minDate).toEqual(addBusinessDays(meetingDate, 5))
+      expect(advertModel.findOne.mock.calls[0][0].attributes).toContain(
+        'divisionMeetingDate',
+      )
+    })
     it('should return 63 days after first recall publication when no division meeting date exists', async () => {
       // Arrange - No division meeting, but recall advert exists
       jest.spyOn(advertModel, 'findOne').mockResolvedValueOnce(null) // No division meeting
@@ -302,6 +325,26 @@ describe('RecallApplicationService', () => {
         new Date('2026-01-15').getTime(),
       )
     })
+    it('should count from the latest meeting date, not its publication', async () => {
+      const meetingDate = new Date('2026-03-02T14:00:00.000Z')
+      const publishedAt = new Date('2026-02-20T00:00:00.000Z')
+
+      advertModel.findOne.mockResolvedValueOnce({
+        id: 'advert-123',
+        createdAt: new Date('2026-02-10'),
+        divisionMeetingDate: meetingDate,
+        publications: [
+          { id: 'pub-123', scheduledAt: publishedAt, publishedAt: publishedAt },
+        ],
+      } as any)
+
+      const result = await service.getMinDateForDivisionEnding(APPLICATION_ID)
+
+      expect(result.minDate).toEqual(addBusinessDays(meetingDate, 1))
+      expect(advertModel.findOne.mock.calls[0][0].attributes).toContain(
+        'divisionMeetingDate',
+      )
+    })
     it('should return 63 days after first recall publication when no division meeting exists', async () => {
       // Arrange - No division meeting, find first recall advert
       jest.spyOn(advertModel, 'findOne').mockResolvedValueOnce(null) // No division meeting
@@ -371,7 +414,8 @@ describe('RecallApplicationService', () => {
   })
 
   describe('addDivisionMeeting', () => {
-    // The fixture meets on 2026-04-08, so the clock is pinned to the day before.
+    // The fixtures publish on 2026-04-07 for a meeting on 2026-04-15, so the
+    // clock is pinned to the morning of the publication day.
     beforeEach(() => {
       pinClock('2026-04-07T10:00:00.000Z')
     })
@@ -380,34 +424,18 @@ describe('RecallApplicationService', () => {
       jest.useRealTimers()
     })
 
-    const createDivisionMeetingBody = (meetingDate: string) =>
+    const createDivisionMeetingBody = ({
+      meetingDate = '2026-04-15T14:00:00.000Z',
+      scheduledAt = '2026-04-07T00:00:00.000Z',
+    } = {}) =>
       ({
         meetingDate: new Date(meetingDate),
+        scheduledAt: new Date(scheduledAt),
         meetingLocation: 'Court House',
         signature: { name: 'Lawyer', location: 'Reykjavik', onBehalfOf: null },
       }) as any
 
-    // The meeting date doubles as the publishing date, so the noon cutoff
-    // applies to it as it does to a Skiptalok.
-    it('should reject a meeting today when submitted after noon', async () => {
-      pinClock('2026-04-08T12:30:00.000Z')
-      applicationModel.findOneOrThrow.mockResolvedValue(
-        createMockApplication() as any,
-      )
-
-      await expect(
-        service.addDivisionMeeting(
-          APPLICATION_ID,
-          createDivisionMeetingBody('2026-04-08T14:00:00.000Z'),
-          mockUser,
-        ),
-      ).rejects.toThrow(PUBLISHING_DATE_CUTOFF_MESSAGE)
-
-      expect(advertService.createAdvert).not.toHaveBeenCalled()
-    })
-
-    it('should accept a meeting today when submitted before noon', async () => {
-      pinClock('2026-04-08T09:00:00.000Z')
+    const allowCreate = () => {
       applicationModel.findOneOrThrow.mockResolvedValue(
         createMockApplication() as any,
       )
@@ -416,14 +444,82 @@ describe('RecallApplicationService', () => {
         id: 'advert-456',
         settlement: { id: 'settlement-456' },
       })
+    }
+
+    it('should reject a publication today when submitted after noon', async () => {
+      pinClock('2026-04-07T12:30:00.000Z')
+      allowCreate()
+
+      await expect(
+        service.addDivisionMeeting(
+          APPLICATION_ID,
+          createDivisionMeetingBody(),
+          mockUser,
+        ),
+      ).rejects.toThrow(PUBLISHING_DATE_CUTOFF_MESSAGE)
+
+      expect(advertService.createAdvert).not.toHaveBeenCalled()
+    })
+
+    it('should accept a publication today when submitted before noon', async () => {
+      pinClock('2026-04-07T09:00:00.000Z')
+      allowCreate()
 
       await service.addDivisionMeeting(
         APPLICATION_ID,
-        createDivisionMeetingBody('2026-04-08T14:00:00.000Z'),
+        createDivisionMeetingBody(),
         mockUser,
       )
 
       expect(advertService.createAdvert).toHaveBeenCalled()
+    })
+
+    it('should reject a publication less than a week before the meeting', async () => {
+      allowCreate()
+
+      await expect(
+        service.addDivisionMeeting(
+          APPLICATION_ID,
+          createDivisionMeetingBody({
+            meetingDate: '2026-04-13T14:00:00.000Z',
+          }),
+          mockUser,
+        ),
+      ).rejects.toThrow(DIVISION_MEETING_NOTICE_MESSAGE)
+
+      expect(advertService.createAdvert).not.toHaveBeenCalled()
+    })
+
+    it('should accept a publication exactly a week before the meeting', async () => {
+      allowCreate()
+
+      await service.addDivisionMeeting(
+        APPLICATION_ID,
+        createDivisionMeetingBody({ meetingDate: '2026-04-14T09:00:00.000Z' }),
+        mockUser,
+      )
+
+      expect(advertService.createAdvert).toHaveBeenCalled()
+    })
+
+    it('should publish on the chosen day, not on the meeting date', async () => {
+      allowCreate()
+
+      await service.addDivisionMeeting(
+        APPLICATION_ID,
+        createDivisionMeetingBody({
+          meetingDate: '2026-04-20T13:00:00.000Z',
+          scheduledAt: '2026-04-09T00:00:00.000Z',
+        }),
+        mockUser,
+      )
+
+      expect(advertService.createAdvert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scheduledAt: [new Date('2026-04-09T00:00:00.000Z')],
+          divisionMeetingDate: new Date('2026-04-20T13:00:00.000Z'),
+        }),
+      )
     })
 
     it('should clone the current settlement into a new advert settlement', async () => {
@@ -438,7 +534,8 @@ describe('RecallApplicationService', () => {
       const body = {
         additionalText: 'Additional note',
         content: '<p>Division meeting content</p>',
-        meetingDate: new Date('2026-04-08T10:00:00.000Z'),
+        meetingDate: new Date('2026-04-15T10:00:00.000Z'),
+        scheduledAt: new Date('2026-04-08T00:00:00.000Z'),
         meetingLocation: 'Court House',
         signature: {
           date: new Date('2026-04-01T10:00:00.000Z'),
@@ -729,8 +826,9 @@ describe('RecallApplicationService', () => {
   })
 
   describe('addDivisionMeeting', () => {
-    // The fixture meets on 2026-05-05; pinned before it so the date is open and
-    // the rejection below can only come from the live Skiptalok.
+    // The fixture publishes on 2026-05-05 for a meeting on 2026-05-12; pinned
+    // before it so the dates are open and the rejection below can only come
+    // from the live Skiptalok.
     beforeEach(() => {
       pinClock('2026-05-04T10:00:00.000Z')
     })
@@ -752,7 +850,8 @@ describe('RecallApplicationService', () => {
         service.addDivisionMeeting(
           APPLICATION_ID,
           {
-            meetingDate: new Date('2026-05-05T00:00:00.000Z'),
+            meetingDate: new Date('2026-05-12T14:00:00.000Z'),
+            scheduledAt: new Date('2026-05-05T00:00:00.000Z'),
             meetingLocation: 'Reykjavik',
             additionalText: undefined,
             signature: {

@@ -1,16 +1,24 @@
 import * as z from 'zod'
 
 import {
+  DIVISION_MEETING_NOTICE_MESSAGE,
+  isDivisionMeetingNoticeSufficient,
   isOnOrAfterEarliestPublishingDay,
   PUBLISHING_DATE_CUTOFF_MESSAGE,
 } from '../base/publishing-dates'
 import { signatureSchemaRefined } from '../base/signature'
 
-export const createDivisionMeetingInput = z.object({
-  // The meeting date is also the publishing date, so the noon cutoff applies.
-  meetingDate: z.iso
-    .datetime({
-      error: 'Dagsetning skiptafundar er nauðsynleg',
+/**
+ * The fields of a skiptafundur, without the cross-field notice rule. Forms use
+ * it for their partial state; validate with {@link createDivisionMeetingInput}.
+ */
+export const createDivisionMeetingFields = z.object({
+  meetingDate: z.iso.datetime({
+    error: 'Dagsetning skiptafundar er nauðsynleg',
+  }),
+  scheduledAt: z.coerce
+    .date({
+      error: 'Dagsetning birtingar er nauðsynleg',
     })
     .refine((date) => isOnOrAfterEarliestPublishingDay(date), {
       message: PUBLISHING_DATE_CUTOFF_MESSAGE,
@@ -22,6 +30,24 @@ export const createDivisionMeetingInput = z.object({
     message: 'Staðsetning skiptafundar er nauðsynleg',
   }),
 })
+
+const refineDivisionMeetingNotice = (
+  value: { meetingDate: string; scheduledAt: Date },
+  ctx: z.RefinementCtx,
+) => {
+  if (
+    !isDivisionMeetingNoticeSufficient(value.scheduledAt, value.meetingDate)
+  ) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['scheduledAt'],
+      message: DIVISION_MEETING_NOTICE_MESSAGE,
+    })
+  }
+}
+
+export const createDivisionMeetingInput =
+  createDivisionMeetingFields.superRefine(refineDivisionMeetingNotice)
 
 export const createDivisionEndingInput = z.object({
   declaredClaims: z.number().optional(),
@@ -44,10 +70,11 @@ export const createDivisionEndingInput = z.object({
   signature: signatureSchemaRefined,
 })
 
-export const createDivisionMeetingWithIdInput =
-  createDivisionMeetingInput.extend({
+export const createDivisionMeetingWithIdInput = createDivisionMeetingFields
+  .extend({
     applicationId: z.uuid(),
   })
+  .superRefine(refineDivisionMeetingNotice)
 
 export const createDivisionEndingWithIdInput = createDivisionEndingInput.extend(
   {
