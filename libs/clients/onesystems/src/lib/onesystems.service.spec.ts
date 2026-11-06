@@ -52,6 +52,19 @@ const json = (
 const success = (extra: Record<string, unknown> = {}) =>
   json({ Success: true, ItemID: 'item-1', ErrorMessage: null, ...extra })
 
+/**
+ * What SendDocToIslandIs actually answers with (OneSystems, 9 Oct 2026), not
+ * the spec's `GeneralResponse`. It carries the recipient's kennitala.
+ */
+const sendDocResponse = (extra: Record<string, unknown> = {}) =>
+  json({
+    Kennitala: COMPANY_NATIONAL_ID,
+    DocumentId: 'doc-1',
+    Success: true,
+    Errors: null,
+    ...extra,
+  })
+
 /** ASP.NET's model-validation body: rejected before the action ran. */
 const problemDetails = (status = 400) =>
   json(
@@ -584,6 +597,20 @@ describe('OneSystemsService', () => {
       })
     })
 
+    // One spells the spec's `ItemID` as "ItemId" in its own messages.
+    it('createCase and createDocument read ItemId too', async () => {
+      actionReplies = [
+        () => json({ Success: true, ItemId: 'item-7', ErrorMessage: null }),
+      ]
+
+      await expect(createCase()).resolves.toMatchObject({
+        caseItemId: 'item-7',
+      })
+      await expect(createDocument()).resolves.toEqual({
+        documentItemId: 'item-7',
+      })
+    })
+
     it('createDocument sends the file base64-encoded with PDF as the default extension', async () => {
       await expect(
         service.createDocument({
@@ -613,8 +640,8 @@ describe('OneSystemsService', () => {
       })
     })
 
-    it('sendDocToIslandIs maps the input and returns the island.is document id', async () => {
-      actionReplies = [() => success({ ItemID: 'island-doc-1' })]
+    it('sendDocToIslandIs maps the input and returns the DocumentId', async () => {
+      actionReplies = [() => sendDocResponse({ DocumentId: 'island-doc-1' })]
 
       await expect(
         service.sendDocToIslandIs({
@@ -624,7 +651,10 @@ describe('OneSystemsService', () => {
           type: 't',
           sendNotification: true,
         }),
-      ).resolves.toEqual({ islandIsDocumentId: 'island-doc-1' })
+      ).resolves.toEqual({
+        islandIsDocumentId: 'island-doc-1',
+        alreadyInMailbox: false,
+      })
 
       await expect(bodyOf(actionRequests()[0])).resolves.toEqual({
         ItemID: 'doc-1',
@@ -721,24 +751,366 @@ describe('OneSystemsService', () => {
       },
     )
 
+    // The field is always `DocumentId` (OneSystems, 20 Oct 2026).
+    it('sendDocToIslandIs does not read DocumentID', async () => {
+      actionReplies = [
+        () => sendDocResponse({ DocumentId: undefined, DocumentID: 'doc-1' }),
+      ]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: null,
+        alreadyInMailbox: false,
+      })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('without a DocumentId'),
+        expect.objectContaining({ operation: 'SendDocToIslandIs' }),
+      )
+    })
+
+    it('sendDocToIslandIs warns when DocumentId names another document', async () => {
+      actionReplies = [() => sendDocResponse({ DocumentId: 'doc-9' })]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'doc-9',
+        alreadyInMailbox: false,
+      })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('DocumentId other than the ItemID sent'),
+        expect.objectContaining({
+          sentItemId: 'doc-1',
+          returnedDocumentId: 'doc-9',
+        }),
+      )
+    })
+
+    it('sendDocToIslandIs does not warn when DocumentId differs from the ItemID only in case', async () => {
+      actionReplies = [() => sendDocResponse({ DocumentId: 'DOC-1' })]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'DOC-1',
+        alreadyInMailbox: false,
+      })
+      expect(logger.warn).not.toHaveBeenCalled()
+    })
+
     it.each([
-      ['an empty ItemID', { Success: true, ItemID: '' }],
-      ['a null ItemID', { Success: true, ItemID: null }],
-      ['no ItemID', { Success: true, ResultText: 'Sent' }],
+      ['an empty object', {}],
+      ['an empty array', []],
+      ['an empty string', ''],
+      ['an array of an empty object', [{}]],
+      ['an array of null', [null]],
+      ['an array of blanks', ['', [], {}]],
+      // `Errors` is string[] or null (OneSystems, 20 Oct 2026): a scalar is
+      // not error text.
+      ['false', false],
+      ['0', 0],
+      ['an array of false and 0', [false, 0]],
+    ])(
+      'sendDocToIslandIs: Success:true with Errors as %s is no errors, and does not warn',
+      async (_label, errors) => {
+        actionReplies = [() => sendDocResponse({ Errors: errors })]
+
+        await expect(sendDocToIslandIs()).resolves.toEqual({
+          islandIsDocumentId: 'doc-1',
+          alreadyInMailbox: false,
+        })
+        expect(logger.warn).not.toHaveBeenCalled()
+      },
+    )
+
+    // island.is may answer this way and One passes it through (OneSystems,
+    // 20 Oct 2026). Kept visible: the JSON type only, never the text.
+    it('sendDocToIslandIs: Success:true with Errors is sent, with a warning naming only their shape', async () => {
+      actionReplies = [
+        () => sendDocResponse({ Errors: ['Færsla þegar skráð.'] }),
+      ]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'doc-1',
+        alreadyInMailbox: false,
+      })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('reported success with Errors'),
+        expect.objectContaining({ errorsShape: 'array' }),
+      )
+      expect(JSON.stringify(logger.warn.mock.calls)).not.toContain(
+        'Færsla þegar skráð',
+      )
+    })
+
+    it.each([
+      ['an empty DocumentId', { DocumentId: '' }],
+      ['a null DocumentId', { DocumentId: null }],
+      ['no DocumentId', { DocumentId: undefined }],
+      ['only the spec’s ItemID', { DocumentId: undefined, ItemID: 'item-9' }],
     ])(
       'sendDocToIslandIs: Success:true with %s is sent, with a null id and a warning',
-      async (_label, body) => {
-        actionReplies = [() => json(body)]
+      async (_label, extra) => {
+        actionReplies = [() => sendDocResponse(extra)]
 
         await expect(sendDocToIslandIs()).resolves.toEqual({
           islandIsDocumentId: null,
+          alreadyInMailbox: false,
         })
         expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('without an ItemID'),
+          expect.stringContaining('without a DocumentId'),
           expect.objectContaining({ operation: 'SendDocToIslandIs' }),
         )
       },
     )
+
+    it.each<[string, unknown, string, string]>([
+      ['a string', 'Færsla þegar skráð.', 'Færsla þegar skráð.', 'string'],
+      [
+        'an array of strings',
+        ['Færsla þegar skráð.', 'Önnur villa'],
+        'Færsla þegar skráð.; Önnur villa',
+        'array',
+      ],
+      ['an array of another error', ['Önnur villa'], 'Önnur villa', 'array'],
+      [
+        'an array of objects',
+        [{ Code: 'E1', Message: 'Færsla þegar skráð.' }],
+        '{"Code":"E1","Message":"Færsla þegar skráð."}',
+        'array',
+      ],
+      [
+        'an object',
+        { ItemID: ['Færsla þegar skráð.'] },
+        '{"ItemID":["Færsla þegar skráð."]}',
+        'object',
+      ],
+    ])(
+      'sendDocToIslandIs: Success:false with Errors as %s is REJECTED, not definitive, with Errors as the errorMessage',
+      async (_label, errors, errorMessage, errorsShape) => {
+        actionReplies = [
+          () =>
+            sendDocResponse({
+              DocumentId: null,
+              Success: false,
+              Errors: errors,
+            }),
+        ]
+
+        const error = await caught(sendDocToIslandIs())
+
+        expect(error).toMatchObject({
+          reason: 'REJECTED',
+          upstreamStatus: 200,
+          errorNumber: null,
+          errorMessage,
+        })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('was rejected'),
+          expect.objectContaining({
+            operation: 'SendDocToIslandIs',
+            errorsShape,
+          }),
+        )
+        expect(loggedText()).not.toContain('Færsla')
+        expect(loggedText()).not.toContain('Önnur')
+      },
+    )
+
+    // What One answered for a repeated send (OneSystems, 20 Oct 2026):
+    // island.is already has the document.
+    it('sendDocToIslandIs: the duplicate answer is sent, already in the mailbox', async () => {
+      actionReplies = [
+        () =>
+          sendDocResponse({
+            Success: false,
+            Errors: ['Færsla þegar skráð.'],
+          }),
+      ]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'doc-1',
+        alreadyInMailbox: true,
+      })
+      expect(logger.error).not.toHaveBeenCalled()
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('already sent, treating it as sent'),
+        expect.objectContaining({ operation: 'SendDocToIslandIs' }),
+      )
+      expect(loggedText()).not.toContain('Færsla')
+      expect(loggedText()).not.toContain(COMPANY_NATIONAL_ID)
+    })
+
+    it('sendDocToIslandIs: the duplicate answer naming the ItemID in another casing is sent', async () => {
+      actionReplies = [
+        () =>
+          sendDocResponse({
+            DocumentId: 'DOC-1',
+            Success: false,
+            Errors: ['Færsla þegar skráð.'],
+          }),
+      ]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'DOC-1',
+        alreadyInMailbox: true,
+      })
+    })
+
+    it('sendDocToIslandIs: the duplicate text decomposed (NFD) is still the duplicate', async () => {
+      const decomposed = 'Færsla þegar skráð.'.normalize('NFD')
+      expect(decomposed).not.toBe('Færsla þegar skráð.')
+      actionReplies = [
+        () => sendDocResponse({ Success: false, Errors: [decomposed] }),
+      ]
+
+      await expect(sendDocToIslandIs()).resolves.toEqual({
+        islandIsDocumentId: 'doc-1',
+        alreadyInMailbox: true,
+      })
+    })
+
+    // A false SENT is never retried, so the company would silently miss the
+    // notice: without the sent document's id, or with any other sign of
+    // failure, the duplicate text alone proves nothing.
+    it.each<[string, Record<string, unknown>]>([
+      ['no DocumentId', { DocumentId: undefined }],
+      ['a null DocumentId', { DocumentId: null }],
+      ['an empty DocumentId', { DocumentId: '' }],
+      ['a blank DocumentId', { DocumentId: '  ' }],
+      ['a DocumentId naming another document', { DocumentId: 'doc-9' }],
+      ['an ErrorNumber alongside', { ErrorNumber: '42' }],
+      ['a numeric ErrorNumber alongside', { ErrorNumber: 42 }],
+      ['an ErrorMessage alongside', { ErrorMessage: 'Villa' }],
+    ])(
+      'sendDocToIslandIs: the duplicate answer with %s is REJECTED, not definitive',
+      async (_label, extra) => {
+        actionReplies = [
+          () =>
+            sendDocResponse({
+              Success: false,
+              Errors: ['Færsla þegar skráð.'],
+              ...extra,
+            }),
+        ]
+
+        const error = await caught(sendDocToIslandIs())
+
+        expect(error).toBeInstanceOf(OneSystemsError)
+        expect(error).toMatchObject({ reason: 'REJECTED', upstreamStatus: 200 })
+        expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('treating it as rejected'),
+          expect.objectContaining({ operation: 'SendDocToIslandIs' }),
+        )
+        expect(logger.warn).not.toHaveBeenCalledWith(
+          expect.stringContaining('treating it as sent'),
+          expect.anything(),
+        )
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('was rejected'),
+          expect.objectContaining({ operation: 'SendDocToIslandIs' }),
+        )
+        expect(loggedText()).not.toContain('Færsla')
+        expect(loggedText()).not.toContain('Villa')
+        expect(loggedText()).not.toContain(COMPANY_NATIONAL_ID)
+      },
+    )
+
+    it('sendDocToIslandIs: a rejected duplicate answer keeps the duplicate text as the errorMessage', async () => {
+      actionReplies = [
+        () =>
+          sendDocResponse({
+            DocumentId: null,
+            Success: false,
+            Errors: ['Færsla þegar skráð.'],
+          }),
+      ]
+
+      await expect(caught(sendDocToIslandIs())).resolves.toMatchObject({
+        reason: 'REJECTED',
+        errorNumber: null,
+        errorMessage: 'Færsla þegar skráð.',
+      })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('treating it as rejected'),
+        expect.objectContaining({
+          hasDocumentId: false,
+          documentIdMatches: false,
+          sentItemId: 'doc-1',
+          returnedDocumentId: null,
+        }),
+      )
+    })
+
+    it('the duplicate answer only counts for SendDocToIslandIs', async () => {
+      actionReplies = [
+        () =>
+          json({
+            Success: false,
+            ItemID: null,
+            Errors: ['Færsla þegar skráð.'],
+          }),
+      ]
+
+      await expect(caught(createDocument())).resolves.toMatchObject({
+        reason: 'REJECTED',
+      })
+    })
+
+    it.each([
+      ['null', null, 'null'],
+      ['absent', undefined, 'absent'],
+      ['an empty array', [], 'array'],
+      ['an empty object', {}, 'object'],
+    ])(
+      'sendDocToIslandIs: Success:false with Errors %s leaves errorMessage null',
+      async (_label, errors, errorsShape) => {
+        actionReplies = [
+          () => sendDocResponse({ Success: false, Errors: errors }),
+        ]
+
+        const error = await caught(sendDocToIslandIs())
+
+        expect(error).toMatchObject({ reason: 'REJECTED', errorMessage: null })
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({ errorsShape }),
+        )
+      },
+    )
+
+    it('reads Errors off a non-2xx SendDocToIslandIs body', async () => {
+      actionReplies = [
+        () =>
+          json(
+            {
+              Kennitala: COMPANY_NATIONAL_ID,
+              DocumentId: null,
+              Success: false,
+              Errors: ['Færsla þegar skráð.'],
+            },
+            { status: 400 },
+          ),
+      ]
+
+      const error = await caught(sendDocToIslandIs())
+
+      expect(error).toMatchObject({
+        reason: 'HTTP',
+        upstreamStatus: 400,
+        hasGeneralResponseBody: true,
+        errorMessage: 'Færsla þegar skráð.',
+      })
+      expect(isDefinitiveOneSystemsFailure(error)).toBe(false)
+    })
+
+    it('prefers ErrorMessage over Errors when both are present', async () => {
+      actionReplies = [
+        () =>
+          json({ Success: false, ErrorMessage: 'Villa', Errors: ['Önnur'] }),
+      ]
+
+      await expect(caught(createDocument())).resolves.toMatchObject({
+        errorMessage: 'Villa',
+      })
+    })
 
     it.each(actions)(
       '%s: a fetch rejection is an unclear TRANSPORT failure',
@@ -1464,6 +1836,10 @@ describe('OneSystemsService', () => {
       )
       await caught(sendDocToIslandIs())
 
+      // SendDocToIslandIs's success body carries the recipient's kennitala.
+      actionReplies = [() => sendDocResponse()]
+      await sendDocToIslandIs()
+
       // Force a fresh Login whose body is an unrecognised shape.
       service = new OneSystemsService(logger as never)
       loginReplies = [() => json({ unexpected: TOKEN_2 })]
@@ -1473,6 +1849,7 @@ describe('OneSystemsService', () => {
       expect(logger.info).toHaveBeenCalled()
       expect(logger.error).toHaveBeenCalled()
       for (const secret of [
+        COMPANY_NATIONAL_ID,
         PASSWORD,
         TOKEN_1,
         TOKEN_2,

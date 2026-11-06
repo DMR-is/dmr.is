@@ -13,6 +13,8 @@ export const DOE_TASK_NAMESPACE = 3010
 export const DOE_TASK_JOB_IDS = {
   reportDeadlineReminder: 1,
   reportDraftPrune: 2,
+  noticeOutbox: 3,
+  mailboxDeliveryAlert: 4,
 } as const
 
 export const REPORT_DEADLINE_REMINDER_LOGGING_CONTEXT =
@@ -20,12 +22,16 @@ export const REPORT_DEADLINE_REMINDER_LOGGING_CONTEXT =
 
 export const REPORT_DRAFT_PRUNE_LOGGING_CONTEXT = 'ReportDraftPruneTask'
 
+export const NOTICE_OUTBOX_LOGGING_CONTEXT = 'NoticeOutboxTask'
+
 /** Abandoned drafts untouched for this long are reaped by the prune task. */
 export const DRAFT_PRUNE_AGE_MONTHS = 6
 
 /**
- * Master switch for the daily automated reminder emails
- * (`ReportDeadlineReminderTask`).
+ * Master switch for the daily automated deadline reminders
+ * (`ReportDeadlineReminderTask`). The name predates the mailbox: it gates the
+ * task, so it gates the reminders on both channels, the island.is mailbox
+ * (`ONESYSTEMS_ENABLED`) as well as email. Declared in doe-api's `.env.schema`.
  *
  * Strict opt-in: the job only runs when `EMAIL_REMINDER_JOB_ENABLED` is
  * exactly `'true'`, so an unset or malformed value leaves outbound reminder

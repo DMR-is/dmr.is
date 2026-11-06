@@ -2,8 +2,12 @@ import { ReportModel } from '../../report/models/report.model'
 import { escapeHtml, formatDate } from './format'
 import { reportKindLabel } from './report-labels'
 
-export const buildReportApprovedSubject = (report: ReportModel): string =>
-  `${reportKindLabel(report.type)} samþykkt`
+/** What the approval's text reads off the report, in the email and the letter. */
+export type ApprovedReport = Pick<ReportModel, 'type' | 'validUntil'>
+
+export const buildReportApprovedSubject = (
+  report: Pick<ReportModel, 'type'>,
+): string => `${reportKindLabel(report.type)} samþykkt`
 
 /**
  * Names the attached documents in the body.
@@ -30,7 +34,7 @@ const attachmentLine = (labels: string[]): string =>
  * caller passes a report projection that omitted it.
  */
 export const buildReportApprovedHtml = (
-  report: ReportModel,
+  report: ApprovedReport,
   attachmentLabels: string[],
 ): string => {
   const kind = reportKindLabel(report.type)
@@ -38,14 +42,16 @@ export const buildReportApprovedHtml = (
 
   return [
     `<h2>${escapeHtml(kind)} samþykkt</h2>`,
-    `<p>Jafnréttisstofa hefur samþykkt ${escapeHtml(kind.toLowerCase())} fyrirtækisins.</p>`,
+    `<p>Jafnréttisstofa hefur samþykkt ${escapeHtml(
+      kind.toLowerCase(),
+    )} fyrirtækisins.</p>`,
     `<p>Samþykktin gildir til ${formatDate(report.validUntil)}.</p>`,
     attachments ? `<p>${escapeHtml(attachments)}</p>` : '',
   ].join('')
 }
 
 export const buildReportApprovedText = (
-  report: ReportModel,
+  report: ApprovedReport,
   attachmentLabels: string[],
 ): string => {
   const kind = reportKindLabel(report.type)

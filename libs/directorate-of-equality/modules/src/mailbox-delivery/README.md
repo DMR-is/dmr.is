@@ -4,11 +4,22 @@ Delivers a notice to a company's island.is Stafrænt pósthólf through
 Jafnréttisstofa's case system, One: CreateCase, then CreateDocument, then
 SendDocToIslandIs. Each delivery is one row in `mailbox_delivery`.
 
-Nothing calls this yet. Every notice kind is unconfigured (see
-`mailbox-delivery.kinds.ts`), so `deliverToMailbox` throws before it writes a
-row. It also does nothing unless `ONESYSTEMS_ENABLED` is `true`. That flag is
-checked here, not in the OneSystems client: the client is not gated, so any new
-consumer of the client must check the flag itself.
+Two callers, both in doe-api: the notice dispatcher (`notice-dispatch/`, the
+submission receipt and the approval and denial letters, from `notice_outbox`)
+and the deadline-reminder task. No kind has a confirmed case template yet (see
+`mailbox-delivery.kinds.ts`), so `deliverToMailbox` answers `UNCONFIGURED`
+for every kind, logged at error, before it writes a row. (A delivery whose
+template is unset after it reached One, by a rollback, answers as its row
+stands instead; see [Statuses](#statuses).) The dispatcher holds
+the notice without counting an attempt, and the reminder task emails the
+reminder instead, so switching the flag on early loses nothing. doe-api logs
+an error at boot, and the daily alert names every unconfigured kind, while the
+flag is on. It also does nothing unless `ONESYSTEMS_ENABLED` is `true`. That flag is checked here, not in the OneSystems client: the client is
+not gated, so any new consumer of the client must check the flag itself.
+
+A quarantined company (`company.quarantined`) gets nothing: `deliverToMailbox`
+returns `QUARANTINED` before it writes a row, and the next call with the same
+key after the quarantine is lifted carries on.
 
 ## For callers
 
@@ -45,14 +56,14 @@ consumer of the client must check the flag itself.
 
 ## Statuses
 
-| Status             | Meaning                                                                                                                                                         | What happens next                                                                                                           |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `PENDING`          | Row written, nothing sent to One yet.                                                                                                                           | The next call starts it.                                                                                                    |
-| `CASE_CREATED`     | One has a case (`one_case_item_id`).                                                                                                                            | The next call creates the document.                                                                                         |
-| `DOCUMENT_CREATED` | The PDF is filed under the case (`one_document_item_id`).                                                                                                       | The next call sends it.                                                                                                     |
-| `SENT`             | One confirmed the send (`sent_at`). `island_is_document_id` is set too, unless One confirmed without an `ItemID`.                                               | Nothing. A repeat call returns SENT with `alreadySent: true`.                                                               |
-| `FAILED`           | One certainly did not act on the failed call: a CreateCase failure, a failed render, or a CreateDocument or send rejected before it reached One's action.       | The next call with the same key resumes from the saved ids, until `attempts` reaches 5 ([Exhausted rows](#exhausted-rows)). |
-| `UNCERTAIN`        | Whether One acted is unknown: a timeout, a 5xx, a `Success: false`, a response with no usable id, or a process that died mid-call (`in_flight_step` still set). | **Nothing. No code path leaves UNCERTAIN.** A person reconciles it (below).                                                 |
+| Status             | Meaning                                                                                                                                                                                                                            | What happens next                                                                                                           |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `PENDING`          | Row written, nothing sent to One yet.                                                                                                                                                                                              | The next call starts it.                                                                                                    |
+| `CASE_CREATED`     | One has a case (`one_case_item_id`).                                                                                                                                                                                               | The next call creates the document.                                                                                         |
+| `DOCUMENT_CREATED` | The PDF is filed under the case (`one_document_item_id`).                                                                                                                                                                          | The next call sends it.                                                                                                     |
+| `SENT`             | One confirmed the send (`sent_at`), or island.is answered that it already had this very document ([below](#a-duplicate-answer)). `island_is_document_id` is set too, unless One confirmed without a `DocumentId`.                  | Nothing. A repeat call returns SENT with `alreadySent: true`.                                                               |
+| `FAILED`           | One certainly did not act on the failed call: a CreateCase failure, a failed render, or a CreateDocument or send rejected before it reached One's action.                                                                          | The next call with the same key resumes from the saved ids, until `attempts` reaches 5 ([Exhausted rows](#exhausted-rows)). |
+| `UNCERTAIN`        | Whether One acted is unknown: a timeout, a 5xx, a `Success: false` (other than the duplicate answer for this document, which is SENT), a response with no usable id, or a process that died mid-call (`in_flight_step` still set). | **Nothing. No code path leaves UNCERTAIN.** A person reconciles it (below).                                                 |
 
 The saved ids and `sent_at` decide what runs next, not `status`. A `FAILED`
 row that already has `one_document_item_id` resumes at the send.
@@ -64,33 +75,74 @@ numbers that OneSystems confirms are raised before anything is filed or sent go
 into `ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS` in the client, which makes them FAILED.
 That list is empty until OneSystems confirms it.
 
-CreateCase is retried after any failure, on the assumption that One
-finds-or-creates the case. The spec does not document this
-(TODO(OneSystems)). If the assumption is wrong, a retry leaves an orphan case in
-One. It never causes a second send. A case id that loses the race to be saved
-is logged (`discardedCaseItemId`).
+### A duplicate answer
+
+island.is refuses a repeated send with `Success: false` and
+`Errors: ["Færsla þegar skráð."]` (OneSystems, 20 Oct 2026). The client takes
+it as sent, and the row becomes SENT, only when all of these hold:
+
+- `Errors` holds that text and nothing else (compared trimmed and in NFC);
+- `DocumentId` is present and is the document's `ItemID` that was sent
+  (`one_document_item_id`), compared without case;
+- the answer has no `ErrorNumber` and no `ErrorMessage`.
+
+Anything else, including that text without a `DocumentId` or with another
+document's, is a rejection, and the row is UNCERTAIN like any other
+`Success: false`. The client logs
+`… answered that the document was already sent, but not for certain of this
+document, treating it as rejected` with both ids, which is where to start
+reconciling it.
+
+A row settled this way looks like any other SENT row. `sent_at` is when the
+repeat was confirmed, not when the document first reached the mailbox, and no
+column marks it: only the warn line
+`Mailbox delivery <id>: island.is already had the document, recording it as
+sent` does.
+
+CreateCase is retried after any failure: One finds-or-creates the case by
+`IDNumber` + `CaseType` (OneSystems, 29 Sep 2026). A case id that loses the race
+to be saved is logged (`discardedCaseItemId`).
 
 A row is claimed at most `MAILBOX_DELIVERY_MAX_ATTEMPTS` (5) times. Every
 claim adds one to `attempts`. After that `deliverToMailbox` makes no call and
 returns the row's own status with `skipped: 'ATTEMPTS_EXHAUSTED'`, and logs an
 error with the `deliveryId` and `attempts`. Without the cap a permanent
-rejection would be retried on every call, and while find-or-create is
-unconfirmed each retry may leave another orphan case in One. See
+rejection would be retried on every call. See
 [Exhausted rows](#exhausted-rows). A row whose last claim died mid-call is still
 claimed once more, so it becomes UNCERTAIN as usual.
 
-## Before the first caller lands
+## Alerting
 
-The PR that wires the first `deliverToMailbox` caller must also:
+Every row that needs a person is reported once a day, by doe-api's
+`NoticeOutboxTask.alertStuckMailboxDeliveries` (08:00 Atlantic/Reykjavik,
+under its own advisory lock): one error-level log line,
+`Mailbox deliveries need a person: …`, with the count per reason and the
+`deliveryId`s (ids only, nothing personal). Error-level lines are what the
+service's alerting watches. `findStuckDeliveries` is the query, and it finds:
 
-- Add an alert or an admin read for rows with `status = 'UNCERTAIN'` and for
-  `ATTEMPTS_EXHAUSTED` rows (the query under
-  [Exhausted rows](#exhausted-rows)). Both need a person, and nothing tells
-  one today. The partial index `mailbox_delivery_status_idx`
-  (`WHERE status <> 'SENT'`) serves both queries.
-- Get OneSystems to confirm that CreateCase finds-or-creates the case
-  (TODO(OneSystems)). If it does not, every retry of a FAILED row can leave an
-  orphan case in One.
+- `UNCERTAIN` rows: reconcile them ([below](#reconciling-an-uncertain-row)).
+- `INTERRUPTED` rows: a marker still set with its lease lapsed. They become
+  UNCERTAIN only on the next call with their key, which an outbox row that has
+  already given up never makes, so they are listed too.
+- `ATTEMPTS_EXHAUSTED` rows ([Exhausted rows](#exhausted-rows)).
+
+It runs whatever `ONESYSTEMS_ENABLED` says, since rows left from before the
+flag went off still need a person. The partial index
+`mailbox_delivery_status_idx` (`WHERE status <> 'SENT'`) serves it.
+
+The same run, with the flag on, names every kind in use with no case
+template, and names every `notice_outbox` row overdue (an hour old and still
+`PENDING`, not waiting on a quarantine or, with the flag off, a receipt): one
+held on a document One has filed but not sent, one held on an unconfigured
+kind, or one failing every run. It also names every `notice_outbox` row
+given up as `FAILED` in the last week (by `processed_at`): nothing retries
+those, so the company has not been told. The counts are taken over every
+row; at most 50 rows of each are named.
+
+A deadline reminder that stops this way also leaves an event on the
+company's timeline, on the run that stopped it: `…_UNCONFIRMED` for an
+UNCERTAIN or interrupted delivery, `…_UNDELIVERED` for one out of attempts. There is no admin screen for these rows yet; until
+there is, the alert and the SQL below are the way in.
 
 ## Exhausted rows
 
@@ -117,10 +169,8 @@ ORDER BY last_attempt_at;
 `5` is `MAILBOX_DELIVERY_MAX_ATTEMPTS`. As in the UNCERTAIN list, read
 `last_error` for one row at a time and do not paste it anywhere.
 
-Fix the cause first: a kind classification One rejects, a recipient One cannot
-find, an outage that lasted longer than five calls. CreateCase find-or-create
-is still TODO(OneSystems), so each attempt so far may have left a case in One;
-check One under the company for orphan cases if that matters. Then re-arm the
+Fix the cause first: a case template One does not know, a recipient One cannot
+find, an outage that lasted longer than five calls. Then re-arm the
 row, so the next call with **the same idempotency key** resumes it from its
 saved ids:
 
@@ -135,7 +185,51 @@ WHERE id = '<delivery id>'
 
 For a row in a forward status, put that status in place of `'FAILED'`.
 Re-arming does not send anything by itself; the next `deliverToMailbox` call
-does.
+with the same key does. Who makes that call depends on the kind:
+
+- A deadline reminder: the reminder task, on its next daily run, while the
+  company is still in the tier's band **and only while its due date has not
+  moved**. The key holds the due date, so once an admin changes it
+  (`updateDueDate`) or an approval advances it, the task uses the new date's
+  key and never calls this row again: re-arming it sends nothing. See
+  [Orphaned reminder rows](#orphaned-reminder-rows).
+- A receipt, approval or denial (`…_SUBMITTED`, `…_APPROVED`, `…_DENIED`): the
+  notice dispatcher, but only for a `notice_outbox` row that is still
+  `PENDING`. By the time a delivery is exhausted its outbox row has usually
+  given up as `FAILED`, so re-drive that row too, after re-arming this one:
+  see "Re-driving a FAILED row" under `notice_outbox` in doe-api's
+  `db/README.md`. The same holds after reconciling an UNCERTAIN row to
+  `FAILED` below.
+
+## Orphaned reminder rows
+
+A reminder delivery that is neither sent nor stuck is left behind when the
+task stops calling its key: the company left the tier's band, or its due date
+moved. Typically One failed SendDocToIslandIs once, which leaves the row
+`DOCUMENT_CREATED` or `FAILED` with attempts left and no event, and the date
+moved before the next run. That is a document filed in One and never sent,
+outside UNCERTAIN, INTERRUPTED and ATTEMPTS_EXHAUSTED, so the daily alert does
+not name it. The task runs daily, so a row it still calls was tried within the
+last day. Find the rest with:
+
+```sql
+SELECT id, company_id, kind, idempotency_key, status,
+       one_case_item_id, one_document_item_id, attempts, last_attempt_at
+FROM mailbox_delivery
+WHERE kind IN ('SALARY_REPORT_DEADLINE_REMINDER',
+               'EQUALITY_REPORT_DEADLINE_REMINDER')
+  AND status NOT IN ('SENT', 'UNCERTAIN')
+  AND in_flight_step IS NULL
+  AND attempts < 5
+  AND last_attempt_at < now() - interval '2 days'
+ORDER BY last_attempt_at;
+```
+
+Nothing calls such a row again, so it is harmless to leave. Do not re-arm it,
+which sends nothing, and do not mint a key for it. The company gets the new
+date's reminders on their own key. Record what was decided in `last_error`,
+and ask Jafnréttisstofa whether the unsent document (`one_document_item_id`)
+should be removed from the case in One.
 
 ## Reconciling an UNCERTAIN row
 
@@ -210,7 +304,10 @@ the id is in the logs.
      that document in One and check whether it was sent to island.is.
 
 3. Ask Jafnréttisstofa or OneSystems to check in One, or check island.is,
-   whenever One does not show it clearly.
+   whenever One does not show it clearly. A row left UNCERTAIN by a duplicate
+   answer that did not name the document ([A duplicate answer](#a-duplicate-answer))
+   was most likely sent before; confirm it in OneCRM's list of documents sent
+   to the mailbox before settling it SENT.
 
 4. Set the status by hand, each in its own statement. Match on `status` too,
    so a row that has changed since you looked is left alone. Clear the lease in

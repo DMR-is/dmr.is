@@ -349,12 +349,24 @@ export class CompanyEventService implements ICompanyEventService {
       { context: LOGGING_CONTEXT, companyId, eventType, tier, dueDateIso },
     )
 
-    await this.companyEventModel.create({
-      companyId,
-      eventType,
-      status,
-      reason: dueDateIso,
-      reminderTier: tier,
-    })
+    // Autocommitted on its own pool connection, outside the caller's CLS
+    // transaction. The deadline-reminder task is the only caller, and it runs
+    // on its advisory lock's transaction for the whole run:
+    // - the event is the record that a reminder went out (and the dedupe
+    //   marker for the next run), and the send cannot be rolled back, so the
+    //   event must not be either, by a later failure in the same run;
+    // - the insert's `company_id` foreign key takes FOR KEY SHARE on the
+    //   company, which on the lock's transaction would be held until the run
+    //   ends and block an admin's `updateDueDate` (FOR UPDATE) behind it.
+    await this.companyEventModel.create(
+      {
+        companyId,
+        eventType,
+        status,
+        reason: dueDateIso,
+        reminderTier: tier,
+      },
+      { transaction: null },
+    )
   }
 }

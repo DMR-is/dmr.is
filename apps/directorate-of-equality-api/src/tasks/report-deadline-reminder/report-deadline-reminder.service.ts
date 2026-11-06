@@ -18,6 +18,20 @@ import {
   looksLikeOneAddress,
   MailSendError,
 } from '@dmr.is/doe-modules/mail'
+import {
+  buildMailboxDeliveryIdempotencyKey,
+  DeliverToMailboxResult,
+  IMailboxDeliveryService,
+  isMailboxDeliveryEnabled,
+  MailboxDeliveryKindEnum,
+  MailboxDeliveryState,
+  MailboxDeliveryStatusEnum,
+} from '@dmr.is/doe-modules/mailbox-delivery'
+import {
+  buildDeadlineReminderLetter,
+  noticeLetterStyles,
+} from '@dmr.is/doe-modules/notice-letter'
+import { IPdfRenderService } from '@dmr.is/doe-modules/pdf-render'
 import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -56,6 +70,19 @@ type DeadlineKind = {
   sentEventType: CompanyDeadlineReminderEventType
   /** Event recorded when a reminder is due but no email is on file. */
   noEmailEventType: CompanyDeadlineReminderEventType
+  /**
+   * Event recorded when the mailbox delivery ran out of attempts without One
+   * sending it, and no later run will finish it on its own.
+   */
+  undeliveredEventType: CompanyDeadlineReminderEventType
+  /**
+   * Event recorded when whether One sent the reminder is unknown (UNCERTAIN,
+   * or interrupted mid-call): a person must check One. Not UNDELIVERED, which
+   * would read as a confirmed non-delivery of a reminder One may have sent.
+   */
+  unconfirmedEventType: CompanyDeadlineReminderEventType
+  /** The mailbox kind, when the reminder goes through One. */
+  mailboxKind: MailboxDeliveryKindEnum
 }
 
 const DEADLINE_KINDS: DeadlineKind[] = [
@@ -66,6 +93,11 @@ const DEADLINE_KINDS: DeadlineKind[] = [
     sentEventType: CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
     noEmailEventType:
       CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+    undeliveredEventType:
+      CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+    unconfirmedEventType:
+      CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED,
+    mailboxKind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
   },
   {
     dueField: 'nextSalaryReportDueAt',
@@ -74,6 +106,11 @@ const DEADLINE_KINDS: DeadlineKind[] = [
     sentEventType: CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT,
     noEmailEventType:
       CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+    undeliveredEventType:
+      CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+    unconfirmedEventType:
+      CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNCONFIRMED,
+    mailboxKind: MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
   },
 ]
 
@@ -149,6 +186,10 @@ export class ReportDeadlineReminderService
     private readonly companyEventService: ICompanyEventService,
     @Inject(IDoeMailService)
     private readonly mailService: IDoeMailService,
+    @Inject(IMailboxDeliveryService)
+    private readonly mailboxDeliveryService: IMailboxDeliveryService,
+    @Inject(IPdfRenderService)
+    private readonly pdfRenderService: IPdfRenderService,
   ) {}
 
   async run(): Promise<void> {
@@ -197,6 +238,16 @@ export class ReportDeadlineReminderService
     }
 
     for (const company of companies) {
+      // A kind with no case template yet falls back to email, so a band that
+      // closes before the template is set is not lost. Both channels write
+      // `kind.sentEventType`, so the mailbox does not send it again later.
+      if (
+        isMailboxDeliveryEnabled() &&
+        (await this.remindCompanyByMailbox(company, kind, tier.tier, now))
+      ) {
+        continue
+      }
+
       /*
        * ⚠️ **Per-company, so one bad recipient cannot abort the run.**
        *
@@ -217,14 +268,16 @@ export class ReportDeadlineReminderService
        *
        * ⚠️ **Only a `MailSendError`.** Everything else rethrows, and it has to:
        * `AdvisoryLockService` runs this whole task in one transaction and CLS is
-       * live for this app, so the model queries here enlist in it. A DB error
-       * therefore aborts the transaction — every later statement fails `25P02`,
-       * a blanket catch swallows each one, and Postgres answers the eventual
-       * `COMMIT` on an aborted transaction with a silent `ROLLBACK`. The task
-       * would report success having mailed every company in the band while every
-       * `SENT` event and the `job_runs` cooldown were discarded, and the next run
-       * would mail them all again. A deterministic fault on the event insert
-       * turns that into a repeating storm.
+       * live for this app, so the model reads here enlist in it. A DB error
+       * there aborts the transaction — every later statement fails `25P02`, a
+       * blanket catch swallows each one, and Postgres answers the eventual
+       * `COMMIT` on an aborted transaction with a silent `ROLLBACK`, discarding
+       * the `job_runs` cooldown. The reminder events are written outside that
+       * transaction (`emitDeadlineReminderEvent`, `transaction: null`), so
+       * they do not roll back with it; but a fault on the event insert itself
+       * leaves a sent reminder unrecorded, and a deterministic one swallowed
+       * per company would mail every company in the band on every run with
+       * nothing recorded.
        *
        * So a database fault must stay loud, exactly as it did before this catch
        * existed.
@@ -238,12 +291,12 @@ export class ReportDeadlineReminderService
        * introduced here, and `report-deadline-reminder.task.ts` now catches at
        * the `@Cron` boundary so the run aborts without taking the API with it.
        *
-       * The `job_runs` row rolls back with the abort. That is the right trade,
-       * but it is not free: SES is not transactional, so any company already
-       * emailed in this run WILL be emailed again on the next one, because its
-       * `SENT` event rolled back too. Bounded by where the fault hits, and far
-       * better than the blanket catch it replaced, which mailed the entire band
-       * with nothing recorded.
+       * The `job_runs` row rolls back with the abort; the reminder events do
+       * not. A company reminded earlier in this run keeps its committed `SENT`
+       * event and is not mailed again. Only a company whose own event write
+       * failed after its send is mailed again on the next run, which is far
+       * better than the blanket catch this replaced, which mailed the entire
+       * band with nothing recorded.
        */
       try {
         await this.remindCompany(company, kind, tier.tier)
@@ -316,6 +369,257 @@ export class ReportDeadlineReminderService
       company.id,
       company.status,
       kind.sentEventType,
+      tier,
+      dueDateIso,
+    )
+  }
+
+  /**
+   * Delivers the reminder to the company's island.is mailbox through One, in
+   * place of the email. The mailbox is addressed by kennitala, so the company's
+   * email address plays no part and this path writes no NO_EMAIL event. The
+   * email fallback (see below) is the flag-off path in full, so it does write
+   * NO_EMAIL for a company with no usable address: that reminder reached no
+   * one. The mailbox still sends it once the kind's template is set, since
+   * only the SENT event stops it.
+   *
+   * The SENT event is written only when One confirms the send. The delivery's
+   * key (kind, company, tier, due date) is what stops a second send: an
+   * UNCERTAIN or exhausted delivery keeps answering the same on every later
+   * run, without calling One, until a person settles it. Such a delivery gets
+   * an event once per tier and due date, UNCONFIRMED when whether One sent it
+   * is unknown and UNDELIVERED when it ran out of attempts, so the gap is on
+   * the company's timeline as the email path's NO_EMAIL is; doe-api's daily
+   * mailbox alert names the delivery to settle.
+   *
+   * The event is written on the call that left the delivery so, too. That
+   * call throws rather than returning UNCERTAIN or exhausted, so the
+   * delivery's row is read back: waiting for a later run would miss a failure
+   * on the band's last day, or before the due date moves.
+   *
+   * Returns false only for `UNCONFIGURED` (the flag on before the kind's case
+   * template is set): nothing went to One and no delivery with this key
+   * reached it, so `processTier` emails the reminder instead.
+   * `deliverToMailbox` logged it at error (once per kind per process), and
+   * the daily alert and the boot check name the kind. A delivery that did
+   * reach One before its template was unset answers
+   * `skipped: 'UNCONFIGURED'` instead, and is neither emailed nor recorded: it
+   * waits for the template.
+   *
+   * ⚠️ **Flipping the flags.** Both channels need `EMAIL_REMINDER_JOB_ENABLED`
+   * (the task does not run without it), so with it off nothing is sent by
+   * either. Turning `ONESYSTEMS_ENABLED` off while a reminder's delivery is
+   * UNCERTAIN emails that reminder on the next run, since only a SENT event
+   * stops the email path: the company may then have it twice. Settle UNCERTAIN
+   * deliveries before turning the flag off.
+   *
+   * ⚠️ **A delivery failure is caught here, per company.** It is not a
+   * database fault on the lock's transaction: `deliverToMailbox` records its own
+   * state outside every ambient transaction (`transaction: null`) and rethrows
+   * only after recording it. Letting it out would abort the run at the first
+   * company One rejects, every day, and withhold every reminder behind it. So
+   * is a failure to read that state back (`findDelivery`, its own pool
+   * connection). The event inserts stay outside the catch, so a fault there
+   * still aborts the run as `processTier` requires. They are written outside
+   * the lock's transaction (`emitDeadlineReminderEvent`), so one written for
+   * an earlier company stands whatever happens later in the run.
+   */
+  private async remindCompanyByMailbox(
+    company: CompanyModel,
+    kind: DeadlineKind,
+    tier: CompanyReminderTierEnum,
+    now: Date,
+  ): Promise<boolean> {
+    const dueDate = company[kind.dueField]
+    if (!dueDate) return true
+
+    const dueDateIso = dueDate.toISOString()
+
+    const alreadySent = await this.companyEventService.hasDeadlineReminderEvent(
+      company.id,
+      kind.sentEventType,
+      tier,
+      dueDateIso,
+    )
+    if (alreadySent) return true
+
+    const letter = buildDeadlineReminderLetter(
+      {
+        companyName: company.name,
+        reportType: kind.reportType,
+        tier,
+        dueDate,
+      },
+      now,
+    )
+    const meta = {
+      context: LOGGING_CONTEXT,
+      companyId: company.id,
+      reportType: kind.reportType,
+      tier,
+    }
+
+    const idempotencyKey = buildMailboxDeliveryIdempotencyKey({
+      kind: kind.mailboxKind,
+      companyId: company.id,
+      discriminator: `${kind.reportType}-${tier}-${dueDateIso
+        .slice(0, 10)
+        .replace(/-/g, '')}`,
+    })
+
+    let result: DeliverToMailboxResult | null = null
+    try {
+      result = await this.mailboxDeliveryService.deliverToMailbox({
+        idempotencyKey,
+        kind: kind.mailboxKind,
+        companyId: company.id,
+        subject: letter.subject,
+        pdf: () =>
+          this.pdfRenderService.renderHtml(
+            letter.html,
+            noticeLetterStyles,
+            'letter',
+          ),
+      })
+    } catch (error) {
+      this.logger.error(
+        `Could not deliver company ${company.id} its ${kind.reportType} ${tier} reminder to the mailbox — continuing with the rest of the batch`,
+        {
+          ...meta,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
+    }
+
+    if (result?.status === 'SENT') {
+      await this.companyEventService.emitDeadlineReminderEvent(
+        company.id,
+        company.status,
+        kind.sentEventType,
+        tier,
+        dueDateIso,
+      )
+      return true
+    }
+
+    // Logged at error by `deliverToMailbox`, once per kind per process.
+    if (result?.status === 'UNCONFIGURED') {
+      this.logger.info(
+        `${kind.reportType} ${tier} reminder for company ${company.id} goes by email: mailbox kind ${result.kind} has no case template`,
+        meta,
+      )
+      return false
+    }
+
+    if (result) {
+      this.logger.error(
+        `${kind.reportType} ${tier} reminder for company ${company.id} was not delivered to the mailbox: ${result.status}`,
+        {
+          ...meta,
+          deliveryId: 'deliveryId' in result ? result.deliveryId : undefined,
+          skipped: 'skipped' in result ? result.skipped : undefined,
+        },
+      )
+    }
+
+    const eventType = await this.stoppedEventType(
+      kind,
+      result,
+      idempotencyKey,
+      meta,
+    )
+    // Outside any catch: a failed event write must abort the run, as for the
+    // SENT event.
+    if (eventType) {
+      await this.flagStopped(company, eventType, tier, dueDateIso)
+    }
+    return true
+  }
+
+  /**
+   * The event for a delivery no later run will finish, or null. IN_PROGRESS
+   * is another worker's, and DISABLED or QUARANTINED send nothing by design.
+   * A thrown call (`result` null) recorded its outcome on the row before
+   * rethrowing, so the row is read.
+   *
+   * The read is on its own pool connection (`transaction: null`), and the
+   * fault that made the call throw (a pool timeout, a DB blip) will often
+   * fail it too. That is caught here, per company, like the call itself: no
+   * event this run, and the next run reads the row again. Letting it out
+   * would abort the run and withhold the reminder of every company after
+   * this one.
+   */
+  private async stoppedEventType(
+    kind: DeadlineKind,
+    result: DeliverToMailboxResult | null,
+    idempotencyKey: string,
+    meta: Record<string, unknown>,
+  ): Promise<CompanyDeadlineReminderEventType | null> {
+    if (result) {
+      if (result.status === 'UNCERTAIN') {
+        return kind.unconfirmedEventType
+      }
+      if ('skipped' in result && result.skipped === 'ATTEMPTS_EXHAUSTED') {
+        return kind.undeliveredEventType
+      }
+      return null
+    }
+
+    let delivery: MailboxDeliveryState | null
+    try {
+      delivery = await this.mailboxDeliveryService.findDelivery(idempotencyKey)
+    } catch (error) {
+      this.logger.error(
+        `Could not read back mailbox delivery ${idempotencyKey} after it failed — the next run reads it again`,
+        {
+          ...meta,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
+      return null
+    }
+    if (!delivery) {
+      return null
+    }
+    // `interrupted` needs two things: recording the failure itself failed (a
+    // call that throws clears its in-flight marker before rethrowing), and
+    // the lease has lapsed since. Read straight after the throw the lease is
+    // usually still live, so such a row reads `inProgress` and gets no event
+    // this run; the next run's call claims it, marks it UNCERTAIN, and the
+    // UNCONFIRMED event is written then.
+    if (
+      delivery.status === MailboxDeliveryStatusEnum.UNCERTAIN ||
+      delivery.interrupted
+    ) {
+      return kind.unconfirmedEventType
+    }
+    return delivery.exhausted ? kind.undeliveredEventType : null
+  }
+
+  /**
+   * Records an UNDELIVERED or UNCONFIRMED event on the company timeline,
+   * deduped per (tier, due date) like `flagMissingEmail`, so the gap shows
+   * once per cycle, not once per run.
+   */
+  private async flagStopped(
+    company: CompanyModel,
+    eventType: CompanyDeadlineReminderEventType,
+    tier: CompanyReminderTierEnum,
+    dueDateIso: string,
+  ): Promise<void> {
+    const alreadyFlagged =
+      await this.companyEventService.hasDeadlineReminderEvent(
+        company.id,
+        eventType,
+        tier,
+        dueDateIso,
+      )
+    if (alreadyFlagged) return
+
+    await this.companyEventService.emitDeadlineReminderEvent(
+      company.id,
+      company.status,
+      eventType,
       tier,
       dueDateIso,
     )

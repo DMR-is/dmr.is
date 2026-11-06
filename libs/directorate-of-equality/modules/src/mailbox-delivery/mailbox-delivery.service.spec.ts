@@ -23,7 +23,9 @@ import {
 } from './models/mailbox-delivery.enums'
 import { buildMailboxDeliveryIdempotencyKey } from './mailbox-delivery.idempotency-key'
 import {
+  isKindConfigured,
   MAILBOX_DELIVERY_KINDS,
+  MAILBOX_DELIVERY_KINDS_IN_USE,
   type MailboxDeliveryKindConfigs,
   resolveKindConfig,
 } from './mailbox-delivery.kinds'
@@ -63,10 +65,9 @@ const CONFIG = {
   islandIsType: 'island-type',
 }
 
-const KINDS: MailboxDeliveryKindConfigs = {
-  [MailboxDeliveryKindEnum.OVERDUE_NOTICE]: CONFIG,
-  [MailboxDeliveryKindEnum.FINES_PRECURSOR]: CONFIG,
-}
+const KINDS = Object.fromEntries(
+  Object.values(MailboxDeliveryKindEnum).map((kind) => [kind, CONFIG]),
+) as MailboxDeliveryKindConfigs
 
 const PDF = Buffer.from('%PDF-1.7 notice')
 const PDF_SHA256 = createHash('sha256').update(PDF).digest('hex')
@@ -213,6 +214,20 @@ function createStore() {
         return row ? { ...row } : null
       },
     ),
+    count: jest.fn(
+      async (options: { where: Record<string | symbol, unknown> }) =>
+        [...rows.values()].filter((r) => matches(r, options.where)).length,
+    ),
+    findAll: jest.fn(
+      async (options: {
+        where: Record<string | symbol, unknown>
+        limit?: number
+      }) =>
+        [...rows.values()]
+          .filter((r) => matches(r, options.where))
+          .slice(0, options.limit)
+          .map((r) => ({ ...r })),
+    ),
     update: jest.fn(
       async (
         values: Record<string, unknown>,
@@ -331,7 +346,10 @@ describe('MailboxDeliveryService', () => {
       caseNumber: 'JAF-2026-1',
     })
     one.createDocument.mockResolvedValue({ documentItemId: 'doc-1' })
-    one.sendDocToIslandIs.mockResolvedValue({ islandIsDocumentId: 'island-1' })
+    one.sendDocToIslandIs.mockResolvedValue({
+      islandIsDocumentId: 'island-1',
+      alreadyInMailbox: false,
+    })
     pdf = jest.fn().mockResolvedValue(PDF)
     service = build()
   })
@@ -401,14 +419,280 @@ describe('MailboxDeliveryService', () => {
     })
   })
 
-  describe('kind config', () => {
-    it('throws before any row or call while the real kinds are placeholders', async () => {
-      service = build(MAILBOX_DELIVERY_KINDS)
+  describe('quarantine', () => {
+    it('delivers nothing to a quarantined company, and writes no row', async () => {
+      companies.findOne.mockResolvedValue({ ...COMPANY, quarantined: true })
 
-      await expect(service.deliverToMailbox(input())).rejects.toThrow(
-        InternalServerErrorException,
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'QUARANTINED',
+      })
+
+      expect(companies.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({
+          attributes: expect.arrayContaining(['quarantined']),
+        }),
+      )
+      expect(store.model.bulkCreate).not.toHaveBeenCalled()
+      expect(store.rows.size).toBe(0)
+      expect(pdf).not.toHaveBeenCalled()
+      expect(oneCalls()).toBe(0)
+    })
+
+    it('leaves a delivery already under way where it stopped', async () => {
+      store.seed({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        oneCaseItemId: 'case-1',
+        oneDocumentItemId: 'doc-1',
+        attempts: 1,
+      })
+      companies.findOne.mockResolvedValue({ ...COMPANY, quarantined: true })
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'QUARANTINED',
+      })
+
+      expect(onlyRow()).toEqual(
+        expect.objectContaining({
+          status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+          attempts: 1,
+        }),
+      )
+      expect(oneCalls()).toBe(0)
+    })
+  })
+
+  describe('findDelivery', () => {
+    it('is null for a key with no row', async () => {
+      await expect(service.findDelivery(KEY)).resolves.toBeNull()
+    })
+
+    it('says how far the delivery got, with the flag off too', async () => {
+      delete process.env.ONESYSTEMS_ENABLED
+      const row = store.seed({
+        status: MailboxDeliveryStatusEnum.FAILED,
+        oneCaseItemId: 'case-1',
+        oneDocumentItemId: 'doc-1',
+      })
+
+      await expect(service.findDelivery(KEY)).resolves.toEqual({
+        deliveryId: row.id,
+        status: MailboxDeliveryStatusEnum.FAILED,
+        documentFiled: true,
+        sent: false,
+        interrupted: false,
+        inProgress: false,
+        exhausted: false,
+      })
+      expect(store.model.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({ transaction: null }),
+      )
+    })
+
+    it.each([
+      [
+        'interrupted: a marker with its lease lapsed',
+        {
+          status: MailboxDeliveryStatusEnum.CASE_CREATED,
+          inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+          leaseExpiresAt: new Date(Date.now() - MINUTE),
+        },
+        { interrupted: true, inProgress: false, exhausted: false },
+      ],
+      [
+        'in progress: a live lease',
+        {
+          status: MailboxDeliveryStatusEnum.CASE_CREATED,
+          inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+          leaseExpiresAt: new Date(Date.now() + 5 * MINUTE),
+        },
+        { interrupted: false, inProgress: true, exhausted: false },
+      ],
+      [
+        'exhausted: out of attempts, no marker, no live lease',
+        {
+          status: MailboxDeliveryStatusEnum.FAILED,
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        },
+        { interrupted: false, inProgress: false, exhausted: true },
+      ],
+      [
+        'none of them: a SENT row is settled, even under a live lease',
+        {
+          status: MailboxDeliveryStatusEnum.SENT,
+          sentAt: new Date(Date.now() - MINUTE),
+          inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+          leaseExpiresAt: new Date(Date.now() + 5 * MINUTE),
+        },
+        {
+          sent: true,
+          interrupted: false,
+          inProgress: false,
+          exhausted: false,
+        },
+      ],
+      [
+        'none of them: UNCERTAIN is settled, whatever its attempts',
+        {
+          status: MailboxDeliveryStatusEnum.UNCERTAIN,
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        },
+        { interrupted: false, inProgress: false, exhausted: false },
+      ],
+    ])('says %s', async (_label, overrides, expected) => {
+      store.seed(overrides)
+
+      await expect(service.findDelivery(KEY)).resolves.toMatchObject(expected)
+    })
+  })
+
+  describe('findStuckDeliveries', () => {
+    it('lists UNCERTAIN, interrupted and exhausted rows, and nothing that can still move', async () => {
+      const lapsed = new Date(Date.now() - MINUTE)
+      const live = new Date(Date.now() + MINUTE)
+      const uncertain = store.seed({
+        idempotencyKey: keyFor('A'),
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+      })
+      const interrupted = store.seed({
+        idempotencyKey: keyFor('B'),
+        status: MailboxDeliveryStatusEnum.CASE_CREATED,
+        inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+        leaseToken: 'gone',
+        leaseExpiresAt: lapsed,
+      })
+      const exhausted = store.seed({
+        idempotencyKey: keyFor('C'),
+        status: MailboxDeliveryStatusEnum.FAILED,
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+      })
+      // Still moving: a live call, a row with attempts left, a last attempt
+      // still holding its lease, and a sent row.
+      store.seed({
+        idempotencyKey: keyFor('D'),
+        status: MailboxDeliveryStatusEnum.CASE_CREATED,
+        inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+        leaseToken: 'live',
+        leaseExpiresAt: live,
+      })
+      store.seed({
+        idempotencyKey: keyFor('E'),
+        status: MailboxDeliveryStatusEnum.FAILED,
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS - 1,
+      })
+      store.seed({
+        idempotencyKey: keyFor('F'),
+        status: MailboxDeliveryStatusEnum.FAILED,
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        leaseToken: 'live',
+        leaseExpiresAt: live,
+      })
+      store.seed({
+        idempotencyKey: keyFor('G'),
+        status: MailboxDeliveryStatusEnum.SENT,
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        sentAt: lapsed,
+      })
+
+      const stuck = await service.findStuckDeliveries(50)
+
+      expect(
+        stuck.map(({ deliveryId, reason }) => ({ deliveryId, reason })),
+      ).toEqual([
+        { deliveryId: uncertain.id, reason: 'UNCERTAIN' },
+        { deliveryId: interrupted.id, reason: 'INTERRUPTED' },
+        { deliveryId: exhausted.id, reason: 'ATTEMPTS_EXHAUSTED' },
+      ])
+      expect(store.model.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          limit: 50,
+          // Oldest attempt first: the fake ignores `order`, so it is pinned
+          // here.
+          order: [['lastAttemptAt', 'ASC']],
+          transaction: null,
+        }),
       )
 
+      // Counted over every row, not the `limit` named.
+      await expect(service.countStuckDeliveries()).resolves.toEqual({
+        UNCERTAIN: 1,
+        INTERRUPTED: 1,
+        ATTEMPTS_EXHAUSTED: 1,
+      })
+      for (const [options] of store.model.count.mock.calls) {
+        expect(options).toEqual(expect.objectContaining({ transaction: null }))
+      }
+    })
+
+    /*
+     * The filters are meant to be disjoint: the counts are summed into one
+     * total. Rows that would match two if a filter lost a clause: an UNCERTAIN
+     * row still carrying a lapsed marker, and an exhausted row with one.
+     */
+    it('counts a row that fits two descriptions once', async () => {
+      const lapsed = new Date(Date.now() - MINUTE)
+      store.seed({
+        idempotencyKey: keyFor('A'),
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        leaseExpiresAt: lapsed,
+      })
+      store.seed({
+        idempotencyKey: keyFor('B'),
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        leaseExpiresAt: lapsed,
+      })
+
+      const stuck = await service.findStuckDeliveries(50)
+      const counts = await service.countStuckDeliveries()
+
+      expect(stuck.map(({ reason }) => reason)).toEqual([
+        'UNCERTAIN',
+        'INTERRUPTED',
+      ])
+      expect(counts).toEqual({
+        UNCERTAIN: 1,
+        INTERRUPTED: 1,
+        ATTEMPTS_EXHAUSTED: 0,
+      })
+      expect(Object.values(counts).reduce((sum, n) => sum + n, 0)).toBe(
+        stuck.length,
+      )
+    })
+
+    it('counts past the limit it names', async () => {
+      for (const discriminator of ['A', 'B', 'C']) {
+        store.seed({
+          idempotencyKey: keyFor(discriminator),
+          status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        })
+      }
+
+      await expect(service.findStuckDeliveries(2)).resolves.toHaveLength(2)
+      await expect(service.countStuckDeliveries()).resolves.toEqual({
+        UNCERTAIN: 3,
+        INTERRUPTED: 0,
+        ATTEMPTS_EXHAUSTED: 0,
+      })
+    })
+  })
+
+  describe('kind config', () => {
+    it('answers UNCONFIGURED, at error, before any row or call for a real kind without a case template', async () => {
+      service = build(MAILBOX_DELIVERY_KINDS)
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'UNCONFIGURED',
+        kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+      })
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('has no case template'),
+        expect.objectContaining({
+          kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+        }),
+      )
       expect(companies.findOne).not.toHaveBeenCalled()
       expect(store.model.bulkCreate).not.toHaveBeenCalled()
       expect(store.rows.size).toBe(0)
@@ -416,23 +700,260 @@ describe('MailboxDeliveryService', () => {
       expect(oneCalls()).toBe(0)
     })
 
-    it('names every missing field, and treats blank as missing', () => {
+    /*
+     * The dispatcher asks every minute, a batch of rows at a time. An error
+     * line per answer would flood the alerting; the boot check and the daily
+     * alert name the kind again.
+     */
+    it('logs an unconfigured kind at error once per kind, however often it is asked', async () => {
+      service = build(MAILBOX_DELIVERY_KINDS)
+      const denied = input({
+        kind: MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+        idempotencyKey: keyFor(
+          'REPORT-1',
+          MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+        ),
+      })
+
+      for (let i = 0; i < 3; i += 1) {
+        await expect(service.deliverToMailbox(input())).resolves.toEqual({
+          status: 'UNCONFIGURED',
+          kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+        })
+        await expect(service.deliverToMailbox(denied)).resolves.toEqual({
+          status: 'UNCONFIGURED',
+          kind: MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+        })
+      }
+
+      const unconfiguredLogs = logger.error.mock.calls.filter(([message]) =>
+        String(message).includes('has no case template'),
+      )
+      expect(unconfiguredLogs.map(([, meta]) => meta.kind)).toEqual([
+        MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+        MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+      ])
+    })
+
+    it.each([
+      ['missing', undefined],
+      ['blank', '  '],
+    ])('refuses a %s caseType', (_label, caseType) => {
       expect(() =>
         resolveKindConfig(MailboxDeliveryKindEnum.FINES_PRECURSOR, {
           ...KINDS,
-          [MailboxDeliveryKindEnum.FINES_PRECURSOR]: {
-            ...CONFIG,
-            docType: '  ',
-            islandIsType: undefined,
-          },
+          [MailboxDeliveryKindEnum.FINES_PRECURSOR]: { ...CONFIG, caseType },
         }),
-      ).toThrow(/FINES_PRECURSOR.*missing docType, islandIsType/)
+      ).toThrow(/FINES_PRECURSOR.*missing caseType/)
     })
+
+    it('sends a missing classification field as an empty string', () => {
+      expect(
+        resolveKindConfig(MailboxDeliveryKindEnum.OVERDUE_NOTICE, {
+          ...KINDS,
+          [MailboxDeliveryKindEnum.OVERDUE_NOTICE]: { caseType: 'case-type' },
+        }),
+      ).toEqual({
+        caseType: 'case-type',
+        docCategory: '',
+        docType: '',
+        author: '',
+        islandIsCategory: '',
+        islandIsType: '',
+      })
+    })
+
+    /*
+     * ⚠️ Pins the guard: no case type is confirmed, and a guessed one files
+     * real mail under the wrong case (which find-or-create then reuses). When
+     * one is confirmed, this is the test to change, on purpose.
+     */
+    it.each(Object.values(MailboxDeliveryKindEnum))(
+      '%s has no confirmed case template, so it cannot reach One',
+      (kind) => {
+        expect(isKindConfigured(kind)).toBe(false)
+        expect(() => resolveKindConfig(kind)).toThrow(/missing caseType/)
+      },
+    )
+
+    it('names every kind in use without a case template, and only those', () => {
+      expect(build(MAILBOX_DELIVERY_KINDS).unconfiguredKinds()).toEqual(
+        MAILBOX_DELIVERY_KINDS_IN_USE,
+      )
+      expect(MAILBOX_DELIVERY_KINDS_IN_USE).not.toContain(
+        MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+      )
+      expect(MAILBOX_DELIVERY_KINDS_IN_USE).not.toContain(
+        MailboxDeliveryKindEnum.FINES_PRECURSOR,
+      )
+      expect(build(KINDS).unconfiguredKinds()).toEqual([])
+    })
+
+    it.each([
+      MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
+      MailboxDeliveryKindEnum.EQUALITY_REPORT_APPROVED,
+      MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+      MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+    ])(
+      'answers UNCONFIGURED for a real %s delivery before any row, render or call',
+      async (kind) => {
+        service = build(MAILBOX_DELIVERY_KINDS)
+
+        await expect(
+          service.deliverToMailbox(
+            input({ kind, idempotencyKey: keyFor('REPORT-1', kind) }),
+          ),
+        ).resolves.toEqual({ status: 'UNCONFIGURED', kind })
+
+        expect(companies.findOne).not.toHaveBeenCalled()
+        expect(store.rows.size).toBe(0)
+        expect(pdf).not.toHaveBeenCalled()
+        expect(oneCalls()).toBe(0)
+      },
+    )
 
     it('returns a complete config', () => {
       expect(
         resolveKindConfig(MailboxDeliveryKindEnum.OVERDUE_NOTICE, KINDS),
       ).toEqual(CONFIG)
+    })
+
+    /*
+     * A template unset after a delivery started (a deploy that rolls back
+     * `mailbox-delivery.kinds.ts`). UNCONFIGURED lets the reminder task email
+     * the notice, so it must not be the answer for a delivery One may already
+     * hold or have sent: the existing row is read first and answers as it
+     * stands, with no write, claim or call.
+     */
+    describe('a delivery that already reached One when its kind loses its template', () => {
+      beforeEach(() => {
+        service = build(MAILBOX_DELIVERY_KINDS)
+      })
+
+      const expectUntouched = (before: Row) => {
+        expect(onlyRow()).toEqual(before)
+        expect(store.model.update).not.toHaveBeenCalled()
+        expect(store.model.bulkCreate).not.toHaveBeenCalled()
+        expect(pdf).not.toHaveBeenCalled()
+        expect(oneCalls()).toBe(0)
+        expect(logger.error).not.toHaveBeenCalledWith(
+          expect.stringContaining('has no case template'),
+          expect.anything(),
+        )
+      }
+
+      it('answers SENT for a sent one', async () => {
+        const sentAt = new Date('2026-10-20T10:00:00.000Z')
+        const row = store.seed({
+          status: MailboxDeliveryStatusEnum.SENT,
+          oneCaseItemId: 'case-1',
+          oneDocumentItemId: 'doc-1',
+          islandIsDocumentId: 'doc-1',
+          sentAt,
+        })
+        const before = { ...row }
+
+        await expect(service.deliverToMailbox(input())).resolves.toEqual({
+          status: 'SENT',
+          deliveryId: row.id,
+          islandIsDocumentId: 'doc-1',
+          sentAt,
+          alreadySent: true,
+        })
+        expectUntouched(before)
+      })
+
+      it('answers UNCERTAIN for an uncertain one', async () => {
+        const row = store.seed({
+          status: MailboxDeliveryStatusEnum.UNCERTAIN,
+          oneCaseItemId: 'case-1',
+          oneDocumentItemId: 'doc-1',
+        })
+        const before = { ...row }
+
+        await expect(service.deliverToMailbox(input())).resolves.toEqual({
+          status: 'UNCERTAIN',
+          deliveryId: row.id,
+        })
+        expectUntouched(before)
+      })
+
+      it('answers IN_PROGRESS while another worker holds its lease', async () => {
+        const row = store.seed({
+          status: MailboxDeliveryStatusEnum.CASE_CREATED,
+          oneCaseItemId: 'case-1',
+          inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+          leaseToken: 'other-worker',
+          leaseExpiresAt: new Date(Date.now() + 5 * MINUTE),
+          attempts: 1,
+        })
+        const before = { ...row }
+
+        await expect(service.deliverToMailbox(input())).resolves.toEqual({
+          status: 'IN_PROGRESS',
+          deliveryId: row.id,
+        })
+        expectUntouched(before)
+      })
+
+      it.each([
+        [
+          'a filed document',
+          {
+            status: MailboxDeliveryStatusEnum.FAILED,
+            oneCaseItemId: 'case-1',
+            oneDocumentItemId: 'doc-1',
+            attempts: 2,
+          },
+        ],
+        [
+          'an interrupted call',
+          {
+            status: MailboxDeliveryStatusEnum.CASE_CREATED,
+            oneCaseItemId: 'case-1',
+            inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+            leaseToken: 'dead-worker',
+            leaseExpiresAt: new Date(Date.now() - MINUTE),
+            attempts: 2,
+          },
+        ],
+      ])(
+        'answers skipped UNCONFIGURED, not UNCONFIGURED, for one holding %s',
+        async (_label, overrides) => {
+          const row = store.seed(overrides)
+          const before = { ...row }
+
+          await expect(service.deliverToMailbox(input())).resolves.toEqual({
+            status: overrides.status,
+            deliveryId: row.id,
+            attempts: 2,
+            skipped: 'UNCONFIGURED',
+          })
+          expectUntouched(before)
+          expect(logger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('already reached One'),
+            expect.objectContaining({ deliveryId: row.id }),
+          )
+        },
+      )
+
+      // CreateCase is find-or-create and nothing is filed or sent, so the
+      // notice may go another way.
+      it('answers UNCONFIGURED for one that only has a case', async () => {
+        const row = store.seed({
+          status: MailboxDeliveryStatusEnum.FAILED,
+          oneCaseItemId: 'case-1',
+          attempts: 1,
+        })
+        const before = { ...row }
+
+        await expect(service.deliverToMailbox(input())).resolves.toEqual({
+          status: 'UNCONFIGURED',
+          kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+        })
+        expect(onlyRow()).toEqual(before)
+        expect(oneCalls()).toBe(0)
+      })
     })
   })
 
@@ -503,7 +1024,10 @@ describe('MailboxDeliveryService', () => {
       })
       one.sendDocToIslandIs.mockImplementation(async () => {
         markers.push(onlyRow().inFlightStep)
-        return { islandIsDocumentId: 'island-1' }
+        return {
+          islandIsDocumentId: 'island-1',
+          alreadyInMailbox: false,
+        }
       })
 
       await service.deliverToMailbox(input())
@@ -1473,9 +1997,39 @@ describe('MailboxDeliveryService', () => {
     })
   })
 
+  describe('a send island.is already had', () => {
+    it('is SENT, with a warning', async () => {
+      one.sendDocToIslandIs.mockResolvedValueOnce({
+        islandIsDocumentId: 'island-1',
+        alreadyInMailbox: true,
+      })
+
+      const result = await service.deliverToMailbox(input())
+
+      const row = onlyRow()
+      expect(result).toMatchObject({
+        status: 'SENT',
+        islandIsDocumentId: 'island-1',
+        alreadySent: false,
+      })
+      expect(row).toMatchObject({
+        status: MailboxDeliveryStatusEnum.SENT,
+        islandIsDocumentId: 'island-1',
+        sentAt: expect.any(Date),
+      })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('island.is already had the document'),
+        expect.objectContaining({ deliveryId: row.id }),
+      )
+    })
+  })
+
   describe('a send confirmed without an ItemID', () => {
     it('is SENT, with a null island.is id', async () => {
-      one.sendDocToIslandIs.mockResolvedValueOnce({ islandIsDocumentId: null })
+      one.sendDocToIslandIs.mockResolvedValueOnce({
+        islandIsDocumentId: null,
+        alreadyInMailbox: false,
+      })
 
       const result = await service.deliverToMailbox(input())
 
@@ -1518,7 +2072,10 @@ describe('MailboxDeliveryService', () => {
     })
 
     it('stays SENT when the save committed but its reply was lost', async () => {
-      one.sendDocToIslandIs.mockResolvedValueOnce({ islandIsDocumentId: null })
+      one.sendDocToIslandIs.mockResolvedValueOnce({
+        islandIsDocumentId: null,
+        alreadyInMailbox: false,
+      })
       interceptUpdate(async (values, apply) => {
         if (values.status === MailboxDeliveryStatusEnum.SENT) {
           await apply()
@@ -1557,7 +2114,7 @@ describe('MailboxDeliveryService', () => {
           islandIsDocumentId: null,
           inFlightStep: null,
         })
-        return { islandIsDocumentId: null }
+        return { islandIsDocumentId: null, alreadyInMailbox: false }
       })
 
       await expect(service.deliverToMailbox(input())).rejects.toThrow(
@@ -1609,7 +2166,10 @@ describe('MailboxDeliveryService', () => {
     it('saves a late send into an UNCERTAIN row but keeps it UNCERTAIN', async () => {
       one.sendDocToIslandIs.mockImplementation(async () => {
         markUncertainByAnotherWorker()
-        return { islandIsDocumentId: 'island-1' }
+        return {
+          islandIsDocumentId: 'island-1',
+          alreadyInMailbox: false,
+        }
       })
 
       const result = await service.deliverToMailbox(input())
