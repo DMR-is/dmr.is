@@ -75,7 +75,10 @@ export const getAmendingMismatches = (
   },
 ): AmendingMismatches => {
   // A change recorded on a base regulation's text. The appendixes of an
-  // impact carry no diff, so changes to them can't be compared.
+  // impact carry no diff, so changes to them can't be compared yet. Diffing
+  // appendixes awaits a decision from the stakeholders. When
+  // `RegulationAppendix` gets a diff, pass each one here as its own
+  // `AmendedRegulation`, as the OJOI application does.
   const regulations: AmendedRegulation[] = impacts
     .filter((i) => i.type === 'amend' && !i.dropped && i.diff)
     .map((i) => ({ name: prettyName(i.regulation), diff: i.diff as HTMLText }))
