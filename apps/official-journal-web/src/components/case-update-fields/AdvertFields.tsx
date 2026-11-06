@@ -19,6 +19,7 @@ import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { HTMLEditor } from '../editor/Editor'
 import { messages } from '../form-steps/messages'
 import * as styles from './AdvertFields.css'
+import { AmendingMismatchesAlert } from './AmendingMismatchesAlert'
 
 import { useMutation } from '@tanstack/react-query'
 
@@ -89,6 +90,7 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
             handleUpload={fileUploader()}
           />
         </Box>
+        <AmendingMismatchesAlert />
         <Inline space={2} justifyContent="flexEnd">
           <OriginalCompare
             disclosure={
