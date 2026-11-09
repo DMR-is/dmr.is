@@ -154,6 +154,15 @@ erDiagram
         timestamp updated_at "unused; present for ParanoidModel fit"
         timestamp deleted_at "nullable, soft delete"
     }
+    report_attachment {
+        uuid id PK
+        uuid report_id FK "ON DELETE CASCADE"
+        text filename
+        text extension "pdf | docx | xlsx | xls"
+        integer size_bytes "max 4 MB"
+        bytea content
+        timestamp created_at
+    }
     doe_api_key {
         uuid id PK
         uuid company_id FK
@@ -307,6 +316,7 @@ erDiagram
     company |o--o{ report_event : "company_id"
 
     report ||--o{ report_comment : "report_id"
+    report ||--o{ report_attachment : "report_id"
     doe_user |o--o{ report_comment : "author_user_id"
 
     company ||--o{ doe_api_key : "company_id"

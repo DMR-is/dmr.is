@@ -16,6 +16,13 @@ export enum ImportUploadBoundary {
    * different caps.
    */
   MAIL_ATTACHMENT = 'mail-attachment',
+  /**
+   * Supporting files (fylgiskjöl) a company sends with its equality report
+   * from the application portal. Staging only — the API moves the bytes into
+   * `report_attachment` and deletes the object. Its own boundary rather than
+   * APPLICATION, which is the xlsx-only, parse-gated workbook import.
+   */
+  EQUALITY_ATTACHMENT = 'equality-attachment',
 }
 
 export interface IImportUploadService {

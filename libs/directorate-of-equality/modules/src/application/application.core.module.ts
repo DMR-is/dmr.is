@@ -7,6 +7,7 @@ import { ConfigCoreModule } from '../config/config.core.module'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
 import { ReportCoreModule } from '../report/report.core.module'
+import { ReportAttachmentCoreModule } from '../report-attachment/report-attachment.core.module'
 import { ReportCommentCoreModule } from '../report-comment/report-comment.core.module'
 import { ReportCreateCoreModule } from '../report-create/report-create.core.module'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
@@ -38,6 +39,7 @@ export class ApplicationCoreModule {
         CompanyCoreModule,
         ConfigCoreModule,
         ReportCoreModule,
+        ReportAttachmentCoreModule,
         ReportCreateCoreModule,
         ReportCommentCoreModule,
         ReportEventCoreModule,

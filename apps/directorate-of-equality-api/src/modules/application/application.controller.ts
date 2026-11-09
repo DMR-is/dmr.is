@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Inject,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
   Query,
@@ -36,6 +37,12 @@ import {
   PresignUploadResponseDto,
 } from '@dmr.is/doe-modules/import-upload'
 import { EqualityReportSummaryDto } from '@dmr.is/doe-modules/report'
+import {
+  AddReportAttachmentDto,
+  GetReportAttachmentsResponseDto,
+  PresignReportAttachmentDto,
+  ReportAttachmentDto,
+} from '@dmr.is/doe-modules/report-attachment'
 import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
 import { GetReportOutliersResponseDto } from '@dmr.is/doe-modules/report-employee'
 import {
@@ -427,6 +434,107 @@ export class ApplicationController {
     @Body() input: EditOutliersDto,
   ): Promise<ApplicationReportDetailDto> {
     return this.applicationService.editOutliers(providerId, input, company)
+  }
+
+  @Post('reports/:providerId/equality-attachments/presign')
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
+  @DoeResponse({
+    operationId: 'presignApplicationEqualityAttachment',
+    include404: true,
+    description:
+      'Presigned PUT URL for one fylgiskjal (supporting file) on an EQUALITY report in status `DRAFT` or `IN_REVIEW`. Allowed types: pdf, docx, xlsx, xls. Upload the bytes to `url`, then register `key` with the attachments endpoint. Refused when the report already has 6 attachments.',
+    type: PresignUploadResponseDto,
+  })
+  async presignEqualityAttachment(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: PresignReportAttachmentDto,
+  ): Promise<PresignUploadResponseDto> {
+    return this.applicationService.presignEqualityAttachment(
+      providerId,
+      input,
+      company,
+    )
+  }
+
+  @Post('reports/:providerId/equality-attachments')
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
+  @DoeResponse({
+    operationId: 'addApplicationEqualityAttachment',
+    include404: true,
+    description:
+      'Registers an uploaded fylgiskjal: the API reads the staged file (at most 4 MB), checks that its contents match its extension and that it carries no macros, stores it and deletes the staged copy. At most 6 per report. On an `IN_REVIEW` report this emits `EDITED`.',
+    type: ReportAttachmentDto,
+  })
+  async addEqualityAttachment(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: AddReportAttachmentDto,
+  ): Promise<ReportAttachmentDto> {
+    return this.applicationService.addEqualityAttachment(
+      providerId,
+      input,
+      company,
+    )
+  }
+
+  @Get('reports/:providerId/equality-attachments')
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
+  @DoeResponse({
+    operationId: 'getApplicationEqualityAttachments',
+    include404: true,
+    description:
+      "Lists the report's fylgiskjöl (metadata only, never the files).",
+    type: GetReportAttachmentsResponseDto,
+  })
+  async listEqualityAttachments(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<GetReportAttachmentsResponseDto> {
+    return this.applicationService.listEqualityAttachments(providerId, company)
+  }
+
+  @Delete('reports/:providerId/equality-attachments/:attachmentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
+  @ApiParam({ name: 'attachmentId', type: String, format: 'uuid' })
+  @DoeResponse({
+    operationId: 'deleteApplicationEqualityAttachment',
+    status: HttpStatus.NO_CONTENT,
+    include404: true,
+    description:
+      'Removes one fylgiskjal from an EQUALITY report in status `DRAFT` or `IN_REVIEW`. On an `IN_REVIEW` report this emits `EDITED`.',
+  })
+  async removeEqualityAttachment(
+    @Param('providerId') providerId: string,
+    @Param('attachmentId', ParseUUIDPipe) attachmentId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<void> {
+    return this.applicationService.removeEqualityAttachment(
+      providerId,
+      attachmentId,
+      company,
+    )
   }
 
   @Delete('reports/:providerId')

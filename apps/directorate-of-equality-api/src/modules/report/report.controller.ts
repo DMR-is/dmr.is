@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Header,
   Inject,
   Param,
   ParseUUIDPipe,
@@ -23,6 +24,10 @@ import {
   ReportOverviewDto,
   ReportOverviewStatisticsDto,
 } from '@dmr.is/doe-modules/report'
+import {
+  GetReportAttachmentsResponseDto,
+  IReportAttachmentService,
+} from '@dmr.is/doe-modules/report-attachment'
 import { GetReportOutliersResponseDto } from '@dmr.is/doe-modules/report-employee'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { PagingQuery } from '@dmr.is/shared-dto'
@@ -39,6 +44,8 @@ import { contentDisposition } from '../../core/http/content-disposition'
 export class ReportController {
   constructor(
     @Inject(IReportService) private readonly reportService: IReportService,
+    @Inject(IReportAttachmentService)
+    private readonly reportAttachmentService: IReportAttachmentService,
   ) {}
 
   @Get('overview')
@@ -133,6 +140,50 @@ export class ReportController {
       // Inline: the admin web embeds this in an iframe rather than downloading
       // it, and `attachment` would make the browser save it instead of render.
       disposition: contentDisposition('inline', fileName),
+    })
+  }
+
+  @Get(':id/attachments')
+  @DoeResponse({
+    operationId: 'getReportAttachments',
+    type: GetReportAttachmentsResponseDto,
+    description:
+      'The fylgiskjöl (supporting files) the company sent with an equality report — metadata only. Empty for a report with none, and for a salary report.',
+  })
+  async getAttachments(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<GetReportAttachmentsResponseDto> {
+    return this.reportAttachmentService.list(id)
+  }
+
+  /**
+   * One fylgiskjal, as the company uploaded it.
+   *
+   * ⚠️ **Always `attachment`, never `inline`** — unlike the plan PDF above.
+   * These are company-supplied Office files and PDFs opened by reviewers; the
+   * browser must hand them to the OS rather than render them in the admin
+   * origin. The content type comes from the stored, signature-checked
+   * extension, and `nosniff` stops the browser second-guessing it.
+   */
+  @Get(':id/attachments/:attachmentId')
+  @Header('X-Content-Type-Options', 'nosniff')
+  @DoeResponse({
+    operationId: 'getReportAttachmentFile',
+    include404: true,
+    produces: 'application/octet-stream',
+    successDescription:
+      'Returns the attachment verbatim as a download. 404 when it does not belong to the report.',
+  })
+  async getAttachmentFile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('attachmentId', ParseUUIDPipe) attachmentId: string,
+  ): Promise<StreamableFile> {
+    const { content, contentType, filename } =
+      await this.reportAttachmentService.getFile(id, attachmentId)
+
+    return new StreamableFile(content, {
+      type: contentType,
+      disposition: contentDisposition('attachment', filename),
     })
   }
 

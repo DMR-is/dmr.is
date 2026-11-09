@@ -28,6 +28,7 @@ export enum DoeModels {
   PUBLIC_REPORT = 'public_report',
   REPORT_EVENT = 'report_event',
   REPORT_COMMENT = 'report_comment',
+  REPORT_ATTACHMENT = 'report_attachment',
   COMPANY_EVENT = 'company_event',
   COMPANY_COMMENT = 'company_comment',
   COMPANY_EMAIL = 'company_email',

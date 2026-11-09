@@ -14,6 +14,7 @@ import {
 import { formatCalendarDateIS } from '../../../../lib/constants'
 import { reportText } from '../../../../lib/text'
 import { Empty } from '../../../Empty'
+import { EqualityReportAttachments } from './EqualityReportAttachments'
 import { EqualityReportInputs } from './EqualityReportInputs'
 
 type EqualityReportTabProps = {
@@ -154,6 +155,7 @@ export const EqualityReportTab = ({
             <HTMLReadOnly html={report.content} />
           </Box>
         )}
+        <EqualityReportAttachments reportId={report.id} />
         <Box marginBottom={6}>
           <EqualityReportInputs
             supervisor={supervisor}
