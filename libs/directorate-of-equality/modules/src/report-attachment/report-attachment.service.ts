@@ -12,6 +12,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CompanyReportModel } from '../company/models/company-report.model'
 import { PresignUploadResponseDto } from '../import-upload/dto/presign-upload-response.dto'
 import {
   IImportUploadService,
@@ -349,14 +350,25 @@ export class ReportAttachmentService implements IReportAttachmentService {
   }
 
   /**
-   * Drafts are invisible to reviewers — the admin report detail cannot load one
-   * (it inner-joins the `company_report` snapshot a draft does not have yet) —
-   * so their attachments are not served on the admin surface either.
+   * Visible to reviewers exactly when the admin report detail can load it: that
+   * view inner-joins the parent `company_report` snapshot, which is written at
+   * submission. So a draft has none, and neither does a report withdrawn while
+   * still a draft (its status is `WITHDRAWN`, which the status filter alone would
+   * let through). The same inner join is required here.
    */
   private async assertVisibleToReviewer(reportId: string): Promise<void> {
     const visible = await this.reportModel.findOne({
       where: { id: reportId, status: { [Op.ne]: ReportStatusEnum.DRAFT } },
       attributes: ['id'],
+      include: [
+        {
+          model: CompanyReportModel,
+          as: 'companyReport',
+          required: true,
+          where: { parentCompanyId: null },
+          attributes: [],
+        },
+      ],
     })
 
     if (!visible) {

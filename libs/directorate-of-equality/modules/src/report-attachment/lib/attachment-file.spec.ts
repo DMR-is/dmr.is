@@ -125,6 +125,9 @@ describe('sanitizeAttachmentFilename', () => {
     ['a left-to-right mark', 'plan\u200E.pdf'],
     ['a directional isolate', '\u2066plan.pdf\u2069'],
     ['a byte-order mark', '\uFEFFplan.pdf'],
+    ['an Arabic letter mark', 'plan\u061C.pdf'],
+    ['a line separator', 'plan\u2028.pdf'],
+    ['a paragraph separator', 'plan\u2029.pdf'],
   ])('strips %s', (_label, raw) => {
     expect(sanitizeAttachmentFilename(raw)).toBe('plan.pdf')
   })

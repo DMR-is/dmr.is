@@ -23,6 +23,7 @@ const FETCH_FAILED_MESSAGE = 'Ekki var unnt að sækja fylgiskjalið.'
 const FETCH_TIMEOUT_MESSAGE =
   'Sókn skjalsins tók of langan tíma. Prófaðu aftur.'
 const NOT_FOUND_MESSAGE = 'Fylgiskjalið fannst ekki.'
+const UNAUTHORIZED_MESSAGE = 'Innskráning er útrunnin. Skráðu þig inn aftur.'
 
 /** Same reasoning as `equality-content`: a row read, nothing rendered. */
 const FETCH_TIMEOUT_MS = 15_000
@@ -54,13 +55,13 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions)
   if (session?.invalid || !session?.idToken) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: UNAUTHORIZED_MESSAGE }, { status: 401 })
   }
 
   const { reportId, attachmentId } = await params
 
   if (!UUID.test(reportId) || !UUID.test(attachmentId)) {
-    return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
+    return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 400 })
   }
 
   let res: Response

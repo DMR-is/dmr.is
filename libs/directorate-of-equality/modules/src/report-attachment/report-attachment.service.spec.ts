@@ -1,4 +1,4 @@
-import { Transaction } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 
 import {
   BadRequestException,
@@ -12,6 +12,7 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CompanyReportModel } from '../company/models/company-report.model'
 import {
   IImportUploadService,
   ImportUploadBoundary,
@@ -35,9 +36,20 @@ import { ReportAttachmentService } from './report-attachment.service'
  * the `afterCommit` hooks by hand to play the commit.
  */
 let ambientTransaction: { afterCommit: jest.Mock } | null = null
-jest.mock('cls-hooked', () => ({
-  getNamespace: () => ({ get: () => ambientTransaction }),
-}))
+// Answers only the namespace and key `CLSMiddleware` commits, so a wrong name
+// falls into the no-transaction branch and the after-commit tests fail.
+jest.mock('cls-hooked', () => {
+  const { CLS_NAMESPACE } = jest.requireActual('@dmr.is/constants')
+  return {
+    getNamespace: (name: string) =>
+      name === CLS_NAMESPACE
+        ? {
+            get: (key: string) =>
+              key === 'transaction' ? ambientTransaction : undefined,
+          }
+        : undefined,
+  }
+})
 
 const BOUNDARY = ImportUploadBoundary.EQUALITY_ATTACHMENT
 const REPORT_ID = '00000000-0000-0000-0000-0000000000cc'
@@ -479,6 +491,43 @@ describe('ReportAttachmentService', () => {
         await expect(call(service)).rejects.toBeInstanceOf(NotFoundException)
         expect(scopedFindOne).not.toHaveBeenCalled()
         expect(attachmentFindAll).not.toHaveBeenCalled()
+      },
+    )
+
+    it.each([
+      ['getFile', (s: ReportAttachmentService) => s.getFile(REPORT_ID, 'a-1')],
+      [
+        'listForReviewer',
+        (s: ReportAttachmentService) => s.listForReviewer(REPORT_ID),
+      ],
+    ])(
+      '%s asks only for reports the admin detail can load',
+      async (_label, call) => {
+        scopedFindOne.mockResolvedValueOnce({
+          filename: 'a.pdf',
+          extension: ReportAttachmentExtensionEnum.PDF,
+          content: Buffer.from('%PDF-'),
+        })
+
+        await call(service)
+
+        // Not a draft, AND joined to the parent snapshot the admin detail
+        // inner-joins: a report withdrawn as a draft is WITHDRAWN but has none.
+        expect(reportFindOne).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: {
+              id: REPORT_ID,
+              status: { [Op.ne]: ReportStatusEnum.DRAFT },
+            },
+            include: [
+              expect.objectContaining({
+                model: CompanyReportModel,
+                required: true,
+                where: { parentCompanyId: null },
+              }),
+            ],
+          }),
+        )
       },
     )
   })

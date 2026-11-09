@@ -30,10 +30,8 @@ const OLE_MAGIC = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])
  * what stops it.
  *
  * ⚠️ **A heuristic, not a guarantee.** OOXML part names are case-insensitive, so
- * the search is too; but a VBA part under another name, declared only through
- * the compressed `[Content_Types].xml` and relationships, is not seen. What
- * actually protects reviewers is Office refusing a macro-enabled workbook under
- * a `.xlsx` name, and Protected View on downloaded files.
+ * the search is too. What protects reviewers is Office refusing a macro-enabled
+ * workbook under a `.xlsx` name, and Protected View on downloaded files.
  */
 const VBA_PROJECT = 'vbaproject.bin'
 
@@ -42,7 +40,8 @@ const VBA_PROJECT = 'vbaproject.bin'
  * because they change how a name DISPLAYS without changing what it is:
  * `x<U+202E>xslx.pdf` renders as `xfdp.xlsx` to a reviewer.
  */
-const INVISIBLE_FORMATTING = /[\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g
+const INVISIBLE_FORMATTING =
+  /[\u061c\u200b-\u200f\u2028\u2029\u202a-\u202e\u2060-\u2069\ufeff]/g
 
 /** C0, DEL and C1 control characters. */
 // eslint-disable-next-line no-control-regex

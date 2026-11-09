@@ -1,3 +1,5 @@
+import { Transform } from 'class-transformer'
+
 import { ApiEnum, ApiString } from '@dmr.is/decorators'
 
 import { ReportAttachmentExtensionEnum } from '../models/report-attachment.model'
@@ -20,9 +22,16 @@ export class AddReportAttachmentDto {
 
 /** Asks for a presigned upload URL for one attachment. */
 export class PresignReportAttachmentDto {
+  // Normalised before the enum check: Windows and scanners often write `.PDF`.
+  @Transform(({ value }) =>
+    typeof value === 'string'
+      ? value.trim().toLowerCase().replace(/^\./, '')
+      : value,
+  )
   @ApiEnum(ReportAttachmentExtensionEnum, {
     enumName: 'ReportAttachmentExtensionEnum',
-    description: "The uploaded file's extension, without the dot.",
+    description:
+      "The uploaded file's extension. Case and a leading dot are ignored.",
   })
   extension!: ReportAttachmentExtensionEnum
 }

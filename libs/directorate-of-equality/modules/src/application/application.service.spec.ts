@@ -1687,6 +1687,23 @@ describe('ApplicationService', () => {
     )
 
     it.each(ROUTES)(
+      '%s reaches the attachment code for the owner of a draft',
+      async (_name, call) => {
+        // The positive control for the 404 tables above and below.
+        reportFindOne.mockResolvedValueOnce(
+          makeReportRow({
+            id: REPORT_ID,
+            status: ReportStatusEnum.DRAFT,
+            companyNationalId: COMPANY.nationalId,
+          }),
+        )
+
+        await call(service)
+        expect(attachmentCalls()).toHaveLength(1)
+      },
+    )
+
+    it.each(ROUTES)(
       '%s 404s when no report has that id',
       async (_name, call) => {
         // reportFindOne resolves undefined by default: no row at all.
