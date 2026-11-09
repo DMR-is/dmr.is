@@ -1,4 +1,5 @@
 import { PresignUploadResponseDto } from '../import-upload/dto/presign-upload-response.dto'
+import { ReportStatusEnum } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import { AddReportAttachmentDto } from './dto/add-report-attachment.dto'
 import {
@@ -23,7 +24,11 @@ export type ReportAttachmentFile = {
  * caller.
  */
 export interface IReportAttachmentService {
+  /** The applicant's view: any status, drafts included. */
   list(reportId: string): Promise<GetReportAttachmentsResponseDto>
+
+  /** The reviewer's view: 404 for a DRAFT, which reviewers cannot see. */
+  listForReviewer(reportId: string): Promise<GetReportAttachmentsResponseDto>
 
   /** A presigned PUT for one attachment. Refused when the report cannot take one. */
   presign(
@@ -32,19 +37,35 @@ export interface IReportAttachmentService {
   ): Promise<PresignUploadResponseDto>
 
   /**
-   * Moves a staged upload into `report_attachment` and deletes the staged
-   * object. Throws 400 when the report cannot take attachments, is at the
-   * limit, or the file fails its checks; 413 when it is over the size cap.
+   * Moves a staged upload into `report_attachment`; the staged object is
+   * deleted once the request commits. Throws 400 when the report cannot take
+   * attachments, is at the limit, or the file fails its checks; 413 when it is
+   * over the size cap.
+   *
+   * `reportStatus` is the status read under the report's row lock — the one
+   * the write was allowed under, and the one a caller should record.
    */
   add(
     report: ReportModel,
     input: AddReportAttachmentDto,
-  ): Promise<ReportAttachmentDto>
+  ): Promise<{
+    attachment: ReportAttachmentDto
+    reportStatus: ReportStatusEnum
+  }>
 
-  /** Throws 404 unless the attachment belongs to `report`. */
-  remove(report: ReportModel, attachmentId: string): Promise<void>
+  /**
+   * Throws 404 unless the attachment belongs to `report`. `reportStatus` as
+   * for {@link add}.
+   */
+  remove(
+    report: ReportModel,
+    attachmentId: string,
+  ): Promise<{ reportStatus: ReportStatusEnum }>
 
-  /** Throws 404 unless the attachment belongs to `reportId`. */
+  /**
+   * The reviewer's download. Throws 404 unless the attachment belongs to
+   * `reportId` and the report is not a DRAFT.
+   */
   getFile(reportId: string, attachmentId: string): Promise<ReportAttachmentFile>
 }
 

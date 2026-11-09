@@ -49,6 +49,7 @@ import {
   type ReportResourceContext,
   ReportRoleEnum,
 } from '../report/types/report-resource-context'
+import { ReportAttachmentExtensionEnum } from '../report-attachment/models/report-attachment.model'
 import { IReportAttachmentService } from '../report-attachment/report-attachment.service.interface'
 import { CommentVisibilityEnum } from '../report-comment/models/report-comment.model'
 import { IReportCommentService } from '../report-comment/report-comment.service.interface'
@@ -142,6 +143,7 @@ describe('ApplicationService', () => {
   let attachmentAdd: jest.Mock
   let attachmentRemove: jest.Mock
   let attachmentList: jest.Mock
+  let attachmentPresign: jest.Mock
 
   beforeEach(async () => {
     configGetByKey = jest.fn().mockResolvedValue({
@@ -182,9 +184,16 @@ describe('ApplicationService', () => {
     getResultByReportId = jest.fn()
     emitEdited = jest.fn().mockResolvedValue(undefined)
     emitStatusChanged = jest.fn().mockResolvedValue(undefined)
-    attachmentAdd = jest.fn().mockResolvedValue({ id: 'attachment-1' })
-    attachmentRemove = jest.fn().mockResolvedValue(undefined)
+    // The status each returns is the one read under the report's row lock.
+    attachmentAdd = jest.fn().mockResolvedValue({
+      attachment: { id: 'attachment-1' },
+      reportStatus: ReportStatusEnum.DRAFT,
+    })
+    attachmentRemove = jest
+      .fn()
+      .mockResolvedValue({ reportStatus: ReportStatusEnum.IN_REVIEW })
     attachmentList = jest.fn().mockResolvedValue({ attachments: [] })
+    attachmentPresign = jest.fn().mockResolvedValue({ url: 'u', key: 'k' })
 
     // Parameterised by channel so a test can rebuild the service on the partner
     // channel. Everything else is identical, and duplicating this provider list
@@ -244,6 +253,7 @@ describe('ApplicationService', () => {
               add: attachmentAdd,
               remove: attachmentRemove,
               list: attachmentList,
+              presign: attachmentPresign,
             },
           },
           {
@@ -1597,6 +1607,115 @@ describe('ApplicationService', () => {
             communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
           },
         },
+      )
+    })
+
+    /*
+     * Every applicant route resolves ownership before the attachment service is
+     * reached — including the two reads, which carry the cross-tenant risk.
+     */
+    const ROUTES: Array<
+      [string, (svc: ApplicationService) => Promise<unknown>]
+    > = [
+      [
+        'presignEqualityAttachment',
+        (svc) =>
+          svc.presignEqualityAttachment(
+            PROVIDER_ID,
+            { extension: ReportAttachmentExtensionEnum.XLSX },
+            COMPANY,
+          ),
+      ],
+      [
+        'addEqualityAttachment',
+        (svc) => svc.addEqualityAttachment(PROVIDER_ID, INPUT, COMPANY),
+      ],
+      [
+        'listEqualityAttachments',
+        (svc) => svc.listEqualityAttachments(PROVIDER_ID, COMPANY),
+      ],
+      [
+        'removeEqualityAttachment',
+        (svc) =>
+          svc.removeEqualityAttachment(PROVIDER_ID, 'attachment-1', COMPANY),
+      ],
+    ]
+
+    const attachmentCalls = () => [
+      ...attachmentPresign.mock.calls,
+      ...attachmentAdd.mock.calls,
+      ...attachmentList.mock.calls,
+      ...attachmentRemove.mock.calls,
+    ]
+
+    it.each(ROUTES)(
+      "%s 404s on another company's DRAFT and reaches no attachment code",
+      async (_name, call) => {
+        reportFindOne.mockResolvedValueOnce(
+          makeReportRow({
+            id: REPORT_ID,
+            status: ReportStatusEnum.DRAFT,
+            companyNationalId: '4407654321',
+          }),
+        )
+
+        await expect(call(service)).rejects.toBeInstanceOf(NotFoundException)
+        expect(attachmentCalls()).toHaveLength(0)
+      },
+    )
+
+    it.each(ROUTES)(
+      "%s 404s on another company's submitted report and reaches no attachment code",
+      async (_name, call) => {
+        const report = makeReportRow({
+          id: REPORT_ID,
+          status: ReportStatusEnum.IN_REVIEW,
+        })
+        reportFindOne
+          .mockResolvedValueOnce(report)
+          .mockResolvedValueOnce(report)
+        companyReportFindAll.mockResolvedValueOnce([
+          makeCompanyReportRow({
+            reportId: REPORT_ID,
+            companyId: 'someone-else',
+          }),
+        ])
+
+        await expect(call(service)).rejects.toBeInstanceOf(NotFoundException)
+        expect(attachmentCalls()).toHaveLength(0)
+      },
+    )
+
+    it.each(ROUTES)(
+      '%s 404s when no report has that id',
+      async (_name, call) => {
+        // reportFindOne resolves undefined by default: no row at all.
+        await expect(call(service)).rejects.toBeInstanceOf(NotFoundException)
+        expect(attachmentCalls()).toHaveLength(0)
+      },
+    )
+
+    it('records the edit by the status read under the lock, not the one resolved first', async () => {
+      // Resolved as a DRAFT, but by the time the row was locked a reviewer had
+      // it IN_REVIEW: the edit belongs on the timeline.
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          status: ReportStatusEnum.DRAFT,
+          companyNationalId: COMPANY.nationalId,
+        }),
+      )
+      attachmentAdd.mockResolvedValueOnce({
+        attachment: { id: 'attachment-1' },
+        reportStatus: ReportStatusEnum.IN_REVIEW,
+      })
+
+      await service.addEqualityAttachment(PROVIDER_ID, INPUT, COMPANY)
+
+      expect(emitEdited).toHaveBeenCalledWith(
+        REPORT_ID,
+        ReportStatusEnum.IN_REVIEW,
+        COMPANY.id,
       )
     })
 

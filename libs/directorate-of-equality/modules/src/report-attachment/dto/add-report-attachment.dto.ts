@@ -1,4 +1,6 @@
-import { ApiString } from '@dmr.is/decorators'
+import { ApiEnum, ApiString } from '@dmr.is/decorators'
+
+import { ReportAttachmentExtensionEnum } from '../models/report-attachment.model'
 
 /** Registers a file already PUT to the presigned URL. */
 export class AddReportAttachmentDto {
@@ -18,9 +20,9 @@ export class AddReportAttachmentDto {
 
 /** Asks for a presigned upload URL for one attachment. */
 export class PresignReportAttachmentDto {
-  @ApiString({
-    description: 'The file extension: pdf, docx, xlsx or xls.',
-    maxLength: 10,
+  @ApiEnum(ReportAttachmentExtensionEnum, {
+    enumName: 'ReportAttachmentExtensionEnum',
+    description: "The uploaded file's extension, without the dot.",
   })
-  extension!: string
+  extension!: ReportAttachmentExtensionEnum
 }

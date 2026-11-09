@@ -28,8 +28,25 @@ const OLE_MAGIC = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])
  * headers and the central directory, so a byte search finds it without
  * unzipping. A `.xlsm` renamed to `.xlsx` passes the zip check alone; this is
  * what stops it.
+ *
+ * ⚠️ **A heuristic, not a guarantee.** OOXML part names are case-insensitive, so
+ * the search is too; but a VBA part under another name, declared only through
+ * the compressed `[Content_Types].xml` and relationships, is not seen. What
+ * actually protects reviewers is Office refusing a macro-enabled workbook under
+ * a `.xlsx` name, and Protected View on downloaded files.
  */
-const VBA_PROJECT = Buffer.from('vbaProject.bin', 'ascii')
+const VBA_PROJECT = 'vbaproject.bin'
+
+/**
+ * Bidirectional and invisible formatting characters. Kept out of filenames
+ * because they change how a name DISPLAYS without changing what it is:
+ * `x<U+202E>xslx.pdf` renders as `xfdp.xlsx` to a reviewer.
+ */
+const INVISIBLE_FORMATTING = /[\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g
+
+/** C0, DEL and C1 control characters. */
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f-\u009f]/g
 
 /**
  * The content type a download is served with — derived from the stored
@@ -76,13 +93,17 @@ export const toAttachmentExtension = (
 
 /**
  * The filename as it will be stored and served: path components dropped
- * (a browser may send `C:\fakepath\…`), control characters removed, trimmed.
+ * (a browser may send `C:\fakepath\…`), NFC-normalised, control and
+ * bidi/invisible formatting characters removed, trimmed.
  * Throws 400 when nothing usable is left or it is too long.
  */
 export const sanitizeAttachmentFilename = (raw: string): string => {
   const base = raw.split(/[\\/]/).pop() ?? ''
-  // eslint-disable-next-line no-control-regex
-  const cleaned = base.replace(/[\u0000-\u001f\u007f]/g, '').trim()
+  const cleaned = base
+    .normalize('NFC')
+    .replace(CONTROL_CHARACTERS, '')
+    .replace(INVISIBLE_FORMATTING, '')
+    .trim()
 
   if (cleaned.length === 0) {
     throw new BadRequestException('Attachment filename is empty')
@@ -131,7 +152,9 @@ export const assertAttachmentContent = (
       if (!bytes.subarray(0, ZIP_MAGIC.length).equals(ZIP_MAGIC)) {
         throw mismatch()
       }
-      if (bytes.indexOf(VBA_PROJECT) !== -1) {
+      // latin1 maps each byte to one character, so lower-casing cannot
+      // shift offsets or merge bytes; at 4 MB this is a cheap copy.
+      if (bytes.toString('latin1').toLowerCase().includes(VBA_PROJECT)) {
         throw new BadRequestException(
           'Files containing macros are not accepted',
         )

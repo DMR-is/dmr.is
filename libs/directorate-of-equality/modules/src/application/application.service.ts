@@ -574,8 +574,11 @@ export class ApplicationService implements IApplicationService {
     company: CompanyDto,
   ): Promise<ReportAttachmentDto> {
     const report = await this.findOwnedReportForAttachments(providerId, company)
-    const attachment = await this.reportAttachmentService.add(report, input)
-    await this.recordAttachmentEdit(report, company)
+    const { attachment, reportStatus } = await this.reportAttachmentService.add(
+      report,
+      input,
+    )
+    await this.recordAttachmentEdit(report.id, reportStatus, company)
     return attachment
   }
 
@@ -593,27 +596,30 @@ export class ApplicationService implements IApplicationService {
     company: CompanyDto,
   ): Promise<void> {
     const report = await this.findOwnedReportForAttachments(providerId, company)
-    await this.reportAttachmentService.remove(report, attachmentId)
-    await this.recordAttachmentEdit(report, company)
+    const { reportStatus } = await this.reportAttachmentService.remove(
+      report,
+      attachmentId,
+    )
+    await this.recordAttachmentEdit(report.id, reportStatus, company)
   }
 
   /**
    * A change to the attachments during review is an edit like a change to the
    * plan: it answers the reviewer and belongs on the timeline. A DRAFT has no
    * timeline yet, so nothing is recorded there.
+   *
+   * `status` is the one the attachment service read under the report's row
+   * lock, not the one resolved at the start of the request.
    */
   private async recordAttachmentEdit(
-    report: ReportModel,
+    reportId: string,
+    status: ReportStatusEnum,
     company: CompanyDto,
   ): Promise<void> {
-    if (report.status !== ReportStatusEnum.IN_REVIEW) return
+    if (status !== ReportStatusEnum.IN_REVIEW) return
 
-    await this.markApplicantResponded(report.id)
-    await this.reportEventService.emitEdited(
-      report.id,
-      report.status,
-      company.id,
-    )
+    await this.markApplicantResponded(reportId)
+    await this.reportEventService.emitEdited(reportId, status, company.id)
   }
 
   /**

@@ -437,6 +437,8 @@ export class ApplicationController {
   }
 
   @Post('reports/:providerId/equality-attachments/presign')
+  // A presign creates nothing on this API — the upload URL is the response.
+  @HttpCode(HttpStatus.OK)
   @ApiParam({
     name: 'providerId',
     type: String,
@@ -463,6 +465,7 @@ export class ApplicationController {
   }
 
   @Post('reports/:providerId/equality-attachments')
+  @HttpCode(HttpStatus.CREATED)
   @ApiParam({
     name: 'providerId',
     type: String,
@@ -471,6 +474,7 @@ export class ApplicationController {
   })
   @DoeResponse({
     operationId: 'addApplicationEqualityAttachment',
+    status: 201,
     include404: true,
     description:
       'Registers an uploaded fylgiskjal: the API reads the staged file (at most 4 MB), checks that its contents match its extension and that it carries no macros, stores it and deletes the staged copy. At most 6 per report. On an `IN_REVIEW` report this emits `EDITED`.',

@@ -29,6 +29,16 @@ import {
 } from './models/report-attachment.model'
 import { ReportAttachmentService } from './report-attachment.service'
 
+/*
+ * The request's CLS transaction, as the service sees it. `null` means "no
+ * ambient transaction" (the unit-test default); a test that sets it can fire
+ * the `afterCommit` hooks by hand to play the commit.
+ */
+let ambientTransaction: { afterCommit: jest.Mock } | null = null
+jest.mock('cls-hooked', () => ({
+  getNamespace: () => ({ get: () => ambientTransaction }),
+}))
+
 const BOUNDARY = ImportUploadBoundary.EQUALITY_ATTACHMENT
 const REPORT_ID = '00000000-0000-0000-0000-0000000000cc'
 const KEY = `doe-imports/equality-attachment/11111111-1111-4111-8111-111111111111.xlsx`
@@ -52,6 +62,9 @@ const makeReport = (overrides: Partial<ReportModel> = {}): ReportModel =>
     ...overrides,
   }) as ReportModel
 
+/** Lets a fire-and-forget cleanup (no ambient transaction) run to completion. */
+const flush = () => new Promise((resolve) => setImmediate(resolve))
+
 describe('ReportAttachmentService', () => {
   let service: ReportAttachmentService
   let importUpload: {
@@ -64,11 +77,14 @@ describe('ReportAttachmentService', () => {
   let attachmentCount: jest.Mock
   let attachmentDestroy: jest.Mock
   let attachmentFindAll: jest.Mock
+  let attachmentFindOne: jest.Mock
   let scopedFindOne: jest.Mock
   let attachmentScope: jest.Mock
   let reportFindOne: jest.Mock
+  let reportUpdate: jest.Mock
 
   beforeEach(async () => {
+    ambientTransaction = null
     importUpload = {
       createUpload: jest.fn().mockResolvedValue({ url: 'u', key: KEY }),
       assertKeyWithinBoundary: jest.fn(),
@@ -83,9 +99,13 @@ describe('ReportAttachmentService', () => {
     attachmentCount = jest.fn().mockResolvedValue(0)
     attachmentDestroy = jest.fn().mockResolvedValue(1)
     attachmentFindAll = jest.fn().mockResolvedValue([])
+    // The post-commit "did the row land" check.
+    attachmentFindOne = jest.fn().mockResolvedValue({ id: 'attachment-1' })
     scopedFindOne = jest.fn()
     attachmentScope = jest.fn().mockReturnValue({ findOne: scopedFindOne })
+    // Both the row lock and the reviewer-visibility check read the report.
     reportFindOne = jest.fn(async () => makeReport())
+    reportUpdate = jest.fn().mockResolvedValue([1])
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -99,12 +119,13 @@ describe('ReportAttachmentService', () => {
             count: attachmentCount,
             destroy: attachmentDestroy,
             findAll: attachmentFindAll,
+            findOne: attachmentFindOne,
             scope: attachmentScope,
           },
         },
         {
           provide: getModelToken(ReportModel),
-          useValue: { findOne: reportFindOne },
+          useValue: { findOne: reportFindOne, update: reportUpdate },
         },
       ],
     }).compile()
@@ -113,8 +134,8 @@ describe('ReportAttachmentService', () => {
   })
 
   describe('add', () => {
-    it('stores the file under a lock, then deletes the staged object', async () => {
-      const result = await service.add(makeReport(), {
+    it('stores the file under a lock and returns the status read under it', async () => {
+      const { attachment, reportStatus } = await service.add(makeReport(), {
         key: KEY,
         filename: 'Aðgerðaáætlun.xlsx',
       })
@@ -127,17 +148,101 @@ describe('ReportAttachmentService', () => {
       expect(reportFindOne).toHaveBeenCalledWith(
         expect.objectContaining({ lock: Transaction.LOCK.UPDATE }),
       )
-      expect(attachmentCreate).toHaveBeenCalledWith({
-        reportId: REPORT_ID,
-        filename: 'Aðgerðaáætlun.xlsx',
-        extension: ReportAttachmentExtensionEnum.XLSX,
-        sizeBytes: XLSX_BYTES.length,
-        content: XLSX_BYTES,
+      expect(attachmentCreate).toHaveBeenCalledWith(
+        {
+          reportId: REPORT_ID,
+          filename: 'Aðgerðaáætlun.xlsx',
+          extension: ReportAttachmentExtensionEnum.XLSX,
+          sizeBytes: XLSX_BYTES.length,
+          content: XLSX_BYTES,
+        },
+        // The insert must not echo 4 MB of bytea back from Postgres.
+        { returning: expect.not.arrayContaining(['content']) },
+      )
+      expect(attachment).not.toHaveProperty('content')
+      expect(attachment.extension).toBe(ReportAttachmentExtensionEnum.XLSX)
+      expect(reportStatus).toBe(ReportStatusEnum.DRAFT)
+    })
+
+    it('counts the attachments only after taking the lock', async () => {
+      await service.add(makeReport(), { key: KEY, filename: 'a.xlsx' })
+
+      const lockCall = reportFindOne.mock.invocationCallOrder[0]
+      const countCall = attachmentCount.mock.invocationCallOrder[0]
+      expect(countCall).toBeGreaterThan(lockCall)
+    })
+
+    it('refreshes a draft so the stale-draft reaper counts the upload as activity', async () => {
+      await service.add(makeReport(), { key: KEY, filename: 'a.xlsx' })
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { updatedAt: expect.any(Date) },
+        { where: { id: REPORT_ID }, silent: true },
+      )
+    })
+
+    it('does not touch updated_at on a report in review', async () => {
+      reportFindOne.mockResolvedValue(
+        makeReport({ status: ReportStatusEnum.IN_REVIEW }),
+      )
+
+      await service.add(makeReport({ status: ReportStatusEnum.IN_REVIEW }), {
+        key: KEY,
+        filename: 'a.xlsx',
       })
-      // No error: success is terminal for the staged object.
-      expect(importUpload.cleanupAfter).toHaveBeenCalledWith(KEY, BOUNDARY)
-      expect(result).not.toHaveProperty('content')
-      expect(result.extension).toBe(ReportAttachmentExtensionEnum.XLSX)
+
+      expect(reportUpdate).not.toHaveBeenCalled()
+    })
+
+    describe('deleting the staged object', () => {
+      it('waits for the commit, then deletes only once the row is confirmed', async () => {
+        ambientTransaction = { afterCommit: jest.fn() }
+
+        await service.add(makeReport(), { key: KEY, filename: 'a.xlsx' })
+
+        // Nothing is deleted while the request can still roll back.
+        expect(importUpload.cleanupAfter).not.toHaveBeenCalled()
+        expect(ambientTransaction.afterCommit).toHaveBeenCalledTimes(1)
+
+        await ambientTransaction.afterCommit.mock.calls[0][0]()
+
+        expect(attachmentFindOne).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { id: 'attachment-1' },
+            transaction: null,
+          }),
+        )
+        expect(importUpload.cleanupAfter).toHaveBeenCalledWith(KEY, BOUNDARY)
+      })
+
+      it('keeps the upload when the hook fires for a commit that did not land', async () => {
+        ambientTransaction = { afterCommit: jest.fn() }
+        attachmentFindOne.mockResolvedValueOnce(null)
+
+        await service.add(makeReport(), { key: KEY, filename: 'a.xlsx' })
+        await ambientTransaction.afterCommit.mock.calls[0][0]()
+
+        expect(importUpload.cleanupAfter).not.toHaveBeenCalled()
+      })
+
+      it('never lets a failing post-commit check escape the hook', async () => {
+        ambientTransaction = { afterCommit: jest.fn() }
+        attachmentFindOne.mockRejectedValueOnce(new Error('db gone'))
+
+        await service.add(makeReport(), { key: KEY, filename: 'a.xlsx' })
+
+        await expect(
+          ambientTransaction.afterCommit.mock.calls[0][0](),
+        ).resolves.toBeUndefined()
+        expect(importUpload.cleanupAfter).not.toHaveBeenCalled()
+      })
+
+      it('deletes straight away when there is no request transaction', async () => {
+        await service.add(makeReport(), { key: KEY, filename: 'a.xlsx' })
+        await flush()
+
+        expect(importUpload.cleanupAfter).toHaveBeenCalledWith(KEY, BOUNDARY)
+      })
     })
 
     it('refuses a key outside the boundary before any read or cleanup', async () => {
@@ -155,7 +260,7 @@ describe('ReportAttachmentService', () => {
       expect(importUpload.cleanupAfter).not.toHaveBeenCalled()
     })
 
-    it('refuses the seventh attachment, counted under the lock', async () => {
+    it('refuses the seventh attachment and deletes the staged object', async () => {
       attachmentCount.mockResolvedValue(MAX_REPORT_ATTACHMENTS)
 
       await expect(
@@ -184,11 +289,12 @@ describe('ReportAttachmentService', () => {
       expect(attachmentCreate).not.toHaveBeenCalled()
     })
 
-    it('refuses a filename whose extension differs from the upload', async () => {
+    it('refuses a mismatched filename without deleting the upload it could retry with', async () => {
       await expect(
         service.add(makeReport(), { key: KEY, filename: 'a.pdf' }),
       ).rejects.toThrow(/does not match/)
       expect(importUpload.fetchObject).not.toHaveBeenCalled()
+      expect(importUpload.cleanupAfter).not.toHaveBeenCalled()
     })
 
     it('refuses bytes that are not what the extension says', async () => {
@@ -267,12 +373,49 @@ describe('ReportAttachmentService', () => {
   })
 
   describe('remove', () => {
-    it('deletes only within the given report', async () => {
-      await service.remove(makeReport(), 'attachment-1')
+    it('deletes only within the given report, under the lock, and returns the locked status', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReport({ status: ReportStatusEnum.IN_REVIEW }),
+      )
 
+      const { reportStatus } = await service.remove(
+        makeReport({ status: ReportStatusEnum.IN_REVIEW }),
+        'attachment-1',
+      )
+
+      expect(reportFindOne).toHaveBeenCalledWith(
+        expect.objectContaining({ lock: Transaction.LOCK.UPDATE }),
+      )
+      expect(reportFindOne.mock.invocationCallOrder[0]).toBeLessThan(
+        attachmentDestroy.mock.invocationCallOrder[0],
+      )
       expect(attachmentDestroy).toHaveBeenCalledWith({
         where: { id: 'attachment-1', reportId: REPORT_ID },
       })
+      expect(reportStatus).toBe(ReportStatusEnum.IN_REVIEW)
+    })
+
+    it('refuses when a reviewer decided the report while the request was in flight', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReport({ status: ReportStatusEnum.APPROVED }),
+      )
+
+      await expect(
+        service.remove(
+          makeReport({ status: ReportStatusEnum.IN_REVIEW }),
+          'attachment-1',
+        ),
+      ).rejects.toThrow(/status APPROVED/)
+      expect(attachmentDestroy).not.toHaveBeenCalled()
+    })
+
+    it('refreshes a draft', async () => {
+      await service.remove(makeReport(), 'attachment-1')
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { updatedAt: expect.any(Date) },
+        { where: { id: REPORT_ID }, silent: true },
+      )
     })
 
     it("404s on an attachment that is not this report's", async () => {
@@ -294,8 +437,8 @@ describe('ReportAttachmentService', () => {
     })
   })
 
-  describe('getFile', () => {
-    it('reads the bytes only through the content scope, within the report', async () => {
+  describe('reviewer reads', () => {
+    it('getFile reads the bytes only through the content scope, within the report', async () => {
       scopedFindOne.mockResolvedValueOnce({
         filename: 'plan.xls',
         extension: ReportAttachmentExtensionEnum.XLS,
@@ -313,13 +456,31 @@ describe('ReportAttachmentService', () => {
       expect(file.contentType).toBe('application/vnd.ms-excel')
     })
 
-    it('404s when the attachment is not on the report', async () => {
+    it('getFile 404s when the attachment is not on the report', async () => {
       scopedFindOne.mockResolvedValueOnce(null)
 
       await expect(
         service.getFile(REPORT_ID, 'attachment-1'),
       ).rejects.toBeInstanceOf(NotFoundException)
     })
+
+    it.each([
+      ['getFile', (s: ReportAttachmentService) => s.getFile(REPORT_ID, 'a-1')],
+      [
+        'listForReviewer',
+        (s: ReportAttachmentService) => s.listForReviewer(REPORT_ID),
+      ],
+    ])(
+      '%s 404s for a draft, which reviewers cannot see',
+      async (_label, call) => {
+        // The visibility query excludes DRAFT, so a draft finds no row.
+        reportFindOne.mockResolvedValueOnce(null)
+
+        await expect(call(service)).rejects.toBeInstanceOf(NotFoundException)
+        expect(scopedFindOne).not.toHaveBeenCalled()
+        expect(attachmentFindAll).not.toHaveBeenCalled()
+      },
+    )
   })
 
   describe('list', () => {

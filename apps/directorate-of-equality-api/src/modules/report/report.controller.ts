@@ -146,14 +146,15 @@ export class ReportController {
   @Get(':id/attachments')
   @DoeResponse({
     operationId: 'getReportAttachments',
+    include404: true,
     type: GetReportAttachmentsResponseDto,
     description:
-      'The fylgiskjöl (supporting files) the company sent with an equality report — metadata only. Empty for a report with none, and for a salary report.',
+      'The fylgiskjöl (supporting files) the company sent with an equality report — metadata only. Empty for a report with none, and for a salary report. 404 for a draft, which reviewers cannot see.',
   })
   async getAttachments(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<GetReportAttachmentsResponseDto> {
-    return this.reportAttachmentService.list(id)
+    return this.reportAttachmentService.listForReviewer(id)
   }
 
   /**
@@ -172,7 +173,7 @@ export class ReportController {
     include404: true,
     produces: 'application/octet-stream',
     successDescription:
-      'Returns the attachment verbatim as a download. 404 when it does not belong to the report.',
+      'Returns the attachment verbatim as a download. 404 when it does not belong to the report, or the report is a draft.',
   })
   async getAttachmentFile(
     @Param('id', ParseUUIDPipe) id: string,

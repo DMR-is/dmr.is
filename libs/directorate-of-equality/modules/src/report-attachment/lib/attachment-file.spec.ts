@@ -55,6 +55,14 @@ describe('assertAttachmentContent', () => {
     },
   )
 
+  it.each(['xl/VBAPROJECT.BIN', 'word/VbaProject.Bin'])(
+    'refuses the macro part whatever its case (%s), as OPC part names are case-insensitive',
+    (part) => {
+      const macro = Buffer.concat([zip, Buffer.from(part)])
+      expect(() => assertAttachmentContent(macro, XLSX)).toThrow(/macros/)
+    },
+  )
+
   it('refuses an empty file', () => {
     expect(() => assertAttachmentContent(Buffer.alloc(0), PDF)).toThrow(
       BadRequestException,
@@ -104,6 +112,26 @@ describe('sanitizeAttachmentFilename', () => {
 
   it('strips control characters, so a CR/LF cannot reach a header', () => {
     expect(sanitizeAttachmentFilename('pl\r\nan.pdf')).toBe('plan.pdf')
+  })
+
+  it('strips a right-to-left override, so a .pdf cannot pose as a .xlsx', () => {
+    // Displays as `xfdp.xlsx` with the override in place.
+    expect(sanitizeAttachmentFilename('x\u202Exslx.pdf')).toBe('xxslx.pdf')
+  })
+
+  it.each([
+    ['a C1 control', 'plan\u0085.pdf'],
+    ['a zero-width space', 'plan\u200B.pdf'],
+    ['a left-to-right mark', 'plan\u200E.pdf'],
+    ['a directional isolate', '\u2066plan.pdf\u2069'],
+    ['a byte-order mark', '\uFEFFplan.pdf'],
+  ])('strips %s', (_label, raw) => {
+    expect(sanitizeAttachmentFilename(raw)).toBe('plan.pdf')
+  })
+
+  it('normalises to NFC, so the same name is stored the same way', () => {
+    // "á" as a + combining acute (NFD, as macOS may send it).
+    expect(sanitizeAttachmentFilename('a\u0301.pdf')).toBe('\u00e1.pdf')
   })
 
   it('refuses a name with nothing left, or one too long', () => {

@@ -5059,7 +5059,7 @@
     },
     "/api/v1/reports/{id}/attachments": {
       "get": {
-        "description": "The fylgiskjöl (supporting files) the company sent with an equality report — metadata only. Empty for a report with none, and for a salary report.",
+        "description": "The fylgiskjöl (supporting files) the company sent with an equality report — metadata only. Empty for a report with none, and for a salary report. 404 for a draft, which reviewers cannot see.",
         "operationId": "getReportAttachments",
         "parameters": [
           {
@@ -5104,6 +5104,14 @@
               }
             }
           },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
           "500": {
             "description": "",
             "content": {
@@ -5137,7 +5145,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns the attachment verbatim as a download. 404 when it does not belong to the report.",
+            "description": "Returns the attachment verbatim as a download. 404 when it does not belong to the report, or the report is a draft.",
             "content": {
               "application/octet-stream": {
                 "schema": { "type": "string", "format": "binary" }
