@@ -19,6 +19,7 @@ import { RegulationImpact } from '../../gen/fetch'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatDate } from '../../lib/utils'
+import { AmendingMismatchesAlert } from './AmendingMismatchesAlert'
 import { EditCancellationModal } from './EditCancellationModal'
 import { EditChangeModal } from './EditChangeModal'
 import * as styles from './EditChangeModal.css'
@@ -137,6 +138,7 @@ export const RegulationImpactsFields = ({
 
       {data && (
         <Stack space={4}>
+          <AmendingMismatchesAlert expanded={expanded} />
           {!hasImpacts && (
             <Text variant="small" color="dark300">
               Engin áhrif skráð á aðrar reglugerðir.
