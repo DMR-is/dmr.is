@@ -7,19 +7,14 @@
  * These are hints for the editor, not errors: prose can't be mapped back to
  * a diff reliably.
  */
-import type {
-  AmendedRegulation,
-  AmendingMismatch,
-} from '@dmr.is/regulations-tools/amendingMismatches-browser'
+import type { AmendedRegulation } from '@dmr.is/regulations-tools/amendingMismatches-browser'
 import type { HTMLText } from '@dmr.is/regulations-tools/types'
 
 import { CaseAddition, RegulationImpact } from '../../gen/fetch'
 
 /** `findAmendingMismatches` from the browser entry, loaded on demand. */
-export type FindAmendingMismatches = (
-  amendingHtml: HTMLText,
-  regulations: ReadonlyArray<AmendedRegulation>,
-) => Array<AmendingMismatch>
+export type FindAmendingMismatches =
+  typeof import('@dmr.is/regulations-tools/amendingMismatches-browser').default
 
 /** An amount or a date. `text` is as written where it was found. */
 export type ValueMismatch =
@@ -74,14 +69,24 @@ export const getAmendingMismatches = (
     impacts: RegulationImpact[]
   },
 ): AmendingMismatches => {
-  // A change recorded on a base regulation's text. The appendixes of an
-  // impact carry no diff, so changes to them can't be compared yet. Diffing
-  // appendixes awaits a decision from the stakeholders. When
-  // `RegulationAppendix` gets a diff, pass each one here as its own
-  // `AmendedRegulation`, as the OJOI application does.
-  const regulations: AmendedRegulation[] = impacts
-    .filter((i) => i.type === 'amend' && !i.dropped && i.diff)
-    .map((i) => ({ name: prettyName(i.regulation), diff: i.diff as HTMLText }))
+  const amends = impacts.filter((i) => i.type === 'amend' && !i.dropped)
+  // Each change recorded on a base regulation's text, and each appendix it
+  // changes. An impact's appendixes carry no diff, only their new text, so
+  // each one counts as changed throughout: amounts in a replaced fee table
+  // are found, and nothing in it is reported as missing from the text.
+  // Diffing appendixes awaits a decision from the stakeholders. When
+  // `RegulationAppendix` gets a diff, pass that here instead of the text,
+  // as the OJOI application does.
+  const regulations: AmendedRegulation[] = amends.flatMap((i) => {
+    const name = prettyName(i.regulation)
+    return [
+      ...(i.diff ? [{ name, diff: i.diff as HTMLText }] : []),
+      ...(i.appendixes ?? []).map((a) => ({ name, diff: a.text as HTMLText })),
+    ]
+  })
+  // A change with no diff can't be compared, so the text may state
+  // anything it brings in
+  const unknownChanges = amends.some((i) => !i.diff)
 
   const text = [
     html ?? '',
@@ -98,6 +103,7 @@ export const getAmendingMismatches = (
   const wording: WordingMismatches[] = []
   for (const m of find(text, regulations)) {
     if (m.type === 'notInChanges') {
+      if (unknownChanges) continue
       values.push({ type: m.type, text: m.text, section: m.section })
     } else if (m.kind !== 'wording') {
       values.push({

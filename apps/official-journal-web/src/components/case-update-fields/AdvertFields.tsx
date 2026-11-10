@@ -90,7 +90,7 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
             handleUpload={fileUploader()}
           />
         </Box>
-        <AmendingMismatchesAlert />
+        <AmendingMismatchesAlert expanded={toggle} />
         <Inline space={2} justifyContent="flexEnd">
           <OriginalCompare
             disclosure={

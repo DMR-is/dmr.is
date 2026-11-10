@@ -138,7 +138,7 @@ export const RegulationImpactsFields = ({
 
       {data && (
         <Stack space={4}>
-          <AmendingMismatchesAlert />
+          <AmendingMismatchesAlert expanded={expanded} />
           {!hasImpacts && (
             <Text variant="small" color="dark300">
               Engin áhrif skráð á aðrar reglugerðir.

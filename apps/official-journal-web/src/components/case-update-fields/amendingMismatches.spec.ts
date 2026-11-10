@@ -81,15 +81,41 @@ describe('getAmendingMismatches', () => {
       order,
     })
     expect(
-      check(lead, [raised], [appendix(2, '<p>Gjald: kr. 1.800.</p>')]),
+      check(
+        lead,
+        [raised],
+        [appendix(2, '<p>Gjald: kr. 1.800.</p>'), appendix(1, '<p>Skrá.</p>')],
+      ),
     ).toEqual(NONE)
   })
 
-  it('leaves out dropped changes, repeals and changes without a diff', () => {
-    expect(check(text('1.900'), [{ ...raised, dropped: true }])).toEqual(NONE)
+  it('compares an appendix the text replaces with the changed appendix', () => {
+    const tariff = '<p>Skoðun: kr. 2.000.</p><p>Endurskoðun: kr. 3.500.</p>'
+    const html = `${text(
+      '1.800',
+    )}<h3>2. gr.</h3><p>Viðauki I við reglugerðina orðast svo:</p>${tariff}`
+    const appendixes = [{ title: 'Viðauki I', text: tariff }]
+    expect(check(html, [{ ...raised, appendixes }])).toEqual(NONE)
     expect(
-      check(text('1.900'), [{ ...raised, type: 'repeal', diff: undefined }]),
-    ).toEqual(NONE)
+      check(html.replace('3.500', '3.600'), [{ ...raised, appendixes }]).values,
+    ).toEqual([{ type: 'notInChanges', text: '3.600', section: '2. gr.' }])
+  })
+
+  it('reports nothing as missing from changes when a change has no diff', () => {
+    const unknown = { ...raised, id: '2', diff: undefined }
+    expect(check(text('1.900'), [raised, unknown]).values).toEqual([
+      {
+        type: 'missingFromText',
+        text: '1.800',
+        regulation: '123/2020',
+        section: '5. gr.',
+      },
+    ])
+  })
+
+  it('leaves out dropped changes, repeals and an empty text', () => {
+    expect(check(text('1.900'), [{ ...raised, dropped: true }])).toEqual(NONE)
+    expect(check(text('1.900'), [{ ...raised, type: 'repeal' }])).toEqual(NONE)
     expect(check('', [raised])).toEqual(NONE)
   })
 })

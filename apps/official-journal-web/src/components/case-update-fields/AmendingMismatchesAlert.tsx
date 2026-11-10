@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 
+import { getLogger } from '@dmr.is/logging-next'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Bullet } from '@dmr.is/ui/components/island-is/Bullet'
 import { BulletList } from '@dmr.is/ui/components/island-is/BulletList'
@@ -10,6 +11,7 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import {
   AmendingMismatches,
+  FindAmendingMismatches,
   getAmendingMismatches,
   ValueMismatch,
 } from './amendingMismatches'
@@ -26,6 +28,8 @@ const MAX_LENGTH = 120
 const shorten = (text: string) =>
   text.length > MAX_LENGTH ? `${text.slice(0, MAX_LENGTH).trimEnd()}…` : text
 
+const logger = getLogger('AmendingMismatchesAlert')
+
 const more = (count: number) => `og ${count} til viðbótar`
 
 /** "5. gr. reglugerðar nr. 123/2020", or "reglugerð nr. 123/2020" */
@@ -34,12 +38,50 @@ const placeOf = (regulation: string, section?: string) =>
     ? `${section} reglugerðar nr. ${regulation}`
     : `reglugerð nr. ${regulation}`
 
+/** An article of the text, "1. gr.", rather than an appendix's title */
+const isArticle = (section?: string) => !!section && /gr\.$/.test(section)
+
 const describeValue = (v: ValueMismatch) =>
   v.type === 'missingFromText'
     ? `„${v.text}“ er í breytingu á ${placeOf(v.regulation, v.section)} en kemur ekki fram í textanum.`
-    : v.section
+    : isArticle(v.section)
       ? `„${v.text}“ í ${v.section} textans er hvergi í breytingum á stofnreglugerð.`
       : `„${v.text}“ í textanum er hvergi í breytingum á stofnreglugerð.`
+
+/** The checker, loaded once on demand, like the differ: it parses HTML in the browser */
+const checkerQuery = {
+  queryKey: ['amendingMismatchesChecker'],
+  queryFn: () =>
+    import('@dmr.is/regulations-tools/amendingMismatches-browser').then(
+      (m) => m.default as FindAmendingMismatches,
+    ),
+  staleTime: Infinity,
+  gcTime: Infinity,
+  retry: false,
+}
+
+type Input = Parameters<typeof getAmendingMismatches>[1]
+
+/**
+ * The last check, shared by the two places the alert is shown: after a
+ * save both get the same text and the same draft, so it runs once.
+ */
+let last:
+  | { key: string; draft: unknown; result: AmendingMismatches }
+  | undefined
+
+const check = (find: FindAmendingMismatches, draft: unknown, input: Input) => {
+  const key = [
+    input.html ?? '',
+    ...(input.additions ?? []).map((a) =>
+      [a.order, a.title, a.html].join('\u0000'),
+    ),
+  ].join('\u0001')
+  if (last?.key !== key || last.draft !== draft) {
+    last = { key, draft, result: getAmendingMismatches(find, input) }
+  }
+  return last.result
+}
 
 /**
  * Warns the editor of an amending regulation about possible mismatches
@@ -47,7 +89,12 @@ const describeValue = (v: ValueMismatch) =>
  * amount, a date or wording in one and not the other. The sender gets the
  * same warning in the OJOI application. Never blocks anything.
  */
-export const AmendingMismatchesAlert = () => {
+export const AmendingMismatchesAlert = ({
+  expanded,
+}: {
+  /** Whether the accordion it's in is open: it stays mounted when closed */
+  expanded: boolean
+}) => {
   const trpc = useTRPC()
   const { currentCase } = useCaseContext()
 
@@ -62,31 +109,49 @@ export const AmendingMismatchesAlert = () => {
     refetchOnWindowFocus: false,
   })
 
-  const [mismatches, setMismatches] = useState<AmendingMismatches>()
+  const checker = useQuery({ ...checkerQuery, enabled: enabled && expanded })
+  const find = checker.data
 
-  useEffect(() => {
-    if (!enabled || !data) return
-
-    let cancelled = false
-    // Loaded on demand, like the differ: it parses HTML in the browser
-    import('@dmr.is/regulations-tools/amendingMismatches-browser').then(
-      ({ default: find }) => {
-        if (cancelled) return
-        setMismatches(
-          getAmendingMismatches(find, {
-            html: currentCase.html,
-            additions: currentCase.additions,
-            impacts: data.impacts ?? [],
-          }),
-        )
-      },
-    )
-    return () => {
-      cancelled = true
+  const result = useMemo(() => {
+    if (!expanded || !data || !find) return undefined
+    try {
+      return {
+        mismatches: check(find, data, {
+          html: currentCase.html,
+          additions: currentCase.additions,
+          impacts: data.impacts ?? [],
+        }),
+      }
+    } catch (error) {
+      return { error }
     }
-  }, [enabled, data, currentCase.html, currentCase.additions])
+  }, [expanded, data, find, currentCase.html, currentCase.additions])
 
-  if (!enabled || !mismatches) {
+  const error = checker.error ?? result?.error
+  useEffect(() => {
+    if (error) {
+      logger.error('Failed to check the amending text for mismatches', {
+        caseId: currentCase.id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }, [error, currentCase.id])
+
+  if (!enabled) {
+    return null
+  }
+  // Shown, so a failed check isn't taken for one that found nothing
+  if (error) {
+    return (
+      <AlertMessage
+        type="warning"
+        title="Ekki tókst að leita að ósamræmi"
+        message="Texti breytingarreglugerðarinnar var ekki borinn saman við breytingarnar á stofnreglugerð. Prófaðu að endurhlaða síðuna."
+      />
+    )
+  }
+  const mismatches = result?.mismatches
+  if (!mismatches) {
     return null
   }
   const { values, wording } = mismatches
