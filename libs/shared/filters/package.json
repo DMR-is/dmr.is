@@ -12,6 +12,6 @@
   "dependencies": {
     "@dmr.is/logging": "*",
     "@dmr.is/shared-dto": "*",
-    "zod": "4.1.11"
+    "zod": "4.6.7"
   }
 }
