@@ -36,7 +36,7 @@
     "class-validator": "^0.14.1",
     "date-fns": "2.30.0",
     "mammoth": "^1.8.0",
-    "nodemailer": "^10.0.15",
+    "nodemailer": "^10.1.4",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "4.4.168",
     "puppeteer": "^22.8.1",
