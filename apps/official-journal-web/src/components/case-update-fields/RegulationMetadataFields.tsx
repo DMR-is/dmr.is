@@ -14,6 +14,7 @@ import { toast } from '@dmr.is/ui/utils/toast'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { OJOISelect } from '../select/OJOISelect'
+import { isEffectiveOnOrBeforePublication } from './utils'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -195,6 +196,17 @@ export const RegulationMetadataFields = ({
               />
             )}
           </Inline>
+
+          {isEffectiveOnOrBeforePublication(
+            draft.effectiveDate,
+            currentCase.requestedPublicationDate,
+          ) && (
+            <AlertMessage
+              type="warning"
+              title="Athugið gildistökudag"
+              message="Gildistökudagur er sami dagur og birtingardagur eða fyrr. Slíkt tíðkast aðeins í sérstökum undantekningartilvikum. Vinsamlegast gangið úr skugga um að dagsetningin sé rétt."
+            />
+          )}
 
           <Box>
             <Text variant="small" fontWeight="semiBold" marginBottom={1}>

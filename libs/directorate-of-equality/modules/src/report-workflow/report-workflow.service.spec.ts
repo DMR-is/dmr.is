@@ -261,6 +261,36 @@ describe('ReportWorkflowService', () => {
       expect(reportEventService.emitAssigned).not.toHaveBeenCalled()
     })
 
+    it('logs a status change, not a second assignment, when the existing reviewer moves the report into review', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({ reviewerUserId: 'reviewer-1' })
+      userModel.findOne.mockResolvedValue({
+        id: 'reviewer-1',
+        isActive: true,
+      })
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+
+      await service.assign(reviewerContext(ReportStatusEnum.SUBMITTED), {
+        userId: 'reviewer-1',
+        updateStatus: true,
+      })
+
+      expect(reportModel.update).toHaveBeenCalledWith(
+        {
+          status: ReportStatusEnum.IN_REVIEW,
+          reviewerUserId: 'reviewer-1',
+        },
+        { where: { id: 'report-1' } },
+      )
+      expect(reportEventService.emitAssigned).not.toHaveBeenCalled()
+      expect(reportEventService.emitStatusChanged).toHaveBeenCalledWith(
+        'report-1',
+        ReportStatusEnum.SUBMITTED,
+        ReportStatusEnum.IN_REVIEW,
+        'reviewer-1',
+      )
+    })
+
     it('rejects when target user is inactive', async () => {
       reportModel.findOne.mockResolvedValue({ reviewerUserId: null })
       userModel.findOne.mockResolvedValue({ id: 'user-2', isActive: false })

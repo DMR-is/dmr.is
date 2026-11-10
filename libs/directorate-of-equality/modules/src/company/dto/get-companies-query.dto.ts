@@ -32,9 +32,17 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../models/company.enums'
-import { CompanyExpiryFilterEnum } from '../utils/filters'
+import {
+  CompanyExpiryFilterEnum,
+  CompanyObligationFilterEnum,
+  CompanyValidReportFilterEnum,
+} from '../utils/filters'
 
-export { CompanyExpiryFilterEnum }
+export {
+  CompanyExpiryFilterEnum,
+  CompanyObligationFilterEnum,
+  CompanyValidReportFilterEnum,
+}
 
 export enum CompanySortByEnum {
   NAME = 'name',
@@ -80,7 +88,7 @@ export class GetCompaniesQueryDto extends PagingQuery {
     isArray: true,
     required: false,
     description:
-      'Return only companies whose report status is one of the provided values (same status shown on each company). Omit for no constraint.',
+      'Return only companies in ALL of the provided compliance states (per-obligation, as shown in the list columns). Several values AND together, as they do with `validReport`. Omit for no constraint.',
   })
   @Transform(({ value }) => {
     if (value == null) return undefined
@@ -90,6 +98,40 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsArray()
   @IsEnum(CompanyReportStatusEnum, { each: true })
   companyStatus?: CompanyReportStatusEnum[]
+
+  @ApiProperty({
+    enum: CompanyValidReportFilterEnum,
+    enumName: 'CompanyValidReportFilterEnum',
+    isArray: true,
+    required: false,
+    description:
+      'Return only companies holding ALL of the given in-force reports. VALID_EQUALITY_REPORT / VALID_SALARY_REPORT match the rows whose list column reads "Í gildi" (owed and covered by an approved report or unexpired legacy certificate). VALID_ACTION_PLAN matches an approved, unexpired salary report with at least one pay-gap outlier. AND-ed with `companyStatus`.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(CompanyValidReportFilterEnum, { each: true })
+  validReport?: CompanyValidReportFilterEnum[]
+
+  @ApiProperty({
+    enum: CompanyObligationFilterEnum,
+    enumName: 'CompanyObligationFilterEnum',
+    isArray: true,
+    required: false,
+    description:
+      'Return only companies matching ALL of the given reporting obligations — whether they owe an equality plan and/or a salary report. Uses the same rule as the list columns: RADUNEYTI owes a salary report at any size; SVEITARFELAG keeps its equality obligation. Setting this lifts the default "not obliged" hide, as `employeeCountCategory` does.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(CompanyObligationFilterEnum, { each: true })
+  obligation?: CompanyObligationFilterEnum[]
 
   @ApiProperty({
     enum: CompanyStatusEnum,
@@ -154,7 +196,7 @@ export class GetCompaniesQueryDto extends PagingQuery {
 
   @ApiOptionalBoolean({
     description:
-      'When true, also return companies that owe no report at all ("ekki lagaskylt": under 25 employees with no salary-report override). These are HIDDEN BY DEFAULT — the admin register is a list of who owes what, and ~250 companies that owe nothing crowd it out. Companies of UNKNOWN size are never hidden: an unestablished size is an open question, not a settled "owes nothing". Ignored when `employeeCountCategory` is set, which is a more specific request about the same axis.',
+      'When true, also return companies that owe no report at all ("ekki lagaskylt": under 25 employees with no salary-report override). These are HIDDEN BY DEFAULT — the admin register is a list of who owes what, and ~250 companies that owe nothing crowd it out. Companies of UNKNOWN size are never hidden: an unestablished size is an open question, not a settled "owes nothing". Ignored when `employeeCountCategory` or `obligation` is set, which is a more specific request about the same axis.',
   })
   @Transform(({ value }) => value === 'true' || value === true)
   @IsOptional()

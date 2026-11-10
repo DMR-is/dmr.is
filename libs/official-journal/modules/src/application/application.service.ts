@@ -203,11 +203,27 @@ export class ApplicationService implements IApplicationService {
     )
 
     if (!res.ok) {
+      // The status alone does not say why island.is refused: the reason is in
+      // the body. Error bodies are not guaranteed to be JSON, so read text.
+      const resInfo = await res.text().catch(() => '')
+      let details: unknown
+      try {
+        details = JSON.parse(resInfo)
+      } catch {
+        // Not JSON, e.g. an ingress error page; cap it so it cannot flood logs.
+        details = resInfo.slice(0, 2000)
+      }
       this.logger.error(
         `Appliction.service.getApplication, could not get application<${id}>`,
         {
           applicationId: id,
           statusCode: res.status,
+          statusText: res.statusText,
+          // Set by the X-Road security server: the error header only when the
+          // failure is X-Road's own, the request id so island.is can find the call.
+          xroadError: res.headers.get('x-road-error'),
+          xroadRequestId: res.headers.get('x-road-request-id'),
+          details,
           category: LOGGING_CATEGORY,
         },
       )

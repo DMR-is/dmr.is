@@ -144,7 +144,19 @@ export class ReportWorkflowService implements IReportWorkflowService {
       { where: { id: context.reportId } },
     )
 
-    if (targetUserId === null) {
+    // Same reviewer, new status: the report is only moving along the pipeline.
+    // This is the sidebar's "Færa í vinnslu" button on a report whose reviewer
+    // was already picked from a dropdown. Logging it as ASSIGNED put a second
+    // "X merkir sér málið" entry in the timeline for an assignment that had
+    // already been recorded, so it is logged as the status change it is.
+    if (currentReviewerUserId === targetUserId) {
+      await this.reportEventService.emitStatusChanged(
+        context.reportId,
+        context.reportStatus,
+        nextStatus,
+        actorUserId,
+      )
+    } else if (targetUserId === null) {
       await this.reportEventService.emitUnassigned(
         context.reportId,
         actorUserId,

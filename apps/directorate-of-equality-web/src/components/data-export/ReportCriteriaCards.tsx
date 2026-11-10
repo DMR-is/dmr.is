@@ -13,7 +13,6 @@ import { companiesText, dataExportText } from '../../lib/text'
 import { SelectFilter } from '../companies/SelectFilter'
 import {
   ADMIN_GENDER_OPTIONS,
-  EQUALITY_SOURCE_OPTIONS,
   GAP_BOUND_OPTIONS,
   IMPROVEMENT_PLAN_OPTIONS,
   REPORT_TYPE_OPTIONS,
@@ -43,14 +42,12 @@ import {
 export type ReportCriteria = {
   type: string[]
   companyAdminGender: string[]
-  equalitySource: string[]
   improvementPlan: string[]
 }
 
 export const EMPTY_REPORT_CRITERIA: ReportCriteria = {
   type: [],
   companyAdminGender: [],
-  equalitySource: [],
   improvementPlan: [],
 }
 
@@ -204,7 +201,6 @@ export const reportCriteriaCards = ({
       labelColor={labelColor(
         criteria.type,
         criteria.companyAdminGender,
-        criteria.equalitySource,
         criteria.improvementPlan,
       )}
       iconVariant="small"
@@ -229,16 +225,6 @@ export const reportCriteriaCards = ({
           options={ADMIN_GENDER_OPTIONS}
           selected={criteria.companyAdminGender}
           onChange={(val) => onCriteriaChange('companyAdminGender', val)}
-        />
-        <MultiSelectFilter
-          name="reportEqualitySource"
-          label={dataExportText.equalitySourceLabel}
-          placeholder={dataExportText.equalitySourcePlaceholder}
-          noOptionsMessage={companiesText.filterNoResults}
-          isSearchable={false}
-          options={EQUALITY_SOURCE_OPTIONS}
-          selected={criteria.equalitySource}
-          onChange={(val) => onCriteriaChange('equalitySource', val)}
         />
         <MultiSelectFilter
           name="reportImprovementPlan"

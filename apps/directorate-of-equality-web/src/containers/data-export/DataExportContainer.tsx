@@ -19,6 +19,7 @@ import {
   CompanyFilter,
   type CompanyFilters,
 } from '../../components/companies/CompanyFilter'
+import { splitStatusFilter } from '../../components/companies/companyStatus'
 import { CompanyTable } from '../../components/companies/CompanyTable'
 import {
   EMPTY_GAP_BOUNDS,
@@ -32,7 +33,6 @@ import {
 } from '../../components/data-export/ReportCriteriaCards'
 import {
   CompanyExpiryFilterEnum,
-  CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
   CompanyStatusEnum,
@@ -86,8 +86,8 @@ const improvementPlanQuery = (
 
 const EMPTY_FILTERS: CompanyFilters = {
   employees: [],
+  obligation: [],
   status: [],
-  registerStatus: [],
   expires: [],
   flags: [],
   regionCode: [],
@@ -194,97 +194,86 @@ export const DataExportContainer = () => {
       dates: reportDates,
       gaps: reportGaps,
       query: q,
-    }: Submission): Record<string, unknown> => ({
-      ...(q.trim() ? { q: q.trim() } : {}),
-      ...(filters.employees.length
-        ? { employeeCountCategory: filters.employees as CompanySizeEnum[] }
-        : {}),
-      ...(filters.status.length
-        ? { companyStatus: filters.status as CompanyReportStatusEnum[] }
-        : {}),
-      ...(filters.registerStatus.length
-        ? { status: filters.registerStatus as CompanyStatusEnum[] }
-        : {}),
-      ...(filters.expires.length
-        ? { expiresWithin: filters.expires as CompanyExpiryFilterEnum[] }
-        : {}),
-      ...(filters.flags.includes('fines') ? { finesStarted: true } : {}),
-      ...(filters.flags.includes('overdue') ? { overdue: true } : {}),
-      // The four "aldrei skilað" flags AND together, matching the company
-      // list — see `buildCompanyListQuery`.
-      ...(filters.flags.includes('neverFiledEquality')
-        ? { neverFiledEquality: true }
-        : {}),
-      ...(filters.flags.includes('neverFiledEqualityIncludingLegacy')
-        ? { neverFiledEqualityIncludingLegacy: true }
-        : {}),
-      ...(filters.flags.includes('neverFiledSalary')
-        ? { neverFiledSalary: true }
-        : {}),
-      ...(filters.flags.includes('neverFiledSalaryIncludingLegacy')
-        ? { neverFiledSalaryIncludingLegacy: true }
-        : {}),
-      ...(filters.visibility.includes('notObliged')
-        ? { includeNotObliged: true }
-        : {}),
-      ...(filters.visibility.includes('inactive')
-        ? { includeInactive: true }
-        : {}),
-      // "Í vari" is a reveal here, not a narrowing — it moved out of `flags`.
-      ...(filters.visibility.includes('quarantined')
-        ? { includeQuarantined: true }
-        : {}),
-      ...(filters.isatCategoryCode.length
-        ? { isatCategoryCode: filters.isatCategoryCode }
-        : {}),
-      ...(filters.isatSection.length
-        ? { isatSection: filters.isatSection }
-        : {}),
-      ...(filters.sector.length
-        ? { sector: filters.sector as CompanySectorEnum[] }
-        : {}),
-      ...(filters.regionCode.length ? { regionCode: filters.regionCode } : {}),
-      ...(filters.postcode.length ? { postcode: filters.postcode } : {}),
+    }: Submission): Record<string, unknown> => {
+      const { companyStatus, validReport } = splitStatusFilter(filters.status)
+      return {
+        ...(q.trim() ? { q: q.trim() } : {}),
+        ...(filters.employees.length
+          ? { employeeCountCategory: filters.employees as CompanySizeEnum[] }
+          : {}),
+        ...(filters.obligation.length
+          ? { obligation: filters.obligation }
+          : {}),
+        ...(companyStatus.length ? { companyStatus } : {}),
+        ...(validReport.length ? { validReport } : {}),
+        ...(filters.expires.length
+          ? { expiresWithin: filters.expires as CompanyExpiryFilterEnum[] }
+          : {}),
+        ...(filters.flags.includes('fines') ? { finesStarted: true } : {}),
+        // Every company, whatever its state today: an export about past
+        // filings must not drop a company that has since gone óvirk, í vari or
+        // out of scope. The panel's filters still narrow it.
+        includeInactive: true,
+        includeQuarantined: true,
+        includeNotObliged: true,
+        // Same narrowing as the register's checkboxes: only óvirk, only í vari.
+        ...(filters.visibility.includes('inactive')
+          ? { status: [CompanyStatusEnum.INACTIVE] }
+          : {}),
+        ...(filters.visibility.includes('quarantined')
+          ? { quarantined: true }
+          : {}),
+        ...(filters.isatCategoryCode.length
+          ? { isatCategoryCode: filters.isatCategoryCode }
+          : {}),
+        ...(filters.isatSection.length
+          ? { isatSection: filters.isatSection }
+          : {}),
+        ...(filters.sector.length
+          ? { sector: filters.sector as CompanySectorEnum[] }
+          : {}),
+        ...(filters.regionCode.length
+          ? { regionCode: filters.regionCode }
+          : {}),
+        ...(filters.postcode.length ? { postcode: filters.postcode } : {}),
 
-      // --- Report criteria: narrow the companies, never change the row. ---
-      ...(reportCriteria.type.length
-        ? { reportType: reportCriteria.type }
-        : {}),
-      ...(reportCriteria.companyAdminGender.length
-        ? { reportCompanyAdminGender: reportCriteria.companyAdminGender }
-        : {}),
-      ...(reportCriteria.equalitySource.length
-        ? { reportEqualitySource: reportCriteria.equalitySource }
-        : {}),
-      // After `reportType`: both ticked narrows it — see `improvementPlanQuery`.
-      ...improvementPlanQuery(
-        reportCriteria.improvementPlan,
-        reportCriteria.type,
-      ),
-      // The pickers give local midnight and the API reads the UTC day, so the
-      // picked calendar day is sent as UTC midnight to survive any time zone.
-      ...Object.fromEntries(
-        Object.entries(reportDates)
-          .filter(([, value]) => value instanceof Date)
-          .map(([key, value]) => {
-            const day = value as Date
-            return [
-              key,
-              new Date(
-                Date.UTC(day.getFullYear(), day.getMonth(), day.getDate()),
-              ).toISOString(),
-            ]
-          }),
-      ),
-      // The gap selects carry strings. `Number('')` is 0, which would read as
-      // a real lower bound of zero, so an empty value is dropped rather than
-      // converted.
-      ...Object.fromEntries(
-        Object.entries(reportGaps)
-          .filter(([, value]) => value !== undefined && value !== '')
-          .map(([key, value]) => [key, Number(value)]),
-      ),
-    }),
+        // --- Report criteria: narrow the companies, never change the row. ---
+        ...(reportCriteria.type.length
+          ? { reportType: reportCriteria.type }
+          : {}),
+        ...(reportCriteria.companyAdminGender.length
+          ? { reportCompanyAdminGender: reportCriteria.companyAdminGender }
+          : {}),
+        // After `reportType`: both ticked narrows it — see `improvementPlanQuery`.
+        ...improvementPlanQuery(
+          reportCriteria.improvementPlan,
+          reportCriteria.type,
+        ),
+        // The pickers give local midnight and the API reads the UTC day, so the
+        // picked calendar day is sent as UTC midnight to survive any time zone.
+        ...Object.fromEntries(
+          Object.entries(reportDates)
+            .filter(([, value]) => value instanceof Date)
+            .map(([key, value]) => {
+              const day = value as Date
+              return [
+                key,
+                new Date(
+                  Date.UTC(day.getFullYear(), day.getMonth(), day.getDate()),
+                ).toISOString(),
+              ]
+            }),
+        ),
+        // The gap selects carry strings. `Number('')` is 0, which would read as
+        // a real lower bound of zero, so an empty value is dropped rather than
+        // converted.
+        ...Object.fromEntries(
+          Object.entries(reportGaps)
+            .filter(([, value]) => value !== undefined && value !== '')
+            .map(([key, value]) => [key, Number(value)]),
+        ),
+      }
+    },
     [],
   )
 

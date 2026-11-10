@@ -67,12 +67,10 @@ export const dataExportText = {
     'Ekkert er sótt fyrr en þú ýtir á „Sækja lista“ — listarnir eru stórir og síurnar eiga að þrengja þá fyrst.',
 
   // --- Report criteria ---
-  cardReport: 'Skýrslur fyrirtækisins',
+  cardReport: 'Skýrslur',
   cardDates: 'Dagsetningar',
   typeLabel: 'Tegund',
   typePlaceholder: 'Veldu tegund',
-  equalitySourceLabel: 'Grundvöllur jafnréttisáætlunar',
-  equalitySourcePlaceholder: 'Veldu grundvöll',
   dateFrom: 'Frá',
   dateTo: 'Til',
   datePlaceholder: 'dd.mm.áááá',
@@ -978,8 +976,7 @@ export const companiesText = {
   validPeriod: 'Gildistími',
   validPeriodPlaceholder: 'Veldu gildistíma',
   statusPlaceholder: 'Veldu stöðu',
-  flags: 'Annað',
-  flagsPlaceholder: 'Veldu',
+  showDailyFines: 'Aðeins dagsektir í gangi',
   dailyFines: 'Dagsektir',
   overdue: 'Skiladagur',
   overdueTag: 'Skiladagur liðinn',
@@ -996,26 +993,18 @@ export const companiesText = {
   obligationCovered: 'Í gildi',
   // Register status, moved off the row and onto an icon.
   companyInactive: 'Fyrirtæki er ekki í skrá',
-  // The default-hide escape hatch. Labelled by what it REVEALS, because the
-  // hiding is the default state and a label naming the hidden group would read
-  // as "filter down to these".
-  visibility: 'Engin skilaskylda',
-  visibilityPlaceholder: 'Fela',
-  showNotObliged: 'Sýna óskyldug',
-  showInactive: 'Sýna óvirk',
-  showQuarantined: 'Sýna í vari',
-  onlyQuarantined: 'Aðeins fyrirtæki í vari',
-  excludeQuarantined: 'Fyrirtæki utan vars',
-  // The four "never filed" filters, as two pairs. Each pair has to say which
-  // question it is asking in the option itself: nearly every company in the
-  // register was loaded from the old SharePoint sheet with no report row of its
-  // own, so "aldrei skilað" without the qualifier matches almost the whole list
-  // and an admin has no way to tell which of the two they picked.
-  neverFiledEquality: 'Aldrei skilað jafnréttisáætlun (í kerfinu)',
-  neverFiledEqualityIncludingLegacy:
-    'Aldrei skilað jafnréttisáætlun (né eldri gögn)',
-  neverFiledSalary: 'Aldrei skilað skýrslu (í kerfinu)',
-  neverFiledSalaryIncludingLegacy: 'Aldrei skilað skýrslu (né eldri gögn)',
+  // Each narrows the list to only those companies.
+  showInactive: 'Aðeins óvirk',
+  showQuarantined: 'Aðeins í vari',
+  obligation: 'Skilaskylda',
+  obligationPlaceholder: 'Veldu skilaskyldu',
+  equalityRequired: 'Jafnréttisáætlun skylda',
+  salaryRequired: 'Skýrslugjöf skylda',
+  equalityNotRequired: 'Jafnréttisáætlun EKKI skylda',
+  salaryNotRequired: 'Skýrslugjöf EKKI skylda',
+  validEqualityReport: 'Gild jafnréttisáætlun',
+  validActionPlan: 'Gild úrbótaáætlun',
+  validSalaryReport: 'Gild skýrslugjöf',
   // The active-filter summary above the table.
   activeFilters: 'Virkar síur',
   activeFilterQuery: 'Leit',
@@ -1049,11 +1038,6 @@ export const companiesText = {
   // the detail view shows it beneath this field. See `sectorLegalFormHint`.
   sector: 'Rekstrarform',
   sectorPlaceholder: 'Veldu rekstrarform',
-  // Deliberately NOT `statusLabel`, which the compliance filter already uses in
-  // the same panel. Selecting nothing means both, which is also what the list
-  // shows unfiltered.
-  registerStatus: 'Staða í skrá',
-  registerStatusPlaceholder: 'Virkt eða óvirkt',
   resultsText: 'fyrirtæki fundust',
   noData: 'Engin fyrirtæki skráð',
   expandedRow: {
@@ -1609,7 +1593,7 @@ export const sharedText = {
   genders: {
     male: 'Karl',
     female: 'Kona',
-    neutral: 'Kynhlutlægt',
+    neutral: 'Kynsegin',
     maleCount: 'Karlar',
     femaleCount: 'Konur',
   },

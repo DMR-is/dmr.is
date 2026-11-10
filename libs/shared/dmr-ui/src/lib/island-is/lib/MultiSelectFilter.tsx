@@ -241,7 +241,7 @@ const ChevronIndicator = (
   props: DropdownIndicatorProps<MultiSelectOption, true>,
 ) => (
   <components.DropdownIndicator {...props}>
-    <Icon icon="chevronDown" size="large" color="blue400" ariaHidden />
+    <Icon icon="chevronDown" size="medium" color="blue400" ariaHidden />
   </components.DropdownIndicator>
 )
 
@@ -296,7 +296,8 @@ const customStyles: StylesConfig<MultiSelectOption, true> = {
   }),
   valueContainer: (base) => ({
     ...base,
-    padding: '4px 8px',
+    // 16px text inset, the island-ui sm Select's own on mobile.
+    padding: `4px ${theme.spacing[2]}px`,
     gap: 6,
     flexWrap: 'nowrap',
   }),

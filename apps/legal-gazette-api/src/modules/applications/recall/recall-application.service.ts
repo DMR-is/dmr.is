@@ -1,5 +1,5 @@
 import addDays from 'date-fns/addDays'
-import { Op } from 'sequelize'
+import { Op, Order } from 'sequelize'
 import * as z from 'zod'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
@@ -8,6 +8,8 @@ import { InjectModel } from '@nestjs/sequelize'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import {
   ApplicationTypeEnum,
+  DIVISION_MEETING_NOTICE_MESSAGE,
+  isDivisionMeetingNoticeSufficient,
   isOnOrAfterEarliestPublishingDay,
   PUBLISHING_DATE_CUTOFF_MESSAGE,
   recallBankruptcyAnswersRefined,
@@ -50,6 +52,28 @@ import {
 import { IRecallApplicationService } from './recall-application.service.interface'
 
 const LOGGING_CONTEXT = 'RecallApplicationService'
+
+/** The most recent skiptafundur first; any without a meeting date last. */
+const LATEST_DIVISION_MEETING_FIRST: Order = [
+  ['divisionMeetingDate', 'DESC NULLS LAST'],
+  ['createdAt', 'DESC'],
+]
+
+/**
+ * When an earlier skiptafundur was held: its meeting date, or its publication
+ * when it has none. Until the two were separated they were the same day.
+ */
+const getMeetingDate = (advert: AdvertModel): Date => {
+  if (advert.divisionMeetingDate) {
+    return new Date(advert.divisionMeetingDate)
+  }
+
+  const [publication] = advert.publications
+
+  return publication.publishedAt
+    ? new Date(publication.publishedAt)
+    : new Date(publication.scheduledAt)
+}
 @Injectable()
 export class RecallApplicationService implements IRecallApplicationService {
   constructor(
@@ -150,11 +174,13 @@ export class RecallApplicationService implements IRecallApplicationService {
     // if no division meeting exists then it should be 2 months and 1 week after the first recall advert publication date
 
     const divisionMeeting = await this.advertModel.findOne({
-      attributes: ['id', 'createdAt'],
+      attributes: ['id', 'createdAt', 'divisionMeetingDate'],
       where: {
         applicationId: applicationId,
+        typeId: TypeIdEnum.DIVISION_MEETING,
         ...notTerminatedWhere,
       },
+      order: LATEST_DIVISION_MEETING_FIRST,
       include: [
         {
           model: AdvertPublicationModel,
@@ -171,11 +197,7 @@ export class RecallApplicationService implements IRecallApplicationService {
     })
 
     if (divisionMeeting && divisionMeeting.publications.length > 0) {
-      const meeting = divisionMeeting.publications[0]
-
-      const previousMeetingDate = meeting.publishedAt
-        ? new Date(meeting.publishedAt)
-        : new Date(meeting.scheduledAt)
+      const previousMeetingDate = getMeetingDate(divisionMeeting)
 
       const nextMeetingDate = addBusinessDays(previousMeetingDate, 1)
 
@@ -278,12 +300,27 @@ export class RecallApplicationService implements IRecallApplicationService {
     body: CreateDivisionMeetingDto,
     user: DMRUser,
   ): Promise<void> {
-    // The meeting date doubles as the publishing date (scheduledAt below).
     this.assertPublishingDateOpen(
       applicationId,
-      body.meetingDate,
+      body.scheduledAt,
       'division meeting',
     )
+
+    if (
+      !isDivisionMeetingNoticeSufficient(body.scheduledAt, body.meetingDate)
+    ) {
+      this.logger.warn(
+        'Rejected division meeting published with less than the minimum notice',
+        {
+          context: LOGGING_CONTEXT,
+          applicationId: applicationId,
+          publishingDate: String(body.scheduledAt),
+          meetingDate: String(body.meetingDate),
+        },
+      )
+
+      throw new BadRequestException(DIVISION_MEETING_NOTICE_MESSAGE)
+    }
 
     const application = await this.applicationModel.findOneOrThrow({
       where: {
@@ -329,9 +366,10 @@ export class RecallApplicationService implements IRecallApplicationService {
       typeId: TypeIdEnum.DIVISION_MEETING,
       title: `Skiptafundur - ${application.settlement.name}`,
       additionalText: body.additionalText,
+      content: body.content,
       settlement: this.cloneSettlement(application.settlement),
       communicationChannels: application.answers.communicationChannels,
-      scheduledAt: [body.meetingDate],
+      scheduledAt: [body.scheduledAt],
     })
 
     if (advert.settlement?.id) {
@@ -478,13 +516,13 @@ export class RecallApplicationService implements IRecallApplicationService {
     // if not then the minDate is 9 weeks later than the first publication date of the recall advert
 
     const divisionMeeting = await this.advertModel.findOne({
-      attributes: ['id', 'createdAt'],
+      attributes: ['id', 'createdAt', 'divisionMeetingDate'],
       where: {
         applicationId: applicationId,
         typeId: TypeIdEnum.DIVISION_MEETING,
         ...notTerminatedWhere,
       },
-      order: [['createdAt', 'ASC']],
+      order: LATEST_DIVISION_MEETING_FIRST,
       include: [
         {
           required: true,
@@ -501,10 +539,7 @@ export class RecallApplicationService implements IRecallApplicationService {
     })
 
     if (divisionMeeting && divisionMeeting.publications.length > 0) {
-      const meeting = divisionMeeting.publications[0]
-      const previousMeetingDate = meeting.publishedAt
-        ? new Date(meeting.publishedAt)
-        : new Date(meeting.scheduledAt)
+      const previousMeetingDate = getMeetingDate(divisionMeeting)
 
       const nextMinMeetingDate = addBusinessDays(previousMeetingDate, 5)
       this.logger.debug(

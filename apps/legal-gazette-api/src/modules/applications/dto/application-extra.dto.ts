@@ -55,10 +55,17 @@ export class CreateDivisionMeetingDto {
   @ApiOptionalString()
   additionalText?: string
 
+  @ApiHTML({ required: false })
+  @IsOptional()
+  content?: string
+
   @ApiProperty({ type: String })
   @Type(() => Date)
   @IsDate()
   meetingDate!: Date
+
+  @ApiDateTime()
+  scheduledAt!: Date
 
   @ApiString()
   meetingLocation!: string

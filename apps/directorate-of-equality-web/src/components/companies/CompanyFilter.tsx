@@ -3,6 +3,7 @@
 import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { Filter } from '@dmr.is/ui/components/island-is/Filter'
 import { FilterInput } from '@dmr.is/ui/components/island-is/FilterInput'
 import { MultiSelectFilter } from '@dmr.is/ui/components/island-is/MultiSelectFilter'
@@ -14,42 +15,36 @@ import { useIsTablet } from '../../hooks/useIsTablet'
 import { companiesText, sharedText } from '../../lib/text'
 import { EMPLOYEE_RANGES } from '../../lib/utils'
 import {
-  COMPANY_STATUS_FILTER_OPTIONS,
   EXPIRES_FILTER_OPTIONS,
   FLAG_FILTER_OPTIONS,
+  OBLIGATION_FILTER_OPTIONS,
   SECTOR_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
   VISIBILITY_FILTER_OPTIONS,
 } from './companyStatus'
 import { IsatCategoryFilter } from './IsatCategoryFilter'
 import { IsatSectionFilter } from './IsatSectionFilter'
-import { SelectFilter } from './SelectFilter'
 
 export type FilterOption = { value: string; label: string }
 
 export type CompanyFilters = {
   employees: string[]
-  /** Compliance — what the company still owes (`CompanyReportStatusEnum`). */
-  status: string[]
+  /** Reporting obligation (`CompanyObligationFilterEnum`); selections AND. */
+  obligation: string[]
   /**
-   * Register lifecycle — whether the company is on the books at all
-   * (`CompanyStatusEnum`). A separate key from `status` above because they are
-   * separate axes and the panel offers both; collapsing them into one control
-   * would ask a single question that has two answers.
+   * Compliance — "Vantar …" (`CompanyReportStatusEnum`) and "Gild …"
+   * (`CompanyValidReportFilterEnum`) in one control; see `splitStatusFilter`.
    */
-  registerStatus: string[]
+  status: string[]
   expires: string[]
+  /** Checkbox toggles from `FLAG_FILTER_OPTIONS` (daily fines). */
   flags: string[]
   regionCode: string[]
   postcode: string[]
   isatCategoryCode: string[]
   isatSection: string[]
   sector: string[]
-  /**
-   * Opt-in reveals for the three groups the list hides by default — companies
-   * with no reporting obligation, companies off the register, and quarantined
-   * companies. Empty means all three remain hidden.
-   */
+  /** Checkbox toggles from `VISIBILITY_FILTER_OPTIONS` (óvirk, í vari). */
   visibility: string[]
 }
 
@@ -88,6 +83,29 @@ export const CompanyFilter = ({
   // Blue label once any filter in the card is active.
   const labelColor = (...selections: string[][]) =>
     selections.some((s) => s.length > 0) ? 'blue400' : 'currentColor'
+
+  // One checkbox per option, toggling its value in the array-valued key.
+  const checkboxes = (
+    key: 'flags' | 'visibility',
+    options: { value: string; label: string }[],
+  ) =>
+    options.map(({ value, label }) => (
+      <Checkbox
+        key={value}
+        id={`${key}-${value}`}
+        name={`${key}-${value}`}
+        label={label}
+        checked={filters[key].includes(value)}
+        onChange={(e) =>
+          onFiltersChange(
+            key,
+            e.target.checked
+              ? [...filters[key], value]
+              : filters[key].filter((v) => v !== value),
+          )
+        }
+      />
+    ))
 
   return (
     <>
@@ -129,7 +147,7 @@ export const CompanyFilter = ({
               labelVariant="h5"
               labelColor={labelColor(
                 filters.employees,
-                filters.registerStatus,
+                filters.obligation,
                 filters.sector,
                 filters.isatSection,
                 filters.isatCategoryCode,
@@ -138,11 +156,12 @@ export const CompanyFilter = ({
               iconVariant="small"
             >
               <Stack space={2}>
-                <SelectFilter
+                <MultiSelectFilter
                   name="employees"
                   label={companiesText.avgEmployeeCount}
                   placeholder={companiesText.avgEmployeeCountPlaceholder}
                   noOptionsMessage={companiesText.filterNoResults}
+                  isSearchable={false}
                   options={EMPLOYEE_RANGES}
                   selected={filters.employees}
                   // Multi since the API took a list: the register's own
@@ -151,14 +170,14 @@ export const CompanyFilter = ({
                   onChange={(val) => onFiltersChange('employees', val)}
                 />
                 <MultiSelectFilter
-                  name="registerStatus"
-                  label={companiesText.registerStatus}
-                  placeholder={companiesText.registerStatusPlaceholder}
+                  name="obligation"
+                  label={companiesText.obligation}
+                  placeholder={companiesText.obligationPlaceholder}
                   noOptionsMessage={companiesText.filterNoResults}
                   isSearchable={false}
-                  options={COMPANY_STATUS_FILTER_OPTIONS}
-                  selected={filters.registerStatus}
-                  onChange={(val) => onFiltersChange('registerStatus', val)}
+                  options={OBLIGATION_FILTER_OPTIONS}
+                  selected={filters.obligation}
+                  onChange={(val) => onFiltersChange('obligation', val)}
                 />
                 <MultiSelectFilter
                   name="sector"
@@ -182,16 +201,7 @@ export const CompanyFilter = ({
                     onFiltersChange('isatCategoryCode', codes)
                   }
                 />
-                <MultiSelectFilter
-                  name="visibility"
-                  label={companiesText.visibility}
-                  placeholder={companiesText.visibilityPlaceholder}
-                  noOptionsMessage={companiesText.filterNoResults}
-                  isSearchable={false}
-                  options={VISIBILITY_FILTER_OPTIONS}
-                  selected={filters.visibility}
-                  onChange={(val) => onFiltersChange('visibility', val)}
-                />
+                {checkboxes('visibility', VISIBILITY_FILTER_OPTIONS)}
               </Stack>
             </AccordionItem>
 
@@ -228,16 +238,7 @@ export const CompanyFilter = ({
                   selected={filters.expires}
                   onChange={(val) => onFiltersChange('expires', val)}
                 />
-                <MultiSelectFilter
-                  name="flags"
-                  label={companiesText.flags}
-                  placeholder={companiesText.flagsPlaceholder}
-                  noOptionsMessage={companiesText.filterNoResults}
-                  isSearchable={false}
-                  options={FLAG_FILTER_OPTIONS}
-                  selected={filters.flags}
-                  onChange={(val) => onFiltersChange('flags', val)}
-                />
+                {checkboxes('flags', FLAG_FILTER_OPTIONS)}
               </Stack>
             </AccordionItem>
 

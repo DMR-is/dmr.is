@@ -6,6 +6,8 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import * as styles from './SelectFilter.css'
+
 export type SelectFilterOption = { value: string; label: string }
 
 type Props = {
@@ -58,6 +60,7 @@ export const SelectFilter = ({
 
   return (
     <Box
+      className={styles.root}
       {...(groupLabelledBy
         ? {
             role: 'group',

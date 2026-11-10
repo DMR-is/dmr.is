@@ -31,7 +31,11 @@ import {
 import { CommunicationChannelModel } from '../../models/communication-channel.model'
 import { SettlementModel } from '../../models/settlement.model'
 import { SignatureModel } from '../../models/signature.model'
-import { StatusIdEnum, StatusModel } from '../../models/status.model'
+import {
+  DELETABLE_ADVERT_STATUS_IDS,
+  StatusIdEnum,
+  StatusModel,
+} from '../../models/status.model'
 import { TypeIdEnum, TypeModel } from '../../models/type.model'
 import { UserModel } from '../../models/users.model'
 import {
@@ -383,13 +387,7 @@ export class AdvertService implements IAdvertService {
   async deleteAdvert(advertId: string): Promise<void> {
     const advert = await this.advertModel.findByPkOrThrow(advertId)
 
-    const deletableStatuses = [
-      StatusIdEnum.SUBMITTED,
-      StatusIdEnum.IN_PROGRESS,
-      StatusIdEnum.READY_FOR_PUBLICATION,
-    ]
-
-    if (!deletableStatuses.includes(advert.statusId)) {
+    if (!DELETABLE_ADVERT_STATUS_IDS.includes(advert.statusId)) {
       this.logger.warn(
         `Advert with id ${advertId} is in status ${advert.statusId} and cannot be deleted`,
       )

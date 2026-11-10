@@ -10,13 +10,24 @@ import {
   buildCompanyExpiryWhere,
   buildCompanyLifecycleStatusWhere,
   buildCompanyListQuery,
+  buildCompanyObligationWhere,
   buildCompanyStatusWhere,
+  buildCompanyValidReportWhere,
   CompanyExpiryFilterEnum,
+  CompanyObligationFilterEnum,
+  CompanyValidReportFilterEnum,
 } from './filters'
 import {
   actionPlanMissingSql,
+  activeActionPlanExistsSql,
+  equalityObligationStatusCaseSql,
   equalityReportMissingSql,
+  equalityReportValidSql,
+  equalityRequiredSql,
+  salaryObligationStatusCaseSql,
   salaryReportMissingSql,
+  salaryReportValidSql,
+  salaryRequiredSql,
 } from './report-status'
 
 /**
@@ -145,7 +156,7 @@ describe('buildCompanyStatusWhere', () => {
     expect(sql).not.toContain('MISSING_SALARY_REPORT')
   })
 
-  it('ORs several statuses into "missing any of these"', () => {
+  it('ANDs several statuses into "in all of these states"', () => {
     const sql = sqlFor([
       CompanyReportStatusEnum.MISSING_EQUALITY_REPORT,
       CompanyReportStatusEnum.MISSING_ACTION_PLAN,
@@ -153,7 +164,9 @@ describe('buildCompanyStatusWhere', () => {
 
     expect(sql).toContain(equalityReportMissingSql())
     expect(sql).toContain(actionPlanMissingSql())
-    expect(sql).toContain(' OR ')
+    expect(sql).toBe(
+      `(${equalityReportMissingSql()} AND ${actionPlanMissingSql()})`,
+    )
   })
 
   it('treats SATISFACTORY as the absence of every other status', () => {
@@ -166,16 +179,88 @@ describe('buildCompanyStatusWhere', () => {
     expect(sql).toContain(`NOT ${actionPlanMissingSql()}`)
     expect(sql).toContain(`NOT ${salaryReportMissingSql()}`)
   })
+})
 
-  it('keeps SATISFACTORY disjoint from the statuses it negates', () => {
-    // Selecting everything must not exclude everything: the OR of all four has
-    // to stay satisfiable for any company, which it only is while SATISFACTORY
-    // is the complement of the other three rather than an extra conjunct.
-    const all = sqlFor(Object.values(CompanyReportStatusEnum))
+describe('buildCompanyValidReportWhere', () => {
+  const sqlFor = (values: CompanyValidReportFilterEnum[]): string =>
+    (buildCompanyValidReportWhere(values) as { val: string }).val
 
-    expect(all).toContain(' OR ')
-    expect(all.startsWith('(')).toBe(true)
-    expect(all.endsWith(')')).toBe(true)
+  it('is inert when nothing is selected', () => {
+    expect(buildCompanyValidReportWhere([])).toEqual({})
+  })
+
+  it('uses the "Í gildi" predicates rather than evaluating the column CASE', () => {
+    const equality = sqlFor([
+      CompanyValidReportFilterEnum.VALID_EQUALITY_REPORT,
+    ])
+    const salary = sqlFor([CompanyValidReportFilterEnum.VALID_SALARY_REPORT])
+
+    expect(equality).toContain(equalityReportValidSql())
+    expect(salary).toContain(salaryReportValidSql())
+    expect(equality).not.toContain(equalityObligationStatusCaseSql())
+    expect(salary).not.toContain(salaryObligationStatusCaseSql())
+  })
+
+  it('requires the obligation, and excludes an outstanding úrbótaáætlun from a valid salary report', () => {
+    expect(equalityReportValidSql()).toContain(equalityRequiredSql)
+    expect(salaryReportValidSql()).toContain(salaryRequiredSql)
+    expect(salaryReportValidSql()).toContain(
+      `AND NOT ${actionPlanMissingSql()}`,
+    )
+  })
+
+  it('reads an in-force approved salary report with outliers for the action plan', () => {
+    const sql = sqlFor([CompanyValidReportFilterEnum.VALID_ACTION_PLAN])
+
+    expect(sql).toContain(activeActionPlanExistsSql())
+    expect(sql).toContain("r.status = 'APPROVED'")
+    expect(sql).toContain('report_employee_outlier')
+  })
+
+  it('ANDs several selections', () => {
+    const sql = sqlFor([
+      CompanyValidReportFilterEnum.VALID_EQUALITY_REPORT,
+      CompanyValidReportFilterEnum.VALID_SALARY_REPORT,
+    ])
+
+    expect(sql).toBe(
+      `(${equalityReportValidSql()} AND ${salaryReportValidSql()})`,
+    )
+  })
+})
+
+describe('buildCompanyObligationWhere', () => {
+  const sqlFor = (values: CompanyObligationFilterEnum[]): string =>
+    (buildCompanyObligationWhere(values) as { val: string }).val
+
+  it('is inert when nothing is selected', () => {
+    expect(buildCompanyObligationWhere([])).toEqual({})
+  })
+
+  it('reuses the shared obligation rule rather than restating it', () => {
+    // RADUNEYTI's salary obligation lives in `salary_report_required`, which
+    // `salaryRequiredSql` reads — restating size buckets here would drop it.
+    expect(sqlFor([CompanyObligationFilterEnum.EQUALITY_REQUIRED])).toBe(
+      `(${equalityRequiredSql})`,
+    )
+    expect(sqlFor([CompanyObligationFilterEnum.SALARY_REQUIRED])).toBe(
+      `(${salaryRequiredSql})`,
+    )
+  })
+
+  it('negates the same rule for "EKKI skylda"', () => {
+    expect(sqlFor([CompanyObligationFilterEnum.SALARY_NOT_REQUIRED])).toBe(
+      `(NOT ${salaryRequiredSql})`,
+    )
+  })
+
+  it('ANDs several selections', () => {
+    expect(
+      sqlFor([
+        CompanyObligationFilterEnum.EQUALITY_REQUIRED,
+        CompanyObligationFilterEnum.SALARY_NOT_REQUIRED,
+      ]),
+    ).toBe(`(${equalityRequiredSql} AND NOT ${salaryRequiredSql})`)
   })
 })
 
@@ -264,6 +349,23 @@ describe('buildCompanyListQuery', () => {
         { status: CompanyStatusEnum.ACTIVE },
         { quarantined: false },
       ])
+    })
+
+    it('lifts the obligation hide when filtering by obligation', () => {
+      // "Jafnréttisáætlun EKKI skylda" would otherwise return almost nothing:
+      // the companies it asks for are the ones the default hides.
+      const conditions = conditionsOf({
+        obligation: [CompanyObligationFilterEnum.EQUALITY_NOT_REQUIRED],
+      })
+
+      expect(conditions).toHaveLength(3)
+      expect(conditions[0]).toEqual(
+        buildCompanyObligationWhere([
+          CompanyObligationFilterEnum.EQUALITY_NOT_REQUIRED,
+        ]),
+      )
+      expect(conditions[1]).toEqual({ status: CompanyStatusEnum.ACTIVE })
+      expect(conditions[2]).toEqual({ quarantined: false })
     })
 
     it('keeps the hide when the size filter is present but empty', () => {
@@ -423,6 +525,8 @@ describe('buildCompanyListQuery', () => {
       q: 'a',
       employeeCountCategory: [CompanySizeEnum.LARGE],
       companyStatus: [CompanyReportStatusEnum.SATISFACTORY],
+      validReport: [CompanyValidReportFilterEnum.VALID_SALARY_REPORT],
+      obligation: [CompanyObligationFilterEnum.SALARY_REQUIRED],
       status: [CompanyStatusEnum.ACTIVE],
       expiresWithin: [CompanyExpiryFilterEnum.MONTHS_3],
       finesStarted: true,
@@ -432,7 +536,7 @@ describe('buildCompanyListQuery', () => {
       sector: [CompanySectorEnum.FYRIRTAEKI],
     })
 
-    expect(conditions).toHaveLength(10)
+    expect(conditions).toHaveLength(12)
   })
 
   it('always joins ÍSAT, so the resolved code reaches the DTO', () => {

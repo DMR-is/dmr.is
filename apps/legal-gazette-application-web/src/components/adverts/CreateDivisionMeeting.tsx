@@ -1,6 +1,6 @@
 'use client'
 
-import { addYears } from 'date-fns'
+import { addDays, addYears, max, min } from 'date-fns'
 import { useState } from 'react'
 import * as z from 'zod'
 
@@ -8,7 +8,13 @@ import {
   getAdvertHTMLMarkup,
   LegalGazetteHTMLTemplates,
 } from '@dmr.is/legal-gazette-html'
-import { createDivisionMeetingInput } from '@dmr.is/legal-gazette-schemas'
+import {
+  createDivisionMeetingFields,
+  createDivisionMeetingInput,
+  DIVISION_MEETING_MIN_NOTICE_DAYS,
+  getLatestDivisionMeetingPublishingDay,
+  isDivisionMeetingNoticeSufficient,
+} from '@dmr.is/legal-gazette-schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -23,6 +29,8 @@ import {
   getNextValidPublishingDate,
 } from '@dmr.is/utils-client/dateUtils'
 import {
+  fromCalendarDateIso,
+  toCalendarDate,
   toCalendarDateIso,
   toReykjavikDateTimeIso,
 } from '@dmr.is/utils-shared/date/calendarDate'
@@ -35,7 +43,7 @@ import { FormGroup } from '../form-group/FormGroup'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-const partialSchema = createDivisionMeetingInput.partial()
+const partialSchema = createDivisionMeetingFields.partial()
 
 type Props = {
   applicationId: string
@@ -88,12 +96,25 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
       }),
     )
 
-  const minDate = getEarliestPublishingDate(
-    dateData?.minDate ? new Date(dateData.minDate) : undefined,
-  )
   const maxDate = getNextValidPublishingDate(addYears(new Date(), 3))
+
+  // The advert has to run at least a week before the meeting, so the meeting
+  // can be no earlier than a week after the first day it can be published.
+  const publishingMinDate = getEarliestPublishingDate()
+  const meetingMinDate = max([
+    addDays(publishingMinDate, DIVISION_MEETING_MIN_NOTICE_DAYS),
+    ...(dateData?.minDate ? [fromCalendarDateIso(dateData.minDate)] : []),
+  ])
+  const publishingMaxDate = state.meetingDate
+    ? min([
+        maxDate,
+        fromCalendarDateIso(
+          getLatestDivisionMeetingPublishingDay(state.meetingDate),
+        ),
+      ])
+    : maxDate
   const invalidPublishingDates = getInvalidPublishingDatesInRange(
-    minDate,
+    publishingMinDate,
     maxDate,
   )
 
@@ -105,7 +126,7 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
   }
 
   const clearFieldError = (
-    field: keyof z.infer<typeof createDivisionMeetingInput>,
+    field: keyof z.infer<typeof createDivisionMeetingFields>,
   ) => {
     setErrors((prev) =>
       prev?.properties
@@ -132,6 +153,7 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
 
   const sharedMeetingProps = {
     meetingDate: state.meetingDate,
+    publishDate: state.scheduledAt,
     meetingLocation: state.meetingLocation,
     content: state.content,
     additionalText: state.additionalText,
@@ -141,18 +163,22 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
     nationalId: settlementInfo?.nationalId,
   }
 
-  const preview = getAdvertHTMLMarkup(
-    ApplicationTypeEnum.RECALLBANKRUPTCY
-      ? {
-          templateType: LegalGazetteHTMLTemplates.DIVISION_MEETING_BANKRUPTCY,
-
-          ...sharedMeetingProps,
-        }
-      : {
-          templateType: LegalGazetteHTMLTemplates.DIVISION_MEETING_DECEASED,
-          ...sharedMeetingProps,
-        },
-  )
+  // The template depends on the application type, so there is no preview
+  // until the application has loaded.
+  const preview = application
+    ? getAdvertHTMLMarkup(
+        application.type === ApplicationTypeEnum.RECALLBANKRUPTCY
+          ? {
+              templateType:
+                LegalGazetteHTMLTemplates.DIVISION_MEETING_BANKRUPTCY,
+              ...sharedMeetingProps,
+            }
+          : {
+              templateType: LegalGazetteHTMLTemplates.DIVISION_MEETING_DECEASED,
+              ...sharedMeetingProps,
+            },
+      )
+    : null
 
   return (
     <Modal
@@ -186,17 +212,53 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
           <FormElement
             required
             type="date"
-            minDate={minDate}
+            minDate={meetingMinDate}
             maxDate={maxDate}
-            excludeDates={invalidPublishingDates}
             label="Dagsetning og tími skiptafundar"
             showTimeInput
             timeInputLabel="Klukkan"
             hasError={!!errors?.properties?.meetingDate?.errors.length}
             errorMessage={errors?.properties?.meetingDate?.errors[0]}
             onChange={(date) => {
-              handleSetState('meetingDate', toReykjavikDateTimeIso(date))
+              const meetingDate = toReykjavikDateTimeIso(date)
+              handleSetState('meetingDate', meetingDate)
               clearFieldError('meetingDate')
+
+              // A publication day picked for an earlier meeting may now be too
+              // close to it.
+              if (
+                state.scheduledAt &&
+                !isDivisionMeetingNoticeSufficient(
+                  state.scheduledAt,
+                  meetingDate,
+                )
+              ) {
+                handleSetState('scheduledAt', undefined)
+              }
+            }}
+          />
+        </FormGroup>
+        <FormGroup
+          title="Birting"
+          subTitle="Auglýsing um skiptafund skal birt með minnst viku fyrirvara. Skiptafund um nauðasamning eða frumvarp til úthlutunar skal auglýsa með minnst tveggja vikna fyrirvara."
+        >
+          <FormElement
+            required
+            type="date"
+            minDate={publishingMinDate}
+            maxDate={publishingMaxDate}
+            excludeDates={invalidPublishingDates}
+            selected={
+              state.scheduledAt ? fromCalendarDateIso(state.scheduledAt) : null
+            }
+            label="Dagsetning birtingar"
+            hasError={!!errors?.properties?.scheduledAt?.errors.length}
+            errorMessage={errors?.properties?.scheduledAt?.errors[0]}
+            onChange={(date) => {
+              // The picked day, not browser-local midnight, which from east of
+              // UTC would publish a day early.
+              handleSetState('scheduledAt', toCalendarDate(date))
+              clearFieldError('scheduledAt')
             }}
           />
         </FormGroup>
@@ -266,7 +328,7 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
         </FormGroup>
         <FormGroup title="Forskoðun">
           <GridColumn span="12/12">
-            <AdvertDisplay html={preview} />
+            {preview && <AdvertDisplay html={preview} />}
           </GridColumn>
         </FormGroup>
         <FormGroup>

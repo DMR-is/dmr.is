@@ -1,7 +1,6 @@
 import type { ReportCriteria } from '../../components/data-export/ReportCriteriaCards'
 import {
   ADMIN_GENDER_OPTIONS,
-  EQUALITY_SOURCE_OPTIONS,
   IMPROVEMENT_PLAN_OPTIONS,
   REPORT_TYPE_OPTIONS,
   type ReportFilterOption,
@@ -29,8 +28,8 @@ export type ReportChip = {
   remove: <S extends ReportState>(state: S) => S
 }
 
-// Prefixed where the bare option would not say what it filters: "Karl" or
-// "Úr eldra kerfi" alone could be about anything, "Með úrbótaáætlun" cannot.
+// Prefixed where the bare option would not say what it filters: "Karl" alone
+// could be about anything, "Með úrbótaáætlun" cannot.
 // A `Record` so a new criterion without a chip is a type error. Key order is
 // insertion order, which is the panel order the chips follow.
 const CRITERIA: Record<
@@ -41,10 +40,6 @@ const CRITERIA: Record<
   companyAdminGender: {
     options: ADMIN_GENDER_OPTIONS,
     prefix: dataExportText.adminGenderLabel,
-  },
-  equalitySource: {
-    options: EQUALITY_SOURCE_OPTIONS,
-    prefix: dataExportText.equalitySourceLabel,
   },
   improvementPlan: { options: IMPROVEMENT_PLAN_OPTIONS },
 }
