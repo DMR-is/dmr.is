@@ -161,8 +161,8 @@ export const assertAttachmentContent = (
       return
 
     case ReportAttachmentExtensionEnum.XLS:
-      // Macros in a legacy .xls cannot be detected this cheaply; reviewers'
-      // Excel opens downloaded files in Protected View.
+      // Signature check; reviewers' Excel opens downloaded files in Protected
+      // View.
       if (!bytes.subarray(0, OLE_MAGIC.length).equals(OLE_MAGIC)) {
         throw mismatch()
       }

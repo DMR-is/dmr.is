@@ -477,7 +477,7 @@ export class ApplicationController {
     status: 201,
     include404: true,
     description:
-      'Registers an uploaded fylgiskjal: the API reads the staged file (at most 4 MB), checks that its contents match its extension and that it carries no macros, stores it, and deletes the staged copy once the row has committed. At most 6 per report. On an `IN_REVIEW` report this emits `EDITED`.',
+      'Registers an uploaded fylgiskjal: the API reads the staged file (at most 4 MB), checks its contents against its extension, stores it, and deletes the staged copy once the row has committed. At most 6 per report. On an `IN_REVIEW` report this emits `EDITED`.',
     type: ReportAttachmentDto,
   })
   async addEqualityAttachment(
