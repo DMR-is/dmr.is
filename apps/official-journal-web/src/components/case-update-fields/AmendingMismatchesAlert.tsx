@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 
 import { getLogger } from '@dmr.is/logging-next'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -39,7 +39,8 @@ const placeOf = (regulation: string, section?: string) =>
     : `reglugerð nr. ${regulation}`
 
 /** An article of the text, "1. gr.", rather than an appendix's title */
-const isArticle = (section?: string) => !!section && /gr\.$/.test(section)
+const isArticle = (section?: string) =>
+  !!section && /\bgr\.(\s|$)/.test(section)
 
 const describeValue = (v: ValueMismatch) =>
   v.type === 'missingFromText'
@@ -51,9 +52,16 @@ const describeValue = (v: ValueMismatch) =>
 /** The checker, loaded once on demand, like the differ: it parses HTML in the browser */
 const checkerQuery = {
   queryKey: ['amendingMismatchesChecker'],
+  // Logged here, once, rather than by each alert
   queryFn: () =>
     import('@dmr.is/regulations-tools/amendingMismatches-browser').then(
-      (m) => m.default as FindAmendingMismatches,
+      (m) => m.default,
+      (error) => {
+        logger.error('Failed to load the amending mismatch checker', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+        throw error
+      },
     ),
   staleTime: Infinity,
   gcTime: Infinity,
@@ -62,23 +70,40 @@ const checkerQuery = {
 
 type Input = Parameters<typeof getAmendingMismatches>[1]
 
+type Result = { mismatches: AmendingMismatches } | { error: unknown }
+
 /**
  * The last check, shared by the two places the alert is shown: after a
- * save both get the same text and the same draft, so it runs once.
+ * save both get the same text and the same draft, so it runs, and a
+ * failure is logged, once.
  */
-let last:
-  | { key: string; draft: unknown; result: AmendingMismatches }
-  | undefined
+let last: { key: string; draft: unknown; result: Result } | undefined
 
-const check = (find: FindAmendingMismatches, draft: unknown, input: Input) => {
+const check = (
+  find: FindAmendingMismatches,
+  draft: unknown,
+  caseId: string,
+  input: Input,
+): Result => {
   const key = [
+    caseId,
     input.html ?? '',
     ...(input.additions ?? []).map((a) =>
       [a.order, a.title, a.html].join('\u0000'),
     ),
   ].join('\u0001')
   if (last?.key !== key || last.draft !== draft) {
-    last = { key, draft, result: getAmendingMismatches(find, input) }
+    let result: Result
+    try {
+      result = { mismatches: getAmendingMismatches(find, input) }
+    } catch (error) {
+      logger.error('Failed to check the amending text for mismatches', {
+        caseId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      result = { error }
+    }
+    last = { key, draft, result }
   }
   return last.result
 }
@@ -112,36 +137,30 @@ export const AmendingMismatchesAlert = ({
   const checker = useQuery({ ...checkerQuery, enabled: enabled && expanded })
   const find = checker.data
 
-  const result = useMemo(() => {
-    if (!expanded || !data || !find) return undefined
-    try {
-      return {
-        mismatches: check(find, data, {
-          html: currentCase.html,
-          additions: currentCase.additions,
-          impacts: data.impacts ?? [],
-        }),
-      }
-    } catch (error) {
-      return { error }
-    }
-  }, [expanded, data, find, currentCase.html, currentCase.additions])
-
-  const error = checker.error ?? result?.error
-  useEffect(() => {
-    if (error) {
-      logger.error('Failed to check the amending text for mismatches', {
-        caseId: currentCase.id,
-        error: error instanceof Error ? error.message : String(error),
-      })
-    }
-  }, [error, currentCase.id])
+  const result = useMemo(
+    () =>
+      expanded && data && find
+        ? check(find, data, currentCase.id, {
+            html: currentCase.html,
+            additions: currentCase.additions,
+            impacts: data.impacts ?? [],
+          })
+        : undefined,
+    [
+      expanded,
+      data,
+      find,
+      currentCase.id,
+      currentCase.html,
+      currentCase.additions,
+    ],
+  )
 
   if (!enabled) {
     return null
   }
   // Shown, so a failed check isn't taken for one that found nothing
-  if (error) {
+  if (checker.error || (result && 'error' in result)) {
     return (
       <AlertMessage
         type="warning"
@@ -150,10 +169,10 @@ export const AmendingMismatchesAlert = ({
       />
     )
   }
-  const mismatches = result?.mismatches
-  if (!mismatches) {
+  if (!result) {
     return null
   }
+  const { mismatches } = result
   const { values, wording } = mismatches
   if (!values.length && !wording.length) {
     return null

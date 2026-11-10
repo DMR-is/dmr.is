@@ -70,10 +70,13 @@ export const getAmendingMismatches = (
   },
 ): AmendingMismatches => {
   const amends = impacts.filter((i) => i.type === 'amend' && !i.dropped)
-  // Each change recorded on a base regulation's text, and each appendix it
-  // changes. An impact's appendixes carry no diff, only their new text, so
-  // each one counts as changed throughout: amounts in a replaced fee table
-  // are found, and nothing in it is reported as missing from the text.
+  // Each change recorded on a base regulation's text, and its appendixes.
+  // An impact holds every appendix of the base regulation as the change
+  // leaves them, with no diff, so each counts as changed throughout: amounts
+  // in a replaced fee table are found, and nothing in an appendix is
+  // reported as missing from the text. An amount in an appendix left as it
+  // was can hide a slip in the text, and an amount the text quotes as
+  // replaced in an appendix ("Í stað „kr. 1.200“ í viðauka …") is reported.
   // Diffing appendixes awaits a decision from the stakeholders. When
   // `RegulationAppendix` gets a diff, pass that here instead of the text,
   // as the OJOI application does.

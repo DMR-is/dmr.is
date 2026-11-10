@@ -89,6 +89,22 @@ describe('getAmendingMismatches', () => {
     ).toEqual(NONE)
   })
 
+  it('reads the appendixes by their order, not as listed', () => {
+    const appendix = (order: number, amount: string): CaseAddition => ({
+      id: `${order}`,
+      title: `Viðauki ${order}`,
+      html: `<p>Gjald: kr. ${amount}.</p>`,
+      order,
+    })
+    expect(
+      check(
+        text('1.800'),
+        [raised],
+        [appendix(2, '9.002'), appendix(1, '9.001')],
+      ).values.map((v) => v.text),
+    ).toEqual(['9.001', '9.002'])
+  })
+
   it('compares an appendix the text replaces with the changed appendix', () => {
     const tariff = '<p>Skoðun: kr. 2.000.</p><p>Endurskoðun: kr. 3.500.</p>'
     const html = `${text(
