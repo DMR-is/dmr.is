@@ -38,9 +38,12 @@ const placeOf = (regulation: string, section?: string) =>
     ? `${section} reglugerðar nr. ${regulation}`
     : `reglugerð nr. ${regulation}`
 
-/** An article of the text, "1. gr.", rather than an appendix's title */
+/**
+ * An article of the text, "1. gr." or "6. gr. a.", rather than an
+ * appendix's title, which may cite one ("Viðauki við 3. gr. …")
+ */
 const isArticle = (section?: string) =>
-  !!section && /\bgr\.(\s|$)/.test(section)
+  !!section && /^\d+\.\s*gr\.(\s|$)/.test(section)
 
 const describeValue = (v: ValueMismatch) =>
   v.type === 'missingFromText'
