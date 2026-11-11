@@ -23,4 +23,9 @@ export const configMessages = {
     translatedMessage:
       'Núgildandi hlutfall er ekki gild tala. Hafðu samband við kerfisstjóra áður en því er breytt.',
   }),
+  mailboxAllowlistInvalid: (value: string): ErrorMessage => ({
+    message: `Mailbox allowlist must be "none", "*" or comma-separated 10-digit national IDs, got "${value}"`,
+    translatedMessage:
+      'Gildið verður að vera "none", "*" eða kennitölur aðskildar með kommu',
+  }),
 } as const

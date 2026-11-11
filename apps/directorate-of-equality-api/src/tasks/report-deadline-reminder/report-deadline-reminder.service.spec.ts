@@ -49,6 +49,7 @@ type CompanyOverrides = Partial<{
   id: string
   name: string
   email: string | null
+  nationalId: string
   status: CompanyStatusEnum
   nextEqualityReportDueAt: Date | null
   nextSalaryReportDueAt: Date | null
@@ -73,6 +74,7 @@ describe('ReportDeadlineReminderService', () => {
   let sendReportDeadlineReminder: jest.Mock
   let deliverToMailbox: jest.Mock
   let findDelivery: jest.Mock
+  let mailboxAllowlist: jest.Mock
   let renderHtml: jest.Mock
 
   beforeEach(async () => {
@@ -85,6 +87,7 @@ describe('ReportDeadlineReminderService', () => {
       alreadySent: false,
     })
     findDelivery = jest.fn().mockResolvedValue(null)
+    mailboxAllowlist = jest.fn().mockResolvedValue({ all: true })
     renderHtml = jest.fn().mockResolvedValue(Buffer.from('letter-pdf'))
     findAll = jest.fn().mockResolvedValue([])
     hasDeadlineReminderEvent = jest.fn().mockResolvedValue(false)
@@ -106,7 +109,7 @@ describe('ReportDeadlineReminderService', () => {
         },
         {
           provide: IMailboxDeliveryService,
-          useValue: { deliverToMailbox, findDelivery },
+          useValue: { deliverToMailbox, findDelivery, mailboxAllowlist },
         },
         { provide: IPdfRenderService, useValue: { renderHtml } },
       ],
@@ -507,6 +510,50 @@ describe('ReportDeadlineReminderService', () => {
         CompanyReminderTierEnum.SIX_MONTHS,
         SALARY_DUE.toISOString(),
       )
+    })
+
+    describe('the mailbox allowlist', () => {
+      it('emails a company not on it, as with the flag off', async () => {
+        mailboxAllowlist.mockResolvedValue({
+          all: false,
+          nationalIds: new Set(['2222222222']),
+        })
+        returnCompanyAtCall(
+          CALL.salarySixMonths,
+          company({ nationalId: '1234567890' }),
+        )
+
+        await service.run()
+
+        expect(deliverToMailbox).not.toHaveBeenCalled()
+        expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(1)
+      })
+
+      it('delivers to a company on it', async () => {
+        mailboxAllowlist.mockResolvedValue({
+          all: false,
+          nationalIds: new Set(['1234567890']),
+        })
+        returnCompanyAtCall(
+          CALL.salarySixMonths,
+          company({ nationalId: '1234567890' }),
+        )
+
+        await service.run()
+
+        expect(deliverToMailbox).toHaveBeenCalledTimes(1)
+        expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+      })
+
+      it('is not read with the flag off', async () => {
+        delete process.env.ONESYSTEMS_ENABLED
+        returnCompanyAtCall(CALL.salarySixMonths, company())
+
+        await service.run()
+
+        expect(mailboxAllowlist).not.toHaveBeenCalled()
+        expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(1)
+      })
     })
 
     // The mailbox is addressed by kennitala, not by email.

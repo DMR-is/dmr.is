@@ -23,6 +23,7 @@ import {
   DeliverToMailboxResult,
   IMailboxDeliveryService,
   isMailboxDeliveryEnabled,
+  mailboxAllowlistAllows,
   MailboxDeliveryKindEnum,
   MailboxDeliveryState,
   MailboxDeliveryStatusEnum,
@@ -237,12 +238,21 @@ export class ReportDeadlineReminderService
       )
     }
 
+    // Read once per band. Null while the flag is off.
+    const allowlist =
+      isMailboxDeliveryEnabled() && companies.length > 0
+        ? await this.mailboxDeliveryService.mailboxAllowlist()
+        : null
+
     for (const company of companies) {
       // A kind with no case template yet falls back to email, so a band that
-      // closes before the template is set is not lost. Both channels write
-      // `kind.sentEventType`, so the mailbox does not send it again later.
+      // closes before the template is set is not lost. A company not on the
+      // mailbox allowlist goes by email too, as with the flag off. Both
+      // channels write `kind.sentEventType`, so the mailbox does not send it
+      // again later.
       if (
-        isMailboxDeliveryEnabled() &&
+        allowlist &&
+        mailboxAllowlistAllows(allowlist, company.nationalId) &&
         (await this.remindCompanyByMailbox(company, kind, tier.tier, now))
       ) {
         continue

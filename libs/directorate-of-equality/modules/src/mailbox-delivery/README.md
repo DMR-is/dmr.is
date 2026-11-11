@@ -6,16 +6,30 @@ SendDocToIslandIs. Each delivery is one row in `mailbox_delivery`.
 
 Two callers, both in doe-api: the notice dispatcher (`notice-dispatch/`, the
 submission receipt and the approval and denial letters, from `notice_outbox`)
-and the deadline-reminder task. No kind has a confirmed case template yet (see
-`mailbox-delivery.kinds.ts`), so `deliverToMailbox` answers `UNCONFIGURED`
-for every kind, logged at error, before it writes a row. (A delivery whose
-template is unset after it reached One, by a rollback, answers as its row
-stands instead; see [Statuses](#statuses).) The dispatcher holds
-the notice without counting an attempt, and the reminder task emails the
-reminder instead, so switching the flag on early loses nothing. doe-api logs
-an error at boot, and the daily alert names every unconfigured kind, while the
-flag is on. It also does nothing unless `ONESYSTEMS_ENABLED` is `true`. That flag is checked here, not in the OneSystems client: the client is
-not gated, so any new consumer of the client must check the flag itself.
+and the deadline-reminder task.
+
+A company gets a letter only when all three hold:
+
+1. `ONESYSTEMS_ENABLED` is `true`, for the environment.
+2. The `onesystems_mailbox_allowlist` config row names the company, or is `*`.
+   It starts at `none`, and a missing or malformed row reads as nobody. Change
+   it with `PATCH /api/v1/config/onesystems_mailbox_allowlist` (`none`, `*`, or
+   comma-separated kennitölur); no deploy. Dev talks to production One, so on
+   dev it names only Jafnréttisstofa's own kennitala.
+3. The kind has a case template in `mailbox-delivery.kinds.ts`. Every kind in
+   use has one (`SKYRSLA` salary, `J-AAETLUN` equality, confirmed by
+   Jafnréttisstofa 30 Sep 2026). A kind without one answers `UNCONFIGURED`,
+   logged at error, before it writes a row. (A delivery whose template is unset
+   after it reached One, by a rollback, answers as its row stands instead; see
+   [Statuses](#statuses).) The dispatcher holds the notice without counting an
+   attempt, and the reminder task emails the reminder instead.
+
+A company failing 1 or 2 is treated as though mailbox delivery were off: the
+dispatcher emails approvals and denials and holds receipts, and the reminder
+task emails. Callers ask `isMailboxOpenFor` (or read `mailboxAllowlist` once
+per batch); `deliverToMailbox` checks both again and answers `DISABLED`. The
+flag is checked here, not in the OneSystems client: the client is not gated,
+so any new consumer of the client must go through this service.
 
 A quarantined company (`company.quarantined`) gets nothing: `deliverToMailbox`
 returns `QUARANTINED` before it writes a row, and the next call with the same

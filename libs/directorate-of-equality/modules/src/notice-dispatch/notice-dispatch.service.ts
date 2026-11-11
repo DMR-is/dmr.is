@@ -312,7 +312,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
         { lastAttemptAt: null },
         { lastAttemptAt: { [Op.lt]: retryBefore } },
       ],
-      ...this.notWaitingByDesign(),
+      ...(await this.notWaitingByDesign()),
     }
 
     // Least recently looked at first, never-tried rows ahead of all. A held
@@ -357,7 +357,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
     const where: WhereOptions<NoticeOutboxModel> = {
       status: NoticeOutboxStatusEnum.PENDING,
       createdAt: { [Op.lt]: new Date(Date.now() - NOTICE_OVERDUE_AFTER_MS) },
-      ...this.notWaitingByDesign(),
+      ...(await this.notWaitingByDesign()),
     }
 
     const total = await this.noticeOutboxModel.count({
@@ -451,17 +451,66 @@ export class NoticeDispatchService implements INoticeDispatchService {
 
   /**
    * The rows that wait by design, left out of the pick and the overdue alert:
-   * a quarantined filing company's, and, with the flag off, receipts. A
-   * receipt only ever goes to the mailbox, so with the flag off it waits,
-   * unpicked, and cannot take a batch slot from a notice that can go.
+   * a quarantined filing company's, and receipts that cannot go to the
+   * mailbox (the flag off, or the filing company not on the mailbox
+   * allowlist). A receipt only ever goes to the mailbox, so it waits, unpicked,
+   * and cannot take a batch slot from a notice that can go.
    */
-  private notWaitingByDesign(): WhereOptions<NoticeOutboxModel> {
-    return {
-      [Op.and]: [FILING_COMPANY_NOT_QUARANTINED],
-      ...(isMailboxDeliveryEnabled()
-        ? {}
-        : { kind: { [Op.ne]: NoticeOutboxKindEnum.REPORT_SUBMITTED } }),
+  private async notWaitingByDesign(): Promise<WhereOptions<NoticeOutboxModel>> {
+    const notReceipt = {
+      kind: { [Op.ne]: NoticeOutboxKindEnum.REPORT_SUBMITTED },
     }
+    const allowlist = isMailboxDeliveryEnabled()
+      ? await this.mailboxDeliveryService.mailboxAllowlist()
+      : null
+
+    if (allowlist?.all) {
+      return { [Op.and]: [FILING_COMPANY_NOT_QUARANTINED] }
+    }
+    if (!allowlist || allowlist.nationalIds.size === 0) {
+      return { [Op.and]: [FILING_COMPANY_NOT_QUARANTINED, notReceipt] }
+    }
+
+    // Every id is ten digits (`parseMailboxAllowlist`), and escaped anyway.
+    const ids = [...allowlist.nationalIds]
+      .map((id) => this.sequelize.escape(id))
+      .join(', ')
+    const filingCompanyAllowed = literal(`EXISTS (
+  SELECT 1
+    FROM company_report cr
+    JOIN company c ON c.id = cr.company_id
+   WHERE cr.report_id = "NoticeOutboxModel"."report_id"
+     AND cr.parent_company_id IS NULL
+     AND c.national_id IN (${ids})
+)`)
+
+    return {
+      [Op.and]: [
+        FILING_COMPANY_NOT_QUARANTINED,
+        { [Op.or]: [notReceipt, filingCompanyAllowed] },
+      ],
+    }
+  }
+
+  /**
+   * Whether this row's notice goes to the mailbox: the flag on and the filing
+   * company on the allowlist. A row with no filing company goes the mailbox
+   * way, which settles it GONE as before.
+   */
+  private async mailboxOpenForRow(row: NoticeOutboxModel): Promise<boolean> {
+    if (!isMailboxDeliveryEnabled()) {
+      return false
+    }
+
+    const filing = await this.companyReportModel.findOne({
+      where: { reportId: row.reportId, parentCompanyId: null },
+      attributes: ['companyId'],
+    })
+    if (!filing) {
+      return true
+    }
+
+    return this.mailboxDeliveryService.isMailboxOpenFor(filing.companyId)
   }
 
   /** Returns whether the row left PENDING. Never throws. */
@@ -555,15 +604,18 @@ export class NoticeDispatchService implements INoticeDispatchService {
     row: NoticeOutboxModel,
     lockTransaction: Transaction,
   ): Promise<SendResult> {
-    if (isMailboxDeliveryEnabled()) {
+    if (await this.mailboxOpenForRow(row)) {
       return this.sendToMailbox(row, lockTransaction)
     }
 
+    // The flag off, or the filing company not on the mailbox allowlist: both
+    // go the same way.
     switch (row.kind) {
       case NoticeOutboxKindEnum.REPORT_SUBMITTED:
         // No email for a submission has ever existed. The receipt goes out
-        // only through the mailbox, so it waits for the flag. Not picked while
-        // the flag is off; this covers the flag going off mid-run.
+        // only through the mailbox, so it waits for the flag and the
+        // allowlist. Not picked while either is closed to it; this covers one
+        // closing mid-run.
         return { outcome: 'HELD', reason: 'mailbox delivery is off' }
       case NoticeOutboxKindEnum.REPORT_APPROVED:
         return (

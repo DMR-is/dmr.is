@@ -9,7 +9,10 @@ import { Test } from '@nestjs/testing'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ConfigModel } from './models/config.model'
-import { SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY as THRESHOLD_KEY } from './config.constants'
+import {
+  MAILBOX_ALLOWLIST_CONFIG_KEY,
+  SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY as THRESHOLD_KEY,
+} from './config.constants'
 import { ConfigService } from './config.service'
 
 const mockLogger = {
@@ -190,5 +193,40 @@ describe('ConfigService', () => {
     await expect(
       service.updateByKey(THRESHOLD_KEY, { value: '3.5' }),
     ).rejects.toThrow(NotFoundException)
+  })
+
+  describe('the mailbox allowlist', () => {
+    const allowlistEntry = () => ({
+      key: MAILBOX_ALLOWLIST_CONFIG_KEY,
+      value: 'none',
+      description: 'Mailbox allowlist',
+      update,
+    })
+
+    it('stores the canonical form', async () => {
+      findOne.mockResolvedValue(allowlistEntry())
+
+      await service.updateByKey(MAILBOX_ALLOWLIST_CONFIG_KEY, {
+        value: ' 123456-7890 , 0987654321 ',
+      })
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({ value: '1234567890,0987654321' }),
+        { transaction: 'tx' },
+      )
+    })
+
+    it.each(['all', '12345', '1234567890;0987654321'])(
+      'refuses %p and leaves the active row alone',
+      async (value) => {
+        findOne.mockResolvedValue(allowlistEntry())
+
+        await expect(
+          service.updateByKey(MAILBOX_ALLOWLIST_CONFIG_KEY, { value }),
+        ).rejects.toThrow(BadRequestException)
+        expect(update).not.toHaveBeenCalled()
+        expect(create).not.toHaveBeenCalled()
+      },
+    )
   })
 })
