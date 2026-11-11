@@ -70,6 +70,10 @@ import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analy
 import { analyzeSalaryPayload } from '../report-statistics/lib/salary-analysis'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
+import {
+  ApplicationReportListItemDto,
+  GetApplicationReportsResponseDto,
+} from './dto/application-report-list.dto'
 import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
 import { EditOutliersDto } from './dto/edit-outliers.dto'
 import {
@@ -90,6 +94,7 @@ import type {
 } from './dto/submit-report-company.dto'
 import { EQUALITY_REPORT_TEMPLATE_BASE64 } from './equality-template/template-data'
 import { buildEqualityReportTemplateHtml } from './equality-template/template-html'
+import { isReportOwnedBy } from './lib/report-ownership'
 import {
   SUB_CRITERION_CATALOG,
   SUB_CRITERION_GENERAL_SCALE,
@@ -341,6 +346,102 @@ export class ApplicationService implements IApplicationService {
     }
   }
 
+  /**
+   * The resolved company's submissions, newest first — exactly the reports
+   * `getReport` would open for it, each with the `providerId` it opens under.
+   *
+   * Built from the same two halves the detail lookup checks, rather than a
+   * query of its own:
+   *  - ownership: `isReportOwnedBy`, the rule every `reports/:providerId`
+   *    route applies. Candidates are the reports where this company has a
+   *    parentless `company_report` row; each is then re-checked against ALL of
+   *    its rows, in the detail read's order, so a report the detail route
+   *    would refuse can never be listed.
+   *  - addressability: the handle is the channel's inverse of the stored
+   *    `provider_id`, kept only when `buildProviderId` maps it straight back to
+   *    that stored value under this company — i.e. only when the detail
+   *    route's `findOne` would hit this very row. A report filed on another
+   *    channel, or without a provider id, has no route here and is left out.
+   *
+   * Drafts are left out on purpose: a draft is not a submission yet, and the
+   * portal reaches it through the application that owns it
+   * (`reports/:providerId/draft`), not through this list.
+   */
+  async listReports(
+    company: CompanyDto,
+  ): Promise<GetApplicationReportsResponseDto> {
+    const parentRows = await this.companyReportModel.findAll({
+      where: { companyId: company.id, parentCompanyId: null },
+      attributes: ['reportId'],
+    })
+    const candidateIds = [...new Set(parentRows.map((row) => row.reportId))]
+
+    if (candidateIds.length === 0) {
+      return { reports: [] }
+    }
+
+    const reports = await this.reportModel.findAll({
+      where: {
+        id: candidateIds,
+        providerType: this.channel.providerType,
+        providerId: { [Op.ne]: null },
+        status: { [Op.ne]: ReportStatusEnum.DRAFT },
+      },
+      // `id` breaks ties so two reports filed in the same instant keep a
+      // stable order between calls.
+      order: [
+        ['createdAt', 'DESC'],
+        ['id', 'DESC'],
+      ],
+    })
+
+    if (reports.length === 0) {
+      return { reports: [] }
+    }
+
+    const allRows = await this.companyReportModel.findAll({
+      where: { reportId: reports.map((report) => report.id) },
+      attributes: ['reportId', 'companyId', 'parentCompanyId'],
+      order: [['createdAt', 'ASC']],
+    })
+    const rowsByReport = new Map<string, CompanyReportModel[]>()
+    for (const row of allRows) {
+      const rows = rowsByReport.get(row.reportId) ?? []
+      rows.push(row)
+      rowsByReport.set(row.reportId, rows)
+    }
+
+    const items: ApplicationReportListItemDto[] = []
+    for (const report of reports) {
+      if (!isReportOwnedBy(rowsByReport.get(report.id) ?? [], company)) {
+        continue
+      }
+
+      const providerId = this.channel.toClientProviderId(report)
+      if (
+        providerId === null ||
+        this.channel.buildProviderId(providerId, company.nationalId) !==
+          report.providerId
+      ) {
+        continue
+      }
+
+      items.push({
+        providerId,
+        type: report.type,
+        status: report.status,
+        identifier: report.identifier,
+        submittedAt: report.createdAt ?? null,
+        approvedAt: report.approvedAt,
+        validUntil: report.validUntil,
+        salaryDataBasis: report.salaryDataBasis,
+        salaryDataPeriod: report.salaryDataPeriod,
+      })
+    }
+
+    return { reports: items }
+  }
+
   async getReport(
     providerId: string,
     company: CompanyDto,
@@ -364,10 +465,7 @@ export class ApplicationService implements IApplicationService {
       order: [['createdAt', 'ASC']],
     })
 
-    const parentCompany = companyRows.find(
-      (row) => row.parentCompanyId === null,
-    )
-    if (!parentCompany || parentCompany.companyId !== company.id) {
+    if (!isReportOwnedBy(companyRows, company)) {
       throw new NotFoundException(`Report "${providerId}" not found`)
     }
 
@@ -476,10 +574,7 @@ export class ApplicationService implements IApplicationService {
       order: [['createdAt', 'ASC']],
     })
 
-    const parentCompany = companyRows.find(
-      (row) => row.parentCompanyId === null,
-    )
-    if (!parentCompany || parentCompany.companyId !== company.id) {
+    if (!isReportOwnedBy(companyRows, company)) {
       throw new NotFoundException(`Report "${providerId}" not found`)
     }
 
@@ -868,11 +963,11 @@ export class ApplicationService implements IApplicationService {
     const companyRows = await this.companyReportModel.findAll({
       where: { reportId: report.id },
       attributes: ['companyId', 'parentCompanyId'],
+      // Same order as the detail read, so "the first parentless row" names the
+      // same row on every route that applies `isReportOwnedBy`.
+      order: [['createdAt', 'ASC']],
     })
-    const parentCompany = companyRows.find(
-      (row) => row.parentCompanyId === null,
-    )
-    if (!parentCompany || parentCompany.companyId !== company.id) {
+    if (!isReportOwnedBy(companyRows, company)) {
       throw new NotFoundException(`Report "${providerId}" not found`)
     }
 

@@ -10,6 +10,7 @@ import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analys
 import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
+import { GetApplicationReportsResponseDto } from './dto/application-report-list.dto'
 import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
 import { EditOutliersDto } from './dto/edit-outliers.dto'
 import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
@@ -52,6 +53,11 @@ export interface IApplicationService {
   getSalaryReportEligibility(
     company: CompanyDto,
   ): Promise<SalaryReportEligibilityDto>
+  /**
+   * The company's submitted reports, newest first: exactly the set `getReport`
+   * opens for it (same ownership rule, same channel), drafts excluded.
+   */
+  listReports(company: CompanyDto): Promise<GetApplicationReportsResponseDto>
   getReport(
     providerId: string,
     company: CompanyDto,

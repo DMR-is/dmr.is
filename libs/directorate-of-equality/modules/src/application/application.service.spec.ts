@@ -1,6 +1,7 @@
 import addMonths from 'date-fns/addMonths'
 import format from 'date-fns/format'
 import subMonths from 'date-fns/subMonths'
+import { Op } from 'sequelize'
 
 import {
   BadRequestException,
@@ -123,6 +124,7 @@ describe('ApplicationService', () => {
   let createEquality: jest.Mock
   let findReplay: jest.Mock
   let reportFindOne: jest.Mock
+  let reportFindAll: jest.Mock
   let reportUpdate: jest.Mock
   let companyReportFindAll: jest.Mock
   let outlierFindAll: jest.Mock
@@ -159,6 +161,7 @@ describe('ApplicationService', () => {
       .mockResolvedValue({ reportId: 'report-1', replayed: false })
     findReplay = jest.fn().mockResolvedValue(null)
     reportFindOne = jest.fn()
+    reportFindAll = jest.fn().mockResolvedValue([])
     reportUpdate = jest.fn().mockResolvedValue([1])
     companyReportFindAll = jest.fn().mockResolvedValue([])
     outlierFindAll = jest.fn().mockResolvedValue([])
@@ -233,7 +236,11 @@ describe('ApplicationService', () => {
           },
           {
             provide: getModelToken(ReportModel),
-            useValue: { findOne: reportFindOne, update: reportUpdate },
+            useValue: {
+              findOne: reportFindOne,
+              findAll: reportFindAll,
+              update: reportUpdate,
+            },
           },
           {
             provide: getModelToken(CompanyReportModel),
@@ -947,6 +954,293 @@ describe('ApplicationService', () => {
       )
       expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createEquality).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('listReports', () => {
+    const OWN_A = 'report-own-a'
+    const OWN_B = 'report-own-b'
+    const FOREIGN = 'report-foreign'
+
+    /**
+     * Answers the two `company_report` reads `listReports` makes from one
+     * table of rows: the candidate read (this company's parentless rows) and
+     * the ownership read (every row of the candidate reports). Filtering a
+     * table, rather than scripting two return values, keeps the fixture
+     * honest about which rows each query can actually see.
+     */
+    const companyReportTable = (
+      rows: Array<{
+        reportId: string
+        companyId: string
+        parentCompanyId: string | null
+      }>,
+    ) => {
+      companyReportFindAll.mockImplementation(
+        async ({ where }: { where: Record<string, unknown> }) => {
+          if ('companyId' in where) {
+            return rows.filter(
+              (row) =>
+                row.companyId === where.companyId &&
+                row.parentCompanyId === where.parentCompanyId,
+            )
+          }
+          const ids = where.reportId as string[]
+          return rows.filter((row) => ids.includes(row.reportId))
+        },
+      )
+    }
+
+    it('lists the company’s own reports with the providerId the detail route takes', async () => {
+      const submittedAt = new Date('2026-05-01T00:00:00.000Z')
+      const approvedAt = new Date('2026-06-01T00:00:00.000Z')
+      const validUntil = new Date('2029-06-01T00:00:00.000Z')
+      companyReportTable([
+        { reportId: OWN_A, companyId: COMPANY.id, parentCompanyId: null },
+      ])
+      reportFindAll.mockResolvedValueOnce([
+        makeReportRow({
+          id: OWN_A,
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.APPROVED,
+          identifier: 'SAL-2026-001',
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: 'island-is-application-a',
+          createdAt: submittedAt,
+          approvedAt,
+          validUntil,
+          salaryDataBasis: SalaryDataBasisEnum.MONTH,
+          salaryDataPeriod: '2026-03-01',
+        }),
+      ])
+
+      const result = await service.listReports(COMPANY)
+
+      expect(result).toEqual({
+        reports: [
+          {
+            providerId: 'island-is-application-a',
+            type: ReportTypeEnum.SALARY,
+            status: ReportStatusEnum.APPROVED,
+            identifier: 'SAL-2026-001',
+            submittedAt,
+            approvedAt,
+            validUntil,
+            salaryDataBasis: SalaryDataBasisEnum.MONTH,
+            salaryDataPeriod: '2026-03-01',
+          },
+        ],
+      })
+      expect(companyReportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { companyId: COMPANY.id, parentCompanyId: null },
+        }),
+      )
+      expect(reportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: [OWN_A],
+            providerType: ReportProviderEnum.ISLAND_IS,
+          }),
+        }),
+      )
+    })
+
+    it('excludes another company’s reports', async () => {
+      companyReportTable([
+        { reportId: OWN_A, companyId: COMPANY.id, parentCompanyId: null },
+        {
+          reportId: FOREIGN,
+          companyId: 'someone-else',
+          parentCompanyId: null,
+        },
+      ])
+      reportFindAll.mockImplementation(
+        async ({ where }: { where: { id: string[] } }) =>
+          [
+            makeReportRow({
+              id: OWN_A,
+              providerType: ReportProviderEnum.ISLAND_IS,
+              providerId: 'own-a',
+            }),
+            makeReportRow({
+              id: FOREIGN,
+              providerType: ReportProviderEnum.ISLAND_IS,
+              providerId: 'foreign',
+            }),
+          ].filter((row) => where.id.includes(row.id)),
+      )
+
+      const result = await service.listReports(COMPANY)
+
+      expect(result.reports.map((r) => r.providerId)).toEqual(['own-a'])
+    })
+
+    /**
+     * Defence in depth: even a report the candidate query let through is
+     * re-checked with the detail route's own rule, against all of its rows.
+     */
+    it('drops a report whose first parentless row names another company, as the detail route would', async () => {
+      companyReportTable([
+        {
+          reportId: FOREIGN,
+          companyId: 'someone-else',
+          parentCompanyId: null,
+        },
+        { reportId: FOREIGN, companyId: COMPANY.id, parentCompanyId: null },
+      ])
+      reportFindAll.mockResolvedValueOnce([
+        makeReportRow({
+          id: FOREIGN,
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: 'foreign',
+        }),
+      ])
+
+      await expect(service.listReports(COMPANY)).resolves.toEqual({
+        reports: [],
+      })
+    })
+
+    it('returns newest first, in the order the query sorts by', async () => {
+      companyReportTable([
+        { reportId: OWN_A, companyId: COMPANY.id, parentCompanyId: null },
+        { reportId: OWN_B, companyId: COMPANY.id, parentCompanyId: null },
+      ])
+      reportFindAll.mockResolvedValueOnce([
+        makeReportRow({
+          id: OWN_B,
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: 'newer',
+          createdAt: new Date('2026-09-01T00:00:00.000Z'),
+        }),
+        makeReportRow({
+          id: OWN_A,
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: 'older',
+          createdAt: new Date('2025-09-01T00:00:00.000Z'),
+        }),
+      ])
+
+      const result = await service.listReports(COMPANY)
+
+      expect(reportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          order: [
+            ['createdAt', 'DESC'],
+            ['id', 'DESC'],
+          ],
+        }),
+      )
+      expect(result.reports.map((r) => r.providerId)).toEqual([
+        'newer',
+        'older',
+      ])
+    })
+
+    it('lists a group report for the parent that filed it, not for a subsidiary it covers', async () => {
+      const SUBSIDIARY: CompanyDto = { ...COMPANY, id: 'subsidiary-1' }
+      companyReportTable([
+        { reportId: OWN_A, companyId: COMPANY.id, parentCompanyId: null },
+        {
+          reportId: OWN_A,
+          companyId: SUBSIDIARY.id,
+          parentCompanyId: COMPANY.id,
+        },
+      ])
+      reportFindAll.mockImplementation(
+        async ({ where }: { where: { id: string[] } }) =>
+          [
+            makeReportRow({
+              id: OWN_A,
+              providerType: ReportProviderEnum.ISLAND_IS,
+              providerId: 'group-report',
+            }),
+          ].filter((row) => where.id.includes(row.id)),
+      )
+
+      const parent = await service.listReports(COMPANY)
+      const subsidiary = await service.listReports(SUBSIDIARY)
+
+      expect(parent.reports.map((r) => r.providerId)).toEqual(['group-report'])
+      expect(subsidiary.reports).toEqual([])
+    })
+
+    it('leaves drafts out', async () => {
+      companyReportTable([
+        { reportId: OWN_A, companyId: COMPANY.id, parentCompanyId: null },
+      ])
+
+      await service.listReports(COMPANY)
+
+      expect(reportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { [Op.ne]: ReportStatusEnum.DRAFT },
+          }),
+        }),
+      )
+    })
+
+    it('reads nothing more when the company has filed nothing', async () => {
+      companyReportTable([])
+
+      await expect(service.listReports(COMPANY)).resolves.toEqual({
+        reports: [],
+      })
+      expect(reportFindAll).not.toHaveBeenCalled()
+    })
+
+    describe('on the partner channel', () => {
+      beforeEach(async () => {
+        service = await createService(EXTERNAL_PROVIDER_CHANNEL)
+      })
+
+      it('returns the caller’s own id, and that id opens the report on the detail route', async () => {
+        const stored = `${COMPANY.nationalId}:vendor-42`
+        companyReportTable([
+          { reportId: OWN_A, companyId: COMPANY.id, parentCompanyId: null },
+        ])
+        reportFindAll.mockResolvedValueOnce([
+          makeReportRow({
+            id: OWN_A,
+            providerType: ReportProviderEnum.OTHER,
+            providerId: stored,
+            companyNationalId: COMPANY.nationalId,
+          }),
+        ])
+
+        const { reports } = await service.listReports(COMPANY)
+        expect(reports.map((r) => r.providerId)).toEqual(['vendor-42'])
+
+        reportFindOne.mockResolvedValueOnce(null)
+        await expect(
+          service.getReport(reports[0].providerId, COMPANY),
+        ).rejects.toThrow(NotFoundException)
+        expect(reportFindOne).toHaveBeenCalledWith({
+          where: { providerType: ReportProviderEnum.OTHER, providerId: stored },
+        })
+      })
+
+      it('drops a row the detail route could not address under this company', async () => {
+        companyReportTable([
+          { reportId: OWN_A, companyId: COMPANY.id, parentCompanyId: null },
+        ])
+        reportFindAll.mockResolvedValueOnce([
+          makeReportRow({
+            id: OWN_A,
+            providerType: ReportProviderEnum.OTHER,
+            // Snapshotted under an earlier kennitala: the inverse strips it,
+            // but the detail route would look it up under the current one.
+            providerId: '4401234567:vendor-42',
+            companyNationalId: '4401234567',
+          }),
+        ])
+
+        await expect(service.listReports(COMPANY)).resolves.toEqual({
+          reports: [],
+        })
+      })
     })
   })
 

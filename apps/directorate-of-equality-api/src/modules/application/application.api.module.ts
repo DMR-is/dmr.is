@@ -6,6 +6,7 @@ import {
 } from '@dmr.is/doe-modules/application'
 import { CompanyCoreModule } from '@dmr.is/doe-modules/company'
 import { ImportUploadCoreModule } from '@dmr.is/doe-modules/import-upload'
+import { PartnerClientCoreModule } from '@dmr.is/doe-modules/partner-client'
 import { ReportExcelCoreModule } from '@dmr.is/doe-modules/report-excel'
 
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
@@ -17,6 +18,9 @@ import { ApplicationController } from './application.controller'
     ReportExcelCoreModule,
     CompanyCoreModule,
     ImportUploadCoreModule,
+    // `GET /application/company` reports `isServiceProvider` from the same
+    // lookup `PartnerClientResourceGuard` uses.
+    PartnerClientCoreModule,
   ],
   controllers: [ApplicationController],
   providers: [CompanyResourceGuard],
