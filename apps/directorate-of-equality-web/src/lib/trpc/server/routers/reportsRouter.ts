@@ -1,5 +1,6 @@
 import {
   zGetCompanyEmployeeCountHistoryPath,
+  zGetReportAttachmentsPath,
   zGetReportByIdPath,
   zGetReportOutlierGroupsPath,
   zGetReportOutliersPath,
@@ -59,6 +60,16 @@ export const reportsRouter = router({
     .input(zGetReportOutlierGroupsPath)
     .query(({ ctx, input }) =>
       ctx.api.getReportOutlierGroups({
+        path: { id: input.id },
+      }),
+    ),
+
+  // Metadata only. The files themselves go through the
+  // `api/report-attachments` route handler, which can stream bytes.
+  getAttachments: protectedProcedure
+    .input(zGetReportAttachmentsPath)
+    .query(({ ctx, input }) =>
+      ctx.api.getReportAttachments({
         path: { id: input.id },
       }),
     ),

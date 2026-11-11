@@ -45,6 +45,14 @@ const PDF_MAGIC = Buffer.from('%PDF-', 'ascii')
  */
 const PDF_MAGIC_SEARCH_BYTES = 1024
 
+/**
+ * Whether `bytes` carries the PDF signature where Acrobat and `pdf-lib` would
+ * look for it. Shared with the attachment checks so "is this a PDF" means the
+ * same thing for the main plan and its fylgiskjöl.
+ */
+export const hasPdfSignature = (bytes: Buffer): boolean =>
+  bytes.subarray(0, PDF_MAGIC_SEARCH_BYTES).indexOf(PDF_MAGIC) !== -1
+
 const MEGABYTES = (bytes: number) => Math.round(bytes / (1024 * 1024))
 
 export type EqualityContentInput = {
@@ -111,7 +119,7 @@ const assertValidPdf = (base64: string): void => {
    * A renamed .docx is caught at submission, where the applicant can still fix
    * it, or it is not caught at all.
    */
-  if (decoded.subarray(0, PDF_MAGIC_SEARCH_BYTES).indexOf(PDF_MAGIC) === -1) {
+  if (!hasPdfSignature(decoded)) {
     throw new BadRequestException(
       'The uploaded file is not a PDF — no "%PDF-" signature found',
     )

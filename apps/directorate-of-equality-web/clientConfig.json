@@ -5057,6 +5057,147 @@
         "tags": ["Reports"]
       }
     },
+    "/api/v1/reports/{id}/attachments": {
+      "get": {
+        "description": "The fylgiskjöl (supporting files) the company sent with an equality report — metadata only. Empty for a report with none, and for a salary report. 404 for a draft, which reviewers cannot see.",
+        "operationId": "getReportAttachments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetReportAttachmentsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
+    "/api/v1/reports/{id}/attachments/{attachmentId}": {
+      "get": {
+        "operationId": "getReportAttachmentFile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "attachmentId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the attachment verbatim as a download. 404 when it does not belong to the report, or the report is a draft.",
+            "content": {
+              "application/octet-stream": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
     "/api/v1/reports/{id}/outliers": {
       "get": {
         "description": "Paginated list of a report's employee outliers — the rows behind the Úrbótaáætlun table. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Defaults to role title ascending, then `employeeOrdinal` ascending — the same grouped-by-role order the draft employee lists serve; override with `sortBy` + `direction`.",
@@ -9610,6 +9751,45 @@
           "companyQuarantined",
           "includesImprovementPlan"
         ]
+      },
+      "ReportAttachmentExtensionEnum": {
+        "type": "string",
+        "enum": ["pdf", "docx", "xlsx", "xls"]
+      },
+      "ReportAttachmentDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "filename": {
+            "type": "string",
+            "description": "The name the company uploaded the file under."
+          },
+          "extension": {
+            "allOf": [
+              { "$ref": "#/components/schemas/ReportAttachmentExtensionEnum" }
+            ]
+          },
+          "sizeBytes": {
+            "type": "number",
+            "description": "Size of the file in bytes."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": ["id", "filename", "extension", "sizeBytes", "createdAt"]
+      },
+      "GetReportAttachmentsResponseDto": {
+        "type": "object",
+        "properties": {
+          "attachments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportAttachmentDto" }
+          }
+        },
+        "required": ["attachments"]
       },
       "ReportOutlierSortByEnum": {
         "type": "string",

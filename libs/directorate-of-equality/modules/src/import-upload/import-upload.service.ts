@@ -112,6 +112,8 @@ const BOUNDARY_EXTENSIONS: Record<ImportUploadBoundary, readonly string[]> = {
     'jpg',
     'jpeg',
   ],
+  // Mirrors ReportAttachmentExtensionEnum and the report_attachment CHECK.
+  [ImportUploadBoundary.EQUALITY_ATTACHMENT]: ['pdf', 'docx', 'xlsx', 'xls'],
 }
 
 const extensionGroup = (boundary: ImportUploadBoundary) =>
