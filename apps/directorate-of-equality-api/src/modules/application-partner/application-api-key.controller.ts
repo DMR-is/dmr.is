@@ -36,8 +36,8 @@ import { CompanyResourceGuard } from '../../core/guards/company-resource/company
 
 /**
  * A signed-in company's own API keys, for filing through the partner API
- * directly rather than through a provider. Called by the self-service web
- * (`directorate-of-equality-partner-web`).
+ * directly rather than through a provider. Called by the self-service web,
+ * island.is My Pages (which replaces `directorate-of-equality-partner-web`).
  *
  * These lived on `ApplicationController` because, before the self-service web,
  * the island.is application was the only place a company was signed in with

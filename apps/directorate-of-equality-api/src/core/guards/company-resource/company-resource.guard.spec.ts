@@ -5,7 +5,7 @@ import { SELF_SERVICE_TOKEN_SURFACE_METADATA } from '../../decorators/self-servi
 import {
   ISLAND_IS_APPLICATION_SCOPE,
   ISLAND_IS_SALARY_APPLICATION_SCOPE,
-  PARTNER_WEB_SCOPE,
+  MY_PAGES_SCOPE,
 } from '../token-surface/token-surface'
 import {
   CompanyResourceGuard,
@@ -68,10 +68,10 @@ describe('CompanyResourceGuard', () => {
     expect(request.companyContext).toEqual({ id: 'company-a' })
   })
 
-  it('resolves the company for a partner-web token', async () => {
+  it('resolves the company for a My Pages token', async () => {
     const request = await run({
       nationalId: '9999999999',
-      scope: [PARTNER_WEB_SCOPE],
+      scope: [MY_PAGES_SCOPE],
     } as never)
 
     expect(request.companyContext).toEqual({ id: 'company-a' })
@@ -81,7 +81,7 @@ describe('CompanyResourceGuard', () => {
     autoProvision = true
 
     const request = await run(
-      { nationalId: '9999999999', scope: [PARTNER_WEB_SCOPE] } as never,
+      { nationalId: '9999999999', scope: [MY_PAGES_SCOPE] } as never,
       { company: { name: ' Fyrirtæki ehf. ' } },
     )
 
@@ -124,10 +124,10 @@ describe('CompanyResourceGuard', () => {
       selfService = true
     })
 
-    it('resolves the company for a partner-web token', async () => {
+    it('resolves the company for a My Pages token', async () => {
       const request = await run({
         nationalId: '9999999999',
-        scope: [PARTNER_WEB_SCOPE],
+        scope: [MY_PAGES_SCOPE],
       } as never)
 
       expect(request.companyContext).toEqual({ id: 'company-a' })

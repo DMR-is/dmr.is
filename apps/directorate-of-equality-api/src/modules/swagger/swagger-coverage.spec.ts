@@ -170,7 +170,7 @@ const ADMIN_ONLY_HANDLERS: readonly string[] = [
 ]
 
 /**
- * Routes held to `SELF_SERVICE_TOKEN_SCOPES` (partner-web only, for now) rather
+ * Routes held to `SELF_SERVICE_TOKEN_SCOPES` (island.is My Pages only) rather
  * than every company scope: a company's own API keys and partner delegations,
  * and a provider's own vendor keys. Minting a key turns a short-lived token
  * into lasting access, so these must not accept the island.is application

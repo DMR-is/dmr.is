@@ -32,14 +32,22 @@ export const ISLAND_IS_APPLICATION_SCOPE =
 export const ISLAND_IS_SALARY_APPLICATION_SCOPE =
   '@island.is/applications/directorate-of-equality-salary'
 
-/** partner-web's API resource scope, as its `identityServerConfig` requests it. */
-export const PARTNER_WEB_SCOPE = '@jafnretti.is/doe-partner-web'
+/**
+ * island.is My Pages' dedicated DoE scope: the self-service client, where a
+ * company manages its API keys and partner delegations and an approved provider
+ * its vendor keys. It replaces partner-web, which never reached production.
+ *
+ * PROPOSED NAME, pending island.is's confirmation: the island.is team adds it
+ * as an ApiScope for the service-portal client. If the confirmed name differs,
+ * change it here; nothing else holds the string.
+ */
+export const MY_PAGES_SCOPE = '@island.is/directorate-of-equality'
 
 /** Both company channels call the same `/application` endpoints. */
 export const COMPANY_TOKEN_SCOPES: ReadonlyArray<string> = [
   ISLAND_IS_APPLICATION_SCOPE,
   ISLAND_IS_SALARY_APPLICATION_SCOPE,
-  PARTNER_WEB_SCOPE,
+  MY_PAGES_SCOPE,
 ]
 
 /**
@@ -53,16 +61,10 @@ export const COMPANY_TOKEN_SCOPES: ReadonlyArray<string> = [
  *
  * Narrower than `COMPANY_TOKEN_SCOPES` on purpose. Minting a key turns a token
  * that lasts minutes into access that lasts, so only the clients built to
- * manage keys may call these. Today that is partner-web alone: the island.is
+ * manage keys may call these. That is island.is My Pages alone: the island.is
  * application system never calls them.
- *
- * island.is My Pages is being built to call these routes too, and its scope is
- * not decided yet. ADD THE MY PAGES SCOPE HERE BEFORE MY PAGES GOES LIVE, or
- * every My Pages call to these routes is refused with a 403.
  */
-export const SELF_SERVICE_TOKEN_SCOPES: ReadonlyArray<string> = [
-  PARTNER_WEB_SCOPE,
-]
+export const SELF_SERVICE_TOKEN_SCOPES: ReadonlyArray<string> = [MY_PAGES_SCOPE]
 
 /**
  * doe-web's IDS client id. doe-web sends its id_token, whose `aud` is the
@@ -103,7 +105,8 @@ const refuse = (
 }
 
 /**
- * A company acting through island.is or partner-web: an access token carrying
+ * A company acting through the island.is application system or My Pages: an
+ * access token carrying
  * one of `allowedScopes`. An id_token has no `scope` claim, so it fails too.
  *
  * Delegation is allowed here, since that is how a person acts for a company.
