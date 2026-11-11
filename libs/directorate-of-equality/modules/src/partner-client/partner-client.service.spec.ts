@@ -348,15 +348,18 @@ describe('PartnerClientService', () => {
         createdVia: ApiKeyOriginEnum.ISLAND_IS,
         actorUserId: undefined,
         actorNationalId: FIRM_NATIONAL_ID,
+        actorName: 'Jóna Jónsdóttir',
       })
 
       expect(keys.create.mock.calls[0][0]).toMatchObject({
         createdByUserId: ADMIN_ID,
         createdByNationalId: null,
+        createdByName: null,
       })
       expect(keys.create.mock.calls[1][0]).toMatchObject({
         createdByUserId: null,
         createdByNationalId: FIRM_NATIONAL_ID,
+        createdByName: 'Jóna Jónsdóttir',
       })
     })
 
@@ -424,9 +427,53 @@ describe('PartnerClientService', () => {
         order: [['created_at', 'DESC']],
       })
     })
+
+    it('returns the stored names, so a list need not show a kennitala', async () => {
+      const stored = {
+        id: 'key-row',
+        createdByNationalId: FIRM_NATIONAL_ID,
+        createdByName: 'Jóna Jónsdóttir',
+        revokedByNationalId: FIRM_NATIONAL_ID,
+        revokedByName: 'Jón Jónsson',
+      }
+      keys.findAll.mockResolvedValueOnce([
+        {
+          fromModel: () =>
+            PartnerClientKeyModel.fromModel(
+              stored as unknown as PartnerClientKeyModel,
+            ),
+        },
+      ])
+
+      const [listed] = await service.listKeys(CLIENT_ID)
+
+      expect(listed.createdByName).toBe('Jóna Jónsdóttir')
+      expect(listed.revokedByName).toBe('Jón Jónsson')
+    })
   })
 
   describe('revokeKey', () => {
+    it('stamps the name beside the kennitala on a self-service revoke', async () => {
+      keys.findOne.mockResolvedValueOnce(
+        rowFrom({ id: 'key-row', keyId: 'aaaaaaaaaaaaaaa1' }),
+      )
+
+      await service.revokeKey({
+        id: 'key-row',
+        partnerClientId: CLIENT_ID,
+        actorNationalId: FIRM_NATIONAL_ID,
+        actorName: 'Jóna Jónsdóttir',
+      })
+
+      expect(keys.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          revokedByNationalId: FIRM_NATIONAL_ID,
+          revokedByName: 'Jóna Jónsdóttir',
+        }),
+        { where: { id: 'key-row', revokedAt: null } },
+      )
+    })
+
     it('scopes the lookup to the firm, so one firm cannot revoke another’s key', async () => {
       await service
         .revokeKey({ id: 'key-row', partnerClientId: CLIENT_ID })
@@ -481,6 +528,7 @@ describe('PartnerClientService', () => {
         expect.objectContaining({
           revokedAt: expect.any(Date),
           revokedByUserId: ADMIN_ID,
+          revokedByName: null,
         }),
         { where: { id: 'key-row', revokedAt: null } },
       )

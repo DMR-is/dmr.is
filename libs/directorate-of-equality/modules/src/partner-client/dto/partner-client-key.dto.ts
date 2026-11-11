@@ -45,6 +45,13 @@ export class PartnerClientKeyDto {
   @ApiOptionalString({
     nullable: true,
     description:
+      'Name of the person who minted the key on the self-service path, as island.is gave it at the time — show this instead of `createdByNationalId`. Null when the key was minted on the admin path, or before names were recorded; show a fallback then.',
+  })
+  createdByName!: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
       'DoE reviewer who minted the key. Null on the self-service path.',
   })
   createdByUserId!: string | null
@@ -70,6 +77,13 @@ export class PartnerClientKeyDto {
 
   @ApiOptionalString({ nullable: true })
   revokedByNationalId!: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'Name of the person who revoked the key on the self-service path, as island.is gave it at the time. Null on the admin path, while the key is live, or for revocations recorded before names were stored.',
+  })
+  revokedByName!: string | null
 
   @ApiOptionalString({ nullable: true })
   revokedByUserId!: string | null

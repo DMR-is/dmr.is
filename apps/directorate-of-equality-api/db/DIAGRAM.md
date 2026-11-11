@@ -164,8 +164,10 @@ erDiagram
         ApiKeyOriginEnum created_via
         uuid created_by_user_id FK "nullable, ADMIN path"
         text created_by_national_id "nullable, ISLAND_IS path"
+        text created_by_name "nullable, snapshot from token"
         timestamptz last_used_at "nullable"
         timestamptz revoked_at "nullable"
+        text revoked_by_name "nullable, snapshot"
     }
     doe_partner_client {
         uuid id PK
@@ -183,8 +185,10 @@ erDiagram
         ApiKeyOriginEnum created_via
         uuid created_by_user_id FK "nullable, ADMIN path"
         text created_by_national_id "nullable, ISLAND_IS path"
+        text created_by_name "nullable, snapshot from token"
         timestamptz last_used_at "nullable"
         timestamptz revoked_at "nullable"
+        text revoked_by_name "nullable, snapshot"
     }
     doe_partner_delegation {
         uuid id PK
@@ -193,9 +197,11 @@ erDiagram
         text company_national_id "denormalised"
         text_array scopes
         text granted_by_national_id
+        text granted_by_name "nullable, snapshot from token"
         timestamptz revoked_at "nullable"
         uuid revoked_by_user_id FK "nullable"
         text revoked_by_national_id "nullable"
+        text revoked_by_name "nullable, snapshot"
     }
     company_event {
         uuid id PK

@@ -19,11 +19,13 @@ type ApiKeyAttributes = {
   createdVia: ApiKeyOriginEnum
   createdByUserId: string | null
   createdByNationalId: string | null
+  createdByName: string | null
   expiresAt: Date | null
   lastUsedAt: Date | null
   revokedAt: Date | null
   revokedByUserId: string | null
   revokedByNationalId: string | null
+  revokedByName: string | null
   revokedReason: string | null
 }
 
@@ -37,6 +39,7 @@ type ApiKeyCreateAttributes = {
   label?: string | null
   createdByUserId?: string | null
   createdByNationalId?: string | null
+  createdByName?: string | null
   expiresAt?: Date | null
 }
 
@@ -108,6 +111,13 @@ export class ApiKeyModel extends MutableModel<
   })
   createdByNationalId!: string | null
 
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    field: 'created_by_name',
+  })
+  createdByName!: string | null
+
   @Column({ type: DataType.DATE, allowNull: true, field: 'expires_at' })
   expiresAt!: Date | null
 
@@ -127,6 +137,13 @@ export class ApiKeyModel extends MutableModel<
   })
   revokedByNationalId!: string | null
 
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    field: 'revoked_by_name',
+  })
+  revokedByName!: string | null
+
   @Column({ type: DataType.TEXT, allowNull: true, field: 'revoked_reason' })
   revokedReason!: string | null
 
@@ -139,12 +156,14 @@ export class ApiKeyModel extends MutableModel<
       scopes: model.scopes,
       createdVia: model.createdVia,
       createdByNationalId: model.createdByNationalId,
+      createdByName: model.createdByName,
       createdByUserId: model.createdByUserId,
       createdAt: model.createdAt,
       expiresAt: model.expiresAt,
       lastUsedAt: model.lastUsedAt,
       revokedAt: model.revokedAt,
       revokedByNationalId: model.revokedByNationalId,
+      revokedByName: model.revokedByName,
       revokedByUserId: model.revokedByUserId,
       revokedReason: model.revokedReason,
     }

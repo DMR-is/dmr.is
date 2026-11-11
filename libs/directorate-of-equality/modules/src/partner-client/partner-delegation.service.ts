@@ -161,6 +161,7 @@ export class PartnerDelegationService implements IPartnerDelegationService {
         companyNationalId: input.company.nationalId,
         scopes,
         grantedByNationalId: input.actorNationalId,
+        grantedByName: input.actorName ?? null,
       })
     } catch (error) {
       // Two tabs granting at once: the partial unique index decides, and the
@@ -225,6 +226,8 @@ export class PartnerDelegationService implements IPartnerDelegationService {
       {
         revokedAt: new Date(),
         revokedByNationalId: input.actorNationalId ?? null,
+        // Only beside a kennitala: the admin path names the reviewer by id.
+        revokedByName: input.actorNationalId ? (input.actorName ?? null) : null,
         revokedByUserId: input.actorUserId ?? null,
       },
       { where: { id: delegation.id, revokedAt: null } },
@@ -269,6 +272,7 @@ export class PartnerDelegationService implements IPartnerDelegationService {
       scopes: delegation.scopes,
       grantedAt: delegation.createdAt,
       grantedByNationalId: delegation.grantedByNationalId,
+      grantedByName: delegation.grantedByName,
     }
   }
 

@@ -14,9 +14,11 @@ type PartnerDelegationAttributes = {
   companyNationalId: string
   scopes: ApiKeyScopeEnum[]
   grantedByNationalId: string
+  grantedByName: string | null
   revokedAt: Date | null
   revokedByUserId: string | null
   revokedByNationalId: string | null
+  revokedByName: string | null
 }
 
 type PartnerDelegationCreateAttributes = {
@@ -25,6 +27,7 @@ type PartnerDelegationCreateAttributes = {
   companyNationalId: string
   scopes: ApiKeyScopeEnum[]
   grantedByNationalId: string
+  grantedByName?: string | null
 }
 
 /**
@@ -73,6 +76,13 @@ export class PartnerDelegationModel extends MutableModel<
   })
   grantedByNationalId!: string
 
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    field: 'granted_by_name',
+  })
+  grantedByName!: string | null
+
   @Column({ type: DataType.DATE, allowNull: true, field: 'revoked_at' })
   revokedAt!: Date | null
 
@@ -86,4 +96,11 @@ export class PartnerDelegationModel extends MutableModel<
     field: 'revoked_by_national_id',
   })
   revokedByNationalId!: string | null
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    field: 'revoked_by_name',
+  })
+  revokedByName!: string | null
 }

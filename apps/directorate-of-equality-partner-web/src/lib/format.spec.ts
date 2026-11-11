@@ -30,6 +30,16 @@ describe('issuedBy', () => {
       issuedBy({ createdVia: 'ISLAND_IS', createdByNationalId: '0000000000' }),
     ).toBe('000000-0000')
   })
+
+  it('prefers the issuing person’s name when it was recorded', () => {
+    expect(
+      issuedBy({
+        createdVia: 'ISLAND_IS',
+        createdByNationalId: '0000000000',
+        createdByName: 'Jóna Jónsdóttir',
+      }),
+    ).toBe('Jóna Jónsdóttir')
+  })
 })
 
 describe('formatNationalId', () => {

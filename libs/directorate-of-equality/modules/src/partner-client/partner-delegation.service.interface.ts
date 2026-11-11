@@ -26,6 +26,8 @@ export type GrantPartnerDelegationInput = {
   scopes?: ApiKeyScopeEnum[]
   /** The person granting it: `user.actor.nationalId` under procuration. */
   actorNationalId: string
+  /** Their display name, from the same branch as `actorNationalId` (`resolveActorName`). */
+  actorName?: string | null
 }
 
 export type RevokePartnerDelegationInput = {
@@ -34,6 +36,7 @@ export type RevokePartnerDelegationInput = {
   /** Scopes the revoke to one company — a caller cannot revoke another's. */
   company: DelegatingCompany
   actorNationalId?: string | null
+  actorName?: string | null
   actorUserId?: string | null
 }
 

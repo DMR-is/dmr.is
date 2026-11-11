@@ -11,7 +11,7 @@ const CLIENT = { id: 'client-a', nationalId: '9999999999' } as never
 /** A procuration login: the firm is the subject, the person is the actor. */
 const USER = {
   nationalId: '9999999999',
-  actor: { nationalId: '0000000000' },
+  actor: { nationalId: '0000000000', name: 'Jóna Jónsdóttir' },
 } as never
 
 /**
@@ -87,6 +87,7 @@ describe('ApplicationPartnerClientController', () => {
       partnerClientId: 'client-a',
       createdVia: ApiKeyOriginEnum.ISLAND_IS,
       actorNationalId: '0000000000',
+      actorName: 'Jóna Jónsdóttir',
       label: 'prod',
       expiresAt: undefined,
     })
@@ -99,6 +100,7 @@ describe('ApplicationPartnerClientController', () => {
       id: 'k-1',
       partnerClientId: 'client-a',
       actorNationalId: '0000000000',
+      actorName: 'Jóna Jónsdóttir',
     })
   })
 })

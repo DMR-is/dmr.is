@@ -111,15 +111,20 @@ export const KEY_STATE_VARIANT: Record<KeyState, 'blue' | 'red' | 'disabled'> =
 type IssuedKeyLike = {
   createdVia: 'ISLAND_IS' | 'ADMIN'
   createdByNationalId?: string | null
+  createdByName?: string | null
 }
 
 /**
  * Who minted a key. A reviewer-issued key names no person on this side — the
  * reviewer is a Jafnréttisstofa user — so the origin decides what to show.
+ * The person's name when it was recorded; keys minted before names were stored
+ * have only the kennitala, so that is the fallback.
  */
 export const issuedBy = (key: IssuedKeyLike): string =>
   key.createdVia === 'ADMIN'
     ? keyText.createdViaAdmin
-    : key.createdByNationalId
-      ? formatNationalId(key.createdByNationalId)
-      : keyText.createdViaIslandIs
+    : key.createdByName
+      ? key.createdByName
+      : key.createdByNationalId
+        ? formatNationalId(key.createdByNationalId)
+        : keyText.createdViaIslandIs

@@ -12,7 +12,7 @@ const COMPANY = {
 /** A procuration login: the company is the subject, the person is the actor. */
 const USER = {
   nationalId: '1111111111',
-  actor: { nationalId: '0000000000' },
+  actor: { nationalId: '0000000000', name: 'Jóna Jónsdóttir' },
 } as never
 
 /**
@@ -53,6 +53,7 @@ describe('ApplicationPartnerController', () => {
         partnerClientId: 'client-a',
         scopes: [ApiKeyScopeEnum.REPORT_READ],
         actorNationalId: '0000000000',
+        actorName: 'Jóna Jónsdóttir',
       })
     })
 
@@ -63,6 +64,7 @@ describe('ApplicationPartnerController', () => {
         id: 'd-1',
         company: COMPANY,
         actorNationalId: '0000000000',
+        actorName: 'Jóna Jónsdóttir',
       })
     })
   })

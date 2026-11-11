@@ -5314,6 +5314,11 @@
             "nullable": true,
             "description": "Kennitala of the person who minted the key on the island.is path. Null on the admin path, where `createdByUserId` names the reviewer instead."
           },
+          "createdByName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the person who minted the key on the self-service path, as island.is gave it at the time — show this instead of `createdByNationalId`. Null when the key was minted on the admin path, or before names were recorded; show a fallback then."
+          },
           "createdByUserId": {
             "type": "string",
             "nullable": true,
@@ -5345,6 +5350,11 @@
             "nullable": true
           },
           "revokedByNationalId": { "type": "string", "nullable": true },
+          "revokedByName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the person who revoked the key on the self-service path, as island.is gave it at the time. Null on the admin path, while the key is live, or for revocations recorded before names were stored."
+          },
           "revokedByUserId": { "type": "string", "nullable": true },
           "revokedReason": { "type": "string", "nullable": true }
         },
@@ -5415,6 +5425,11 @@
           "grantedByNationalId": {
             "type": "string",
             "description": "Kennitala of the person who granted it."
+          },
+          "grantedByName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the person who granted it, as island.is gave it at the time — show this instead of `grantedByNationalId`. Null for delegations granted before names were recorded; show a fallback then."
           }
         },
         "required": [
@@ -5531,6 +5546,11 @@
             "nullable": true,
             "description": "Kennitala of the person who minted the key on the self-service path. Null on the admin path."
           },
+          "createdByName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the person who minted the key on the self-service path, as island.is gave it at the time — show this instead of `createdByNationalId`. Null when the key was minted on the admin path, or before names were recorded; show a fallback then."
+          },
           "createdByUserId": {
             "type": "string",
             "nullable": true,
@@ -5562,6 +5582,11 @@
             "nullable": true
           },
           "revokedByNationalId": { "type": "string", "nullable": true },
+          "revokedByName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the person who revoked the key on the self-service path, as island.is gave it at the time. Null on the admin path, while the key is live, or for revocations recorded before names were stored."
+          },
           "revokedByUserId": { "type": "string", "nullable": true },
           "revokedReason": { "type": "string", "nullable": true }
         },

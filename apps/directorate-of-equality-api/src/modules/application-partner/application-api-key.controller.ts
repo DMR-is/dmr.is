@@ -18,6 +18,7 @@ import {
   CreateApiKeyDto,
   GetApiKeysResponseDto,
   IApiKeyService,
+  resolveActorName,
   resolveActorNationalId,
 } from '@dmr.is/doe-modules/api-key'
 import { CompanyDto } from '@dmr.is/doe-modules/company'
@@ -81,6 +82,7 @@ export class ApplicationApiKeyController {
       company,
       createdVia: ApiKeyOriginEnum.ISLAND_IS,
       actorNationalId: resolveActorNationalId(user),
+      actorName: resolveActorName(user),
       label: input.label,
       scopes: input.scopes,
       expiresAt: input.expiresAt,
@@ -123,6 +125,7 @@ export class ApplicationApiKeyController {
       id,
       company,
       actorNationalId: resolveActorNationalId(user),
+      actorName: resolveActorName(user),
     })
   }
 }

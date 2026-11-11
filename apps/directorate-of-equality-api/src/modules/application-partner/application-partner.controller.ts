@@ -14,7 +14,10 @@ import {
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
-import { resolveActorNationalId } from '@dmr.is/doe-modules/api-key'
+import {
+  resolveActorName,
+  resolveActorNationalId,
+} from '@dmr.is/doe-modules/api-key'
 import { CompanyDto } from '@dmr.is/doe-modules/company'
 import {
   CompanyPartnerDelegationDto,
@@ -113,6 +116,7 @@ export class ApplicationPartnerController {
       partnerClientId: input.partnerClientId,
       scopes: input.scopes,
       actorNationalId: resolveActorNationalId(user),
+      actorName: resolveActorName(user),
     })
   }
 
@@ -134,6 +138,7 @@ export class ApplicationPartnerController {
       id,
       company,
       actorNationalId: resolveActorNationalId(user),
+      actorName: resolveActorName(user),
     })
   }
 }

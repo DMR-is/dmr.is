@@ -27,6 +27,12 @@ export type IssuePartnerClientKeyInput = {
   actorUserId?: string | null
   /** Kennitala of the person issuing. Required on the ISLAND_IS path. */
   actorNationalId?: string | null
+  /**
+   * Display name of that person, snapshotted from the login token so a list
+   * can name them without a kennitala. Taken alongside `actorNationalId`
+   * (see `resolveActorName`); ignored on the admin path.
+   */
+  actorName?: string | null
   label?: string | null
   expiresAt?: Date | null
 }
@@ -38,6 +44,7 @@ export type RevokePartnerClientKeyInput = {
   partnerClientId: string
   actorUserId?: string | null
   actorNationalId?: string | null
+  actorName?: string | null
   reason?: string | null
 }
 

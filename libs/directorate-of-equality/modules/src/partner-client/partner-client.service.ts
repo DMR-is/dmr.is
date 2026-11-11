@@ -205,7 +205,8 @@ export class PartnerClientService implements IPartnerClientService {
 
     const expiresAt = resolveApiKeyExpiry(input.expiresAt)
     await this.assertLiveKeyBudget(client.id)
-    const { actorUserId, actorNationalId } = resolveApiKeyIssuer(input)
+    const { actorUserId, actorNationalId, actorName } =
+      resolveApiKeyIssuer(input)
 
     const generated = generateApiKey(apiKeyEnv(), ApiKeyKindEnum.PARTNER_CLIENT)
     const secretHash = hashApiKeySecret(
@@ -221,6 +222,7 @@ export class PartnerClientService implements IPartnerClientService {
       label: input.label ?? null,
       createdByUserId: actorUserId,
       createdByNationalId: actorNationalId,
+      createdByName: actorName,
       expiresAt,
     })
 
@@ -282,6 +284,8 @@ export class PartnerClientService implements IPartnerClientService {
         revokedAt: new Date(),
         revokedByUserId: input.actorUserId ?? null,
         revokedByNationalId: input.actorNationalId ?? null,
+        // Only beside a kennitala: the admin path names the reviewer by id.
+        revokedByName: input.actorNationalId ? (input.actorName ?? null) : null,
         revokedReason: input.reason ?? null,
       },
       { where: { id: key.id, revokedAt: null } },
