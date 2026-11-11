@@ -9,6 +9,7 @@ import {
   assertCompanyToken,
   assertStaffToken,
   ISLAND_IS_APPLICATION_SCOPE,
+  ISLAND_IS_SALARY_APPLICATION_SCOPE,
   PARTNER_WEB_SCOPE,
 } from './token-surface'
 
@@ -38,6 +39,19 @@ describe('assertCompanyToken', () => {
     expect(
       company({ scope: ['openid', ISLAND_IS_APPLICATION_SCOPE] }),
     ).not.toThrow()
+  })
+
+  // The salary-report template requires its own scope, not the one above.
+  it('accepts an island.is salary-report application token', () => {
+    expect(
+      company({ scope: ['openid', ISLAND_IS_SALARY_APPLICATION_SCOPE] }),
+    ).not.toThrow()
+  })
+
+  it('refuses a scope that only starts with a DoE scope', () => {
+    expect(
+      company({ scope: [`${ISLAND_IS_APPLICATION_SCOPE}-other`] }),
+    ).toThrow(ForbiddenException)
   })
 
   it('accepts a partner-web token', () => {
