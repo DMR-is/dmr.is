@@ -5,9 +5,12 @@ import { OpenAPIObject } from '@nestjs/swagger'
 import { API_VERSION, applyApiRouting, GLOBAL_PREFIX } from '../../api-routing'
 import { AppModule } from '../../app/app.module'
 import { PUBLIC_ROUTE_METADATA } from '../../core/decorators/public-route.decorator'
+import { SELF_SERVICE_TOKEN_SURFACE_METADATA } from '../../core/decorators/self-service-token-surface.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'
+import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { declaresAccess } from '../../core/guards/declared-access/declared-access.guard'
+import { PartnerClientResourceGuard } from '../../core/guards/partner-client-resource/partner-client-resource.guard'
 import { buildSwaggerDocument } from '../../setupSwaggerDocument'
 import { SWAGGER_CONFIG } from '../../swagger.config'
 
@@ -165,6 +168,35 @@ const ADMIN_ONLY_HANDLERS: readonly string[] = [
   'UserController.lookupNationalRegistry',
   'UserController.updateUser',
 ]
+
+/**
+ * Routes held to `SELF_SERVICE_TOKEN_SCOPES` (partner-web only, for now) rather
+ * than every company scope: a company's own API keys and partner delegations,
+ * and a provider's own vendor keys. Minting a key turns a short-lived token
+ * into lasting access, so these must not accept the island.is application
+ * scopes.
+ *
+ * Pinned in both directions. A handler added under one of these paths without
+ * the narrower check would mint keys on any company token; one quietly added
+ * to the list would refuse the island.is application system.
+ */
+const SELF_SERVICE_HANDLERS: readonly string[] = [
+  'ApplicationApiKeyController.getApiKeys',
+  'ApplicationApiKeyController.issueApiKey',
+  'ApplicationApiKeyController.revokeApiKey',
+  'ApplicationPartnerClientController.getPartnerClient',
+  'ApplicationPartnerClientController.getPartnerClientKeys',
+  'ApplicationPartnerClientController.issuePartnerClientKey',
+  'ApplicationPartnerClientController.revokePartnerClientKey',
+  'ApplicationPartnerController.getPartnerDelegations',
+  'ApplicationPartnerController.getPartnerProviders',
+  'ApplicationPartnerController.grantPartnerDelegation',
+  'ApplicationPartnerController.revokePartnerDelegation',
+]
+
+/** Route paths that must be self-service, as `<controller path>/<handler path>`. */
+const SELF_SERVICE_PATH =
+  /^application\/(api-keys|partner-delegations|partner-providers|partner-client)(\/|$)/
 
 /**
  * The draft-report lifecycle, each operation pinned to the `operationId` the
@@ -775,6 +807,64 @@ describe('swagger document coverage', () => {
         .sort()
 
       expect(adminOnly).toEqual([...ADMIN_ONLY_HANDLERS])
+    })
+
+    it('holds every key and delegation route to the self-service scopes', () => {
+      const routePath = (
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        controller: Function,
+        method: string,
+      ): string =>
+        [
+          Reflect.getMetadata(PATH_METADATA, controller),
+          Reflect.getMetadata(PATH_METADATA, controller.prototype[method]),
+        ]
+          .filter((part) => typeof part === 'string' && part !== '/')
+          .join('/')
+
+      // What the guards will actually check: CompanyResourceGuard narrowed by
+      // the decorator, or PartnerClientResourceGuard, which always is.
+      const selfService = (
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        controller: Function,
+        method: string,
+      ): boolean => {
+        const guards = guardsForHandler(controller, method)
+        const marked =
+          Reflect.getMetadata(
+            SELF_SERVICE_TOKEN_SURFACE_METADATA,
+            controller.prototype[method],
+          ) ??
+          Reflect.getMetadata(SELF_SERVICE_TOKEN_SURFACE_METADATA, controller)
+
+        return (
+          guards.includes(PartnerClientResourceGuard) ||
+          (Boolean(marked) && guards.includes(CompanyResourceGuard))
+        )
+      }
+
+      const handlers = routedHandlers(app)
+
+      const onSelfServicePaths = handlers.filter(([controller, method]) =>
+        SELF_SERVICE_PATH.test(routePath(controller, method)),
+      )
+
+      // Anti-vacuity: a path regex that matched nothing would pass below.
+      expect(onSelfServicePaths).toHaveLength(SELF_SERVICE_HANDLERS.length)
+
+      const unnarrowed = onSelfServicePaths
+        .filter(([controller, method]) => !selfService(controller, method))
+        .map(([controller, method]) => `${controller.name}.${method}`)
+        .sort()
+
+      expect(unnarrowed).toEqual([])
+
+      const narrowed = handlers
+        .filter(([controller, method]) => selfService(controller, method))
+        .map(([controller, method]) => `${controller.name}.${method}`)
+        .sort()
+
+      expect(narrowed).toEqual([...SELF_SERVICE_HANDLERS].sort())
     })
 
     it('guards a substantial surface', () => {

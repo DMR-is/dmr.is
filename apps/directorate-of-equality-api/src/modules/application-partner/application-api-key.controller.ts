@@ -31,6 +31,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
+import { SelfServiceTokenSurface } from '../../core/decorators/self-service-token-surface.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 
 /**
@@ -57,6 +58,8 @@ import { CompanyResourceGuard } from '../../core/guards/company-resource/company
 @ApiTags('Application')
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, CompanyResourceGuard)
+// Only the clients built to manage keys and delegations may call these.
+@SelfServiceTokenSurface()
 export class ApplicationApiKeyController {
   constructor(
     @Inject(IApiKeyService)
