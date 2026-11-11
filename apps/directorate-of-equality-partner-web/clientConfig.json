@@ -3,6 +3,7 @@
   "paths": {
     "/api/v1/application/company": {
       "get": {
+        "description": "The company the signed-in organisation resolves to, as in the register. `isServiceProvider` says whether the organisation is also an approved service provider (þjónustuaðili): it comes from the same live-partner-client lookup that guards `GET /application/partner-client`, so it is `true` exactly when those provider routes answer rather than 404.",
         "operationId": "getApplicationCompany",
         "parameters": [],
         "responses": {
@@ -10,7 +11,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationCompanyDto"
+                }
               }
             }
           },
@@ -31,6 +34,68 @@
             }
           },
           "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
+    "/api/v1/application/reports": {
+      "get": {
+        "description": "The resolved company's submitted equality reports (jafnréttisáætlanir) and salary reports (jafnlaunaskýrslur), newest first. Exactly the reports `GET /application/reports/:providerId` opens for this company: each row's `providerId` is the handle that route takes, and a report the detail route would 404 on is never listed. Group reports appear only for the parent company that filed them — a subsidiary covered by a group report cannot open it, so it does not see it here either. Drafts are not listed: a draft is not a submission yet, and is reached through its own application under `reports/:providerId/draft`. Reports filed through another channel (the partner API) are not listed, because they have no handle on this one. Withdrawn, denied and superseded reports are listed with their status. Empty when the company has filed nothing; 404 only when the authenticated kennitala has no company row yet.",
+        "operationId": "getApplicationReports",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetApplicationReportsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
             "description": "",
             "content": {
               "application/json": {
@@ -3522,7 +3587,7 @@
         "description": "One reporting obligation's own state. NOT_REQUIRED means the company does not owe this report at all — it is the absence of an obligation, not a compliance failure. ACTION_PLAN_MISSING applies only to a salary report, which alone can be postponed pending outlier explanations.",
         "enum": ["NOT_REQUIRED", "MISSING", "ACTION_PLAN_MISSING", "COVERED"]
       },
-      "CompanyDto": {
+      "ApplicationCompanyDto": {
         "type": "object",
         "properties": {
           "id": { "type": "string", "format": "uuid" },
@@ -3624,6 +3689,10 @@
           "hasLegacyReports": {
             "type": "boolean",
             "description": "Derived: the Directorate's retired SharePoint register holds at least one row for this company. Drives whether the detail view offers the legacy-data tab; says nothing about compliance — the row may record a lapsed or surrendered certificate."
+          },
+          "isServiceProvider": {
+            "type": "boolean",
+            "description": "True when this organisation is also an approved service provider (þjónustuaðili) — a live partner client, not revoked. Decided by the same lookup that guards `GET /application/partner-client` and the provider key routes, so `true` here means those routes answer and `false` means they 404."
           }
         },
         "required": [
@@ -3643,7 +3712,8 @@
           "salaryObligationStatus",
           "equalityReportOverdue",
           "salaryReportOverdue",
-          "hasLegacyReports"
+          "hasLegacyReports",
+          "isServiceProvider"
         ]
       },
       "ApiErrorDto": {
@@ -3694,6 +3764,89 @@
           "details": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["statusCode", "timestamp"]
+      },
+      "ReportTypeEnum": { "type": "string", "enum": ["SALARY", "EQUALITY"] },
+      "ReportStatusEnum": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "SUBMITTED",
+          "POSTPONED",
+          "IN_REVIEW",
+          "DENIED",
+          "APPROVED",
+          "SUPERSEDED",
+          "WITHDRAWN"
+        ]
+      },
+      "SalaryDataBasisEnum": {
+        "type": "string",
+        "enum": ["MONTH", "AVERAGE"],
+        "description": "Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). The submittee must declare one."
+      },
+      "ApplicationReportListItemDto": {
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "description": "The handle for `GET /application/reports/:providerId` and every other `reports/:providerId` route — the submission id this caller filed under (on island.is, the application UUID). Never the DoE-side `report.id`, which resolves on no applicant route."
+          },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportTypeEnum" }]
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "identifier": {
+            "type": "string",
+            "nullable": true,
+            "description": "Human-facing display code assigned by the Directorate. Not a lookup handle."
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the report was filed — the same value as `submittedAt` on the report detail. The list is ordered by this, newest first."
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When a reviewer approved the report. Null until approved."
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "The end of the period an approved report covers (three years from approval). Null until approved."
+          },
+          "salaryDataBasis": {
+            "nullable": true,
+            "description": "Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). The submittee must declare one.",
+            "allOf": [{ "$ref": "#/components/schemas/SalaryDataBasisEnum" }]
+          },
+          "salaryDataPeriod": {
+            "type": "string",
+            "nullable": true,
+            "description": "Salary-only. The payroll month the data is based on, as `YYYY-MM-01`. Set when `salaryDataBasis` is `MONTH`, null otherwise."
+          }
+        },
+        "required": ["providerId", "type", "status"]
+      },
+      "GetApplicationReportsResponseDto": {
+        "type": "object",
+        "properties": {
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationReportListItemDto"
+            }
+          }
+        },
+        "required": ["reports"]
       },
       "SubCriterionCatalogEntryDto": {
         "type": "object",
@@ -4506,11 +4659,6 @@
         },
         "required": ["eligible", "earliestNewDueAt"]
       },
-      "SalaryDataBasisEnum": {
-        "type": "string",
-        "enum": ["MONTH", "AVERAGE"],
-        "description": "Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). The submittee must declare one."
-      },
       "SubmitReportCompanyDto": {
         "type": "object",
         "properties": {
@@ -4753,20 +4901,6 @@
           "contactEmail",
           "contactPhone",
           "company"
-        ]
-      },
-      "ReportTypeEnum": { "type": "string", "enum": ["SALARY", "EQUALITY"] },
-      "ReportStatusEnum": {
-        "type": "string",
-        "enum": [
-          "DRAFT",
-          "SUBMITTED",
-          "POSTPONED",
-          "IN_REVIEW",
-          "DENIED",
-          "APPROVED",
-          "SUPERSEDED",
-          "WITHDRAWN"
         ]
       },
       "CompanyReportDto": {

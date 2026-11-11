@@ -17,10 +17,12 @@ import {
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import {
+  ApplicationCompanyDto,
   ApplicationReportCommentDto,
   ApplicationReportDetailDto,
   EditEqualityContentDto,
   EditOutliersDto,
+  GetApplicationReportsResponseDto,
   GetSubCriterionCatalogResponseDto,
   IApplicationService,
   SalaryReportEligibilityDto,
@@ -35,6 +37,7 @@ import {
   ImportUploadBoundary,
   PresignUploadResponseDto,
 } from '@dmr.is/doe-modules/import-upload'
+import { IPartnerClientService } from '@dmr.is/doe-modules/partner-client'
 import { EqualityReportSummaryDto } from '@dmr.is/doe-modules/report'
 import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
 import { GetReportOutliersResponseDto } from '@dmr.is/doe-modules/report-employee'
@@ -75,12 +78,42 @@ export class ApplicationController {
     private readonly reportExcelService: IReportExcelService,
     @Inject(IImportUploadService)
     private readonly importUploadService: IImportUploadService,
+    @Inject(IPartnerClientService)
+    private readonly partnerClientService: IPartnerClientService,
   ) {}
 
   @Get('company')
-  @DoeResponse({ operationId: 'getApplicationCompany', type: CompanyDto })
-  async getCompany(@CurrentCompany() company: CompanyDto): Promise<CompanyDto> {
-    return company
+  @DoeResponse({
+    operationId: 'getApplicationCompany',
+    description:
+      'The company the signed-in organisation resolves to, as in the register. `isServiceProvider` says whether the organisation is also an approved service provider (þjónustuaðili): it comes from the same live-partner-client lookup that guards `GET /application/partner-client`, so it is `true` exactly when those provider routes answer rather than 404.',
+    type: ApplicationCompanyDto,
+  })
+  async getCompany(
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<ApplicationCompanyDto> {
+    // The same call `PartnerClientResourceGuard` makes, so the flag cannot say
+    // yes while the provider routes say 404. `company.nationalId` is the
+    // token's kennitala — `CompanyResourceGuard` resolved the row by it.
+    const partnerClient = await this.partnerClientService.findLiveByNationalId(
+      company.nationalId,
+    )
+
+    return { ...company, isServiceProvider: partnerClient !== null }
+  }
+
+  @Get('reports')
+  @DoeResponse({
+    operationId: 'getApplicationReports',
+    description:
+      "The resolved company's submitted equality reports (jafnréttisáætlanir) and salary reports (jafnlaunaskýrslur), newest first. Exactly the reports `GET /application/reports/:providerId` opens for this company: each row's `providerId` is the handle that route takes, and a report the detail route would 404 on is never listed. Group reports appear only for the parent company that filed them — a subsidiary covered by a group report cannot open it, so it does not see it here either. Drafts are not listed: a draft is not a submission yet, and is reached through its own application under `reports/:providerId/draft`. Reports filed through another channel (the partner API) are not listed, because they have no handle on this one. Withdrawn, denied and superseded reports are listed with their status. Empty when the company has filed nothing; 404 only when the authenticated kennitala has no company row yet.",
+    type: GetApplicationReportsResponseDto,
+    include404: true,
+  })
+  async getReports(
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<GetApplicationReportsResponseDto> {
+    return this.applicationService.listReports(company)
   }
 
   @Get('reports/excel/template')
