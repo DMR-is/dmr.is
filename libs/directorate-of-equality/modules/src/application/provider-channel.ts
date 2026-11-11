@@ -49,6 +49,31 @@ export type ReportProviderChannel = {
    * a handle the caller can only ever 404 on is worse than no handle.
    */
   toClientProviderId(report: ClientProviderIdSource): string | null
+
+  /**
+   * The handle the READ routes of this channel open a report by, or null when
+   * it has none here. On island.is this reaches past the channel: a company
+   * reads every report filed for it, whoever filed it (see
+   * `ISLAND_IS_PROVIDER_CHANNEL`). Write routes never take it — they stay on
+   * `buildProviderId`, scoped to this channel's own submissions.
+   */
+  toReadHandle(report: ClientProviderIdSource): string | null
+
+  /**
+   * Inverse of `toReadHandle`: the stored tuple a read handle names for the
+   * authenticated company, or null when the handle names nothing. Ownership is
+   * still checked by the caller, on the row this finds.
+   */
+  resolveReadHandle(
+    handle: string,
+    companyNationalId: string,
+  ): StoredProviderTuple | null
+}
+
+/** A report's stored `(provider_type, provider_id)`. */
+export type StoredProviderTuple = {
+  providerType: ReportProviderEnum
+  providerId: string
 }
 
 /**
@@ -78,6 +103,9 @@ export const ISLAND_IS_PROVIDER_CHANNEL: ReportProviderChannel = {
     report.providerType === ReportProviderEnum.ISLAND_IS
       ? report.providerId
       : null,
+  toReadHandle: (report) => toIslandIsReadHandle(report),
+  resolveReadHandle: (handle, companyNationalId) =>
+    resolveIslandIsReadHandle(handle, companyNationalId),
 }
 
 /**
@@ -113,4 +141,85 @@ export const EXTERNAL_PROVIDER_CHANNEL: ReportProviderChannel = {
       ? providerId.slice(prefix.length)
       : null
   },
+  // The partner API reads only what it filed: its read handle is its own id.
+  toReadHandle: (report) =>
+    EXTERNAL_PROVIDER_CHANNEL.toClientProviderId(report),
+  resolveReadHandle: (handle, companyNationalId) => ({
+    providerType: ReportProviderEnum.OTHER,
+    providerId: EXTERNAL_PROVIDER_CHANNEL.buildProviderId(
+      handle,
+      companyNationalId,
+    ),
+  }),
+}
+
+/**
+ * Prefixes the island.is read routes use for reports island.is did not file.
+ *
+ * A bare handle stays the island.is application id it has always been, so no
+ * existing link changes meaning. Prefixed rather than the internal `report.id`,
+ * which the applicant never sees. An island.is id is an application UUID, so
+ * it can never begin with either prefix.
+ */
+export const PARTNER_READ_HANDLE_PREFIX = 'partner:'
+export const SYSTEM_READ_HANDLE_PREFIX = 'system:'
+
+/**
+ * - island.is: the application id, bare.
+ * - partner API: `partner:<the firm's own id>`, the namespace stripped exactly
+ *   as the partner channel strips it, so only a row stored under the report's
+ *   own company kennitala gets a handle.
+ * - SYSTEM (created by the Directorate): `system:<provider_id>`. Every SYSTEM
+ *   row has one: the admin web sends a random id, `ReportCreateService` mints a
+ *   UUID when none is given, and m-20261111-report-system-provider-ids
+ *   backfilled the rest.
+ */
+const toIslandIsReadHandle = (
+  report: ClientProviderIdSource,
+): string | null => {
+  switch (report.providerType) {
+    case ReportProviderEnum.ISLAND_IS:
+      return report.providerId
+    case ReportProviderEnum.OTHER: {
+      const clientId = EXTERNAL_PROVIDER_CHANNEL.toClientProviderId(report)
+      return clientId ? `${PARTNER_READ_HANDLE_PREFIX}${clientId}` : null
+    }
+    case ReportProviderEnum.SYSTEM:
+      return report.providerId
+        ? `${SYSTEM_READ_HANDLE_PREFIX}${report.providerId}`
+        : null
+    default:
+      return null
+  }
+}
+
+const resolveIslandIsReadHandle = (
+  handle: string,
+  companyNationalId: string,
+): StoredProviderTuple | null => {
+  if (handle.startsWith(PARTNER_READ_HANDLE_PREFIX)) {
+    const clientId = handle.slice(PARTNER_READ_HANDLE_PREFIX.length)
+    // The namespace is the token company's kennitala, never one from the
+    // handle: another company's partner report cannot be named this way.
+    return clientId
+      ? {
+          providerType: ReportProviderEnum.OTHER,
+          providerId: EXTERNAL_PROVIDER_CHANNEL.buildProviderId(
+            clientId,
+            companyNationalId,
+          ),
+        }
+      : null
+  }
+
+  if (handle.startsWith(SYSTEM_READ_HANDLE_PREFIX)) {
+    const providerId = handle.slice(SYSTEM_READ_HANDLE_PREFIX.length)
+    return providerId
+      ? { providerType: ReportProviderEnum.SYSTEM, providerId }
+      : null
+  }
+
+  return handle
+    ? { providerType: ReportProviderEnum.ISLAND_IS, providerId: handle }
+    : null
 }

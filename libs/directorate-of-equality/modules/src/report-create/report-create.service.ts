@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { CreationAttributes } from 'sequelize'
 
 import {
@@ -48,6 +49,32 @@ import {
 } from './dto/create-salary-options'
 import { IReportCreateService } from './report-create.service.interface'
 
+/**
+ * Gives a report filed without a provider id one of its own, under SYSTEM.
+ *
+ * Every channel that files upstream sends an id, so a null one means the
+ * report was entered directly (the Directorate, or a direct API call). Without
+ * an id it has no handle on any applicant route, and the company could never
+ * see it in its submissions list. The id is opaque and fresh — never
+ * `report.id`, which the applicant must not see — and it is minted after the
+ * replay check, which skips a null id, so it changes no replay outcome.
+ *
+ * The provider type becomes SYSTEM even when another was given: an ISLAND_IS
+ * or OTHER row with an id island.is or a firm never issued would be openable
+ * by that channel's write routes. See m-20261111-report-system-provider-ids
+ * for the same rule applied to existing rows.
+ */
+export const withReadHandle = (
+  values: CreationAttributes<ReportModel>,
+): CreationAttributes<ReportModel> =>
+  values.providerId
+    ? values
+    : {
+        ...values,
+        providerType: ReportProviderEnum.SYSTEM,
+        providerId: randomUUID(),
+      }
+
 const LOGGING_CONTEXT = 'ReportCreateService'
 
 /**
@@ -93,7 +120,7 @@ export class ReportCreateService implements IReportCreateService {
     values: CreationAttributes<ReportModel>,
   ): Promise<ReportModel> {
     try {
-      return await this.reportModel.create(values)
+      return await this.reportModel.create(withReadHandle(values))
     } catch (error) {
       rethrowReportWriteError(error)
     }
