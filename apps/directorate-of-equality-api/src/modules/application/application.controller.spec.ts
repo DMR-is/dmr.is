@@ -2,7 +2,14 @@ import { NotFoundException } from '@nestjs/common'
 
 import type { CompanyDto } from '@dmr.is/doe-modules/company'
 
+import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { PartnerClientResourceGuard } from '../../core/guards/partner-client-resource/partner-client-resource.guard'
+import {
+  assertIdentityGuarded,
+  assertTokenSurface,
+  ISLAND_IS_APPLICATION_SCOPE,
+  PARTNER_WEB_SCOPE,
+} from '../../core/guards/token-surface/token-surface.testing'
 import { ApplicationController } from './application.controller'
 
 const logger = {
@@ -37,6 +44,34 @@ const partnerClientTable = (
 })
 
 describe('ApplicationController', () => {
+  // Both channels My Pages and partner-web use reach these routes.
+  describe('token surface (#1568)', () => {
+    const methods = [
+      'getCompany',
+      'getReports',
+      'getReport',
+      'getReportComments',
+    ]
+
+    it.each(methods)('%s runs behind the identity guard', (method) => {
+      expect(() =>
+        assertIdentityGuarded(
+          ApplicationController,
+          method,
+          CompanyResourceGuard,
+        ),
+      ).not.toThrow()
+    })
+
+    it('that guard admits its own surface and refuses any other token', async () => {
+      await expect(
+        assertTokenSurface(CompanyResourceGuard, {
+          accepts: [ISLAND_IS_APPLICATION_SCOPE, PARTNER_WEB_SCOPE],
+        }),
+      ).resolves.toBeUndefined()
+    })
+  })
+
   describe('getCompany — isServiceProvider', () => {
     const build = (service: ReturnType<typeof partnerClientTable>) => ({
       controller: new ApplicationController(
@@ -56,7 +91,10 @@ describe('ApplicationController', () => {
       try {
         await guard.canActivate({
           switchToHttp: () => ({
-            getRequest: () => ({ user: { nationalId } }),
+            // A partner-web token: since #1568 these routes take no other.
+            getRequest: () => ({
+              user: { nationalId, scope: [PARTNER_WEB_SCOPE] },
+            }),
           }),
         } as never)
         return true

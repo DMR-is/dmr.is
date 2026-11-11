@@ -1,5 +1,12 @@
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 
+import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
+import {
+  assertIdentityGuarded,
+  assertTokenSurface,
+  ISLAND_IS_APPLICATION_SCOPE,
+  PARTNER_WEB_SCOPE,
+} from '../../core/guards/token-surface/token-surface.testing'
 import { ApplicationPartnerController } from './application-partner.controller'
 
 /** Placeholder kennitölur — shape only, never checksum-valid. */
@@ -20,6 +27,33 @@ const USER = {
  * the handlers pass down — whose company, which person — not the guards.
  */
 describe('ApplicationPartnerController', () => {
+  describe('token surface (#1568)', () => {
+    const methods = [
+      'getPartnerProviders',
+      'getPartnerDelegations',
+      'grantPartnerDelegation',
+      'revokePartnerDelegation',
+    ]
+
+    it.each(methods)('%s runs behind the identity guard', (method) => {
+      expect(() =>
+        assertIdentityGuarded(
+          ApplicationPartnerController,
+          method,
+          CompanyResourceGuard,
+        ),
+      ).not.toThrow()
+    })
+
+    it('that guard admits its own surface and refuses any other token', async () => {
+      await expect(
+        assertTokenSurface(CompanyResourceGuard, {
+          accepts: [ISLAND_IS_APPLICATION_SCOPE, PARTNER_WEB_SCOPE],
+        }),
+      ).resolves.toBeUndefined()
+    })
+  })
+
   let clients: { listProviders: jest.Mock }
   let delegations: {
     listLiveForCompany: jest.Mock
