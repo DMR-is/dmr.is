@@ -80,7 +80,8 @@ Read when a call is made, never at import:
 
 - `ONESYSTEMS_API_URL`: the OneExternalAPI base URL. **There is no default.**
   For Jafnréttisstofa's instance it is, for example,
-  `https://jafnrettisstofa-one.onecrm.is/OneExternalAPI`.
+  `https://jafnrettisstofa-one.onecrm.is/OneExternalAPI`. A trailing `/api`
+  is accepted and dropped, since every operation path already starts with it.
 - `ONESYSTEMS_USERNAME`, `ONESYSTEMS_PASSWORD`: the Login credentials.
 
 If any of the three is missing (or blank), the call throws a `OneSystemsError`
