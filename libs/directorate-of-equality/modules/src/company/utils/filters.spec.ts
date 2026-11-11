@@ -458,6 +458,19 @@ describe('buildCompanyListQuery', () => {
         { quarantined: false },
       ])
     })
+
+    it('keeps all three default hides on the mail path', () => {
+      const { where } = buildCompanyListQuery(
+        { page: 1, pageSize: 10, q: 'Jafnréttisstofa' },
+        { searchLiftsHides: false },
+      )
+      const conditions = (where as Record<symbol, unknown[]>)[Op.and]
+
+      expect(conditions).toHaveLength(4)
+      expect(conditions[0]).toEqual(searchCondition('Jafnréttisstofa'))
+      expect(conditions).toContainEqual({ status: CompanyStatusEnum.ACTIVE })
+      expect(conditions).toContainEqual({ quarantined: false })
+    })
   })
 
   /**
