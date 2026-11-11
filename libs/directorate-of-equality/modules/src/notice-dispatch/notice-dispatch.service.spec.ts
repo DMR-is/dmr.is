@@ -72,6 +72,8 @@ describe('NoticeDispatchService', () => {
   const mailboxDeliveryService = {
     deliverToMailbox: jest.fn(),
     findDelivery: jest.fn(),
+    mailboxAllowlist: jest.fn(),
+    isMailboxOpenFor: jest.fn(),
   }
 
   const pdfRenderService = {
@@ -88,9 +90,14 @@ describe('NoticeDispatchService', () => {
    */
   const sequelize = {
     transaction: jest.fn(),
+    escape: jest.fn((value: string) => `'${value}'`),
   }
 
   const NOW = new Date('2026-10-08T10:00:00.000Z')
+
+  const NOT_A_RECEIPT = {
+    kind: { [Op.ne]: NoticeOutboxKindEnum.REPORT_SUBMITTED },
+  }
   const COMPANY_ID = '0b9f5c1e-6a3d-4c2b-9e8f-1a2b3c4d5e6f'
   const APPROVED_AT = new Date('2026-10-08T09:58:00.000Z')
 
@@ -198,6 +205,10 @@ describe('NoticeDispatchService', () => {
       alreadySent: false,
     })
     mailboxDeliveryService.findDelivery.mockResolvedValue(null)
+    // Every company, so the suite is about the flag; `describe('mailbox
+    // allowlist')` narrows it.
+    mailboxDeliveryService.mailboxAllowlist.mockResolvedValue({ all: true })
+    mailboxDeliveryService.isMailboxOpenFor.mockResolvedValue(true)
     pdfRenderService.renderHtml.mockResolvedValue(Buffer.from('letter-pdf'))
     jest.mocked(mergePdfs).mockResolvedValue(Buffer.from('merged-pdf'))
     sequelize.transaction.mockImplementation(
@@ -418,18 +429,49 @@ describe('NoticeDispatchService', () => {
       await service.dispatchPending(lockTransaction)
 
       const [query] = noticeOutboxModel.findAll.mock.calls[0]
-      expect(query.where.kind).toEqual({
-        [Op.ne]: NoticeOutboxKindEnum.REPORT_SUBMITTED,
-      })
+      expect(query.where[Op.and]).toContainEqual(NOT_A_RECEIPT)
+      expect(mailboxDeliveryService.mailboxAllowlist).not.toHaveBeenCalled()
     })
 
-    it('picks submission receipts while mailbox delivery is on', async () => {
+    it('picks every submission receipt while the mailbox is open to every company', async () => {
       process.env.ONESYSTEMS_ENABLED = 'true'
 
       await service.dispatchPending(lockTransaction)
 
       const [query] = noticeOutboxModel.findAll.mock.calls[0]
       expect(query.where.kind).toBeUndefined()
+      expect(query.where[Op.and]).toHaveLength(1)
+    })
+
+    it('leaves out submission receipts while the mailbox allowlist is empty', async () => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+      mailboxDeliveryService.mailboxAllowlist.mockResolvedValue({
+        all: false,
+        nationalIds: new Set(),
+      })
+
+      await service.dispatchPending(lockTransaction)
+
+      const [query] = noticeOutboxModel.findAll.mock.calls[0]
+      expect(query.where[Op.and]).toContainEqual(NOT_A_RECEIPT)
+    })
+
+    it('picks only the receipts of companies on the mailbox allowlist', async () => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+      mailboxDeliveryService.mailboxAllowlist.mockResolvedValue({
+        all: false,
+        nationalIds: new Set(['1234567890']),
+      })
+
+      await service.dispatchPending(lockTransaction)
+
+      const [query] = noticeOutboxModel.findAll.mock.calls[0]
+      const [, receipts] = query.where[Op.and]
+      expect(receipts[Op.or][0]).toEqual(NOT_A_RECEIPT)
+      expect(receipts[Op.or][1].val).toContain(
+        "regexp_replace(c.national_id, '[[:space:]-]', '', 'g') IN ('1234567890')",
+      )
+      expect(sequelize.escape).toHaveBeenCalledWith('1234567890')
     })
 
     // One slow mailbox row can take minutes, and the run holds the lock's
@@ -1221,9 +1263,7 @@ describe('NoticeDispatchService', () => {
         // A quarantined company's rows, and receipts with the flag off, wait
         // by design.
         expect(options.where[Op.and][0].val).toContain('c.quarantined')
-        expect(options.where.kind).toEqual({
-          [Op.ne]: NoticeOutboxKindEnum.REPORT_SUBMITTED,
-        })
+        expect(options.where[Op.and]).toContainEqual(NOT_A_RECEIPT)
       }
       expect(query.order).toEqual([['createdAt', 'ASC']])
       expect(query.limit).toBe(1)
@@ -1540,6 +1580,37 @@ describe('NoticeDispatchService', () => {
     }
 
     const renderedHtml = () => pdfRenderService.renderHtml.mock.calls[0][0]
+
+    describe('a filing company not on the mailbox allowlist', () => {
+      beforeEach(() => {
+        mailboxDeliveryService.isMailboxOpenFor.mockResolvedValue(false)
+      })
+
+      it('emails the denial, as with the flag off', async () => {
+        await dispatch(NoticeOutboxKindEnum.REPORT_DENIED)
+
+        expect(mailboxDeliveryService.isMailboxOpenFor).toHaveBeenCalledWith(
+          COMPANY_ID,
+        )
+        expect(mailboxDeliveryService.deliverToMailbox).not.toHaveBeenCalled()
+        expect(mailService.sendReportDenied).toHaveBeenCalledTimes(1)
+      })
+
+      it('emails the approval, as with the flag off', async () => {
+        await dispatch(NoticeOutboxKindEnum.REPORT_APPROVED)
+
+        expect(mailboxDeliveryService.deliverToMailbox).not.toHaveBeenCalled()
+        expect(mailService.sendReportApproved).toHaveBeenCalledTimes(1)
+      })
+
+      it('holds the receipt, which has no email', async () => {
+        await dispatch(NoticeOutboxKindEnum.REPORT_SUBMITTED)
+
+        expect(mailboxDeliveryService.deliverToMailbox).not.toHaveBeenCalled()
+        expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+        expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+      })
+    })
 
     it.each([
       [

@@ -8,3 +8,9 @@
  */
 export const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
   'salary_difference_threshold_percent'
+
+/**
+ * Config key naming the companies that may receive island.is mailbox notices.
+ * See `lib/mailbox-allowlist.ts` for the stored format.
+ */
+export const MAILBOX_ALLOWLIST_CONFIG_KEY = 'onesystems_mailbox_allowlist'

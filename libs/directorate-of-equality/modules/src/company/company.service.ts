@@ -171,6 +171,9 @@ export class CompanyService implements ICompanyService {
     // Shared with `findMailRecipientsByFilter` on purpose: the count this
     // list shows is the count the "send to everyone matching this filter"
     // button promises, so both sides have to resolve the identical query.
+    // The one exception is a search, which lifts the default hides here but
+    // not on the mail path (`searchLiftsHides`); the email preview shows the
+    // count that will actually be sent.
     const { where, includes } = buildCompanyListQuery(query)
 
     const sortDir = (
@@ -216,7 +219,12 @@ export class CompanyService implements ICompanyService {
   async findMailRecipientsByFilter(
     filter: GetCompaniesQueryDto,
   ): Promise<CompanyMailRecipient[]> {
-    const { where, includes } = buildCompanyListQuery(filter)
+    // A search narrows the recipients and never lifts the register's default
+    // hides here, so a search cannot mail inactive, not-obliged or
+    // quarantined companies the filter would otherwise leave out.
+    const { where, includes } = buildCompanyListQuery(filter, {
+      searchLiftsHides: false,
+    })
 
     /*
      * No `limit`/`offset`: `filter` arrives carrying the list's paging params,

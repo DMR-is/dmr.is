@@ -46,25 +46,25 @@ export const MAILBOX_DELIVERY_KIND_CONFIGS = Symbol(
 )
 
 /**
- * The case template of each report type: `undefined` until confirmed, so
- * every report kind is `UNCONFIGURED` and nothing reaches One.
+ * The case template of each report type. Created in One by Jafnréttisstofa's
+ * case-system administrator on 30 Sep 2026 and confirmed.
  *
- * ⚠️ Deliberate. A wrong `CaseType` files real mail under the wrong case, and
- * CreateCase finds-or-creates by `IDNumber` + `CaseType`, so the wrong case is
- * then reused by every later notice to that company. There is no documented
- * test environment to find out in.
+ * ⚠️ A wrong `CaseType` files real mail under the wrong case, and CreateCase
+ * finds-or-creates by `IDNumber` + `CaseType`, so the wrong case is then
+ * reused by every later notice to that company. Change these only with
+ * Jafnréttisstofa's confirmation.
+ *
+ * Setting them does not by itself send anything: `ONESYSTEMS_ENABLED` must be
+ * on, and the company must be on the `onesystems_mailbox_allowlist` config row
+ * (see `config/lib/mailbox-allowlist.ts`).
  *
  * Unsetting one again (a deploy that rolls this file back) does not get a
  * notice sent twice: `deliverToMailbox` reads the delivery's row before it
  * answers `UNCONFIGURED`, and a delivery that already reached One answers as
  * it stands and waits for the template instead of being emailed on top.
- *
- * TODO(Jafnréttisstofa): the proposed keys are `SKYRSLA` for salary reports
- * and `J-AAETLUN` for equality reports. Set each here, with who confirmed it
- * and when, once Jafnréttisstofa's case-system administrator confirms it.
  */
-const SALARY_CASE_TYPE: string | undefined = undefined
-const EQUALITY_CASE_TYPE: string | undefined = undefined
+const SALARY_CASE_TYPE: string | undefined = 'SKYRSLA'
+const EQUALITY_CASE_TYPE: string | undefined = 'J-AAETLUN'
 
 /** No classification: One and island.is accept empty strings. */
 const UNCLASSIFIED = {

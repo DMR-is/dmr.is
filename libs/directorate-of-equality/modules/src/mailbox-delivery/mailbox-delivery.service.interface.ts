@@ -1,12 +1,13 @@
+import type { MailboxAllowlist } from '../config/lib/mailbox-allowlist'
 import {
   MailboxDeliveryKindEnum,
   MailboxDeliveryStatusEnum,
 } from './models/mailbox-delivery.enums'
 
 /**
- * Whether notices go to the island.is mailbox through One. The one reading of
- * `ONESYSTEMS_ENABLED`: `deliverToMailbox` gates on it, and a caller that has
- * an email fallback branches on it.
+ * Whether the island.is mailbox is switched on for this environment. The one
+ * reading of `ONESYSTEMS_ENABLED`. It is not enough on its own: a company must
+ * also be on the mailbox allowlist (`IMailboxDeliveryService.isMailboxOpenFor`).
  */
 export const isMailboxDeliveryEnabled = (): boolean =>
   process.env.ONESYSTEMS_ENABLED === 'true'
@@ -212,6 +213,20 @@ export interface IMailboxDeliveryService {
    * the `limit` that `findStuckDeliveries` names.
    */
   countStuckDeliveries(): Promise<Record<StuckMailboxDeliveryReason, number>>
+
+  /**
+   * The `onesystems_mailbox_allowlist` config row, parsed. A missing or
+   * malformed row reads as nobody. Read it once per batch and test each
+   * company with `mailboxAllowlistAllows`.
+   */
+  mailboxAllowlist(): Promise<MailboxAllowlist>
+
+  /**
+   * Whether a notice to this company goes to the mailbox: `ONESYSTEMS_ENABLED`
+   * is on and the allowlist names the company. When false, a caller with an
+   * email fallback uses it, exactly as with the flag off.
+   */
+  isMailboxOpenFor(companyId: string): Promise<boolean>
 
   /**
    * The kinds in use (`MAILBOX_DELIVERY_KINDS_IN_USE`) with no case template.

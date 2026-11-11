@@ -13,8 +13,12 @@ import { InjectConnection, InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ConfigDto, UpdateConfigDto } from './dto/config.dto'
+import { normalizeMailboxAllowlistValue } from './lib/mailbox-allowlist'
 import { ConfigModel } from './models/config.model'
-import { SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY } from './config.constants'
+import {
+  MAILBOX_ALLOWLIST_CONFIG_KEY,
+  SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
+} from './config.constants'
 import { configMessages } from './config.messages'
 import { IConfigService } from './config.service.interface'
 
@@ -112,7 +116,9 @@ export class ConfigService implements IConfigService {
       const value =
         key === SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY
           ? this.assertThresholdIsLowered(current.value, dto.value)
-          : dto.value
+          : key === MAILBOX_ALLOWLIST_CONFIG_KEY
+            ? this.assertMailboxAllowlist(dto.value)
+            : dto.value
 
       await current.update({ supersededAt: new Date() }, { transaction })
 
@@ -130,6 +136,23 @@ export class ConfigService implements IConfigService {
 
       return newEntry.fromModel()
     })
+  }
+
+  /**
+   * The mailbox allowlist decides who gets real letters from One, so a value
+   * the reader would misread is refused rather than stored. Returns the
+   * canonical form, which is what gets stored.
+   */
+  private assertMailboxAllowlist(nextValue: string): string {
+    const normalized = normalizeMailboxAllowlistValue(nextValue)
+
+    if (normalized === null) {
+      throw new BadRequestException(
+        configMessages.mailboxAllowlistInvalid(nextValue),
+      )
+    }
+
+    return normalized
   }
 
   /**

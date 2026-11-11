@@ -4,6 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { OneSystemsModule } from '@dmr.is/clients-onesystems'
 
 import { CompanyModel } from '../company/models/company.model'
+import { ConfigModel } from '../config/models/config.model'
 import { MailboxDeliveryModel } from './models/mailbox-delivery.model'
 import {
   MAILBOX_DELIVERY_KIND_CONFIGS,
@@ -19,7 +20,11 @@ import { IMailboxDeliveryService } from './mailbox-delivery.service.interface'
  */
 @Module({
   imports: [
-    SequelizeModule.forFeature([MailboxDeliveryModel, CompanyModel]),
+    SequelizeModule.forFeature([
+      MailboxDeliveryModel,
+      CompanyModel,
+      ConfigModel,
+    ]),
     OneSystemsModule,
   ],
   providers: [

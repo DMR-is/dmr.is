@@ -295,6 +295,7 @@ describe('MailboxDeliveryService', () => {
 
   let store: ReturnType<typeof createStore>
   let companies: { findOne: jest.Mock }
+  let configs: { findOne: jest.Mock }
   let one: jest.Mocked<IOneSystemsService>
   let pdf: jest.Mock<Promise<Buffer>, []>
   let service: MailboxDeliveryService
@@ -304,6 +305,7 @@ describe('MailboxDeliveryService', () => {
       logger as never,
       store.model as never,
       companies as never,
+      configs as never,
       one,
       kinds,
     )
@@ -335,6 +337,9 @@ describe('MailboxDeliveryService', () => {
     process.env.ONESYSTEMS_ENABLED = 'true'
     store = createStore()
     companies = { findOne: jest.fn().mockResolvedValue({ ...COMPANY }) }
+    // Every company, so the rest of the suite is about delivery, not the
+    // allowlist; `describe('allowlist')` narrows it.
+    configs = { findOne: jest.fn().mockResolvedValue({ value: '*' }) }
     one = {
       createCase: jest.fn(),
       createDocument: jest.fn(),
@@ -360,6 +365,85 @@ describe('MailboxDeliveryService', () => {
     } else {
       process.env.ONESYSTEMS_ENABLED = originalEnabled
     }
+  })
+
+  describe('allowlist', () => {
+    it.each([
+      ['none', 'none'],
+      ['a missing row', null],
+      ['a malformed row', 'everyone'],
+      ['another company', '2222222222'],
+    ])(
+      'treats the company as switched off when the allowlist is %s',
+      async (_label, value) => {
+        configs.findOne.mockResolvedValue(value === null ? null : { value })
+
+        await expect(service.deliverToMailbox(input())).resolves.toEqual({
+          status: 'DISABLED',
+        })
+
+        expect(store.rows.size).toBe(0)
+        expect(pdf).not.toHaveBeenCalled()
+        expect(oneCalls()).toBe(0)
+      },
+    )
+
+    it('delivers to a company the allowlist names, hyphen and all', async () => {
+      configs.findOne.mockResolvedValue({
+        value: `2222222222, ${COMPANY.nationalId.slice(0, 6)}-${COMPANY.nationalId.slice(6)}`,
+      })
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'SENT',
+      })
+      expect(one.sendDocToIslandIs).toHaveBeenCalledTimes(1)
+    })
+
+    it('reads the active row on its own connection', async () => {
+      await service.mailboxAllowlist()
+
+      expect(configs.findOne).toHaveBeenCalledWith({
+        where: { key: 'onesystems_mailbox_allowlist', supersededAt: null },
+        attributes: ['value'],
+        transaction: null,
+      })
+    })
+
+    describe('isMailboxOpenFor', () => {
+      it('is closed with the flag off, whatever the allowlist says', async () => {
+        delete process.env.ONESYSTEMS_ENABLED
+
+        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(false)
+        expect(configs.findOne).not.toHaveBeenCalled()
+      })
+
+      it('is open to every company on `*` without reading the company', async () => {
+        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(true)
+        expect(companies.findOne).not.toHaveBeenCalled()
+      })
+
+      it('is closed on `none` without reading the company', async () => {
+        configs.findOne.mockResolvedValue({ value: 'none' })
+
+        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(false)
+        expect(companies.findOne).not.toHaveBeenCalled()
+      })
+
+      it('is open only to a named company', async () => {
+        configs.findOne.mockResolvedValue({ value: COMPANY.nationalId })
+        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(true)
+
+        configs.findOne.mockResolvedValue({ value: '2222222222' })
+        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(false)
+      })
+
+      it('is closed to a company that does not exist', async () => {
+        configs.findOne.mockResolvedValue({ value: COMPANY.nationalId })
+        companies.findOne.mockResolvedValue(null)
+
+        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(false)
+      })
+    })
   })
 
   describe('kill switch', () => {
@@ -707,11 +791,11 @@ describe('MailboxDeliveryService', () => {
      */
     it('logs an unconfigured kind at error once per kind, however often it is asked', async () => {
       service = build(MAILBOX_DELIVERY_KINDS)
-      const denied = input({
-        kind: MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+      const fines = input({
+        kind: MailboxDeliveryKindEnum.FINES_PRECURSOR,
         idempotencyKey: keyFor(
           'REPORT-1',
-          MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+          MailboxDeliveryKindEnum.FINES_PRECURSOR,
         ),
       })
 
@@ -720,9 +804,9 @@ describe('MailboxDeliveryService', () => {
           status: 'UNCONFIGURED',
           kind: MailboxDeliveryKindEnum.OVERDUE_NOTICE,
         })
-        await expect(service.deliverToMailbox(denied)).resolves.toEqual({
+        await expect(service.deliverToMailbox(fines)).resolves.toEqual({
           status: 'UNCONFIGURED',
-          kind: MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+          kind: MailboxDeliveryKindEnum.FINES_PRECURSOR,
         })
       }
 
@@ -731,7 +815,7 @@ describe('MailboxDeliveryService', () => {
       )
       expect(unconfiguredLogs.map(([, meta]) => meta.kind)).toEqual([
         MailboxDeliveryKindEnum.OVERDUE_NOTICE,
-        MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
+        MailboxDeliveryKindEnum.FINES_PRECURSOR,
       ])
     })
 
@@ -764,53 +848,38 @@ describe('MailboxDeliveryService', () => {
     })
 
     /*
-     * ⚠️ Pins the guard: no case type is confirmed, and a guessed one files
-     * real mail under the wrong case (which find-or-create then reuses). When
-     * one is confirmed, this is the test to change, on purpose.
+     * ⚠️ Pins the confirmed case templates (Jafnréttisstofa, 30 Sep 2026). A
+     * wrong one files real mail under the wrong case, which find-or-create
+     * then reuses, so a change here must be on purpose.
      */
-    it.each(Object.values(MailboxDeliveryKindEnum))(
-      '%s has no confirmed case template, so it cannot reach One',
-      (kind) => {
-        expect(isKindConfigured(kind)).toBe(false)
-        expect(() => resolveKindConfig(kind)).toThrow(/missing caseType/)
-      },
-    )
-
-    it('names every kind in use without a case template, and only those', () => {
-      expect(build(MAILBOX_DELIVERY_KINDS).unconfiguredKinds()).toEqual(
-        MAILBOX_DELIVERY_KINDS_IN_USE,
-      )
-      expect(MAILBOX_DELIVERY_KINDS_IN_USE).not.toContain(
-        MailboxDeliveryKindEnum.OVERDUE_NOTICE,
-      )
-      expect(MAILBOX_DELIVERY_KINDS_IN_USE).not.toContain(
-        MailboxDeliveryKindEnum.FINES_PRECURSOR,
-      )
-      expect(build(KINDS).unconfiguredKinds()).toEqual([])
+    it.each(
+      MAILBOX_DELIVERY_KINDS_IN_USE.map((kind) => [
+        kind,
+        kind.startsWith('SALARY_') ? 'SKYRSLA' : 'J-AAETLUN',
+      ]),
+    )('%s is filed under case template %s', (kind, caseType) => {
+      expect(isKindConfigured(kind)).toBe(true)
+      expect(resolveKindConfig(kind).caseType).toBe(caseType)
     })
 
     it.each([
-      MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
-      MailboxDeliveryKindEnum.EQUALITY_REPORT_APPROVED,
-      MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
-      MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
-    ])(
-      'answers UNCONFIGURED for a real %s delivery before any row, render or call',
-      async (kind) => {
-        service = build(MAILBOX_DELIVERY_KINDS)
+      MailboxDeliveryKindEnum.OVERDUE_NOTICE,
+      MailboxDeliveryKindEnum.FINES_PRECURSOR,
+    ])('%s, not in use, has no case template', (kind) => {
+      expect(MAILBOX_DELIVERY_KINDS_IN_USE).not.toContain(kind)
+      expect(isKindConfigured(kind)).toBe(false)
+      expect(() => resolveKindConfig(kind)).toThrow(/missing caseType/)
+    })
 
-        await expect(
-          service.deliverToMailbox(
-            input({ kind, idempotencyKey: keyFor('REPORT-1', kind) }),
-          ),
-        ).resolves.toEqual({ status: 'UNCONFIGURED', kind })
-
-        expect(companies.findOne).not.toHaveBeenCalled()
-        expect(store.rows.size).toBe(0)
-        expect(pdf).not.toHaveBeenCalled()
-        expect(oneCalls()).toBe(0)
-      },
-    )
+    it('has no kind in use without a case template', () => {
+      expect(build(MAILBOX_DELIVERY_KINDS).unconfiguredKinds()).toEqual([])
+      expect(
+        build({
+          ...KINDS,
+          [MailboxDeliveryKindEnum.SALARY_REPORT_DENIED]: {},
+        }).unconfiguredKinds(),
+      ).toEqual([MailboxDeliveryKindEnum.SALARY_REPORT_DENIED])
+    })
 
     it('returns a complete config', () => {
       expect(

@@ -8,10 +8,16 @@ import {
 
 import { IAuthorizationService } from '@dmr.is/doe-modules/authorization'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
+import { assertStaffToken } from '../token-surface/token-surface'
+
+const LOGGING_CONTEXT = 'AdminGuard'
 
 @Injectable()
 export class AdminGuard implements CanActivate {
   constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAuthorizationService)
     private readonly authorizationService: IAuthorizationService,
   ) {}
@@ -27,6 +33,8 @@ export class AdminGuard implements CanActivate {
     if (!user?.nationalId) {
       throw new UnauthorizedException()
     }
+
+    assertStaffToken(user, this.logger, LOGGING_CONTEXT)
 
     request.adminUser = await this.authorizationService.resolveAdminUser(
       user.nationalId,
