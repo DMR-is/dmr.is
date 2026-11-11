@@ -10,7 +10,7 @@ import {
   assertStaffToken,
   ISLAND_IS_APPLICATION_SCOPE,
   ISLAND_IS_SALARY_APPLICATION_SCOPE,
-  PARTNER_WEB_SCOPE,
+  MY_PAGES_SCOPE,
 } from './token-surface'
 
 const STAFF_CLIENT_ID = 'doe-web-client'
@@ -54,13 +54,21 @@ describe('assertCompanyToken', () => {
     ).toThrow(ForbiddenException)
   })
 
-  it('accepts a partner-web token', () => {
-    expect(company({ scope: [PARTNER_WEB_SCOPE] })).not.toThrow()
+  // partner-web never reached production and is being replaced by My Pages,
+  // so its scope no longer opens any company route.
+  it("refuses partner-web's retired scope", () => {
+    expect(company({ scope: ['@jafnretti.is/doe-partner-web'] })).toThrow(
+      ForbiddenException,
+    )
+  })
+
+  it('accepts a My Pages token', () => {
+    expect(company({ scope: [MY_PAGES_SCOPE] })).not.toThrow()
   })
 
   // IDS serialises a claim with one value as a string, not a one-item array.
   it('accepts a single scope emitted as a string', () => {
-    expect(company({ scope: PARTNER_WEB_SCOPE })).not.toThrow()
+    expect(company({ scope: MY_PAGES_SCOPE })).not.toThrow()
   })
 
   it('accepts a delegated token, since that is how a person acts for a company', () => {
@@ -85,7 +93,7 @@ describe('assertCompanyToken', () => {
 
   it('refuses a scope outside the allowed list it is given', () => {
     expect(
-      company({ scope: [ISLAND_IS_APPLICATION_SCOPE] }, [PARTNER_WEB_SCOPE]),
+      company({ scope: [ISLAND_IS_APPLICATION_SCOPE] }, [MY_PAGES_SCOPE]),
     ).toThrow(ForbiddenException)
   })
 })

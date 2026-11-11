@@ -62,9 +62,8 @@ export class PartnerClientResourceGuard implements CanActivate {
       throw new UnauthorizedException()
     }
 
-    // Vendor keys are self-service: managed only from the clients built for
-    // it (partner-web today), so the island.is application scope is not enough
-    // here.
+    // Vendor keys are self-service: managed only from island.is My Pages, so
+    // the island.is application scope is not enough here.
     assertCompanyToken(
       user,
       this.logger,
