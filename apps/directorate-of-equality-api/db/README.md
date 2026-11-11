@@ -623,8 +623,7 @@ lists, and `mailbox_delivery_company_id_idx`.
 
 A row settled by island.is's duplicate answer looks like any other `SENT` row: `sent_at` is
 when the repeat was confirmed, not when the document first reached the mailbox, and no
-column marks it. Only the warn line `Mailbox delivery <id>: island.is already had the
-document, recording it as sent` does.
+column marks it. Only the warn line `Mailbox delivery <id>: island.is already had the document, recording it as sent` does.
 
 ## Notice outbox
 
@@ -1709,9 +1708,9 @@ Updates are **supersede-and-insert**: the old row gets `superseded_at` stamped a
 
 Current entries:
 
-| key                                   | value | description                                                           |
-| ------------------------------------- | ----- | --------------------------------------------------------------------- |
-| `salary_difference_threshold_percent` | `3.9` | Annual gender salary difference threshold (%). Updated each February. |
+| key                                   | value  | description                                                                                                                                                                                                                                                        |
+| ------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `salary_difference_threshold_percent` | `3.9`  | Annual gender salary difference threshold (%). Updated each February.                                                                                                                                                                                              |
 | `onesystems_mailbox_allowlist`        | `none` | Companies that may receive island.is mailbox notices through One: `none`, `*` (all) or comma-separated kennitölur. Others get email, as with `ONESYSTEMS_ENABLED` off. Validated and normalised on update. Migration `m-20261111-onesystems-mailbox-allowlist.js`. |
 
 No FKs, no relationships. Standalone lookup table.

@@ -430,9 +430,7 @@ describe('NoticeDispatchService', () => {
 
       const [query] = noticeOutboxModel.findAll.mock.calls[0]
       expect(query.where[Op.and]).toContainEqual(NOT_A_RECEIPT)
-      expect(
-        mailboxDeliveryService.mailboxAllowlist,
-      ).not.toHaveBeenCalled()
+      expect(mailboxDeliveryService.mailboxAllowlist).not.toHaveBeenCalled()
     })
 
     it('picks every submission receipt while the mailbox is open to every company', async () => {

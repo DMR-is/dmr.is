@@ -19,12 +19,17 @@ describe('mailbox allowlist', () => {
       expect(normalizeMailboxAllowlistValue(value)).toBe(stored)
     })
 
-    it.each(['', ' ', ',', 'all', '123456789', '12345678901', '1234567890,abc'])(
-      'refuses %p',
-      (value) => {
-        expect(normalizeMailboxAllowlistValue(value)).toBeNull()
-      },
-    )
+    it.each([
+      '',
+      ' ',
+      ',',
+      'all',
+      '123456789',
+      '12345678901',
+      '1234567890,abc',
+    ])('refuses %p', (value) => {
+      expect(normalizeMailboxAllowlistValue(value)).toBeNull()
+    })
   })
 
   describe('parseMailboxAllowlist', () => {

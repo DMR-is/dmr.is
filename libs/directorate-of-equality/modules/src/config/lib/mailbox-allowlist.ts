@@ -42,7 +42,9 @@ const splitEntries = (value: string): string[] =>
  * The stored value in canonical form, or null when it is not a valid value.
  * The admin update stores what this returns, so the reader never has to guess.
  */
-export const normalizeMailboxAllowlistValue = (value: string): string | null => {
+export const normalizeMailboxAllowlistValue = (
+  value: string,
+): string | null => {
   const trimmed = value.trim()
 
   if (trimmed === MAILBOX_ALLOWLIST_ALL) {

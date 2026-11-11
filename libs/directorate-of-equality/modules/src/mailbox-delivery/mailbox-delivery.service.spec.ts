@@ -413,9 +413,7 @@ describe('MailboxDeliveryService', () => {
       it('is closed with the flag off, whatever the allowlist says', async () => {
         delete process.env.ONESYSTEMS_ENABLED
 
-        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(
-          false,
-        )
+        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(false)
         expect(configs.findOne).not.toHaveBeenCalled()
       })
 
@@ -427,9 +425,7 @@ describe('MailboxDeliveryService', () => {
       it('is closed on `none` without reading the company', async () => {
         configs.findOne.mockResolvedValue({ value: 'none' })
 
-        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(
-          false,
-        )
+        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(false)
         expect(companies.findOne).not.toHaveBeenCalled()
       })
 
@@ -438,18 +434,14 @@ describe('MailboxDeliveryService', () => {
         await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(true)
 
         configs.findOne.mockResolvedValue({ value: '2222222222' })
-        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(
-          false,
-        )
+        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(false)
       })
 
       it('is closed to a company that does not exist', async () => {
         configs.findOne.mockResolvedValue({ value: COMPANY.nationalId })
         companies.findOne.mockResolvedValue(null)
 
-        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(
-          false,
-        )
+        await expect(service.isMailboxOpenFor(COMPANY.id)).resolves.toBe(false)
       })
     })
   })
