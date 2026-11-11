@@ -1,7 +1,10 @@
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common'
 
+import { AUTO_PROVISION_COMPANY_METADATA } from '../../decorators/auto-provision-company.decorator'
+import { SELF_SERVICE_TOKEN_SURFACE_METADATA } from '../../decorators/self-service-token-surface.decorator'
 import {
   ISLAND_IS_APPLICATION_SCOPE,
+  ISLAND_IS_SALARY_APPLICATION_SCOPE,
   PARTNER_WEB_SCOPE,
 } from '../token-surface/token-surface'
 import {
@@ -20,6 +23,7 @@ describe('CompanyResourceGuard', () => {
   let getByNationalId: jest.Mock
   let getOrCreateByNationalId: jest.Mock
   let autoProvision: boolean
+  let selfService: boolean
   let guard: CompanyResourceGuard
 
   const run = async (
@@ -39,10 +43,18 @@ describe('CompanyResourceGuard', () => {
     getByNationalId = jest.fn().mockResolvedValue({ id: 'company-a' })
     getOrCreateByNationalId = jest.fn().mockResolvedValue({ id: 'company-b' })
     autoProvision = false
+    selfService = false
     guard = new CompanyResourceGuard(
       logger as never,
       { getByNationalId, getOrCreateByNationalId } as never,
-      { getAllAndOverride: () => autoProvision } as never,
+      {
+        getAllAndOverride: (key: string) =>
+          key === AUTO_PROVISION_COMPANY_METADATA
+            ? autoProvision
+            : key === SELF_SERVICE_TOKEN_SURFACE_METADATA
+              ? selfService
+              : undefined,
+      } as never,
     )
   })
 
@@ -105,5 +117,42 @@ describe('CompanyResourceGuard', () => {
   it('refuses a token with no kennitala', async () => {
     await expect(run(undefined)).rejects.toBeInstanceOf(UnauthorizedException)
     expect(getByNationalId).not.toHaveBeenCalled()
+  })
+
+  describe('on a @SelfServiceTokenSurface() route', () => {
+    beforeEach(() => {
+      selfService = true
+    })
+
+    it('resolves the company for a partner-web token', async () => {
+      const request = await run({
+        nationalId: '9999999999',
+        scope: [PARTNER_WEB_SCOPE],
+      } as never)
+
+      expect(request.companyContext).toEqual({ id: 'company-a' })
+    })
+
+    // island.is application tokens may file reports, but must not mint a
+    // long-lived API key or grant a delegation.
+    it.each([
+      ['island.is application', ISLAND_IS_APPLICATION_SCOPE],
+      ['island.is salary-report', ISLAND_IS_SALARY_APPLICATION_SCOPE],
+    ])('refuses an %s token', async (_label, scope) => {
+      await expect(
+        run({ nationalId: '9999999999', scope: [scope] } as never),
+      ).rejects.toBeInstanceOf(ForbiddenException)
+      expect(getByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('refuses a delegated session without the self-service scope', async () => {
+      await expect(
+        run({
+          nationalId: '9999999999',
+          scope: ['@island.is/documents'],
+          actor: { nationalId: '1111111111' },
+        } as never),
+      ).rejects.toBeInstanceOf(ForbiddenException)
+    })
   })
 })

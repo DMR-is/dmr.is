@@ -43,6 +43,28 @@ export const COMPANY_TOKEN_SCOPES: ReadonlyArray<string> = [
 ]
 
 /**
+ * The self-service routes: a company's own partner API keys
+ * (`application/api-keys`), its partner delegations and the provider list they
+ * pick from (`application/partner-delegations`, `application/partner-providers`),
+ * and an approved provider's own vendor keys (`application/partner-client/*`).
+ * They are marked with `@SelfServiceTokenSurface()` (or sit behind
+ * `PartnerClientResourceGuard`), and `swagger-coverage.spec.ts` pins which
+ * routes those are.
+ *
+ * Narrower than `COMPANY_TOKEN_SCOPES` on purpose. Minting a key turns a token
+ * that lasts minutes into access that lasts, so only the clients built to
+ * manage keys may call these. Today that is partner-web alone: the island.is
+ * application system never calls them.
+ *
+ * island.is My Pages is being built to call these routes too, and its scope is
+ * not decided yet. ADD THE MY PAGES SCOPE HERE BEFORE MY PAGES GOES LIVE, or
+ * every My Pages call to these routes is refused with a 403.
+ */
+export const SELF_SERVICE_TOKEN_SCOPES: ReadonlyArray<string> = [
+  PARTNER_WEB_SCOPE,
+]
+
+/**
  * doe-web's IDS client id. doe-web sends its id_token, whose `aud` is the
  * client it was issued to, so a token issued to any other client fails here.
  */
