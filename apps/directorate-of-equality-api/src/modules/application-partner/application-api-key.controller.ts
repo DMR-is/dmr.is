@@ -125,7 +125,6 @@ export class ApplicationApiKeyController {
       id,
       company,
       actorNationalId: resolveActorNationalId(user),
-      actorName: resolveActorName(user),
     })
   }
 }

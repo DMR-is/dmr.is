@@ -226,8 +226,6 @@ export class PartnerDelegationService implements IPartnerDelegationService {
       {
         revokedAt: new Date(),
         revokedByNationalId: input.actorNationalId ?? null,
-        // Only beside a kennitala: the admin path names the reviewer by id.
-        revokedByName: input.actorNationalId ? (input.actorName ?? null) : null,
         revokedByUserId: input.actorUserId ?? null,
       },
       { where: { id: delegation.id, revokedAt: null } },

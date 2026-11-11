@@ -78,13 +78,6 @@ export class PartnerClientKeyDto {
   @ApiOptionalString({ nullable: true })
   revokedByNationalId!: string | null
 
-  @ApiOptionalString({
-    nullable: true,
-    description:
-      'Name of the person who revoked the key on the self-service path, as island.is gave it at the time. Null on the admin path, while the key is live, or for revocations recorded before names were stored.',
-  })
-  revokedByName!: string | null
-
   @ApiOptionalString({ nullable: true })
   revokedByUserId!: string | null
 

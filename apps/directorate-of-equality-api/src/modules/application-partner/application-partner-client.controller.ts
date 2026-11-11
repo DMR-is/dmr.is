@@ -135,7 +135,6 @@ export class ApplicationPartnerClientController {
       id,
       partnerClientId: client.id,
       actorNationalId: resolveActorNationalId(user),
-      actorName: resolveActorName(user),
     })
   }
 }

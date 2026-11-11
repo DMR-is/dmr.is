@@ -458,16 +458,16 @@ null there conventionally means "the company did it", which cannot name the huma
 self-service key — that is why the kennitala lives on the key row, and why a timeline
 entry for a self-service issuance should render from `created_by_national_id`.
 
-**Names beside kennitölur.** Each self-service kennitala column has a name twin
-(`created_by_name`, `revoked_by_name`, and `granted_by_name` on delegations;
+**Names beside kennitölur.** The person who created a key or granted a delegation is also
+recorded by name (`created_by_name` on both key tables, `granted_by_name` on delegations;
 `m-20261111-actor-names-on-keys-and-delegations`), so My Pages can say who created a key or
-granted access without showing a raw kennitala. The name is snapshotted from the island.is
-token when the row is written — `resolveActorName`, which takes the same branch as
-`resolveActorNationalId`: the procuration actor's name, or the company's own on a
-self-login — and is never looked up from the national registry. The columns are nullable
-with no backfill: null means the admin path (named by `*_by_user_id`) or a row written before
-names were stored, and readers show a fallback. A name is display data, not identity: audit
-still keys on the kennitala.
+granted access without showing a raw kennitala. Revocations record the kennitala only. The
+name is snapshotted from the island.is token when the row is written — `resolveActorName`,
+which takes the same branch as `resolveActorNationalId`: the procuration actor's name, or
+the company's own on a self-login — and is never looked up from the national registry. The
+columns are nullable with no backfill: null means the admin path (named by
+`created_by_user_id`) or a row written before names were stored, and readers show a
+fallback. A name is display data, not identity: audit still keys on the kennitala.
 
 A revoked row names at most one actor, and may name none: a system-initiated revocation
 (company deactivated, for instance) has no human behind it, and the constraint

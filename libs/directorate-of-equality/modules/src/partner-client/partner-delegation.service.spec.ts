@@ -297,14 +297,12 @@ describe('PartnerDelegationService', () => {
         id: 'd-1',
         company: COMPANY,
         actorNationalId: '0000000000',
-        actorName: 'Jón Jónsson',
       })
 
       expect(delegations.update).toHaveBeenCalledWith(
         {
           revokedAt: expect.any(Date),
           revokedByNationalId: '0000000000',
-          revokedByName: 'Jón Jónsson',
           revokedByUserId: null,
         },
         { where: { id: 'd-1', revokedAt: null } },

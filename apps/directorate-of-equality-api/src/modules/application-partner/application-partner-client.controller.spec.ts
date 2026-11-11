@@ -100,7 +100,6 @@ describe('ApplicationPartnerClientController', () => {
       id: 'k-1',
       partnerClientId: 'client-a',
       actorNationalId: '0000000000',
-      actorName: 'Jóna Jónsdóttir',
     })
   })
 })

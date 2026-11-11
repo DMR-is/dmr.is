@@ -64,7 +64,6 @@ describe('ApplicationPartnerController', () => {
         id: 'd-1',
         company: COMPANY,
         actorNationalId: '0000000000',
-        actorName: 'Jóna Jónsdóttir',
       })
     })
   })

@@ -7108,11 +7108,6 @@
             "nullable": true
           },
           "revokedByNationalId": { "type": "string", "nullable": true },
-          "revokedByName": {
-            "type": "string",
-            "nullable": true,
-            "description": "Name of the person who revoked the key on the self-service path, as island.is gave it at the time. Null on the admin path, while the key is live, or for revocations recorded before names were stored."
-          },
           "revokedByUserId": { "type": "string", "nullable": true },
           "revokedReason": { "type": "string", "nullable": true }
         },
@@ -8811,11 +8806,6 @@
             "nullable": true
           },
           "revokedByNationalId": { "type": "string", "nullable": true },
-          "revokedByName": {
-            "type": "string",
-            "nullable": true,
-            "description": "Name of the person who revoked the key on the self-service path, as island.is gave it at the time. Null on the admin path, while the key is live, or for revocations recorded before names were stored."
-          },
           "revokedByUserId": { "type": "string", "nullable": true },
           "revokedReason": { "type": "string", "nullable": true }
         },

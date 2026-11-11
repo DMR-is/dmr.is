@@ -22,7 +22,6 @@ type PartnerClientKeyAttributes = {
   revokedAt: Date | null
   revokedByUserId: string | null
   revokedByNationalId: string | null
-  revokedByName: string | null
   revokedReason: string | null
 }
 
@@ -113,13 +112,6 @@ export class PartnerClientKeyModel extends MutableModel<
   })
   revokedByNationalId!: string | null
 
-  @Column({
-    type: DataType.TEXT,
-    allowNull: true,
-    field: 'revoked_by_name',
-  })
-  revokedByName!: string | null
-
   @Column({ type: DataType.TEXT, allowNull: true, field: 'revoked_reason' })
   revokedReason!: string | null
 
@@ -138,7 +130,6 @@ export class PartnerClientKeyModel extends MutableModel<
       lastUsedAt: model.lastUsedAt,
       revokedAt: model.revokedAt,
       revokedByNationalId: model.revokedByNationalId,
-      revokedByName: model.revokedByName,
       revokedByUserId: model.revokedByUserId,
       revokedReason: model.revokedReason,
     }

@@ -284,8 +284,6 @@ export class PartnerClientService implements IPartnerClientService {
         revokedAt: new Date(),
         revokedByUserId: input.actorUserId ?? null,
         revokedByNationalId: input.actorNationalId ?? null,
-        // Only beside a kennitala: the admin path names the reviewer by id.
-        revokedByName: input.actorNationalId ? (input.actorName ?? null) : null,
         revokedReason: input.reason ?? null,
       },
       { where: { id: key.id, revokedAt: null } },

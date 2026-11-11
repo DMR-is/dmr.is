@@ -167,7 +167,6 @@ erDiagram
         text created_by_name "nullable, snapshot from token"
         timestamptz last_used_at "nullable"
         timestamptz revoked_at "nullable"
-        text revoked_by_name "nullable, snapshot"
     }
     doe_partner_client {
         uuid id PK
@@ -188,7 +187,6 @@ erDiagram
         text created_by_name "nullable, snapshot from token"
         timestamptz last_used_at "nullable"
         timestamptz revoked_at "nullable"
-        text revoked_by_name "nullable, snapshot"
     }
     doe_partner_delegation {
         uuid id PK
@@ -201,7 +199,6 @@ erDiagram
         timestamptz revoked_at "nullable"
         uuid revoked_by_user_id FK "nullable"
         text revoked_by_national_id "nullable"
-        text revoked_by_name "nullable, snapshot"
     }
     company_event {
         uuid id PK

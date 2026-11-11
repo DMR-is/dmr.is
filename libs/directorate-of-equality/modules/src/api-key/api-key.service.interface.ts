@@ -52,7 +52,6 @@ export type RevokeApiKeyInput = {
   company: ApiKeyCompany
   actorUserId?: string | null
   actorNationalId?: string | null
-  actorName?: string | null
   reason?: string | null
 }
 

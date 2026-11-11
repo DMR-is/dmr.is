@@ -44,7 +44,6 @@ export type RevokePartnerClientKeyInput = {
   partnerClientId: string
   actorUserId?: string | null
   actorNationalId?: string | null
-  actorName?: string | null
   reason?: string | null
 }
 

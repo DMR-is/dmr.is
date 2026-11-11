@@ -36,7 +36,6 @@ export type RevokePartnerDelegationInput = {
   /** Scopes the revoke to one company — a caller cannot revoke another's. */
   company: DelegatingCompany
   actorNationalId?: string | null
-  actorName?: string | null
   actorUserId?: string | null
 }
 

@@ -18,7 +18,6 @@ type PartnerDelegationAttributes = {
   revokedAt: Date | null
   revokedByUserId: string | null
   revokedByNationalId: string | null
-  revokedByName: string | null
 }
 
 type PartnerDelegationCreateAttributes = {
@@ -96,11 +95,4 @@ export class PartnerDelegationModel extends MutableModel<
     field: 'revoked_by_national_id',
   })
   revokedByNationalId!: string | null
-
-  @Column({
-    type: DataType.TEXT,
-    allowNull: true,
-    field: 'revoked_by_name',
-  })
-  revokedByName!: string | null
 }

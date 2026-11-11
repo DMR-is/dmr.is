@@ -453,8 +453,6 @@ describe('ApiKeyService', () => {
         keyId: 'k1',
         createdByNationalId: '0101901234',
         createdByName: 'Jóna Jónsdóttir',
-        revokedByNationalId: '0101905678',
-        revokedByName: 'Jón Jónsson',
       }
       findAll.mockResolvedValue([
         {
@@ -467,7 +465,6 @@ describe('ApiKeyService', () => {
       const [listed] = await service.list(COMPANY.id)
 
       expect(listed.createdByName).toBe('Jóna Jónsdóttir')
-      expect(listed.revokedByName).toBe('Jón Jónsson')
     })
 
     it('maps through fromModel, which carries no secret', async () => {
@@ -537,7 +534,6 @@ describe('ApiKeyService', () => {
         revokedAt: expect.any(Date),
         revokedByUserId: 'reviewer-1',
         revokedByNationalId: null,
-        revokedByName: null,
         revokedReason: 'rotated',
       })
       expect(events.emitApiKeyRevoked).toHaveBeenCalledWith(
@@ -546,26 +542,6 @@ describe('ApiKeyService', () => {
         'aaaaaaaaaaaaaaa1',
         'reviewer-1',
         'rotated',
-      )
-    })
-
-    it('stamps the name beside the kennitala on a self-service revoke', async () => {
-      const row = liveKey()
-      findOne.mockResolvedValue(row)
-
-      await service.revoke({
-        id: 'key-row-1',
-        company: COMPANY,
-        actorNationalId: '0101901234',
-        actorName: 'Jóna Jónsdóttir',
-      })
-
-      expect(row.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          revokedByNationalId: '0101901234',
-          revokedByName: 'Jóna Jónsdóttir',
-          revokedByUserId: null,
-        }),
       )
     })
 
