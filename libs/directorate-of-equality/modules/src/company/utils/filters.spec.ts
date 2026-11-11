@@ -421,6 +421,46 @@ describe('buildCompanyListQuery', () => {
   })
 
   /**
+   * A search names a company, so it reaches every company: none of the three
+   * default hides applies, and the filters the admin selected still do.
+   */
+  describe('a search', () => {
+    const searchCondition = (q: string) => ({
+      [Op.or]: [
+        { name: { [Op.iLike]: `%${q}%` } },
+        { nationalId: { [Op.iLike]: `%${q}%` } },
+      ],
+    })
+
+    it('lifts all three default hides', () => {
+      expect(conditionsOf({ q: 'Jafnréttisstofa' })).toEqual([
+        searchCondition('Jafnréttisstofa'),
+      ])
+    })
+
+    it('trims the term, and a blank one is no search', () => {
+      expect(conditionsOf({ q: '  Jafnrétt ' })).toEqual([
+        searchCondition('Jafnrétt'),
+      ])
+      expect(conditionsOf({ q: '   ' })).toHaveLength(3)
+    })
+
+    it('keeps the filters the admin selected', () => {
+      expect(
+        conditionsOf({
+          q: 'Jafnrétt',
+          status: [CompanyStatusEnum.ACTIVE],
+          quarantined: false,
+        }),
+      ).toEqual([
+        searchCondition('Jafnrétt'),
+        buildCompanyLifecycleStatusWhere([CompanyStatusEnum.ACTIVE]),
+        { quarantined: false },
+      ])
+    })
+  })
+
+  /**
    * The four "aldrei skilað" filters. They carry no obligation gate, so the
    * only thing keeping a 0–24 company off an unfiltered page is the register's
    * own default hide — which these deliberately do NOT lift.

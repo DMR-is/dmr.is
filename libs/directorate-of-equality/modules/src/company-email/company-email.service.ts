@@ -379,8 +379,9 @@ export class CompanyEmailService implements ICompanyEmailService {
    *
    * Matched companies that cannot receive mail are kept in the result, so the
    * preview can explain the difference between matched and recipient counts.
-   * Filter targets use the register's default hides: quarantined companies only
-   * appear as skipped when explicitly included by the filter or company IDs.
+   * Filter targets use the register's default hides, which a search (`q`)
+   * lifts: quarantined companies appear as skipped when a search, the filter
+   * or the company IDs include them, and are never sent to.
    */
   private async resolveRecipients(
     dto: SendCompanyEmailDto,

@@ -334,8 +334,15 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
 } {
   const conditions: WhereOptions[] = []
 
-  if (query.q) {
-    const pattern = `%${query.q.trim()}%`
+  // A search names the company the admin is looking for, so it reaches every
+  // company: the three default hides below are lifted, and only the filters
+  // the admin actually selected narrow it. A small institution that filed by
+  // mistake has to be findable by its name, not hidden for owing nothing.
+  const searchTerm = query.q?.trim() ?? ''
+  const searching = searchTerm.length > 0
+
+  if (searching) {
+    const pattern = `%${searchTerm}%`
     conditions.push({
       [Op.or]: [
         { name: { [Op.iLike]: pattern } },
@@ -414,9 +421,14 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   // means the admin has already answered the question the default was guessing
   // at: filtering to Óvirkt has to return óvirk companies, not an empty page.
   //
+  // A search (`q`) lifts all three: see `searching` above. The bulk email
+  // reuses this builder, and still skips a quarantined company per recipient
+  // (`CompanyEmailService.resolveRecipients`), so a search cannot mail one.
+  //
   // Ordered after the explicit filters purely for readability; `conditions`
   // is AND-ed, so position carries no meaning.
   if (
+    !searching &&
     !query.includeNotObliged &&
     !query.employeeCountCategory?.length &&
     !query.obligation?.length
@@ -424,7 +436,7 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
     conditions.push(literal(`NOT ${hiddenFromDefaultRegisterSql()}`))
   }
 
-  if (!query.includeInactive && !query.status?.length) {
+  if (!searching && !query.includeInactive && !query.status?.length) {
     conditions.push({ status: CompanyStatusEnum.ACTIVE })
   }
 
@@ -434,7 +446,11 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   // (the reveal the list offers) or an explicit `quarantined`, which is still
   // accepted by the API and is the more specific answer on the same axis:
   // asking for quarantined companies has to return them, not an empty page.
-  if (!query.includeQuarantined && query.quarantined === undefined) {
+  if (
+    !searching &&
+    !query.includeQuarantined &&
+    query.quarantined === undefined
+  ) {
     conditions.push({ quarantined: false })
   }
 
