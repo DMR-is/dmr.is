@@ -36,6 +36,7 @@ import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../constants'
+import { INoticeOutboxService } from '../notice-outbox/notice-outbox.service.interface'
 import {
   padToSemanticValidity,
   personalCriterion,
@@ -278,6 +279,10 @@ describe('ReportCreateService', () => {
         {
           provide: IReportFinalizeService,
           useClass: ReportFinalizeService,
+        },
+        {
+          provide: INoticeOutboxService,
+          useValue: { enqueue: jest.fn().mockResolvedValue(undefined) },
         },
         {
           provide: IReportService,

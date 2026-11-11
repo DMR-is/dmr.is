@@ -2,8 +2,9 @@ import { ReportModel } from '../../report/models/report.model'
 import { escapeHtml } from './format'
 import { reportKindLabel } from './report-labels'
 
-export const buildReportDeniedSubject = (report: ReportModel): string =>
-  `${reportKindLabel(report.type)} hafnað`
+export const buildReportDeniedSubject = (
+  report: Pick<ReportModel, 'type'>,
+): string => `${reportKindLabel(report.type)} hafnað`
 
 /**
  * The denial notice. The reviewer's `denialReason` IS the body — there is no
@@ -19,7 +20,7 @@ export const buildReportDeniedSubject = (report: ReportModel): string =>
  * `external-comment.template.ts` on why one is not invented here.
  */
 export const buildReportDeniedHtml = (
-  report: ReportModel,
+  report: Pick<ReportModel, 'type'>,
   denialReason: string,
 ): string => {
   const label = reportKindLabel(report.type).toLowerCase()
@@ -27,7 +28,9 @@ export const buildReportDeniedHtml = (
 
   return [
     `<h2>${escapeHtml(reportKindLabel(report.type))} hafnað</h2>`,
-    `<p>Jafnréttisstofa hefur hafnað ${escapeHtml(label)} fyrirtækisins. Ástæðan er eftirfarandi:</p>`,
+    `<p>Jafnréttisstofa hefur hafnað ${escapeHtml(
+      label,
+    )} fyrirtækisins. Ástæðan er eftirfarandi:</p>`,
     '<blockquote style="border-left:3px solid #ccc;padding-left:12px;margin:16px 0;">',
     safeReason,
     '</blockquote>',
@@ -35,7 +38,7 @@ export const buildReportDeniedHtml = (
 }
 
 export const buildReportDeniedText = (
-  report: ReportModel,
+  report: Pick<ReportModel, 'type'>,
   denialReason: string,
 ): string => {
   const label = reportKindLabel(report.type).toLowerCase()

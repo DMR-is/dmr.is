@@ -167,6 +167,11 @@ export interface ICompanyEventService {
    * Records a deadline-reminder outcome for one milestone (`tier`) — either the
    * reminder being sent or there being no email on file (per `eventType`).
    * `dueDateIso` (stored in `reason`) is the due date being reminded about.
+   *
+   * Always written outside any ambient transaction (`transaction: null`), so
+   * it commits the moment it is written: it records something that already
+   * happened outside the database, and a caller's later rollback must not
+   * un-record it.
    */
   emitDeadlineReminderEvent(
     companyId: string,

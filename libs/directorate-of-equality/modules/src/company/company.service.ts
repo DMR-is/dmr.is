@@ -887,6 +887,12 @@ export class CompanyService implements ICompanyService {
    * company straight into the reminder task's DUE band and leave it overdue.
    * Capped at `REPORT_VALIDITY_YEARS` from today, the date an approval made
    * today would set.
+   *
+   * The FOR UPDATE below does not wait on a running deadline-reminder task:
+   * its reminder events, whose `company_event.company_id` foreign key takes
+   * FOR KEY SHARE on the company, are autocommitted one by one
+   * (`emitDeadlineReminderEvent`), not held on the task's long advisory-lock
+   * transaction.
    */
   async updateDueDate(
     id: string,

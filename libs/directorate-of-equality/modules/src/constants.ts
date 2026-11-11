@@ -62,6 +62,12 @@ export enum DoeModels {
    * (OneExternalAPI), with the ids One returned so a delivery can resume.
    */
   MAILBOX_DELIVERY = 'mailbox_delivery',
+
+  /**
+   * Notices owed to a company (report submitted, approved, denied), written in
+   * the same transaction as the change and sent by doe-api's dispatcher.
+   */
+  NOTICE_OUTBOX = 'notice_outbox',
 }
 
 /**

@@ -11,6 +11,12 @@ import {
 } from '@dmr.is/doe-modules/company'
 import { ICompanyEventService } from '@dmr.is/doe-modules/company-event'
 import { IDoeMailService, MailSendError } from '@dmr.is/doe-modules/mail'
+import {
+  buildMailboxDeliveryIdempotencyKey,
+  IMailboxDeliveryService,
+  MailboxDeliveryKindEnum,
+} from '@dmr.is/doe-modules/mailbox-delivery'
+import { IPdfRenderService } from '@dmr.is/doe-modules/pdf-render'
 import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -65,8 +71,21 @@ describe('ReportDeadlineReminderService', () => {
   let hasDeadlineReminderEvent: jest.Mock
   let emitDeadlineReminderEvent: jest.Mock
   let sendReportDeadlineReminder: jest.Mock
+  let deliverToMailbox: jest.Mock
+  let findDelivery: jest.Mock
+  let renderHtml: jest.Mock
 
   beforeEach(async () => {
+    delete process.env.ONESYSTEMS_ENABLED
+    deliverToMailbox = jest.fn().mockResolvedValue({
+      status: 'SENT',
+      deliveryId: 'delivery-1',
+      islandIsDocumentId: 'doc-1',
+      sentAt: new Date(),
+      alreadySent: false,
+    })
+    findDelivery = jest.fn().mockResolvedValue(null)
+    renderHtml = jest.fn().mockResolvedValue(Buffer.from('letter-pdf'))
     findAll = jest.fn().mockResolvedValue([])
     hasDeadlineReminderEvent = jest.fn().mockResolvedValue(false)
     emitDeadlineReminderEvent = jest.fn().mockResolvedValue(undefined)
@@ -85,10 +104,19 @@ describe('ReportDeadlineReminderService', () => {
           provide: IDoeMailService,
           useValue: { sendReportDeadlineReminder },
         },
+        {
+          provide: IMailboxDeliveryService,
+          useValue: { deliverToMailbox, findDelivery },
+        },
+        { provide: IPdfRenderService, useValue: { renderHtml } },
       ],
     }).compile()
 
     service = module.get(ReportDeadlineReminderService)
+  })
+
+  afterEach(() => {
+    delete process.env.ONESYSTEMS_ENABLED
   })
 
   // The run iterates kinds [equality, salary] × tiers [6mo, 2mo, 2wk, due], so
@@ -367,14 +395,13 @@ describe('ReportDeadlineReminderService', () => {
      * ⚠️ **The other half of the containment, and the reason it is typed.**
      *
      * `AdvisoryLockService` runs this whole task inside one transaction and CLS
-     * is live for this app, so every query here enlists in it. A DB error
-     * therefore aborts the transaction: if the catch were blanket, each later
-     * statement would fail `25P02` and be swallowed the same way, the loop would
-     * keep calling SES for every remaining company, and Postgres would answer
-     * the eventual COMMIT on an aborted transaction with a silent ROLLBACK. The
-     * task would report success having mailed everyone while every SENT event
-     * and the `job_runs` cooldown were discarded — and the next run would mail
-     * them all again.
+     * is live for this app, so the reads here enlist in it. A DB error there
+     * aborts the transaction: if the catch were blanket, each later statement
+     * would fail `25P02` and be swallowed the same way, and the loop would keep
+     * calling SES for every remaining company. The events are autocommitted
+     * outside that transaction, but a failing event write swallowed the same
+     * way would leave every one of those reminders unrecorded, so the next run
+     * would mail them all again.
      *
      * So anything that is not a mail failure has to come back out. Widen the
      * catch to `catch (error)` and this test fails.
@@ -428,6 +455,482 @@ describe('ReportDeadlineReminderService', () => {
 
       expect(hasDeadlineReminderEvent).not.toHaveBeenCalled()
       expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('run – mailbox delivery (ONESYSTEMS_ENABLED on)', () => {
+    const COMPANY_ID = '0b9f5c1e-6a3d-4c2b-9e8f-1a2b3c4d5e6f'
+    const NOW = new Date('2026-10-09T06:00:00.000Z')
+
+    beforeEach(() => {
+      process.env.ONESYSTEMS_ENABLED = 'true'
+      jest.useFakeTimers().setSystemTime(NOW)
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    const company = (overrides: CompanyOverrides = {}) =>
+      makeCompany({ id: COMPANY_ID, ...overrides })
+
+    it('delivers the reminder letter to the mailbox instead of emailing, keyed by kind, tier and due date', async () => {
+      returnCompanyAtCall(CALL.salarySixMonths, company())
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+      expect(deliverToMailbox).toHaveBeenCalledTimes(1)
+      const [input] = deliverToMailbox.mock.calls[0]
+      expect(input).toEqual(
+        expect.objectContaining({
+          kind: MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
+          companyId: COMPANY_ID,
+          idempotencyKey: buildMailboxDeliveryIdempotencyKey({
+            kind: MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
+            companyId: COMPANY_ID,
+            discriminator: 'SALARY-SIX_MONTHS-20270115',
+          }),
+          subject: expect.stringContaining('15.01.2027'),
+        }),
+      )
+
+      await expect(input.pdf()).resolves.toEqual(Buffer.from('letter-pdf'))
+      const [html] = renderHtml.mock.calls[0]
+      expect(html).toContain('Acme ehf.')
+      expect(html).toContain('09.10.2026')
+
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+        COMPANY_ID,
+        CompanyStatusEnum.ACTIVE,
+        CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT,
+        CompanyReminderTierEnum.SIX_MONTHS,
+        SALARY_DUE.toISOString(),
+      )
+    })
+
+    // The mailbox is addressed by kennitala, not by email.
+    it('delivers to a company with no email on file, and writes no NO_EMAIL event', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company({ email: null }))
+
+      await service.run()
+
+      expect(deliverToMailbox).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent.mock.calls[0][2]).toBe(
+        CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+      )
+    })
+
+    it('skips a company already reminded for that tier and due date', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      // Only the exact (company, SENT type, tier, due date) counts as sent.
+      hasDeadlineReminderEvent.mockImplementation(
+        async (companyId, eventType, tier, dueDateIso) =>
+          companyId === COMPANY_ID &&
+          eventType ===
+            CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT &&
+          tier === CompanyReminderTierEnum.SIX_MONTHS &&
+          dueDateIso === EQUALITY_DUE.toISOString(),
+      )
+
+      await service.run()
+
+      expect(deliverToMailbox).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      [
+        ReportTypeEnum.EQUALITY,
+        CALL.equalitySixMonths,
+        MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+        CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+        EQUALITY_DUE,
+      ],
+      [
+        ReportTypeEnum.SALARY,
+        CALL.salarySixMonths,
+        MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
+        CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT,
+        SALARY_DUE,
+      ],
+    ])(
+      'files a %s reminder as its own mailbox kind and event type',
+      async (_type, call, mailboxKind, sentEventType, due) => {
+        returnCompanyAtCall(call, company())
+
+        await service.run()
+
+        expect(deliverToMailbox.mock.calls[0][0].kind).toBe(mailboxKind)
+        expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+          COMPANY_ID,
+          CompanyStatusEnum.ACTIVE,
+          sentEventType,
+          CompanyReminderTierEnum.SIX_MONTHS,
+          due.toISOString(),
+        )
+      },
+    )
+
+    const exhausted = {
+      status: 'FAILED',
+      deliveryId: 'delivery-7',
+      attempts: 5,
+      skipped: 'ATTEMPTS_EXHAUSTED',
+    }
+
+    // No later run finishes these on its own, so the gap goes on the
+    // timeline: UNCONFIRMED where One may have sent it, UNDELIVERED where it
+    // certainly did not.
+    it.each([
+      [
+        'UNCERTAIN',
+        { status: 'UNCERTAIN', deliveryId: 'delivery-7' },
+        CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNCONFIRMED,
+      ],
+      [
+        'out of attempts',
+        exhausted,
+        CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+      ],
+    ])(
+      'records its own event, not SENT, when the delivery is %s',
+      async (_label, result, eventType) => {
+        returnCompanyAtCall(CALL.salarySixMonths, company())
+        deliverToMailbox.mockResolvedValue(result)
+
+        await service.run()
+
+        expect(hasDeadlineReminderEvent).toHaveBeenCalledWith(
+          COMPANY_ID,
+          eventType,
+          CompanyReminderTierEnum.SIX_MONTHS,
+          SALARY_DUE.toISOString(),
+        )
+        expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+        expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+          COMPANY_ID,
+          CompanyStatusEnum.ACTIVE,
+          eventType,
+          CompanyReminderTierEnum.SIX_MONTHS,
+          SALARY_DUE.toISOString(),
+        )
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining(result.status),
+          expect.objectContaining({ deliveryId: 'delivery-7' }),
+        )
+      },
+    )
+
+    it('records the UNDELIVERED event once per tier and due date, not every run', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValue(exhausted)
+      hasDeadlineReminderEvent.mockImplementation(
+        async (_companyId, eventType) =>
+          eventType ===
+          CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+      )
+
+      await service.run()
+
+      expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      [{ status: 'IN_PROGRESS', deliveryId: 'delivery-7' }],
+      [{ status: 'QUARANTINED' }],
+      [{ status: 'DISABLED' }],
+    ])('records no event when the delivery answers %o', async (result) => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValue(result)
+
+      await service.run()
+
+      expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(result.status),
+        expect.anything(),
+      )
+    })
+
+    /*
+     * The flag on before the kind's case template is set: the reminder goes by
+     * email, so a band that closes meanwhile is not lost. The SENT event is the
+     * one both channels write, so the mailbox will not send it again.
+     */
+    it('emails the reminder when the mailbox kind has no case template', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValue({
+        status: 'UNCONFIGURED',
+        kind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+      })
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(1)
+      expect(sendReportDeadlineReminder).toHaveBeenCalledWith(
+        'acme@acme.is',
+        expect.objectContaining({
+          tier: CompanyReminderTierEnum.SIX_MONTHS,
+        }),
+      )
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+        COMPANY_ID,
+        CompanyStatusEnum.ACTIVE,
+        CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+        CompanyReminderTierEnum.SIX_MONTHS,
+        EQUALITY_DUE.toISOString(),
+      )
+      // `deliverToMailbox` logged it at error; not twice.
+      expect(mockLogger.error).not.toHaveBeenCalled()
+      expect(findDelivery).not.toHaveBeenCalled()
+    })
+
+    const unconfigured = {
+      status: 'UNCONFIGURED',
+      kind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+    }
+
+    /*
+     * The email fallback is the flag-off path in full, so a company with no
+     * usable address gets the NO_EMAIL event even with the flag on: the
+     * reminder did not reach it, which is what an admin needs to see. Once
+     * the template is set the mailbox still sends, since only the SENT event
+     * stops it.
+     */
+    it('records NO_EMAIL, and sends nothing, when the kind has no case template and no email is on file', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company({ email: null }))
+      deliverToMailbox.mockResolvedValue(unconfigured)
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+        COMPANY_ID,
+        CompanyStatusEnum.ACTIVE,
+        CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+        CompanyReminderTierEnum.SIX_MONTHS,
+        EQUALITY_DUE.toISOString(),
+      )
+    })
+
+    // Both channels write the one SENT event, so a reminder emailed while the
+    // kind had no template is not sent again by the mailbox once it has one.
+    it('does not deliver to the mailbox a reminder the email fallback already sent', async () => {
+      const events: Array<Array<unknown>> = []
+      emitDeadlineReminderEvent.mockImplementation(async (...args) => {
+        events.push(args)
+      })
+      hasDeadlineReminderEvent.mockImplementation(
+        async (companyId, eventType, tier, dueDateIso) =>
+          events.some(
+            ([c, , e, t, d]) =>
+              c === companyId &&
+              e === eventType &&
+              t === tier &&
+              d === dueDateIso,
+          ),
+      )
+
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValueOnce(unconfigured)
+      await service.run()
+
+      expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(1)
+      expect(deliverToMailbox).toHaveBeenCalledTimes(1)
+
+      // The template is set by the next run: the mailbox would send.
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      await service.run()
+
+      expect(deliverToMailbox).toHaveBeenCalledTimes(1)
+      expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(1)
+      expect(events).toHaveLength(1)
+    })
+
+    /*
+     * The template was unset (a rollback) after this reminder's delivery
+     * reached One. Emailing it would put the reminder in front of the company
+     * twice if One sends or sent it, so it waits for the template.
+     */
+    it('neither emails nor records an event when a delivery that reached One lost its template', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValue({
+        status: 'DOCUMENT_CREATED',
+        deliveryId: 'delivery-7',
+        attempts: 1,
+        skipped: 'UNCONFIGURED',
+      })
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+      expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('was not delivered to the mailbox'),
+        expect.objectContaining({
+          deliveryId: 'delivery-7',
+          skipped: 'UNCONFIGURED',
+        }),
+      )
+    })
+
+    it('names the render a letter, for the failure log', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+
+      await service.run()
+      await deliverToMailbox.mock.calls[0][0].pdf()
+
+      expect(renderHtml).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        'letter',
+      )
+    })
+
+    // One rejection must not withhold every reminder behind it, every day.
+    it('carries on with the batch when a delivery throws', async () => {
+      const second = company({
+        id: '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f',
+      })
+      returnCompaniesAtCall(CALL.equalitySixMonths, [company(), second])
+      deliverToMailbox
+        .mockRejectedValueOnce(new Error('OneSystems CreateCase was rejected'))
+        .mockResolvedValueOnce({
+          status: 'SENT',
+          deliveryId: 'delivery-2',
+          islandIsDocumentId: null,
+          sentAt: NOW,
+          alreadySent: false,
+        })
+
+      await expect(service.run()).resolves.toBeUndefined()
+
+      expect(deliverToMailbox).toHaveBeenCalledTimes(2)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent.mock.calls[0][0]).toBe(second.id)
+    })
+
+    /*
+     * The call that goes UNCERTAIN, or spends the last attempt, throws rather
+     * than answering so. The row it recorded says which, and the event is
+     * written on that run: a later run may never come for this tier and due
+     * date.
+     */
+    describe('a delivery that throws', () => {
+      const state = (overrides: Record<string, unknown>) => ({
+        deliveryId: 'delivery-7',
+        status: 'FAILED',
+        documentFiled: false,
+        sent: false,
+        interrupted: false,
+        inProgress: false,
+        exhausted: false,
+        ...overrides,
+      })
+
+      beforeEach(() => {
+        returnCompanyAtCall(CALL.equalitySixMonths, company())
+        deliverToMailbox.mockRejectedValue(
+          new Error('OneSystems SendDocToIslandIs did not answer'),
+        )
+      })
+
+      it.each([
+        [
+          'UNCERTAIN',
+          state({ status: 'UNCERTAIN' }),
+          CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED,
+        ],
+        // Only when recording the failure itself failed: a call that throws
+        // clears its in-flight marker first.
+        [
+          'interrupted',
+          state({ status: 'CASE_CREATED', interrupted: true }),
+          CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNCONFIRMED,
+        ],
+        [
+          'out of attempts',
+          state({ exhausted: true }),
+          CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_UNDELIVERED,
+        ],
+      ])(
+        'reads the row back and records its event when it is %s',
+        async (_label, delivery, eventType) => {
+          findDelivery.mockResolvedValue(delivery)
+
+          await expect(service.run()).resolves.toBeUndefined()
+
+          expect(findDelivery).toHaveBeenCalledWith(
+            deliverToMailbox.mock.calls[0][0].idempotencyKey,
+          )
+          expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+          expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+            COMPANY_ID,
+            CompanyStatusEnum.ACTIVE,
+            eventType,
+            CompanyReminderTierEnum.SIX_MONTHS,
+            EQUALITY_DUE.toISOString(),
+          )
+        },
+      )
+
+      it.each([
+        ['has attempts left', state({ attempts: 2 })],
+        ['is in progress', state({ inProgress: true })],
+        ['has no row', null],
+      ])(
+        'records no event when the row %s, for the next run to retry',
+        async (_label, delivery) => {
+          findDelivery.mockResolvedValue(delivery)
+
+          await service.run()
+
+          expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
+        },
+      )
+    })
+
+    /*
+     * The read-back is on its own pool connection, and the fault that made the
+     * call throw will often fail it too. That is a per-company skip, not an
+     * abort that would withhold every later company's reminder.
+     */
+    it('carries on with the batch when the read-back after a throw fails', async () => {
+      const second = company({
+        id: '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f',
+      })
+      returnCompaniesAtCall(CALL.equalitySixMonths, [company(), second])
+      deliverToMailbox
+        .mockRejectedValueOnce(new Error('pool acquire timeout'))
+        .mockResolvedValueOnce({
+          status: 'SENT',
+          deliveryId: 'delivery-2',
+          islandIsDocumentId: null,
+          sentAt: NOW,
+          alreadySent: false,
+        })
+      findDelivery.mockRejectedValue(new Error('pool acquire timeout'))
+
+      await expect(service.run()).resolves.toBeUndefined()
+
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent.mock.calls[0][0]).toBe(second.id)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Could not read back mailbox delivery'),
+        expect.objectContaining({ companyId: COMPANY_ID }),
+      )
+    })
+
+    // A failed event write must still abort the run: swallowed, a fault that
+    // repeats would mail the band every run with nothing recorded.
+    it('rethrows a failure to record the SENT event', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      emitDeadlineReminderEvent.mockRejectedValue(new Error('25P02'))
+
+      await expect(service.run()).rejects.toThrow('25P02')
     })
   })
 })
