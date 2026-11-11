@@ -255,6 +255,33 @@ describe('OneSystemsService', () => {
       ])
     })
 
+    it.each([
+      'https://other.test/OneExternalAPI/api',
+      'https://other.test/OneExternalAPI/api/',
+      'https://other.test/OneExternalAPI/API',
+    ])('tolerates a URL that already ends in /api (%s)', async (url) => {
+      process.env.ONESYSTEMS_API_URL = url
+      actionReplies = [() => success()]
+
+      await createCase()
+
+      expect(requests().map((r) => r.url)).toEqual([
+        'https://other.test/OneExternalAPI/api/auth/Login',
+        'https://other.test/OneExternalAPI/api/actions/CreateCase',
+      ])
+    })
+
+    it('keeps "api" anywhere but the last path segment', async () => {
+      process.env.ONESYSTEMS_API_URL = 'https://api.other.test/OneExternalAPI'
+      actionReplies = [() => success()]
+
+      await createCase()
+
+      expect(requests()[0].url).toBe(
+        'https://api.other.test/OneExternalAPI/api/auth/Login',
+      )
+    })
+
     it('reuses a valid token across calls', async () => {
       actionReplies = [() => success()]
 

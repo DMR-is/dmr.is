@@ -29,11 +29,14 @@ export function oneSystemsTimeoutMs(operation: OneSystemsOperation): number {
  * when it is unset or blank.
  *
  * A trailing slash is stripped because the generated client concatenates the
- * base URL and the operation path directly.
+ * base URL and the operation path directly. So is a trailing `/api`: every
+ * generated path already starts with `/api`, and a URL configured with it
+ * (`…/OneExternalAPI/api`) would otherwise reach `…/api/api/auth/Login` and
+ * get a 404 from One.
  */
 export function resolveOneSystemsBaseUrl(): string | null {
   const value = process.env.ONESYSTEMS_API_URL?.trim()
-  return value ? value.replace(/\/+$/, '') : null
+  return value ? value.replace(/\/+$/, '').replace(/\/api$/i, '') : null
 }
 
 /**
