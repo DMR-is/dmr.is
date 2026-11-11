@@ -1259,6 +1259,19 @@ describe('ApplicationService', () => {
       })
     })
 
+    it('leaves out a report with no provider id, which has no handle', async () => {
+      companyReportTable([
+        { reportId: OWN_A, companyId: COMPANY.id, parentCompanyId: null },
+      ])
+
+      await service.listReports(COMPANY)
+
+      // Filtered in the query: a row with a null provider id is never fetched.
+      expect(reportFindAll.mock.calls[0][0].where.providerId).toEqual({
+        [Op.ne]: null,
+      })
+    })
+
     it('does not list another company’s partner-filed or system report', async () => {
       companyReportTable([
         {
@@ -1451,6 +1464,23 @@ describe('ApplicationService', () => {
       await expect(
         service.getReportComments('system:k3j9x2ab7q', COMPANY),
       ).rejects.toThrow(NotFoundException)
+    })
+
+    it('cannot open a report with no provider id: no handle resolves to a null id', async () => {
+      // Stored with no provider id; every handle shape is tried against it.
+      storeReport(
+        makeReportRow({
+          id: REPORT_ID,
+          providerType: ReportProviderEnum.SYSTEM,
+          providerId: null,
+        }),
+      )
+
+      for (const handle of ['system:', 'system:null', 'partner:', REPORT_ID]) {
+        await expect(service.getReport(handle, COMPANY)).rejects.toThrow(
+          NotFoundException,
+        )
+      }
     })
 
     it('404s an empty prefixed handle rather than querying', async () => {

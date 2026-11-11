@@ -50,30 +50,25 @@ import {
 import { IReportCreateService } from './report-create.service.interface'
 
 /**
- * Gives a report filed without a provider id one of its own, under SYSTEM.
+ * Gives a SYSTEM report filed without a provider id one of its own.
  *
- * Every channel that files upstream sends an id, so a null one means the
- * report was entered directly (the Directorate, or a direct API call). Without
- * an id it has no handle on any applicant route, and the company could never
- * see it in its submissions list. The id is opaque and fresh — never
- * `report.id`, which the applicant must not see — and it is minted after the
- * replay check, which skips a null id, so it changes no replay outcome.
+ * Without an id a report has no handle on any applicant route, so the company
+ * could never see it in its submissions list. The id is opaque and fresh —
+ * never `report.id`, which the applicant must not see — and it is minted after
+ * the replay check, which skips a null id, so it changes no replay outcome.
  *
- * The provider type becomes SYSTEM even when another was given: an ISLAND_IS
- * or OTHER row with an id island.is or a firm never issued would be openable
- * by that channel's write routes. See m-20261111-report-system-provider-ids
- * for the same rule applied to existing rows.
+ * SYSTEM only. The provider type is never changed, and an ISLAND_IS or OTHER
+ * report is never given an id that island.is or a firm did not issue: that id
+ * would open it to that channel's write routes. Such a report stays without
+ * one, and so off the submissions list, as do rows written before this
+ * existed (there is no backfill).
  */
 export const withReadHandle = (
   values: CreationAttributes<ReportModel>,
 ): CreationAttributes<ReportModel> =>
-  values.providerId
+  values.providerId || values.providerType !== ReportProviderEnum.SYSTEM
     ? values
-    : {
-        ...values,
-        providerType: ReportProviderEnum.SYSTEM,
-        providerId: randomUUID(),
-      }
+    : { ...values, providerId: randomUUID() }
 
 const LOGGING_CONTEXT = 'ReportCreateService'
 

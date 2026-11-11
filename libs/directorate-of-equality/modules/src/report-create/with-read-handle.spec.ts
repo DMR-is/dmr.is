@@ -1,5 +1,6 @@
 import { CreationAttributes } from 'sequelize'
 
+import { ISLAND_IS_PROVIDER_CHANNEL } from '../application/provider-channel'
 import { ReportProviderEnum } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import { withReadHandle } from './report-create.service'
@@ -10,7 +11,7 @@ const values = (
   ({ type: 'SALARY', ...overrides }) as CreationAttributes<ReportModel>
 
 describe('withReadHandle', () => {
-  it('mints an opaque SYSTEM id for a report filed with none', () => {
+  it('mints an opaque id for a SYSTEM report filed with none', () => {
     const minted = withReadHandle(
       values({ providerType: ReportProviderEnum.SYSTEM, providerId: null }),
     )
@@ -21,28 +22,44 @@ describe('withReadHandle', () => {
     )
   })
 
-  it('files a null id under SYSTEM whatever type was given, so no channel’s write routes can reach it', () => {
+  it('so a newly created id-less report gets a system: handle', () => {
+    const minted = withReadHandle(
+      values({ providerType: ReportProviderEnum.SYSTEM, providerId: null }),
+    )
+
     expect(
-      withReadHandle(
-        values({
-          providerType: ReportProviderEnum.ISLAND_IS,
-          providerId: null,
-        }),
-      ).providerType,
-    ).toBe(ReportProviderEnum.SYSTEM)
+      ISLAND_IS_PROVIDER_CHANNEL.toReadHandle({
+        providerType: minted.providerType ?? null,
+        providerId: minted.providerId ?? null,
+        companyNationalId: '5501012130',
+      }),
+    ).toBe(`system:${minted.providerId}`)
   })
 
   it('mints a fresh id every time', () => {
-    const a = withReadHandle(values({ providerId: null }))
-    const b = withReadHandle(values({ providerId: null }))
+    const system = values({
+      providerType: ReportProviderEnum.SYSTEM,
+      providerId: null,
+    })
 
-    expect(a.providerId).not.toBe(b.providerId)
+    expect(withReadHandle(system).providerId).not.toBe(
+      withReadHandle(system).providerId,
+    )
   })
 
-  it('leaves a given id and its type alone', () => {
+  it.each([ReportProviderEnum.ISLAND_IS, ReportProviderEnum.OTHER])(
+    'never reclassifies or invents an id for a %s report',
+    (providerType) => {
+      const given = values({ providerType, providerId: null })
+
+      expect(withReadHandle(given)).toBe(given)
+    },
+  )
+
+  it('leaves a given id alone', () => {
     const given = values({
-      providerType: ReportProviderEnum.OTHER,
-      providerId: '5501012130:vendor-42',
+      providerType: ReportProviderEnum.SYSTEM,
+      providerId: 'k3j9x2ab7q',
     })
 
     expect(withReadHandle(given)).toBe(given)

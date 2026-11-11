@@ -169,10 +169,15 @@ export const SYSTEM_READ_HANDLE_PREFIX = 'system:'
  * - partner API: `partner:<the firm's own id>`, the namespace stripped exactly
  *   as the partner channel strips it, so only a row stored under the report's
  *   own company kennitala gets a handle.
- * - SYSTEM (created by the Directorate): `system:<provider_id>`. Every SYSTEM
- *   row has one: the admin web sends a random id, `ReportCreateService` mints a
- *   UUID when none is given, and m-20261111-report-system-provider-ids
- *   backfilled the rest.
+ * - SYSTEM (created by the Directorate): `system:<provider_id>`. The admin
+ *   web sends a random id, and `ReportCreateService` mints a UUID when none is
+ *   given (`withReadHandle`).
+ *
+ * A row with no `provider_id` has no handle, whatever its type: rows written
+ * before ids were minted are not backfilled. They are left off the
+ * submissions list, and `resolveReadHandle` can never name them either — it
+ * never yields a null id, and `provider_id = <text>` never matches NULL — so
+ * the list and the read routes agree.
  */
 const toIslandIsReadHandle = (
   report: ClientProviderIdSource,

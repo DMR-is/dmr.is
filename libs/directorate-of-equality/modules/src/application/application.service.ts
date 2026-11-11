@@ -384,6 +384,9 @@ export class ApplicationService implements IApplicationService {
     const reports = await this.reportModel.findAll({
       where: {
         id: candidateIds,
+        // No provider id, no handle: such a row (older SYSTEM reports, never
+        // backfilled) is left out here, and `resolveReadHandle` can never name
+        // it on the read routes either, so the two still agree.
         providerId: { [Op.ne]: null },
         status: { [Op.ne]: ReportStatusEnum.DRAFT },
       },
