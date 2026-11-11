@@ -469,7 +469,7 @@ describe('NoticeDispatchService', () => {
       const [, receipts] = query.where[Op.and]
       expect(receipts[Op.or][0]).toEqual(NOT_A_RECEIPT)
       expect(receipts[Op.or][1].val).toContain(
-        "c.national_id IN ('1234567890')",
+        "regexp_replace(c.national_id, '[[:space:]-]', '', 'g') IN ('1234567890')",
       )
       expect(sequelize.escape).toHaveBeenCalledWith('1234567890')
     })

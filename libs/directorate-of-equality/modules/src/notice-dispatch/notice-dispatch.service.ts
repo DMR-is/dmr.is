@@ -472,6 +472,9 @@ export class NoticeDispatchService implements INoticeDispatchService {
     }
 
     // Every id is ten digits (`parseMailboxAllowlist`), and escaped anyway.
+    // The company's own kennitala is stripped of whitespace and hyphens, as
+    // `mailboxAllowlistAllows` does on the send path, so the two checks agree
+    // on a kennitala stored with a hyphen.
     const ids = [...allowlist.nationalIds]
       .map((id) => this.sequelize.escape(id))
       .join(', ')
@@ -481,7 +484,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
     JOIN company c ON c.id = cr.company_id
    WHERE cr.report_id = "NoticeOutboxModel"."report_id"
      AND cr.parent_company_id IS NULL
-     AND c.national_id IN (${ids})
+     AND regexp_replace(c.national_id, '[[:space:]-]', '', 'g') IN (${ids})
 )`)
 
     return {
@@ -968,8 +971,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
           reason: `mailbox delivery ${result.deliveryId} is in progress`,
         }
       case 'DISABLED':
-        // The flag went off between the check and the call. Try again next
-        // run.
+        // The mailbox closed to this company between the check and the call:
+        // the flag went off, or the company left the mailbox allowlist. Try
+        // again next run, which takes the flag-off path if it is still
+        // closed.
         return {
           outcome: ReportMailOutcome.FAILED,
           channel: NoticeOutboxChannelEnum.MAILBOX,
