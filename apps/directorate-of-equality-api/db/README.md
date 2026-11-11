@@ -623,8 +623,7 @@ lists, and `mailbox_delivery_company_id_idx`.
 
 A row settled by island.is's duplicate answer looks like any other `SENT` row: `sent_at` is
 when the repeat was confirmed, not when the document first reached the mailbox, and no
-column marks it. Only the warn line `Mailbox delivery <id>: island.is already had the
-document, recording it as sent` does.
+column marks it. Only the warn line `Mailbox delivery <id>: island.is already had the document, recording it as sent` does.
 
 ## Notice outbox
 
@@ -646,7 +645,9 @@ or OneSystems credentials.
 submission (which never had an email) waits `PENDING`: it is not picked until the flag is
 on, so switching the flag off during a One incident holds receipts instead of dropping
 them. With the flag on, every kind goes to the island.is mailbox through One (see "Mailbox
-delivery" above) and the row records `channel = MAILBOX`. An approval or denial whose
+delivery" above) and the row records `channel = MAILBOX`, but only for a filing company on
+the `onesystems_mailbox_allowlist` config row. Every other company's rows go as with the
+flag off: approvals and denials emailed, receipts not picked. An approval or denial whose
 mailbox delivery already got somewhere is not emailed when the flag goes off: one One
 sent is recorded `DONE` by mailbox, an UNCERTAIN or interrupted one is `FAILED` for a person,
 and one whose document One holds unsent waits `PENDING` for the flag. With the flag on, a
@@ -665,7 +666,7 @@ status (see "Channels"): one whose document One holds unsent stays `PENDING` wha
 report's status. `SKIPPED` rows from before this rule are receipts settled with the flag off.
 
 **Overdue rows.** Every `PENDING` row older than an hour that does not wait by design (a
-quarantined company's, or a receipt while the flag is off) is named in doe-api's daily
+quarantined company's, or a receipt the mailbox is closed to) is named in doe-api's daily
 mailbox alert, `Notice outbox: N notices overdue`, with its `last_error`.
 
 **Failed rows.** Nothing retries a `FAILED` row, so the company has not been told until a
@@ -675,9 +676,10 @@ week (`NOTICE_FAILED_ALERT_WINDOW_MS`) is named in the same daily alert,
 window keeps a row someone has looked at and chosen to leave from being raised forever; a
 re-driven row is `PENDING` again and drops out, and a fresh give-up starts a new week.
 
-**Before turning the flag on.** Every receipt held while the flag was off goes out once its
-kind has a case template (none has yet, so until then they stay held), however old, if its
-report is still `SUBMITTED`, `POSTPONED` or `IN_REVIEW`. They go
+**Before turning the flag on, or adding a company to the allowlist.** Every receipt held
+while the mailbox was closed to a company goes out once it opens (the flag on and the
+company on `onesystems_mailbox_allowlist`), however old, if its report is still
+`SUBMITTED`, `POSTPONED` or `IN_REVIEW`. They go
 `NOTICE_DISPATCH_BATCH_SIZE` (20) rows per run, with the approvals and denials, once a
 minute. List them first, and settle the ones too old to send `SKIPPED` (the cut-off is a decision for
 Jafnréttisstofa, not a constant):
@@ -1706,9 +1708,10 @@ Updates are **supersede-and-insert**: the old row gets `superseded_at` stamped a
 
 Current entries:
 
-| key                                   | value | description                                                           |
-| ------------------------------------- | ----- | --------------------------------------------------------------------- |
-| `salary_difference_threshold_percent` | `3.9` | Annual gender salary difference threshold (%). Updated each February. |
+| key                                   | value  | description                                                                                                                                                                                                                                                        |
+| ------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `salary_difference_threshold_percent` | `3.9`  | Annual gender salary difference threshold (%). Updated each February.                                                                                                                                                                                              |
+| `onesystems_mailbox_allowlist`        | `none` | Companies that may receive island.is mailbox notices through One: `none`, `*` (all) or comma-separated kennitölur. Others get email, as with `ONESYSTEMS_ENABLED` off. Validated and normalised on update. Migration `m-20261111-onesystems-mailbox-allowlist.js`. |
 
 No FKs, no relationships. Standalone lookup table.
 

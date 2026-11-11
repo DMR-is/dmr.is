@@ -22,6 +22,13 @@ import {
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyModel } from '../company/models/company.model'
+import { MAILBOX_ALLOWLIST_CONFIG_KEY } from '../config/config.constants'
+import {
+  type MailboxAllowlist,
+  mailboxAllowlistAllows,
+  parseMailboxAllowlist,
+} from '../config/lib/mailbox-allowlist'
+import { ConfigModel } from '../config/models/config.model'
 import {
   MailboxDeliveryKindEnum,
   MailboxDeliveryStatusEnum,
@@ -229,6 +236,8 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     private readonly deliveryModel: typeof MailboxDeliveryModel,
     @InjectModel(CompanyModel)
     private readonly companyModel: typeof CompanyModel,
+    @InjectModel(ConfigModel)
+    private readonly configModel: typeof ConfigModel,
     @Inject(IOneSystemsService)
     private readonly oneSystems: IOneSystemsService,
     @Inject(MAILBOX_DELIVERY_KIND_CONFIGS)
@@ -269,6 +278,19 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
 
     // Again against the id the DB handed back, which is the one stored.
     assertCanonicalKey(input, company.id)
+
+    // A company outside the allowlist is treated as though the flag were off.
+    // Callers check `isMailboxOpenFor` first; this covers the row changing
+    // between their check and this call.
+    if (
+      !mailboxAllowlistAllows(await this.mailboxAllowlist(), company.nationalId)
+    ) {
+      this.logger.warn(
+        `Not delivering ${input.kind} to company ${company.id}: it is not on the mailbox allowlist`,
+        { context: LOGGING_CONTEXT, companyId: company.id, kind: input.kind },
+      )
+      return { status: 'DISABLED' }
+    }
 
     // Quarantine halts every outbound touchpoint (`CompanyService
     // .updateQuarantine`). Checked before the row, so nothing is written for a
@@ -370,6 +392,39 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         !leaseLive &&
         row.attempts >= MAILBOX_DELIVERY_MAX_ATTEMPTS,
     }
+  }
+
+  async mailboxAllowlist(): Promise<MailboxAllowlist> {
+    // On its own pool connection, like the company read in `deliverToMailbox`:
+    // callers run inside the advisory lock's transaction, and a read error
+    // there would abort it.
+    const row = await this.configModel.findOne({
+      where: { key: MAILBOX_ALLOWLIST_CONFIG_KEY, supersededAt: null },
+      attributes: ['value'],
+      transaction: null,
+    })
+    return parseMailboxAllowlist(row?.value)
+  }
+
+  async isMailboxOpenFor(companyId: string): Promise<boolean> {
+    if (!isMailboxDeliveryEnabled()) {
+      return false
+    }
+
+    const allowlist = await this.mailboxAllowlist()
+    if (allowlist.all) {
+      return true
+    }
+    if (allowlist.nationalIds.size === 0) {
+      return false
+    }
+
+    const company = await this.companyModel.findOne({
+      where: { id: companyId.toLowerCase() },
+      attributes: ['id', 'nationalId'],
+      transaction: null,
+    })
+    return mailboxAllowlistAllows(allowlist, company?.nationalId)
   }
 
   unconfiguredKinds(): MailboxDeliveryKindEnum[] {

@@ -328,14 +328,30 @@ export function buildCompanyExpiryWhere(
  * `overdue` and `expiresWithin` return `literal()` SQL bound to
  * `COMPANY_QUERY_ALIAS`, which does not resolve off the bare model.
  */
-export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
+export function buildCompanyListQuery(
+  query: GetCompaniesQueryDto,
+  { searchLiftsHides = true }: { searchLiftsHides?: boolean } = {},
+): {
   where: WhereOptions
   includes: Includeable[]
 } {
   const conditions: WhereOptions[] = []
 
-  if (query.q) {
-    const pattern = `%${query.q.trim()}%`
+  // A search names the company the admin is looking for, so on the register
+  // it reaches every company: the three default hides below are lifted, and
+  // only the filters the admin actually selected narrow it. A small
+  // institution that filed by mistake has to be findable by its name, not
+  // hidden for owing nothing.
+  //
+  // The bulk email passes `searchLiftsHides: false`: a search there narrows
+  // the usual recipients and never widens them to inactive, not-obliged or
+  // quarantined companies.
+  const searchTerm = query.q?.trim() ?? ''
+  const searching = searchTerm.length > 0
+  const liftHides = searching && searchLiftsHides
+
+  if (searching) {
+    const pattern = `%${searchTerm}%`
     conditions.push({
       [Op.or]: [
         { name: { [Op.iLike]: pattern } },
@@ -414,9 +430,13 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   // means the admin has already answered the question the default was guessing
   // at: filtering to Óvirkt has to return óvirk companies, not an empty page.
   //
+  // A search (`q`) lifts all three, except on the bulk email path: see
+  // `searchLiftsHides` above.
+  //
   // Ordered after the explicit filters purely for readability; `conditions`
   // is AND-ed, so position carries no meaning.
   if (
+    !liftHides &&
     !query.includeNotObliged &&
     !query.employeeCountCategory?.length &&
     !query.obligation?.length
@@ -424,7 +444,7 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
     conditions.push(literal(`NOT ${hiddenFromDefaultRegisterSql()}`))
   }
 
-  if (!query.includeInactive && !query.status?.length) {
+  if (!liftHides && !query.includeInactive && !query.status?.length) {
     conditions.push({ status: CompanyStatusEnum.ACTIVE })
   }
 
@@ -434,7 +454,11 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   // (the reveal the list offers) or an explicit `quarantined`, which is still
   // accepted by the API and is the more specific answer on the same axis:
   // asking for quarantined companies has to return them, not an empty page.
-  if (!query.includeQuarantined && query.quarantined === undefined) {
+  if (
+    !liftHides &&
+    !query.includeQuarantined &&
+    query.quarantined === undefined
+  ) {
     conditions.push({ quarantined: false })
   }
 

@@ -16,3 +16,7 @@ export type { MailboxDeliveryKindConfig } from './mailbox-delivery.kinds'
 export * from './mailbox-delivery.service.interface'
 export * from './models/mailbox-delivery.enums'
 export * from './models/mailbox-delivery.model'
+export {
+  type MailboxAllowlist,
+  mailboxAllowlistAllows,
+} from '../config/lib/mailbox-allowlist'
