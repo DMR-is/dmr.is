@@ -42,10 +42,15 @@ const deliveryLabel = (delivery?: NoticeIssueDeliveryDto | null): string => {
 const Section = ({
   heading,
   description,
+  shown,
+  total,
   children,
 }: {
   heading: string
   description: string
+  /** Rows listed, and how many there are: the API returns at most 100. */
+  shown: number
+  total: number
   children: React.ReactNode
 }) => (
   <Box background="white" borderRadius="large" padding={[3, 3, 4]}>
@@ -54,6 +59,11 @@ const Section = ({
         {heading}
       </Text>
       <Text variant="small">{description}</Text>
+      {total > shown && (
+        <Text variant="small" fontWeight="semiBold">
+          {t.shownOf(shown, total)}
+        </Text>
+      )}
       {children}
     </Stack>
   </Box>
@@ -262,6 +272,8 @@ export const NoticeIssuesContainer = () => {
             <Section
               heading={t.failedHeading}
               description={t.failedDescription}
+              shown={data?.failed.length ?? 0}
+              total={data?.failedTotal ?? 0}
             >
               <Table
                 columns={failedColumns}
@@ -272,6 +284,8 @@ export const NoticeIssuesContainer = () => {
             <Section
               heading={t.overdueHeading}
               description={t.overdueDescription}
+              shown={data?.overdue.length ?? 0}
+              total={data?.overdueTotal ?? 0}
             >
               <Table
                 columns={overdueColumns}
@@ -282,6 +296,8 @@ export const NoticeIssuesContainer = () => {
             <Section
               heading={t.remindersHeading}
               description={t.remindersDescription}
+              shown={data?.reminders.length ?? 0}
+              total={data?.remindersTotal ?? 0}
             >
               <Table
                 columns={reminderColumns}

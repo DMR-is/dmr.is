@@ -2,6 +2,7 @@ import type { MailboxAllowlist } from '../config/lib/mailbox-allowlist'
 import {
   MailboxDeliveryKindEnum,
   MailboxDeliveryStatusEnum,
+  MailboxDeliveryStepEnum,
 } from './models/mailbox-delivery.enums'
 
 /**
@@ -238,7 +239,39 @@ export interface IMailboxDeliveryService {
    * How many deliveries need a person, by reason, over every row rather than
    * the `limit` that `findStuckDeliveries` names.
    */
-  countStuckDeliveries(): Promise<Record<StuckMailboxDeliveryReason, number>>
+  countStuckDeliveries(
+    /** Only these kinds. */
+    kinds?: MailboxDeliveryKindEnum[],
+  ): Promise<Record<StuckMailboxDeliveryReason, number>>
+
+  /**
+   * The README's "Exhausted rows" re-arm: `attempts` back to 0, nothing else
+   * touched, so the next call with the key resumes from the saved ids. Only
+   * while the row is still exhausted (`STUCK_WHERE.ATTEMPTS_EXHAUSTED`, no
+   * live lease on Postgres's clock) and in the status it was read in. False
+   * when it has moved since.
+   */
+  rearmExhausted(
+    id: string,
+    readStatus: MailboxDeliveryStatusEnum,
+    note: string,
+  ): Promise<boolean>
+
+  /**
+   * The README's "Reconciling an UNCERTAIN row", for an UNCERTAIN or
+   * interrupted row a person has checked against One: SENT records it as
+   * sent; NOT_SENT lets it go again with its attempts back, from
+   * `documentItemId` when One holds the document. Only while the row still
+   * holds what it was read with (`read`) and no lease is live. `note` is the
+   * audit text for `last_error`. False when it has moved since.
+   */
+  settleUncertain(
+    id: string,
+    read: SettleUncertainRead,
+    outcome: 'SENT' | 'NOT_SENT',
+    documentItemId: string | null,
+    note: string,
+  ): Promise<boolean>
 
   /**
    * The `onesystems_mailbox_allowlist` config row, parsed. A missing or
@@ -262,4 +295,12 @@ export interface IMailboxDeliveryService {
 }
 
 // Token for DI, based on https://stackoverflow.com/a/70088972
+/** What `settleUncertain` was decided on, re-checked by the write. */
+export type SettleUncertainRead = {
+  status: MailboxDeliveryStatusEnum
+  inFlightStep: MailboxDeliveryStepEnum | null
+  oneDocumentItemId: string | null
+  sentAt: Date | null
+}
+
 export const IMailboxDeliveryService = Symbol('IMailboxDeliveryService')

@@ -14,7 +14,7 @@ export const noticeIssuesMessages = {
   noticeNotFailed: (id: string, status: string): ErrorMessage => ({
     message: `Notice ${id} is ${status}; only a FAILED notice can be retried`,
     translatedMessage:
-      'Aðeins er hægt að senda aftur tilkynningu sem komst ekki til skila. Endurhlaðið síðuna.',
+      'Aðeins er hægt að senda aftur tilkynningu sem komst ekki til skila. Endurhlaðaðu síðuna.',
   }),
 
   deliveryNotFound: (id: string): ErrorMessage => ({
@@ -25,42 +25,42 @@ export const noticeIssuesMessages = {
   deliveryInProgress: (id: string): ErrorMessage => ({
     message: `Mailbox delivery ${id} is in progress; try again in a few minutes`,
     translatedMessage:
-      'Sendingin er í vinnslu núna. Reynið aftur eftir nokkrar mínútur.',
+      'Sendingin er í vinnslu núna. Reyndu aftur eftir nokkrar mínútur.',
   }),
 
   deliveryNeedsReconciling: (id: string): ErrorMessage => ({
     message: `Mailbox delivery ${id} may already have reached One; reconcile it against One first`,
     translatedMessage:
-      'Bréfið gæti þegar hafa farið í pósthólfið. Staðfestið stöðuna í One fyrst.',
+      'Bréfið gæti þegar hafa farið í pósthólfið. Staðfestu stöðuna í One fyrst.',
   }),
 
   deliveryNeedsNoReconciling: (id: string, status: string): ErrorMessage => ({
     message: `Mailbox delivery ${id} is ${status} and needs no reconciling`,
     translatedMessage:
-      'Það þarf ekki að staðfesta stöðu þessarar sendingar. Endurhlaðið síðuna.',
+      'Það þarf ekki að staðfesta stöðu þessarar sendingar. Endurhlaðaðu síðuna.',
   }),
 
   documentIdRequired: (id: string): ErrorMessage => ({
     message: `Mailbox delivery ${id} has no document id; give the document's ItemID from One`,
     translatedMessage:
-      'Sláið inn auðkenni skjalsins í One til að merkja það sent.',
+      'Sláðu inn auðkenni skjalsins í One til að merkja það sent.',
   }),
 
   sentConfirmedByOne: (id: string): ErrorMessage => ({
     message: `One confirmed mailbox delivery ${id} as sent; reconcile it as SENT`,
     translatedMessage:
-      'One staðfesti að bréfið var sent. Merkið það sent í staðinn.',
+      'One staðfesti að bréfið var sent. Merktu það sent í staðinn.',
   }),
 
   deliveryChanged: (id: string): ErrorMessage => ({
     message: `Mailbox delivery ${id} changed while it was being updated; reload and check again`,
     translatedMessage:
-      'Sendingin breyttist á meðan. Endurhlaðið síðuna og athugið stöðuna aftur.',
+      'Sendingin breyttist á meðan. Endurhlaðaðu síðuna og athugaðu stöðuna aftur.',
   }),
 
   noticeChanged: (id: string): ErrorMessage => ({
     message: `Notice ${id} changed while it was being retried; reload and check again`,
     translatedMessage:
-      'Tilkynningin breyttist á meðan. Endurhlaðið síðuna og athugið stöðuna aftur.',
+      'Tilkynningin breyttist á meðan. Endurhlaðaðu síðuna og athugaðu stöðuna aftur.',
   }),
 }

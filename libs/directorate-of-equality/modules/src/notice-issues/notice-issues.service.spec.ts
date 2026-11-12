@@ -1,5 +1,3 @@
-import { literal, Op } from 'sequelize'
-
 import {
   BadRequestException,
   ConflictException,
@@ -32,13 +30,8 @@ const DENIED_KEY = buildMailboxDeliveryIdempotencyKey({
   discriminator: REPORT_ID,
 })
 
-/** No live lease, on Postgres's clock. */
-const LEASE_FREE = {
-  [Op.or]: [
-    { leaseExpiresAt: null },
-    { leaseExpiresAt: { [Op.lt]: literal('CURRENT_TIMESTAMP') } },
-  ],
-}
+const AUDIT =
+  /^(Re-armed|Reconciled) by Anna Jónsdóttir \(user-1\) on \d{4}-\d{2}-\d{2}$/
 
 const notice = (overrides: Record<string, unknown> = {}) => ({
   id: NOTICE_ID,
@@ -77,13 +70,20 @@ describe('NoticeIssuesService', () => {
     findByPk: jest.Mock
     findOne: jest.Mock
     update: jest.Mock
+    count: jest.Mock
   }
-  let deliveries: { findAll: jest.Mock; findByPk: jest.Mock; update: jest.Mock }
+  let deliveries: { findAll: jest.Mock; findByPk: jest.Mock }
   let reports: { findAll: jest.Mock }
   let companyReports: { findAll: jest.Mock }
   let companies: { findAll: jest.Mock }
   let dispatch: { findOverdueNotices: jest.Mock }
-  let mailbox: { findStuckDeliveries: jest.Mock; checkConnection: jest.Mock }
+  let mailbox: {
+    findStuckDeliveries: jest.Mock
+    countStuckDeliveries: jest.Mock
+    rearmExhausted: jest.Mock
+    settleUncertain: jest.Mock
+    checkConnection: jest.Mock
+  }
   let service: NoticeIssuesService
 
   beforeEach(() => {
@@ -93,11 +93,11 @@ describe('NoticeIssuesService', () => {
       findByPk: jest.fn().mockResolvedValue(notice()),
       findOne: jest.fn().mockResolvedValue(null),
       update: jest.fn().mockResolvedValue([1]),
+      count: jest.fn().mockResolvedValue(0),
     }
     deliveries = {
       findAll: jest.fn().mockResolvedValue([]),
       findByPk: jest.fn().mockResolvedValue(null),
-      update: jest.fn().mockResolvedValue([1]),
     }
     reports = {
       findAll: jest.fn().mockResolvedValue([
@@ -125,6 +125,13 @@ describe('NoticeIssuesService', () => {
     }
     mailbox = {
       findStuckDeliveries: jest.fn().mockResolvedValue([]),
+      countStuckDeliveries: jest.fn().mockResolvedValue({
+        UNCERTAIN: 0,
+        INTERRUPTED: 0,
+        ATTEMPTS_EXHAUSTED: 0,
+      }),
+      rearmExhausted: jest.fn().mockResolvedValue(true),
+      settleUncertain: jest.fn().mockResolvedValue(true),
       checkConnection: jest.fn().mockResolvedValue({ ok: true, reason: null }),
     }
     service = new NoticeIssuesService(
@@ -139,9 +146,6 @@ describe('NoticeIssuesService', () => {
     )
   })
 
-  const noticeUpdate = () => notices.update.mock.calls[0]
-  const deliveryUpdate = () => deliveries.update.mock.calls[0]
-
   const REDRIVEN = {
     status: NoticeOutboxStatusEnum.PENDING,
     processedAt: null,
@@ -154,6 +158,7 @@ describe('NoticeIssuesService', () => {
   describe('getIssues', () => {
     it('lists a failed notice with its report, company and delivery, without the delivery last_error', async () => {
       notices.findAll.mockResolvedValueOnce([notice()])
+      notices.count.mockResolvedValueOnce(1)
       deliveries.findAll.mockResolvedValueOnce([
         delivery({ attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS }),
       ])
@@ -161,6 +166,7 @@ describe('NoticeIssuesService', () => {
       const issues = await service.getIssues()
 
       expect(issues.failed).toHaveLength(1)
+      expect(issues.failedTotal).toBe(1)
       expect(issues.failed[0]).toMatchObject({
         id: NOTICE_ID,
         reportIdentifier: 'KTPQZW',
@@ -170,6 +176,7 @@ describe('NoticeIssuesService', () => {
           exhausted: true,
           needsReconciling: false,
           inProgress: false,
+          uncertainStep: null,
         },
       })
       expect(JSON.stringify(issues)).not.toContain('kennitala')
@@ -178,29 +185,82 @@ describe('NoticeIssuesService', () => {
       })
     })
 
-    it('flags an interrupted delivery as needing reconciling', async () => {
-      notices.findAll.mockResolvedValueOnce([notice()])
-      deliveries.findAll.mockResolvedValueOnce([
-        delivery({
-          inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
-          leaseExpiresAt: new Date(Date.now() - 60_000),
-        }),
-      ])
+    it('lists failed notices oldest first, with no time window', async () => {
+      await service.getIssues()
 
-      const issues = await service.getIssues()
-
-      expect(issues.failed[0].delivery).toMatchObject({
-        needsReconciling: true,
-        inProgress: false,
-        exhausted: false,
+      expect(notices.findAll).toHaveBeenCalledWith({
+        where: { status: NoticeOutboxStatusEnum.FAILED },
+        order: [['processedAt', 'ASC']],
+        limit: 100,
       })
     })
 
-    it('lists only reminder deliveries among the stuck ones', async () => {
-      mailbox.findStuckDeliveries.mockResolvedValueOnce([
-        { deliveryId: 'd-1' },
-        { deliveryId: 'd-2' },
+    it('returns the totals behind each list', async () => {
+      notices.count.mockResolvedValueOnce(250)
+      dispatch.findOverdueNotices.mockResolvedValueOnce({
+        total: 120,
+        notices: [],
+      })
+      mailbox.countStuckDeliveries.mockResolvedValueOnce({
+        UNCERTAIN: 2,
+        INTERRUPTED: 1,
+        ATTEMPTS_EXHAUSTED: 4,
+      })
+
+      const issues = await service.getIssues()
+
+      expect(issues).toMatchObject({
+        failedTotal: 250,
+        overdueTotal: 120,
+        remindersTotal: 7,
+      })
+      expect(mailbox.countStuckDeliveries).toHaveBeenCalledWith([
+        MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
+        MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
       ])
+    })
+
+    it.each([
+      [
+        'an interrupted CreateDocument',
+        {
+          inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+          leaseExpiresAt: new Date(Date.now() - 60_000),
+        },
+        MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+      ],
+      [
+        'an UNCERTAIN row with no document',
+        { status: MailboxDeliveryStatusEnum.UNCERTAIN },
+        MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+      ],
+      [
+        'an UNCERTAIN row with a document',
+        {
+          status: MailboxDeliveryStatusEnum.UNCERTAIN,
+          oneDocumentItemId: 'doc-1',
+        },
+        MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+      ],
+    ])(
+      'flags %s as needing reconciling and names the step in doubt',
+      async (_what, overrides, step) => {
+        notices.findAll.mockResolvedValueOnce([notice()])
+        deliveries.findAll.mockResolvedValueOnce([delivery(overrides)])
+
+        const issues = await service.getIssues()
+
+        expect(issues.failed[0].delivery).toMatchObject({
+          needsReconciling: true,
+          inProgress: false,
+          exhausted: false,
+          uncertainStep: step,
+        })
+      },
+    )
+
+    it('lists only reminder deliveries among the stuck ones', async () => {
+      mailbox.findStuckDeliveries.mockResolvedValueOnce([{ deliveryId: 'd-1' }])
       deliveries.findAll.mockResolvedValueOnce([
         delivery({
           id: 'd-1',
@@ -211,23 +271,10 @@ describe('NoticeIssuesService', () => {
 
       const issues = await service.getIssues()
 
-      // Filtered in the query, so stuck notice deliveries cannot use up the
-      // limit and hide every reminder.
       expect(mailbox.findStuckDeliveries).toHaveBeenCalledWith(100, [
         MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
         MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
       ])
-      expect(deliveries.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {
-            id: ['d-1', 'd-2'],
-            kind: [
-              MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
-              MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
-            ],
-          },
-        }),
-      )
       expect(issues.reminders).toEqual([
         expect.objectContaining({
           companyName: 'Jafnréttisstofa',
@@ -296,7 +343,7 @@ describe('NoticeIssuesService', () => {
       await expect(service.retryNotice(NOTICE_ID, ACTOR)).rejects.toMatchObject(
         {
           response: {
-            translatedMessage: expect.stringContaining('Staðfestið stöðuna'),
+            translatedMessage: expect.stringContaining('Staðfestu stöðuna'),
           },
         },
       )
@@ -316,42 +363,38 @@ describe('NoticeIssuesService', () => {
     it('re-drives a notice that has no delivery (an email failure)', async () => {
       await service.retryNotice(NOTICE_ID, ACTOR)
 
-      expect(deliveries.update).not.toHaveBeenCalled()
-      expect(noticeUpdate()).toEqual([
-        REDRIVEN,
-        {
-          where: { id: NOTICE_ID, status: NoticeOutboxStatusEnum.FAILED },
-          transaction: null,
-        },
-      ])
+      expect(mailbox.rearmExhausted).not.toHaveBeenCalled()
+      expect(notices.update).toHaveBeenCalledWith(REDRIVEN, {
+        where: { id: NOTICE_ID, status: NoticeOutboxStatusEnum.FAILED },
+        transaction: null,
+      })
     })
 
-    it('re-arms an exhausted delivery, then re-drives the notice', async () => {
+    it('re-arms an exhausted delivery through the mailbox module, then re-drives the notice', async () => {
       deliveries.findAll.mockResolvedValueOnce([
         delivery({ attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS }),
       ])
 
       await service.retryNotice(NOTICE_ID, ACTOR)
 
-      expect(deliveryUpdate()).toEqual([
-        {
-          attempts: 0,
-          lastError: expect.stringMatching(
-            /^Re-armed by Anna Jónsdóttir \(user-1\) on \d{4}-\d{2}-\d{2}$/,
-          ),
-        },
-        {
-          where: {
-            id: DELIVERY_ID,
-            status: MailboxDeliveryStatusEnum.FAILED,
-            inFlightStep: null,
-            attempts: { [Op.gte]: MAILBOX_DELIVERY_MAX_ATTEMPTS },
-            ...LEASE_FREE,
-          },
-          transaction: null,
-        },
+      expect(mailbox.rearmExhausted).toHaveBeenCalledWith(
+        DELIVERY_ID,
+        MailboxDeliveryStatusEnum.FAILED,
+        expect.stringMatching(AUDIT),
+      )
+      expect(notices.update.mock.calls[0][0]).toEqual(REDRIVEN)
+    })
+
+    it('refuses when the re-arm finds the delivery moved', async () => {
+      deliveries.findAll.mockResolvedValueOnce([
+        delivery({ attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS }),
       ])
-      expect(noticeUpdate()[0]).toEqual(REDRIVEN)
+      mailbox.rearmExhausted.mockResolvedValueOnce(false)
+
+      await expect(service.retryNotice(NOTICE_ID, ACTOR)).rejects.toThrow(
+        ConflictException,
+      )
+      expect(notices.update).not.toHaveBeenCalled()
     })
 
     it('leaves a delivery with attempts left as it is', async () => {
@@ -359,8 +402,8 @@ describe('NoticeIssuesService', () => {
 
       await service.retryNotice(NOTICE_ID, ACTOR)
 
-      expect(deliveries.update).not.toHaveBeenCalled()
-      expect(noticeUpdate()[0]).toEqual(REDRIVEN)
+      expect(mailbox.rearmExhausted).not.toHaveBeenCalled()
+      expect(notices.update.mock.calls[0][0]).toEqual(REDRIVEN)
     })
 
     it.each([
@@ -379,7 +422,7 @@ describe('NoticeIssuesService', () => {
       await expect(service.retryNotice(NOTICE_ID, ACTOR)).rejects.toThrow(
         ConflictException,
       )
-      expect(deliveries.update).not.toHaveBeenCalled()
+      expect(mailbox.rearmExhausted).not.toHaveBeenCalled()
       expect(notices.update).not.toHaveBeenCalled()
     })
 
@@ -396,6 +439,13 @@ describe('NoticeIssuesService', () => {
     const uncertain = (overrides: Record<string, unknown> = {}) =>
       delivery({ status: MailboxDeliveryStatusEnum.UNCERTAIN, ...overrides })
 
+    const READ = {
+      status: MailboxDeliveryStatusEnum.UNCERTAIN,
+      inFlightStep: null,
+      oneDocumentItemId: null,
+      sentAt: null,
+    }
+
     it('refuses a delivery that does not exist', async () => {
       await expect(
         service.reconcileDelivery(DELIVERY_ID, { outcome: 'SENT' }, ACTOR),
@@ -408,7 +458,7 @@ describe('NoticeIssuesService', () => {
       await expect(
         service.reconcileDelivery(DELIVERY_ID, { outcome: 'SENT' }, ACTOR),
       ).rejects.toThrow(ConflictException)
-      expect(deliveries.update).not.toHaveBeenCalled()
+      expect(mailbox.settleUncertain).not.toHaveBeenCalled()
     })
 
     it('refuses SENT without a document id', async () => {
@@ -417,10 +467,10 @@ describe('NoticeIssuesService', () => {
       await expect(
         service.reconcileDelivery(DELIVERY_ID, { outcome: 'SENT' }, ACTOR),
       ).rejects.toThrow(BadRequestException)
-      expect(deliveries.update).not.toHaveBeenCalled()
+      expect(mailbox.settleUncertain).not.toHaveBeenCalled()
     })
 
-    it('records SENT with the given document id, then re-drives its FAILED notice', async () => {
+    it('settles SENT through the mailbox module with what it read, then re-drives its FAILED notice', async () => {
       deliveries.findByPk.mockResolvedValueOnce(uncertain())
       notices.findOne.mockResolvedValueOnce(notice())
 
@@ -430,31 +480,13 @@ describe('NoticeIssuesService', () => {
         ACTOR,
       )
 
-      expect(deliveryUpdate()).toEqual([
-        expect.objectContaining({
-          status: MailboxDeliveryStatusEnum.SENT,
-          oneDocumentItemId: 'doc-9',
-          sentAt: expect.any(Date),
-          inFlightStep: null,
-          leaseToken: null,
-          leaseExpiresAt: null,
-          lastError: expect.stringMatching(
-            /^Reconciled by Anna Jónsdóttir \(user-1\) on .*: sent$/,
-          ),
-        }),
-        {
-          where: {
-            id: DELIVERY_ID,
-            status: MailboxDeliveryStatusEnum.UNCERTAIN,
-            inFlightStep: null,
-            // A late reply saving either would make the write miss.
-            oneDocumentItemId: null,
-            sentAt: null,
-            ...LEASE_FREE,
-          },
-          transaction: null,
-        },
-      ])
+      expect(mailbox.settleUncertain).toHaveBeenCalledWith(
+        DELIVERY_ID,
+        READ,
+        'SENT',
+        'doc-9',
+        expect.stringMatching(AUDIT),
+      )
       expect(notices.findOne).toHaveBeenCalledWith({
         where: {
           reportId: REPORT_ID,
@@ -462,7 +494,7 @@ describe('NoticeIssuesService', () => {
           status: NoticeOutboxStatusEnum.FAILED,
         },
       })
-      expect(noticeUpdate()[0]).toEqual(REDRIVEN)
+      expect(notices.update.mock.calls[0][0]).toEqual(REDRIVEN)
     })
 
     it('keeps a saved document id over the one given', async () => {
@@ -476,34 +508,10 @@ describe('NoticeIssuesService', () => {
         ACTOR,
       )
 
-      expect(deliveryUpdate()[0]).toMatchObject({
-        oneDocumentItemId: 'doc-saved',
-      })
+      expect(mailbox.settleUncertain.mock.calls[0][3]).toBe('doc-saved')
     })
 
-    it('lets NOT_SENT go again with its attempts back, from the document when known', async () => {
-      deliveries.findByPk.mockResolvedValueOnce(
-        uncertain({ attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS }),
-      )
-
-      await service.reconcileDelivery(
-        DELIVERY_ID,
-        { outcome: 'NOT_SENT', documentItemId: 'doc-9' },
-        ACTOR,
-      )
-
-      expect(deliveryUpdate()[0]).toEqual(
-        expect.objectContaining({
-          status: MailboxDeliveryStatusEnum.FAILED,
-          oneDocumentItemId: 'doc-9',
-          attempts: 0,
-          inFlightStep: null,
-          lastError: expect.stringMatching(/: filed, not sent$/),
-        }),
-      )
-    })
-
-    it('clears the marker of an interrupted delivery', async () => {
+    it('settles an interrupted delivery with its marker as read', async () => {
       deliveries.findByPk.mockResolvedValueOnce(
         delivery({
           status: MailboxDeliveryStatusEnum.CASE_CREATED,
@@ -517,25 +525,18 @@ describe('NoticeIssuesService', () => {
         ACTOR,
       )
 
-      expect(deliveryUpdate()).toEqual([
-        expect.objectContaining({
-          status: MailboxDeliveryStatusEnum.FAILED,
-          inFlightStep: null,
-          oneDocumentItemId: null,
-          lastError: expect.stringMatching(/: not sent$/),
-        }),
+      expect(mailbox.settleUncertain).toHaveBeenCalledWith(
+        DELIVERY_ID,
         {
-          where: {
-            id: DELIVERY_ID,
-            status: MailboxDeliveryStatusEnum.CASE_CREATED,
-            inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
-            oneDocumentItemId: null,
-            sentAt: null,
-            ...LEASE_FREE,
-          },
-          transaction: null,
+          status: MailboxDeliveryStatusEnum.CASE_CREATED,
+          inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+          oneDocumentItemId: null,
+          sentAt: null,
         },
-      ])
+        'NOT_SENT',
+        null,
+        expect.stringMatching(AUDIT),
+      )
     })
 
     it('refuses NOT_SENT once One confirmed the send', async () => {
@@ -546,7 +547,7 @@ describe('NoticeIssuesService', () => {
       await expect(
         service.reconcileDelivery(DELIVERY_ID, { outcome: 'NOT_SENT' }, ACTOR),
       ).rejects.toThrow(ConflictException)
-      expect(deliveries.update).not.toHaveBeenCalled()
+      expect(mailbox.settleUncertain).not.toHaveBeenCalled()
     })
 
     it('refuses while a worker holds the lease', async () => {
@@ -564,7 +565,7 @@ describe('NoticeIssuesService', () => {
 
     it('refuses when the delivery changed meanwhile', async () => {
       deliveries.findByPk.mockResolvedValueOnce(uncertain())
-      deliveries.update.mockResolvedValueOnce([0])
+      mailbox.settleUncertain.mockResolvedValueOnce(false)
 
       await expect(
         service.reconcileDelivery(DELIVERY_ID, { outcome: 'NOT_SENT' }, ACTOR),

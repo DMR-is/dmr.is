@@ -1,5 +1,3 @@
-import { literal, Op } from 'sequelize'
-
 import {
   BadRequestException,
   ConflictException,
@@ -14,11 +12,12 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { buildMailboxDeliveryIdempotencyKey } from '../mailbox-delivery/mailbox-delivery.idempotency-key'
-import { MAILBOX_DELIVERY_MAX_ATTEMPTS } from '../mailbox-delivery/mailbox-delivery.service'
+import { classifyDelivery } from '../mailbox-delivery/mailbox-delivery.service'
 import { IMailboxDeliveryService } from '../mailbox-delivery/mailbox-delivery.service.interface'
 import {
   MailboxDeliveryKindEnum,
   MailboxDeliveryStatusEnum,
+  MailboxDeliveryStepEnum,
 } from '../mailbox-delivery/models/mailbox-delivery.enums'
 import { MailboxDeliveryModel } from '../mailbox-delivery/models/mailbox-delivery.model'
 import { INoticeDispatchService } from '../notice-dispatch/notice-dispatch.service.interface'
@@ -49,18 +48,6 @@ const LOGGING_CONTEXT = 'NoticeIssuesService'
 /** Rows of each list. A page of more than this means something larger is wrong. */
 const LIST_LIMIT = 100
 
-/**
- * No live lease, on Postgres's clock as the delivery service compares leases
- * (`mailbox-delivery.service.ts`), so a worker's call still under way on
- * another container is never cleared by a skewed app clock.
- */
-const LEASE_FREE = {
-  [Op.or]: [
-    { leaseExpiresAt: null },
-    { leaseExpiresAt: { [Op.lt]: literal('CURRENT_TIMESTAMP') } },
-  ],
-}
-
 /** Recent sends shown on Kerfisstillingar. */
 const RECENT_LIMIT = 20
 
@@ -90,15 +77,22 @@ export class NoticeIssuesService implements INoticeIssuesService {
   ) {}
 
   async getIssues(): Promise<NoticeIssuesDto> {
+    // Every FAILED notice, with no time window: unlike the daily alert
+    // (`findFailedNotices`, the last week), this is the list a person works
+    // through, and a failed notice stays until someone acts on it. Oldest
+    // first, so the ones left longest are never the ones cut off.
     const failedRows = await this.noticeModel.findAll({
       where: { status: NoticeOutboxStatusEnum.FAILED },
-      order: [['processedAt', 'DESC']],
+      order: [['processedAt', 'ASC']],
       limit: LIST_LIMIT,
+    })
+    const failedTotal = await this.noticeModel.count({
+      where: { status: NoticeOutboxStatusEnum.FAILED },
     })
 
     // The dispatcher's own definition, so this list and the daily alert
     // cannot disagree about what is overdue.
-    const { notices: overdue } =
+    const { notices: overdue, total: overdueTotal } =
       await this.noticeDispatchService.findOverdueNotices(LIST_LIMIT)
     const overdueRows = overdue.length
       ? await this.noticeModel.findAll({
@@ -111,6 +105,12 @@ export class NoticeIssuesService implements INoticeIssuesService {
       LIST_LIMIT,
       REMINDER_KINDS,
     )
+    const stuckCounts =
+      await this.mailboxDeliveryService.countStuckDeliveries(REMINDER_KINDS)
+    const remindersTotal =
+      stuckCounts.UNCERTAIN +
+      stuckCounts.INTERRUPTED +
+      stuckCounts.ATTEMPTS_EXHAUSTED
     const reminderRows = stuck.length
       ? await this.deliveryModel.findAll({
           where: {
@@ -155,8 +155,11 @@ export class NoticeIssuesService implements INoticeIssuesService {
 
     return {
       failed: failedRows.map(toIssue),
+      failedTotal,
       overdue: overdueRows.map(toIssue),
+      overdueTotal,
       reminders,
+      remindersTotal,
     }
   }
 
@@ -198,7 +201,7 @@ export class NoticeIssuesService implements INoticeIssuesService {
     const delivery = context.deliveries.get(notice.id)
 
     if (delivery) {
-      const state = deliveryState(delivery)
+      const state = needsAction(delivery)
       if (state.inProgress) {
         throw new ConflictException(
           noticeIssuesMessages.deliveryInProgress(delivery.id),
@@ -236,7 +239,7 @@ export class NoticeIssuesService implements INoticeIssuesService {
       )
     }
 
-    const state = deliveryState(delivery)
+    const state = needsAction(delivery)
     if (state.inProgress) {
       throw new ConflictException(
         noticeIssuesMessages.deliveryInProgress(deliveryId),
@@ -253,66 +256,36 @@ export class NoticeIssuesService implements INoticeIssuesService {
 
     const documentItemId =
       delivery.oneDocumentItemId ?? dto.documentItemId ?? null
-    const note = auditNote('Reconciled', actor)
-
-    // Matched on every column the decision rests on, as the README's SQL
-    // does: a late reply can save a document id or `sent_at` into an
-    // UNCERTAIN row without changing its status, and writing over either
-    // would lose what One returned (a second document filed) or break the
-    // sent CHECK.
-    const unchanged = {
-      id: delivery.id,
-      status: delivery.status,
-      inFlightStep: delivery.inFlightStep,
-      oneDocumentItemId: delivery.oneDocumentItemId,
-      sentAt: delivery.sentAt,
-      ...LEASE_FREE,
-    }
-
-    let updated: number
-    if (dto.outcome === 'SENT') {
-      // The SENT CHECK needs a document; a sent document exists in One, so a
-      // person can find its ItemID. Never made up.
-      if (!documentItemId) {
-        throw new BadRequestException(
-          noticeIssuesMessages.documentIdRequired(deliveryId),
-        )
-      }
-      ;[updated] = await this.deliveryModel.update(
-        {
-          status: MailboxDeliveryStatusEnum.SENT,
-          oneDocumentItemId: documentItemId,
-          sentAt: delivery.sentAt ?? new Date(),
-          inFlightStep: null,
-          leaseToken: null,
-          leaseExpiresAt: null,
-          lastError: `${note}: sent`,
-        },
-        { where: unchanged, transaction: null },
+    // The SENT CHECK needs a document; a sent document exists in One, so a
+    // person can find its ItemID. Never made up.
+    if (dto.outcome === 'SENT' && !documentItemId) {
+      throw new BadRequestException(
+        noticeIssuesMessages.documentIdRequired(deliveryId),
       )
-    } else {
-      // One confirmed the send after the row went UNCERTAIN: it was sent,
-      // whatever the person believes.
-      if (delivery.sentAt) {
-        throw new ConflictException(
-          noticeIssuesMessages.sentConfirmedByOne(deliveryId),
-        )
-      }
-      ;[updated] = await this.deliveryModel.update(
-        {
-          status: MailboxDeliveryStatusEnum.FAILED,
-          oneDocumentItemId: documentItemId,
-          attempts: 0,
-          inFlightStep: null,
-          leaseToken: null,
-          leaseExpiresAt: null,
-          lastError: `${note}: ${documentItemId ? 'filed, not sent' : 'not sent'}`,
-        },
-        { where: unchanged, transaction: null },
+    }
+    // One confirmed the send after the row went UNCERTAIN: it was sent,
+    // whatever the person believes.
+    if (dto.outcome === 'NOT_SENT' && delivery.sentAt) {
+      throw new ConflictException(
+        noticeIssuesMessages.sentConfirmedByOne(deliveryId),
       )
     }
 
-    if (updated === 0) {
+    // The write, and its guards, belong to the mailbox-delivery module.
+    const updated = await this.mailboxDeliveryService.settleUncertain(
+      delivery.id,
+      {
+        status: delivery.status,
+        inFlightStep: delivery.inFlightStep,
+        oneDocumentItemId: delivery.oneDocumentItemId,
+        sentAt: delivery.sentAt,
+      },
+      dto.outcome,
+      documentItemId,
+      auditNote('Reconciled', actor),
+    )
+
+    if (!updated) {
       throw new ConflictException(
         noticeIssuesMessages.deliveryChanged(deliveryId),
       )
@@ -346,25 +319,17 @@ export class NoticeIssuesService implements INoticeIssuesService {
     )
   }
 
-  /** The "Exhausted rows" re-arm: the attempts back, nothing else touched. */
+  /** The "Exhausted rows" re-arm, in the mailbox-delivery module. */
   private async rearm(
     delivery: MailboxDeliveryModel,
     actor: NoticeIssueActor,
   ): Promise<void> {
-    const [updated] = await this.deliveryModel.update(
-      { attempts: 0, lastError: `${auditNote('Re-armed', actor)}` },
-      {
-        where: {
-          id: delivery.id,
-          status: delivery.status,
-          inFlightStep: null,
-          attempts: { [Op.gte]: MAILBOX_DELIVERY_MAX_ATTEMPTS },
-          ...LEASE_FREE,
-        },
-        transaction: null,
-      },
+    const updated = await this.mailboxDeliveryService.rearmExhausted(
+      delivery.id,
+      delivery.status,
+      auditNote('Re-armed', actor),
     )
-    if (updated === 0) {
+    if (!updated) {
       throw new ConflictException(
         noticeIssuesMessages.deliveryChanged(delivery.id),
       )
@@ -474,31 +439,35 @@ export class NoticeIssuesService implements INoticeIssuesService {
   }
 }
 
-function deliveryState(row: MailboxDeliveryModel): {
+/** The shared rule (`classifyDelivery`), plus what the page acts on. */
+function needsAction(row: MailboxDeliveryModel): {
   exhausted: boolean
   needsReconciling: boolean
   inProgress: boolean
 } {
-  const leaseLive =
-    !!row.leaseExpiresAt && row.leaseExpiresAt.getTime() > Date.now()
-  const settled =
-    row.status === MailboxDeliveryStatusEnum.SENT ||
-    row.status === MailboxDeliveryStatusEnum.UNCERTAIN
+  const state = classifyDelivery(row)
   return {
-    inProgress: leaseLive,
+    exhausted: state.exhausted,
+    inProgress: state.inProgress,
     needsReconciling:
-      row.status === MailboxDeliveryStatusEnum.UNCERTAIN ||
-      (!!row.inFlightStep && !leaseLive),
-    exhausted:
-      !settled &&
-      !row.inFlightStep &&
-      !leaseLive &&
-      row.attempts >= MAILBOX_DELIVERY_MAX_ATTEMPTS,
+      row.status === MailboxDeliveryStatusEnum.UNCERTAIN || state.interrupted,
   }
 }
 
+/**
+ * Which call is in doubt, for a person checking One, read as the README's
+ * "Reconciling an UNCERTAIN row" does: a marker names it; otherwise no saved
+ * document means CreateDocument, a saved one the send.
+ */
+function uncertainStep(row: MailboxDeliveryModel): MailboxDeliveryStepEnum {
+  if (row.inFlightStep) return row.inFlightStep
+  return row.oneDocumentItemId
+    ? MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS
+    : MailboxDeliveryStepEnum.CREATE_DOCUMENT
+}
+
 function toDeliveryDto(row: MailboxDeliveryModel): NoticeIssueDeliveryDto {
-  const state = deliveryState(row)
+  const state = needsAction(row)
   return {
     id: row.id,
     kind: row.kind,
@@ -507,6 +476,7 @@ function toDeliveryDto(row: MailboxDeliveryModel): NoticeIssueDeliveryDto {
     exhausted: state.exhausted,
     needsReconciling: state.needsReconciling,
     inProgress: state.inProgress,
+    uncertainStep: state.needsReconciling ? uncertainStep(row) : null,
     oneCaseNumber: row.oneCaseNumber,
     oneDocumentItemId: row.oneDocumentItemId,
     lastErrorNumber: row.lastErrorNumber,

@@ -449,6 +449,28 @@ describe('OneSystemsService', () => {
       },
     )
 
+    it.each([
+      ['CreateDocument', () => createDocument()],
+      ['SendDocToIslandIs', () => sendDocToIslandIs()],
+    ] as const)(
+      '%s: an empty Bearer challenge whose re-Login fails throws a Login error after one action request',
+      async (_operation, call) => {
+        loginReplies = [
+          () => json({ token: TOKEN_1 }),
+          () => new Response('', { status: 401 }),
+        ]
+        actionReplies = [() => bearerChallenge()]
+
+        const error = await caught(call())
+
+        // The mailbox delivery hands back the attempt and clears the marker on
+        // a Login error, which is safe only because the one action request
+        // was refused before the action ran.
+        expect(error).toMatchObject({ operation: 'Login', reason: 'HTTP' })
+        expect(actionRequests()).toHaveLength(1)
+      },
+    )
+
     describe('checkLogin', () => {
       it('logs in again with fresh, even with a valid token cached', async () => {
         await service.checkLogin()

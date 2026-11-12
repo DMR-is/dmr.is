@@ -64,6 +64,12 @@ export const ReconcileDeliveryModal = ({ delivery, onClose }: Props) => {
   // One confirmed the send after the row went uncertain: it was sent, and the
   // API refuses NOT_SENT.
   const sentAt = delivery?.sentAt ?? null
+  // A reminder is resent only while the company is in the same tier's band
+  // and its due date has not moved (mailbox-delivery README), so the button
+  // does not promise a resend.
+  const isReminder =
+    delivery?.kind === 'SALARY_REPORT_DEADLINE_REMINDER' ||
+    delivery?.kind === 'EQUALITY_REPORT_DEADLINE_REMINDER'
   const typedId = documentItemId.trim()
 
   const submit = (outcome: 'SENT' | 'NOT_SENT') => {
@@ -96,6 +102,12 @@ export const ReconcileDeliveryModal = ({ delivery, onClose }: Props) => {
           title={t.warningTitle}
           message={t.warningMessage}
         />
+
+        {delivery?.uncertainStep && (
+          <Text>{t.stepHint[delivery.uncertainStep]}</Text>
+        )}
+
+        {isReminder && <Text variant="small">{t.reminderNote}</Text>}
 
         <Box>
           <Text variant="eyebrow" color="blue400">
@@ -154,7 +166,7 @@ export const ReconcileDeliveryModal = ({ delivery, onClose }: Props) => {
             disabled={!!sentAt}
             onClick={() => submit('NOT_SENT')}
           >
-            {t.notSentButton}
+            {isReminder ? t.notSentReminderButton : t.notSentButton}
           </Button>
           <Button
             size="small"

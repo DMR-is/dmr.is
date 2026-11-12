@@ -1811,7 +1811,8 @@ export const noticeIssuesText = {
     'Allar tilraunir notaðar. Sendist ekki aftur sjálfkrafa.',
   retryButton: 'Reyna aftur',
   reconcileButton: 'Staðfesta stöðu',
-  retrySuccess: 'Tilkynningin fer aftur af stað innan mínútu',
+  retrySuccess: 'Tilkynningin er komin aftur í biðröð',
+  shownOf: (shown: number, total: number) => `Sýnir ${shown} af ${total}`,
   retryError: 'Ekki tókst að senda tilkynninguna aftur',
   reconcile: {
     title: 'Staðfesta stöðu í One',
@@ -1827,6 +1828,15 @@ export const noticeIssuesText = {
     sentConfirmedNote:
       'One hefur staðfest að bréfið var sent, svo það er ekki hægt að senda það aftur.',
     notSentButton: 'Var ekki sent: senda aftur',
+    notSentReminderButton: 'Var ekki sent',
+    reminderNote:
+      'Áminning er aðeins send aftur ef fyrirtækið er enn á sama tímabili og skilafresturinn hefur ekki breyst.',
+    stepHint: {
+      CREATE_DOCUMENT:
+        'Óvíst er hvort skjalið var vistað í One. Leitaðu að því undir málinu.',
+      SEND_DOC_TO_ISLAND_IS:
+        'Skjalið er vistað í One. Athugaðu hvort það var sent í pósthólfið.',
+    } as Record<string, string>,
     sentButton: 'Var sent: merkja lokið',
     success: 'Staða vistuð',
     error: 'Ekki tókst að vista stöðuna',

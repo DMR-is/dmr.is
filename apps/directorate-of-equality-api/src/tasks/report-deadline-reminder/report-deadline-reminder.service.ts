@@ -408,8 +408,11 @@ export class ReportDeadlineReminderService
    * on the band's last day, or before the due date moves.
    *
    * Returns false only for `UNCONFIGURED` (the flag on before the kind's case
-   * template is set): nothing went to One and no delivery with this key
-   * reached it, so `processTier` emails the reminder instead.
+   * template is set) and top-level `UNAVAILABLE` (One cannot be reached):
+   * nothing went to One and no delivery with this key reached it, so
+   * `processTier` emails the reminder instead. A delivery that reached One
+   * during an outage answers `skipped: 'UNAVAILABLE'`, and returns true with
+   * no email and no event, so a later run resumes it.
    * `deliverToMailbox` logged it at error (once per kind per process), and
    * the daily alert and the boot check name the kind. A delivery that did
    * reach One before its template was unset answers
