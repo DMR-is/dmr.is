@@ -89,9 +89,8 @@ export class NoticeIssuesService implements INoticeIssuesService {
         })
       : []
 
-    const stuck = await this.mailboxDeliveryService.findStuckDeliveries(
-      LIST_LIMIT,
-    )
+    const stuck =
+      await this.mailboxDeliveryService.findStuckDeliveries(LIST_LIMIT)
     const reminderRows = stuck.length
       ? await this.deliveryModel.findAll({
           where: {

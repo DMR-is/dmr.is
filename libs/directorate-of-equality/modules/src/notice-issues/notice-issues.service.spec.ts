@@ -93,7 +93,11 @@ describe('NoticeIssuesService', () => {
     }
     reports = {
       findAll: jest.fn().mockResolvedValue([
-        { id: REPORT_ID, type: ReportTypeEnum.EQUALITY, identifier: 'KTPQZW' },
+        {
+          id: REPORT_ID,
+          type: ReportTypeEnum.EQUALITY,
+          identifier: 'KTPQZW',
+        },
       ]),
     }
     companyReports = {
@@ -286,10 +290,7 @@ describe('NoticeIssuesService', () => {
     })
 
     it.each([
-      [
-        'UNCERTAIN',
-        { status: MailboxDeliveryStatusEnum.UNCERTAIN },
-      ],
+      ['UNCERTAIN', { status: MailboxDeliveryStatusEnum.UNCERTAIN }],
       [
         'interrupted',
         {
@@ -297,10 +298,7 @@ describe('NoticeIssuesService', () => {
           leaseExpiresAt: null,
         },
       ],
-      [
-        'in progress',
-        { leaseExpiresAt: new Date(Date.now() + 60_000) },
-      ],
+      ['in progress', { leaseExpiresAt: new Date(Date.now() + 60_000) }],
     ])('refuses while the delivery is %s', async (_state, overrides) => {
       deliveries.findAll.mockResolvedValueOnce([delivery(overrides)])
 
