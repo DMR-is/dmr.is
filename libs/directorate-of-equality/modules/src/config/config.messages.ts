@@ -12,7 +12,7 @@ export const configMessages = {
   changedSinceRead: (key: string): ErrorMessage => ({
     message: `Config entry "${key}" changed since it was read; reload before saving`,
     translatedMessage:
-      'Stillingunni var breytt á meðan. Endurhlaðið síðuna og reynið aftur.',
+      'Stillingunni var breytt á meðan. Endurhladdu síðuna og reyndu aftur.',
   }),
   thresholdNotPositiveNumber: (value: string): ErrorMessage => ({
     message: `Salary difference threshold must be a positive number with at most two decimals, got "${value}"`,

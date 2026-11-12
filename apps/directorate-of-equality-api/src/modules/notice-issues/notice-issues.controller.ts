@@ -71,8 +71,9 @@ export class NoticeIssuesController {
 
   /**
    * A fresh Login to One, from the Kerfisstillingar page. Sends nothing
-   * else, and runs whatever ONESYSTEMS_ENABLED says, so credentials can be
-   * checked before the switch goes on.
+   * else. The API runs it whatever ONESYSTEMS_ENABLED says, so a script can
+   * check credentials before the switch goes on; the page offers it only
+   * where the flag is on.
    */
   @Post('onesystems/check')
   @HttpCode(200)

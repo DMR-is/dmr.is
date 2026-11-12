@@ -1086,7 +1086,11 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     return null
   }
 
-  async checkConnection(): Promise<{ ok: boolean; reason: string | null }> {
+  async checkConnection(): Promise<{
+    ok: boolean
+    reason: string | null
+    checkedAt: Date
+  }> {
     // A failed check is answered again for a while without a request:
     // repeated clicks with a wrong password are the lockout risk the Login
     // backoff exists to prevent.
@@ -1094,7 +1098,12 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       this.lastFailedCheck &&
       Date.now() - this.lastFailedCheck.at < CHECK_RETRY_AFTER_MS
     ) {
-      return { ok: false, reason: this.lastFailedCheck.reason }
+      return {
+        ok: false,
+        reason: this.lastFailedCheck.reason,
+        // When the Login that failed ran, not now.
+        checkedAt: new Date(this.lastFailedCheck.at),
+      }
     }
 
     try {
@@ -1106,8 +1115,9 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       // Kept in step with the deliveries: the backoff and the outage log.
       const result = this.loginUnavailable(error)
       const reason = result.status === 'UNAVAILABLE' ? result.reason : null
-      this.lastFailedCheck = { at: Date.now(), reason }
-      return { ok: false, reason }
+      const at = Date.now()
+      this.lastFailedCheck = { at, reason }
+      return { ok: false, reason, checkedAt: new Date(at) }
     }
     if (this.loginFailure) {
       this.loginFailure = null
@@ -1115,7 +1125,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         context: LOGGING_CONTEXT,
       })
     }
-    return { ok: true, reason: null }
+    return { ok: true, reason: null, checkedAt: new Date() }
   }
 
   /**

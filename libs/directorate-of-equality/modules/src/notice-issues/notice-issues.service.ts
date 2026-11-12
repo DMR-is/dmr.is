@@ -183,7 +183,7 @@ export class NoticeIssuesService implements INoticeIssuesService {
       `OneSystems connection checked by user ${actor.id}: ${result.ok ? 'ok' : result.reason}`,
       { context: LOGGING_CONTEXT, userId: actor.id, ok: result.ok },
     )
-    return { ...result, checkedAt: new Date() }
+    return result
   }
 
   async retryNotice(noticeId: string, actor: NoticeIssueActor): Promise<void> {

@@ -132,7 +132,9 @@ describe('NoticeIssuesService', () => {
       }),
       rearmExhausted: jest.fn().mockResolvedValue(true),
       settleUncertain: jest.fn().mockResolvedValue(true),
-      checkConnection: jest.fn().mockResolvedValue({ ok: true, reason: null }),
+      checkConnection: jest
+        .fn()
+        .mockResolvedValue({ ok: true, reason: null, checkedAt: new Date() }),
     }
     service = new NoticeIssuesService(
       logger as never,
@@ -312,16 +314,18 @@ describe('NoticeIssuesService', () => {
   })
 
   describe('checkOneSystems', () => {
-    it('passes the result through with the time it was checked', async () => {
+    it('passes the result through with the time of the real Login', async () => {
+      const checkedAt = new Date('2026-11-12T10:00:00Z')
       mailbox.checkConnection.mockResolvedValueOnce({
         ok: false,
         reason: 'Login HTTP 401',
+        checkedAt,
       })
 
       await expect(service.checkOneSystems(ACTOR)).resolves.toEqual({
         ok: false,
         reason: 'Login HTTP 401',
-        checkedAt: expect.any(Date),
+        checkedAt,
       })
     })
   })

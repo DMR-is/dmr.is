@@ -215,20 +215,26 @@ export interface IMailboxDeliveryService {
   findDelivery(idempotencyKey: string): Promise<MailboxDeliveryState | null>
 
   /**
+   * A fresh Login to One, for a person checking the connection: nothing else
+   * is sent. The API runs it whatever `ONESYSTEMS_ENABLED` says; the
+   * Kerfisstillingar page offers it only where the flag is on. A success ends
+   * the Login backoff; a failure starts it, as a delivery's would. A failure
+   * is answered again for `CHECK_RETRY_AFTER_MS` without a Login, with the
+   * time of the real one in `checkedAt`. `reason` is loggable (operation,
+   * reason, HTTP status).
+   */
+  checkConnection(): Promise<{
+    ok: boolean
+    reason: string | null
+    checkedAt: Date
+  }>
+
+  /**
    * The deliveries a person must act on (see `StuckMailboxDeliveryReason`),
    * oldest attempt first, at most `limit`. Reads only, whatever
    * `ONESYSTEMS_ENABLED` says: rows left from before the flag went off still
    * need a person.
    */
-  /**
-   * A fresh Login to One, for a person checking the connection: nothing else
-   * is sent. Runs whatever `ONESYSTEMS_ENABLED` says, so credentials can be
-   * checked before the switch goes on. A success ends the Login backoff; a
-   * failure starts it, as a delivery's would. `reason` is loggable
-   * (operation, reason, HTTP status).
-   */
-  checkConnection(): Promise<{ ok: boolean; reason: string | null }>
-
   findStuckDeliveries(
     limit: number,
     /** Only these kinds, filtered in the query so `limit` applies to them. */

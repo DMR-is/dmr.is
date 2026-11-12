@@ -98,10 +98,16 @@ export class ConfigService implements IConfigService {
    * that fails after the supersede would leave zero, which `updateByKey` itself
    * needs one of to run at all.
    */
-  async updateByKey(key: string, dto: UpdateConfigDto): Promise<ConfigDto> {
-    this.logger.info(`Updating config entry with key "${key}"`, {
-      context: LOGGING_CONTEXT,
-    })
+  async updateByKey(
+    key: string,
+    dto: UpdateConfigDto,
+    actorUserId?: string,
+  ): Promise<ConfigDto> {
+    // The row records when a value changed, not who changed it: the log does.
+    this.logger.info(
+      `Updating config entry with key "${key}" by user ${actorUserId ?? 'unknown'}`,
+      { context: LOGGING_CONTEXT, key, userId: actorUserId },
+    )
 
     return this.sequelize.transaction(async (transaction) => {
       const current = await this.configModel.findOne({

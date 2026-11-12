@@ -2348,6 +2348,7 @@ describe('MailboxDeliveryService', () => {
         await expect(service.checkConnection()).resolves.toEqual({
           ok: true,
           reason: null,
+          checkedAt: expect.any(Date),
         })
         expect(one.checkLogin).toHaveBeenCalledWith({ fresh: true })
         expect(oneCalls()).toBe(0)
@@ -2359,6 +2360,7 @@ describe('MailboxDeliveryService', () => {
         await expect(service.checkConnection()).resolves.toEqual({
           ok: false,
           reason: 'Login HTTP 401',
+          checkedAt: expect.any(Date),
         })
 
         await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
@@ -2370,10 +2372,13 @@ describe('MailboxDeliveryService', () => {
       it('answers a repeat failed check from the last one for a while', async () => {
         one.checkLogin.mockRejectedValue(loginRefused())
 
-        await service.checkConnection()
+        const first = await service.checkConnection()
+        clock += 5_000
+        // The time of the Login that failed, not of the repeat.
         await expect(service.checkConnection()).resolves.toEqual({
           ok: false,
           reason: 'Login HTTP 401',
+          checkedAt: first.checkedAt,
         })
         expect(one.checkLogin).toHaveBeenCalledTimes(1)
 

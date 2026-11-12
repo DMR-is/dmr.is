@@ -108,6 +108,17 @@ describe('ConfigService', () => {
     expect(create).not.toHaveBeenCalled()
   })
 
+  it('logs who made the change', async () => {
+    findOne.mockResolvedValue(currentEntry('3.9'))
+
+    await service.updateByKey(THRESHOLD_KEY, { value: '3.5' }, 'user-1')
+
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      expect.stringContaining('by user user-1'),
+      expect.objectContaining({ key: THRESHOLD_KEY, userId: 'user-1' }),
+    )
+  })
+
   it('writes when expectedValue matches the stored value', async () => {
     findOne.mockResolvedValue(currentEntry('3.9'))
 

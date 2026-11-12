@@ -60,6 +60,11 @@ export const MailboxAllowlistModal = ({
   const [nationalIds, setNationalIds] = useState('')
   const [touched, setTouched] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
+  // The stored value the form was filled from, sent as `expectedValue`. Not
+  // the live prop: a refetch (on window focus) while the dialog is open would
+  // otherwise send the new stored value with a list built from the old one,
+  // and the stale-write check would pass.
+  const [openedValue, setOpenedValue] = useState(currentValue)
 
   // Each opening starts from what is stored, not from a cancelled edit. The
   // section opens this only once the stored value has loaded.
@@ -74,6 +79,7 @@ export const MailboxAllowlistModal = ({
     )
     setTouched(false)
     setIsConfirming(false)
+    setOpenedValue(currentValue)
     // `currentValue` is read at opening only: a refetch while the modal is
     // open must not wipe the admin's edit.
   }, [isOpen])
@@ -106,13 +112,13 @@ export const MailboxAllowlistModal = ({
     },
   })
 
-  const current = parseMailboxAllowlist(currentValue)
+  const current = parseMailboxAllowlist(openedValue)
   const entries = [...new Set(splitTypedNationalIds(nationalIds))]
   const invalid = invalidNationalIds(entries)
 
   const value =
     mode === 'all' ? '*' : mode === 'none' ? 'none' : entries.join(',')
-  const unchanged = value === normalizeMailboxAllowlist(currentValue)
+  const unchanged = value === normalizeMailboxAllowlist(openedValue)
 
   // Companies the mailbox opens to with this change: their held receipts go.
   const opensTo =
@@ -150,7 +156,7 @@ export const MailboxAllowlistModal = ({
     save.mutate({
       key: MAILBOX_ALLOWLIST_CONFIG_KEY,
       value,
-      expectedValue: currentValue,
+      expectedValue: openedValue,
     })
   }
 
