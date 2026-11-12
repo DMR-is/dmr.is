@@ -3,6 +3,7 @@ import { Sequelize } from 'sequelize-typescript'
 
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -111,6 +112,16 @@ export class ConfigService implements IConfigService {
 
       if (!current) {
         throw new NotFoundException(configMessages.notFound(key))
+      }
+
+      // Checked under the row lock: a page that read an older value must not
+      // write over a change made since (the allowlist is written whole, so a
+      // stale remove would re-add a company someone else just removed).
+      if (
+        dto.expectedValue !== undefined &&
+        dto.expectedValue !== current.value
+      ) {
+        throw new ConflictException(configMessages.changedSinceRead(key))
       }
 
       const value =

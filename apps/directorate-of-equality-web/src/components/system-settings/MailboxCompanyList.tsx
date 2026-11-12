@@ -17,7 +17,11 @@ import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query'
 
 const t = systemSettingsText.mailbox
 
-type Props = { nationalIds: string[] }
+type Props = {
+  nationalIds: string[]
+  /** The stored value the list was read from, sent as `expectedValue`. */
+  storedValue: string
+}
 
 /**
  * The named companies, by name and kennitala, each with its own remove.
@@ -26,7 +30,7 @@ type Props = { nationalIds: string[] }
  * which reaches every company; a kennitala not in the register shows as
  * unknown.
  */
-export const MailboxCompanyList = ({ nationalIds }: Props) => {
+export const MailboxCompanyList = ({ nationalIds, storedValue }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -64,9 +68,13 @@ export const MailboxCompanyList = ({ nationalIds }: Props) => {
 
   const removeId = (id: string) => {
     const rest = nationalIds.filter((other) => other !== id)
+    // Built from the list this page read, so the API refuses it if someone
+    // has changed the setting since (a stale remove would re-add a company
+    // they just removed).
     remove.mutate({
       key: MAILBOX_ALLOWLIST_CONFIG_KEY,
       value: rest.length ? rest.join(',') : 'none',
+      expectedValue: storedValue,
     })
   }
 

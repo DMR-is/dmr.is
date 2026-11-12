@@ -1534,6 +1534,7 @@ export const systemSettingsText = {
     checkError: 'Ekki tókst að prófa tenginguna',
     recentHeading: 'Nýlegar sendingar í pósthólf',
     recentNoData: 'Engar sendingar í pósthólf enn',
+    recentLoadError: 'Ekki tókst að sækja nýlegar sendingar',
     recentColumns: {
       kind: 'Tegund',
       company: 'Fyrirtæki',

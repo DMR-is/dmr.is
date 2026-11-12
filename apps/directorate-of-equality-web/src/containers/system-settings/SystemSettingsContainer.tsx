@@ -185,7 +185,7 @@ export const SystemSettingsContainer = () => {
                 size="small"
                 variant="utility"
                 colorScheme="white"
-                disabled={!allowlist.loaded}
+                disabled={!allowlist.loaded || allowlist.missing}
                 onClick={() => setIsAllowlistModalOpen(true)}
               >
                 {t.mailbox.editButton}

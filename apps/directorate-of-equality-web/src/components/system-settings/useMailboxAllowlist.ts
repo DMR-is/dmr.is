@@ -42,6 +42,11 @@ export const useMailboxAllowlist = () => {
     parsed: parseMailboxAllowlist(value),
     isPending,
     loaded: !!current || missing,
+    /**
+     * No active row. Reads as nobody, but cannot be saved: the API updates
+     * the active row and has none to update.
+     */
+    missing,
     history: history ?? [],
     status,
     /** The environment's switch could not be read. */

@@ -126,6 +126,9 @@ export const MAILBOX_DELIVERY_MAX_ATTEMPTS = 5
  */
 export const LOGIN_RETRY_AFTER_MS = 60_000
 
+/** How long a failed connection check is answered again without a Login. */
+export const CHECK_RETRY_AFTER_MS = 30_000
+
 /**
  * `last_error` is for a person reconciling the row. It may hold One's own
  * `ErrorMessage`, which can echo the recipient's details, so it is kept short.
@@ -253,6 +256,9 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
    * and one info line when it ends.
    */
   private loginFailure: { reason: string; retryAfter: number } | null = null
+
+  /** The last failed `checkConnection`, answered again within its window. */
+  private lastFailedCheck: { at: number; reason: string | null } | null = null
 
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
@@ -1001,6 +1007,16 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
   }
 
   async checkConnection(): Promise<{ ok: boolean; reason: string | null }> {
+    // A failed check is answered again for a while without a request:
+    // repeated clicks with a wrong password are the lockout risk the Login
+    // backoff exists to prevent.
+    if (
+      this.lastFailedCheck &&
+      Date.now() - this.lastFailedCheck.at < CHECK_RETRY_AFTER_MS
+    ) {
+      return { ok: false, reason: this.lastFailedCheck.reason }
+    }
+
     try {
       await this.oneSystems.checkLogin({ fresh: true })
     } catch (error) {
@@ -1009,10 +1025,9 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       }
       // Kept in step with the deliveries: the backoff and the outage log.
       const result = this.loginUnavailable(error)
-      return {
-        ok: false,
-        reason: result.status === 'UNAVAILABLE' ? result.reason : null,
-      }
+      const reason = result.status === 'UNAVAILABLE' ? result.reason : null
+      this.lastFailedCheck = { at: Date.now(), reason }
+      return { ok: false, reason }
     }
     if (this.loginFailure) {
       this.loginFailure = null

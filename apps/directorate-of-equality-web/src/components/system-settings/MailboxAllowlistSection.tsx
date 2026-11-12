@@ -67,7 +67,7 @@ type Props = {
 }
 
 export const MailboxAllowlistSection = ({ check }: Props) => {
-  const { parsed, isPending, loaded, history, status, statusFailed } =
+  const { value, parsed, isPending, loaded, history, status, statusFailed } =
     useMailboxAllowlist()
 
   const pastValues = history.filter((row) => !!row.supersededAt)
@@ -134,7 +134,10 @@ export const MailboxAllowlistSection = ({ check }: Props) => {
       )}
 
       {loaded && parsed.mode === 'list' && (
-        <MailboxCompanyList nationalIds={parsed.nationalIds} />
+        <MailboxCompanyList
+          nationalIds={parsed.nationalIds}
+          storedValue={value}
+        />
       )}
 
       <MailboxRecentDeliveries />

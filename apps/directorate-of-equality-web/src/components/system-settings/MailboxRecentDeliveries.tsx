@@ -1,6 +1,8 @@
 'use client'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
@@ -55,18 +57,25 @@ const COLUMNS: ColumnDef<RecentDeliveryDto>[] = [
 /** The latest letters that reached a mailbox, whatever the current setting. */
 export const MailboxRecentDeliveries = () => {
   const trpc = useTRPC()
-  const { data } = useQuery(trpc.noticeIssues.getRecent.queryOptions())
+  const { data, isError } = useQuery(trpc.noticeIssues.getRecent.queryOptions())
 
   return (
-    <Stack space={2}>
-      <Text variant="h5" fontWeight="semiBold">
-        {t.recentHeading}
-      </Text>
-      <Table
-        columns={COLUMNS}
-        data={data ?? []}
-        noDataMessage={t.recentNoData}
-      />
-    </Stack>
+    <Box background="white" borderRadius="large" padding={[3, 3, 4]}>
+      <Stack space={2}>
+        <Text variant="h4" fontWeight="semiBold">
+          {t.recentHeading}
+        </Text>
+        {isError ? (
+          // Not "no sends yet": that would be a false negative here.
+          <AlertMessage type="error" message={t.recentLoadError} />
+        ) : (
+          <Table
+            columns={COLUMNS}
+            data={data ?? []}
+            noDataMessage={t.recentNoData}
+          />
+        )}
+      </Stack>
+    </Box>
   )
 }

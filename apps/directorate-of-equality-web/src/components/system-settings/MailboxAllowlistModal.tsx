@@ -145,7 +145,13 @@ export const MailboxAllowlistModal = ({
       setIsConfirming(true)
       return
     }
-    save.mutate({ key: MAILBOX_ALLOWLIST_CONFIG_KEY, value })
+    // The value this page read: the API refuses the write if someone has
+    // changed it since.
+    save.mutate({
+      key: MAILBOX_ALLOWLIST_CONFIG_KEY,
+      value,
+      expectedValue: currentValue,
+    })
   }
 
   return (

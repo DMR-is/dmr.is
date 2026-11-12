@@ -30,6 +30,7 @@ import {
   resolveKindConfig,
 } from './mailbox-delivery.kinds'
 import {
+  CHECK_RETRY_AFTER_MS,
   LOGIN_RETRY_AFTER_MS,
   MAILBOX_DELIVERY_LEASE_MINUTES,
   MAILBOX_DELIVERY_MAX_ATTEMPTS,
@@ -2341,6 +2342,21 @@ describe('MailboxDeliveryService', () => {
           status: 'UNAVAILABLE',
         })
         expect(one.checkLogin).toHaveBeenCalledTimes(1)
+      })
+
+      it('answers a repeat failed check from the last one for a while', async () => {
+        one.checkLogin.mockRejectedValue(loginRefused())
+
+        await service.checkConnection()
+        await expect(service.checkConnection()).resolves.toEqual({
+          ok: false,
+          reason: 'Login HTTP 401',
+        })
+        expect(one.checkLogin).toHaveBeenCalledTimes(1)
+
+        clock += CHECK_RETRY_AFTER_MS + 1
+        await service.checkConnection()
+        expect(one.checkLogin).toHaveBeenCalledTimes(2)
       })
 
       it('ends the backoff when it succeeds', async () => {

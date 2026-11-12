@@ -33,6 +33,12 @@ export class UpdateConfigDto {
 
   @ApiOptionalString({ nullable: true })
   description?: string | null
+
+  @ApiOptionalString({
+    description:
+      "The value the caller read. When given, the update is refused (409) if the stored value has changed since, so a stale page cannot overwrite someone else's change.",
+  })
+  expectedValue?: string
 }
 
 /**

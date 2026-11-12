@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
@@ -92,6 +93,30 @@ describe('ConfigService', () => {
     expect(findOne).toHaveBeenCalledWith(
       expect.objectContaining({ lock: 'UPDATE', transaction: 'tx' }),
     )
+  })
+
+  it('refuses a write whose expectedValue no longer matches, without touching the active entry', async () => {
+    findOne.mockResolvedValue(currentEntry('3.9'))
+
+    await expect(
+      service.updateByKey(THRESHOLD_KEY, {
+        value: '3.5',
+        expectedValue: '4.0',
+      }),
+    ).rejects.toThrow(ConflictException)
+    expect(update).not.toHaveBeenCalled()
+    expect(create).not.toHaveBeenCalled()
+  })
+
+  it('writes when expectedValue matches the stored value', async () => {
+    findOne.mockResolvedValue(currentEntry('3.9'))
+
+    await service.updateByKey(THRESHOLD_KEY, {
+      value: '3.5',
+      expectedValue: '3.9',
+    })
+
+    expect(create).toHaveBeenCalled()
   })
 
   it('rejects raising the threshold without touching the active entry', async () => {

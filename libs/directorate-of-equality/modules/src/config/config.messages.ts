@@ -9,6 +9,11 @@ export const configMessages = {
     message: `Config entry with key "${key}" not found`,
     translatedMessage: 'Kerfisstilling fannst ekki',
   }),
+  changedSinceRead: (key: string): ErrorMessage => ({
+    message: `Config entry "${key}" changed since it was read; reload before saving`,
+    translatedMessage:
+      'Stillingunni var breytt á meðan. Endurhlaðið síðuna og reynið aftur.',
+  }),
   thresholdNotPositiveNumber: (value: string): ErrorMessage => ({
     message: `Salary difference threshold must be a positive number with at most two decimals, got "${value}"`,
     translatedMessage:

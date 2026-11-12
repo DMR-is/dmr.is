@@ -26,7 +26,11 @@ export const configRouter = router({
     .mutation(({ ctx, input }) =>
       ctx.api.updateConfigByKey({
         path: { key: input.key },
-        body: { value: input.value, description: input.description },
+        body: {
+          value: input.value,
+          description: input.description,
+          expectedValue: input.expectedValue,
+        },
       }),
     ),
 
