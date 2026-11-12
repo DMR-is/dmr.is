@@ -3545,6 +3545,57 @@
         "tags": ["Config"]
       }
     },
+    "/api/v1/config/environment/onesystems": {
+      "get": {
+        "operationId": "getOneSystemsStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OneSystemsStatusDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Config"]
+      }
+    },
     "/api/v1/config/{key}": {
       "get": {
         "operationId": "getConfigByKey",
@@ -8730,6 +8781,16 @@
           }
         },
         "required": ["id", "key", "value"]
+      },
+      "OneSystemsStatusDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "ONESYSTEMS_ENABLED is on for this environment. When off, no company gets mailbox notices whatever the allowlist says."
+          }
+        },
+        "required": ["enabled"]
       },
       "UpdateConfigDto": {
         "type": "object",

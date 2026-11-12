@@ -9,6 +9,10 @@ import { protectedProcedure, router } from '../trpc'
 export const configRouter = router({
   getAll: protectedProcedure.query(({ ctx }) => ctx.api.getAllConfig()),
 
+  getOneSystemsStatus: protectedProcedure.query(({ ctx }) =>
+    ctx.api.getOneSystemsStatus(),
+  ),
+
   getByKey: protectedProcedure
     .input(zGetConfigByKeyPath)
     .query(({ ctx, input }) =>

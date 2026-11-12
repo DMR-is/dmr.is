@@ -248,9 +248,7 @@ export const MailboxAllowlistModal = ({
             />
           )}
 
-          <Text variant="small">
-            {unchanged ? t.modal.unchanged : t.flagNote}
-          </Text>
+          {unchanged && <Text variant="small">{t.modal.unchanged}</Text>}
 
           <Inline justifyContent="flexEnd" space={2}>
             <Button

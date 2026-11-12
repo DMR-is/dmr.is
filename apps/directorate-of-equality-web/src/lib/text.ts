@@ -1515,16 +1515,20 @@ export const systemSettingsText = {
     description:
       'Fyrirtæki sem fá allar tilkynningar í pósthólf sitt á island.is í gegnum One. Önnur fyrirtæki fá tölvupóst og móttökukvittanir bíða.',
     loadError: 'Ekki tókst að sækja stillinguna. Reyndu aftur síðar.',
-    currentLabel: 'Í gildi',
+    currentLabel: 'Núverandi stilling',
+    flagOn: 'Sending í pósthólf virk',
+    flagOff: 'Sending í pósthólf óvirk',
+    flagOffNote:
+      'Á þessu umhverfi fara engar tilkynningar í pósthólf, hvað sem stillingin segir. Það ræðst af ONESYSTEMS_ENABLED í uppsetningu umhverfisins.',
+    historyHeading: 'Fyrri stillingar',
+    historyUntilLabel: 'Gilti til',
     modeNone: 'Engin fyrirtæki',
     modeAll: 'Öll fyrirtæki',
     modeList: 'Valin fyrirtæki',
     modeListCount: (n: number) =>
       n === 1 ? '1 valið fyrirtæki' : `${n} valin fyrirtæki`,
-    flagNote:
-      'Gildir aðeins þar sem sending í pósthólf er virkjuð fyrir umhverfið (ONESYSTEMS_ENABLED).',
     editButton: 'Breyta',
-    historyValueLabel: 'Gildi',
+    historyValueLabel: 'Stilling',
     modal: {
       title: 'Pósthólf á island.is',
       modeLabel: 'Hverjir fá tilkynningar í pósthólf?',
