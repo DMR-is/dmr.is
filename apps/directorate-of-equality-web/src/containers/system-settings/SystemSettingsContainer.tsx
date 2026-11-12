@@ -206,7 +206,10 @@ export const SystemSettingsContainer = () => {
                 size="small"
                 variant="utility"
                 colorScheme="white"
-                disabled={activeTab !== 'postholf'}
+                // Only where the environment sends to mailboxes at all.
+                disabled={
+                  activeTab !== 'postholf' || !allowlist.status?.enabled
+                }
                 loading={checkOneSystems.isPending}
                 onClick={() => checkOneSystems.mutate()}
               >
