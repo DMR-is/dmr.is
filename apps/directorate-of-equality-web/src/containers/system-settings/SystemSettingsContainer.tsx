@@ -71,11 +71,24 @@ type SettingsTab = (typeof SETTINGS_TABS)[number]
  */
 export const SystemSettingsContainer = () => {
   const trpc = useTRPC()
-  // In the URL (`?tab=postholf`), so a link can open a tab directly.
-  const [activeTab, setActiveTab] = useQueryState(
+  // The URL (`?tab=postholf`) gives the starting tab and is kept up to date,
+  // but the tab itself is plain state. island-ui's Tabs reads `selected` once
+  // and reports focus moves through an effect; feeding that straight into the
+  // asynchronously updated URL state made the two disagree for a render and
+  // flip back and forth. A repeat for the tab already open is ignored.
+  const [urlTab, setUrlTab] = useQueryState(
     'tab',
     parseAsStringLiteral(SETTINGS_TABS).withDefault('launamunur'),
   )
+  const [activeTab, setActiveTab] = useState<SettingsTab>(urlTab)
+  const changeTab = (id: string) => {
+    const next = (SETTINGS_TABS as readonly string[]).includes(id)
+      ? (id as SettingsTab)
+      : 'launamunur'
+    if (next === activeTab) return
+    setActiveTab(next)
+    void setUrlTab(next)
+  }
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAllowlistModalOpen, setIsAllowlistModalOpen] = useState(false)
   const allowlist = useMailboxAllowlist()
@@ -211,7 +224,7 @@ export const SystemSettingsContainer = () => {
               contentBackground="blue100"
               size="sm"
               onlyRenderSelectedTab
-              onChange={(id) => setActiveTab(id as SettingsTab)}
+              onChange={changeTab}
               tabs={[
                 {
                   id: 'launamunur',
