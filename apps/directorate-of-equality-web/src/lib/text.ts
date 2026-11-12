@@ -1470,6 +1470,8 @@ export const systemSettingsText = {
     'Hér má sjá stillingar sem gilda fyrir allt kerfið. Breytingar á þeim hafa áhrif á allar skýrslur sem eru reiknaðar eftir að breytingin er vistuð.',
   heroImageAlt: 'Kerfisstillingar',
   actionsHeading: 'Aðgerðir',
+  tabSalary: 'Leyfilegur launamunur',
+  tabMailbox: 'Pósthólf á island.is',
   thresholdHeading: 'Leyfilegur launamunur',
   thresholdLabel: 'Hámark á launamun karla og kvenna',
   // ⚠️ Rewritten when the ±band was retired. This used to read "sjálfvirka

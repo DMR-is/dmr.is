@@ -1,11 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-
-import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
-import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
@@ -14,12 +10,11 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import { type ConfigDto } from '../../gen/fetch/types.gen'
-import { formatDateIS, MAILBOX_ALLOWLIST_CONFIG_KEY } from '../../lib/constants'
+import { formatDateIS } from '../../lib/constants'
 import { systemSettingsText } from '../../lib/text'
-import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
 import { parseMailboxAllowlist } from './mailboxAllowlist'
-import { MailboxAllowlistModal } from './MailboxAllowlistModal'
+import { useMailboxAllowlist } from './useMailboxAllowlist'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
@@ -54,38 +49,14 @@ const HISTORY_COLUMNS: ColumnDef<ConfigDto>[] = [
 /**
  * Who gets notices in their island.is mailbox, and whether this environment
  * sends to mailboxes at all (`ONESYSTEMS_ENABLED`, read from the API so the
- * tag shows what the dispatcher acts on).
- *
- * Read with `useQuery`, not suspense, so a failure here leaves the rest of the
- * page usable. A missing row (404) reads as nobody, as it does in the API; any
- * other failure says so rather than showing "nobody" for a value it never
- * read, and the edit stays closed until the value has loaded.
+ * tag shows what the dispatcher acts on). The Breyta action lives in the
+ * page's Aðgerðir sidebar while this tab is open.
  */
 export const MailboxAllowlistSection = () => {
-  const trpc = useTRPC()
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { value, parsed, isPending, loaded, history, status } =
+    useMailboxAllowlist()
 
-  const {
-    data: current,
-    isPending,
-    error,
-  } = useQuery(
-    trpc.config.getByKey.queryOptions({ key: MAILBOX_ALLOWLIST_CONFIG_KEY }),
-  )
-  const { data: history } = useQuery(
-    trpc.config.getHistoryByKey.queryOptions({
-      key: MAILBOX_ALLOWLIST_CONFIG_KEY,
-    }),
-  )
-  const { data: status } = useQuery(
-    trpc.config.getOneSystemsStatus.queryOptions(),
-  )
-
-  const missing = error?.data?.httpStatus === 404
-  const loaded = !!current || missing
-  const value = current?.value ?? 'none'
-  const parsed = parseMailboxAllowlist(value)
-  const pastValues = (history ?? []).filter((row) => !!row.supersededAt)
+  const pastValues = history.filter((row) => !!row.supersededAt)
 
   // What actually happens on this environment: the flag first, since off
   // means email for everyone whatever the setting says.
@@ -104,27 +75,15 @@ export const MailboxAllowlistSection = () => {
   return (
     <Box background="white" borderRadius="large" padding={[3, 3, 4]}>
       <Stack space={2}>
-        <Inline justifyContent="spaceBetween" alignY="center">
-          <Inline space={2} alignY="center">
-            <Text variant="h4" fontWeight="semiBold">
-              {t.heading}
-            </Text>
-            {status && (
-              <Tag variant={status.enabled ? 'mint' : 'red'} disabled>
-                {status.enabled ? t.flagOn : t.flagOff}
-              </Tag>
-            )}
-          </Inline>
-          <Button
-            size="small"
-            variant="utility"
-            icon="pencil"
-            iconType="outline"
-            disabled={!loaded}
-            onClick={() => setIsModalOpen(true)}
-          >
-            {t.editButton}
-          </Button>
+        <Inline space={2} alignY="center">
+          <Text variant="h4" fontWeight="semiBold">
+            {t.heading}
+          </Text>
+          {status && (
+            <Tag variant={status.enabled ? 'mint' : 'red'} disabled>
+              {status.enabled ? t.flagOn : t.flagOff}
+            </Tag>
+          )}
         </Inline>
         <Text variant="small">{description}</Text>
 
@@ -155,12 +114,6 @@ export const MailboxAllowlistSection = () => {
           </Stack>
         )}
       </Stack>
-
-      <MailboxAllowlistModal
-        currentValue={value}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
     </Box>
   )
 }
