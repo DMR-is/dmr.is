@@ -178,7 +178,14 @@ export const SystemSettingsContainer = () => {
                 {t.mailbox.editButton}
               </Button>
             )}
-            {activeTab === 'postholf' && (
+            {/* Always rendered, hidden on Launamunur, so the sidebar keeps
+                its height and the page does not jump between tabs. */}
+            <Box
+              aria-hidden={activeTab !== 'postholf'}
+              style={{
+                visibility: activeTab === 'postholf' ? 'visible' : 'hidden',
+              }}
+            >
               <Button
                 icon="reload"
                 iconType="outline"
@@ -186,12 +193,13 @@ export const SystemSettingsContainer = () => {
                 size="small"
                 variant="utility"
                 colorScheme="white"
+                disabled={activeTab !== 'postholf'}
                 loading={checkOneSystems.isPending}
                 onClick={() => checkOneSystems.mutate()}
               >
                 {t.mailbox.checkButton}
               </Button>
-            )}
+            </Box>
           </Stack>
         </GridColumn>
 
