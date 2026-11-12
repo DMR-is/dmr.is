@@ -13,6 +13,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import { LowerSalaryThresholdModal } from '../../components/system-settings/LowerSalaryThresholdModal'
+import { MailboxAllowlistSection } from '../../components/system-settings/MailboxAllowlistSection'
 import { type ConfigDto } from '../../gen/fetch/types.gen'
 import {
   formatDateIS,
@@ -49,8 +50,8 @@ const HISTORY_COLUMNS: ColumnDef<ConfigDto>[] = [
 ]
 
 /**
- * System-wide settings, currently the single knob the directorate owns: the
- * allowed base-salary difference between men and women.
+ * System-wide settings: the allowed base-salary difference between men and
+ * women, and who gets notices in their island.is mailbox.
  *
  * Config entries are append-only — an update supersedes the active row rather
  * than overwriting it — so the change log below is simply the key's own history,
@@ -132,6 +133,8 @@ export const SystemSettingsContainer = () => {
                   noDataMessage={t.historyNoData}
                 />
               </Stack>
+
+              <MailboxAllowlistSection />
             </Stack>
           </Box>
         </GridColumn>

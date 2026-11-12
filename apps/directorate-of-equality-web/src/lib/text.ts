@@ -1510,6 +1510,35 @@ export const systemSettingsText = {
     saveSuccess: 'Hlutfallið hefur verið lækkað',
     saveError: 'Villa við vistun hlutfalls',
   },
+  mailbox: {
+    heading: 'Pósthólf á island.is',
+    description:
+      'Fyrirtæki sem fá tilkynningar (móttökukvittanir, samþykktir, synjanir og áminningar) í pósthólf sitt á island.is í gegnum One. Önnur fyrirtæki fá tölvupóst og móttökukvittanir bíða.',
+    currentLabel: 'Í gildi',
+    modeNone: 'Engin fyrirtæki',
+    modeAll: 'Öll fyrirtæki',
+    modeList: 'Valin fyrirtæki',
+    modeListCount: (n: number) =>
+      n === 1 ? '1 valið fyrirtæki' : `${n} valin fyrirtæki`,
+    flagNote:
+      'Gildir aðeins þar sem sending í pósthólf er virkjuð fyrir umhverfið (ONESYSTEMS_ENABLED).',
+    editButton: 'Breyta',
+    historyValueLabel: 'Gildi',
+    modal: {
+      title: 'Pósthólf á island.is',
+      modeLabel: 'Hverjir fá tilkynningar í pósthólf?',
+      nationalIdsLabel: 'Kennitölur',
+      nationalIdsPlaceholder: 'Ein eða fleiri kennitölur, aðskildar með kommu',
+      nationalIdsInvalid: (values: string) => `Ekki gild kennitala: ${values}`,
+      nationalIdsEmpty: 'Sláðu inn að minnsta kosti eina kennitölu',
+      allWarningTitle: 'Öll fyrirtæki fá bréf í pósthólf',
+      allWarningMessage:
+        'Allar tilkynningar sem bíða, og allar nýjar, fara í pósthólf fyrirtækjanna á island.is. Á prófunarumhverfi fara þær í raunveruleg pósthólf, því það tengist One í rekstri.',
+      save: 'Vista',
+      saveSuccess: 'Stillingin hefur verið vistuð',
+      saveError: 'Villa við vistun stillingar',
+    },
+  },
 }
 
 export const loginText = {
