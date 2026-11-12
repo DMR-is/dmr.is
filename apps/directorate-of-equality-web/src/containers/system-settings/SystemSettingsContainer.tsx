@@ -1,5 +1,6 @@
 'use client'
 
+import { parseAsStringLiteral, useQueryState } from 'nuqs'
 import { useState } from 'react'
 
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -52,7 +53,8 @@ const HISTORY_COLUMNS: ColumnDef<ConfigDto>[] = [
   },
 ]
 
-type SettingsTab = 'launamunur' | 'postholf'
+const SETTINGS_TABS = ['launamunur', 'postholf'] as const
+type SettingsTab = (typeof SETTINGS_TABS)[number]
 
 /**
  * System-wide settings, one tab each: the allowed base-salary difference
@@ -65,7 +67,11 @@ type SettingsTab = 'launamunur' | 'postholf'
  */
 export const SystemSettingsContainer = () => {
   const trpc = useTRPC()
-  const [activeTab, setActiveTab] = useState<SettingsTab>('launamunur')
+  // In the URL (`?tab=postholf`), so a link can open a tab directly.
+  const [activeTab, setActiveTab] = useQueryState(
+    'tab',
+    parseAsStringLiteral(SETTINGS_TABS).withDefault('launamunur'),
+  )
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAllowlistModalOpen, setIsAllowlistModalOpen] = useState(false)
   const allowlist = useMailboxAllowlist()

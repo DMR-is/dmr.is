@@ -53,11 +53,16 @@ const HISTORY_COLUMNS: ColumnDef<ConfigDto>[] = [
  * sidebar while this tab is open.
  */
 export const MailboxAllowlistSection = () => {
-  const { parsed, isPending, loaded, history, status } = useMailboxAllowlist()
+  const { parsed, isPending, loaded, history, status, statusFailed } =
+    useMailboxAllowlist()
 
   const pastValues = history.filter((row) => !!row.supersededAt)
 
   const alert = (() => {
+    // Either read failing leaves the state unknown: say so, never "nobody".
+    if (statusFailed || (!isPending && !loaded)) {
+      return { type: 'error' as const, title: t.loadError, message: '' }
+    }
     if (isPending || !status) return null
     if (!status.enabled) {
       return {
@@ -65,9 +70,6 @@ export const MailboxAllowlistSection = () => {
         title: t.titleFlagOff,
         message: t.descriptionFlagOff,
       }
-    }
-    if (!loaded) {
-      return { type: 'error' as const, title: t.loadError, message: '' }
     }
     if (parsed.mode === 'all') {
       return {

@@ -30,7 +30,7 @@ export const useMailboxAllowlist = () => {
       key: MAILBOX_ALLOWLIST_CONFIG_KEY,
     }),
   )
-  const { data: status } = useQuery(
+  const { data: status, isError: statusFailed } = useQuery(
     trpc.config.getOneSystemsStatus.queryOptions(),
   )
 
@@ -44,5 +44,7 @@ export const useMailboxAllowlist = () => {
     loaded: !!current || missing,
     history: history ?? [],
     status,
+    /** The environment's switch could not be read. */
+    statusFailed,
   }
 }
