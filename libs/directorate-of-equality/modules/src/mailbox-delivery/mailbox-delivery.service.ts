@@ -54,6 +54,7 @@ import {
   isMailboxDeliveryEnabled,
   type MailboxDeliveryState,
   type MailboxDeliveryUnsettledStatus,
+  type SettleUncertainRead,
   type StuckMailboxDelivery,
   type StuckMailboxDeliveryReason,
 } from './mailbox-delivery.service.interface'
@@ -405,26 +406,84 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       return null
     }
 
-    // On this process's clock, not Postgres's as the claim uses: close enough
-    // for a caller deciding whether to wait, and a lease is minutes long.
-    const leaseLive = Boolean(
-      row.leaseExpiresAt && row.leaseExpiresAt.getTime() > Date.now(),
-    )
-    const unsettled = !SETTLED_STATUSES.includes(row.status)
-
     return {
       deliveryId: row.id,
       status: row.status,
       documentFiled: Boolean(row.oneDocumentItemId),
       sent: Boolean(row.sentAt),
-      interrupted: unsettled && Boolean(row.inFlightStep) && !leaseLive,
-      inProgress: unsettled && leaseLive,
-      exhausted:
-        unsettled &&
-        !row.inFlightStep &&
-        !leaseLive &&
-        row.attempts >= MAILBOX_DELIVERY_MAX_ATTEMPTS,
+      ...classifyDelivery(row),
     }
+  }
+
+  async rearmExhausted(
+    id: string,
+    readStatus: MailboxDeliveryStatusEnum,
+    note: string,
+  ): Promise<boolean> {
+    const [count] = await this.deliveryModel.update(
+      { attempts: 0, lastError: note },
+      {
+        where: {
+          [Op.and]: [
+            { id, status: readStatus },
+            STUCK_WHERE.ATTEMPTS_EXHAUSTED,
+          ],
+        },
+        transaction: null,
+      },
+    )
+    return count > 0
+  }
+
+  async settleUncertain(
+    id: string,
+    read: SettleUncertainRead,
+    outcome: 'SENT' | 'NOT_SENT',
+    documentItemId: string | null,
+    note: string,
+  ): Promise<boolean> {
+    // Matched on every column the decision rests on, as the README's SQL
+    // does: a late reply can save a document id or `sent_at` into an
+    // UNCERTAIN row without changing its status, and writing over either
+    // would lose what One returned (a second document filed) or break the
+    // sent CHECK. No live lease, on Postgres's clock as every claim is.
+    const where = {
+      [Op.and]: [
+        {
+          id,
+          status: read.status,
+          inFlightStep: read.inFlightStep,
+          oneDocumentItemId: read.oneDocumentItemId,
+          sentAt: read.sentAt,
+        },
+        { [Op.or]: LEASE_FREE },
+      ],
+    }
+    const values =
+      outcome === 'SENT'
+        ? {
+            status: MailboxDeliveryStatusEnum.SENT,
+            oneDocumentItemId: documentItemId,
+            sentAt: read.sentAt ?? new Date(),
+            inFlightStep: null,
+            leaseToken: null,
+            leaseExpiresAt: null,
+            lastError: `${note}: sent`,
+          }
+        : {
+            status: MailboxDeliveryStatusEnum.FAILED,
+            oneDocumentItemId: documentItemId,
+            attempts: 0,
+            inFlightStep: null,
+            leaseToken: null,
+            leaseExpiresAt: null,
+            lastError: `${note}: ${documentItemId ? 'filed, not sent' : 'not sent'}`,
+          }
+    const [count] = await this.deliveryModel.update(values, {
+      where,
+      transaction: null,
+    })
+    return count > 0
   }
 
   async mailboxAllowlist(): Promise<MailboxAllowlist> {
@@ -466,12 +525,14 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     )
   }
 
-  async countStuckDeliveries(): Promise<
-    Record<StuckMailboxDeliveryReason, number>
-  > {
+  async countStuckDeliveries(
+    kinds?: MailboxDeliveryKindEnum[],
+  ): Promise<Record<StuckMailboxDeliveryReason, number>> {
     const count = (reason: StuckMailboxDeliveryReason) =>
       this.deliveryModel.count({
-        where: STUCK_WHERE[reason],
+        where: kinds
+          ? { [Op.and]: [STUCK_WHERE[reason], { kind: kinds }] }
+          : STUCK_WHERE[reason],
         transaction: null,
       })
     // One after another: each takes its own pool connection.
@@ -1327,6 +1388,36 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         },
       )
     }
+  }
+}
+
+/**
+ * Where a delivery stands, from its own columns: the one rule `findDelivery`
+ * and the admin page use, so they cannot classify a row differently. On this
+ * process's clock, not Postgres's as the claim uses: close enough for a
+ * caller deciding whether to wait or offer an action, and a lease is minutes
+ * long. The writes that act on it (`rearmExhausted`, `settleUncertain`)
+ * re-check on Postgres's clock.
+ */
+export function classifyDelivery(
+  row: Pick<
+    MailboxDeliveryModel,
+    'status' | 'inFlightStep' | 'leaseExpiresAt' | 'attempts'
+  >,
+  now: number = Date.now(),
+): { interrupted: boolean; inProgress: boolean; exhausted: boolean } {
+  const leaseLive = Boolean(
+    row.leaseExpiresAt && row.leaseExpiresAt.getTime() > now,
+  )
+  const unsettled = !SETTLED_STATUSES.includes(row.status)
+  return {
+    interrupted: unsettled && Boolean(row.inFlightStep) && !leaseLive,
+    inProgress: unsettled && leaseLive,
+    exhausted:
+      unsettled &&
+      !row.inFlightStep &&
+      !leaseLive &&
+      row.attempts >= MAILBOX_DELIVERY_MAX_ATTEMPTS,
   }
 }
 

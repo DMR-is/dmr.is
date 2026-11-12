@@ -197,7 +197,11 @@ The admin web's **Tilkynningar** page (`/tilkynningar`, ADMIN-only, backed by
 without SQL: **Reyna aftur** re-arms an exhausted delivery and re-drives its
 FAILED notice; **Staðfesta stöðu** reconciles an UNCERTAIN or interrupted
 delivery as sent or not sent after a person has checked One. Each leaves who
-did it in `last_error`. They follow the SQL below, guarded the same way
+did it in `last_error`. The failed list has no time window, unlike the daily alert's last week: a
+failed notice stays on it until someone acts. Exhausted **reminder** deliveries
+are listed but have no button: re-arming one sends nothing unless the company
+is still in the tier's band with the same due date ([Exhausted rows](#exhausted-rows)),
+so they still go through the SQL below. They follow the SQL below, guarded the same way
 (status, marker, saved document id and `sent_at` as read, and no live lease on
 Postgres's clock), with two differences: an interrupted row is settled
 directly rather than first marked UNCERTAIN, and a row reconciled as sent with

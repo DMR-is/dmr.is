@@ -9,12 +9,16 @@ import {
   ApiNumber,
   ApiOptionalDateTime,
   ApiOptionalDto,
+  ApiOptionalEnum,
   ApiOptionalString,
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
 
-import { MailboxDeliveryKindEnum } from '../../mailbox-delivery/models/mailbox-delivery.enums'
+import {
+  MailboxDeliveryKindEnum,
+  MailboxDeliveryStepEnum,
+} from '../../mailbox-delivery/models/mailbox-delivery.enums'
 import {
   NoticeOutboxKindEnum,
   NoticeOutboxStatusEnum,
@@ -54,6 +58,14 @@ export class NoticeIssueDeliveryDto {
     description: 'A worker holds a live lease and may be calling One now.',
   })
   inProgress!: boolean
+
+  @ApiOptionalEnum(MailboxDeliveryStepEnum, {
+    enumName: 'MailboxDeliveryStepEnum',
+    nullable: true,
+    description:
+      'For a delivery that needs reconciling, the call in doubt: CREATE_DOCUMENT (look in One for a document under the case) or SEND_DOC_TO_ISLAND_IS (check whether that document reached the mailbox).',
+  })
+  uncertainStep!: MailboxDeliveryStepEnum | null
 
   @ApiOptionalString({
     nullable: true,
@@ -141,17 +153,31 @@ export class NoticeIssuesDto {
   })
   failed!: NoticeIssueDto[]
 
+  @ApiNumber({ description: 'All FAILED notices; `failed` holds at most 100.' })
+  failedTotal!: number
+
   @ApiDtoArray(NoticeIssueDto, {
     description:
       'Notices still PENDING past the overdue limit: held, for the reason in lastError. They go by themselves once the cause is fixed.',
   })
   overdue!: NoticeIssueDto[]
 
+  @ApiNumber({
+    description: 'All overdue notices; `overdue` holds at most 100.',
+  })
+  overdueTotal!: number
+
   @ApiDtoArray(ReminderDeliveryIssueDto, {
     description:
       'Deadline reminder deliveries that stopped: uncertain, interrupted or out of attempts.',
   })
   reminders!: ReminderDeliveryIssueDto[]
+
+  @ApiNumber({
+    description:
+      'All stopped reminder deliveries; `reminders` holds at most 100.',
+  })
+  remindersTotal!: number
 }
 
 export const RECONCILE_OUTCOMES = ['SENT', 'NOT_SENT'] as const
