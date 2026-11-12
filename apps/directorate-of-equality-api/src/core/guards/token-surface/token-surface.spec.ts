@@ -74,6 +74,22 @@ describe('assertCompanyToken', () => {
     expect(company({ scope: [MY_PAGES_SCOPE] })).toThrow(ForbiddenException)
   })
 
+  // Pins the string island.is gave the scope; a typo here would refuse every
+  // My Pages call.
+  it("holds My Pages' scope as island.is named it", () => {
+    expect(MY_PAGES_SCOPE).toBe('@island.is/directorate-of-equality/reports')
+  })
+
+  // One segment short of My Pages' scope, and not another name for it.
+  it('refuses the bare @island.is/directorate-of-equality scope', () => {
+    expect(
+      company(
+        { scope: ['@island.is/directorate-of-equality'] },
+        COMPANY_READ_TOKEN_SCOPES,
+      ),
+    ).toThrow(ForbiddenException)
+  })
+
   it('accepts a My Pages token on the read list', () => {
     expect(
       company({ scope: [MY_PAGES_SCOPE] }, COMPANY_READ_TOKEN_SCOPES),
