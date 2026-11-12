@@ -13,6 +13,7 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { type NoticeIssueDeliveryDto } from '../../gen/fetch/types.gen'
+import { formatDateIS } from '../../lib/constants'
 import { noticeIssuesText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
@@ -59,6 +60,9 @@ export const ReconcileDeliveryModal = ({ delivery, onClose }: Props) => {
   if (!delivery) return null
 
   const savedDocumentId = delivery.oneDocumentItemId ?? null
+  // One confirmed the send after the row went uncertain: it was sent, and the
+  // API refuses NOT_SENT.
+  const sentAt = delivery.sentAt ?? null
   const typedId = documentItemId.trim()
 
   const submit = (outcome: 'SENT' | 'NOT_SENT') => {
@@ -98,6 +102,16 @@ export const ReconcileDeliveryModal = ({ delivery, onClose }: Props) => {
           <Text>{delivery.oneCaseNumber ?? t.unknown}</Text>
         </Box>
 
+        {sentAt && (
+          <Box>
+            <Text variant="eyebrow" color="blue400">
+              {t.sentAtLabel}
+            </Text>
+            <Text>{formatDateIS(sentAt)}</Text>
+            <Text variant="small">{t.sentConfirmedNote}</Text>
+          </Box>
+        )}
+
         {savedDocumentId ? (
           <Box>
             <Text variant="eyebrow" color="blue400">
@@ -135,6 +149,7 @@ export const ReconcileDeliveryModal = ({ delivery, onClose }: Props) => {
             variant="ghost"
             size="small"
             loading={reconcile.isPending}
+            disabled={!!sentAt}
             onClick={() => submit('NOT_SENT')}
           >
             {t.notSentButton}

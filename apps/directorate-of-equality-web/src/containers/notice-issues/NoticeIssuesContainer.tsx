@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -92,6 +92,8 @@ export const NoticeIssuesContainer = () => {
     },
   })
 
+  const pendingRetryId = retry.isPending ? retry.variables?.id : undefined
+
   const noticeColumns = (withAction: boolean): ColumnDef<NoticeIssueDto>[] => [
     {
       accessorKey: 'kind',
@@ -158,9 +160,10 @@ export const NoticeIssuesContainer = () => {
                 <Button
                   size="small"
                   variant="text"
-                  loading={
-                    retry.isPending && retry.variables?.id === row.original.id
-                  }
+                  loading={pendingRetryId === row.original.id}
+                  // One retry at a time: a second click would make the first
+                  // row's button clickable again while its request runs.
+                  disabled={!!pendingRetryId}
                   onClick={() => retry.mutate({ id: row.original.id })}
                 >
                   {t.retryButton}
@@ -172,57 +175,65 @@ export const NoticeIssuesContainer = () => {
       : []),
   ]
 
-  const reminderColumns: ColumnDef<ReminderDeliveryIssueDto>[] = [
-    {
-      id: 'kind',
-      header: t.columns.kind,
-      enableSorting: false,
-      cell: ({ row }) =>
-        t.kindLabels[row.original.delivery.kind] ?? row.original.delivery.kind,
-    },
-    {
-      accessorKey: 'companyName',
-      header: t.columns.company,
-      enableSorting: false,
-      cell: ({ row }) => row.original.companyName ?? '',
-    },
-    {
-      id: 'date',
-      header: t.columns.date,
-      enableSorting: false,
-      cell: ({ row }) =>
-        row.original.delivery.lastAttemptAt
-          ? formatDateIS(row.original.delivery.lastAttemptAt)
-          : '',
-    },
-    {
-      id: 'mailbox',
-      header: t.columns.mailbox,
-      enableSorting: false,
-      cell: ({ row }) => deliveryLabel(row.original.delivery),
-    },
-    {
-      id: 'action',
-      header: t.columns.action,
-      enableSorting: false,
-      cell: ({ row }) => {
-        const delivery = row.original.delivery
-        if (delivery.inProgress) return t.inProgressNote
-        if (delivery.needsReconciling) {
-          return (
-            <Button
-              size="small"
-              variant="text"
-              onClick={() => setReconciling(delivery)}
-            >
-              {t.reconcileButton}
-            </Button>
-          )
-        }
-        return t.reminderExhaustedNote
+  // Rebuilt only when a retry starts or ends, not on every render.
+  const failedColumns = useMemo(() => noticeColumns(true), [pendingRetryId])
+  const overdueColumns = useMemo(() => noticeColumns(false), [])
+
+  const reminderColumns = useMemo<ColumnDef<ReminderDeliveryIssueDto>[]>(
+    () => [
+      {
+        id: 'kind',
+        header: t.columns.kind,
+        enableSorting: false,
+        cell: ({ row }) =>
+          t.kindLabels[row.original.delivery.kind] ??
+          row.original.delivery.kind,
       },
-    },
-  ]
+      {
+        accessorKey: 'companyName',
+        header: t.columns.company,
+        enableSorting: false,
+        cell: ({ row }) => row.original.companyName ?? '',
+      },
+      {
+        id: 'date',
+        header: t.columns.date,
+        enableSorting: false,
+        cell: ({ row }) =>
+          row.original.delivery.lastAttemptAt
+            ? formatDateIS(row.original.delivery.lastAttemptAt)
+            : '',
+      },
+      {
+        id: 'mailbox',
+        header: t.columns.mailbox,
+        enableSorting: false,
+        cell: ({ row }) => deliveryLabel(row.original.delivery),
+      },
+      {
+        id: 'action',
+        header: t.columns.action,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const delivery = row.original.delivery
+          if (delivery.inProgress) return t.inProgressNote
+          if (delivery.needsReconciling) {
+            return (
+              <Button
+                size="small"
+                variant="text"
+                onClick={() => setReconciling(delivery)}
+              >
+                {t.reconcileButton}
+              </Button>
+            )
+          }
+          return t.reminderExhaustedNote
+        },
+      },
+    ],
+    [],
+  )
 
   return (
     <GridContainer>
@@ -234,7 +245,7 @@ export const NoticeIssuesContainer = () => {
               description={t.failedDescription}
             >
               <Table
-                columns={noticeColumns(true)}
+                columns={failedColumns}
                 data={data.failed}
                 noDataMessage={t.failedNoData}
               />
@@ -244,7 +255,7 @@ export const NoticeIssuesContainer = () => {
               description={t.overdueDescription}
             >
               <Table
-                columns={noticeColumns(false)}
+                columns={overdueColumns}
                 data={data.overdue}
                 noDataMessage={t.overdueNoData}
               />

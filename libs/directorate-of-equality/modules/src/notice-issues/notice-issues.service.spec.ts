@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { literal, Op } from 'sequelize'
 
 import {
   BadRequestException,
@@ -31,6 +31,14 @@ const DENIED_KEY = buildMailboxDeliveryIdempotencyKey({
   companyId: COMPANY_ID,
   discriminator: REPORT_ID,
 })
+
+/** No live lease, on Postgres's clock. */
+const LEASE_FREE = {
+  [Op.or]: [
+    { leaseExpiresAt: null },
+    { leaseExpiresAt: { [Op.lt]: literal('CURRENT_TIMESTAMP') } },
+  ],
+}
 
 const notice = (overrides: Record<string, unknown> = {}) => ({
   id: NOTICE_ID,
@@ -200,6 +208,12 @@ describe('NoticeIssuesService', () => {
 
       const issues = await service.getIssues()
 
+      // Filtered in the query, so stuck notice deliveries cannot use up the
+      // limit and hide every reminder.
+      expect(mailbox.findStuckDeliveries).toHaveBeenCalledWith(100, [
+        MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
+        MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,
+      ])
       expect(deliveries.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
@@ -226,6 +240,20 @@ describe('NoticeIssuesService', () => {
 
       await expect(service.retryNotice(NOTICE_ID, ACTOR)).rejects.toThrow(
         NotFoundException,
+      )
+    })
+
+    it('tells the admin why in Icelandic', async () => {
+      deliveries.findAll.mockResolvedValueOnce([
+        delivery({ status: MailboxDeliveryStatusEnum.UNCERTAIN }),
+      ])
+
+      await expect(service.retryNotice(NOTICE_ID, ACTOR)).rejects.toMatchObject(
+        {
+          response: {
+            translatedMessage: expect.stringContaining('Staðfestið stöðuna'),
+          },
+        },
       )
     })
 
@@ -273,6 +301,7 @@ describe('NoticeIssuesService', () => {
             status: MailboxDeliveryStatusEnum.FAILED,
             inFlightStep: null,
             attempts: { [Op.gte]: MAILBOX_DELIVERY_MAX_ATTEMPTS },
+            ...LEASE_FREE,
           },
           transaction: null,
         },
@@ -373,6 +402,10 @@ describe('NoticeIssuesService', () => {
             id: DELIVERY_ID,
             status: MailboxDeliveryStatusEnum.UNCERTAIN,
             inFlightStep: null,
+            // A late reply saving either would make the write miss.
+            oneDocumentItemId: null,
+            sentAt: null,
+            ...LEASE_FREE,
           },
           transaction: null,
         },
@@ -451,6 +484,9 @@ describe('NoticeIssuesService', () => {
             id: DELIVERY_ID,
             status: MailboxDeliveryStatusEnum.CASE_CREATED,
             inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+            oneDocumentItemId: null,
+            sentAt: null,
+            ...LEASE_FREE,
           },
           transaction: null,
         },

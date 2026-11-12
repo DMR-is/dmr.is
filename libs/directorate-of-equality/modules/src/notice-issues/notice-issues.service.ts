@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { literal, Op } from 'sequelize'
 
 import {
   BadRequestException,
@@ -36,6 +36,7 @@ import {
   ReconcileDeliveryDto,
   ReminderDeliveryIssueDto,
 } from './dto/notice-issues.dto'
+import { noticeIssuesMessages } from './notice-issues.messages'
 import {
   INoticeIssuesService,
   NoticeIssueActor,
@@ -45,6 +46,18 @@ const LOGGING_CONTEXT = 'NoticeIssuesService'
 
 /** Rows of each list. A page of more than this means something larger is wrong. */
 const LIST_LIMIT = 100
+
+/**
+ * No live lease, on Postgres's clock as the delivery service compares leases
+ * (`mailbox-delivery.service.ts`), so a worker's call still under way on
+ * another container is never cleared by a skewed app clock.
+ */
+const LEASE_FREE = {
+  [Op.or]: [
+    { leaseExpiresAt: null },
+    { leaseExpiresAt: { [Op.lt]: literal('CURRENT_TIMESTAMP') } },
+  ],
+}
 
 const REMINDER_KINDS = [
   MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
@@ -89,8 +102,10 @@ export class NoticeIssuesService implements INoticeIssuesService {
         })
       : []
 
-    const stuck =
-      await this.mailboxDeliveryService.findStuckDeliveries(LIST_LIMIT)
+    const stuck = await this.mailboxDeliveryService.findStuckDeliveries(
+      LIST_LIMIT,
+      REMINDER_KINDS,
+    )
     const reminderRows = stuck.length
       ? await this.deliveryModel.findAll({
           where: {
@@ -143,11 +158,11 @@ export class NoticeIssuesService implements INoticeIssuesService {
   async retryNotice(noticeId: string, actor: NoticeIssueActor): Promise<void> {
     const notice = await this.noticeModel.findByPk(noticeId)
     if (!notice) {
-      throw new NotFoundException(`Notice ${noticeId} not found`)
+      throw new NotFoundException(noticeIssuesMessages.noticeNotFound(noticeId))
     }
     if (notice.status !== NoticeOutboxStatusEnum.FAILED) {
       throw new ConflictException(
-        `Notice ${noticeId} is ${notice.status}; only a FAILED notice can be retried`,
+        noticeIssuesMessages.noticeNotFailed(noticeId, notice.status),
       )
     }
 
@@ -158,12 +173,12 @@ export class NoticeIssuesService implements INoticeIssuesService {
       const state = deliveryState(delivery)
       if (state.inProgress) {
         throw new ConflictException(
-          `Mailbox delivery ${delivery.id} is in progress; try again in a few minutes`,
+          noticeIssuesMessages.deliveryInProgress(delivery.id),
         )
       }
       if (state.needsReconciling) {
         throw new ConflictException(
-          `Mailbox delivery ${delivery.id} may already have reached One; reconcile it against One first`,
+          noticeIssuesMessages.deliveryNeedsReconciling(delivery.id),
         )
       }
       if (state.exhausted) {
@@ -188,18 +203,23 @@ export class NoticeIssuesService implements INoticeIssuesService {
   ): Promise<void> {
     const delivery = await this.deliveryModel.findByPk(deliveryId)
     if (!delivery) {
-      throw new NotFoundException(`Mailbox delivery ${deliveryId} not found`)
+      throw new NotFoundException(
+        noticeIssuesMessages.deliveryNotFound(deliveryId),
+      )
     }
 
     const state = deliveryState(delivery)
     if (state.inProgress) {
       throw new ConflictException(
-        `Mailbox delivery ${deliveryId} is in progress; try again in a few minutes`,
+        noticeIssuesMessages.deliveryInProgress(deliveryId),
       )
     }
     if (!state.needsReconciling) {
       throw new ConflictException(
-        `Mailbox delivery ${deliveryId} is ${delivery.status} and needs no reconciling`,
+        noticeIssuesMessages.deliveryNeedsNoReconciling(
+          deliveryId,
+          delivery.status,
+        ),
       )
     }
 
@@ -207,11 +227,18 @@ export class NoticeIssuesService implements INoticeIssuesService {
       delivery.oneDocumentItemId ?? dto.documentItemId ?? null
     const note = auditNote('Reconciled', actor)
 
-    // Matched on what was read, so a row that moved since is left alone.
+    // Matched on every column the decision rests on, as the README's SQL
+    // does: a late reply can save a document id or `sent_at` into an
+    // UNCERTAIN row without changing its status, and writing over either
+    // would lose what One returned (a second document filed) or break the
+    // sent CHECK.
     const unchanged = {
       id: delivery.id,
       status: delivery.status,
       inFlightStep: delivery.inFlightStep,
+      oneDocumentItemId: delivery.oneDocumentItemId,
+      sentAt: delivery.sentAt,
+      ...LEASE_FREE,
     }
 
     let updated: number
@@ -220,7 +247,7 @@ export class NoticeIssuesService implements INoticeIssuesService {
       // person can find its ItemID. Never made up.
       if (!documentItemId) {
         throw new BadRequestException(
-          `Mailbox delivery ${deliveryId} has no document id; give the document's ItemID from One`,
+          noticeIssuesMessages.documentIdRequired(deliveryId),
         )
       }
       ;[updated] = await this.deliveryModel.update(
@@ -240,7 +267,7 @@ export class NoticeIssuesService implements INoticeIssuesService {
       // whatever the person believes.
       if (delivery.sentAt) {
         throw new ConflictException(
-          `One confirmed mailbox delivery ${deliveryId} as sent; reconcile it as SENT`,
+          noticeIssuesMessages.sentConfirmedByOne(deliveryId),
         )
       }
       ;[updated] = await this.deliveryModel.update(
@@ -259,7 +286,7 @@ export class NoticeIssuesService implements INoticeIssuesService {
 
     if (updated === 0) {
       throw new ConflictException(
-        `Mailbox delivery ${deliveryId} changed while it was being reconciled; reload and check again`,
+        noticeIssuesMessages.deliveryChanged(deliveryId),
       )
     }
 
@@ -304,13 +331,14 @@ export class NoticeIssuesService implements INoticeIssuesService {
           status: delivery.status,
           inFlightStep: null,
           attempts: { [Op.gte]: MAILBOX_DELIVERY_MAX_ATTEMPTS },
+          ...LEASE_FREE,
         },
         transaction: null,
       },
     )
     if (updated === 0) {
       throw new ConflictException(
-        `Mailbox delivery ${delivery.id} changed while it was being re-armed; reload and check again`,
+        noticeIssuesMessages.deliveryChanged(delivery.id),
       )
     }
   }
@@ -336,9 +364,7 @@ export class NoticeIssuesService implements INoticeIssuesService {
       { where: { id: noticeId, status: from }, transaction: null },
     )
     if (updated === 0) {
-      throw new ConflictException(
-        `Notice ${noticeId} changed while it was being retried; reload and check again`,
-      )
+      throw new ConflictException(noticeIssuesMessages.noticeChanged(noticeId))
     }
   }
 

@@ -1719,7 +1719,7 @@ export const noticeIssuesText = {
     mailbox: 'Pósthólf',
     action: 'Aðgerð',
   },
-  noDelivery: 'Tölvupóstur',
+  noDelivery: 'Engin sending í pósthólf',
   exhaustedNote: 'Allar tilraunir notaðar',
   inProgressNote: 'Í vinnslu',
   reminderExhaustedNote:
@@ -1738,6 +1738,9 @@ export const noticeIssuesText = {
     documentIdHelp:
       'Nauðsynlegt ef bréfið var sent og auðkenni vantar. Ef skjalið er til í One en var ekki sent, sláðu það inn svo það verði sent í stað þess að vera vistað aftur.',
     documentIdRequired: 'Sláðu inn auðkenni skjalsins til að merkja það sent',
+    sentAtLabel: 'One staðfesti sendingu',
+    sentConfirmedNote:
+      'One hefur staðfest að bréfið var sent, svo það er ekki hægt að senda það aftur.',
     notSentButton: 'Var ekki sent: senda aftur',
     sentButton: 'Var sent: merkja lokið',
     success: 'Staða vistuð',

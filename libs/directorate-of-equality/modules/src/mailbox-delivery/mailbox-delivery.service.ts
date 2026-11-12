@@ -482,9 +482,13 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     }
   }
 
-  async findStuckDeliveries(limit: number): Promise<StuckMailboxDelivery[]> {
+  async findStuckDeliveries(
+    limit: number,
+    kinds?: MailboxDeliveryKindEnum[],
+  ): Promise<StuckMailboxDelivery[]> {
     const rows = await this.deliveryModel.findAll({
       where: {
+        ...(kinds ? { kind: kinds } : {}),
         [Op.or]: [
           STUCK_WHERE.UNCERTAIN,
           STUCK_WHERE.INTERRUPTED,

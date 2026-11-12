@@ -219,7 +219,11 @@ export interface IMailboxDeliveryService {
    * `ONESYSTEMS_ENABLED` says: rows left from before the flag went off still
    * need a person.
    */
-  findStuckDeliveries(limit: number): Promise<StuckMailboxDelivery[]>
+  findStuckDeliveries(
+    limit: number,
+    /** Only these kinds, filtered in the query so `limit` applies to them. */
+    kinds?: MailboxDeliveryKindEnum[],
+  ): Promise<StuckMailboxDelivery[]>
 
   /**
    * How many deliveries need a person, by reason, over every row rather than

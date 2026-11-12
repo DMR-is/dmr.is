@@ -197,8 +197,12 @@ The admin web's **Tilkynningar** page (`/tilkynningar`, ADMIN-only, backed by
 without SQL: **Reyna aftur** re-arms an exhausted delivery and re-drives its
 FAILED notice; **Staðfesta stöðu** reconciles an UNCERTAIN or interrupted
 delivery as sent or not sent after a person has checked One. Each leaves who
-did it in `last_error`. The SQL below is what those buttons run, for when the
-page is not an option.
+did it in `last_error`. They follow the SQL below, guarded the same way
+(status, marker, saved document id and `sent_at` as read, and no live lease on
+Postgres's clock), with two differences: an interrupted row is settled
+directly rather than first marked UNCERTAIN, and a row reconciled as sent with
+no `sent_at` gets the time of the reconcile, not the real send time. The SQL is
+for when the page is not an option.
 
 ## Exhausted rows
 
