@@ -734,6 +734,28 @@ describe('ReportDeadlineReminderService', () => {
       expect(findDelivery).not.toHaveBeenCalled()
     })
 
+    it('emails the reminder while One cannot be reached', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValue({
+        status: 'UNAVAILABLE',
+        reason: 'Login HTTP 401',
+      })
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+        COMPANY_ID,
+        CompanyStatusEnum.ACTIVE,
+        CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+        CompanyReminderTierEnum.SIX_MONTHS,
+        EQUALITY_DUE.toISOString(),
+      )
+      // `deliverToMailbox` logged the outage at error; not again per company.
+      expect(mockLogger.error).not.toHaveBeenCalled()
+      expect(findDelivery).not.toHaveBeenCalled()
+    })
+
     const unconfigured = {
       status: 'UNCONFIGURED',
       kind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,

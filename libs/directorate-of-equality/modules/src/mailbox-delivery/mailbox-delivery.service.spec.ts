@@ -84,13 +84,16 @@ const isLiteral = (value: unknown): value is { val: string } =>
   !(value instanceof Date) &&
   'val' in value
 
-/** Stands in for the three SQL fragments the service sends as literals. */
+/** Stands in for the SQL fragments the service sends as literals. */
 function evaluate(value: unknown, row: Row): unknown {
   if (!isLiteral(value)) {
     return value
   }
   if (value.val === 'attempts + 1') {
     return (row.attempts as number) + 1
+  }
+  if (value.val === 'GREATEST(attempts - 1, 0)') {
+    return Math.max((row.attempts as number) - 1, 0)
   }
   if (value.val.includes('INTERVAL')) {
     expect(value.val).toBe(
@@ -341,6 +344,7 @@ describe('MailboxDeliveryService', () => {
     // allowlist; `describe('allowlist')` narrows it.
     configs = { findOne: jest.fn().mockResolvedValue({ value: '*' }) }
     one = {
+      checkLogin: jest.fn().mockResolvedValue(undefined),
       createCase: jest.fn(),
       createDocument: jest.fn(),
       sendDocToIslandIs: jest.fn(),
@@ -2032,15 +2036,6 @@ describe('MailboxDeliveryService', () => {
           'a 400 model-validation body',
           () => http(operation, 400, { isValidationProblemBody: true }),
         ],
-        ['a failed Login in front of it', () => transport('Login')],
-        [
-          'missing configuration',
-          () =>
-            new OneSystemsError('OneSystems is not configured', {
-              operation: 'Login',
-              reason: 'CONFIG',
-            }),
-        ],
         [
           'input that cannot be sent',
           () =>
@@ -2063,6 +2058,122 @@ describe('MailboxDeliveryService', () => {
           })
         },
       )
+    })
+  })
+
+  describe('when One cannot be reached', () => {
+    const loginRefused = () => http('Login', 401)
+
+    it('answers UNAVAILABLE before writing or claiming anything', async () => {
+      one.checkLogin.mockRejectedValueOnce(loginRefused())
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'UNAVAILABLE',
+        reason: 'Login HTTP 401',
+      })
+
+      expect(store.rows.size).toBe(0)
+      expect(oneCalls()).toBe(0)
+      expect(pdf).not.toHaveBeenCalled()
+    })
+
+    it('counts missing configuration as unavailable', async () => {
+      one.checkLogin.mockRejectedValueOnce(
+        new OneSystemsError('OneSystems is not configured', {
+          operation: 'Login',
+          reason: 'CONFIG',
+        }),
+      )
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'UNAVAILABLE',
+        reason: 'Login CONFIG',
+      })
+    })
+
+    it('never spends an attempt, however long Login fails, and delivers once it works', async () => {
+      one.checkLogin.mockRejectedValue(loginRefused())
+
+      for (let i = 0; i < MAILBOX_DELIVERY_MAX_ATTEMPTS + 2; i++) {
+        await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+          status: 'UNAVAILABLE',
+        })
+      }
+
+      one.checkLogin.mockResolvedValue(undefined)
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'SENT',
+      })
+      expect(onlyRow().attempts).toBe(1)
+    })
+
+    it('logs the outage at error once, and its end once', async () => {
+      one.checkLogin.mockRejectedValue(loginRefused())
+
+      await service.deliverToMailbox(input())
+      await service.deliverToMailbox(input())
+
+      const outageLogs = () =>
+        logger.error.mock.calls.filter(([message]) =>
+          String(message).startsWith('OneSystems is unavailable'),
+        )
+      expect(outageLogs()).toHaveLength(1)
+
+      one.checkLogin.mockResolvedValue(undefined)
+      await service.deliverToMailbox(input())
+      await service.deliverToMailbox(input())
+
+      expect(
+        logger.info.mock.calls.filter(
+          ([message]) => message === 'OneSystems Login works again',
+        ),
+      ).toHaveLength(1)
+    })
+
+    it.each([
+      ['before CreateCase', 'createCase', MailboxDeliveryStatusEnum.PENDING],
+      [
+        'in front of CreateDocument, after its marker',
+        'createDocument',
+        MailboxDeliveryStatusEnum.CASE_CREATED,
+      ],
+      [
+        'in front of SendDocToIslandIs, after its marker',
+        'sendDocToIslandIs',
+        MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+      ],
+    ] as const)(
+      'hands the attempt back when Login fails mid-run %s',
+      async (_when, call, status) => {
+        one[call].mockRejectedValueOnce(transport('Login'))
+
+        await expect(service.deliverToMailbox(input())).resolves.toEqual({
+          status: 'UNAVAILABLE',
+          reason: 'Login TRANSPORT',
+        })
+
+        expect(onlyRow()).toMatchObject({
+          status,
+          attempts: 0,
+          inFlightStep: null,
+          leaseToken: null,
+          leaseExpiresAt: null,
+          lastError: 'Login TRANSPORT: Login did not answer',
+        })
+
+        await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+          status: 'SENT',
+        })
+        expect(onlyRow().attempts).toBe(1)
+      },
+    )
+
+    it('rethrows anything that is not a OneSystems failure', async () => {
+      const bug = new Error('boom')
+      one.checkLogin.mockRejectedValueOnce(bug)
+
+      await expect(service.deliverToMailbox(input())).rejects.toBe(bug)
     })
   })
 

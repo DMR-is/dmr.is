@@ -449,6 +449,47 @@ describe('OneSystemsService', () => {
       },
     )
 
+    describe('checkLogin', () => {
+      it('logs in once and sends nothing else', async () => {
+        await expect(service.checkLogin()).resolves.toBeUndefined()
+
+        expect(loginRequests()).toHaveLength(1)
+        expect(actionRequests()).toHaveLength(0)
+      })
+
+      it('reuses the token the next call needs', async () => {
+        actionReplies = [() => success()]
+
+        await service.checkLogin()
+        await createCase()
+
+        expect(loginRequests()).toHaveLength(1)
+        expect(actionRequests()).toHaveLength(1)
+      })
+
+      it('throws the Login failure', async () => {
+        loginReplies = [() => new Response('', { status: 401 })]
+
+        const error = await caught(service.checkLogin())
+
+        expect(error).toMatchObject({
+          operation: 'Login',
+          reason: 'HTTP',
+          upstreamStatus: 401,
+        })
+        expect(actionRequests()).toHaveLength(0)
+      })
+
+      it('throws CONFIG without a request when the password is unset', async () => {
+        delete process.env.ONESYSTEMS_PASSWORD
+
+        const error = await caught(service.checkLogin())
+
+        expect(error).toMatchObject({ operation: 'Login', reason: 'CONFIG' })
+        expect(requests()).toHaveLength(0)
+      })
+    })
+
     it('wraps anything else thrown inside Login as a definitive Login failure', async () => {
       const cause = new RangeError(
         `something unexpected ${COMPANY_NATIONAL_ID}`,

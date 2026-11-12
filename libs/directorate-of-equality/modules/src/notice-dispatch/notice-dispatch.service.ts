@@ -983,6 +983,17 @@ export class NoticeDispatchService implements INoticeDispatchService {
         // Quarantined between the pick and the call. Not an attempt: the row
         // waits, and is not picked again until the quarantine is lifted.
         return { outcome: 'HELD', reason: 'the filing company is quarantined' }
+      case 'UNAVAILABLE':
+        // One cannot be reached at all (Login fails, or the client is not
+        // configured). Not an attempt: the fault is the environment's, and
+        // counting it would give up every notice during an outage.
+        // `deliverToMailbox` logged it at error when it began, and the daily
+        // alert names the row once it is overdue.
+        return {
+          outcome: 'HELD',
+          reason: `OneSystems is unavailable (${result.reason}); waiting for Login to succeed`,
+          alert: true,
+        }
       case 'UNCONFIGURED':
         // The flag is on before the kind's case template is set. Not an
         // attempt, so nothing is spent and the row goes once the template

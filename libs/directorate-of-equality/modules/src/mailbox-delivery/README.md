@@ -118,12 +118,31 @@ CreateCase is retried after any failure: One finds-or-creates the case by
 to be saved is logged (`discardedCaseItemId`).
 
 A row is claimed at most `MAILBOX_DELIVERY_MAX_ATTEMPTS` (5) times. Every
-claim adds one to `attempts`. After that `deliverToMailbox` makes no call and
+claim adds one to `attempts`, except one whose Login fails (see
+[One unreachable](#one-unreachable)). After that `deliverToMailbox` makes no call and
 returns the row's own status with `skipped: 'ATTEMPTS_EXHAUSTED'`, and logs an
 error with the `deliveryId` and `attempts`. Without the cap a permanent
 rejection would be retried on every call. See
 [Exhausted rows](#exhausted-rows). A row whose last claim died mid-call is still
 claimed once more, so it becomes UNCERTAIN as usual.
+
+## One unreachable
+
+Before a row is written or claimed, `deliverToMailbox` checks that the client
+has a OneSystems token (`IOneSystemsService.checkLogin`, cached while valid).
+When Login fails, or the URL or credentials are missing, it answers
+`UNAVAILABLE` with a loggable reason such as `Login HTTP 401`. Nothing is
+written and no attempt is spent: a wrong password, a wrong URL or One being
+down is a fault of the environment, and counting it would give up every notice
+within five minutes. A Login that fails mid-run (the token lapsed and its
+renewal failed) hands the claim's attempt back and clears the marker, since
+Login comes before the action.
+
+The outage is logged at error once when it starts and at info once when Login
+works again. The dispatcher holds the notice at warn without counting an
+attempt, and the daily alert names it once it is overdue. The reminder task
+emails the reminder, as for a missing case template. Once Login works, every
+held notice goes on the next run, with nothing to re-arm.
 
 ## Alerting
 
@@ -184,7 +203,8 @@ ORDER BY last_attempt_at;
 `last_error` for one row at a time and do not paste it anywhere.
 
 Fix the cause first: a case template One does not know, a recipient One cannot
-find, an outage that lasted longer than five calls. Then re-arm the
+find, an outage of One itself that answered past Login. (A failing Login spends
+no attempts; see [One unreachable](#one-unreachable).) Then re-arm the
 row, so the next call with **the same idempotency key** resumes it from its
 saved ids:
 

@@ -89,6 +89,13 @@ export type DeliverToMailboxResult =
   | { status: 'DISABLED' }
   | { status: 'UNCONFIGURED'; kind: MailboxDeliveryKindEnum }
   | { status: 'QUARANTINED' }
+  /**
+   * One cannot be reached at all: Login fails, or the client is not
+   * configured. Nothing was written or claimed for this notice, so no
+   * attempt was spent, and a delivery whose Login failed mid-run got its
+   * attempt back. `reason` is safe to log (operation, reason, HTTP status).
+   */
+  | { status: 'UNAVAILABLE'; reason: string }
   | {
       status: 'SENT'
       deliveryId: string

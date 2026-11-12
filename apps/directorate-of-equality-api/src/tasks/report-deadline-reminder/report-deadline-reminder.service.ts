@@ -521,6 +521,17 @@ export class ReportDeadlineReminderService
       return false
     }
 
+    // Logged at error by `deliverToMailbox` when the outage began. Email
+    // rather than wait, as for a missing case template: a reminder is tied
+    // to a deadline.
+    if (result?.status === 'UNAVAILABLE') {
+      this.logger.info(
+        `${kind.reportType} ${tier} reminder for company ${company.id} goes by email: ${result.reason}`,
+        meta,
+      )
+      return false
+    }
+
     if (result) {
       this.logger.error(
         `${kind.reportType} ${tier} reminder for company ${company.id} was not delivered to the mailbox: ${result.status}`,
