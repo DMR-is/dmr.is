@@ -1470,8 +1470,8 @@ export const systemSettingsText = {
     'Hér má sjá stillingar sem gilda fyrir allt kerfið. Breytingar á þeim hafa áhrif á allar skýrslur sem eru reiknaðar eftir að breytingin er vistuð.',
   heroImageAlt: 'Kerfisstillingar',
   actionsHeading: 'Aðgerðir',
-  tabSalary: 'Leyfilegur launamunur',
-  tabMailbox: 'Pósthólf á island.is',
+  tabSalary: 'Launamunur',
+  tabMailbox: 'Pósthólfið',
   thresholdHeading: 'Leyfilegur launamunur',
   thresholdLabel: 'Hámark á launamun karla og kvenna',
   // ⚠️ Rewritten when the ±band was retired. This used to read "sjálfvirka
@@ -1513,30 +1513,28 @@ export const systemSettingsText = {
     saveError: 'Villa við vistun hlutfalls',
   },
   mailbox: {
-    heading: 'Pósthólf á island.is',
-    description:
-      'Hvaða fyrirtæki fá tilkynningar í pósthólf sitt á island.is í gegnum One.',
     descriptionFlagOff:
-      'Sending í pósthólf er óvirk á þessu umhverfi. Allar tilkynningar fara í tölvupósti og móttökukvittanir bíða, hvað sem stillingin segir.',
+      'Á þessu umhverfi fara allar tilkynningar í tölvupósti og móttökukvittanir bíða, hvað sem stillingin segir.',
     descriptionNone:
-      'Ekkert fyrirtæki fær tilkynningar í pósthólf. Allar tilkynningar fara í tölvupósti og móttökukvittanir bíða.',
-    descriptionList: (n: number) =>
-      n === 1
-        ? 'Aðeins 1 fyrirtæki fær tilkynningar í pósthólf sitt á island.is. Öll önnur fyrirtæki fá tölvupóst og móttökukvittanir til þeirra bíða.'
-        : `Aðeins ${n} fyrirtæki fá tilkynningar í pósthólf sitt á island.is. Öll önnur fyrirtæki fá tölvupóst og móttökukvittanir til þeirra bíða.`,
+      'Allar tilkynningar fara í tölvupósti og móttökukvittanir bíða.',
+    descriptionList:
+      'Önnur fyrirtæki fá tölvupóst og móttökukvittanir til þeirra bíða.',
     descriptionAll:
-      'Öll fyrirtæki fá tilkynningar í pósthólf sitt á island.is í gegnum One í stað tölvupósts.',
+      'Tilkynningar fara í pósthólf fyrirtækjanna á island.is í gegnum One í stað tölvupósts.',
     loadError: 'Ekki tókst að sækja stillinguna. Reyndu aftur síðar.',
-    currentLabel: 'Núverandi stilling',
-    flagOn: 'Virkt',
-    flagOff: 'Óvirkt',
+    titleFlagOff: 'Sending í pósthólf er óvirk',
+    titleNone: 'Ekkert fyrirtæki fær tilkynningar í pósthólf',
+    titleList: (n: number) =>
+      n === 1
+        ? 'Sending í pósthólf er virk fyrir 1 fyrirtæki'
+        : `Sending í pósthólf er virk fyrir ${n} fyrirtæki`,
+    titleAll: 'Sending í pósthólf er virk fyrir öll fyrirtæki',
+    selectedHeading: 'Fyrirtæki sem fá tilkynningar í pósthólf',
     historyHeading: 'Fyrri stillingar',
     historyUntilLabel: 'Gilti til',
     modeNone: 'Engin fyrirtæki',
     modeAll: 'Öll fyrirtæki',
     modeList: 'Valin fyrirtæki',
-    modeListCount: (n: number) =>
-      n === 1 ? '1 valið fyrirtæki' : `${n} valin fyrirtæki`,
     editButton: 'Breyta',
     historyValueLabel: 'Stilling',
     modal: {
