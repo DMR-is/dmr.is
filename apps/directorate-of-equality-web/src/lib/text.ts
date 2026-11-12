@@ -1513,7 +1513,8 @@ export const systemSettingsText = {
   mailbox: {
     heading: 'Pósthólf á island.is',
     description:
-      'Fyrirtæki sem fá tilkynningar (móttökukvittanir, samþykktir, synjanir og áminningar) í pósthólf sitt á island.is í gegnum One. Önnur fyrirtæki fá tölvupóst og móttökukvittanir bíða.',
+      'Fyrirtæki sem fá allar tilkynningar í pósthólf sitt á island.is í gegnum One. Önnur fyrirtæki fá tölvupóst og móttökukvittanir bíða.',
+    loadError: 'Ekki tókst að sækja stillinguna. Reyndu aftur síðar.',
     currentLabel: 'Í gildi',
     modeNone: 'Engin fyrirtæki',
     modeAll: 'Öll fyrirtæki',
@@ -1530,10 +1531,20 @@ export const systemSettingsText = {
       nationalIdsLabel: 'Kennitölur',
       nationalIdsPlaceholder: 'Ein eða fleiri kennitölur, aðskildar með kommu',
       nationalIdsInvalid: (values: string) => `Ekki gild kennitala: ${values}`,
+      unchanged: 'Engin breyting frá núgildandi stillingu',
+      heldReceiptsTitle: 'Móttökukvittanir sem bíða fara af stað',
+      heldReceiptsMessage:
+        'Allar móttökukvittanir sem bíða og eiga enn við fara í pósthólf fyrirtækjanna sem bætast við, sama hversu gamlar þær eru. Ákveðið fyrst hvort eldri kvittanir eigi að fara, og afgreiðið þær sem ekki eiga að fara áður en vistað er.',
       nationalIdsEmpty: 'Sláðu inn að minnsta kosti eina kennitölu',
       allWarningTitle: 'Öll fyrirtæki fá bréf í pósthólf',
       allWarningMessage:
-        'Allar tilkynningar sem bíða, og allar nýjar, fara í pósthólf fyrirtækjanna á island.is. Á prófunarumhverfi fara þær í raunveruleg pósthólf, því það tengist One í rekstri.',
+        'Allar nýjar tilkynningar, og allar móttökukvittanir sem bíða og eiga enn við, fara í pósthólf fyrirtækjanna á island.is. Á prófunarumhverfi fara þær í raunveruleg pósthólf, því það tengist One í rekstri.',
+      confirmAllTitle: 'Opna pósthólf fyrir öll fyrirtæki?',
+      confirmAllMessage:
+        'Tilkynningar til allra fyrirtækja í skránni fara héðan í frá í pósthólf þeirra á island.is í stað tölvupósts.',
+      confirmAllButton: 'Já, öll fyrirtæki',
+      continue: 'Halda áfram',
+      back: 'Til baka',
       save: 'Vista',
       saveSuccess: 'Stillingin hefur verið vistuð',
       saveError: 'Villa við vistun stillingar',
