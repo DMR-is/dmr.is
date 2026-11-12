@@ -1513,17 +1513,15 @@ export const systemSettingsText = {
     saveError: 'Villa við vistun hlutfalls',
   },
   mailbox: {
-    descriptionFlagOff:
-      'Á þessu umhverfi fara allar tilkynningar í tölvupósti og móttökukvittanir bíða, hvað sem stillingin segir.',
-    descriptionNone:
-      'Allar tilkynningar fara í tölvupósti og móttökukvittanir bíða.',
+    descriptionFlagOff: 'Allar tilkynningar eru sendar með tölvupósti',
+    descriptionNone: 'Ekkert fyrirtæki er valið',
     descriptionList:
       'Önnur fyrirtæki fá tölvupóst og móttökukvittanir til þeirra bíða.',
     descriptionAll:
       'Tilkynningar fara í pósthólf fyrirtækjanna á island.is í gegnum One í stað tölvupósts.',
     loadError: 'Ekki tókst að sækja stillinguna. Reyndu aftur síðar.',
-    titleFlagOff: 'Sending í pósthólf er óvirk',
-    titleNone: 'Ekkert fyrirtæki fær tilkynningar í pósthólf',
+    titleFlagOff: 'Pósthólfið er óvirkt',
+    titleNone: 'Pósthólfið er virkt',
     titleList: (n: number) =>
       n === 1
         ? 'Sending í pósthólf er virk fyrir 1 fyrirtæki'
