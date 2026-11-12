@@ -390,6 +390,27 @@ export class ApplicationService implements IApplicationService {
         providerId: { [Op.ne]: null },
         status: { [Op.ne]: ReportStatusEnum.DRAFT },
       },
+      // Only what the list maps and the handle check reads. Without this every
+      // row brings `equality_report_content`, which holds an uploaded plan's
+      // whole PDF as base64, on each My Pages visit. `companyNationalId` stays:
+      // `toReadHandle` strips the partner namespace with it. Ownership is
+      // checked on the separate `company_report` read below, as on the read
+      // routes, so narrowing this changes no rule.
+      attributes: [
+        'id',
+        'providerType',
+        'providerId',
+        'companyNationalId',
+        'importedFromExcel',
+        'type',
+        'status',
+        'identifier',
+        'createdAt',
+        'approvedAt',
+        'validUntil',
+        'salaryDataBasis',
+        'salaryDataPeriod',
+      ],
       // `id` breaks ties so two reports filed in the same instant keep a
       // stable order between calls.
       order: [
@@ -925,13 +946,6 @@ export class ApplicationService implements IApplicationService {
   }
 
   /**
-   * Lookup helper used by applicant-facing edit endpoints. Resolves the report
-   * by the upstream `(provider_type, provider_id)` tuple and verifies the
-   * authenticated company owns the parent `company_report` row. Throws
-   * `NotFoundException` on miss or ownership mismatch — never leaks the
-   * existence of another company's report.
-   */
-  /**
    * The lookup behind every READ route (detail, equality PDF, comments, the
    * outlier list) and, through the same two halves, the submissions list.
    * Resolves the channel's read handle — on island.is, a report from any
@@ -967,6 +981,15 @@ export class ApplicationService implements IApplicationService {
     return { report, companyRows }
   }
 
+  /**
+   * Lookup helper used by the applicant-facing WRITE endpoints (edit,
+   * outliers, withdraw); channel-scoped, unlike `findOwnedReportForRead`.
+   * Resolves the report by the upstream `(provider_type, provider_id)` tuple
+   * and verifies the authenticated company owns the parent `company_report`
+   * row. Throws
+   * `NotFoundException` on miss or ownership mismatch — never leaks the
+   * existence of another company's report.
+   */
   private async findOwnedReportByProviderTuple(
     providerId: string,
     company: CompanyDto,

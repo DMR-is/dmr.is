@@ -1259,6 +1259,25 @@ describe('ApplicationService', () => {
       })
     })
 
+    it('reads only summary columns, never the stored equality-plan PDF', async () => {
+      companyReportTable([
+        { reportId: OWN_A, companyId: COMPANY.id, parentCompanyId: null },
+      ])
+
+      await service.listReports(COMPANY)
+
+      const { attributes } = reportFindAll.mock.calls[0][0]
+      expect(attributes).not.toContain('equalityReportContent')
+      // What the handle check needs to strip a partner namespace.
+      expect(attributes).toEqual(
+        expect.arrayContaining([
+          'providerType',
+          'providerId',
+          'companyNationalId',
+        ]),
+      )
+    })
+
     it('leaves out a report with no provider id, which has no handle', async () => {
       companyReportTable([
         { reportId: OWN_A, companyId: COMPANY.id, parentCompanyId: null },
