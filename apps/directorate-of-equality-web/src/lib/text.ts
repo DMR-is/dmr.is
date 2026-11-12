@@ -1516,7 +1516,7 @@ export const systemSettingsText = {
     descriptionFlagOff: 'Allar tilkynningar eru sendar með tölvupósti',
     descriptionNone: 'Ekkert fyrirtæki er valið',
     descriptionList:
-      'Önnur fyrirtæki fá tölvupóst og móttökukvittanir til þeirra bíða',
+      'Önnur fyrirtæki fá tölvupóst og staðfestingar á móttöku til þeirra bíða',
     descriptionAll:
       'Tilkynningar fara í pósthólf fyrirtækjanna á island.is í gegnum One í stað tölvupósts',
     loadError: 'Ekki tókst að sækja stillinguna. Reyndu aftur síðar.',
@@ -1544,8 +1544,8 @@ export const systemSettingsText = {
     mailboxKindLabels: {
       OVERDUE_NOTICE: 'Tilkynning um vanskil',
       FINES_PRECURSOR: 'Viðvörun um dagsektir',
-      SALARY_REPORT_SUBMITTED: 'Móttökukvittun, jafnlaunaskýrsla',
-      EQUALITY_REPORT_SUBMITTED: 'Móttökukvittun, jafnréttisáætlun',
+      SALARY_REPORT_SUBMITTED: 'Staðfesting á móttöku, jafnlaunaskýrsla',
+      EQUALITY_REPORT_SUBMITTED: 'Staðfesting á móttöku, jafnréttisáætlun',
       SALARY_REPORT_APPROVED: 'Samþykkt, jafnlaunaskýrsla',
       EQUALITY_REPORT_APPROVED: 'Samþykkt, jafnréttisáætlun',
       SALARY_REPORT_DENIED: 'Synjun, jafnlaunaskýrsla',
@@ -1571,13 +1571,13 @@ export const systemSettingsText = {
       nationalIdsPlaceholder: 'Ein eða fleiri kennitölur, aðskildar með kommu',
       nationalIdsInvalid: (values: string) => `Ekki gild kennitala: ${values}`,
       unchanged: 'Engin breyting frá núgildandi stillingu',
-      heldReceiptsTitle: 'Móttökukvittanir sem bíða fara af stað',
+      heldReceiptsTitle: 'Staðfestingar á móttöku sem bíða fara af stað',
       heldReceiptsMessage:
-        'Allar móttökukvittanir sem bíða og eiga enn við fara í pósthólf fyrirtækjanna sem bætast við, sama hversu gamlar þær eru. Ákveðið fyrst hvort eldri kvittanir eigi að fara, og afgreiðið þær sem ekki eiga að fara áður en vistað er.',
+        'Allar staðfestingar á móttöku sem bíða og eiga enn við fara í pósthólf fyrirtækjanna sem bætast við, sama hversu gamlar þær eru. Ákveðið fyrst hvort eldri staðfestingar eigi að fara, og afgreiðið þær sem ekki eiga að fara áður en vistað er.',
       nationalIdsEmpty: 'Sláðu inn að minnsta kosti eina kennitölu',
       allWarningTitle: 'Öll fyrirtæki fá bréf í pósthólf',
       allWarningMessage:
-        'Allar nýjar tilkynningar, og allar móttökukvittanir sem bíða og eiga enn við, fara í pósthólf fyrirtækjanna á island.is. Á prófunarumhverfi fara þær í raunveruleg pósthólf, því það tengist One í rekstri.',
+        'Allar nýjar tilkynningar, og allar staðfestingar á móttöku sem bíða og eiga enn við, fara í pósthólf fyrirtækjanna á island.is. Á prófunarumhverfi fara þær í raunveruleg pósthólf, því það tengist One í rekstri.',
       confirmAllTitle: 'Opna pósthólf fyrir öll fyrirtæki?',
       confirmAllMessage:
         'Tilkynningar til allra fyrirtækja í skránni fara héðan í frá í pósthólf þeirra á island.is í stað tölvupósts.',
@@ -1768,7 +1768,7 @@ export const noticeIssuesText = {
     'Tilkynningar til fyrirtækja sem komust ekki til skila, í pósthólf á island.is eða í tölvupósti. Hér má senda þær aftur eða staðfesta stöðu þeirra eftir að hafa skoðað þær í One.',
   heroImageAlt: 'Tilkynningar',
   kindLabels: {
-    REPORT_SUBMITTED: 'Móttökukvittun',
+    REPORT_SUBMITTED: 'Staðfesting á móttöku',
     REPORT_APPROVED: 'Samþykkt',
     REPORT_DENIED: 'Synjun',
     SALARY_REPORT_DEADLINE_REMINDER: 'Áminning um jafnlaunaskýrslu',
