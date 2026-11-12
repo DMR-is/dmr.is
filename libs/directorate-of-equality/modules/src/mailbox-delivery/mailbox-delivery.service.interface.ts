@@ -89,6 +89,16 @@ export type DeliverToMailboxResult =
   | { status: 'DISABLED' }
   | { status: 'UNCONFIGURED'; kind: MailboxDeliveryKindEnum }
   | { status: 'QUARANTINED' }
+  /**
+   * One cannot be reached at all: Login fails, or the client is not
+   * configured. Nothing was written or claimed for this notice, so no
+   * attempt was spent, and a delivery whose Login failed mid-run got its
+   * attempt back. Only when no delivery with this key reached One, so a
+   * caller may send it another way; otherwise the row answers as it stands,
+   * with `skipped: 'UNAVAILABLE'` when unsettled. `reason` is safe to log
+   * (operation, reason, HTTP status).
+   */
+  | { status: 'UNAVAILABLE'; reason: string }
   | {
       status: 'SENT'
       deliveryId: string
@@ -106,7 +116,10 @@ export type DeliverToMailboxResult =
     }
 
 /** Why a delivery was left alone without a call to One. */
-export type MailboxDeliverySkipReason = 'ATTEMPTS_EXHAUSTED' | 'UNCONFIGURED'
+export type MailboxDeliverySkipReason =
+  | 'ATTEMPTS_EXHAUSTED'
+  | 'UNCONFIGURED'
+  | 'UNAVAILABLE'
 
 /** A row status that still has work left: neither SENT nor UNCERTAIN. */
 export type MailboxDeliveryUnsettledStatus = Exclude<
@@ -206,7 +219,11 @@ export interface IMailboxDeliveryService {
    * `ONESYSTEMS_ENABLED` says: rows left from before the flag went off still
    * need a person.
    */
-  findStuckDeliveries(limit: number): Promise<StuckMailboxDelivery[]>
+  findStuckDeliveries(
+    limit: number,
+    /** Only these kinds, filtered in the query so `limit` applies to them. */
+    kinds?: MailboxDeliveryKindEnum[],
+  ): Promise<StuckMailboxDelivery[]>
 
   /**
    * How many deliveries need a person, by reason, over every row rather than

@@ -521,6 +521,28 @@ export class ReportDeadlineReminderService
       return false
     }
 
+    // Logged at error by `deliverToMailbox` when the outage began. Email
+    // rather than wait, as for a missing case template: a reminder is tied
+    // to a deadline.
+    if (result?.status === 'UNAVAILABLE') {
+      this.logger.info(
+        `${kind.reportType} ${tier} reminder for company ${company.id} goes by email: ${result.reason}`,
+        meta,
+      )
+      return false
+    }
+
+    // A delivery of this reminder already reached One. Neither emailed (One
+    // may have sent it) nor flagged: it resumes on a later run once Login
+    // works, and the outage was logged at error when it began.
+    if (result && 'skipped' in result && result.skipped === 'UNAVAILABLE') {
+      this.logger.info(
+        `${kind.reportType} ${tier} reminder for company ${company.id} waits for OneSystems: its delivery already reached One`,
+        { ...meta, deliveryId: result.deliveryId },
+      )
+      return true
+    }
+
     if (result) {
       this.logger.error(
         `${kind.reportType} ${tier} reminder for company ${company.id} was not delivered to the mailbox: ${result.status}`,

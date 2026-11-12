@@ -2011,6 +2011,48 @@ describe('NoticeDispatchService', () => {
       )
     })
 
+    // A wrong password or URL, or One down: the notice waits, uncounted, so an
+    // outage does not give up every notice.
+    it('holds the row, not an attempt, at warn, while One cannot be reached', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: 'UNAVAILABLE',
+        reason: 'Login HTTP 401',
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED, {
+        attempts: NOTICE_DISPATCH_MAX_ATTEMPTS - 1,
+      })
+
+      expect(lastOutboxUpdate()[0]).toEqual({
+        lastAttemptAt: NOW,
+        lastError:
+          'OneSystems is unavailable (Login HTTP 401); waiting for Login to succeed',
+      })
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('OneSystems is unavailable'),
+        expect.objectContaining({ noticeId: 'notice-1' }),
+      )
+    })
+
+    it('holds the row, not an attempt, when a delivery that reached One waits for Login', async () => {
+      mailboxDeliveryService.deliverToMailbox.mockResolvedValue({
+        status: 'DOCUMENT_CREATED',
+        deliveryId: 'delivery-1',
+        attempts: 1,
+        skipped: 'UNAVAILABLE',
+      })
+
+      await dispatch(NoticeOutboxKindEnum.REPORT_DENIED, {
+        attempts: NOTICE_DISPATCH_MAX_ATTEMPTS - 1,
+      })
+
+      expect(lastOutboxUpdate()[0]).toEqual({
+        lastAttemptAt: NOW,
+        lastError:
+          'mailbox delivery delivery-1 waits for OneSystems Login to succeed',
+      })
+    })
+
     // The template was unset (a rollback) after the delivery reached One: it
     // waits for the template like an unconfigured kind, uncounted, and is
     // not given up as out of attempts.

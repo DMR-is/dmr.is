@@ -103,27 +103,62 @@ it as sent, and the row becomes SENT, only when all of these hold:
 Anything else, including that text without a `DocumentId` or with another
 document's, is a rejection, and the row is UNCERTAIN like any other
 `Success: false`. The client logs
-`… answered that the document was already sent, but not for certain of this
-document, treating it as rejected` with both ids, which is where to start
+`… answered that the document was already sent, but not for certain of this document, treating it as rejected` with both ids, which is where to start
 reconciling it.
 
 A row settled this way looks like any other SENT row. `sent_at` is when the
 repeat was confirmed, not when the document first reached the mailbox, and no
 column marks it: only the warn line
-`Mailbox delivery <id>: island.is already had the document, recording it as
-sent` does.
+`Mailbox delivery <id>: island.is already had the document, recording it as sent` does.
 
 CreateCase is retried after any failure: One finds-or-creates the case by
 `IDNumber` + `CaseType` (OneSystems, 29 Sep 2026). A case id that loses the race
 to be saved is logged (`discardedCaseItemId`).
 
 A row is claimed at most `MAILBOX_DELIVERY_MAX_ATTEMPTS` (5) times. Every
-claim adds one to `attempts`. After that `deliverToMailbox` makes no call and
+claim adds one to `attempts`, except one whose Login fails (see
+[One unreachable](#one-unreachable)). After that `deliverToMailbox` makes no call and
 returns the row's own status with `skipped: 'ATTEMPTS_EXHAUSTED'`, and logs an
 error with the `deliveryId` and `attempts`. Without the cap a permanent
 rejection would be retried on every call. See
 [Exhausted rows](#exhausted-rows). A row whose last claim died mid-call is still
 claimed once more, so it becomes UNCERTAIN as usual.
+
+## One unreachable
+
+Before a row is written or claimed, `deliverToMailbox` checks that the client
+has a OneSystems token (`IOneSystemsService.checkLogin`, cached while valid).
+When Login fails, or the URL or credentials are missing, no attempt is spent:
+a wrong password, a wrong URL or One being down is a fault of the environment,
+and counting it would give up every notice within five minutes.
+
+What it answers follows the same rule as a missing case template:
+
+- No delivery with this key, or one that got no further than CreateCase:
+  `UNAVAILABLE`, with a loggable reason such as `Login HTTP 401`. Nothing is
+  written. The dispatcher holds the notice; the reminder task emails the
+  reminder.
+- A delivery that is SENT, UNCERTAIN or under a live lease answers as it
+  stands.
+- A delivery holding a filed document or a marker answers its own status with
+  `skipped: 'UNAVAILABLE'`. The dispatcher holds the notice and the reminder
+  task neither emails nor flags it, since One may already have sent it. It
+  resumes from its saved ids once Login works.
+
+A Login that fails mid-run (the token lapsed and its renewal failed) hands the
+claim's attempt back and clears the marker, since Login comes before the
+action.
+
+A failed Login is trusted for `LOGIN_RETRY_AFTER_MS` (one minute): until then
+`checkLogin` answers without a request. Without it every delivery would send
+its own Login, which could lock out One's service account and, with One down,
+wait out the Login timeout each time. So the OneSystems client, which logs
+every failed Login at error, logs at most one a minute per process. This
+service logs the outage at error when it starts and again when its reason
+changes, and at info when Login works again. The dispatcher logs each held
+notice at warn on every look, and the daily alert names it once it is
+overdue. Once Login works, every held notice goes on the next run, with
+nothing to re-arm.
 
 ## Alerting
 
@@ -155,8 +190,19 @@ row; at most 50 rows of each are named.
 
 A deadline reminder that stops this way also leaves an event on the
 company's timeline, on the run that stopped it: `…_UNCONFIRMED` for an
-UNCERTAIN or interrupted delivery, `…_UNDELIVERED` for one out of attempts. There is no admin screen for these rows yet; until
-there is, the alert and the SQL below are the way in.
+UNCERTAIN or interrupted delivery, `…_UNDELIVERED` for one out of attempts.
+
+The admin web's **Tilkynningar** page (`/tilkynningar`, ADMIN-only, backed by
+`notice-issues` in doe-modules) lists these rows and does the recovery below
+without SQL: **Reyna aftur** re-arms an exhausted delivery and re-drives its
+FAILED notice; **Staðfesta stöðu** reconciles an UNCERTAIN or interrupted
+delivery as sent or not sent after a person has checked One. Each leaves who
+did it in `last_error`. They follow the SQL below, guarded the same way
+(status, marker, saved document id and `sent_at` as read, and no live lease on
+Postgres's clock), with two differences: an interrupted row is settled
+directly rather than first marked UNCERTAIN, and a row reconciled as sent with
+no `sent_at` gets the time of the reconcile, not the real send time. The SQL is
+for when the page is not an option.
 
 ## Exhausted rows
 
@@ -184,7 +230,8 @@ ORDER BY last_attempt_at;
 `last_error` for one row at a time and do not paste it anywhere.
 
 Fix the cause first: a case template One does not know, a recipient One cannot
-find, an outage that lasted longer than five calls. Then re-arm the
+find, an outage of One itself that answered past Login. (A failing Login spends
+no attempts; see [One unreachable](#one-unreachable).) Then re-arm the
 row, so the next call with **the same idempotency key** resumes it from its
 saved ids:
 

@@ -20,10 +20,7 @@ import {
   IMailboxDeliveryService,
   isMailboxDeliveryEnabled,
 } from '../mailbox-delivery/mailbox-delivery.service.interface'
-import {
-  MailboxDeliveryKindEnum,
-  MailboxDeliveryStatusEnum,
-} from '../mailbox-delivery/models/mailbox-delivery.enums'
+import { MailboxDeliveryStatusEnum } from '../mailbox-delivery/models/mailbox-delivery.enums'
 import {
   buildApprovedLetter,
   buildDeniedLetter,
@@ -57,6 +54,7 @@ import {
   NoticeDispatchSummary,
   OverdueNotice,
 } from './notice-dispatch.service.interface'
+import { NOTICE_MAILBOX_KINDS } from './notice-mailbox-kinds'
 
 const LOGGING_CONTEXT = 'NoticeDispatchService'
 
@@ -145,26 +143,6 @@ const FILING_COMPANY_NOT_QUARANTINED = literal(`NOT EXISTS (
      AND cr.parent_company_id IS NULL
      AND c.quarantined
 )`)
-
-/** The mailbox kind of each notice, by report type: each has its own case template. */
-const MAILBOX_KINDS: Record<
-  NoticeOutboxKindEnum,
-  Record<ReportTypeEnum, MailboxDeliveryKindEnum>
-> = {
-  [NoticeOutboxKindEnum.REPORT_SUBMITTED]: {
-    [ReportTypeEnum.SALARY]: MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
-    [ReportTypeEnum.EQUALITY]:
-      MailboxDeliveryKindEnum.EQUALITY_REPORT_SUBMITTED,
-  },
-  [NoticeOutboxKindEnum.REPORT_APPROVED]: {
-    [ReportTypeEnum.SALARY]: MailboxDeliveryKindEnum.SALARY_REPORT_APPROVED,
-    [ReportTypeEnum.EQUALITY]: MailboxDeliveryKindEnum.EQUALITY_REPORT_APPROVED,
-  },
-  [NoticeOutboxKindEnum.REPORT_DENIED]: {
-    [ReportTypeEnum.SALARY]: MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
-    [ReportTypeEnum.EQUALITY]: MailboxDeliveryKindEnum.EQUALITY_REPORT_DENIED,
-  },
-}
 
 /** A notice ready for the mailbox. The PDF is rendered only if One needs it. */
 type MailboxNotice = {
@@ -336,7 +314,9 @@ export class NoticeDispatchService implements INoticeDispatchService {
     for (const row of rows) {
       if (Date.now() - startedAt >= NOTICE_DISPATCH_TIME_BUDGET_MS) {
         this.logger.warn(
-          `Notice dispatch ran past its time budget; leaving ${rows.length - picked} rows for the next run`,
+          `Notice dispatch ran past its time budget; leaving ${
+            rows.length - picked
+          } rows for the next run`,
           { context: LOGGING_CONTEXT, left: rows.length - picked },
         )
         break
@@ -675,7 +655,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
       return null
     }
 
-    const kind = MAILBOX_KINDS[row.kind][report.type]
+    const kind = NOTICE_MAILBOX_KINDS[row.kind][report.type]
     const delivery = await this.mailboxDeliveryService.findDelivery(
       buildMailboxDeliveryIdempotencyKey({
         kind,
@@ -750,7 +730,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
 
     const delivery = await this.mailboxDeliveryService.findDelivery(
       buildMailboxDeliveryIdempotencyKey({
-        kind: MAILBOX_KINDS[row.kind][report.type],
+        kind: NOTICE_MAILBOX_KINDS[row.kind][report.type],
         companyId,
         discriminator: report.id,
       }),
@@ -832,7 +812,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
       return notice
     }
 
-    const kind = MAILBOX_KINDS[row.kind][report.type]
+    const kind = NOTICE_MAILBOX_KINDS[row.kind][report.type]
     const result = await this.mailboxDeliveryService.deliverToMailbox({
       idempotencyKey: buildMailboxDeliveryIdempotencyKey({
         kind,
@@ -983,6 +963,17 @@ export class NoticeDispatchService implements INoticeDispatchService {
         // Quarantined between the pick and the call. Not an attempt: the row
         // waits, and is not picked again until the quarantine is lifted.
         return { outcome: 'HELD', reason: 'the filing company is quarantined' }
+      case 'UNAVAILABLE':
+        // One cannot be reached at all (Login fails, or the client is not
+        // configured). Not an attempt: the fault is the environment's, and
+        // counting it would give up every notice during an outage.
+        // `deliverToMailbox` logged it at error when it began, and the daily
+        // alert names the row once it is overdue.
+        return {
+          outcome: 'HELD',
+          reason: `OneSystems is unavailable (${result.reason}); waiting for Login to succeed`,
+          alert: true,
+        }
       case 'UNCONFIGURED':
         // The flag is on before the kind's case template is set. Not an
         // attempt, so nothing is spent and the row goes once the template
@@ -995,6 +986,15 @@ export class NoticeDispatchService implements INoticeDispatchService {
           alert: true,
         }
       default:
+        if (result.skipped === 'UNAVAILABLE') {
+          // A delivery that reached One, held until Login works so it can
+          // resume from its saved ids. Uncounted, like top-level UNAVAILABLE.
+          return {
+            outcome: 'HELD',
+            reason: `mailbox delivery ${result.deliveryId} waits for OneSystems Login to succeed`,
+            alert: true,
+          }
+        }
         if (result.skipped === 'UNCONFIGURED') {
           // The template was unset after this delivery reached One (a
           // rollback). Held like UNCONFIGURED, uncounted, and resumed from

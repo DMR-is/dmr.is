@@ -119,6 +119,19 @@ export interface OneSystemsCloseCaseResult {
  */
 export interface IOneSystemsService {
   /**
+   * Makes sure the client holds a usable token: the cached one while it is
+   * valid, otherwise a fresh Login. Sends nothing else, so it is safe to call
+   * before every delivery.
+   *
+   * Throws the Login's `OneSystemsError` (operation `Login`) when there is no
+   * token to be had: credentials or URL missing (`CONFIG`), or One refusing,
+   * not answering or answering something unreadable. A caller uses it to tell
+   * "One cannot be reached at all right now" apart from a failure of one
+   * delivery.
+   */
+  checkLogin(): Promise<void>
+
+  /**
    * Finds the party's open case that uses `caseType` (by `IDNumber` +
    * `CaseType`), or creates one from the template. Repeating it with the same
    * input returns the same case (OneSystems, 29 Sep 2026).
