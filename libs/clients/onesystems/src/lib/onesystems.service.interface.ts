@@ -117,6 +117,14 @@ export interface OneSystemsCloseCaseResult {
  * the caller's job (the DoE mailbox-delivery service does it); a new consumer
  * must gate its own calls.
  */
+/**
+ * An action call throws a `Login` error only when no action request could
+ * have run: the Login in front of the first request failed, or the action was
+ * refused with an empty Bearer challenge (the JwtBearer handler, before the
+ * action) and the re-Login for the retry failed. The mailbox delivery relies
+ * on this to hand back an attempt and clear a non-idempotent marker; the
+ * client spec pins it.
+ */
 export interface IOneSystemsService {
   /**
    * Makes sure the client holds a usable token: the cached one while it is
