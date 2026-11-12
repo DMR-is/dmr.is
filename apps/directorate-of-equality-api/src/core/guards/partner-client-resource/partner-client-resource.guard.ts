@@ -17,7 +17,7 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import {
   assertCompanyToken,
-  PARTNER_WEB_SCOPE,
+  SELF_SERVICE_TOKEN_SCOPES,
 } from '../token-surface/token-surface'
 
 export type PartnerClientResourceRequest = {
@@ -62,9 +62,14 @@ export class PartnerClientResourceGuard implements CanActivate {
       throw new UnauthorizedException()
     }
 
-    // Vendor keys are managed only from partner-web, so the island.is
-    // application scope is not enough here.
-    assertCompanyToken(user, this.logger, LOGGING_CONTEXT, [PARTNER_WEB_SCOPE])
+    // Vendor keys are self-service: managed only from island.is My Pages, so
+    // the island.is application scope is not enough here.
+    assertCompanyToken(
+      user,
+      this.logger,
+      LOGGING_CONTEXT,
+      SELF_SERVICE_TOKEN_SCOPES,
+    )
 
     const client =
       await this.partnerClientService.findLiveByNationalId(nationalId)

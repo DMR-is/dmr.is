@@ -13,6 +13,7 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   assertCompanyToken,
   assertStaffToken,
+  companyTokenScopesFor,
 } from '../token-surface/token-surface'
 
 const LOGGING_CONTEXT = 'ReportResourceGuard'
@@ -41,7 +42,13 @@ export class ReportResourceGuard implements CanActivate {
     if (resourceContext.actor.kind === ReportRoleEnum.REVIEWER) {
       assertStaffToken(user, this.logger, LOGGING_CONTEXT)
     } else {
-      assertCompanyToken(user, this.logger, LOGGING_CONTEXT)
+      // Reads may also come from My Pages; see `@CompanyReadTokenSurface()`.
+      assertCompanyToken(
+        user,
+        this.logger,
+        LOGGING_CONTEXT,
+        companyTokenScopesFor(context.getHandler(), context.getClass()),
+      )
     }
 
     request.reportResourceContext = resourceContext

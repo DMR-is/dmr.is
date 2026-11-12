@@ -6,7 +6,7 @@ import {
 
 import {
   ISLAND_IS_APPLICATION_SCOPE,
-  PARTNER_WEB_SCOPE,
+  MY_PAGES_SCOPE,
 } from '../token-surface/token-surface'
 import {
   PartnerClientResourceGuard,
@@ -52,7 +52,7 @@ describe('PartnerClientResourceGuard', () => {
 
     const request = await run({
       nationalId: '9999999999',
-      scope: [PARTNER_WEB_SCOPE],
+      scope: [MY_PAGES_SCOPE],
     } as never)
 
     expect(findLiveByNationalId).toHaveBeenCalledWith('9999999999')
@@ -62,7 +62,7 @@ describe('PartnerClientResourceGuard', () => {
   it('404s an organisation that is not an approved provider, in Icelandic too', async () => {
     const error = await run({
       nationalId: '1111111111',
-      scope: [PARTNER_WEB_SCOPE],
+      scope: [MY_PAGES_SCOPE],
     } as never).catch((e) => e)
 
     expect(error).toBeInstanceOf(NotFoundException)
@@ -76,7 +76,7 @@ describe('PartnerClientResourceGuard', () => {
     expect(findLiveByNationalId).not.toHaveBeenCalled()
   })
 
-  // Vendor keys are partner-web's alone; the island.is application channel
+  // Vendor keys are My Pages' alone; the island.is application channel
   // never manages them.
   it('refuses an island.is application token before looking up the provider', async () => {
     await expect(

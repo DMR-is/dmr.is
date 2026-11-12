@@ -57,6 +57,7 @@ import { PagingQuery } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AutoProvisionCompany } from '../../core/decorators/auto-provision-company.decorator'
+import { CompanyReadTokenSurface } from '../../core/decorators/company-read-token-surface.decorator'
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
@@ -85,6 +86,7 @@ export class ApplicationController {
   ) {}
 
   @Get('company')
+  @CompanyReadTokenSurface()
   @DoeResponse({ operationId: 'getApplicationCompany', type: CompanyDto })
   async getCompany(@CurrentCompany() company: CompanyDto): Promise<CompanyDto> {
     return company
@@ -175,6 +177,7 @@ export class ApplicationController {
   }
 
   @Get('reports/equality/active')
+  @CompanyReadTokenSurface()
   @DoeResponse({
     operationId: 'getApplicationActiveEqualityReport',
     include404: true,
@@ -261,6 +264,7 @@ export class ApplicationController {
   }
 
   @Get('reports/:providerId')
+  @CompanyReadTokenSurface()
   @ApiParam({
     name: 'providerId',
     type: String,
@@ -290,6 +294,7 @@ export class ApplicationController {
    * they would otherwise have no way to look at.
    */
   @Get('reports/:providerId/equality-content/pdf')
+  @CompanyReadTokenSurface()
   @ApiParam({
     name: 'providerId',
     type: String,
@@ -318,6 +323,7 @@ export class ApplicationController {
   }
 
   @Get('reports/:providerId/outliers')
+  @CompanyReadTokenSurface()
   @ApiParam({
     name: 'providerId',
     type: String,
@@ -340,6 +346,7 @@ export class ApplicationController {
   }
 
   @Get('reports/:providerId/comments')
+  @CompanyReadTokenSurface()
   @ApiParam({
     name: 'providerId',
     type: String,
@@ -493,6 +500,7 @@ export class ApplicationController {
   }
 
   @Get('reports/:providerId/equality-attachments')
+  @CompanyReadTokenSurface()
   @ApiParam({
     name: 'providerId',
     type: String,
