@@ -1782,6 +1782,7 @@ export const noticeIssuesText = {
     FAILED: 'Mistókst',
     UNCERTAIN: 'Óvíst hvort sent',
   } as Record<string, string>,
+  loadError: 'Ekki tókst að sækja tilkynningarnar. Reyndu aftur síðar.',
   failedHeading: 'Komust ekki til skila',
   failedDescription:
     'Kerfið er hætt að reyna. Fyrirtækið hefur ekki fengið tilkynninguna fyrr en einhver bregst við.',
