@@ -57,15 +57,17 @@ export const ReconcileDeliveryModal = ({ delivery, onClose }: Props) => {
     },
   })
 
-  if (!delivery) return null
-
-  const savedDocumentId = delivery.oneDocumentItemId ?? null
+  // Always mounted, with `isVisible` toggled, as the other modals are: the
+  // dialog opens on a hidden-to-visible change, so one mounted already
+  // visible never opened.
+  const savedDocumentId = delivery?.oneDocumentItemId ?? null
   // One confirmed the send after the row went uncertain: it was sent, and the
   // API refuses NOT_SENT.
-  const sentAt = delivery.sentAt ?? null
+  const sentAt = delivery?.sentAt ?? null
   const typedId = documentItemId.trim()
 
   const submit = (outcome: 'SENT' | 'NOT_SENT') => {
+    if (!delivery) return
     if (outcome === 'SENT' && !savedDocumentId && !typedId) {
       setShowRequired(true)
       return
@@ -99,7 +101,7 @@ export const ReconcileDeliveryModal = ({ delivery, onClose }: Props) => {
           <Text variant="eyebrow" color="blue400">
             {t.caseNumberLabel}
           </Text>
-          <Text>{delivery.oneCaseNumber ?? t.unknown}</Text>
+          <Text>{delivery?.oneCaseNumber ?? t.unknown}</Text>
         </Box>
 
         {sentAt && (

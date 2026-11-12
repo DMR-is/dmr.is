@@ -2,12 +2,15 @@
 
 import { useMemo, useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
@@ -23,11 +26,7 @@ import { formatDateIS } from '../../lib/constants'
 import { noticeIssuesText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type ColumnDef } from '@tanstack/react-table'
 
 const t = noticeIssuesText
@@ -73,7 +72,11 @@ export const NoticeIssuesContainer = () => {
     null,
   )
 
-  const { data } = useSuspenseQuery(trpc.noticeIssues.getIssues.queryOptions())
+  // Not a suspense query: one would run during the server render, which has
+  // no session, and log a 401 on every load before falling back to the client.
+  const { data, isPending, isError } = useQuery(
+    trpc.noticeIssues.getIssues.queryOptions(),
+  )
 
   const retry = useMutation({
     ...trpc.noticeIssues.retryNotice.mutationOptions(),
@@ -235,6 +238,22 @@ export const NoticeIssuesContainer = () => {
     [],
   )
 
+  if (isPending) {
+    return (
+      <GridContainer>
+        <SkeletonLoader repeat={3} height={160} space={3} />
+      </GridContainer>
+    )
+  }
+
+  if (isError) {
+    return (
+      <GridContainer>
+        <AlertMessage type="error" message={t.loadError} />
+      </GridContainer>
+    )
+  }
+
   return (
     <GridContainer>
       <GridRow>
@@ -246,7 +265,7 @@ export const NoticeIssuesContainer = () => {
             >
               <Table
                 columns={failedColumns}
-                data={data.failed}
+                data={data?.failed ?? []}
                 noDataMessage={t.failedNoData}
               />
             </Section>
@@ -256,7 +275,7 @@ export const NoticeIssuesContainer = () => {
             >
               <Table
                 columns={overdueColumns}
-                data={data.overdue}
+                data={data?.overdue ?? []}
                 noDataMessage={t.overdueNoData}
               />
             </Section>
@@ -266,7 +285,7 @@ export const NoticeIssuesContainer = () => {
             >
               <Table
                 columns={reminderColumns}
-                data={data.reminders}
+                data={data?.reminders ?? []}
                 noDataMessage={t.remindersNoData}
               />
             </Section>
