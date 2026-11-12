@@ -1,7 +1,6 @@
 'use client'
 
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
-import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
@@ -12,6 +11,7 @@ import { formatDateIS } from '../../lib/constants'
 import { systemSettingsText } from '../../lib/text'
 import { formatNationalId } from '../../lib/utils'
 import { parseMailboxAllowlist } from './mailboxAllowlist'
+import { MailboxCompanyList } from './MailboxCompanyList'
 import { useMailboxAllowlist } from './useMailboxAllowlist'
 
 import { type ColumnDef } from '@tanstack/react-table'
@@ -46,9 +46,8 @@ const HISTORY_COLUMNS: ColumnDef<ConfigDto>[] = [
 
 /**
  * What happens to notices on this environment, said once, in an alert whose
- * level matches: every company's mailbox (success), only some (warning), or
- * none, either because `ONESYSTEMS_ENABLED` is off or because no company is
- * named (error). The flag decides first: off means email for everyone,
+ * level matches: every company's mailbox (success), only some or none named
+ * (warning), or `ONESYSTEMS_ENABLED` off (error). The flag decides first: off means email for everyone,
  * whatever the setting says. The Breyta action lives in the page's Aðgerðir
  * sidebar while this tab is open.
  */
@@ -86,7 +85,7 @@ export const MailboxAllowlistSection = () => {
       }
     }
     return {
-      type: 'error' as const,
+      type: 'warning' as const,
       title: t.titleNone,
       message: t.descriptionNone,
     }
@@ -105,18 +104,7 @@ export const MailboxAllowlistSection = () => {
       )}
 
       {loaded && parsed.mode === 'list' && (
-        <Box background="white" borderRadius="large" padding={[3, 3, 4]}>
-          <Stack space={2}>
-            <Text variant="h4" fontWeight="semiBold">
-              {t.selectedHeading}
-            </Text>
-            <Stack space={1}>
-              {parsed.nationalIds.map((id) => (
-                <Text key={id}>{formatNationalId(id)}</Text>
-              ))}
-            </Stack>
-          </Stack>
-        </Box>
+        <MailboxCompanyList nationalIds={parsed.nationalIds} />
       )}
 
       {pastValues.length > 0 && (

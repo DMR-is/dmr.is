@@ -1522,12 +1522,13 @@ export const systemSettingsText = {
     loadError: 'Ekki tókst að sækja stillinguna. Reyndu aftur síðar.',
     titleFlagOff: 'Pósthólfið er óvirkt',
     titleNone: 'Pósthólfið er virkt',
-    titleList: (n: number) =>
-      n === 1
-        ? 'Sending í pósthólf er virk fyrir 1 fyrirtæki'
-        : `Sending í pósthólf er virk fyrir ${n} fyrirtæki`,
+    titleList: (n: number) => `Pósthólfið er virkt fyrir ${n} fyrirtæki`,
     titleAll: 'Sending í pósthólf er virk fyrir öll fyrirtæki',
     selectedHeading: 'Fyrirtæki sem fá tilkynningar í pósthólf',
+    unknownCompany: 'Fannst ekki í fyrirtækjaskrá',
+    removeButton: 'Fjarlægja',
+    removeSuccess: 'Fyrirtækið hefur verið fjarlægt',
+    removeError: 'Ekki tókst að fjarlægja fyrirtækið',
     historyHeading: 'Fyrri stillingar',
     historyUntilLabel: 'Gilti til',
     modeNone: 'Engin fyrirtæki',
