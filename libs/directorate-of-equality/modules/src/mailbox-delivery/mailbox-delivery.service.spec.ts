@@ -2243,6 +2243,20 @@ describe('MailboxDeliveryService', () => {
         },
       )
 
+      it('answers an exhausted one with nothing filed as exhausted, not UNAVAILABLE', async () => {
+        const seeded = store.seed({
+          status: MailboxDeliveryStatusEnum.FAILED,
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        })
+
+        await expect(service.deliverToMailbox(input())).resolves.toEqual({
+          status: MailboxDeliveryStatusEnum.FAILED,
+          deliveryId: seeded.id,
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+          skipped: 'ATTEMPTS_EXHAUSTED',
+        })
+      })
+
       it('answers UNAVAILABLE for one that got no further than CreateCase', async () => {
         store.seed({
           status: MailboxDeliveryStatusEnum.CASE_CREATED,
@@ -2272,10 +2286,19 @@ describe('MailboxDeliveryService', () => {
       async (_when, call, status) => {
         one[call].mockRejectedValueOnce(transport('Login'))
 
-        await expect(service.deliverToMailbox(input())).resolves.toEqual({
-          status: 'UNAVAILABLE',
-          reason: 'Login TRANSPORT',
-        })
+        // A row holding a filed document answers as it stands, so nobody
+        // emails a notice whose document One already has.
+        const result = await service.deliverToMailbox(input())
+        expect(result).toEqual(
+          status === MailboxDeliveryStatusEnum.DOCUMENT_CREATED
+            ? {
+                status,
+                deliveryId: onlyRow().id,
+                attempts: 0,
+                skipped: 'UNAVAILABLE',
+              }
+            : { status: 'UNAVAILABLE', reason: 'Login TRANSPORT' },
+        )
 
         expect(onlyRow()).toMatchObject({
           status,

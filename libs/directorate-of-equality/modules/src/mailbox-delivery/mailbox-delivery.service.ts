@@ -598,6 +598,22 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     if (row.leaseExpiresAt && row.leaseExpiresAt.getTime() > Date.now()) {
       return { status: 'IN_PROGRESS', deliveryId: row.id }
     }
+    // Out of attempts with nothing filed: answered as exhausted, as it would
+    // be with One up, so an outage does not turn a reminder already flagged
+    // undelivered into an email. Only for an outage: a missing case template
+    // keeps its own answer.
+    if (
+      skipped === 'UNAVAILABLE' &&
+      !row.inFlightStep &&
+      row.attempts >= MAILBOX_DELIVERY_MAX_ATTEMPTS
+    ) {
+      return {
+        status: row.status as MailboxDeliveryUnsettledStatus,
+        deliveryId: row.id,
+        attempts: row.attempts,
+        skipped: 'ATTEMPTS_EXHAUSTED',
+      }
+    }
     if (!row.oneDocumentItemId && !row.inFlightStep) {
       return null
     }
@@ -955,7 +971,10 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       // was not reached: the claim's attempt is handed back.
       if (isUnavailableError(error)) {
         await this.releaseUnattempted(row.id, leaseToken, error)
-        return this.loginUnavailable(error)
+        // By the same rule as the pre-check: a row that already holds a filed
+        // document answers `skipped: 'UNAVAILABLE'`, never top-level, or the
+        // reminder task would email it and orphan the document in One.
+        return this.unavailableResult(input, this.loginUnavailable(error))
       }
 
       // Only a non-idempotent call whose outcome is unclear is UNCERTAIN.
