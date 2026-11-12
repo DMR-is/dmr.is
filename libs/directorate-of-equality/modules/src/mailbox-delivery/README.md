@@ -174,8 +174,15 @@ row; at most 50 rows of each are named.
 
 A deadline reminder that stops this way also leaves an event on the
 company's timeline, on the run that stopped it: `…_UNCONFIRMED` for an
-UNCERTAIN or interrupted delivery, `…_UNDELIVERED` for one out of attempts. There is no admin screen for these rows yet; until
-there is, the alert and the SQL below are the way in.
+UNCERTAIN or interrupted delivery, `…_UNDELIVERED` for one out of attempts.
+
+The admin web's **Tilkynningar** page (`/tilkynningar`, ADMIN-only, backed by
+`notice-issues` in doe-modules) lists these rows and does the recovery below
+without SQL: **Reyna aftur** re-arms an exhausted delivery and re-drives its
+FAILED notice; **Staðfesta stöðu** reconciles an UNCERTAIN or interrupted
+delivery as sent or not sent after a person has checked One. Each leaves who
+did it in `last_error`. The SQL below is what those buttons run, for when the
+page is not an option.
 
 ## Exhausted rows
 
