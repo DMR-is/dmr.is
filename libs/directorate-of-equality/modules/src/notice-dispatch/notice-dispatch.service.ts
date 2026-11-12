@@ -336,7 +336,9 @@ export class NoticeDispatchService implements INoticeDispatchService {
     for (const row of rows) {
       if (Date.now() - startedAt >= NOTICE_DISPATCH_TIME_BUDGET_MS) {
         this.logger.warn(
-          `Notice dispatch ran past its time budget; leaving ${rows.length - picked} rows for the next run`,
+          `Notice dispatch ran past its time budget; leaving ${
+            rows.length - picked
+          } rows for the next run`,
           { context: LOGGING_CONTEXT, left: rows.length - picked },
         )
         break
@@ -1006,6 +1008,15 @@ export class NoticeDispatchService implements INoticeDispatchService {
           alert: true,
         }
       default:
+        if (result.skipped === 'UNAVAILABLE') {
+          // A delivery that reached One, held until Login works so it can
+          // resume from its saved ids. Uncounted, like top-level UNAVAILABLE.
+          return {
+            outcome: 'HELD',
+            reason: `mailbox delivery ${result.deliveryId} waits for OneSystems Login to succeed`,
+            alert: true,
+          }
+        }
         if (result.skipped === 'UNCONFIGURED') {
           // The template was unset after this delivery reached One (a
           // rollback). Held like UNCONFIGURED, uncounted, and resumed from
