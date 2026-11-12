@@ -87,6 +87,20 @@ export const MailboxAllowlistSection = () => {
   const parsed = parseMailboxAllowlist(value)
   const pastValues = (history ?? []).filter((row) => !!row.supersededAt)
 
+  // What actually happens on this environment: the flag first, since off
+  // means email for everyone whatever the setting says.
+  const description = !status
+    ? t.description
+    : !status.enabled
+      ? t.descriptionFlagOff
+      : !loaded
+        ? t.description
+        : parsed.mode === 'all'
+          ? t.descriptionAll
+          : parsed.mode === 'list'
+            ? t.descriptionList(parsed.nationalIds.length)
+            : t.descriptionNone
+
   return (
     <Box background="white" borderRadius="large" padding={[3, 3, 4]}>
       <Stack space={2}>
@@ -112,11 +126,7 @@ export const MailboxAllowlistSection = () => {
             {t.editButton}
           </Button>
         </Inline>
-        <Text variant="small">{t.description}</Text>
-
-        {status && !status.enabled && (
-          <AlertMessage type="info" message={t.flagOffNote} />
-        )}
+        <Text variant="small">{description}</Text>
 
         {isPending ? (
           <SkeletonLoader height={56} />

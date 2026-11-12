@@ -1513,13 +1513,21 @@ export const systemSettingsText = {
   mailbox: {
     heading: 'Pósthólf á island.is',
     description:
-      'Fyrirtæki sem fá allar tilkynningar í pósthólf sitt á island.is í gegnum One. Önnur fyrirtæki fá tölvupóst og móttökukvittanir bíða.',
+      'Hvaða fyrirtæki fá tilkynningar í pósthólf sitt á island.is í gegnum One.',
+    descriptionFlagOff:
+      'Sending í pósthólf er óvirk á þessu umhverfi. Allar tilkynningar fara í tölvupósti og móttökukvittanir bíða, hvað sem stillingin segir.',
+    descriptionNone:
+      'Ekkert fyrirtæki fær tilkynningar í pósthólf. Allar tilkynningar fara í tölvupósti og móttökukvittanir bíða.',
+    descriptionList: (n: number) =>
+      n === 1
+        ? 'Aðeins 1 fyrirtæki fær tilkynningar í pósthólf sitt á island.is. Öll önnur fyrirtæki fá tölvupóst og móttökukvittanir til þeirra bíða.'
+        : `Aðeins ${n} fyrirtæki fá tilkynningar í pósthólf sitt á island.is. Öll önnur fyrirtæki fá tölvupóst og móttökukvittanir til þeirra bíða.`,
+    descriptionAll:
+      'Öll fyrirtæki fá tilkynningar í pósthólf sitt á island.is í gegnum One í stað tölvupósts.',
     loadError: 'Ekki tókst að sækja stillinguna. Reyndu aftur síðar.',
     currentLabel: 'Núverandi stilling',
-    flagOn: 'Sending í pósthólf virk',
-    flagOff: 'Sending í pósthólf óvirk',
-    flagOffNote:
-      'Á þessu umhverfi fara engar tilkynningar í pósthólf, hvað sem stillingin segir. Það ræðst af ONESYSTEMS_ENABLED í uppsetningu umhverfisins.',
+    flagOn: 'Virkt',
+    flagOff: 'Óvirkt',
     historyHeading: 'Fyrri stillingar',
     historyUntilLabel: 'Gilti til',
     modeNone: 'Engin fyrirtæki',
