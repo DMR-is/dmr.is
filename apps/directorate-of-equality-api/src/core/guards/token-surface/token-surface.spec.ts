@@ -5,12 +5,18 @@ import {
 
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
+import { CompanyReadTokenSurface } from '../../decorators/company-read-token-surface.decorator'
+import { SelfServiceTokenSurface } from '../../decorators/self-service-token-surface.decorator'
 import {
   assertCompanyToken,
   assertStaffToken,
+  COMPANY_READ_TOKEN_SCOPES,
+  COMPANY_TOKEN_SCOPES,
+  companyTokenScopesFor,
   ISLAND_IS_APPLICATION_SCOPE,
   ISLAND_IS_SALARY_APPLICATION_SCOPE,
   MY_PAGES_SCOPE,
+  SELF_SERVICE_TOKEN_SCOPES,
 } from './token-surface'
 
 const STAFF_CLIENT_ID = 'doe-web-client'
@@ -26,8 +32,9 @@ const logger = {
 const token = (claims: Record<string, unknown>): DMRUser =>
   ({ nationalId: '0000000000', ...claims }) as unknown as DMRUser
 
-const company = (claims: Record<string, unknown>, scopes?: string[]) => () =>
-  assertCompanyToken(token(claims), logger as never, CONTEXT, scopes)
+const company =
+  (claims: Record<string, unknown>, scopes?: ReadonlyArray<string>) => () =>
+    assertCompanyToken(token(claims), logger as never, CONTEXT, scopes)
 
 const staff = (claims: Record<string, unknown>) => () =>
   assertStaffToken(token(claims), logger as never, CONTEXT)
@@ -62,13 +69,20 @@ describe('assertCompanyToken', () => {
     )
   })
 
-  it('accepts a My Pages token', () => {
-    expect(company({ scope: [MY_PAGES_SCOPE] })).not.toThrow()
+  // The default list is for routes that file or edit; My Pages only reads.
+  it('refuses a My Pages token on the default (write) list', () => {
+    expect(company({ scope: [MY_PAGES_SCOPE] })).toThrow(ForbiddenException)
+  })
+
+  it('accepts a My Pages token on the read list', () => {
+    expect(
+      company({ scope: [MY_PAGES_SCOPE] }, COMPANY_READ_TOKEN_SCOPES),
+    ).not.toThrow()
   })
 
   // IDS serialises a claim with one value as a string, not a one-item array.
   it('accepts a single scope emitted as a string', () => {
-    expect(company({ scope: MY_PAGES_SCOPE })).not.toThrow()
+    expect(company({ scope: ISLAND_IS_APPLICATION_SCOPE })).not.toThrow()
   })
 
   it('accepts a delegated token, since that is how a person acts for a company', () => {
@@ -153,5 +167,57 @@ describe('assertStaffToken', () => {
       expect.stringContaining('DOE_WEB_CLIENT_ID'),
       expect.anything(),
     )
+  })
+})
+
+describe('companyTokenScopesFor', () => {
+  class Unmarked {
+    handler() {
+      return null
+    }
+  }
+
+  class Marked {
+    @CompanyReadTokenSurface()
+    read() {
+      return null
+    }
+
+    write() {
+      return null
+    }
+  }
+
+  @SelfServiceTokenSurface()
+  class SelfService {
+    handler() {
+      return null
+    }
+  }
+
+  it('defaults to the write list, which never holds the My Pages scope', () => {
+    expect(companyTokenScopesFor(Unmarked.prototype.handler, Unmarked)).toBe(
+      COMPANY_TOKEN_SCOPES,
+    )
+    expect(COMPANY_TOKEN_SCOPES).not.toContain(MY_PAGES_SCOPE)
+  })
+
+  it('gives a @CompanyReadTokenSurface() handler the read list', () => {
+    expect(companyTokenScopesFor(Marked.prototype.read, Marked)).toBe(
+      COMPANY_READ_TOKEN_SCOPES,
+    )
+    expect(COMPANY_READ_TOKEN_SCOPES).toContain(MY_PAGES_SCOPE)
+  })
+
+  it("does not widen the decorated handler's siblings", () => {
+    expect(companyTokenScopesFor(Marked.prototype.write, Marked)).toBe(
+      COMPANY_TOKEN_SCOPES,
+    )
+  })
+
+  it('gives a @SelfServiceTokenSurface() controller the self-service list', () => {
+    expect(
+      companyTokenScopesFor(SelfService.prototype.handler, SelfService),
+    ).toBe(SELF_SERVICE_TOKEN_SCOPES)
   })
 })

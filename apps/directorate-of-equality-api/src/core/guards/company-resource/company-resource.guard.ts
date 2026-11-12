@@ -12,11 +12,9 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AUTO_PROVISION_COMPANY_METADATA } from '../../decorators/auto-provision-company.decorator'
-import { SELF_SERVICE_TOKEN_SURFACE_METADATA } from '../../decorators/self-service-token-surface.decorator'
 import {
   assertCompanyToken,
-  COMPANY_TOKEN_SCOPES,
-  SELF_SERVICE_TOKEN_SCOPES,
+  companyTokenScopesFor,
 } from '../token-surface/token-surface'
 
 export type CompanyResourceRequest = {
@@ -46,17 +44,12 @@ export class CompanyResourceGuard implements CanActivate {
       throw new UnauthorizedException()
     }
 
-    const selfService = this.reflector.getAllAndOverride<boolean>(
-      SELF_SERVICE_TOKEN_SURFACE_METADATA,
-      [context.getHandler(), context.getClass()],
-    )
-
     // Before anything is looked up or provisioned from `nationalId`.
     assertCompanyToken(
       user,
       this.logger,
       LOGGING_CONTEXT,
-      selfService ? SELF_SERVICE_TOKEN_SCOPES : COMPANY_TOKEN_SCOPES,
+      companyTokenScopesFor(context.getHandler(), context.getClass()),
     )
 
     const autoProvision = this.reflector.getAllAndOverride<boolean>(

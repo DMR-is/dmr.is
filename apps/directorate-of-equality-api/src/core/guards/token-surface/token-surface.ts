@@ -6,6 +6,9 @@ import {
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger } from '@dmr.is/logging'
 
+import { COMPANY_READ_TOKEN_SURFACE_METADATA } from '../../decorators/company-read-token-surface.decorator'
+import { SELF_SERVICE_TOKEN_SURFACE_METADATA } from '../../decorators/self-service-token-surface.decorator'
+
 /**
  * Which IDS tokens each caller surface accepts.
  *
@@ -33,9 +36,12 @@ export const ISLAND_IS_SALARY_APPLICATION_SCOPE =
   '@island.is/applications/directorate-of-equality-salary'
 
 /**
- * island.is My Pages' dedicated DoE scope: the self-service client, where a
- * company manages its API keys and partner delegations and an approved provider
- * its vendor keys. It replaces partner-web, which never reached production.
+ * island.is My Pages' dedicated DoE scope. My Pages is where a company manages
+ * its API keys and partner delegations, an approved provider its vendor keys,
+ * and where a company READS its reports. It never files or edits: it is in
+ * `SELF_SERVICE_TOKEN_SCOPES` and `COMPANY_READ_TOKEN_SCOPES`, never in
+ * `COMPANY_TOKEN_SCOPES`. It replaces partner-web, which never reached
+ * production.
  *
  * PROPOSED NAME, pending island.is's confirmation: the island.is team adds it
  * as an ApiScope for the service-portal client. If the confirmed name differs,
@@ -43,10 +49,27 @@ export const ISLAND_IS_SALARY_APPLICATION_SCOPE =
  */
 export const MY_PAGES_SCOPE = '@island.is/directorate-of-equality'
 
-/** Both company channels call the same `/application` endpoints. */
+/**
+ * Company routes that file, draft, edit, upload, withdraw or comment: the
+ * island.is application system's two scopes only.
+ *
+ * The default for every company route (`CompanyResourceGuard`, and the company
+ * side of `ReportResourceGuard`), so a new route accepts My Pages only once
+ * someone marks it `@CompanyReadTokenSurface()` and pins it in
+ * `swagger-coverage.spec.ts`.
+ */
 export const COMPANY_TOKEN_SCOPES: ReadonlyArray<string> = [
   ISLAND_IS_APPLICATION_SCOPE,
   ISLAND_IS_SALARY_APPLICATION_SCOPE,
+]
+
+/**
+ * Company routes that only read the company's own reports (and the company
+ * row itself), marked `@CompanyReadTokenSurface()`: the application system,
+ * plus My Pages, which shows reports but must never change them.
+ */
+export const COMPANY_READ_TOKEN_SCOPES: ReadonlyArray<string> = [
+  ...COMPANY_TOKEN_SCOPES,
   MY_PAGES_SCOPE,
 ]
 
@@ -65,6 +88,36 @@ export const COMPANY_TOKEN_SCOPES: ReadonlyArray<string> = [
  * application system never calls them.
  */
 export const SELF_SERVICE_TOKEN_SCOPES: ReadonlyArray<string> = [MY_PAGES_SCOPE]
+
+/**
+ * Which company scope list a handler declares: `@SelfServiceTokenSurface()`,
+ * `@CompanyReadTokenSurface()`, or neither, which means
+ * `COMPANY_TOKEN_SCOPES`. The one place the guards and
+ * `swagger-coverage.spec.ts` resolve it, so the spec pins exactly what the
+ * guards enforce.
+ */
+export const companyTokenScopesFor = (
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  handler: Function,
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  controller: Function,
+): ReadonlyArray<string> => {
+  const declared = (key: string): boolean =>
+    Boolean(
+      (handler && Reflect.getMetadata(key, handler)) ??
+        (controller && Reflect.getMetadata(key, controller)),
+    )
+
+  if (declared(SELF_SERVICE_TOKEN_SURFACE_METADATA)) {
+    return SELF_SERVICE_TOKEN_SCOPES
+  }
+
+  if (declared(COMPANY_READ_TOKEN_SURFACE_METADATA)) {
+    return COMPANY_READ_TOKEN_SCOPES
+  }
+
+  return COMPANY_TOKEN_SCOPES
+}
 
 /**
  * doe-web's IDS client id. doe-web sends its id_token, whose `aud` is the
