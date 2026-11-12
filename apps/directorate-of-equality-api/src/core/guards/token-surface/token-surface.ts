@@ -43,11 +43,11 @@ export const ISLAND_IS_SALARY_APPLICATION_SCOPE =
  * `COMPANY_TOKEN_SCOPES`. It replaces partner-web, which never reached
  * production.
  *
- * The name is the one the island.is team gave it, an ApiScope on the
- * service-portal client; they may keep it on production. If they rename it,
- * change it here: nothing else holds the string.
+ * The name is agreed with the island.is team, an ApiScope on the service-portal
+ * client. Nothing else holds the string, so this is the one place to change if
+ * it ever does.
  */
-export const MY_PAGES_SCOPE = '@island.is/directorate-of-equality/reports'
+export const MY_PAGES_SCOPE = '@island.is/directorate-of-equality'
 
 /**
  * Company routes that file, draft, edit, upload, withdraw or comment: the
