@@ -4,7 +4,11 @@ import { ForbiddenException } from '@nestjs/common'
 import { ReportRoleEnum, ReportStatusEnum } from '@dmr.is/doe-modules/report'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
-import { ISLAND_IS_APPLICATION_SCOPE } from '../token-surface/token-surface'
+import { CompanyReadTokenSurface } from '../../decorators/company-read-token-surface.decorator'
+import {
+  ISLAND_IS_APPLICATION_SCOPE,
+  MY_PAGES_SCOPE,
+} from '../token-surface/token-surface'
 import { ReportResourceGuard } from './report-resource.guard'
 
 const STAFF_CLIENT_ID = 'doe-web-client'
@@ -50,11 +54,29 @@ const companyContext = {
   actor: { kind: ReportRoleEnum.COMPANY, nationalId: '5500000000' },
 }
 
-const createExecutionContext = (request: Record<string, unknown>) =>
+// The comment routes, as the controller declares them: reading is open to My
+// Pages, posting and deleting are not.
+class CommentRoutes {
+  @CompanyReadTokenSurface()
+  list() {
+    return null
+  }
+
+  create() {
+    return null
+  }
+}
+
+const createExecutionContext = (
+  request: Record<string, unknown>,
+  handler: 'list' | 'create' = 'create',
+) =>
   ({
     switchToHttp: () => ({
       getRequest: () => request,
     }),
+    getHandler: () => CommentRoutes.prototype[handler],
+    getClass: () => CommentRoutes,
   }) as never
 
 describe('ReportResourceGuard', () => {
@@ -186,5 +208,56 @@ describe('ReportResourceGuard', () => {
     await expect(
       guard.canActivate(createExecutionContext(request)),
     ).rejects.toBeInstanceOf(ForbiddenException)
+  })
+
+  describe('My Pages tokens on the company side', () => {
+    const myPagesUser = (nationalId: string): DMRUser =>
+      ({ ...createCompanyUser(nationalId), scope: [MY_PAGES_SCOPE] }) as DMRUser
+
+    it('reads a report the company owns', async () => {
+      const request: Record<string, unknown> = {
+        params: { reportId: 'report-1' },
+        user: myPagesUser('5500000000'),
+      }
+      authorizationService.resolveReportResourceContext.mockResolvedValue(
+        companyContext,
+      )
+
+      await expect(
+        guard.canActivate(createExecutionContext(request, 'list')),
+      ).resolves.toBe(true)
+      expect(request.reportResourceContext).toBe(companyContext)
+    })
+
+    it('is refused on a write, such as posting a comment', async () => {
+      const request: Record<string, unknown> = {
+        params: { reportId: 'report-1' },
+        user: myPagesUser('5500000000'),
+      }
+      authorizationService.resolveReportResourceContext.mockResolvedValue(
+        companyContext,
+      )
+
+      await expect(
+        guard.canActivate(createExecutionContext(request, 'create')),
+      ).rejects.toBeInstanceOf(ForbiddenException)
+      expect(request.reportResourceContext).toBeUndefined()
+    })
+
+    // A read marker widens the company side only: reviewer authority still
+    // comes from doe-web alone.
+    it('never gets reviewer access, even on a read', async () => {
+      const request: Record<string, unknown> = {
+        params: { reportId: 'report-1' },
+        user: myPagesUser('1111111111'),
+      }
+      authorizationService.resolveReportResourceContext.mockResolvedValue(
+        reviewerContext,
+      )
+
+      await expect(
+        guard.canActivate(createExecutionContext(request, 'list')),
+      ).rejects.toBeInstanceOf(ForbiddenException)
+    })
   })
 })

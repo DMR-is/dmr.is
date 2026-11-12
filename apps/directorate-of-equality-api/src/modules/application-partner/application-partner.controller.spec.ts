@@ -5,7 +5,8 @@ import {
   assertIdentityGuarded,
   assertTokenSurface,
   ISLAND_IS_APPLICATION_SCOPE,
-  PARTNER_WEB_SCOPE,
+  ISLAND_IS_SALARY_APPLICATION_SCOPE,
+  MY_PAGES_SCOPE,
 } from '../../core/guards/token-surface/token-surface.testing'
 import { ApplicationPartnerController } from './application-partner.controller'
 
@@ -45,13 +46,25 @@ describe('ApplicationPartnerController', () => {
       ).not.toThrow()
     })
 
-    it('that guard admits its own surface and refuses any other token', async () => {
-      await expect(
-        assertTokenSurface(CompanyResourceGuard, {
-          accepts: [ISLAND_IS_APPLICATION_SCOPE, PARTNER_WEB_SCOPE],
-        }),
-      ).resolves.toBeUndefined()
-    })
+    it.each(methods)(
+      '%s admits My Pages only and refuses any other token',
+      async (method) => {
+        await expect(
+          assertTokenSurface(
+            ApplicationPartnerController,
+            method,
+            CompanyResourceGuard,
+            {
+              accepts: [MY_PAGES_SCOPE],
+              refuses: [
+                ISLAND_IS_APPLICATION_SCOPE,
+                ISLAND_IS_SALARY_APPLICATION_SCOPE,
+              ],
+            },
+          ),
+        ).resolves.toBeUndefined()
+      },
+    )
   })
 
   let clients: { listProviders: jest.Mock }

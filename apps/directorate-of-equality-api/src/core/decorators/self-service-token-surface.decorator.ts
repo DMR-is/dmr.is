@@ -10,5 +10,5 @@ export const SELF_SERVICE_TOKEN_SURFACE_METADATA = 'doeSelfServiceTokenSurface'
  * Applied to the controller, so a new handler on it is covered without anyone
  * remembering to. `swagger-coverage.spec.ts` pins which routes carry it.
  */
-export const SelfServiceTokenSurface = () =>
+export const SelfServiceTokenSurface = (): ClassDecorator =>
   SetMetadata(SELF_SERVICE_TOKEN_SURFACE_METADATA, true)

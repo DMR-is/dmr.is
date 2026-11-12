@@ -5,12 +5,17 @@ import { OpenAPIObject } from '@nestjs/swagger'
 import { API_VERSION, applyApiRouting, GLOBAL_PREFIX } from '../../api-routing'
 import { AppModule } from '../../app/app.module'
 import { PUBLIC_ROUTE_METADATA } from '../../core/decorators/public-route.decorator'
-import { SELF_SERVICE_TOKEN_SURFACE_METADATA } from '../../core/decorators/self-service-token-surface.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { declaresAccess } from '../../core/guards/declared-access/declared-access.guard'
 import { PartnerClientResourceGuard } from '../../core/guards/partner-client-resource/partner-client-resource.guard'
+import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
+import {
+  companyTokenScopesFor,
+  MY_PAGES_SCOPE,
+  SELF_SERVICE_TOKEN_SCOPES,
+} from '../../core/guards/token-surface/token-surface'
 import { buildSwaggerDocument } from '../../setupSwaggerDocument'
 import { SWAGGER_CONFIG } from '../../swagger.config'
 
@@ -200,6 +205,38 @@ const SELF_SERVICE_HANDLERS: readonly string[] = [
   'ApplicationPartnerController.grantPartnerDelegation',
   'ApplicationPartnerController.revokePartnerDelegation',
 ]
+
+/**
+ * Company routes that accept a My Pages token besides the island.is application
+ * system: the ones marked `@CompanyReadTokenSurface()`. My Pages shows a
+ * company its reports and must never file, edit, upload, withdraw or comment.
+ *
+ * Read means what the handler does, not its verb. Left out on purpose, though
+ * they are GETs: the draft routes (the filing workspace), the salary-report
+ * eligibility pre-flight (a filing gate), and the blank templates and the
+ * sub-criterion catalog (filing aids, no company data). Left out as POSTs:
+ * salary analysis and workbook import, which only compute or parse but exist
+ * to file. Left out though it reads: the equality-attachment list, whose
+ * lookup also reaches the company's draft and only resolves island.is-filed
+ * reports.
+ *
+ * Pinned in both directions: a write route here would let My Pages change a
+ * report; a read route dropped from it breaks My Pages.
+ */
+const COMPANY_READ_HANDLERS: readonly string[] = [
+  'ApplicationController.getActiveEqualityReport',
+  'ApplicationController.getCompany',
+  'ApplicationController.getEqualityContentPdf',
+  'ApplicationController.getReport',
+  'ApplicationController.getReportComments',
+  'ApplicationController.getReportOutliers',
+  'ApplicationController.getReports',
+  'ReportCommentController.getByReportId',
+]
+
+/** Nest's request-method metadata key (`METHOD_METADATA`); `0` is GET. */
+const METHOD_METADATA = 'method'
+const GET = 0
 
 /** Route paths that must be self-service, as `<controller path>/<handler path>`. */
 const SELF_SERVICE_PATH =
@@ -420,6 +457,22 @@ const guardsForHandler = (controller: Function, method: string): unknown[] => [
   ) as unknown[]) ?? []),
   ...((Reflect.getMetadata(GUARDS_METADATA, controller) as unknown[]) ?? []),
 ]
+
+/**
+ * Whether a company token can reach this handler: behind `CompanyResourceGuard`,
+ * or behind `ReportResourceGuard` outside a staff-only (`AdminGuard`) chain.
+ * Both guards check such a token against `companyTokenScopesFor`, so the
+ * surface specs below judge every one of these handlers by that same call.
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+const hasCompanySide = (controller: Function, method: string): boolean => {
+  const guards = guardsForHandler(controller, method)
+
+  return (
+    guards.includes(CompanyResourceGuard) ||
+    (guards.includes(ReportResourceGuard) && !guards.includes(AdminGuard))
+  )
+}
 
 /** Every routed handler in the container, as `[controller, method]` pairs. */
 const routedHandlers = (
@@ -829,26 +882,21 @@ describe('swagger document coverage', () => {
           .filter((part) => typeof part === 'string' && part !== '/')
           .join('/')
 
-      // What the guards will actually check: CompanyResourceGuard narrowed by
-      // the decorator, or PartnerClientResourceGuard, which always is.
+      // What the guards will actually check: PartnerClientResourceGuard, which
+      // is always self-service, or any company-side guard whose scope list
+      // resolves to the self-service one — through the same call the guards
+      // make, so a marker on a ReportResourceGuard route is counted too.
       const selfService = (
         // eslint-disable-next-line @typescript-eslint/ban-types
         controller: Function,
         method: string,
-      ): boolean => {
-        const guards = guardsForHandler(controller, method)
-        const marked =
-          Reflect.getMetadata(
-            SELF_SERVICE_TOKEN_SURFACE_METADATA,
-            controller.prototype[method],
-          ) ??
-          Reflect.getMetadata(SELF_SERVICE_TOKEN_SURFACE_METADATA, controller)
-
-        return (
-          guards.includes(PartnerClientResourceGuard) ||
-          (Boolean(marked) && guards.includes(CompanyResourceGuard))
-        )
-      }
+      ): boolean =>
+        guardsForHandler(controller, method).includes(
+          PartnerClientResourceGuard,
+        ) ||
+        (hasCompanySide(controller, method) &&
+          companyTokenScopesFor(controller.prototype[method], controller) ===
+            SELF_SERVICE_TOKEN_SCOPES)
 
       const handlers = routedHandlers(app)
 
@@ -872,6 +920,51 @@ describe('swagger document coverage', () => {
         .sort()
 
       expect(narrowed).toEqual([...SELF_SERVICE_HANDLERS].sort())
+    })
+
+    it('lets My Pages read company report routes but never write them', () => {
+      const companySide = routedHandlers(app).filter(([controller, method]) =>
+        hasCompanySide(controller, method),
+      )
+
+      // Anti-vacuity: the company surface is dozens of routes.
+      expect(companySide.length).toBeGreaterThan(30)
+
+      // The same resolution the guards make at runtime.
+      const scopesOf = (
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        controller: Function,
+        method: string,
+      ) => companyTokenScopesFor(controller.prototype[method], controller)
+
+      const myPagesReads = companySide
+        .filter(
+          ([controller, method]) =>
+            scopesOf(controller, method) !== SELF_SERVICE_TOKEN_SCOPES,
+        )
+        .filter(([controller, method]) =>
+          scopesOf(controller, method).includes(MY_PAGES_SCOPE),
+        )
+
+      expect(
+        myPagesReads
+          .map(([controller, method]) => `${controller.name}.${method}`)
+          .sort(),
+      ).toEqual([...COMPANY_READ_HANDLERS].sort())
+
+      // A cheap tripwire for the classification above: nothing that answers a
+      // POST, PUT, PATCH or DELETE may be a My Pages read.
+      const notGet = myPagesReads
+        .filter(
+          ([controller, method]) =>
+            Reflect.getMetadata(
+              METHOD_METADATA,
+              controller.prototype[method],
+            ) !== GET,
+        )
+        .map(([controller, method]) => `${controller.name}.${method}`)
+
+      expect(notGet).toEqual([])
     })
 
     it('guards a substantial surface', () => {

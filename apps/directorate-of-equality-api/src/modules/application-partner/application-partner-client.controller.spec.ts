@@ -7,7 +7,8 @@ import {
   assertIdentityGuarded,
   assertTokenSurface,
   ISLAND_IS_APPLICATION_SCOPE,
-  PARTNER_WEB_SCOPE,
+  ISLAND_IS_SALARY_APPLICATION_SCOPE,
+  MY_PAGES_SCOPE,
 } from '../../core/guards/token-surface/token-surface.testing'
 import { ApplicationPartnerController } from './application-partner.controller'
 import { ApplicationPartnerClientController } from './application-partner-client.controller'
@@ -25,8 +26,8 @@ const USER = {
  * `PartnerClientResourceGuard` resolved, attributed to the person signed in.
  */
 describe('ApplicationPartnerClientController', () => {
-  // Provider keys are managed from partner-web only: an island.is
-  // application token is refused here since #1568.
+  // Provider keys are managed from My Pages only: an island.is application
+  // token is refused here.
   describe('token surface (#1568)', () => {
     const methods = [
       'getPartnerClient',
@@ -45,14 +46,25 @@ describe('ApplicationPartnerClientController', () => {
       ).not.toThrow()
     })
 
-    it('that guard admits its own surface and refuses any other token', async () => {
-      await expect(
-        assertTokenSurface(PartnerClientResourceGuard, {
-          accepts: [PARTNER_WEB_SCOPE],
-          refuses: [ISLAND_IS_APPLICATION_SCOPE],
-        }),
-      ).resolves.toBeUndefined()
-    })
+    it.each(methods)(
+      '%s admits My Pages only and refuses any other token',
+      async (method) => {
+        await expect(
+          assertTokenSurface(
+            ApplicationPartnerClientController,
+            method,
+            PartnerClientResourceGuard,
+            {
+              accepts: [MY_PAGES_SCOPE],
+              refuses: [
+                ISLAND_IS_APPLICATION_SCOPE,
+                ISLAND_IS_SALARY_APPLICATION_SCOPE,
+              ],
+            },
+          ),
+        ).resolves.toBeUndefined()
+      },
+    )
   })
 
   let service: {
