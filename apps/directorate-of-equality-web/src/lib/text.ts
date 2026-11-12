@@ -1516,14 +1516,14 @@ export const systemSettingsText = {
     descriptionFlagOff: 'Allar tilkynningar eru sendar með tölvupósti',
     descriptionNone: 'Ekkert fyrirtæki er valið',
     descriptionList:
-      'Önnur fyrirtæki fá tölvupóst og móttökukvittanir til þeirra bíða.',
+      'Önnur fyrirtæki fá tölvupóst og móttökukvittanir til þeirra bíða',
     descriptionAll:
-      'Tilkynningar fara í pósthólf fyrirtækjanna á island.is í gegnum One í stað tölvupósts.',
+      'Tilkynningar fara í pósthólf fyrirtækjanna á island.is í gegnum One í stað tölvupósts',
     loadError: 'Ekki tókst að sækja stillinguna. Reyndu aftur síðar.',
     titleFlagOff: 'Pósthólfið er óvirkt',
     titleNone: 'Pósthólfið er virkt',
     titleList: (n: number) => `Pósthólfið er virkt fyrir ${n} fyrirtæki`,
-    titleAll: 'Sending í pósthólf er virk fyrir öll fyrirtæki',
+    titleAll: 'Pósthólfið er virkt fyrir öll fyrirtæki',
     selectedHeading: 'Fyrirtæki sem fá tilkynningar í pósthólf',
     checkButton: 'Prófa tengingu',
     checkOkTitle: 'Tenging við One virkar',
@@ -1565,7 +1565,7 @@ export const systemSettingsText = {
     editButton: 'Breyta',
     historyValueLabel: 'Stilling',
     modal: {
-      title: 'Pósthólf á island.is',
+      title: 'Pósthólfið',
       modeLabel: 'Hverjir fá tilkynningar í pósthólf?',
       nationalIdsLabel: 'Kennitölur',
       nationalIdsPlaceholder: 'Ein eða fleiri kennitölur, aðskildar með kommu',
