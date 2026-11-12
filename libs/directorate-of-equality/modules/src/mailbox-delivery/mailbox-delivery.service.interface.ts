@@ -93,7 +93,10 @@ export type DeliverToMailboxResult =
    * One cannot be reached at all: Login fails, or the client is not
    * configured. Nothing was written or claimed for this notice, so no
    * attempt was spent, and a delivery whose Login failed mid-run got its
-   * attempt back. `reason` is safe to log (operation, reason, HTTP status).
+   * attempt back. Only when no delivery with this key reached One, so a
+   * caller may send it another way; otherwise the row answers as it stands,
+   * with `skipped: 'UNAVAILABLE'` when unsettled. `reason` is safe to log
+   * (operation, reason, HTTP status).
    */
   | { status: 'UNAVAILABLE'; reason: string }
   | {
@@ -113,7 +116,10 @@ export type DeliverToMailboxResult =
     }
 
 /** Why a delivery was left alone without a call to One. */
-export type MailboxDeliverySkipReason = 'ATTEMPTS_EXHAUSTED' | 'UNCONFIGURED'
+export type MailboxDeliverySkipReason =
+  | 'ATTEMPTS_EXHAUSTED'
+  | 'UNCONFIGURED'
+  | 'UNAVAILABLE'
 
 /** A row status that still has work left: neither SENT nor UNCERTAIN. */
 export type MailboxDeliveryUnsettledStatus = Exclude<

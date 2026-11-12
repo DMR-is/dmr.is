@@ -103,15 +103,13 @@ it as sent, and the row becomes SENT, only when all of these hold:
 Anything else, including that text without a `DocumentId` or with another
 document's, is a rejection, and the row is UNCERTAIN like any other
 `Success: false`. The client logs
-`… answered that the document was already sent, but not for certain of this
-document, treating it as rejected` with both ids, which is where to start
+`… answered that the document was already sent, but not for certain of this document, treating it as rejected` with both ids, which is where to start
 reconciling it.
 
 A row settled this way looks like any other SENT row. `sent_at` is when the
 repeat was confirmed, not when the document first reached the mailbox, and no
 column marks it: only the warn line
-`Mailbox delivery <id>: island.is already had the document, recording it as
-sent` does.
+`Mailbox delivery <id>: island.is already had the document, recording it as sent` does.
 
 CreateCase is retried after any failure: One finds-or-creates the case by
 `IDNumber` + `CaseType` (OneSystems, 29 Sep 2026). A case id that loses the race
@@ -130,19 +128,37 @@ claimed once more, so it becomes UNCERTAIN as usual.
 
 Before a row is written or claimed, `deliverToMailbox` checks that the client
 has a OneSystems token (`IOneSystemsService.checkLogin`, cached while valid).
-When Login fails, or the URL or credentials are missing, it answers
-`UNAVAILABLE` with a loggable reason such as `Login HTTP 401`. Nothing is
-written and no attempt is spent: a wrong password, a wrong URL or One being
-down is a fault of the environment, and counting it would give up every notice
-within five minutes. A Login that fails mid-run (the token lapsed and its
-renewal failed) hands the claim's attempt back and clears the marker, since
-Login comes before the action.
+When Login fails, or the URL or credentials are missing, no attempt is spent:
+a wrong password, a wrong URL or One being down is a fault of the environment,
+and counting it would give up every notice within five minutes.
 
-The outage is logged at error once when it starts and at info once when Login
-works again. The dispatcher holds the notice at warn without counting an
-attempt, and the daily alert names it once it is overdue. The reminder task
-emails the reminder, as for a missing case template. Once Login works, every
-held notice goes on the next run, with nothing to re-arm.
+What it answers follows the same rule as a missing case template:
+
+- No delivery with this key, or one that got no further than CreateCase:
+  `UNAVAILABLE`, with a loggable reason such as `Login HTTP 401`. Nothing is
+  written. The dispatcher holds the notice; the reminder task emails the
+  reminder.
+- A delivery that is SENT, UNCERTAIN or under a live lease answers as it
+  stands.
+- A delivery holding a filed document or a marker answers its own status with
+  `skipped: 'UNAVAILABLE'`. The dispatcher holds the notice and the reminder
+  task neither emails nor flags it, since One may already have sent it. It
+  resumes from its saved ids once Login works.
+
+A Login that fails mid-run (the token lapsed and its renewal failed) hands the
+claim's attempt back and clears the marker, since Login comes before the
+action.
+
+A failed Login is trusted for `LOGIN_RETRY_AFTER_MS` (one minute): until then
+`checkLogin` answers without a request. Without it every delivery would send
+its own Login, which could lock out One's service account and, with One down,
+wait out the Login timeout each time. So the OneSystems client, which logs
+every failed Login at error, logs at most one a minute per process. This
+service logs the outage at error when it starts and again when its reason
+changes, and at info when Login works again. The dispatcher logs each held
+notice at warn on every look, and the daily alert names it once it is
+overdue. Once Login works, every held notice goes on the next run, with
+nothing to re-arm.
 
 ## Alerting
 

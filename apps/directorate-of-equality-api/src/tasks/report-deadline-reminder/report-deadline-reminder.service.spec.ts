@@ -756,6 +756,22 @@ describe('ReportDeadlineReminderService', () => {
       expect(findDelivery).not.toHaveBeenCalled()
     })
 
+    it('neither emails nor flags a reminder whose delivery reached One while One cannot be reached', async () => {
+      returnCompanyAtCall(CALL.equalitySixMonths, company())
+      deliverToMailbox.mockResolvedValue({
+        status: 'DOCUMENT_CREATED',
+        deliveryId: 'delivery-7',
+        attempts: 1,
+        skipped: 'UNAVAILABLE',
+      })
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+      expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
+      expect(mockLogger.error).not.toHaveBeenCalled()
+    })
+
     const unconfigured = {
       status: 'UNCONFIGURED',
       kind: MailboxDeliveryKindEnum.EQUALITY_REPORT_DEADLINE_REMINDER,

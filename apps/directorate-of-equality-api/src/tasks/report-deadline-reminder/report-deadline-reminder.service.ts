@@ -532,6 +532,17 @@ export class ReportDeadlineReminderService
       return false
     }
 
+    // A delivery of this reminder already reached One. Neither emailed (One
+    // may have sent it) nor flagged: it resumes on a later run once Login
+    // works, and the outage was logged at error when it began.
+    if (result && 'skipped' in result && result.skipped === 'UNAVAILABLE') {
+      this.logger.info(
+        `${kind.reportType} ${tier} reminder for company ${company.id} waits for OneSystems: its delivery already reached One`,
+        { ...meta, deliveryId: result.deliveryId },
+      )
+      return true
+    }
+
     if (result) {
       this.logger.error(
         `${kind.reportType} ${tier} reminder for company ${company.id} was not delivered to the mailbox: ${result.status}`,
