@@ -12,13 +12,17 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tabs } from '@dmr.is/ui/components/island-is/Tabs'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import { LowerSalaryThresholdModal } from '../../components/system-settings/LowerSalaryThresholdModal'
 import { MailboxAllowlistModal } from '../../components/system-settings/MailboxAllowlistModal'
 import { MailboxAllowlistSection } from '../../components/system-settings/MailboxAllowlistSection'
 import { useMailboxAllowlist } from '../../components/system-settings/useMailboxAllowlist'
-import { type ConfigDto } from '../../gen/fetch/types.gen'
+import {
+  type ConfigDto,
+  type OneSystemsCheckDto,
+} from '../../gen/fetch/types.gen'
 import {
   formatDateIS,
   SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
@@ -27,7 +31,7 @@ import { systemSettingsText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatPercentValue } from '../../lib/utils'
 
-import { useSuspenseQueries } from '@tanstack/react-query'
+import { useMutation, useSuspenseQueries } from '@tanstack/react-query'
 import { type ColumnDef } from '@tanstack/react-table'
 
 const t = systemSettingsText
@@ -75,6 +79,20 @@ export const SystemSettingsContainer = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAllowlistModalOpen, setIsAllowlistModalOpen] = useState(false)
   const allowlist = useMailboxAllowlist()
+  const [check, setCheck] = useState<OneSystemsCheckDto | null>(null)
+  const checkOneSystems = useMutation({
+    ...trpc.noticeIssues.checkOneSystems.mutationOptions(),
+    onSuccess: (result) => setCheck(result),
+    onError: (error) => {
+      const translated = error.data?.translatedMessage
+      toast.error(
+        translated
+          ? `${t.mailbox.checkError} - ${translated}`
+          : t.mailbox.checkError,
+        { autoClose: 5000 },
+      )
+    },
+  })
 
   // One `useSuspenseQueries` rather than two `useSuspenseQuery` calls: the
   // second would not be issued until the first suspended and resumed, making the
@@ -160,6 +178,20 @@ export const SystemSettingsContainer = () => {
                 {t.mailbox.editButton}
               </Button>
             )}
+            {activeTab === 'postholf' && (
+              <Button
+                icon="reload"
+                iconType="outline"
+                fluid
+                size="small"
+                variant="utility"
+                colorScheme="white"
+                loading={checkOneSystems.isPending}
+                onClick={() => checkOneSystems.mutate()}
+              >
+                {t.mailbox.checkButton}
+              </Button>
+            )}
           </Stack>
         </GridColumn>
 
@@ -183,7 +215,7 @@ export const SystemSettingsContainer = () => {
                   label: t.tabMailbox,
                   content: (
                     <Box paddingTop={3}>
-                      <MailboxAllowlistSection />
+                      <MailboxAllowlistSection check={check} />
                     </Box>
                   ),
                 },

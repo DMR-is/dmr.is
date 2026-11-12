@@ -1000,6 +1000,29 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     return null
   }
 
+  async checkConnection(): Promise<{ ok: boolean; reason: string | null }> {
+    try {
+      await this.oneSystems.checkLogin({ fresh: true })
+    } catch (error) {
+      if (!isUnavailableError(error)) {
+        throw error
+      }
+      // Kept in step with the deliveries: the backoff and the outage log.
+      const result = this.loginUnavailable(error)
+      return {
+        ok: false,
+        reason: result.status === 'UNAVAILABLE' ? result.reason : null,
+      }
+    }
+    if (this.loginFailure) {
+      this.loginFailure = null
+      this.logger.info('OneSystems Login works again', {
+        context: LOGGING_CONTEXT,
+      })
+    }
+    return { ok: true, reason: null }
+  }
+
   /**
    * Records a Login failure and answers UNAVAILABLE. Logged at error when an
    * outage starts and again when its reason changes (One back up, but the

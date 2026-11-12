@@ -3970,6 +3970,111 @@
         "tags": ["Notice issues"]
       }
     },
+    "/api/v1/notice-issues/recent": {
+      "get": {
+        "operationId": "getRecentMailboxDeliveries",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RecentDeliveryDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Notice issues"]
+      }
+    },
+    "/api/v1/notice-issues/onesystems/check": {
+      "post": {
+        "operationId": "checkOneSystems",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OneSystemsCheckDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Notice issues"]
+      }
+    },
     "/api/v1/notice-issues/notices/{id}/retry": {
       "post": {
         "operationId": "retryNotice",
@@ -9186,6 +9291,35 @@
           }
         },
         "required": ["failed", "overdue", "reminders"]
+      },
+      "RecentDeliveryDto": {
+        "type": "object",
+        "properties": {
+          "delivery": { "$ref": "#/components/schemas/NoticeIssueDeliveryDto" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "companyName": { "type": "string", "nullable": true }
+        },
+        "required": ["delivery", "companyId"]
+      },
+      "OneSystemsCheckDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "A fresh Login to One succeeded."
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Why it failed: operation, reason and HTTP status, e.g. \"Login HTTP 401\". Nothing personal."
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": ["ok", "checkedAt"]
       },
       "ReconcileDeliveryDto": {
         "type": "object",

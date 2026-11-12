@@ -103,7 +103,11 @@ export class OneSystemsService implements IOneSystemsService {
 
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {}
 
-  async checkLogin(): Promise<void> {
+  async checkLogin(options: { fresh?: boolean } = {}): Promise<void> {
+    if (options.fresh) {
+      await this.tokenCache.refreshNow(() => this.login())
+      return
+    }
     await this.getToken()
   }
 

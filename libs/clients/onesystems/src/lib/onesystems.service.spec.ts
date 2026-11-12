@@ -450,6 +450,14 @@ describe('OneSystemsService', () => {
     )
 
     describe('checkLogin', () => {
+      it('logs in again with fresh, even with a valid token cached', async () => {
+        await service.checkLogin()
+        await service.checkLogin({ fresh: true })
+
+        expect(loginRequests()).toHaveLength(2)
+        expect(actionRequests()).toHaveLength(0)
+      })
+
       it('logs in once and sends nothing else', async () => {
         await expect(service.checkLogin()).resolves.toBeUndefined()
 

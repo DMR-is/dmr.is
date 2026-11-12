@@ -2318,6 +2318,50 @@ describe('MailboxDeliveryService', () => {
 
       await expect(service.deliverToMailbox(input())).rejects.toBe(bug)
     })
+
+    describe('checkConnection', () => {
+      it('logs in fresh and reports success', async () => {
+        await expect(service.checkConnection()).resolves.toEqual({
+          ok: true,
+          reason: null,
+        })
+        expect(one.checkLogin).toHaveBeenCalledWith({ fresh: true })
+        expect(oneCalls()).toBe(0)
+      })
+
+      it('reports the failure and starts the backoff, as a delivery would', async () => {
+        one.checkLogin.mockRejectedValueOnce(loginRefused())
+
+        await expect(service.checkConnection()).resolves.toEqual({
+          ok: false,
+          reason: 'Login HTTP 401',
+        })
+
+        await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+          status: 'UNAVAILABLE',
+        })
+        expect(one.checkLogin).toHaveBeenCalledTimes(1)
+      })
+
+      it('ends the backoff when it succeeds', async () => {
+        one.checkLogin.mockRejectedValueOnce(loginRefused())
+        await service.deliverToMailbox(input())
+
+        await service.checkConnection()
+
+        await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+          status: 'SENT',
+        })
+      })
+
+      it('runs with ONESYSTEMS_ENABLED off', async () => {
+        process.env.ONESYSTEMS_ENABLED = 'false'
+
+        await expect(service.checkConnection()).resolves.toMatchObject({
+          ok: true,
+        })
+      })
+    })
   })
 
   describe('a send island.is already had', () => {

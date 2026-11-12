@@ -16,6 +16,8 @@ import {
   INoticeIssuesService,
   NoticeIssueActor,
   NoticeIssuesDto,
+  OneSystemsCheckDto,
+  RecentDeliveryDto,
   ReconcileDeliveryDto,
 } from '@dmr.is/doe-modules/notice-issues'
 import { type UserModel } from '@dmr.is/doe-modules/user'
@@ -56,6 +58,29 @@ export class NoticeIssuesController {
   @DoeResponse({ operationId: 'getNoticeIssues', type: NoticeIssuesDto })
   async getIssues(): Promise<NoticeIssuesDto> {
     return this.noticeIssuesService.getIssues()
+  }
+
+  @Get('recent')
+  @DoeResponse({
+    operationId: 'getRecentMailboxDeliveries',
+    type: [RecentDeliveryDto],
+  })
+  async getRecentDeliveries(): Promise<RecentDeliveryDto[]> {
+    return this.noticeIssuesService.getRecentDeliveries()
+  }
+
+  /**
+   * A fresh Login to One, from the Kerfisstillingar page. Sends nothing
+   * else, and runs whatever ONESYSTEMS_ENABLED says, so credentials can be
+   * checked before the switch goes on.
+   */
+  @Post('onesystems/check')
+  @HttpCode(200)
+  @DoeResponse({ operationId: 'checkOneSystems', type: OneSystemsCheckDto })
+  async checkOneSystems(
+    @Req() req: RequestWithAdminUser,
+  ): Promise<OneSystemsCheckDto> {
+    return this.noticeIssuesService.checkOneSystems(actorOf(req))
   }
 
   @Post('notices/:id/retry')

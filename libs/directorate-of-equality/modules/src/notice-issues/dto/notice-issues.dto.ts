@@ -154,6 +154,33 @@ export class NoticeIssuesDto {
   reminders!: ReminderDeliveryIssueDto[]
 }
 
+/** A letter that reached a company's mailbox. */
+export class RecentDeliveryDto {
+  @ApiDto(NoticeIssueDeliveryDto)
+  delivery!: NoticeIssueDeliveryDto
+
+  @ApiUUId()
+  companyId!: string
+
+  @ApiOptionalString({ nullable: true })
+  companyName!: string | null
+}
+
+export class OneSystemsCheckDto {
+  @ApiBoolean({ description: 'A fresh Login to One succeeded.' })
+  ok!: boolean
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'Why it failed: operation, reason and HTTP status, e.g. "Login HTTP 401". Nothing personal.',
+  })
+  reason!: string | null
+
+  @ApiDateTime()
+  checkedAt!: Date
+}
+
 export const RECONCILE_OUTCOMES = ['SENT', 'NOT_SENT'] as const
 export type ReconcileOutcome = (typeof RECONCILE_OUTCOMES)[number]
 

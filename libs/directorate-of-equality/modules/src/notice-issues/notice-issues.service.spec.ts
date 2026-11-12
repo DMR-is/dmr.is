@@ -83,7 +83,7 @@ describe('NoticeIssuesService', () => {
   let companyReports: { findAll: jest.Mock }
   let companies: { findAll: jest.Mock }
   let dispatch: { findOverdueNotices: jest.Mock }
-  let mailbox: { findStuckDeliveries: jest.Mock }
+  let mailbox: { findStuckDeliveries: jest.Mock; checkConnection: jest.Mock }
   let service: NoticeIssuesService
 
   beforeEach(() => {
@@ -123,7 +123,10 @@ describe('NoticeIssuesService', () => {
         .fn()
         .mockResolvedValue({ total: 0, notices: [] }),
     }
-    mailbox = { findStuckDeliveries: jest.fn().mockResolvedValue([]) }
+    mailbox = {
+      findStuckDeliveries: jest.fn().mockResolvedValue([]),
+      checkConnection: jest.fn().mockResolvedValue({ ok: true, reason: null }),
+    }
     service = new NoticeIssuesService(
       logger as never,
       notices as never,
@@ -231,6 +234,48 @@ describe('NoticeIssuesService', () => {
           delivery: expect.objectContaining({ needsReconciling: true }),
         }),
       ])
+    })
+  })
+
+  describe('getRecentDeliveries', () => {
+    it('lists the latest sent letters with their company, newest first', async () => {
+      deliveries.findAll.mockResolvedValueOnce([
+        delivery({
+          status: MailboxDeliveryStatusEnum.SENT,
+          sentAt: new Date('2026-11-12T11:00:00Z'),
+          oneDocumentItemId: 'doc-1',
+        }),
+      ])
+
+      const recent = await service.getRecentDeliveries()
+
+      expect(deliveries.findAll).toHaveBeenCalledWith({
+        where: { status: MailboxDeliveryStatusEnum.SENT },
+        order: [['sentAt', 'DESC']],
+        limit: 20,
+      })
+      expect(recent).toEqual([
+        expect.objectContaining({
+          companyName: 'Jafnréttisstofa',
+          delivery: expect.objectContaining({ id: DELIVERY_ID }),
+        }),
+      ])
+      expect(JSON.stringify(recent)).not.toContain('kennitala')
+    })
+  })
+
+  describe('checkOneSystems', () => {
+    it('passes the result through with the time it was checked', async () => {
+      mailbox.checkConnection.mockResolvedValueOnce({
+        ok: false,
+        reason: 'Login HTTP 401',
+      })
+
+      await expect(service.checkOneSystems(ACTOR)).resolves.toEqual({
+        ok: false,
+        reason: 'Login HTTP 401',
+        checkedAt: expect.any(Date),
+      })
     })
   })
 

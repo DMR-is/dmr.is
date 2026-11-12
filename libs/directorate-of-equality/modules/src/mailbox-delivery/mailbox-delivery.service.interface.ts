@@ -219,6 +219,15 @@ export interface IMailboxDeliveryService {
    * `ONESYSTEMS_ENABLED` says: rows left from before the flag went off still
    * need a person.
    */
+  /**
+   * A fresh Login to One, for a person checking the connection: nothing else
+   * is sent. Runs whatever `ONESYSTEMS_ENABLED` says, so credentials can be
+   * checked before the switch goes on. A success ends the Login backoff; a
+   * failure starts it, as a delivery's would. `reason` is loggable
+   * (operation, reason, HTTP status).
+   */
+  checkConnection(): Promise<{ ok: boolean; reason: string | null }>
+
   findStuckDeliveries(
     limit: number,
     /** Only these kinds, filtered in the query so `limit` applies to them. */

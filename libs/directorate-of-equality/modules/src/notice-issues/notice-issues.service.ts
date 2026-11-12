@@ -33,6 +33,8 @@ import {
   NoticeIssueDeliveryDto,
   NoticeIssueDto,
   NoticeIssuesDto,
+  OneSystemsCheckDto,
+  RecentDeliveryDto,
   ReconcileDeliveryDto,
   ReminderDeliveryIssueDto,
 } from './dto/notice-issues.dto'
@@ -58,6 +60,9 @@ const LEASE_FREE = {
     { leaseExpiresAt: { [Op.lt]: literal('CURRENT_TIMESTAMP') } },
   ],
 }
+
+/** Recent sends shown on Kerfisstillingar. */
+const RECENT_LIMIT = 20
 
 const REMINDER_KINDS = [
   MailboxDeliveryKindEnum.SALARY_REPORT_DEADLINE_REMINDER,
@@ -153,6 +158,29 @@ export class NoticeIssuesService implements INoticeIssuesService {
       overdue: overdueRows.map(toIssue),
       reminders,
     }
+  }
+
+  async getRecentDeliveries(): Promise<RecentDeliveryDto[]> {
+    const rows = await this.deliveryModel.findAll({
+      where: { status: MailboxDeliveryStatusEnum.SENT },
+      order: [['sentAt', 'DESC']],
+      limit: RECENT_LIMIT,
+    })
+    const names = await this.companyNames(rows.map((d) => d.companyId))
+    return rows.map((d) => ({
+      delivery: toDeliveryDto(d),
+      companyId: d.companyId,
+      companyName: names.get(d.companyId) ?? null,
+    }))
+  }
+
+  async checkOneSystems(actor: NoticeIssueActor): Promise<OneSystemsCheckDto> {
+    const result = await this.mailboxDeliveryService.checkConnection()
+    this.logger.info(
+      `OneSystems connection checked by user ${actor.id}: ${result.ok ? 'ok' : result.reason}`,
+      { context: LOGGING_CONTEXT, userId: actor.id, ok: result.ok },
+    )
+    return { ...result, checkedAt: new Date() }
   }
 
   async retryNotice(noticeId: string, actor: NoticeIssueActor): Promise<void> {

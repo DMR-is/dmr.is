@@ -6,12 +6,16 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
-import { type ConfigDto } from '../../gen/fetch/types.gen'
+import {
+  type ConfigDto,
+  type OneSystemsCheckDto,
+} from '../../gen/fetch/types.gen'
 import { formatDateIS } from '../../lib/constants'
 import { systemSettingsText } from '../../lib/text'
 import { formatNationalId } from '../../lib/utils'
 import { parseMailboxAllowlist } from './mailboxAllowlist'
 import { MailboxCompanyList } from './MailboxCompanyList'
+import { MailboxRecentDeliveries } from './MailboxRecentDeliveries'
 import { useMailboxAllowlist } from './useMailboxAllowlist'
 
 import { type ColumnDef } from '@tanstack/react-table'
@@ -51,7 +55,18 @@ const HISTORY_COLUMNS: ColumnDef<ConfigDto>[] = [
  * whatever the setting says. The Breyta action lives in the page's Aðgerðir
  * sidebar while this tab is open.
  */
-export const MailboxAllowlistSection = () => {
+const checkTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('is-IS', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+type Props = {
+  /** The last "Prófa tengingu" result, from the sidebar action. */
+  check?: OneSystemsCheckDto | null
+}
+
+export const MailboxAllowlistSection = ({ check }: Props) => {
   const { parsed, isPending, loaded, history, status, statusFailed } =
     useMailboxAllowlist()
 
@@ -103,9 +118,26 @@ export const MailboxAllowlistSection = () => {
         <SkeletonLoader height={80} />
       )}
 
+      {check && (
+        <AlertMessage
+          type={check.ok ? 'success' : 'error'}
+          title={check.ok ? t.checkOkTitle : t.checkFailedTitle}
+          message={
+            check.ok
+              ? t.checkedAt(checkTime(check.checkedAt))
+              : t.checkFailedMessage(
+                  check.reason ?? '',
+                  checkTime(check.checkedAt),
+                )
+          }
+        />
+      )}
+
       {loaded && parsed.mode === 'list' && (
         <MailboxCompanyList nationalIds={parsed.nationalIds} />
       )}
+
+      <MailboxRecentDeliveries />
 
       {pastValues.length > 0 && (
         <Stack space={2}>
