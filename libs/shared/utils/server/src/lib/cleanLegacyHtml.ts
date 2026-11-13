@@ -391,6 +391,70 @@ export const sanitizeForDisplay = (html: string) => {
   return sanitizeHtml(html, displayOptions)
 }
 
+const tableLayoutAttributes = ['width', 'height', 'valign', 'align']
+
+/**
+ * Like `sanitizeForDisplay`, for an Official Journal advert as stored: the
+ * same limits on styles, links, `id`/`name` and `data:`, but its tables are
+ * kept as they are. Legacy adverts lay out in tables, so this keeps
+ * `<colgroup>`/`<col>`, the table layout attributes (`border`, `cellpadding`,
+ * `valign`, `width`, …) and the advert classes the display styles target
+ * (`advertText`, `advertType`, `advertSubSerial`). Unlike `simpleSanitize`, it
+ * leaves `advertSubSerial` rows in place rather than turning them into
+ * paragraphs.
+ */
+const advertDisplayOptions: sanitizeHtml.IOptions = {
+  ...displayOptions,
+  allowedTags: [
+    ...(baseOptions.allowedTags || []),
+    'colgroup',
+    'col',
+    'caption',
+  ],
+  allowedAttributes: {
+    ...displayOptions.allowedAttributes,
+    table: [
+      ...(displayOptions.allowedAttributes || {}).table,
+      'border',
+      'cellpadding',
+      'cellspacing',
+      'width',
+      'height',
+    ],
+    tr: [
+      ...(displayOptions.allowedAttributes || {}).tr,
+      ...tableLayoutAttributes,
+    ],
+    td: [
+      ...(displayOptions.allowedAttributes || {}).td,
+      ...tableLayoutAttributes,
+    ],
+    th: [
+      ...(displayOptions.allowedAttributes || {}).th,
+      ...tableLayoutAttributes,
+    ],
+    colgroup: ['span', 'width'],
+    col: ['span', 'width'],
+  },
+  allowedClasses: {
+    '*': [
+      ...((displayOptions.allowedClasses || {})['*'] as Array<string>),
+      'advertText',
+      'advertType',
+      'advertSubSerial',
+    ],
+  },
+  transformTags: {
+    a: (displayOptions.transformTags || {}).a,
+    body: 'div',
+    meta: '',
+  },
+}
+
+export const sanitizeAdvertForDisplay = (html: string) => {
+  return sanitizeHtml(html, advertDisplayOptions)
+}
+
 export function cleanLegacyHtml(input: string): string {
   const src = despaceIfSpacedOut(input ?? '')
 
