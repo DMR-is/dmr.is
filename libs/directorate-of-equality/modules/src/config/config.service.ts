@@ -103,13 +103,11 @@ export class ConfigService implements IConfigService {
     dto: UpdateConfigDto,
     actorUserId?: string,
   ): Promise<ConfigDto> {
-    // The row records when a value changed, not who changed it: the log does.
-    this.logger.info(
-      `Updating config entry with key "${key}" by user ${actorUserId ?? 'unknown'}`,
-      { context: LOGGING_CONTEXT, key, userId: actorUserId },
-    )
+    this.logger.info(`Updating config entry with key "${key}"`, {
+      context: LOGGING_CONTEXT,
+    })
 
-    return this.sequelize.transaction(async (transaction) => {
+    const updated = await this.sequelize.transaction(async (transaction) => {
       const current = await this.configModel.findOne({
         where: { key, supersededAt: null },
         lock: Transaction.LOCK.UPDATE,
@@ -153,6 +151,17 @@ export class ConfigService implements IConfigService {
 
       return newEntry.fromModel()
     })
+
+    // The row records when a value changed, not who changed it: this line
+    // does. Written only once the change has committed, so a refused write
+    // (409, 400, 404) is never logged as a change. Never the value, which for
+    // the allowlist is a list of kennitölur.
+    this.logger.info(
+      `Config entry "${key}" changed by user ${actorUserId ?? 'unknown'}`,
+      { context: LOGGING_CONTEXT, key, userId: actorUserId, id: updated.id },
+    )
+
+    return updated
   }
 
   /**
