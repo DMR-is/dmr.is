@@ -56,7 +56,7 @@ export const API_URL = API_SERVER + '/api/v1/regulation'
  * the bucket holds objects seeded 2025-02-14, so nothing would ever have been
  * invalidated. That was harmless only because the cache itself was broken.
  */
-export const PDF_TEMPLATE_UPDATED = '2026-11-02T00:00:00'
+export const PDF_TEMPLATE_UPDATED = '2026-11-13T00:00:00'
 
 export { FILE_SERVER } from '@dmr.is/regulations-tools/constants'
 
