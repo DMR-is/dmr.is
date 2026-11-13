@@ -1,4 +1,4 @@
-import { FocusEvent, useCallback, useEffect, useRef } from 'react'
+import { FocusEvent, useCallback, useEffect, useRef, useState } from 'react'
 
 import type { EditorFileUploader } from '@dmr.is/regulations-tools/EditorV2'
 import { EditorV2 } from '@dmr.is/regulations-tools/EditorV2'
@@ -22,13 +22,56 @@ type Props = {
   onBlur?: (value: HTMLText) => void
 }
 
-export const HTMLEditor = ({
+/**
+ * Read-only shows the stored HTML itself, not an editor. An editor reads its
+ * input through its own schema, so it would render something other than what
+ * is stored, and warn that saving would change it to someone who can't save.
+ * It is also far cheaper on long adverts. The case HTML can come from an
+ * application, so it is sanitised for display first.
+ */
+export const HTMLEditor = ({ readonly = false, ...props }: Props) =>
+  readonly ? (
+    <ReadOnlyHTML html={props.defaultValue ?? ''} />
+  ) : (
+    <EditableHTMLEditor {...props} />
+  )
+
+const ReadOnlyHTML = ({ html }: { html: string }) => {
+  const [sanitized, setSanitized] = useState<string>()
+
+  useEffect(() => {
+    let current = true
+    // Loaded on demand, as in the compare views: the sanitizer is large
+    import('@dmr.is/utils-server/cleanLegacyHtml').then(
+      ({ sanitizeAdvertForDisplay }) => {
+        if (current) setSanitized(sanitizeAdvertForDisplay(html))
+      },
+    )
+    return () => {
+      current = false
+    }
+  }, [html])
+
+  return (
+    <div className={classes.wrapper}>
+      <div className={classes.editingpane}>
+        <div
+          className={classes.editor}
+          dangerouslySetInnerHTML={
+            sanitized === undefined ? undefined : { __html: sanitized }
+          }
+        />
+      </div>
+    </div>
+  )
+}
+
+const EditableHTMLEditor = ({
   defaultValue = '',
-  readonly = false,
   onChange,
   handleUpload,
   onBlur,
-}: Props) => {
+}: Omit<Props, 'readonly'>) => {
   const valueRef = useRef(() => defaultValue as HTMLText)
   const onChangeRef = useRef(onChange)
   const onBlurRef = useRef(onBlur)
@@ -102,12 +145,9 @@ export const HTMLEditor = ({
       onBlur={handleBlur}
     >
       <EditorV2
-        readOnly={readonly}
         valueRef={valueRef}
         fileUploader={handleUpload}
         classes={classes}
-        key={readonly ? 'readonly' : 'editable'}
-        toolbar={readonly ? false : undefined}
         disabledWarnings={['nonEmTitleContent']}
         onChange={handleChange}
       />

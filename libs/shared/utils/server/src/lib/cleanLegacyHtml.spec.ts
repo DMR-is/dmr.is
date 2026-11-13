@@ -1,5 +1,6 @@
 import {
   cleanLegacyHtml,
+  sanitizeAdvertForDisplay,
   sanitizeForDisplay,
   simpleSanitize,
 } from './cleanLegacyHtml'
@@ -149,6 +150,72 @@ describe('sanitizeForDisplay', () => {
         '<a href=" JaVaScRiPt:alert(1)" onclick="x()">a</a><img src="x" onerror="x()" />',
       ),
     ).toBe('<a rel="noopener noreferrer">a</a><img src="x" />')
+  })
+})
+
+describe('sanitizeAdvertForDisplay', () => {
+  it('keeps a legacy advert table as stored', () => {
+    const html =
+      '<table width="100%" border="0" cellpadding="2" cellspacing="0" class="advertText">' +
+      '<colgroup><col width="120" /></colgroup><tbody>' +
+      '<tr class="advertType"><td valign="top" align="center" colspan="2" height="20">Auglýsing</td></tr>' +
+      '<tr class="advertSubSerial"><td valign="top" width="520">B deild - Útgáfud.: 1. janúar 2020</td></tr>' +
+      '</tbody></table>'
+
+    expect(sanitizeAdvertForDisplay(html)).toBe(html)
+  })
+
+  it('unwraps the nested document of a legacy advert', () => {
+    expect(
+      sanitizeAdvertForDisplay(
+        '<table><tbody><tr><td><html><body><meta charset="utf-8" /><p>Texti</p></body></html></td></tr></tbody></table>',
+      ),
+    ).toBe(
+      '<table><tbody><tr><td><div><p>Texti</p></div></td></tr></tbody></table>',
+    )
+  })
+
+  it('keeps the content classes and drops any other', () => {
+    expect(
+      sanitizeAdvertForDisplay(
+        '<h3 class="article__title regtools-dialog">1. gr.</h3><p class="Dags fixed">a</p>',
+      ),
+    ).toBe('<h3 class="article__title">1. gr.</h3><p class="Dags">a</p>')
+  })
+
+  it('applies the same style limits as sanitizeForDisplay', () => {
+    expect(
+      sanitizeAdvertForDisplay(
+        '<table style="position:fixed;inset:0;width:100%"><tbody><tr>' +
+          '<td style="z-index:9999;background:url(https://example.com/x.png);text-align:right">a</td>' +
+          '</tr></tbody></table>',
+      ),
+    ).toBe(
+      '<table style="width:100%"><tbody><tr><td style="text-align:right">a</td></tr></tbody></table>',
+    )
+  })
+
+  it('removes scripts, event handlers, ids and javascript: links', () => {
+    expect(
+      sanitizeAdvertForDisplay(
+        '<script>x()</script><p id="main" onclick="x()">a</p>' +
+          '<a href=" JaVaScRiPt:alert(1)" target="_top">b</a>' +
+          '<table onload="x()"><tbody><tr><td onmouseover="x()">c</td></tr></tbody></table>',
+      ),
+    ).toBe(
+      '<p>a</p><a rel="noopener noreferrer">b</a>' +
+        '<table><tbody><tr><td>c</td></tr></tbody></table>',
+    )
+  })
+
+  it('allows data: on images only', () => {
+    expect(
+      sanitizeAdvertForDisplay(
+        '<a href="data:text/html,x">a</a><img src="data:image/png;base64,AAAA" />',
+      ),
+    ).toBe(
+      '<a rel="noopener noreferrer">a</a><img src="data:image/png;base64,AAAA" />',
+    )
   })
 })
 

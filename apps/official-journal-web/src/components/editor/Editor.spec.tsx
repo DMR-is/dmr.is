@@ -213,18 +213,49 @@ describe('HTMLEditor', () => {
     expect(nextOnChange).toHaveBeenCalledWith('abc')
   })
 
-  it('passes the default toolbar when editable and none when readonly', () => {
+  it('passes no read-only state or toolbar override when editable', () => {
     expect(mockEditor.toolbar).toBeUndefined()
-    expect(mockEditor.readOnly).toBe(false)
+    expect(mockEditor.readOnly).toBeUndefined()
+  })
 
+  it('shows the stored HTML, sanitised, without an editor when readonly', async () => {
+    act(() =>
+      root.render(
+        <HTMLEditor
+          readonly
+          defaultValue={
+            '<table border="0" class="advertText"><tbody>' +
+            '<tr class="advertSubSerial"><td valign="top">B deild</td></tr>' +
+            '</tbody></table><font>Texti</font><p onclick="x()">a</p>'
+          }
+          handleUpload={handleUpload}
+        />,
+      ),
+    )
+    await act(async () => {
+      await import('@dmr.is/utils-server/cleanLegacyHtml')
+    })
+
+    expect(get('text')).toBeNull()
+    expect(container.innerHTML).toContain(
+      '<table border="0" class="advertText"><tbody>' +
+        '<tr class="advertSubSerial"><td valign="top">B deild</td></tr>' +
+        '</tbody></table>Texti<p>a</p>',
+    )
+  })
+
+  it('flushes a pending change when switching to readonly', async () => {
+    type('abc')
     act(() =>
       root.render(
         <HTMLEditor readonly onChange={onChange} handleUpload={handleUpload} />,
       ),
     )
+    await act(async () => {
+      await import('@dmr.is/utils-server/cleanLegacyHtml')
+    })
 
-    expect(mockEditor.toolbar).toBe(false)
-    expect(mockEditor.readOnly).toBe(true)
+    expect(onChange).toHaveBeenCalledWith('abc')
   })
 
   it("passes the caller's uploader through", () => {
