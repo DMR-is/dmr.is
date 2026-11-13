@@ -598,10 +598,12 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     if (row.leaseExpiresAt && row.leaseExpiresAt.getTime() > Date.now()) {
       return { status: 'IN_PROGRESS', deliveryId: row.id }
     }
-    // Out of attempts with nothing filed: answered as exhausted, as it would
-    // be with One up, so an outage does not turn a reminder already flagged
-    // undelivered into an email. Only for an outage: a missing case template
-    // keeps its own answer.
+    // Out of attempts, whether or not a document is filed: answered as
+    // exhausted, as it would be with One up (`findExhausted`'s conditions), so
+    // an outage changes nothing about it. Nothing filed: a reminder already
+    // flagged undelivered is not emailed. Filed: the reminder task flags it
+    // undelivered, as it would with One up. Only for an outage: a missing case
+    // template keeps its own answer.
     if (
       skipped === 'UNAVAILABLE' &&
       !row.inFlightStep &&
