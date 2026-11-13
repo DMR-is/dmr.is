@@ -30,6 +30,7 @@ import {
   resolveKindConfig,
 } from './mailbox-delivery.kinds'
 import {
+  CHECK_RETRY_AFTER_MS,
   LOGIN_RETRY_AFTER_MS,
   MAILBOX_DELIVERY_LEASE_MINUTES,
   MAILBOX_DELIVERY_MAX_ATTEMPTS,
@@ -2356,6 +2357,70 @@ describe('MailboxDeliveryService', () => {
       one.checkLogin.mockRejectedValueOnce(bug)
 
       await expect(service.deliverToMailbox(input())).rejects.toBe(bug)
+    })
+
+    describe('checkConnection', () => {
+      it('logs in fresh and reports success', async () => {
+        await expect(service.checkConnection()).resolves.toEqual({
+          ok: true,
+          reason: null,
+          checkedAt: expect.any(Date),
+        })
+        expect(one.checkLogin).toHaveBeenCalledWith({ fresh: true })
+        expect(oneCalls()).toBe(0)
+      })
+
+      it('reports the failure and starts the backoff, as a delivery would', async () => {
+        one.checkLogin.mockRejectedValueOnce(loginRefused())
+
+        await expect(service.checkConnection()).resolves.toEqual({
+          ok: false,
+          reason: 'Login HTTP 401',
+          checkedAt: expect.any(Date),
+        })
+
+        await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+          status: 'UNAVAILABLE',
+        })
+        expect(one.checkLogin).toHaveBeenCalledTimes(1)
+      })
+
+      it('answers a repeat failed check from the last one for a while', async () => {
+        one.checkLogin.mockRejectedValue(loginRefused())
+
+        const first = await service.checkConnection()
+        clock += 5_000
+        // The time of the Login that failed, not of the repeat.
+        await expect(service.checkConnection()).resolves.toEqual({
+          ok: false,
+          reason: 'Login HTTP 401',
+          checkedAt: first.checkedAt,
+        })
+        expect(one.checkLogin).toHaveBeenCalledTimes(1)
+
+        clock += CHECK_RETRY_AFTER_MS + 1
+        await service.checkConnection()
+        expect(one.checkLogin).toHaveBeenCalledTimes(2)
+      })
+
+      it('ends the backoff when it succeeds', async () => {
+        one.checkLogin.mockRejectedValueOnce(loginRefused())
+        await service.deliverToMailbox(input())
+
+        await service.checkConnection()
+
+        await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+          status: 'SENT',
+        })
+      })
+
+      it('runs with ONESYSTEMS_ENABLED off', async () => {
+        process.env.ONESYSTEMS_ENABLED = 'false'
+
+        await expect(service.checkConnection()).resolves.toMatchObject({
+          ok: true,
+        })
+      })
     })
   })
 

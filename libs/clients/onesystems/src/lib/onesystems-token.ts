@@ -233,6 +233,16 @@ export class OneSystemsTokenCache {
     }
   }
 
+  /**
+   * Logs in again whatever is cached, and caches the new token. For a
+   * connection test, which must prove the credentials work now, not that a
+   * token from earlier is still unexpired. Joins a Login already running.
+   */
+  async refreshNow(login: () => Promise<OneSystemsToken>): Promise<string> {
+    const token = await this.refresh(login)
+    return token.value
+  }
+
   private refresh(
     login: () => Promise<OneSystemsToken>,
   ): Promise<OneSystemsToken> {

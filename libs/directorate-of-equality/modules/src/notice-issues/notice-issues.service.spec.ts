@@ -82,6 +82,7 @@ describe('NoticeIssuesService', () => {
     countStuckDeliveries: jest.Mock
     rearmExhausted: jest.Mock
     settleUncertain: jest.Mock
+    checkConnection: jest.Mock
   }
   let service: NoticeIssuesService
 
@@ -131,6 +132,9 @@ describe('NoticeIssuesService', () => {
       }),
       rearmExhausted: jest.fn().mockResolvedValue(true),
       settleUncertain: jest.fn().mockResolvedValue(true),
+      checkConnection: jest
+        .fn()
+        .mockResolvedValue({ ok: true, reason: null, checkedAt: new Date() }),
     }
     service = new NoticeIssuesService(
       logger as never,
@@ -279,6 +283,50 @@ describe('NoticeIssuesService', () => {
           delivery: expect.objectContaining({ needsReconciling: true }),
         }),
       ])
+    })
+  })
+
+  describe('getRecentDeliveries', () => {
+    it('lists the latest sent letters with their company, newest first', async () => {
+      deliveries.findAll.mockResolvedValueOnce([
+        delivery({
+          status: MailboxDeliveryStatusEnum.SENT,
+          sentAt: new Date('2026-11-12T11:00:00Z'),
+          oneDocumentItemId: 'doc-1',
+        }),
+      ])
+
+      const recent = await service.getRecentDeliveries()
+
+      expect(deliveries.findAll).toHaveBeenCalledWith({
+        where: { status: MailboxDeliveryStatusEnum.SENT },
+        order: [['sentAt', 'DESC']],
+        limit: 20,
+      })
+      expect(recent).toEqual([
+        expect.objectContaining({
+          companyName: 'Jafnréttisstofa',
+          delivery: expect.objectContaining({ id: DELIVERY_ID }),
+        }),
+      ])
+      expect(JSON.stringify(recent)).not.toContain('kennitala')
+    })
+  })
+
+  describe('checkOneSystems', () => {
+    it('passes the result through with the time of the real Login', async () => {
+      const checkedAt = new Date('2026-11-12T10:00:00Z')
+      mailbox.checkConnection.mockResolvedValueOnce({
+        ok: false,
+        reason: 'Login HTTP 401',
+        checkedAt,
+      })
+
+      await expect(service.checkOneSystems(ACTOR)).resolves.toEqual({
+        ok: false,
+        reason: 'Login HTTP 401',
+        checkedAt,
+      })
     })
   })
 

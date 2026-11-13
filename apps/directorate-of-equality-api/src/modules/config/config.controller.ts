@@ -5,6 +5,7 @@ import {
   Inject,
   Param,
   Patch,
+  Req,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
@@ -12,8 +13,11 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import {
   ConfigDto,
   IConfigService,
+  OneSystemsStatusDto,
   UpdateConfigDto,
 } from '@dmr.is/doe-modules/config'
+import { isMailboxDeliveryEnabled } from '@dmr.is/doe-modules/mailbox-delivery'
+import { type UserModel } from '@dmr.is/doe-modules/user'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
@@ -37,6 +41,20 @@ export class ConfigController {
   @DoeResponse({ operationId: 'getAllConfig', type: [ConfigDto] })
   async getAll(): Promise<ConfigDto[]> {
     return this.configService.getAll()
+  }
+
+  /**
+   * The environment's mailbox switch, for the Kerfisstillingar page. Two
+   * segments, so it never matches `:key`. Read through the same function the
+   * mailbox delivery uses, so the page cannot disagree with what is sent.
+   */
+  @Get('environment/onesystems')
+  @DoeResponse({
+    operationId: 'getOneSystemsStatus',
+    type: OneSystemsStatusDto,
+  })
+  getOneSystemsStatus(): OneSystemsStatusDto {
+    return { enabled: isMailboxDeliveryEnabled() }
   }
 
   @Get(':key')
@@ -71,11 +89,14 @@ export class ConfigController {
     operationId: 'updateConfigByKey',
     type: ConfigDto,
     include404: true,
+    // A stale `expectedValue`: someone changed the value since it was read.
+    include409: true,
   })
   async updateByKey(
     @Param('key') key: string,
     @Body() dto: UpdateConfigDto,
+    @Req() req: { adminUser: UserModel },
   ): Promise<ConfigDto> {
-    return this.configService.updateByKey(key, dto)
+    return this.configService.updateByKey(key, dto, req.adminUser.id)
   }
 }

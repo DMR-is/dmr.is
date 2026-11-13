@@ -16,6 +16,8 @@ import {
   INoticeIssuesService,
   NoticeIssueActor,
   NoticeIssuesDto,
+  OneSystemsCheckDto,
+  RecentDeliveryDto,
   ReconcileDeliveryDto,
 } from '@dmr.is/doe-modules/notice-issues'
 import { type UserModel } from '@dmr.is/doe-modules/user'
@@ -56,6 +58,30 @@ export class NoticeIssuesController {
   @DoeResponse({ operationId: 'getNoticeIssues', type: NoticeIssuesDto })
   async getIssues(): Promise<NoticeIssuesDto> {
     return this.noticeIssuesService.getIssues()
+  }
+
+  @Get('recent')
+  @DoeResponse({
+    operationId: 'getRecentMailboxDeliveries',
+    type: [RecentDeliveryDto],
+  })
+  async getRecentDeliveries(): Promise<RecentDeliveryDto[]> {
+    return this.noticeIssuesService.getRecentDeliveries()
+  }
+
+  /**
+   * A fresh Login to One, from the Kerfisstillingar page. Sends nothing
+   * else. The API runs it whatever ONESYSTEMS_ENABLED says, so a script can
+   * check credentials before the switch goes on; the page offers it only
+   * where the flag is on.
+   */
+  @Post('onesystems/check')
+  @HttpCode(200)
+  @DoeResponse({ operationId: 'checkOneSystems', type: OneSystemsCheckDto })
+  async checkOneSystems(
+    @Req() req: RequestWithAdminUser,
+  ): Promise<OneSystemsCheckDto> {
+    return this.noticeIssuesService.checkOneSystems(actorOf(req))
   }
 
   @Post('notices/:id/retry')

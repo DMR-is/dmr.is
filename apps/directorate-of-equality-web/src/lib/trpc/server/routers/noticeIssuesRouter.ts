@@ -9,6 +9,14 @@ import { protectedProcedure, router } from '../trpc'
 export const noticeIssuesRouter = router({
   getIssues: protectedProcedure.query(({ ctx }) => ctx.api.getNoticeIssues()),
 
+  getRecent: protectedProcedure.query(({ ctx }) =>
+    ctx.api.getRecentMailboxDeliveries(),
+  ),
+
+  checkOneSystems: protectedProcedure.mutation(({ ctx }) =>
+    ctx.api.checkOneSystems(),
+  ),
+
   retryNotice: protectedProcedure
     .input(zRetryNoticePath)
     .mutation(({ ctx, input }) =>

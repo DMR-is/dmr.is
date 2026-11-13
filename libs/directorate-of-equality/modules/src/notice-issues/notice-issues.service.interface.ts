@@ -1,4 +1,9 @@
-import { NoticeIssuesDto, ReconcileDeliveryDto } from './dto/notice-issues.dto'
+import {
+  NoticeIssuesDto,
+  OneSystemsCheckDto,
+  RecentDeliveryDto,
+  ReconcileDeliveryDto,
+} from './dto/notice-issues.dto'
 
 /** Who acted, for the audit note left on the row. Name and id, never a kennitala. */
 export type NoticeIssueActor = { id: string; name: string }
@@ -13,6 +18,12 @@ export type NoticeIssueActor = { id: string; name: string }
 export interface INoticeIssuesService {
   /** Failed and overdue notices, and stopped reminder deliveries. Reads only. */
   getIssues(): Promise<NoticeIssuesDto>
+
+  /** The latest letters that reached a mailbox, newest first. Reads only. */
+  getRecentDeliveries(): Promise<RecentDeliveryDto[]>
+
+  /** A fresh Login to One, sending nothing else. */
+  checkOneSystems(actor: NoticeIssueActor): Promise<OneSystemsCheckDto>
 
   /**
    * Sends a FAILED notice again. Its mailbox delivery, if any, is re-armed

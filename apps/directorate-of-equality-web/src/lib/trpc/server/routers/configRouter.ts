@@ -9,6 +9,10 @@ import { protectedProcedure, router } from '../trpc'
 export const configRouter = router({
   getAll: protectedProcedure.query(({ ctx }) => ctx.api.getAllConfig()),
 
+  getOneSystemsStatus: protectedProcedure.query(({ ctx }) =>
+    ctx.api.getOneSystemsStatus(),
+  ),
+
   getByKey: protectedProcedure
     .input(zGetConfigByKeyPath)
     .query(({ ctx, input }) =>
@@ -22,7 +26,11 @@ export const configRouter = router({
     .mutation(({ ctx, input }) =>
       ctx.api.updateConfigByKey({
         path: { key: input.key },
-        body: { value: input.value, description: input.description },
+        body: {
+          value: input.value,
+          description: input.description,
+          expectedValue: input.expectedValue,
+        },
       }),
     ),
 

@@ -54,6 +54,13 @@ export const EMPLOYEE_COUNT_HISTORY_ANCHOR = 'starfsmannafjoldasaga'
 export const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
   'salary_difference_threshold_percent'
 
+/**
+ * Config key for the companies that may get notices in their island.is mailbox
+ * through OneSystems: `none`, `*` (all), or comma-separated kennitölur. The API
+ * validates and normalises it, and reads anything malformed as `none`.
+ */
+export const MAILBOX_ALLOWLIST_CONFIG_KEY = 'onesystems_mailbox_allowlist'
+
 const IS_MONTHS = [
   'janúar',
   'febrúar',

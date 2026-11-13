@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
@@ -38,6 +39,7 @@ describe('ConfigService', () => {
   })
 
   beforeEach(async () => {
+    jest.clearAllMocks()
     findOne = jest.fn()
     findAll = jest.fn().mockResolvedValue([])
     update = jest.fn()
@@ -92,6 +94,58 @@ describe('ConfigService', () => {
     expect(findOne).toHaveBeenCalledWith(
       expect.objectContaining({ lock: 'UPDATE', transaction: 'tx' }),
     )
+  })
+
+  it('refuses a write whose expectedValue no longer matches, without touching the active entry', async () => {
+    findOne.mockResolvedValue(currentEntry('3.9'))
+
+    await expect(
+      service.updateByKey(THRESHOLD_KEY, {
+        value: '3.5',
+        expectedValue: '4.0',
+      }),
+    ).rejects.toThrow(ConflictException)
+    expect(update).not.toHaveBeenCalled()
+    expect(create).not.toHaveBeenCalled()
+  })
+
+  it('logs who made the change once it is made, without the value', async () => {
+    findOne.mockResolvedValue(currentEntry('3.9'))
+
+    await service.updateByKey(THRESHOLD_KEY, { value: '3.5' }, 'user-1')
+
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      expect.stringContaining('changed by user user-1'),
+      expect.objectContaining({ key: THRESHOLD_KEY, userId: 'user-1' }),
+    )
+    expect(JSON.stringify(mockLogger.info.mock.calls)).not.toContain('3.5')
+  })
+
+  it('does not log a refused write as a change', async () => {
+    findOne.mockResolvedValue(currentEntry('3.9'))
+
+    await expect(
+      service.updateByKey(
+        THRESHOLD_KEY,
+        { value: '3.5', expectedValue: '4.0' },
+        'user-1',
+      ),
+    ).rejects.toThrow(ConflictException)
+
+    expect(JSON.stringify(mockLogger.info.mock.calls)).not.toContain(
+      'changed by user',
+    )
+  })
+
+  it('writes when expectedValue matches the stored value', async () => {
+    findOne.mockResolvedValue(currentEntry('3.9'))
+
+    await service.updateByKey(THRESHOLD_KEY, {
+      value: '3.5',
+      expectedValue: '3.9',
+    })
+
+    expect(create).toHaveBeenCalled()
   })
 
   it('rejects raising the threshold without touching the active entry', async () => {

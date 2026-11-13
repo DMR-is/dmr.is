@@ -3,6 +3,7 @@ import { Sequelize } from 'sequelize-typescript'
 
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -97,12 +98,16 @@ export class ConfigService implements IConfigService {
    * that fails after the supersede would leave zero, which `updateByKey` itself
    * needs one of to run at all.
    */
-  async updateByKey(key: string, dto: UpdateConfigDto): Promise<ConfigDto> {
+  async updateByKey(
+    key: string,
+    dto: UpdateConfigDto,
+    actorUserId?: string,
+  ): Promise<ConfigDto> {
     this.logger.info(`Updating config entry with key "${key}"`, {
       context: LOGGING_CONTEXT,
     })
 
-    return this.sequelize.transaction(async (transaction) => {
+    const updated = await this.sequelize.transaction(async (transaction) => {
       const current = await this.configModel.findOne({
         where: { key, supersededAt: null },
         lock: Transaction.LOCK.UPDATE,
@@ -111,6 +116,16 @@ export class ConfigService implements IConfigService {
 
       if (!current) {
         throw new NotFoundException(configMessages.notFound(key))
+      }
+
+      // Checked under the row lock: a page that read an older value must not
+      // write over a change made since (the allowlist is written whole, so a
+      // stale remove would re-add a company someone else just removed).
+      if (
+        dto.expectedValue !== undefined &&
+        dto.expectedValue !== current.value
+      ) {
+        throw new ConflictException(configMessages.changedSinceRead(key))
       }
 
       const value =
@@ -136,6 +151,17 @@ export class ConfigService implements IConfigService {
 
       return newEntry.fromModel()
     })
+
+    // The row records when a value changed, not who changed it: this line
+    // does. Written only once the change has committed, so a refused write
+    // (409, 400, 404) is never logged as a change. Never the value, which for
+    // the allowlist is a list of kennitölur.
+    this.logger.info(
+      `Config entry "${key}" changed by user ${actorUserId ?? 'unknown'}`,
+      { context: LOGGING_CONTEXT, key, userId: actorUserId, id: updated.id },
+    )
+
+    return updated
   }
 
   /**

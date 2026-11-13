@@ -152,7 +152,9 @@ const ADMIN_ONLY_HANDLERS: readonly string[] = [
   'ConfigController.updateByKey',
   // Whether a company gets a letter in its island.is mailbox is not a
   // reviewer action, and the page is admin-only, so the reads are pinned too.
+  'NoticeIssuesController.checkOneSystems',
   'NoticeIssuesController.getIssues',
+  'NoticeIssuesController.getRecentDeliveries',
   'NoticeIssuesController.reconcileDelivery',
   'NoticeIssuesController.retryNotice',
   // Approving a firm to file for other companies, cutting it off, and minting

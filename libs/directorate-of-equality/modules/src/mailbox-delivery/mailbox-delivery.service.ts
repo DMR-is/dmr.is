@@ -127,6 +127,9 @@ export const MAILBOX_DELIVERY_MAX_ATTEMPTS = 5
  */
 export const LOGIN_RETRY_AFTER_MS = 60_000
 
+/** How long a failed connection check is answered again without a Login. */
+export const CHECK_RETRY_AFTER_MS = 30_000
+
 /**
  * `last_error` is for a person reconciling the row. It may hold One's own
  * `ErrorMessage`, which can echo the recipient's details, so it is kept short.
@@ -254,6 +257,9 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
    * and one info line when it ends.
    */
   private loginFailure: { reason: string; retryAfter: number } | null = null
+
+  /** The last failed `checkConnection`, answered again within its window. */
+  private lastFailedCheck: { at: number; reason: string | null } | null = null
 
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
@@ -1080,6 +1086,48 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       })
     }
     return null
+  }
+
+  async checkConnection(): Promise<{
+    ok: boolean
+    reason: string | null
+    checkedAt: Date
+  }> {
+    // A failed check is answered again for a while without a request:
+    // repeated clicks with a wrong password are the lockout risk the Login
+    // backoff exists to prevent.
+    if (
+      this.lastFailedCheck &&
+      Date.now() - this.lastFailedCheck.at < CHECK_RETRY_AFTER_MS
+    ) {
+      return {
+        ok: false,
+        reason: this.lastFailedCheck.reason,
+        // When the Login that failed ran, not now.
+        checkedAt: new Date(this.lastFailedCheck.at),
+      }
+    }
+
+    try {
+      await this.oneSystems.checkLogin({ fresh: true })
+    } catch (error) {
+      if (!isUnavailableError(error)) {
+        throw error
+      }
+      // Kept in step with the deliveries: the backoff and the outage log.
+      const result = this.loginUnavailable(error)
+      const reason = result.status === 'UNAVAILABLE' ? result.reason : null
+      const at = Date.now()
+      this.lastFailedCheck = { at, reason }
+      return { ok: false, reason, checkedAt: new Date(at) }
+    }
+    if (this.loginFailure) {
+      this.loginFailure = null
+      this.logger.info('OneSystems Login works again', {
+        context: LOGGING_CONTEXT,
+      })
+    }
+    return { ok: true, reason: null, checkedAt: new Date() }
   }
 
   /**

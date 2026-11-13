@@ -3545,6 +3545,57 @@
         "tags": ["Config"]
       }
     },
+    "/api/v1/config/environment/onesystems": {
+      "get": {
+        "operationId": "getOneSystemsStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OneSystemsStatusDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Config"]
+      }
+    },
     "/api/v1/config/{key}": {
       "get": {
         "operationId": "getConfigByKey",
@@ -3662,6 +3713,14 @@
             }
           },
           "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "409": {
             "description": "",
             "content": {
               "application/json": {
@@ -3878,6 +3937,111 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/NoticeIssuesDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Notice issues"]
+      }
+    },
+    "/api/v1/notice-issues/recent": {
+      "get": {
+        "operationId": "getRecentMailboxDeliveries",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RecentDeliveryDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Notice issues"]
+      }
+    },
+    "/api/v1/notice-issues/onesystems/check": {
+      "post": {
+        "operationId": "checkOneSystems",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OneSystemsCheckDto" }
               }
             }
           },
@@ -8924,11 +9088,25 @@
         },
         "required": ["id", "key", "value"]
       },
+      "OneSystemsStatusDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "ONESYSTEMS_ENABLED is on for this environment. When off, no company gets mailbox notices whatever the allowlist says."
+          }
+        },
+        "required": ["enabled"]
+      },
       "UpdateConfigDto": {
         "type": "object",
         "properties": {
           "value": { "type": "string" },
-          "description": { "type": "string", "nullable": true }
+          "description": { "type": "string", "nullable": true },
+          "expectedValue": {
+            "type": "string",
+            "description": "The value the caller read. When given, the update is refused (409) if the stored value has changed since, so a stale page cannot overwrite someone else's change."
+          }
         },
         "required": ["value"]
       },
@@ -9156,6 +9334,35 @@
           "reminders",
           "remindersTotal"
         ]
+      },
+      "RecentDeliveryDto": {
+        "type": "object",
+        "properties": {
+          "delivery": { "$ref": "#/components/schemas/NoticeIssueDeliveryDto" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "companyName": { "type": "string", "nullable": true }
+        },
+        "required": ["delivery", "companyId"]
+      },
+      "OneSystemsCheckDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "A fresh Login to One succeeded."
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Why it failed: operation, reason and HTTP status, e.g. \"Login HTTP 401\". Nothing personal."
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": ["ok", "checkedAt"]
       },
       "ReconcileDeliveryDto": {
         "type": "object",

@@ -136,7 +136,14 @@ export interface IOneSystemsService {
    * "One cannot be reached at all right now" apart from a failure of one
    * delivery.
    */
-  checkLogin(): Promise<void>
+  checkLogin(options?: {
+    /**
+     * Log in now even if a token is cached: a connection test proving the
+     * credentials and One are working, rather than that an earlier token has
+     * not expired.
+     */
+    fresh?: boolean
+  }): Promise<void>
 
   /**
    * Finds the party's open case that uses `caseType` (by `IDNumber` +
