@@ -21,6 +21,7 @@ import { PartnerDelegationModel } from './partner-client/models/partner-delegati
 import { PublicReportModel } from './public-report/models/public-report.model'
 import { ReportModel } from './report/models/report.model'
 import { ReportEventModel } from './report/models/report-event.model'
+import { ReportAttachmentModel } from './report-attachment/models/report-attachment.model'
 import { ReportCommentModel } from './report-comment/models/report-comment.model'
 import { ReportCriterionModel } from './report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from './report-criterion/models/report-sub-criterion.model'
@@ -116,6 +117,7 @@ export const DOE_MODELS = [
   PublicReportModel,
   ReportEventModel,
   ReportCommentModel,
+  ReportAttachmentModel,
   CompanyEventModel,
   CompanyCommentModel,
   // After CompanyModel and UserModel, both of which the recipient/batch rows

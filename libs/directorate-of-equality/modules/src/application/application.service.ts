@@ -23,6 +23,7 @@ import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../constants'
+import { PresignUploadResponseDto } from '../import-upload/dto/presign-upload-response.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import { computeReportValidUntil } from '../report/lib/day-boundaries'
 import { resolveEqualityContent } from '../report/lib/equality-content'
@@ -47,6 +48,15 @@ import {
   type ReportResourceContext,
   ReportRoleEnum,
 } from '../report/types/report-resource-context'
+import {
+  AddReportAttachmentDto,
+  PresignReportAttachmentDto,
+} from '../report-attachment/dto/add-report-attachment.dto'
+import {
+  GetReportAttachmentsResponseDto,
+  ReportAttachmentDto,
+} from '../report-attachment/dto/report-attachment.dto'
+import { IReportAttachmentService } from '../report-attachment/report-attachment.service.interface'
 import { CommentVisibilityEnum } from '../report-comment/models/report-comment.model'
 import { IReportCommentService } from '../report-comment/report-comment.service.interface'
 import { CreateEqualityReportDto } from '../report-create/dto/create-equality-report.dto'
@@ -142,6 +152,8 @@ export class ApplicationService implements IApplicationService {
     private readonly reportEventService: IReportEventService,
     @Inject(IReportResultService)
     private readonly reportResultService: IReportResultService,
+    @Inject(IReportAttachmentService)
+    private readonly reportAttachmentService: IReportAttachmentService,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
@@ -545,6 +557,105 @@ export class ApplicationService implements IApplicationService {
     )
 
     return this.getReport(providerId, company)
+  }
+
+  async presignEqualityAttachment(
+    providerId: string,
+    input: PresignReportAttachmentDto,
+    company: CompanyDto,
+  ): Promise<PresignUploadResponseDto> {
+    const report = await this.findOwnedReportForAttachments(providerId, company)
+    return this.reportAttachmentService.presign(report, input.extension)
+  }
+
+  async addEqualityAttachment(
+    providerId: string,
+    input: AddReportAttachmentDto,
+    company: CompanyDto,
+  ): Promise<ReportAttachmentDto> {
+    const report = await this.findOwnedReportForAttachments(providerId, company)
+    const { attachment, reportStatus } = await this.reportAttachmentService.add(
+      report,
+      input,
+    )
+    await this.recordAttachmentEdit(report.id, reportStatus, company)
+    return attachment
+  }
+
+  async listEqualityAttachments(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<GetReportAttachmentsResponseDto> {
+    const report = await this.findOwnedReportForAttachments(providerId, company)
+    return this.reportAttachmentService.list(report.id)
+  }
+
+  async removeEqualityAttachment(
+    providerId: string,
+    attachmentId: string,
+    company: CompanyDto,
+  ): Promise<void> {
+    const report = await this.findOwnedReportForAttachments(providerId, company)
+    const { reportStatus } = await this.reportAttachmentService.remove(
+      report,
+      attachmentId,
+    )
+    await this.recordAttachmentEdit(report.id, reportStatus, company)
+  }
+
+  /**
+   * A change to the attachments during review is an edit like a change to the
+   * plan: it answers the reviewer and belongs on the timeline. A DRAFT has no
+   * timeline yet, so nothing is recorded there.
+   *
+   * `status` is the one the attachment service read under the report's row
+   * lock, not the one resolved at the start of the request.
+   */
+  private async recordAttachmentEdit(
+    reportId: string,
+    status: ReportStatusEnum,
+    company: CompanyDto,
+  ): Promise<void> {
+    if (status !== ReportStatusEnum.IN_REVIEW) return
+
+    await this.markApplicantResponded(reportId)
+    await this.reportEventService.emitEdited(reportId, status, company.id)
+  }
+
+  /**
+   * The company's own report, as a draft or as a submitted one.
+   *
+   * Two ownership rules because the two states are owned differently: a DRAFT
+   * has no `company_report` snapshot yet and is owned through its cached
+   * `company_national_id` (as in `ReportDraftService.findOwnedDraft`); a
+   * submitted report is owned through its parent `company_report` row. Both
+   * miss with the same 404, so another company's report is never revealed.
+   * Whether the report may take attachments in its current status is
+   * `IReportAttachmentService`'s rule, not this lookup's.
+   */
+  private async findOwnedReportForAttachments(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<ReportModel> {
+    const report = await this.reportModel.findOne({
+      where: {
+        providerType: this.channel.providerType,
+        providerId: this.channel.buildProviderId(
+          providerId,
+          company.nationalId,
+        ),
+      },
+      attributes: ['id', 'type', 'status', 'companyNationalId'],
+    })
+
+    if (report?.status === ReportStatusEnum.DRAFT) {
+      if (report.companyNationalId !== company.nationalId) {
+        throw new NotFoundException(`Report "${providerId}" not found`)
+      }
+      return report
+    }
+
+    return this.findOwnedReportByProviderTuple(providerId, company)
   }
 
   /**

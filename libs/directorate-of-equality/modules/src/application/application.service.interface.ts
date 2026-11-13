@@ -1,9 +1,18 @@
 import { PagingQuery } from '@dmr.is/shared-dto'
 
 import { CompanyDto } from '../company/dto/company.dto'
+import { PresignUploadResponseDto } from '../import-upload/dto/presign-upload-response.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import { ReportTypeEnum } from '../report/models/report.enums'
 import { EqualityContentPdf } from '../report/report.service.interface'
+import {
+  AddReportAttachmentDto,
+  PresignReportAttachmentDto,
+} from '../report-attachment/dto/add-report-attachment.dto'
+import {
+  GetReportAttachmentsResponseDto,
+  ReportAttachmentDto,
+} from '../report-attachment/dto/report-attachment.dto'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
@@ -87,6 +96,30 @@ export interface IApplicationService {
     input: EditEqualityContentDto,
     company: CompanyDto,
   ): Promise<ApplicationReportDetailDto>
+  /**
+   * Fylgiskjöl on the company's own equality report, while it is a DRAFT or
+   * IN_REVIEW. Ownership is resolved here; the rules live in
+   * `IReportAttachmentService`.
+   */
+  presignEqualityAttachment(
+    providerId: string,
+    input: PresignReportAttachmentDto,
+    company: CompanyDto,
+  ): Promise<PresignUploadResponseDto>
+  addEqualityAttachment(
+    providerId: string,
+    input: AddReportAttachmentDto,
+    company: CompanyDto,
+  ): Promise<ReportAttachmentDto>
+  listEqualityAttachments(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<GetReportAttachmentsResponseDto>
+  removeEqualityAttachment(
+    providerId: string,
+    attachmentId: string,
+    company: CompanyDto,
+  ): Promise<void>
   editOutliers(
     providerId: string,
     input: EditOutliersDto,

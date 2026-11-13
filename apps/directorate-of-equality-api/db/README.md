@@ -895,6 +895,20 @@ In-place edits are exposed for the two narrow corrections the applicant flow nee
 
 A future endpoint may handle other in-place edits after admin/applicant communication; everything else still requires a fresh upstream submission.
 
+### Equality report attachments (fylgiskjöl)
+
+An equality report has one main plan, stored on `report` (`equality_report_content`, HTML or a verbatim PDF). Next to it a company may send up to **6** supporting files of up to **4 MB** each — `.pdf`, `.docx`, `.xlsx` or `.xls` — because some keep their action plans (aðgerðaáætlanir) in Excel. They live in `report_attachment` (see the table below).
+
+- **Reviewer-only.** Attachments are listed and downloaded in the admin web. They are not merged into the approval PDF, not attached to the approval email and not archived to the company-files bucket.
+- **When.** Added or removed while the report is `DRAFT` or `IN_REVIEW` — the same correction window as `PUT …/equality-content` — checked against the status read under a `FOR UPDATE` lock on the report, so a write cannot land on a report a reviewer decided meanwhile. A write on a draft refreshes its `updated_at`, so the stale-draft reaper counts it as activity. A draft's attachments carry through submit, because submit transitions the same `report` row. A change during `IN_REVIEW` marks the thread answered and emits `EDITED`, as a content edit does.
+- **Ownership.** A `DRAFT` is owned through `report.company_national_id` (it has no `company_report` snapshot yet), a submitted report through its parent `company_report` row. Both miss with the same 404.
+- **Transport.** Never inside a JSON or GraphQL body — island.is's GraphQL gateway caps requests at 350kb. The applicant asks for a presigned PUT (`POST …/equality-attachments/presign`, boundary `doe-imports/equality-attachment/`), uploads the bytes to the DOE imports bucket, then registers the key (`POST …/equality-attachments`). The API reads the object with the 4 MB cap pushed into the download, checks the bytes against the extension (`%PDF-`; zip for `.docx`/`.xlsx`, refusing a `vbaProject.bin` part; OLE for `.xls`), counts under a `FOR UPDATE` lock on the report row and inserts. The staged object is deleted after the request commits, once the row is confirmed to have landed — an error later in the request leaves the upload in place for a retry. The bucket's 24-hour lifecycle rule is the backstop for a delete that fails.
+- **Retention.** Attachments live exactly as long as their `report` row. A withdrawn report keeps them (`withdraw` only changes the status), a pruned stale draft loses them by cascade, and a submitted report is never deleted. These are free-form files that may name employees, so this matters more for them than for structured report data; a retention rule for reports would cover them by cascade.
+- **Reviewers never see a draft's attachments**: the admin routes 404 for a `DRAFT`, as the admin report detail does.
+- **Downloads** (`GET /reports/:id/attachments/:attachmentId`, admin) are always `Content-Disposition: attachment` with `nosniff`, and the content type comes from the stored extension.
+
+Endpoints: `POST /application/reports/:providerId/equality-attachments/presign`, `POST|GET /application/reports/:providerId/equality-attachments`, `DELETE /application/reports/:providerId/equality-attachments/:attachmentId`; admin `GET /reports/:id/attachments` and `GET /reports/:id/attachments/:attachmentId`.
+
 ## Daughter companies
 
 Large companies often report on behalf of their corporate group. The `company_report` table captures this — one row per participating company per submission, with the submitted company identity and details (name, national ID, address, headcount, ISAT category) snapshotted so later third-party changes don't rewrite history:
@@ -1691,6 +1705,22 @@ Invariants (enforce via CHECK):
 
 - `author_kind = 'REVIEWER'` ⇒ `author_user_id IS NOT NULL`.
 - `author_kind = 'COMPANY'` ⇒ `author_user_id IS NULL AND visibility = 'EXTERNAL'` (company admins cannot post internal comments).
+
+### `report_attachment`
+
+A supporting file (fylgiskjal) sent with an equality report — see "Equality report attachments". Insert-and-delete only, so no `updated_at`. The bytes are stored here rather than in S3: volume is small (at most 6 × 4 MB per report, few reports carry any), and keeping them in Postgres puts them behind the API's own authorization, in the same backups and under the same delete as the report. The model's default scope leaves `content` out; only the download reads it.
+
+| Column       | Type                                                             |
+| ------------ | ---------------------------------------------------------------- |
+| `id`         | `uuid` PK                                                        |
+| `report_id`  | `fk → report`, `ON DELETE CASCADE`                               |
+| `filename`   | `text` (as uploaded; 1–255 characters)                           |
+| `extension`  | `text` (`pdf`, `docx`, `xlsx`, `xls`; checked against the bytes) |
+| `size_bytes` | `integer` (`> 0`, `≤ 4194304`)                                   |
+| `content`    | `bytea`                                                          |
+| `created_at` | `timestamptz`                                                    |
+
+Invariants: the three CHECKs above (m-20261109). The 6-per-report cap is enforced in `ReportAttachmentService` under a row lock on `report`; a CHECK cannot count rows.
 
 ### `config`
 

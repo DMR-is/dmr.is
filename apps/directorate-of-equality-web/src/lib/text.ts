@@ -396,6 +396,11 @@ export const reportText = {
     // The embedded PDF viewer, for plans the company uploaded as a file.
     pdfFrameTitle: 'Jafnréttisáætlun fyrirtækisins',
     pdfOpenInNewTab: 'Opna í nýjum flipa',
+    // Supporting files the company sent with the plan, e.g. an Excel action
+    // plan. Downloaded, never shown inline.
+    attachmentsTitle: 'Fylgiskjöl',
+    attachmentsError: 'Ekki tókst að sækja fylgiskjöl.',
+    attachmentDownload: 'Sækja',
   },
   salaryTab: {
     emptyTitle: 'Engin skýrslugjöf ',
