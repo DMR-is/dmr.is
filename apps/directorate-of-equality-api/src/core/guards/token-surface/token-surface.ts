@@ -23,12 +23,22 @@ import { type Logger } from '@dmr.is/logging'
 export const ISLAND_IS_APPLICATION_SCOPE =
   '@island.is/applications/directorate-of-equality'
 
+/**
+ * The island.is salary-report template's scope (`ApplicationScope.
+ * directorateOfEqualitySalary` in island.is `libs/auth/scopes`). That template
+ * requires this one instead of the scope above, so its tokens may carry only
+ * this.
+ */
+export const ISLAND_IS_SALARY_APPLICATION_SCOPE =
+  '@island.is/applications/directorate-of-equality-salary'
+
 /** partner-web's API resource scope, as its `identityServerConfig` requests it. */
 export const PARTNER_WEB_SCOPE = '@jafnretti.is/doe-partner-web'
 
 /** Both company channels call the same `/application` endpoints. */
 export const COMPANY_TOKEN_SCOPES: ReadonlyArray<string> = [
   ISLAND_IS_APPLICATION_SCOPE,
+  ISLAND_IS_SALARY_APPLICATION_SCOPE,
   PARTNER_WEB_SCOPE,
 ]
 
