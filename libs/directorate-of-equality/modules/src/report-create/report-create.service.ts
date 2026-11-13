@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { CreationAttributes } from 'sequelize'
 
 import {
@@ -48,6 +49,27 @@ import {
 } from './dto/create-salary-options'
 import { IReportCreateService } from './report-create.service.interface'
 
+/**
+ * Gives a SYSTEM report filed without a provider id one of its own.
+ *
+ * Without an id a report has no handle on any applicant route, so the company
+ * could never see it in its submissions list. The id is opaque and fresh —
+ * never `report.id`, which the applicant must not see — and it is minted after
+ * the replay check, which skips a null id, so it changes no replay outcome.
+ *
+ * SYSTEM only. The provider type is never changed, and an ISLAND_IS or OTHER
+ * report is never given an id that island.is or a firm did not issue: that id
+ * would open it to that channel's write routes. Such a report stays without
+ * one, and so off the submissions list, as do rows written before this
+ * existed (there is no backfill).
+ */
+export const withReadHandle = (
+  values: CreationAttributes<ReportModel>,
+): CreationAttributes<ReportModel> =>
+  values.providerId || values.providerType !== ReportProviderEnum.SYSTEM
+    ? values
+    : { ...values, providerId: randomUUID() }
+
 const LOGGING_CONTEXT = 'ReportCreateService'
 
 /**
@@ -93,7 +115,7 @@ export class ReportCreateService implements IReportCreateService {
     values: CreationAttributes<ReportModel>,
   ): Promise<ReportModel> {
     try {
-      return await this.reportModel.create(values)
+      return await this.reportModel.create(withReadHandle(values))
     } catch (error) {
       rethrowReportWriteError(error)
     }

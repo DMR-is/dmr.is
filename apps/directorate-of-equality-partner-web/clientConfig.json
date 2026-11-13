@@ -3,6 +3,7 @@
   "paths": {
     "/api/v1/application/company": {
       "get": {
+        "description": "The company the signed-in organisation resolves to, as in the register. `isServiceProvider` says whether the organisation is also an approved service provider (þjónustuaðili): it comes from the same live-partner-client lookup that guards `GET /application/partner-client`, so it is `true` exactly when those provider routes answer rather than 404.",
         "operationId": "getApplicationCompany",
         "parameters": [],
         "responses": {
@@ -10,7 +11,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationCompanyDto"
+                }
               }
             }
           },
@@ -31,6 +34,68 @@
             }
           },
           "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
+    "/api/v1/application/reports": {
+      "get": {
+        "description": "The resolved company's submitted equality reports (jafnréttisáætlanir) and salary reports (jafnlaunaskýrslur), newest first. Exactly the reports `GET /application/reports/:providerId` opens for this company: each row's `providerId` is the handle that route takes, and a report the detail route would 404 on is never listed. Group reports appear only for the parent company that filed them — a subsidiary covered by a group report cannot open it, so it does not see it here either. Drafts are not listed: a draft is not a submission yet, and is reached through its own application under `reports/:providerId/draft`. Reports from every channel are listed: those the company filed on island.is, those a service provider filed for it over the partner API, and those Jafnréttisstofa entered for it; `submittedVia` says which. Every row opens with the read routes (detail, equality PDF, outliers, comments); only `ISLAND_IS` rows can be edited, commented on or withdrawn here. A report stored with no provider id — some entered by Jafnréttisstofa before ids were assigned — has no handle on any applicant route, so it is neither listed here nor openable. Withdrawn, denied and superseded reports are listed with their status. Empty when the company has filed nothing; 404 only when the authenticated kennitala has no company row yet.",
+        "operationId": "getApplicationReports",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetApplicationReportsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
             "description": "",
             "content": {
               "application/json": {
@@ -705,14 +770,14 @@
     },
     "/api/v1/application/reports/{providerId}": {
       "get": {
-        "description": "Returns company-facing report detail with external comments. Looked up by upstream `providerId`.",
+        "description": "Returns company-facing report detail with external comments. Read-only across channels: opens any report `GET /application/reports` lists for this company — filed on island.is, by a service provider over the partner API, or by Jafnréttisstofa — under the same ownership rule. Only island.is-filed reports can be changed through the write routes.",
         "operationId": "getApplicationReport",
         "parameters": [
           {
             "name": "providerId",
             "required": true,
             "in": "path",
-            "description": "Upstream submission ID (e.g. the island.is application UUID). Identifies the report by the originator's own handle rather than the DoE-side `report.id`, which the applicant does not see. Resolved against reports whose parent company matches the authenticated company.",
+            "description": "Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.",
             "schema": { "type": "string" }
           }
         ],
@@ -773,14 +838,14 @@
         "tags": ["Application"]
       },
       "delete": {
-        "description": "Withdraws the report tied to an island.is application the applicant deleted upstream. Sets status to `WITHDRAWN` and emits `STATUS_CHANGED`. Allowed only before the report reaches a terminal state (`APPROVED`/`DENIED`/`SUPERSEDED`); idempotent on an already-`WITHDRAWN` report.",
+        "description": "Withdraws the report tied to an island.is application the applicant deleted upstream. Sets status to `WITHDRAWN` and emits `STATUS_CHANGED`. Allowed only before the report reaches a terminal state (`APPROVED`/`DENIED`/`SUPERSEDED`); idempotent on an already-`WITHDRAWN` report. island.is-filed reports only.",
         "operationId": "withdrawApplicationReport",
         "parameters": [
           {
             "name": "providerId",
             "required": true,
             "in": "path",
-            "description": "Upstream submission ID (e.g. the island.is application UUID).",
+            "description": "The island.is application UUID only. This write route acts on reports the company filed on island.is: a `partner:` or `system:` handle answers 404, because a report filed through another channel is changed through that channel.",
             "schema": { "type": "string" }
           }
         ],
@@ -840,13 +905,13 @@
             "name": "providerId",
             "required": true,
             "in": "path",
-            "description": "Upstream submission ID (e.g. the island.is application UUID).",
+            "description": "Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.",
             "schema": { "type": "string" }
           }
         ],
         "responses": {
           "200": {
-            "description": "Returns the uploaded jafnréttisáætlun PDF verbatim. 404 when the report's equality content is HTML rather than an uploaded PDF.",
+            "description": "Returns the uploaded jafnréttisáætlun PDF verbatim. 404 when the report's equality content is HTML rather than an uploaded PDF. Takes any read handle from `GET /application/reports`, whichever channel filed the report.",
             "content": {
               "application/pdf": {
                 "schema": { "type": "string", "format": "binary" }
@@ -901,14 +966,14 @@
     },
     "/api/v1/application/reports/{providerId}/outliers": {
       "get": {
-        "description": "Paginated list of the report's employee outliers. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Ordered by role title and then by the employee's ordinal within the report — the same grouped-by-role order the draft employee lists serve.",
+        "description": "Paginated list of the report's employee outliers. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Ordered by role title and then by the employee's ordinal within the report — the same grouped-by-role order the draft employee lists serve. Read-only across channels: takes any read handle from `GET /application/reports`. Changing the explanations (`PUT …/outliers`) is island.is-only.",
         "operationId": "getApplicationReportOutliers",
         "parameters": [
           {
             "name": "providerId",
             "required": true,
             "in": "path",
-            "description": "Upstream submission ID (e.g. the island.is application UUID).",
+            "description": "Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.",
             "schema": { "type": "string" }
           },
           {
@@ -981,14 +1046,14 @@
         "tags": ["Application"]
       },
       "put": {
-        "description": "Replaces outlier explanations on a SALARY report. All-or-none — the submitted set must match the canonical detected outliers exactly. Allowed in status `POSTPONED` (transitions to `SUBMITTED`) or `IN_REVIEW` (status preserved). Always emits `EDITED`; the `POSTPONED → SUBMITTED` case additionally emits `STATUS_CHANGED`.",
+        "description": "Replaces outlier explanations on a SALARY report. All-or-none — the submitted set must match the canonical detected outliers exactly. Allowed in status `POSTPONED` (transitions to `SUBMITTED`) or `IN_REVIEW` (status preserved). Always emits `EDITED`; the `POSTPONED → SUBMITTED` case additionally emits `STATUS_CHANGED`. island.is-filed reports only.",
         "operationId": "editApplicationOutliers",
         "parameters": [
           {
             "name": "providerId",
             "required": true,
             "in": "path",
-            "description": "Upstream submission ID (e.g. the island.is application UUID).",
+            "description": "The island.is application UUID only. This write route acts on reports the company filed on island.is: a `partner:` or `system:` handle answers 404, because a report filed through another channel is changed through that channel.",
             "schema": { "type": "string" }
           }
         ],
@@ -1059,14 +1124,14 @@
     },
     "/api/v1/application/reports/{providerId}/comments": {
       "get": {
-        "description": "The report's external comment thread on its own, ordered oldest-first. Only comments with `EXTERNAL` visibility are returned — reviewer-internal notes are never exposed to the applicant. Use this instead of re-fetching the report detail when only the conversation is needed; the same list is embedded as `externalComments` in `GET /application/reports/:providerId`.",
+        "description": "The report's external comment thread on its own, ordered oldest-first. Only comments with `EXTERNAL` visibility are returned — reviewer-internal notes are never exposed to the applicant. Use this instead of re-fetching the report detail when only the conversation is needed; the same list is embedded as `externalComments` in `GET /application/reports/:providerId`. Takes any read handle from `GET /application/reports`; posting a comment is island.is-only.",
         "operationId": "getApplicationReportComments",
         "parameters": [
           {
             "name": "providerId",
             "required": true,
             "in": "path",
-            "description": "Upstream submission ID (e.g. the island.is application UUID).",
+            "description": "Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.",
             "schema": { "type": "string" }
           }
         ],
@@ -1130,14 +1195,14 @@
         "tags": ["Application"]
       },
       "post": {
-        "description": "Submits an external comment on a report owned by the authenticated company. Report is looked up by upstream `providerId`.",
+        "description": "Submits an external comment on a report owned by the authenticated company. island.is-filed reports only: the comment thread of a report filed through another channel can be read here but not written to.",
         "operationId": "submitApplicationReportComment",
         "parameters": [
           {
             "name": "providerId",
             "required": true,
             "in": "path",
-            "description": "Upstream submission ID (e.g. the island.is application UUID).",
+            "description": "The island.is application UUID only. This write route acts on reports the company filed on island.is: a `partner:` or `system:` handle answers 404, because a report filed through another channel is changed through that channel.",
             "schema": { "type": "string" }
           }
         ],
@@ -1210,14 +1275,14 @@
     },
     "/api/v1/application/reports/{providerId}/equality-content": {
       "put": {
-        "description": "Replaces the narrative body of an EQUALITY report in place. Allowed only on reports in status `IN_REVIEW`. Emits an `EDITED` event; status is preserved.",
+        "description": "Replaces the narrative body of an EQUALITY report in place. Allowed only on reports in status `IN_REVIEW`. Emits an `EDITED` event; status is preserved. island.is-filed reports only.",
         "operationId": "editApplicationEqualityContent",
         "parameters": [
           {
             "name": "providerId",
             "required": true,
             "in": "path",
-            "description": "Upstream submission ID (e.g. the island.is application UUID).",
+            "description": "The island.is application UUID only. This write route acts on reports the company filed on island.is: a `partner:` or `system:` handle answers 404, because a report filed through another channel is changed through that channel.",
             "schema": { "type": "string" }
           }
         ],
@@ -3522,7 +3587,7 @@
         "description": "One reporting obligation's own state. NOT_REQUIRED means the company does not owe this report at all — it is the absence of an obligation, not a compliance failure. ACTION_PLAN_MISSING applies only to a salary report, which alone can be postponed pending outlier explanations.",
         "enum": ["NOT_REQUIRED", "MISSING", "ACTION_PLAN_MISSING", "COVERED"]
       },
-      "CompanyDto": {
+      "ApplicationCompanyDto": {
         "type": "object",
         "properties": {
           "id": { "type": "string", "format": "uuid" },
@@ -3624,6 +3689,10 @@
           "hasLegacyReports": {
             "type": "boolean",
             "description": "Derived: the Directorate's retired SharePoint register holds at least one row for this company. Drives whether the detail view offers the legacy-data tab; says nothing about compliance — the row may record a lapsed or surrendered certificate."
+          },
+          "isServiceProvider": {
+            "type": "boolean",
+            "description": "True when this organisation is also an approved service provider (þjónustuaðili) — a live partner client, not revoked. Decided by the same lookup that guards `GET /application/partner-client` and the provider key routes, so `true` here means those routes answer and `false` means they 404."
           }
         },
         "required": [
@@ -3643,7 +3712,8 @@
           "salaryObligationStatus",
           "equalityReportOverdue",
           "salaryReportOverdue",
-          "hasLegacyReports"
+          "hasLegacyReports",
+          "isServiceProvider"
         ]
       },
       "ApiErrorDto": {
@@ -3694,6 +3764,110 @@
           "details": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["statusCode", "timestamp"]
+      },
+      "ApplicationReportChannelEnum": {
+        "type": "string",
+        "enum": ["ISLAND_IS", "SERVICE_PROVIDER", "DIRECTORATE"],
+        "description": "Who filed the report: the company on island.is (`ISLAND_IS`), a service provider for it over the partner API (`SERVICE_PROVIDER`), or Jafnréttisstofa on its behalf (`DIRECTORATE`). Only `ISLAND_IS` reports can be edited, commented on or withdrawn here."
+      },
+      "ReportTypeEnum": { "type": "string", "enum": ["SALARY", "EQUALITY"] },
+      "ReportStatusEnum": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "SUBMITTED",
+          "POSTPONED",
+          "IN_REVIEW",
+          "DENIED",
+          "APPROVED",
+          "SUPERSEDED",
+          "WITHDRAWN"
+        ]
+      },
+      "SalaryDataBasisEnum": {
+        "type": "string",
+        "enum": ["MONTH", "AVERAGE"],
+        "description": "Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). The submittee must declare one."
+      },
+      "ApplicationReportListItemDto": {
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "description": "The handle the READ routes take: `GET /application/reports/:providerId`, its equality PDF, its outliers and its comment thread. A report filed on island.is is its bare application UUID; one a service provider filed is `partner:<the provider’s own id>`; one Jafnréttisstofa entered is `system:<id>`. URL-encode it as one path segment. The write routes (edit, outliers, comment, withdraw) accept only the bare island.is form, so a report filed through another channel is read-only here. Never the DoE-side `report.id`."
+          },
+          "submittedVia": {
+            "description": "Who filed the report: the company on island.is (`ISLAND_IS`), a service provider for it over the partner API (`SERVICE_PROVIDER`), or Jafnréttisstofa on its behalf (`DIRECTORATE`). Only `ISLAND_IS` reports can be edited, commented on or withdrawn here.",
+            "allOf": [
+              { "$ref": "#/components/schemas/ApplicationReportChannelEnum" }
+            ]
+          },
+          "importedFromExcel": {
+            "type": "boolean",
+            "description": "True when the salary data was uploaded as the Excel workbook rather than entered in the form. Independent of `submittedVia`."
+          },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportTypeEnum" }]
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "identifier": {
+            "type": "string",
+            "nullable": true,
+            "description": "Human-facing display code assigned by the Directorate. Not a lookup handle."
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the report was filed — the same value as `submittedAt` on the report detail. The list is ordered by this, newest first."
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When a reviewer approved the report. Null until approved."
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "The end of the period an approved report covers (three years from approval). Null until approved."
+          },
+          "salaryDataBasis": {
+            "nullable": true,
+            "description": "Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). The submittee must declare one.",
+            "allOf": [{ "$ref": "#/components/schemas/SalaryDataBasisEnum" }]
+          },
+          "salaryDataPeriod": {
+            "type": "string",
+            "nullable": true,
+            "description": "Salary-only. The payroll month the data is based on, as `YYYY-MM-01`. Set when `salaryDataBasis` is `MONTH`, null otherwise."
+          }
+        },
+        "required": [
+          "providerId",
+          "submittedVia",
+          "importedFromExcel",
+          "type",
+          "status"
+        ]
+      },
+      "GetApplicationReportsResponseDto": {
+        "type": "object",
+        "properties": {
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationReportListItemDto"
+            }
+          }
+        },
+        "required": ["reports"]
       },
       "SubCriterionCatalogEntryDto": {
         "type": "object",
@@ -4506,11 +4680,6 @@
         },
         "required": ["eligible", "earliestNewDueAt"]
       },
-      "SalaryDataBasisEnum": {
-        "type": "string",
-        "enum": ["MONTH", "AVERAGE"],
-        "description": "Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). The submittee must declare one."
-      },
       "SubmitReportCompanyDto": {
         "type": "object",
         "properties": {
@@ -4753,20 +4922,6 @@
           "contactEmail",
           "contactPhone",
           "company"
-        ]
-      },
-      "ReportTypeEnum": { "type": "string", "enum": ["SALARY", "EQUALITY"] },
-      "ReportStatusEnum": {
-        "type": "string",
-        "enum": [
-          "DRAFT",
-          "SUBMITTED",
-          "POSTPONED",
-          "IN_REVIEW",
-          "DENIED",
-          "APPROVED",
-          "SUPERSEDED",
-          "WITHDRAWN"
         ]
       },
       "CompanyReportDto": {
@@ -5314,6 +5469,11 @@
             "nullable": true,
             "description": "Kennitala of the person who minted the key on the island.is path. Null on the admin path, where `createdByUserId` names the reviewer instead."
           },
+          "createdByName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the person who minted the key on the self-service path, as island.is gave it at the time — show this instead of `createdByNationalId`. Null when the key was minted on the admin path, or before names were recorded; show a fallback then."
+          },
           "createdByUserId": {
             "type": "string",
             "nullable": true,
@@ -5415,6 +5575,11 @@
           "grantedByNationalId": {
             "type": "string",
             "description": "Kennitala of the person who granted it."
+          },
+          "grantedByName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the person who granted it, as island.is gave it at the time — show this instead of `grantedByNationalId`. Null for delegations granted before names were recorded; show a fallback then."
           }
         },
         "required": [
@@ -5530,6 +5695,11 @@
             "type": "string",
             "nullable": true,
             "description": "Kennitala of the person who minted the key on the self-service path. Null on the admin path."
+          },
+          "createdByName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the person who minted the key on the self-service path, as island.is gave it at the time — show this instead of `createdByNationalId`. Null when the key was minted on the admin path, or before names were recorded; show a fallback then."
           },
           "createdByUserId": {
             "type": "string",

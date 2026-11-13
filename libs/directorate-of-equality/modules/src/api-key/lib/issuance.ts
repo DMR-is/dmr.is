@@ -137,7 +137,12 @@ export const resolveApiKeyIssuer = (input: {
   createdVia: ApiKeyOriginEnum
   actorUserId?: string | null
   actorNationalId?: string | null
-}): { actorUserId: string | null; actorNationalId: string | null } => {
+  actorName?: string | null
+}): {
+  actorUserId: string | null
+  actorNationalId: string | null
+  actorName: string | null
+} => {
   if (input.createdVia === ApiKeyOriginEnum.ADMIN) {
     if (!input.actorUserId) {
       throw new BadRequestException(
@@ -145,7 +150,13 @@ export const resolveApiKeyIssuer = (input: {
       )
     }
 
-    return { actorUserId: input.actorUserId, actorNationalId: null }
+    // No island.is actor on the admin path: the reviewer is named by
+    // `actorUserId`, which the admin web resolves itself.
+    return {
+      actorUserId: input.actorUserId,
+      actorNationalId: null,
+      actorName: null,
+    }
   }
 
   if (!input.actorNationalId) {
@@ -154,5 +165,9 @@ export const resolveApiKeyIssuer = (input: {
     )
   }
 
-  return { actorUserId: null, actorNationalId: input.actorNationalId }
+  return {
+    actorUserId: null,
+    actorNationalId: input.actorNationalId,
+    actorName: input.actorName ?? null,
+  }
 }

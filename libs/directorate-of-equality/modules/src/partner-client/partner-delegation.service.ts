@@ -161,6 +161,7 @@ export class PartnerDelegationService implements IPartnerDelegationService {
         companyNationalId: input.company.nationalId,
         scopes,
         grantedByNationalId: input.actorNationalId,
+        grantedByName: input.actorName ?? null,
       })
     } catch (error) {
       // Two tabs granting at once: the partial unique index decides, and the
@@ -269,6 +270,7 @@ export class PartnerDelegationService implements IPartnerDelegationService {
       scopes: delegation.scopes,
       grantedAt: delegation.createdAt,
       grantedByNationalId: delegation.grantedByNationalId,
+      grantedByName: delegation.grantedByName,
     }
   }
 

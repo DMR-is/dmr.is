@@ -128,13 +128,25 @@ describe('ApiKeyService', () => {
         company: COMPANY,
         createdVia: ApiKeyOriginEnum.ISLAND_IS,
         actorNationalId: '0101901234',
+        actorName: 'Jóna Jónsdóttir',
       })
 
       expect(create.mock.calls[0][0]).toMatchObject({
         createdVia: ApiKeyOriginEnum.ISLAND_IS,
         createdByNationalId: '0101901234',
+        createdByName: 'Jóna Jónsdóttir',
         createdByUserId: null,
       })
+    })
+
+    it('stores a null name when the token carried none', async () => {
+      await service.issue({
+        company: COMPANY,
+        createdVia: ApiKeyOriginEnum.ISLAND_IS,
+        actorNationalId: '0101901234',
+      })
+
+      expect(create.mock.calls[0][0].createdByName).toBeNull()
     })
 
     it('records the reviewer and no kennitala on the admin path', async () => {
@@ -181,9 +193,11 @@ describe('ApiKeyService', () => {
         createdVia: ApiKeyOriginEnum.ADMIN,
         actorUserId: 'reviewer-1',
         actorNationalId: '0101901234',
+        actorName: 'Jóna Jónsdóttir',
       })
 
       expect(create.mock.calls[0][0].createdByNationalId).toBeNull()
+      expect(create.mock.calls[0][0].createdByName).toBeNull()
     })
 
     it('grants the full scope set when none is asked for', async () => {
@@ -431,6 +445,26 @@ describe('ApiKeyService', () => {
         where: { companyId: COMPANY.id },
         order: [['created_at', 'DESC']],
       })
+    })
+
+    it('returns the stored names, so a list need not show a kennitala', async () => {
+      const stored = {
+        id: 'a',
+        keyId: 'k1',
+        createdByNationalId: '0101901234',
+        createdByName: 'Jóna Jónsdóttir',
+      }
+      findAll.mockResolvedValue([
+        {
+          ...stored,
+          fromModel: () =>
+            ApiKeyModel.fromModel(stored as unknown as ApiKeyModel),
+        },
+      ])
+
+      const [listed] = await service.list(COMPANY.id)
+
+      expect(listed.createdByName).toBe('Jóna Jónsdóttir')
     })
 
     it('maps through fromModel, which carries no secret', async () => {

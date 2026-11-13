@@ -46,6 +46,7 @@ const delegationRow = (overrides: Record<string, unknown> = {}) => {
     companyNationalId: COMPANY.nationalId,
     scopes: [ApiKeyScopeEnum.REPORT_READ],
     grantedByNationalId: '0000000000',
+    grantedByName: 'Jóna Jónsdóttir',
     createdAt: new Date('2026-09-23T10:00:00.000Z'),
     revokedAt: null,
     ...overrides,
@@ -155,6 +156,7 @@ describe('PartnerDelegationService', () => {
         where: { companyId: COMPANY.id, revokedAt: null },
         order: [['created_at', 'DESC']],
       })
+      expect(listed.grantedByName).toBe('Jóna Jónsdóttir')
       expect(listed.provider).toEqual({
         id: FIRM.id,
         name: FIRM.name,
@@ -180,6 +182,7 @@ describe('PartnerDelegationService', () => {
         partnerClientId: FIRM.id,
         scopes: [ApiKeyScopeEnum.REPORT_READ, ApiKeyScopeEnum.SALARY_SUBMIT],
         actorNationalId: '0000000000',
+        actorName: 'Jóna Jónsdóttir',
         ...overrides,
       })
 
@@ -192,7 +195,20 @@ describe('PartnerDelegationService', () => {
         companyNationalId: COMPANY.nationalId,
         scopes: [ApiKeyScopeEnum.REPORT_READ, ApiKeyScopeEnum.SALARY_SUBMIT],
         grantedByNationalId: '0000000000',
+        grantedByName: 'Jóna Jónsdóttir',
       })
+    })
+
+    it('returns the granter’s name, so the company need not see a kennitala', async () => {
+      const granted = await grant()
+
+      expect(granted.grantedByName).toBe('Jóna Jónsdóttir')
+    })
+
+    it('stores a null name when the token carried none', async () => {
+      await grant({ actorName: undefined })
+
+      expect(delegations.create.mock.calls[0][0].grantedByName).toBeNull()
     })
 
     it('puts the grant on the company’s timeline, naming the firm', async () => {

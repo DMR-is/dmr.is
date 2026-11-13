@@ -80,6 +80,10 @@ import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analy
 import { analyzeSalaryPayload } from '../report-statistics/lib/salary-analysis'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
+import {
+  ApplicationReportListItemDto,
+  GetApplicationReportsResponseDto,
+} from './dto/application-report-list.dto'
 import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
 import { EditOutliersDto } from './dto/edit-outliers.dto'
 import {
@@ -100,6 +104,8 @@ import type {
 } from './dto/submit-report-company.dto'
 import { EQUALITY_REPORT_TEMPLATE_BASE64 } from './equality-template/template-data'
 import { buildEqualityReportTemplateHtml } from './equality-template/template-html'
+import { toReportChannel } from './lib/report-channel'
+import { isReportOwnedBy } from './lib/report-ownership'
 import {
   SUB_CRITERION_CATALOG,
   SUB_CRITERION_GENERAL_SCALE,
@@ -329,7 +335,7 @@ export class ApplicationService implements IApplicationService {
 
     return ReportModel.toEqualitySummary(
       coverage.report,
-      this.channel.toClientProviderId(coverage.report),
+      this.channel.toReadHandle(coverage.report),
     )
   }
 
@@ -353,35 +359,140 @@ export class ApplicationService implements IApplicationService {
     }
   }
 
+  /**
+   * The resolved company's submissions, newest first — exactly the reports
+   * `getReport` would open for it, each with the `providerId` it opens under.
+   *
+   * Built from the same two halves the detail lookup checks, rather than a
+   * query of its own:
+   *  - ownership: `isReportOwnedBy`, the rule every `reports/:providerId`
+   *    route applies. Candidates are the reports where this company has a
+   *    parentless `company_report` row; each is then re-checked against ALL of
+   *    its rows, in the detail read's order, so a report the detail route
+   *    would refuse can never be listed.
+   *  - addressability: the handle is the channel's `toReadHandle`, kept only
+   *    when `resolveReadHandle` maps it straight back to the stored tuple under
+   *    this company — i.e. only when the detail route's lookup would hit this
+   *    very row. On island.is that covers every channel: island.is, the
+   *    partner API (`partner:…`) and the Directorate (`system:…`).
+   *
+   * Drafts are left out on purpose: a draft is not a submission yet, and the
+   * portal reaches it through the application that owns it
+   * (`reports/:providerId/draft`), not through this list.
+   */
+  async listReports(
+    company: CompanyDto,
+  ): Promise<GetApplicationReportsResponseDto> {
+    const parentRows = await this.companyReportModel.findAll({
+      where: { companyId: company.id, parentCompanyId: null },
+      attributes: ['reportId'],
+    })
+    const candidateIds = [...new Set(parentRows.map((row) => row.reportId))]
+
+    if (candidateIds.length === 0) {
+      return { reports: [] }
+    }
+
+    const reports = await this.reportModel.findAll({
+      where: {
+        id: candidateIds,
+        // No provider id, no handle: such a row (older SYSTEM reports, never
+        // backfilled) is left out here, and `resolveReadHandle` can never name
+        // it on the read routes either, so the two still agree.
+        providerId: { [Op.ne]: null },
+        status: { [Op.ne]: ReportStatusEnum.DRAFT },
+      },
+      // Only what the list maps and the handle check reads. Without this every
+      // row brings `equality_report_content`, which holds an uploaded plan's
+      // whole PDF as base64, on each My Pages visit. `companyNationalId` stays:
+      // `toReadHandle` strips the partner namespace with it. Ownership is
+      // checked on the separate `company_report` read below, as on the read
+      // routes, so narrowing this changes no rule.
+      attributes: [
+        'id',
+        'providerType',
+        'providerId',
+        'companyNationalId',
+        'importedFromExcel',
+        'type',
+        'status',
+        'identifier',
+        'createdAt',
+        'approvedAt',
+        'validUntil',
+        'salaryDataBasis',
+        'salaryDataPeriod',
+      ],
+      // `id` breaks ties so two reports filed in the same instant keep a
+      // stable order between calls.
+      order: [
+        ['createdAt', 'DESC'],
+        ['id', 'DESC'],
+      ],
+    })
+
+    if (reports.length === 0) {
+      return { reports: [] }
+    }
+
+    const allRows = await this.companyReportModel.findAll({
+      where: { reportId: reports.map((report) => report.id) },
+      attributes: ['reportId', 'companyId', 'parentCompanyId'],
+      order: [['createdAt', 'ASC']],
+    })
+    const rowsByReport = new Map<string, CompanyReportModel[]>()
+    for (const row of allRows) {
+      const rows = rowsByReport.get(row.reportId) ?? []
+      rows.push(row)
+      rowsByReport.set(row.reportId, rows)
+    }
+
+    const items: ApplicationReportListItemDto[] = []
+    for (const report of reports) {
+      if (!isReportOwnedBy(rowsByReport.get(report.id) ?? [], company)) {
+        continue
+      }
+
+      const providerId = this.channel.toReadHandle(report)
+      const resolved =
+        providerId === null
+          ? null
+          : this.channel.resolveReadHandle(providerId, company.nationalId)
+      if (
+        providerId === null ||
+        resolved === null ||
+        resolved.providerType !== report.providerType ||
+        resolved.providerId !== report.providerId
+      ) {
+        continue
+      }
+
+      items.push({
+        providerId,
+        submittedVia: toReportChannel(report.providerType),
+        importedFromExcel: report.importedFromExcel,
+        type: report.type,
+        status: report.status,
+        identifier: report.identifier,
+        submittedAt: report.createdAt ?? null,
+        approvedAt: report.approvedAt,
+        validUntil: report.validUntil,
+        salaryDataBasis: report.salaryDataBasis,
+        salaryDataPeriod: report.salaryDataPeriod,
+      })
+    }
+
+    return { reports: items }
+  }
+
   async getReport(
     providerId: string,
     company: CompanyDto,
   ): Promise<ApplicationReportDetailDto> {
-    const report = await this.reportModel.findOne({
-      where: {
-        providerType: this.channel.providerType,
-        providerId: this.channel.buildProviderId(
-          providerId,
-          company.nationalId,
-        ),
-      },
-    })
-
-    if (!report) {
-      throw new NotFoundException(`Report "${providerId}" not found`)
-    }
-
-    const companyRows = await this.companyReportModel.findAll({
-      where: { reportId: report.id },
-      order: [['createdAt', 'ASC']],
-    })
-
-    const parentCompany = companyRows.find(
-      (row) => row.parentCompanyId === null,
+    const { report, companyRows } = await this.findOwnedReportForRead(
+      providerId,
+      company,
     )
-    if (!parentCompany || parentCompany.companyId !== company.id) {
-      throw new NotFoundException(`Report "${providerId}" not found`)
-    }
 
     const [equalityReport, salaryData, externalComments, denialReason] =
       await Promise.all([
@@ -446,10 +557,7 @@ export class ApplicationService implements IApplicationService {
     providerId: string,
     company: CompanyDto,
   ): Promise<ApplicationReportCommentDto[]> {
-    const report = await this.findOwnedReportByProviderTuple(
-      providerId,
-      company,
-    )
+    const { report } = await this.findOwnedReportForRead(providerId, company)
 
     const comments = await this.reportCommentService.getByReportId(
       this.createCompanyReportContext(report, company),
@@ -488,10 +596,7 @@ export class ApplicationService implements IApplicationService {
       order: [['createdAt', 'ASC']],
     })
 
-    const parentCompany = companyRows.find(
-      (row) => row.parentCompanyId === null,
-    )
-    if (!parentCompany || parentCompany.companyId !== company.id) {
+    if (!isReportOwnedBy(companyRows, company)) {
       throw new NotFoundException(`Report "${providerId}" not found`)
     }
 
@@ -952,9 +1057,47 @@ export class ApplicationService implements IApplicationService {
   }
 
   /**
-   * Lookup helper used by applicant-facing edit endpoints. Resolves the report
-   * by the upstream `(provider_type, provider_id)` tuple and verifies the
-   * authenticated company owns the parent `company_report` row. Throws
+   * The lookup behind every READ route (detail, equality PDF, comments, the
+   * outlier list) and, through the same two halves, the submissions list.
+   * Resolves the channel's read handle — on island.is, a report from any
+   * channel filed for this company — then applies `isReportOwnedBy`.
+   *
+   * Write routes use `findOwnedReportByProviderTuple` instead, which accepts
+   * only this channel's own submissions; keep the two apart.
+   */
+  private async findOwnedReportForRead(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<{ report: ReportModel; companyRows: CompanyReportModel[] }> {
+    const tuple = this.channel.resolveReadHandle(providerId, company.nationalId)
+    const report = tuple
+      ? await this.reportModel.findOne({ where: tuple })
+      : null
+
+    if (!report) {
+      throw new NotFoundException(`Report "${providerId}" not found`)
+    }
+
+    // Same order as every ownership check, so "the first parentless row"
+    // names the same row everywhere.
+    const companyRows = await this.companyReportModel.findAll({
+      where: { reportId: report.id },
+      order: [['createdAt', 'ASC']],
+    })
+
+    if (!isReportOwnedBy(companyRows, company)) {
+      throw new NotFoundException(`Report "${providerId}" not found`)
+    }
+
+    return { report, companyRows }
+  }
+
+  /**
+   * Lookup helper used by the applicant-facing WRITE endpoints (edit,
+   * outliers, withdraw); channel-scoped, unlike `findOwnedReportForRead`.
+   * Resolves the report by the upstream `(provider_type, provider_id)` tuple
+   * and verifies the authenticated company owns the parent `company_report`
+   * row. Throws
    * `NotFoundException` on miss or ownership mismatch — never leaks the
    * existence of another company's report.
    */
@@ -979,11 +1122,11 @@ export class ApplicationService implements IApplicationService {
     const companyRows = await this.companyReportModel.findAll({
       where: { reportId: report.id },
       attributes: ['companyId', 'parentCompanyId'],
+      // Same order as the detail read, so "the first parentless row" names the
+      // same row on every route that applies `isReportOwnedBy`.
+      order: [['createdAt', 'ASC']],
     })
-    const parentCompany = companyRows.find(
-      (row) => row.parentCompanyId === null,
-    )
-    if (!parentCompany || parentCompany.companyId !== company.id) {
+    if (!isReportOwnedBy(companyRows, company)) {
       throw new NotFoundException(`Report "${providerId}" not found`)
     }
 
@@ -1205,10 +1348,7 @@ export class ApplicationService implements IApplicationService {
 
     // Ownership first: resolving the tuple is what makes this the company's own
     // report rather than any report whose id was guessed.
-    const report = await this.findOwnedReportByProviderTuple(
-      providerId,
-      company,
-    )
+    const { report } = await this.findOwnedReportForRead(providerId, company)
 
     return this.reportService.getEqualityContentPdf(report.id)
   }
@@ -1224,10 +1364,7 @@ export class ApplicationService implements IApplicationService {
       providerId,
     })
 
-    const report = await this.findOwnedReportByProviderTuple(
-      providerId,
-      company,
-    )
+    const { report } = await this.findOwnedReportForRead(providerId, company)
 
     const { limit, offset } = getLimitAndOffset(query)
 
@@ -1360,7 +1497,7 @@ export class ApplicationService implements IApplicationService {
 
     return ReportModel.toEqualitySummary(
       equalityReport,
-      this.channel.toClientProviderId(equalityReport),
+      this.channel.toReadHandle(equalityReport),
     )
   }
 
