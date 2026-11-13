@@ -2244,6 +2244,22 @@ describe('MailboxDeliveryService', () => {
         },
       )
 
+      it('answers an exhausted one holding a filed document as exhausted, as with One up', async () => {
+        const seeded = store.seed({
+          status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+          oneCaseItemId: 'case-1',
+          oneDocumentItemId: 'doc-1',
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        })
+
+        await expect(service.deliverToMailbox(input())).resolves.toEqual({
+          status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+          deliveryId: seeded.id,
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+          skipped: 'ATTEMPTS_EXHAUSTED',
+        })
+      })
+
       it('answers an exhausted one with nothing filed as exhausted, not UNAVAILABLE', async () => {
         const seeded = store.seed({
           status: MailboxDeliveryStatusEnum.FAILED,
