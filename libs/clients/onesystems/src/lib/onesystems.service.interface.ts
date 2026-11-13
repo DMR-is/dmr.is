@@ -112,18 +112,17 @@ export interface OneSystemsCloseCaseResult {
  * thrown before any request (including Login) is sent, and both are
  * definitive.
  *
- * NOT GATED: this client does not read `ONESYSTEMS_ENABLED`. Any call on a
- * configured client reaches One. Deciding whether delivery is switched on is
- * the caller's job (the DoE mailbox-delivery service does it); a new consumer
- * must gate its own calls.
- */
-/**
  * An action call throws a `Login` error only when no action request could
  * have run: the Login in front of the first request failed, or the action was
  * refused with an empty Bearer challenge (the JwtBearer handler, before the
  * action) and the re-Login for the retry failed. The mailbox delivery relies
  * on this to hand back an attempt and clear a non-idempotent marker; the
  * client spec pins it.
+ *
+ * NOT GATED: this client does not read `ONESYSTEMS_ENABLED`. Any call on a
+ * configured client reaches One. Deciding whether delivery is switched on is
+ * the caller's job (the DoE mailbox-delivery service does it); a new consumer
+ * must gate its own calls.
  */
 export interface IOneSystemsService {
   /**
