@@ -103,6 +103,10 @@ export class OneSystemsService implements IOneSystemsService {
 
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {}
 
+  async checkLogin(): Promise<void> {
+    await this.getToken()
+  }
+
   async createCase(
     input: OneSystemsCreateCaseInput,
   ): Promise<OneSystemsCreateCaseResult> {

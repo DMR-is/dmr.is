@@ -449,6 +449,69 @@ describe('OneSystemsService', () => {
       },
     )
 
+    it.each([
+      ['CreateDocument', () => createDocument()],
+      ['SendDocToIslandIs', () => sendDocToIslandIs()],
+    ] as const)(
+      '%s: an empty Bearer challenge whose re-Login fails throws a Login error after one action request',
+      async (_operation, call) => {
+        loginReplies = [
+          () => json({ token: TOKEN_1 }),
+          () => new Response('', { status: 401 }),
+        ]
+        actionReplies = [() => bearerChallenge()]
+
+        const error = await caught(call())
+
+        // The mailbox delivery hands back the attempt and clears the marker on
+        // a Login error, which is safe only because the one action request
+        // was refused before the action ran.
+        expect(error).toMatchObject({ operation: 'Login', reason: 'HTTP' })
+        expect(actionRequests()).toHaveLength(1)
+      },
+    )
+
+    describe('checkLogin', () => {
+      it('logs in once and sends nothing else', async () => {
+        await expect(service.checkLogin()).resolves.toBeUndefined()
+
+        expect(loginRequests()).toHaveLength(1)
+        expect(actionRequests()).toHaveLength(0)
+      })
+
+      it('reuses the token the next call needs', async () => {
+        actionReplies = [() => success()]
+
+        await service.checkLogin()
+        await createCase()
+
+        expect(loginRequests()).toHaveLength(1)
+        expect(actionRequests()).toHaveLength(1)
+      })
+
+      it('throws the Login failure', async () => {
+        loginReplies = [() => new Response('', { status: 401 })]
+
+        const error = await caught(service.checkLogin())
+
+        expect(error).toMatchObject({
+          operation: 'Login',
+          reason: 'HTTP',
+          upstreamStatus: 401,
+        })
+        expect(actionRequests()).toHaveLength(0)
+      })
+
+      it('throws CONFIG without a request when the password is unset', async () => {
+        delete process.env.ONESYSTEMS_PASSWORD
+
+        const error = await caught(service.checkLogin())
+
+        expect(error).toMatchObject({ operation: 'Login', reason: 'CONFIG' })
+        expect(requests()).toHaveLength(0)
+      })
+    })
+
     it('wraps anything else thrown inside Login as a definitive Login failure', async () => {
       const cause = new RangeError(
         `something unexpected ${COMPANY_NATIONAL_ID}`,

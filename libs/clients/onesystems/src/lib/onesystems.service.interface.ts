@@ -112,12 +112,32 @@ export interface OneSystemsCloseCaseResult {
  * thrown before any request (including Login) is sent, and both are
  * definitive.
  *
+ * An action call throws a `Login` error only when no action request could
+ * have run: the Login in front of the first request failed, or the action was
+ * refused with an empty Bearer challenge (the JwtBearer handler, before the
+ * action) and the re-Login for the retry failed. The mailbox delivery relies
+ * on this to hand back an attempt and clear a non-idempotent marker; the
+ * client spec pins it.
+ *
  * NOT GATED: this client does not read `ONESYSTEMS_ENABLED`. Any call on a
  * configured client reaches One. Deciding whether delivery is switched on is
  * the caller's job (the DoE mailbox-delivery service does it); a new consumer
  * must gate its own calls.
  */
 export interface IOneSystemsService {
+  /**
+   * Makes sure the client holds a usable token: the cached one while it is
+   * valid, otherwise a fresh Login. Sends nothing else, so it is safe to call
+   * before every delivery.
+   *
+   * Throws the Login's `OneSystemsError` (operation `Login`) when there is no
+   * token to be had: credentials or URL missing (`CONFIG`), or One refusing,
+   * not answering or answering something unreadable. A caller uses it to tell
+   * "One cannot be reached at all right now" apart from a failure of one
+   * delivery.
+   */
+  checkLogin(): Promise<void>
+
   /**
    * Finds the party's open case that uses `caseType` (by `IDNumber` +
    * `CaseType`), or creates one from the template. Repeating it with the same

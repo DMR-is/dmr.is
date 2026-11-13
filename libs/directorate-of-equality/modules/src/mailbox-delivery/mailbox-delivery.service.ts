@@ -101,7 +101,9 @@ export const MAILBOX_DELIVERY_LEASE_MINUTES = Math.ceil(
 
 /**
  * How many times a row may be claimed before `deliverToMailbox` stops trying
- * it. Every claim counts, whatever it then does.
+ * it. Every claim counts, whatever it then does, except one whose Login
+ * failed: that attempt is handed back (`releaseUnattempted`), since One was
+ * never reached.
  *
  * Without a cap a FAILED row is retried forever. CreateCase is repeated on any
  * failure (One finds-or-creates the case by `IDNumber` + `CaseType`, OneSystems,
@@ -115,6 +117,14 @@ export const MAILBOX_DELIVERY_LEASE_MINUTES = Math.ceil(
  * its marker turns it UNCERTAIN without a call to One.
  */
 export const MAILBOX_DELIVERY_MAX_ATTEMPTS = 5
+
+/**
+ * How long a failed Login is trusted before the next delivery tries again.
+ * Short enough that a fixed password is picked up within the dispatcher's next
+ * run or two, long enough to keep a wrong one from being sent every few
+ * seconds.
+ */
+export const LOGIN_RETRY_AFTER_MS = 60_000
 
 /**
  * `last_error` is for a person reconciling the row. It may hold One's own
@@ -218,6 +228,9 @@ type DeliveryCompany = Pick<
  * - A row is claimed at most `MAILBOX_DELIVERY_MAX_ATTEMPTS` times. After
  *   that it is reported as `skipped: 'ATTEMPTS_EXHAUSTED'` and makes no call
  *   until a person resets `attempts`.
+ * - Login is checked before a row is written or claimed. While it fails (a
+ *   wrong password or URL, One down) every call answers UNAVAILABLE and
+ *   spends nothing, so an outage ends with every notice still deliverable.
  */
 @Injectable()
 export class MailboxDeliveryService implements IMailboxDeliveryService {
@@ -229,6 +242,17 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
    * kind again.
    */
   private readonly unconfiguredKindsLogged = new Set<MailboxDeliveryKindEnum>()
+
+  /**
+   * The last Login failure, until `LOGIN_RETRY_AFTER_MS` after it. A failed
+   * Login is not cached by the client, so without this every delivery would
+   * send its own Login: twenty a minute from the dispatcher alone, which
+   * could lock out One's service account and, with One down, wait out the
+   * Login timeout each time. While it holds, `checkLogin` answers UNAVAILABLE
+   * without a request. It also keeps the outage to one error line per reason,
+   * and one info line when it ends.
+   */
+  private loginFailure: { reason: string; retryAfter: number } | null = null
 
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
@@ -302,6 +326,15 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         { context: LOGGING_CONTEXT, companyId: company.id, kind: input.kind },
       )
       return { status: 'QUARANTINED' }
+    }
+
+    // Before any write or claim, like the case template: a wrong password or
+    // URL, or One being down, is a fault of the environment, not of this
+    // notice. Spending its attempts on it would give up every notice within
+    // minutes, each then needing a person to re-arm it.
+    const unavailable = await this.checkLogin()
+    if (unavailable) {
+      return this.unavailableResult(input, unavailable)
     }
 
     const row = await this.findOrInsert(input, company)
@@ -508,37 +541,9 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
   private async unconfiguredResult(
     input: DeliverToMailboxInput,
   ): Promise<DeliverToMailboxResult> {
-    const row = await this.deliveryModel.findOne({
-      where: { idempotencyKey: input.idempotencyKey },
-      transaction: null,
-    })
-    if (row) {
-      const settled = this.settledResult(row)
-      if (settled) {
-        return settled
-      }
-      // On this process's clock, as in `findDelivery`.
-      if (row.leaseExpiresAt && row.leaseExpiresAt.getTime() > Date.now()) {
-        return { status: 'IN_PROGRESS', deliveryId: row.id }
-      }
-      if (row.oneDocumentItemId || row.inFlightStep) {
-        this.logger.warn(
-          `Mailbox delivery ${row.id} already reached One but kind ${input.kind} has no case template; it waits for the template`,
-          {
-            context: LOGGING_CONTEXT,
-            deliveryId: row.id,
-            kind: input.kind,
-            status: row.status,
-            inFlightStep: row.inFlightStep,
-          },
-        )
-        return {
-          status: row.status as MailboxDeliveryUnsettledStatus,
-          deliveryId: row.id,
-          attempts: row.attempts,
-          skipped: 'UNCONFIGURED',
-        }
-      }
+    const started = await this.startedDeliveryResult(input, 'UNCONFIGURED')
+    if (started) {
+      return started
     }
 
     if (!this.unconfiguredKindsLogged.has(input.kind)) {
@@ -549,6 +554,90 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       )
     }
     return { status: 'UNCONFIGURED', kind: input.kind }
+  }
+
+  /**
+   * The answer while One cannot be reached, by the same rule as
+   * `unconfiguredResult`: top-level `UNAVAILABLE`, which lets the reminder
+   * task email instead, only when no delivery with this key has reached One.
+   * A row that is settled, in progress, or holds a filed document or a marker
+   * answers as it stands (`skipped: 'UNAVAILABLE'`), so nobody emails a notice
+   * One may already have sent, and the row resumes once Login works.
+   */
+  private async unavailableResult(
+    input: DeliverToMailboxInput,
+    unavailable: DeliverToMailboxResult,
+  ): Promise<DeliverToMailboxResult> {
+    return (
+      (await this.startedDeliveryResult(input, 'UNAVAILABLE')) ?? unavailable
+    )
+  }
+
+  /**
+   * The answer for a delivery with this key that has got somewhere, read
+   * with no write and no call, or null when there is none or it got no
+   * further than CreateCase (nothing filed or sent, and One finds-or-creates
+   * the case). See `unconfiguredResult`.
+   */
+  private async startedDeliveryResult(
+    input: DeliverToMailboxInput,
+    skipped: 'UNCONFIGURED' | 'UNAVAILABLE',
+  ): Promise<DeliverToMailboxResult | null> {
+    const row = await this.deliveryModel.findOne({
+      where: { idempotencyKey: input.idempotencyKey },
+      transaction: null,
+    })
+    if (!row) {
+      return null
+    }
+    const settled = this.settledResult(row)
+    if (settled) {
+      return settled
+    }
+    // On this process's clock, as in `findDelivery`.
+    if (row.leaseExpiresAt && row.leaseExpiresAt.getTime() > Date.now()) {
+      return { status: 'IN_PROGRESS', deliveryId: row.id }
+    }
+    // Out of attempts, whether or not a document is filed: answered as
+    // exhausted, as it would be with One up (`findExhausted`'s conditions), so
+    // an outage changes nothing about it. Nothing filed: a reminder already
+    // flagged undelivered is not emailed. Filed: the reminder task flags it
+    // undelivered, as it would with One up. Only for an outage: a missing case
+    // template keeps its own answer.
+    if (
+      skipped === 'UNAVAILABLE' &&
+      !row.inFlightStep &&
+      row.attempts >= MAILBOX_DELIVERY_MAX_ATTEMPTS
+    ) {
+      return {
+        status: row.status as MailboxDeliveryUnsettledStatus,
+        deliveryId: row.id,
+        attempts: row.attempts,
+        skipped: 'ATTEMPTS_EXHAUSTED',
+      }
+    }
+    if (!row.oneDocumentItemId && !row.inFlightStep) {
+      return null
+    }
+    // The outage itself is logged once by `loginUnavailable`.
+    if (skipped === 'UNCONFIGURED') {
+      this.logger.warn(
+        `Mailbox delivery ${row.id} already reached One but kind ${input.kind} has no case template; it waits for the template`,
+        {
+          context: LOGGING_CONTEXT,
+          deliveryId: row.id,
+          kind: input.kind,
+          status: row.status,
+          inFlightStep: row.inFlightStep,
+        },
+      )
+    }
+    return {
+      status: row.status as MailboxDeliveryUnsettledStatus,
+      deliveryId: row.id,
+      attempts: row.attempts,
+      skipped,
+    }
   }
 
   /**
@@ -879,6 +968,17 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         alreadySent: false,
       }
     } catch (error) {
+      // The token lapsed and its renewal failed, or the config went missing,
+      // between `checkLogin` and here. Login comes before the action, so One
+      // was not reached: the claim's attempt is handed back.
+      if (isUnavailableError(error)) {
+        await this.releaseUnattempted(row.id, leaseToken, error)
+        // By the same rule as the pre-check: a row that already holds a filed
+        // document answers `skipped: 'UNAVAILABLE'`, never top-level, or the
+        // reminder task would email it and orphan the document in One.
+        return this.unavailableResult(input, this.loginUnavailable(error))
+      }
+
       // Only a non-idempotent call whose outcome is unclear is UNCERTAIN.
       // Anything before its marker (a render, CreateCase) left One untouched.
       const outcome =
@@ -887,6 +987,98 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
           : MailboxDeliveryStatusEnum.FAILED
       await this.recordFailure(row.id, leaseToken, outcome, inFlight, error)
       throw error
+    }
+  }
+
+  /**
+   * Null when One has a token for us, otherwise UNAVAILABLE. Anything other
+   * than a `OneSystemsError` is a bug and is thrown.
+   */
+  private async checkLogin(): Promise<DeliverToMailboxResult | null> {
+    if (this.loginFailure && Date.now() < this.loginFailure.retryAfter) {
+      return { status: 'UNAVAILABLE', reason: this.loginFailure.reason }
+    }
+
+    try {
+      await this.oneSystems.checkLogin()
+    } catch (error) {
+      if (!isUnavailableError(error)) {
+        throw error
+      }
+      return this.loginUnavailable(error)
+    }
+
+    if (this.loginFailure) {
+      this.loginFailure = null
+      this.logger.info('OneSystems Login works again', {
+        context: LOGGING_CONTEXT,
+      })
+    }
+    return null
+  }
+
+  /**
+   * Records a Login failure and answers UNAVAILABLE. Logged at error when an
+   * outage starts and again when its reason changes (One back up, but the
+   * password rotated), not on every check.
+   */
+  private loginUnavailable(error: unknown): DeliverToMailboxResult {
+    const reason = describeUnavailable(error)
+    const previous = this.loginFailure
+    this.loginFailure = {
+      reason,
+      retryAfter: Date.now() + LOGIN_RETRY_AFTER_MS,
+    }
+    if (previous?.reason !== reason) {
+      this.logger.error(
+        `OneSystems is unavailable (${reason}); mailbox deliveries wait without spending attempts until Login succeeds`,
+        {
+          context: LOGGING_CONTEXT,
+          operation: isOneSystemsError(error) ? error.operation : undefined,
+          reason: isOneSystemsError(error) ? error.reason : undefined,
+          upstreamStatus: isOneSystemsError(error)
+            ? error.upstreamStatus
+            : undefined,
+        },
+      )
+    }
+    return { status: 'UNAVAILABLE', reason }
+  }
+
+  /**
+   * Gives a claim back after One could not be reached: the attempt is
+   * returned, the marker cleared (Login comes before the action, so the call
+   * was never sent) and the lease released. The status is left as it was.
+   */
+  private async releaseUnattempted(
+    id: string,
+    leaseToken: string,
+    error: unknown,
+  ): Promise<void> {
+    try {
+      await this.deliveryModel.update(
+        {
+          attempts: literal('GREATEST(attempts - 1, 0)'),
+          inFlightStep: null,
+          lastError: describeError(error),
+          lastErrorNumber: null,
+          leaseToken: null,
+          leaseExpiresAt: null,
+        },
+        { where: { id, leaseToken }, transaction: null },
+      )
+    } catch (writeError) {
+      this.logger.error(
+        `Could not hand back the attempt of mailbox delivery ${id}`,
+        {
+          context: LOGGING_CONTEXT,
+          deliveryId: id,
+          message:
+            writeError instanceof Error
+              ? writeError.message
+              : String(writeError),
+        },
+      )
     }
   }
 
@@ -1199,4 +1391,24 @@ function describeError(error: unknown): string {
     text = error instanceof Error ? error.message : String(error)
   }
   return text.slice(0, MAX_ERROR_LENGTH)
+}
+
+/**
+ * One cannot be reached at all, as opposed to one call failing: Login failed
+ * (whatever the reason), or the client is missing its configuration.
+ */
+function isUnavailableError(error: unknown): boolean {
+  return (
+    isOneSystemsError(error) &&
+    (error.operation === 'Login' || error.reason === 'CONFIG')
+  )
+}
+
+/** Safe to log: operation, reason and HTTP status, never One's text. */
+function describeUnavailable(error: unknown): string {
+  if (!isOneSystemsError(error)) {
+    return 'unknown'
+  }
+  const status = error.upstreamStatus ? ` ${error.upstreamStatus}` : ''
+  return `${error.operation} ${error.reason}${status}`
 }
