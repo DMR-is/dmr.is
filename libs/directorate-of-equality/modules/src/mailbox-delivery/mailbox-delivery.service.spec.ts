@@ -2359,6 +2359,139 @@ describe('MailboxDeliveryService', () => {
     })
   })
 
+  describe('rearmExhausted', () => {
+    it('gives an exhausted row its attempts back, touching nothing else', async () => {
+      const row = store.seed({
+        status: MailboxDeliveryStatusEnum.FAILED,
+        oneCaseItemId: 'case-1',
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+      })
+
+      await expect(
+        service.rearmExhausted(
+          row.id,
+          MailboxDeliveryStatusEnum.FAILED,
+          'note',
+        ),
+      ).resolves.toBe(true)
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.FAILED,
+        oneCaseItemId: 'case-1',
+        attempts: 0,
+        lastError: 'note',
+      })
+    })
+
+    it.each([
+      ['attempts left', { attempts: 2 }],
+      [
+        'a live lease',
+        {
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+          leaseToken: 'other',
+          leaseExpiresAt: new Date(Date.now() + 60_000),
+        },
+      ],
+      [
+        'a marker',
+        {
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+          status: MailboxDeliveryStatusEnum.CASE_CREATED,
+          oneCaseItemId: 'case-1',
+          inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+        },
+      ],
+    ])('leaves a row with %s alone', async (_what, overrides) => {
+      const row = store.seed({
+        status: MailboxDeliveryStatusEnum.FAILED,
+        ...overrides,
+      })
+
+      await expect(
+        service.rearmExhausted(
+          row.id,
+          row.status as MailboxDeliveryStatusEnum,
+          'note',
+        ),
+      ).resolves.toBe(false)
+    })
+  })
+
+  describe('settleUncertain', () => {
+    const read = (row: Row) => ({
+      status: row.status as MailboxDeliveryStatusEnum,
+      inFlightStep: row.inFlightStep as MailboxDeliveryStepEnum | null,
+      oneDocumentItemId: row.oneDocumentItemId as string | null,
+      sentAt: row.sentAt as Date | null,
+    })
+
+    it('records SENT with the document and a sent time', async () => {
+      const row = store.seed({
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        oneCaseItemId: 'case-1',
+      })
+
+      await expect(
+        service.settleUncertain(row.id, read(row), 'SENT', 'doc-9', 'note'),
+      ).resolves.toBe(true)
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.SENT,
+        oneDocumentItemId: 'doc-9',
+        sentAt: expect.any(Date),
+        lastError: 'note: sent',
+      })
+    })
+
+    it('lets NOT_SENT go again from the filed document, with its marker cleared', async () => {
+      const row = store.seed({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        oneCaseItemId: 'case-1',
+        oneDocumentItemId: 'doc-1',
+        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        attempts: 3,
+      })
+
+      await expect(
+        service.settleUncertain(row.id, read(row), 'NOT_SENT', 'doc-1', 'note'),
+      ).resolves.toBe(true)
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.FAILED,
+        oneDocumentItemId: 'doc-1',
+        inFlightStep: null,
+        attempts: 0,
+        lastError: 'note: filed, not sent',
+      })
+    })
+
+    it('misses a row whose document id a late reply saved since it was read', async () => {
+      const row = store.seed({
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        oneCaseItemId: 'case-1',
+      })
+      const before = read(row)
+      row.oneDocumentItemId = 'doc-late'
+
+      await expect(
+        service.settleUncertain(row.id, before, 'NOT_SENT', null, 'note'),
+      ).resolves.toBe(false)
+      expect(onlyRow().oneDocumentItemId).toBe('doc-late')
+    })
+
+    it('misses a row under a live lease', async () => {
+      const row = store.seed({
+        status: MailboxDeliveryStatusEnum.CASE_CREATED,
+        oneCaseItemId: 'case-1',
+        inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+        leaseToken: 'other',
+        leaseExpiresAt: new Date(Date.now() + 60_000),
+      })
+
+      await expect(
+        service.settleUncertain(row.id, read(row), 'NOT_SENT', null, 'note'),
+      ).resolves.toBe(false)
+    })
+  })
+
   describe('a send island.is already had', () => {
     it('is SENT, with a warning', async () => {
       one.sendDocToIslandIs.mockResolvedValueOnce({

@@ -1682,3 +1682,85 @@ export const partnerClientsText = {
       'Lykillinn hættir samstundis að virka. Þjónustuaðilinn og aðrir lyklar hans halda sér.',
   },
 }
+
+export const noticeIssuesText = {
+  heroTitle: 'Tilkynningar',
+  heroDescription:
+    'Tilkynningar til fyrirtækja sem komust ekki til skila, í pósthólf á island.is eða í tölvupósti. Hér má senda þær aftur eða staðfesta stöðu þeirra eftir að hafa skoðað þær í One.',
+  heroImageAlt: 'Tilkynningar',
+  kindLabels: {
+    REPORT_SUBMITTED: 'Móttökukvittun',
+    REPORT_APPROVED: 'Samþykkt',
+    REPORT_DENIED: 'Synjun',
+    SALARY_REPORT_DEADLINE_REMINDER: 'Áminning um jafnlaunaskýrslu',
+    EQUALITY_REPORT_DEADLINE_REMINDER: 'Áminning um jafnréttisáætlun',
+  } as Record<string, string>,
+  deliveryStatusLabels: {
+    PENDING: 'Ekki hafin',
+    CASE_CREATED: 'Mál stofnað í One',
+    DOCUMENT_CREATED: 'Skjal vistað í One, ekki sent',
+    SENT: 'Sent í pósthólf',
+    FAILED: 'Mistókst',
+    UNCERTAIN: 'Óvíst hvort sent',
+  } as Record<string, string>,
+  loadError: 'Ekki tókst að sækja tilkynningarnar. Reyndu aftur síðar.',
+  failedHeading: 'Komust ekki til skila',
+  failedDescription:
+    'Kerfið er hætt að reyna. Fyrirtækið hefur ekki fengið tilkynninguna fyrr en einhver bregst við.',
+  failedNoData: 'Engar tilkynningar sem komust ekki til skila.',
+  overdueHeading: 'Í bið',
+  overdueDescription:
+    'Tilkynningar sem bíða, af ástæðunni sem er gefin. Þær sendast sjálfkrafa þegar ástæðan er úr sögunni.',
+  overdueNoData: 'Engar tilkynningar í bið.',
+  remindersHeading: 'Áminningar sem stöðvuðust',
+  remindersDescription:
+    'Áminningar um skilafrest sem fóru ekki alla leið í pósthólf.',
+  remindersNoData: 'Engar áminningar sem stöðvuðust.',
+  columns: {
+    kind: 'Tegund',
+    report: 'Skýrsla',
+    company: 'Fyrirtæki',
+    reason: 'Ástæða',
+    date: 'Dagsetning',
+    mailbox: 'Pósthólf',
+    action: 'Aðgerð',
+  },
+  noDelivery: 'Engin sending í pósthólf',
+  exhaustedNote: 'Allar tilraunir notaðar',
+  inProgressNote: 'Í vinnslu',
+  reminderExhaustedNote:
+    'Allar tilraunir notaðar. Sendist ekki aftur sjálfkrafa.',
+  retryButton: 'Reyna aftur',
+  reconcileButton: 'Staðfesta stöðu',
+  retrySuccess: 'Tilkynningin er komin aftur í biðröð',
+  shownOf: (shown: number, total: number) => `Sýnir ${shown} af ${total}`,
+  retryError: 'Ekki tókst að senda tilkynninguna aftur',
+  reconcile: {
+    title: 'Staðfesta stöðu í One',
+    warningTitle: 'Óvíst hvort bréfið barst',
+    warningMessage:
+      'Kerfið veit ekki hvort bréfið fór í pósthólf fyrirtækisins. Skoðaðu málið í One áður en þú velur, því annars gæti fyrirtækið fengið bréfið tvisvar.',
+    caseNumberLabel: 'Málsnúmer í One',
+    documentIdLabel: 'Auðkenni skjals í One (ItemID)',
+    documentIdHelp:
+      'Nauðsynlegt ef bréfið var sent og auðkenni vantar. Ef skjalið er til í One en var ekki sent, sláðu það inn svo það verði sent í stað þess að vera vistað aftur.',
+    documentIdRequired: 'Sláðu inn auðkenni skjalsins til að merkja það sent',
+    sentAtLabel: 'One staðfesti sendingu',
+    sentConfirmedNote:
+      'One hefur staðfest að bréfið var sent, svo það er ekki hægt að senda það aftur.',
+    notSentButton: 'Var ekki sent: senda aftur',
+    notSentReminderButton: 'Var ekki sent',
+    reminderNote:
+      'Áminning er aðeins send aftur ef fyrirtækið er enn á sama tímabili og skilafresturinn hefur ekki breyst.',
+    stepHint: {
+      CREATE_DOCUMENT:
+        'Óvíst er hvort skjalið var vistað í One. Leitaðu að því undir málinu.',
+      SEND_DOC_TO_ISLAND_IS:
+        'Skjalið er vistað í One. Athugaðu hvort það var sent í pósthólfið.',
+    } as Record<string, string>,
+    sentButton: 'Var sent: merkja lokið',
+    success: 'Staða vistuð',
+    error: 'Ekki tókst að vista stöðuna',
+    unknown: 'Óþekkt',
+  },
+}

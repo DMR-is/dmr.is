@@ -190,8 +190,23 @@ row; at most 50 rows of each are named.
 
 A deadline reminder that stops this way also leaves an event on the
 company's timeline, on the run that stopped it: `…_UNCONFIRMED` for an
-UNCERTAIN or interrupted delivery, `…_UNDELIVERED` for one out of attempts. There is no admin screen for these rows yet; until
-there is, the alert and the SQL below are the way in.
+UNCERTAIN or interrupted delivery, `…_UNDELIVERED` for one out of attempts.
+
+The admin web's **Tilkynningar** page (`/tilkynningar`, ADMIN-only, backed by
+`notice-issues` in doe-modules) lists these rows and does the recovery below
+without SQL: **Reyna aftur** re-arms an exhausted delivery and re-drives its
+FAILED notice; **Staðfesta stöðu** reconciles an UNCERTAIN or interrupted
+delivery as sent or not sent after a person has checked One. Each leaves who
+did it in `last_error`. The failed list has no time window, unlike the daily alert's last week: a
+failed notice stays on it until someone acts. Exhausted **reminder** deliveries
+are listed but have no button: re-arming one sends nothing unless the company
+is still in the tier's band with the same due date ([Exhausted rows](#exhausted-rows)),
+so they still go through the SQL below. They follow the SQL below, guarded the same way
+(status, marker, saved document id and `sent_at` as read, and no live lease on
+Postgres's clock), with two differences: an interrupted row is settled
+directly rather than first marked UNCERTAIN, and a row reconciled as sent with
+no `sent_at` gets the time of the reconcile, not the real send time. The SQL is
+for when the page is not an option.
 
 ## Exhausted rows
 

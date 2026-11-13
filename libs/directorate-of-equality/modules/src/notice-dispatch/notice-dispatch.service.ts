@@ -20,10 +20,7 @@ import {
   IMailboxDeliveryService,
   isMailboxDeliveryEnabled,
 } from '../mailbox-delivery/mailbox-delivery.service.interface'
-import {
-  MailboxDeliveryKindEnum,
-  MailboxDeliveryStatusEnum,
-} from '../mailbox-delivery/models/mailbox-delivery.enums'
+import { MailboxDeliveryStatusEnum } from '../mailbox-delivery/models/mailbox-delivery.enums'
 import {
   buildApprovedLetter,
   buildDeniedLetter,
@@ -57,6 +54,7 @@ import {
   NoticeDispatchSummary,
   OverdueNotice,
 } from './notice-dispatch.service.interface'
+import { NOTICE_MAILBOX_KINDS } from './notice-mailbox-kinds'
 
 const LOGGING_CONTEXT = 'NoticeDispatchService'
 
@@ -145,26 +143,6 @@ const FILING_COMPANY_NOT_QUARANTINED = literal(`NOT EXISTS (
      AND cr.parent_company_id IS NULL
      AND c.quarantined
 )`)
-
-/** The mailbox kind of each notice, by report type: each has its own case template. */
-const MAILBOX_KINDS: Record<
-  NoticeOutboxKindEnum,
-  Record<ReportTypeEnum, MailboxDeliveryKindEnum>
-> = {
-  [NoticeOutboxKindEnum.REPORT_SUBMITTED]: {
-    [ReportTypeEnum.SALARY]: MailboxDeliveryKindEnum.SALARY_REPORT_SUBMITTED,
-    [ReportTypeEnum.EQUALITY]:
-      MailboxDeliveryKindEnum.EQUALITY_REPORT_SUBMITTED,
-  },
-  [NoticeOutboxKindEnum.REPORT_APPROVED]: {
-    [ReportTypeEnum.SALARY]: MailboxDeliveryKindEnum.SALARY_REPORT_APPROVED,
-    [ReportTypeEnum.EQUALITY]: MailboxDeliveryKindEnum.EQUALITY_REPORT_APPROVED,
-  },
-  [NoticeOutboxKindEnum.REPORT_DENIED]: {
-    [ReportTypeEnum.SALARY]: MailboxDeliveryKindEnum.SALARY_REPORT_DENIED,
-    [ReportTypeEnum.EQUALITY]: MailboxDeliveryKindEnum.EQUALITY_REPORT_DENIED,
-  },
-}
 
 /** A notice ready for the mailbox. The PDF is rendered only if One needs it. */
 type MailboxNotice = {
@@ -677,7 +655,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
       return null
     }
 
-    const kind = MAILBOX_KINDS[row.kind][report.type]
+    const kind = NOTICE_MAILBOX_KINDS[row.kind][report.type]
     const delivery = await this.mailboxDeliveryService.findDelivery(
       buildMailboxDeliveryIdempotencyKey({
         kind,
@@ -752,7 +730,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
 
     const delivery = await this.mailboxDeliveryService.findDelivery(
       buildMailboxDeliveryIdempotencyKey({
-        kind: MAILBOX_KINDS[row.kind][report.type],
+        kind: NOTICE_MAILBOX_KINDS[row.kind][report.type],
         companyId,
         discriminator: report.id,
       }),
@@ -834,7 +812,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
       return notice
     }
 
-    const kind = MAILBOX_KINDS[row.kind][report.type]
+    const kind = NOTICE_MAILBOX_KINDS[row.kind][report.type]
     const result = await this.mailboxDeliveryService.deliverToMailbox({
       idempotencyKey: buildMailboxDeliveryIdempotencyKey({
         kind,

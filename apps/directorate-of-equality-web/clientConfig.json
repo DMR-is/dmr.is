@@ -3868,6 +3868,199 @@
         "tags": ["Location"]
       }
     },
+    "/api/v1/notice-issues": {
+      "get": {
+        "operationId": "getNoticeIssues",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NoticeIssuesDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Notice issues"]
+      }
+    },
+    "/api/v1/notice-issues/notices/{id}/retry": {
+      "post": {
+        "operationId": "retryNotice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Notice issues"]
+      }
+    },
+    "/api/v1/notice-issues/deliveries/{id}/reconcile": {
+      "post": {
+        "operationId": "reconcileMailboxDelivery",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReconcileDeliveryDto" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Notice issues"]
+      }
+    },
     "/api/v1/partner-clients": {
       "post": {
         "description": "Approves a firm as an intermediary, for every scope — approval is all or nothing. Requires the ADMIN role. `409` if the kennitala is already an active partner client. The firm can file for no one until companies delegate to it.",
@@ -8769,6 +8962,216 @@
           "regionId": { "type": "string", "format": "uuid" }
         },
         "required": ["id", "code", "place", "regionId"]
+      },
+      "NoticeOutboxKindEnum": {
+        "type": "string",
+        "enum": ["REPORT_SUBMITTED", "REPORT_APPROVED", "REPORT_DENIED"]
+      },
+      "NoticeOutboxStatusEnum": {
+        "type": "string",
+        "enum": ["PENDING", "DONE", "SKIPPED", "FAILED"]
+      },
+      "MailboxDeliveryKindEnum": {
+        "type": "string",
+        "enum": [
+          "OVERDUE_NOTICE",
+          "FINES_PRECURSOR",
+          "SALARY_REPORT_SUBMITTED",
+          "EQUALITY_REPORT_SUBMITTED",
+          "SALARY_REPORT_APPROVED",
+          "EQUALITY_REPORT_APPROVED",
+          "SALARY_REPORT_DENIED",
+          "EQUALITY_REPORT_DENIED",
+          "SALARY_REPORT_DEADLINE_REMINDER",
+          "EQUALITY_REPORT_DEADLINE_REMINDER"
+        ]
+      },
+      "MailboxDeliveryStepEnum": {
+        "type": "string",
+        "enum": ["CREATE_DOCUMENT", "SEND_DOC_TO_ISLAND_IS"],
+        "description": "For a delivery that needs reconciling, the call in doubt: CREATE_DOCUMENT (look in One for a document under the case) or SEND_DOC_TO_ISLAND_IS (check whether that document reached the mailbox)."
+      },
+      "NoticeIssueDeliveryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "kind": {
+            "allOf": [
+              { "$ref": "#/components/schemas/MailboxDeliveryKindEnum" }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "PENDING, CASE_CREATED, DOCUMENT_CREATED, SENT, FAILED or UNCERTAIN."
+          },
+          "attempts": { "type": "number" },
+          "exhausted": {
+            "type": "boolean",
+            "description": "The attempts are used up."
+          },
+          "needsReconciling": {
+            "type": "boolean",
+            "description": "A call to One may have gone through: UNCERTAIN, or a call interrupted mid-way. Must be reconciled against One before anything is sent again."
+          },
+          "inProgress": {
+            "type": "boolean",
+            "description": "A worker holds a live lease and may be calling One now."
+          },
+          "uncertainStep": {
+            "nullable": true,
+            "description": "For a delivery that needs reconciling, the call in doubt: CREATE_DOCUMENT (look in One for a document under the case) or SEND_DOC_TO_ISLAND_IS (check whether that document reached the mailbox).",
+            "allOf": [
+              { "$ref": "#/components/schemas/MailboxDeliveryStepEnum" }
+            ]
+          },
+          "oneCaseNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "One's case number, to look the case up in One."
+          },
+          "oneDocumentItemId": {
+            "type": "string",
+            "nullable": true,
+            "description": "The document's ItemID in One, once filed."
+          },
+          "lastErrorNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "One's ErrorNumber in its loggable form: the code, or a withheld marker."
+          },
+          "lastAttemptAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "attempts",
+          "exhausted",
+          "needsReconciling",
+          "inProgress"
+        ]
+      },
+      "NoticeIssueDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "kind": {
+            "allOf": [{ "$ref": "#/components/schemas/NoticeOutboxKindEnum" }]
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/NoticeOutboxStatusEnum" }]
+          },
+          "reportId": { "type": "string", "format": "uuid" },
+          "reportIdentifier": { "type": "string", "nullable": true },
+          "companyName": { "type": "string", "nullable": true },
+          "attempts": { "type": "number" },
+          "lastError": {
+            "type": "string",
+            "nullable": true,
+            "description": "The dispatcher's own reason, which holds nothing personal."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "processedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When it was given up, for a FAILED notice."
+          },
+          "delivery": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/NoticeIssueDeliveryDto" }]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "reportId",
+          "attempts",
+          "createdAt"
+        ]
+      },
+      "ReminderDeliveryIssueDto": {
+        "type": "object",
+        "properties": {
+          "delivery": { "$ref": "#/components/schemas/NoticeIssueDeliveryDto" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "companyName": { "type": "string", "nullable": true }
+        },
+        "required": ["delivery", "companyId"]
+      },
+      "NoticeIssuesDto": {
+        "type": "object",
+        "properties": {
+          "failed": {
+            "description": "Notices given up as FAILED: the company was not told until someone acts.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/NoticeIssueDto" }
+          },
+          "failedTotal": {
+            "type": "number",
+            "description": "All FAILED notices; `failed` holds at most 100."
+          },
+          "overdue": {
+            "description": "Notices still PENDING past the overdue limit: held, for the reason in lastError. They go by themselves once the cause is fixed.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/NoticeIssueDto" }
+          },
+          "overdueTotal": {
+            "type": "number",
+            "description": "All overdue notices; `overdue` holds at most 100."
+          },
+          "reminders": {
+            "description": "Deadline reminder deliveries that stopped: uncertain, interrupted or out of attempts.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReminderDeliveryIssueDto" }
+          },
+          "remindersTotal": {
+            "type": "number",
+            "description": "All stopped reminder deliveries; `reminders` holds at most 100."
+          }
+        },
+        "required": [
+          "failed",
+          "failedTotal",
+          "overdue",
+          "overdueTotal",
+          "reminders",
+          "remindersTotal"
+        ]
+      },
+      "ReconcileDeliveryDto": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": ["SENT", "NOT_SENT"],
+            "description": "What One shows, checked by a person: SENT, it reached the mailbox; NOT_SENT, it did not."
+          },
+          "documentItemId": {
+            "type": "string",
+            "description": "The document's ItemID in One. Required for SENT when the delivery has none; for NOT_SENT, give it when One holds the document unsent, so it is sent rather than filed again.",
+            "maxLength": 100
+          }
+        },
+        "required": ["outcome"]
       },
       "CreatePartnerClientDto": {
         "type": "object",

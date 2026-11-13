@@ -26,6 +26,12 @@ export const NAV_PATHS = {
     adminOnly: false,
   },
   ritstjorn: { title: 'Ritstjórar', href: '/ritstjorar', adminOnly: true },
+  // Notices that did not reach the company. ADMIN-only in the API too.
+  tilkynningar: {
+    title: 'Tilkynningar',
+    href: '/tilkynningar',
+    adminOnly: true,
+  },
   kerfisstillingar: {
     title: 'Kerfisstillingar',
     href: '/kerfisstillingar',
