@@ -6530,6 +6530,119 @@
         "summary": "",
         "tags": ["Report PDF"]
       }
+    },
+    "/api/v1/withholding-tax/check": {
+      "post": {
+        "operationId": "checkWithholdingTax",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithholdingTaxCheckDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Withholding tax"]
+      }
+    },
+    "/api/v1/withholding-tax/job-counts/{incomeYear}": {
+      "get": {
+        "operationId": "getWithholdingTaxJobCounts",
+        "parameters": [
+          {
+            "name": "incomeYear",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithholdingTaxJobCountsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Withholding tax"]
+      }
     }
   },
   "info": {
@@ -10609,6 +10722,91 @@
           "totalWageGapPercent": { "type": "number", "nullable": true }
         },
         "required": ["male", "female", "overall"]
+      },
+      "WithholdingTaxCheckDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "A fresh token request to Skatturinn succeeded."
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Why it failed: reason, operation and HTTP status. Never a credential."
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": ["ok", "checkedAt"]
+      },
+      "WithholdingTaxJobCountDto": {
+        "type": "object",
+        "properties": {
+          "incomeYear": { "type": "number" },
+          "nationalId": {
+            "type": "string",
+            "pattern": "^\\d{6}[- ]?\\d{4}$",
+            "example": "0101901234",
+            "description": "National ID. Accepts XXXXXXXXXX, XXXXXX-XXXX, or XXXXXX XXXX — always normalised to XXXXXXXXXX."
+          },
+          "name": { "type": "string", "nullable": true },
+          "legalAddress": { "type": "string", "nullable": true },
+          "postcode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Three digits."
+          },
+          "cityId": { "type": "string", "nullable": true },
+          "city": { "type": "string", "nullable": true },
+          "isatCode": { "type": "string", "nullable": true },
+          "isatText": { "type": "string", "nullable": true },
+          "jobCountBand": {
+            "type": "string",
+            "enum": ["25-49", "50+"],
+            "description": "Average full-time positions (ársverk) over the income year."
+          }
+        },
+        "required": ["incomeYear", "nationalId", "jobCountBand"]
+      },
+      "WithholdingTaxSkippedRowDto": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "number",
+            "description": "Position in Skatturinn’s response."
+          },
+          "issues": {
+            "description": "Field path and validation code per issue. No values.",
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["index", "issues"]
+      },
+      "WithholdingTaxJobCountsDto": {
+        "type": "object",
+        "properties": {
+          "incomeYear": { "type": "number" },
+          "companies": {
+            "description": "Companies at 25–49 or 50+ average positions. Absence means below 25 or unknown to Skatturinn, not a confirmed 0–24.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WithholdingTaxJobCountDto"
+            }
+          },
+          "skipped": {
+            "description": "Rows that failed validation and were left out.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WithholdingTaxSkippedRowDto"
+            }
+          }
+        },
+        "required": ["incomeYear", "companies", "skipped"]
       }
     }
   }

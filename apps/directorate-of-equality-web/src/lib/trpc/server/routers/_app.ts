@@ -12,6 +12,7 @@ import { reportsRouter } from './reportsRouter'
 import { reportStatisticsRouter } from './reportStatisticsRouter'
 import { reportWorkflowRouter } from './reportWorkflowRouter'
 import { userRouter } from './userRouter'
+import { withholdingTaxRouter } from './withholdingTaxRouter'
 
 export const appRouter = router({
   adminReport: adminReportRouter,
@@ -27,6 +28,7 @@ export const appRouter = router({
   reportComments: reportCommentsRouter,
   reportStatistics: reportStatisticsRouter,
   reportWorkflow: reportWorkflowRouter,
+  withholdingTax: withholdingTaxRouter,
 })
 
 export type AppRouter = typeof appRouter

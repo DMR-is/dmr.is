@@ -37,6 +37,13 @@ export const NAV_PATHS = {
     href: '/kerfisstillingar',
     adminOnly: true,
   },
+  // Temporary: trying Skatturinn's job-count feed before anything consumes it.
+  // ADMIN-only in the API too.
+  skatturinn: {
+    title: 'Skatturinn',
+    href: '/skatturinn',
+    adminOnly: true,
+  },
 } satisfies Record<string, NavPath>
 
 /**

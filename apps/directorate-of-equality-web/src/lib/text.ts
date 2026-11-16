@@ -1843,3 +1843,38 @@ export const noticeIssuesText = {
     unknown: 'Óþekkt',
   },
 }
+
+export const withholdingTaxText = {
+  heroTitle: 'Skatturinn',
+  heroDescription:
+    'Prófun á vefþjónustu Skattsins um meðalfjölda ársverka. Sýnir fyrirtæki með 25–49 eða 50+ ársverk á völdu tekjuári. Engu er breytt í fyrirtækjaskránni.',
+  heroImageAlt: 'Mynd af skjölum',
+  incomeYearLabel: 'Tekjuár',
+  fetch: 'Sækja',
+  check: 'Prófa tengingu',
+  checkOk: 'Tenging við Skattinn tókst',
+  checkFailed: (reason: string | null | undefined) =>
+    reason
+      ? `Tenging við Skattinn tókst ekki: ${reason}`
+      : 'Tenging við Skattinn tókst ekki',
+  fetchError: 'Ekki tókst að sækja gögn frá Skattinum',
+  idle: 'Veldu tekjuár og smelltu á Sækja.',
+  summaryHeading: 'Samantekt',
+  total: 'Fyrirtæki',
+  skippedCount: 'Hafnað',
+  absentNote:
+    'Fyrirtæki sem vantar á listann eru með færri en 25 ársverk eða óþekkt hjá Skattinum.',
+  skippedHeading: 'Línur sem stóðust ekki staðfestingu',
+  skippedRow: (index: number) => `Lína ${index}`,
+  companiesHeading: 'Fyrirtæki',
+  noData: 'Engin fyrirtæki',
+  columns: {
+    nationalId: 'Kennitala',
+    name: 'Nafn',
+    address: 'Lögheimili',
+    postcode: 'Póstnúmer',
+    city: 'Staður',
+    isat: 'ÍSAT',
+    band: 'Ársverk',
+  },
+}
