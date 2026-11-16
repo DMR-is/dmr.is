@@ -3,6 +3,12 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { PartnerClientResourceGuard } from '../../core/guards/partner-client-resource/partner-client-resource.guard'
+import {
+  assertIdentityGuarded,
+  assertTokenSurface,
+  ISLAND_IS_APPLICATION_SCOPE,
+  PARTNER_WEB_SCOPE,
+} from '../../core/guards/token-surface/token-surface.testing'
 import { ApplicationPartnerController } from './application-partner.controller'
 import { ApplicationPartnerClientController } from './application-partner-client.controller'
 
@@ -11,7 +17,7 @@ const CLIENT = { id: 'client-a', nationalId: '9999999999' } as never
 /** A procuration login: the firm is the subject, the person is the actor. */
 const USER = {
   nationalId: '9999999999',
-  actor: { nationalId: '0000000000' },
+  actor: { nationalId: '0000000000', name: 'Jóna Jónsdóttir' },
 } as never
 
 /**
@@ -19,6 +25,36 @@ const USER = {
  * `PartnerClientResourceGuard` resolved, attributed to the person signed in.
  */
 describe('ApplicationPartnerClientController', () => {
+  // Provider keys are managed from partner-web only: an island.is
+  // application token is refused here since #1568.
+  describe('token surface (#1568)', () => {
+    const methods = [
+      'getPartnerClient',
+      'getPartnerClientKeys',
+      'issuePartnerClientKey',
+      'revokePartnerClientKey',
+    ]
+
+    it.each(methods)('%s runs behind the identity guard', (method) => {
+      expect(() =>
+        assertIdentityGuarded(
+          ApplicationPartnerClientController,
+          method,
+          PartnerClientResourceGuard,
+        ),
+      ).not.toThrow()
+    })
+
+    it('that guard admits its own surface and refuses any other token', async () => {
+      await expect(
+        assertTokenSurface(PartnerClientResourceGuard, {
+          accepts: [PARTNER_WEB_SCOPE],
+          refuses: [ISLAND_IS_APPLICATION_SCOPE],
+        }),
+      ).resolves.toBeUndefined()
+    })
+  })
+
   let service: {
     listKeys: jest.Mock
     issueKey: jest.Mock
@@ -87,6 +123,7 @@ describe('ApplicationPartnerClientController', () => {
       partnerClientId: 'client-a',
       createdVia: ApiKeyOriginEnum.ISLAND_IS,
       actorNationalId: '0000000000',
+      actorName: 'Jóna Jónsdóttir',
       label: 'prod',
       expiresAt: undefined,
     })

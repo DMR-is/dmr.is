@@ -78,19 +78,20 @@ export class EqualityReportSummaryDto {
   identifier!: string | null
 
   /**
-   * The submission handle **as the calling channel knows it**, and the value
-   * that channel's `GET .../reports/:providerId` resolves against: the
-   * island.is application UUID on island.is, the vendor's own id on the partner
-   * API (the stored value is namespaced by company; the namespace is stripped
-   * here and never exposed).
+   * The read handle **as the calling channel knows it**, and the value that
+   * channel's `GET .../reports/:providerId` resolves against. On island.is that
+   * is the bare application UUID for an island.is filing, `partner:<firm's
+   * id>` for one a service provider filed, and `system:<id>` for one the
+   * Directorate entered. On the partner API it is the vendor's own id (the
+   * stored value is namespaced by company; the namespace is stripped here and
+   * never exposed).
    *
-   * `null` when the report cannot be reached from the calling channel — an
-   * admin- or Excel-created report, one filed on a different channel, or
-   * `LEGACY` coverage, which was never filed here at all — in which case no
-   * content route can reach it and a handle would only 404.
+   * `null` when the report cannot be reached from the calling channel — on the
+   * partner API, one filed on another channel; anywhere, a report stored with
+   * no provider id, or `LEGACY` coverage, which was never filed here at all —
+   * in which case no content route can reach it and a handle would only 404.
    *
-   * Resolved by `ReportProviderChannel.toClientProviderId`, never read off the
-   * row.
+   * Resolved by `ReportProviderChannel.toReadHandle`, never read off the row.
    */
   @ApiOptionalString({ nullable: true })
   providerId!: string | null

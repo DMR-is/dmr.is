@@ -154,3 +154,93 @@ describe('report provider channels', () => {
     )
   })
 })
+
+describe('read handles', () => {
+  const KT = '5501012130'
+
+  const roundTrips = (
+    providerType: ReportProviderEnum,
+    providerId: string,
+    companyNationalId = KT,
+  ) => {
+    const handle = ISLAND_IS_PROVIDER_CHANNEL.toReadHandle({
+      providerType,
+      providerId,
+      companyNationalId,
+    })
+
+    return {
+      handle,
+      resolved:
+        handle === null
+          ? null
+          : ISLAND_IS_PROVIDER_CHANNEL.resolveReadHandle(handle, KT),
+    }
+  }
+
+  it('keeps the island.is application id bare, so no existing link changes meaning', () => {
+    expect(roundTrips(ReportProviderEnum.ISLAND_IS, 'app-uuid')).toEqual({
+      handle: 'app-uuid',
+      resolved: {
+        providerType: ReportProviderEnum.ISLAND_IS,
+        providerId: 'app-uuid',
+      },
+    })
+  })
+
+  it('names a partner-filed report by the firm’s own id, under the token company’s namespace', () => {
+    expect(roundTrips(ReportProviderEnum.OTHER, `${KT}:2026:Q1`)).toEqual({
+      handle: 'partner:2026:Q1',
+      resolved: {
+        providerType: ReportProviderEnum.OTHER,
+        providerId: `${KT}:2026:Q1`,
+      },
+    })
+  })
+
+  it('gives no handle to a partner row stored under another kennitala', () => {
+    expect(
+      roundTrips(ReportProviderEnum.OTHER, '4401234567:x', '4401234567')
+        .resolved,
+    ).toEqual({
+      providerType: ReportProviderEnum.OTHER,
+      // Resolved under the token company, so it cannot name the stored row.
+      providerId: `${KT}:x`,
+    })
+  })
+
+  it('names a SYSTEM report by its stored id, prefixed', () => {
+    expect(roundTrips(ReportProviderEnum.SYSTEM, 'k3j9x2ab7q')).toEqual({
+      handle: 'system:k3j9x2ab7q',
+      resolved: {
+        providerType: ReportProviderEnum.SYSTEM,
+        providerId: 'k3j9x2ab7q',
+      },
+    })
+  })
+
+  it('resolves an empty prefixed handle to nothing', () => {
+    expect(ISLAND_IS_PROVIDER_CHANNEL.resolveReadHandle('partner:', KT)).toBe(
+      null,
+    )
+    expect(ISLAND_IS_PROVIDER_CHANNEL.resolveReadHandle('system:', KT)).toBe(
+      null,
+    )
+  })
+
+  it('keeps the partner API to its own filings: its read handle is its own id', () => {
+    expect(
+      EXTERNAL_PROVIDER_CHANNEL.toReadHandle({
+        providerType: ReportProviderEnum.SYSTEM,
+        providerId: 'k3j9x2ab7q',
+        companyNationalId: KT,
+      }),
+    ).toBeNull()
+    expect(
+      EXTERNAL_PROVIDER_CHANNEL.resolveReadHandle('system:k3j9x2ab7q', KT),
+    ).toEqual({
+      providerType: ReportProviderEnum.OTHER,
+      providerId: `${KT}:system:k3j9x2ab7q`,
+    })
+  })
+})

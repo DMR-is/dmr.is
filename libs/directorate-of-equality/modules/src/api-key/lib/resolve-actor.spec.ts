@@ -1,6 +1,6 @@
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
-import { resolveActorNationalId } from './resolve-actor'
+import { resolveActorName, resolveActorNationalId } from './resolve-actor'
 
 const user = (nationalId: string, actorNationalId?: string): DMRUser =>
   ({
@@ -33,5 +33,31 @@ describe('resolveActorNationalId', () => {
     const resolved = resolveActorNationalId(user('5501012130', '0101901234'))
 
     expect(resolved).not.toBe('5501012130')
+  })
+})
+
+describe('resolveActorName', () => {
+  it('names the delegation actor under procuration', () => {
+    const procuration = user('5501012130', '0101901234')
+
+    expect(resolveActorName(procuration)).toBe('Actor')
+    // Same branch as the kennitala: the name belongs to the recorded person.
+    expect(resolveActorNationalId(procuration)).toBe('0101901234')
+  })
+
+  it('names the subject on a self-login, with no actor', () => {
+    const selfLogin = user('5501012130')
+
+    expect(resolveActorName(selfLogin)).toBe('Test')
+    expect(resolveActorNationalId(selfLogin)).toBe('5501012130')
+  })
+
+  it('records null rather than the company when the actor has no name', () => {
+    const nameless = {
+      ...user('5501012130', '0101901234'),
+      actor: { nationalId: '0101901234', name: '', scope: [] },
+    } as DMRUser
+
+    expect(resolveActorName(nameless)).toBeNull()
   })
 })

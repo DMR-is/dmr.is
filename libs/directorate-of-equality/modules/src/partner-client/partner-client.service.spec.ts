@@ -348,15 +348,18 @@ describe('PartnerClientService', () => {
         createdVia: ApiKeyOriginEnum.ISLAND_IS,
         actorUserId: undefined,
         actorNationalId: FIRM_NATIONAL_ID,
+        actorName: 'Jóna Jónsdóttir',
       })
 
       expect(keys.create.mock.calls[0][0]).toMatchObject({
         createdByUserId: ADMIN_ID,
         createdByNationalId: null,
+        createdByName: null,
       })
       expect(keys.create.mock.calls[1][0]).toMatchObject({
         createdByUserId: null,
         createdByNationalId: FIRM_NATIONAL_ID,
+        createdByName: 'Jóna Jónsdóttir',
       })
     })
 
@@ -423,6 +426,26 @@ describe('PartnerClientService', () => {
         where: { partnerClientId: CLIENT_ID },
         order: [['created_at', 'DESC']],
       })
+    })
+
+    it('returns the stored names, so a list need not show a kennitala', async () => {
+      const stored = {
+        id: 'key-row',
+        createdByNationalId: FIRM_NATIONAL_ID,
+        createdByName: 'Jóna Jónsdóttir',
+      }
+      keys.findAll.mockResolvedValueOnce([
+        {
+          fromModel: () =>
+            PartnerClientKeyModel.fromModel(
+              stored as unknown as PartnerClientKeyModel,
+            ),
+        },
+      ])
+
+      const [listed] = await service.listKeys(CLIENT_ID)
+
+      expect(listed.createdByName).toBe('Jóna Jónsdóttir')
     })
   })
 

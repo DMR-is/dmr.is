@@ -14,7 +14,10 @@ import {
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
-import { resolveActorNationalId } from '@dmr.is/doe-modules/api-key'
+import {
+  resolveActorName,
+  resolveActorNationalId,
+} from '@dmr.is/doe-modules/api-key'
 import {
   CreatePartnerClientKeyDto,
   GetPartnerClientKeysResponseDto,
@@ -102,6 +105,7 @@ export class ApplicationPartnerClientController {
       partnerClientId: client.id,
       createdVia: ApiKeyOriginEnum.ISLAND_IS,
       actorNationalId: resolveActorNationalId(user),
+      actorName: resolveActorName(user),
       label: input.label,
       expiresAt: input.expiresAt,
     })

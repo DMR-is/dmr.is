@@ -54,7 +54,9 @@ const DelegationCard = ({
       </Text>
       <Text variant="small" color="dark400">
         {t.grantedAt}: {formatDateIS(delegation.grantedAt)} · {t.grantedBy}:{' '}
-        {formatNationalId(delegation.grantedByNationalId)}
+        {/* Grants recorded before names were stored have only the kennitala. */}
+        {delegation.grantedByName ??
+          formatNationalId(delegation.grantedByNationalId)}
       </Text>
       {isNarrowGrant(delegation.scopes) && (
         <Text variant="small" color="purple600">

@@ -29,6 +29,7 @@ export type ListedKey = {
   scopes?: ApiKeyDto['scopes']
   createdVia: 'ISLAND_IS' | 'ADMIN'
   createdByNationalId?: string | null
+  createdByName?: string | null
   createdAt: string
   expiresAt?: string | null
   lastUsedAt?: string | null

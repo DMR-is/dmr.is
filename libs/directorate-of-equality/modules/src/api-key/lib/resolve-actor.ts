@@ -17,3 +17,20 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
  */
 export const resolveActorNationalId = (user: DMRUser): string =>
   user.actor?.nationalId ?? user.nationalId
+
+/**
+ * The display name of the same person `resolveActorNationalId` picks, so a
+ * screen can say who acted without showing their kennitala.
+ *
+ * Snapshotted on the row at write time from the login token, never looked up
+ * later: it is what island.is called the person when they acted, and the
+ * national registry is not consulted.
+ *
+ * Paired with the national ID on purpose: one branch picks both. Under
+ * procuration that is the actor's name; when the company logs in as itself it
+ * is the company's name. Falling back from an empty actor name to the subject's
+ * would name the company next to a person's kennitala, so an actor without a
+ * name records null instead.
+ */
+export const resolveActorName = (user: DMRUser): string | null =>
+  (user.actor ? user.actor.name : user.name) || null

@@ -18,10 +18,12 @@ import {
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import {
+  ApplicationCompanyDto,
   ApplicationReportCommentDto,
   ApplicationReportDetailDto,
   EditEqualityContentDto,
   EditOutliersDto,
+  GetApplicationReportsResponseDto,
   GetSubCriterionCatalogResponseDto,
   IApplicationService,
   SalaryReportEligibilityDto,
@@ -36,6 +38,7 @@ import {
   ImportUploadBoundary,
   PresignUploadResponseDto,
 } from '@dmr.is/doe-modules/import-upload'
+import { IPartnerClientService } from '@dmr.is/doe-modules/partner-client'
 import { EqualityReportSummaryDto } from '@dmr.is/doe-modules/report'
 import {
   AddReportAttachmentDto,
@@ -82,12 +85,42 @@ export class ApplicationController {
     private readonly reportExcelService: IReportExcelService,
     @Inject(IImportUploadService)
     private readonly importUploadService: IImportUploadService,
+    @Inject(IPartnerClientService)
+    private readonly partnerClientService: IPartnerClientService,
   ) {}
 
   @Get('company')
-  @DoeResponse({ operationId: 'getApplicationCompany', type: CompanyDto })
-  async getCompany(@CurrentCompany() company: CompanyDto): Promise<CompanyDto> {
-    return company
+  @DoeResponse({
+    operationId: 'getApplicationCompany',
+    description:
+      'The company the signed-in organisation resolves to, as in the register. `isServiceProvider` says whether the organisation is also an approved service provider (þjónustuaðili): it comes from the same live-partner-client lookup that guards `GET /application/partner-client`, so it is `true` exactly when those provider routes answer rather than 404.',
+    type: ApplicationCompanyDto,
+  })
+  async getCompany(
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<ApplicationCompanyDto> {
+    // The same call `PartnerClientResourceGuard` makes, so the flag cannot say
+    // yes while the provider routes say 404. `company.nationalId` is the
+    // token's kennitala — `CompanyResourceGuard` resolved the row by it.
+    const partnerClient = await this.partnerClientService.findLiveByNationalId(
+      company.nationalId,
+    )
+
+    return { ...company, isServiceProvider: partnerClient !== null }
+  }
+
+  @Get('reports')
+  @DoeResponse({
+    operationId: 'getApplicationReports',
+    description:
+      "The resolved company's submitted equality reports (jafnréttisáætlanir) and salary reports (jafnlaunaskýrslur), newest first. Exactly the reports `GET /application/reports/:providerId` opens for this company: each row's `providerId` is the handle that route takes, and a report the detail route would 404 on is never listed. Group reports appear only for the parent company that filed them — a subsidiary covered by a group report cannot open it, so it does not see it here either. Drafts are not listed: a draft is not a submission yet, and is reached through its own application under `reports/:providerId/draft`. Reports from every channel are listed: those the company filed on island.is, those a service provider filed for it over the partner API, and those Jafnréttisstofa entered for it; `submittedVia` says which. Every row opens with the read routes (detail, equality PDF, outliers, comments); only `ISLAND_IS` rows can be edited, commented on or withdrawn here. A report stored with no provider id — some entered by Jafnréttisstofa before ids were assigned — has no handle on any applicant route, so it is neither listed here nor openable. Withdrawn, denied and superseded reports are listed with their status. Empty when the company has filed nothing; 404 only when the authenticated kennitala has no company row yet.",
+    type: GetApplicationReportsResponseDto,
+    include404: true,
+  })
+  async getReports(
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<GetApplicationReportsResponseDto> {
+    return this.applicationService.listReports(company)
   }
 
   @Get('reports/excel/template')
@@ -265,13 +298,13 @@ export class ApplicationController {
     name: 'providerId',
     type: String,
     description:
-      "Upstream submission ID (e.g. the island.is application UUID). Identifies the report by the originator's own handle rather than the DoE-side `report.id`, which the applicant does not see. Resolved against reports whose parent company matches the authenticated company.",
+      'Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.',
   })
   @DoeResponse({
     operationId: 'getApplicationReport',
     include404: true,
     description:
-      'Returns company-facing report detail with external comments. Looked up by upstream `providerId`.',
+      'Returns company-facing report detail with external comments. Read-only across channels: opens any report `GET /application/reports` lists for this company — filed on island.is, by a service provider over the partner API, or by Jafnréttisstofa — under the same ownership rule. Only island.is-filed reports can be changed through the write routes.',
     type: ApplicationReportDetailDto,
   })
   async getReport(
@@ -294,7 +327,7 @@ export class ApplicationController {
     name: 'providerId',
     type: String,
     description:
-      'Upstream submission ID (e.g. the island.is application UUID).',
+      'Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.',
   })
   @DoeResponse({
     operationId: 'getApplicationEqualityContentPdf',
@@ -302,7 +335,8 @@ export class ApplicationController {
     produces: 'application/pdf',
     successDescription:
       'Returns the uploaded jafnréttisáætlun PDF verbatim. 404 when the ' +
-      "report's equality content is HTML rather than an uploaded PDF.",
+      "report's equality content is HTML rather than an uploaded PDF. " +
+      'Takes any read handle from `GET /application/reports`, whichever channel filed the report.',
   })
   async getEqualityContentPdf(
     @Param('providerId') providerId: string,
@@ -322,13 +356,13 @@ export class ApplicationController {
     name: 'providerId',
     type: String,
     description:
-      'Upstream submission ID (e.g. the island.is application UUID).',
+      'Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.',
   })
   @DoeResponse({
     operationId: 'getApplicationReportOutliers',
     include404: true,
     description:
-      "Paginated list of the report's employee outliers. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Ordered by role title and then by the employee's ordinal within the report — the same grouped-by-role order the draft employee lists serve.",
+      "Paginated list of the report's employee outliers. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Ordered by role title and then by the employee's ordinal within the report — the same grouped-by-role order the draft employee lists serve. Read-only across channels: takes any read handle from `GET /application/reports`. Changing the explanations (`PUT …/outliers`) is island.is-only.",
     type: GetReportOutliersResponseDto,
   })
   async getReportOutliers(
@@ -344,13 +378,13 @@ export class ApplicationController {
     name: 'providerId',
     type: String,
     description:
-      'Upstream submission ID (e.g. the island.is application UUID).',
+      'Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.',
   })
   @DoeResponse({
     operationId: 'getApplicationReportComments',
     include404: true,
     description:
-      "The report's external comment thread on its own, ordered oldest-first. Only comments with `EXTERNAL` visibility are returned — reviewer-internal notes are never exposed to the applicant. Use this instead of re-fetching the report detail when only the conversation is needed; the same list is embedded as `externalComments` in `GET /application/reports/:providerId`.",
+      "The report's external comment thread on its own, ordered oldest-first. Only comments with `EXTERNAL` visibility are returned — reviewer-internal notes are never exposed to the applicant. Use this instead of re-fetching the report detail when only the conversation is needed; the same list is embedded as `externalComments` in `GET /application/reports/:providerId`. Takes any read handle from `GET /application/reports`; posting a comment is island.is-only.",
     type: [ApplicationReportCommentDto],
   })
   async getReportComments(
@@ -366,14 +400,14 @@ export class ApplicationController {
     name: 'providerId',
     type: String,
     description:
-      'Upstream submission ID (e.g. the island.is application UUID).',
+      'The island.is application UUID only. This write route acts on reports the company filed on island.is: a `partner:` or `system:` handle answers 404, because a report filed through another channel is changed through that channel.',
   })
   @DoeResponse({
     operationId: 'submitApplicationReportComment',
     status: 201,
     include404: true,
     description:
-      'Submits an external comment on a report owned by the authenticated company. Report is looked up by upstream `providerId`.',
+      'Submits an external comment on a report owned by the authenticated company. island.is-filed reports only: the comment thread of a report filed through another channel can be read here but not written to.',
     type: ApplicationReportCommentDto,
   })
   async submitComment(
@@ -393,13 +427,13 @@ export class ApplicationController {
     name: 'providerId',
     type: String,
     description:
-      'Upstream submission ID (e.g. the island.is application UUID).',
+      'The island.is application UUID only. This write route acts on reports the company filed on island.is: a `partner:` or `system:` handle answers 404, because a report filed through another channel is changed through that channel.',
   })
   @DoeResponse({
     operationId: 'editApplicationEqualityContent',
     include404: true,
     description:
-      'Replaces the narrative body of an EQUALITY report in place. Allowed only on reports in status `IN_REVIEW`. Emits an `EDITED` event; status is preserved.',
+      'Replaces the narrative body of an EQUALITY report in place. Allowed only on reports in status `IN_REVIEW`. Emits an `EDITED` event; status is preserved. island.is-filed reports only.',
     type: ApplicationReportDetailDto,
   })
   async editEqualityContent(
@@ -419,13 +453,13 @@ export class ApplicationController {
     name: 'providerId',
     type: String,
     description:
-      'Upstream submission ID (e.g. the island.is application UUID).',
+      'The island.is application UUID only. This write route acts on reports the company filed on island.is: a `partner:` or `system:` handle answers 404, because a report filed through another channel is changed through that channel.',
   })
   @DoeResponse({
     operationId: 'editApplicationOutliers',
     include404: true,
     description:
-      'Replaces outlier explanations on a SALARY report. All-or-none — the submitted set must match the canonical detected outliers exactly. Allowed in status `POSTPONED` (transitions to `SUBMITTED`) or `IN_REVIEW` (status preserved). Always emits `EDITED`; the `POSTPONED → SUBMITTED` case additionally emits `STATUS_CHANGED`.',
+      'Replaces outlier explanations on a SALARY report. All-or-none — the submitted set must match the canonical detected outliers exactly. Allowed in status `POSTPONED` (transitions to `SUBMITTED`) or `IN_REVIEW` (status preserved). Always emits `EDITED`; the `POSTPONED → SUBMITTED` case additionally emits `STATUS_CHANGED`. island.is-filed reports only.',
     type: ApplicationReportDetailDto,
   })
   async editOutliers(
@@ -547,14 +581,14 @@ export class ApplicationController {
     name: 'providerId',
     type: String,
     description:
-      'Upstream submission ID (e.g. the island.is application UUID).',
+      'The island.is application UUID only. This write route acts on reports the company filed on island.is: a `partner:` or `system:` handle answers 404, because a report filed through another channel is changed through that channel.',
   })
   @DoeResponse({
     operationId: 'withdrawApplicationReport',
     status: HttpStatus.NO_CONTENT,
     include404: true,
     description:
-      'Withdraws the report tied to an island.is application the applicant deleted upstream. Sets status to `WITHDRAWN` and emits `STATUS_CHANGED`. Allowed only before the report reaches a terminal state (`APPROVED`/`DENIED`/`SUPERSEDED`); idempotent on an already-`WITHDRAWN` report.',
+      'Withdraws the report tied to an island.is application the applicant deleted upstream. Sets status to `WITHDRAWN` and emits `STATUS_CHANGED`. Allowed only before the report reaches a terminal state (`APPROVED`/`DENIED`/`SUPERSEDED`); idempotent on an already-`WITHDRAWN` report. island.is-filed reports only.',
   })
   async withdrawReport(
     @Param('providerId') providerId: string,

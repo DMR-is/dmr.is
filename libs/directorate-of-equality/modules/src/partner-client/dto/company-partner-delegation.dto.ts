@@ -2,6 +2,7 @@ import {
   ApiArray,
   ApiDateTime,
   ApiDto,
+  ApiOptionalString,
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
@@ -30,4 +31,11 @@ export class CompanyPartnerDelegationDto {
 
   @ApiString({ description: 'Kennitala of the person who granted it.' })
   grantedByNationalId!: string
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'Name of the person who granted it, as island.is gave it at the time — show this instead of `grantedByNationalId`. Null for delegations granted before names were recorded; show a fallback then.',
+  })
+  grantedByName!: string | null
 }

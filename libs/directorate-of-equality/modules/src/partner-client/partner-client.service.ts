@@ -205,7 +205,8 @@ export class PartnerClientService implements IPartnerClientService {
 
     const expiresAt = resolveApiKeyExpiry(input.expiresAt)
     await this.assertLiveKeyBudget(client.id)
-    const { actorUserId, actorNationalId } = resolveApiKeyIssuer(input)
+    const { actorUserId, actorNationalId, actorName } =
+      resolveApiKeyIssuer(input)
 
     const generated = generateApiKey(apiKeyEnv(), ApiKeyKindEnum.PARTNER_CLIENT)
     const secretHash = hashApiKeySecret(
@@ -221,6 +222,7 @@ export class PartnerClientService implements IPartnerClientService {
       label: input.label ?? null,
       createdByUserId: actorUserId,
       createdByNationalId: actorNationalId,
+      createdByName: actorName,
       expiresAt,
     })
 

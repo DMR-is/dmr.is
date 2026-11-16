@@ -48,7 +48,8 @@ export class ApiKeyService implements IApiKeyService {
     const scopes = resolveApiKeyScopes(input.scopes)
     const expiresAt = resolveApiKeyExpiry(input.expiresAt)
     await this.assertLiveKeyBudget(input.company.id)
-    const { actorUserId, actorNationalId } = resolveApiKeyIssuer(input)
+    const { actorUserId, actorNationalId, actorName } =
+      resolveApiKeyIssuer(input)
 
     const generated = generateApiKey(apiKeyEnv())
     const secretHash = hashApiKeySecret(
@@ -66,6 +67,7 @@ export class ApiKeyService implements IApiKeyService {
       label: input.label ?? null,
       createdByUserId: actorUserId,
       createdByNationalId: actorNationalId,
+      createdByName: actorName,
       expiresAt,
     })
 

@@ -8,7 +8,7 @@ import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import {
-  type CompanyDto,
+  type ApplicationCompanyDto,
   CompanyObligationStatusEnum,
   CompanyStatusEnum,
 } from '../../gen/fetch/types.gen'
@@ -54,7 +54,11 @@ const Obligation = ({ title, status, dueAt, overdue }: ObligationProps) => (
   </Box>
 )
 
-export const CompanyPanel = ({ company }: { company: CompanyDto }) => (
+export const CompanyPanel = ({
+  company,
+}: {
+  company: ApplicationCompanyDto
+}) => (
   <Stack space={3}>
     <Text variant="h3" as="h2">
       {t.heading}

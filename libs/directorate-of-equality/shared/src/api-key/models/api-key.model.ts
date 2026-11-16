@@ -19,6 +19,7 @@ type ApiKeyAttributes = {
   createdVia: ApiKeyOriginEnum
   createdByUserId: string | null
   createdByNationalId: string | null
+  createdByName: string | null
   expiresAt: Date | null
   lastUsedAt: Date | null
   revokedAt: Date | null
@@ -37,6 +38,7 @@ type ApiKeyCreateAttributes = {
   label?: string | null
   createdByUserId?: string | null
   createdByNationalId?: string | null
+  createdByName?: string | null
   expiresAt?: Date | null
 }
 
@@ -108,6 +110,13 @@ export class ApiKeyModel extends MutableModel<
   })
   createdByNationalId!: string | null
 
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    field: 'created_by_name',
+  })
+  createdByName!: string | null
+
   @Column({ type: DataType.DATE, allowNull: true, field: 'expires_at' })
   expiresAt!: Date | null
 
@@ -139,6 +148,7 @@ export class ApiKeyModel extends MutableModel<
       scopes: model.scopes,
       createdVia: model.createdVia,
       createdByNationalId: model.createdByNationalId,
+      createdByName: model.createdByName,
       createdByUserId: model.createdByUserId,
       createdAt: model.createdAt,
       expiresAt: model.expiresAt,
