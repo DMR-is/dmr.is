@@ -22,13 +22,27 @@ export interface WithholdingTaxConfig {
   password: string
 }
 
-/** The configuration, or `null` naming nothing if any value is missing. */
-export function readWithholdingTaxConfig(): WithholdingTaxConfig | null {
+export type WithholdingTaxConfigResult =
+  | { ok: true; config: WithholdingTaxConfig }
+  /** Names of the unset variables — never their values. */
+  | { ok: false; missing: string[] }
+
+export function readWithholdingTaxConfig(): WithholdingTaxConfigResult {
   const baseUrl = process.env.RSK_WITHHOLDING_TAX_API_PATH?.trim()
   const username = process.env.RSK_WITHHOLDING_TAX_USERNAME?.trim()
   const password = process.env.RSK_WITHHOLDING_TAX_PASSWORD
   if (!baseUrl || !username || !password) {
-    return null
+    return {
+      ok: false,
+      missing: [
+        !baseUrl && 'RSK_WITHHOLDING_TAX_API_PATH',
+        !username && 'RSK_WITHHOLDING_TAX_USERNAME',
+        !password && 'RSK_WITHHOLDING_TAX_PASSWORD',
+      ].filter((name): name is string => Boolean(name)),
+    }
   }
-  return { baseUrl: baseUrl.replace(/\/+$/, ''), username, password }
+  return {
+    ok: true,
+    config: { baseUrl: baseUrl.replace(/\/+$/, ''), username, password },
+  }
 }

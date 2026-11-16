@@ -33,7 +33,19 @@ const tokenResponse = (token = 'tok-1') =>
   json({ access_token: token, token_type: 'Bearer', expires_in: 25200 })
 
 const logger = () =>
-  ({ info: jest.fn(), warn: jest.fn(), error: jest.fn() }) as unknown as Logger
+  ({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }) as unknown as Logger
+
+const allLogs = (log: Logger) =>
+  JSON.stringify(
+    (['debug', 'info', 'warn', 'error'] as const).map(
+      (level) => (log[level] as unknown as jest.Mock).mock.calls,
+    ),
+  )
 
 describe('WithholdingTaxService', () => {
   const env = process.env
@@ -226,12 +238,86 @@ describe('WithholdingTaxService', () => {
 
     await service.getJobCounts(2025).catch(() => undefined)
 
-    const logged = JSON.stringify([
-      (log.info as jest.Mock).mock.calls,
-      (log.warn as jest.Mock).mock.calls,
-      (log.error as jest.Mock).mock.calls,
-    ])
-    expect(logged).not.toContain('secret')
+    expect(allLogs(log)).not.toContain('secret')
+  })
+
+  it('logs Skatturinn’s error text with credentials scrubbed', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response('Ekki tókst að auðkenna notanda user/secret', {
+        status: 400,
+        headers: { 'Content-Type': 'text/plain' },
+      }),
+    )
+    const log = logger()
+    const service = new WithholdingTaxService(log)
+
+    await service.checkConnection().catch(() => undefined)
+
+    expect(log.error).toHaveBeenCalledWith(
+      'Token request rejected with HTTP 400',
+      expect.objectContaining({
+        reason: 'AUTH_FAILED',
+        operation: 'token',
+        host: 'rsk.test',
+        status: 400,
+        upstreamBody: 'Ekki tókst að auðkenna notanda [REDACTED]/[REDACTED]',
+      }),
+    )
+    expect(allLogs(log)).not.toContain('secret')
+  })
+
+  it('logs a network error’s cause code', async () => {
+    fetchMock.mockRejectedValueOnce(
+      new TypeError('fetch failed', {
+        cause: Object.assign(new Error('getaddrinfo ENOTFOUND rsk.test'), {
+          code: 'ENOTFOUND',
+        }),
+      }),
+    )
+    const log = logger()
+    const service = new WithholdingTaxService(log)
+
+    await service.checkConnection().catch(() => undefined)
+
+    expect(log.error).toHaveBeenCalledWith(
+      'token could not reach Skatturinn',
+      expect.objectContaining({
+        reason: 'NETWORK_ERROR',
+        causeCode: 'ENOTFOUND',
+        durationMs: expect.any(Number),
+      }),
+    )
+  })
+
+  it('names the missing variables when not configured', async () => {
+    delete process.env.RSK_WITHHOLDING_TAX_USERNAME
+    const log = logger()
+    const service = new WithholdingTaxService(log)
+
+    await service.checkConnection().catch(() => undefined)
+
+    expect(log.error).toHaveBeenCalledWith(
+      expect.stringContaining('RSK_WITHHOLDING_TAX_USERNAME'),
+      expect.objectContaining({
+        missing: ['RSK_WITHHOLDING_TAX_USERNAME'],
+      }),
+    )
+  })
+
+  it('describes the shape of an unexpected body without its values', async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(json({ items: [ROW], total: 1 }))
+    const log = logger()
+    const service = new WithholdingTaxService(log)
+
+    await service.getJobCounts(2025).catch(() => undefined)
+
+    expect(log.error).toHaveBeenCalledWith(
+      'GetJobCount did not return an array',
+      expect.objectContaining({ bodyShape: 'object{items,total}' }),
+    )
+    expect(allLogs(log)).not.toContain('1234567890')
   })
 
   it('rejects a non-integer income year', async () => {
