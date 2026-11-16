@@ -3942,6 +3942,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dmr.is/clients-withholding-tax@workspace:libs/clients/withholding-tax":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/clients-withholding-tax@workspace:libs/clients/withholding-tax"
+  dependencies:
+    "@dmr.is/logging": "npm:*"
+    zod: "npm:4.6.7"
+  peerDependencies:
+    "@nestjs/common": ^11.1.29
+  languageName: unknown
+  linkType: soft
+
 "@dmr.is/constants@npm:*, @dmr.is/constants@workspace:libs/shared/constants":
   version: 0.0.0-use.local
   resolution: "@dmr.is/constants@workspace:libs/shared/constants"

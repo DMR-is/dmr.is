@@ -1,0 +1,34 @@
+{
+  "name": "clients-withholding-tax",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/clients/withholding-tax/src",
+  "projectType": "library",
+  "tags": [],
+  "generators": {},
+  "targets": {
+    "tsc": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"],
+        "cwd": "libs/clients/withholding-tax",
+        "forwardAllArgs": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/clients/withholding-tax/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "libs/clients/withholding-tax/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/libs/clients/withholding-tax"]
+    }
+  }
+}
