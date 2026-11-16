@@ -29,6 +29,31 @@ jest.mock('@dmr.is/regulations-tools/EditorV2', () => ({
 jest.mock('@dmr.is/regulations-tools/editorV2.css', () => ({}))
 jest.mock('./Editor.css', () => ({ classes: {} }))
 
+const mockLoggerError = jest.fn()
+jest.mock('@dmr.is/logging-next', () => ({
+  getLogger: () => ({
+    error: (...args: unknown[]) => mockLoggerError(...args),
+  }),
+}))
+jest.mock('@dmr.is/ui/components/island-is/AlertMessage', () => ({
+  AlertMessage: ({ title }: { title: string }) => (
+    <div data-testid="alert">{title}</div>
+  ),
+}))
+
+// The real sanitiser, unless a test makes it fail
+let mockSanitizeFails = false
+jest.mock('@dmr.is/utils-server/cleanLegacyHtml', () => {
+  const actual = jest.requireActual('@dmr.is/utils-server/cleanLegacyHtml')
+  return {
+    ...actual,
+    sanitizeAdvertForDisplay: (html: string) => {
+      if (mockSanitizeFails) throw new Error('Loading chunk failed')
+      return actual.sanitizeAdvertForDisplay(html)
+    },
+  }
+})
+
 const type = (value: string) => {
   mockText = value
   act(() => mockEditor.onChange?.())
@@ -53,6 +78,8 @@ describe('HTMLEditor', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true
     onChange.mockReset()
     onBlur.mockReset()
+    mockLoggerError.mockReset()
+    mockSanitizeFails = false
     mockText = ''
     container = document.createElement('div')
     outside = document.createElement('button')
@@ -242,6 +269,26 @@ describe('HTMLEditor', () => {
         '<tr class="advertSubSerial"><td valign="top">B deild</td></tr>' +
         '</tbody></table>Texti<p>a</p>',
     )
+  })
+
+  it('shows an error instead of a blank text when the sanitiser fails to load', async () => {
+    mockSanitizeFails = true
+    act(() =>
+      root.render(
+        <HTMLEditor
+          readonly
+          defaultValue="<p>Texti</p>"
+          handleUpload={handleUpload}
+        />,
+      ),
+    )
+    await act(async () => {
+      await import('@dmr.is/utils-server/cleanLegacyHtml')
+    })
+
+    expect(get('alert')).not.toBeNull()
+    expect(container.innerHTML).not.toContain('Texti')
+    expect(mockLoggerError).toHaveBeenCalledTimes(1)
   })
 
   it('flushes a pending change when switching to readonly', async () => {

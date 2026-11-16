@@ -1,12 +1,16 @@
 import { FocusEvent, useCallback, useEffect, useRef, useState } from 'react'
 
+import { getLogger } from '@dmr.is/logging-next'
 import type { EditorFileUploader } from '@dmr.is/regulations-tools/EditorV2'
 import { EditorV2 } from '@dmr.is/regulations-tools/EditorV2'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 
 import { classes } from './Editor.css'
 
 import '@dmr.is/regulations-tools/editorV2.css'
+
+const logger = getLogger('HTMLEditor')
 
 /**
  * Reading the value serializes the whole text, which on long adverts costs
@@ -38,19 +42,38 @@ export const HTMLEditor = ({ readonly = false, ...props }: Props) =>
 
 const ReadOnlyHTML = ({ html }: { html: string }) => {
   const [sanitized, setSanitized] = useState<string>()
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     let current = true
+    setFailed(false)
     // Loaded on demand, as in the compare views: the sanitizer is large
-    import('@dmr.is/utils-server/cleanLegacyHtml').then(
-      ({ sanitizeAdvertForDisplay }) => {
+    import('@dmr.is/utils-server/cleanLegacyHtml')
+      .then(({ sanitizeAdvertForDisplay }) => {
         if (current) setSanitized(sanitizeAdvertForDisplay(html))
-      },
-    )
+      })
+      .catch((e) => {
+        // Usually a tab left open across a release, whose chunks are gone
+        if (!current) return
+        logger.error('Failed to show the advert text', {
+          error: e instanceof Error ? e.message : String(e),
+        })
+        setFailed(true)
+      })
     return () => {
       current = false
     }
   }, [html])
+
+  if (failed) {
+    return (
+      <AlertMessage
+        type="error"
+        title="Ekki tókst að birta textann"
+        message="Endurhlaðið síðunni til að reyna aftur."
+      />
+    )
+  }
 
   return (
     <div className={classes.wrapper}>
