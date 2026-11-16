@@ -201,9 +201,11 @@ export class WithholdingTaxService implements IWithholdingTaxService {
     })
     const { status } = sent.response
 
-    // Skatturinn answers wrong credentials with 400 and a plain-text
-    // "Ekki tókst að auðkenna notanda"; the body is logged to tell that apart
-    // from a malformed request.
+    // Skatturinn answers with 400 and a plain-text "Ekki tókst að auðkenna
+    // notanda" both for wrong credentials AND for a caller whose IP is not on
+    // its allowlist — the two cannot be told apart from here. Check the
+    // egress IP (office, or the environment's NAT gateway) before the
+    // password. The body is logged to tell either from a malformed request.
     if (status === 400 || status === 401 || status === 403) {
       throw this.fail(
         'AUTH_FAILED',
