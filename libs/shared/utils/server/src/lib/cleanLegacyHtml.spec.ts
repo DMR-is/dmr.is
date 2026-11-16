@@ -208,6 +208,18 @@ describe('sanitizeAdvertForDisplay', () => {
     )
   })
 
+  it('unquotes legacy style values, as sanitizeForDisplay does', () => {
+    const html =
+      '<p style="&quot;text-align:center&quot;">a</p>' +
+      '<table><tbody><tr><td style="\'vertical-align:top\'">b</td></tr></tbody></table>'
+
+    expect(sanitizeAdvertForDisplay(html)).toBe(
+      '<p style="text-align:center">a</p>' +
+        '<table><tbody><tr><td style="vertical-align:top">b</td></tr></tbody></table>',
+    )
+    expect(sanitizeAdvertForDisplay(html)).toBe(sanitizeForDisplay(html))
+  })
+
   it('allows data: on images only', () => {
     expect(
       sanitizeAdvertForDisplay(

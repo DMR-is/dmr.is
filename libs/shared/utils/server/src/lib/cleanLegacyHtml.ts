@@ -205,6 +205,38 @@ function rewriteRootTablesOnly(html: string): string {
 }
 
 // ---------- sanitize-html config ----------
+const allowStyleOn = new Set(['p', 'table', 'tr', 'td', 'th', 'ol', 'ul'])
+
+/**
+ * Keeps styles on the tags that may carry them and unquotes legacy style values.
+ * With `convertSubSerial`, an `advertSubSerial` row becomes a centred
+ * paragraph, which suits the editor and the diff but not showing the advert as
+ * stored.
+ */
+const styleTransform =
+  ({
+    convertSubSerial,
+  }: {
+    convertSubSerial: boolean
+  }): sanitizeHtml.Transformer =>
+  (tagName, attribs) => {
+    if (!allowStyleOn.has(tagName)) delete attribs.style
+
+    if (attribs.style) {
+      attribs.style = normalizeStyle(attribs.style)
+    }
+
+    if (convertSubSerial && /\badvertSubSerial\b/.test(attribs.class || '')) {
+      const { class: _drop, ...rest } = attribs
+      return {
+        tagName: 'p',
+        attribs: { ...rest, style: ensureTextAlignCenter(rest.style) },
+      }
+    }
+
+    return { tagName, attribs }
+  }
+
 const baseOptions: sanitizeHtml.IOptions = {
   allowedTags: [
     'div',
@@ -274,26 +306,7 @@ const baseOptions: sanitizeHtml.IOptions = {
     },
   },
   transformTags: {
-    '*': (tagName, attribs) => {
-      const cls = attribs.class || ''
-
-      const allowStyleOn = new Set(['p', 'table', 'tr', 'td', 'th', 'ol', 'ul'])
-      if (!allowStyleOn.has(tagName)) delete attribs.style
-
-      if (attribs.style) {
-        attribs.style = normalizeStyle(attribs.style)
-      }
-
-      if (/\badvertSubSerial\b/.test(cls)) {
-        const { class: _drop, ...rest } = attribs
-        return {
-          tagName: 'p',
-          attribs: { ...rest, style: ensureTextAlignCenter(rest.style) },
-        }
-      }
-
-      return { tagName, attribs }
-    },
+    '*': styleTransform({ convertSubSerial: true }),
     body: 'div',
     meta: '',
   },
@@ -445,9 +458,8 @@ const advertDisplayOptions: sanitizeHtml.IOptions = {
     ],
   },
   transformTags: {
-    a: (displayOptions.transformTags || {}).a,
-    body: 'div',
-    meta: '',
+    ...displayOptions.transformTags,
+    '*': styleTransform({ convertSubSerial: false }),
   },
 }
 
