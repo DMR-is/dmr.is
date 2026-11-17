@@ -3,8 +3,8 @@ import type { CookiesOptions } from 'next-auth'
 /**
  * Per-app NextAuth cookie names.
  *
- * Browsers scope cookies by host, not by port. Two apps on `localhost:5200` and
- * `localhost:5201` therefore share one cookie jar, and with NextAuth's default
+ * Browsers scope cookies by host, not by port. Two apps on `localhost:4200` and
+ * `localhost:5200` therefore share one cookie jar, and with NextAuth's default
  * names both keep their session in `next-auth.session-token`: signing in to one
  * overwrites the other's session, which then fails to decrypt (each app has its
  * own `NEXTAUTH_SECRET`) and reads as a logout. The same holds for any two apps

@@ -93,7 +93,7 @@ jobs:
         with:
           AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
           CLUSTER: ${{ env.ENV }}-dmr-jafnrettisstofa
-          # The partner api and web are dev-only for now; see the version-tag matrix.
+          # The partner api is dev-only for now; see the version-tag matrix.
           SERVICES: directorate-of-equality-api directorate-of-equality-web
           VERSION_TAG: ${{ github.ref_name }}
 
