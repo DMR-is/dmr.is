@@ -1,5 +1,6 @@
 import {
   BadGatewayException,
+  BadRequestException,
   ServiceUnavailableException,
 } from '@nestjs/common'
 
@@ -51,6 +52,16 @@ describe('WithholdingTaxController', () => {
       await expect(controller.getJobCounts(2025)).resolves.toBe(result)
       expect(service.getJobCounts).toHaveBeenCalledWith(2025)
     })
+
+    it.each([0, 1899, new Date().getFullYear() + 1])(
+      'refuses income year %i with a 400 without calling Skatturinn',
+      async (year) => {
+        await expect(controller.getJobCounts(year)).rejects.toBeInstanceOf(
+          BadRequestException,
+        )
+        expect(service.getJobCounts).not.toHaveBeenCalled()
+      },
+    )
 
     it('maps NOT_CONFIGURED to 503', async () => {
       service.getJobCounts.mockRejectedValue(

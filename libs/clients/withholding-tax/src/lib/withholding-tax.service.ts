@@ -141,7 +141,11 @@ export class WithholdingTaxService implements IWithholdingTaxService {
       )
     }
 
-    const raw = await this.readJson(sent, { ...base, attempt })
+    const raw = await this.readJson(
+      sent,
+      { ...base, attempt },
+      WITHHOLDING_TAX_JOB_COUNT_TIMEOUT_MS,
+    )
     // The live API wraps the rows as `{ result: [...] }`; the PDF shows a bare
     // array. Accept both.
     const body =
@@ -165,7 +169,10 @@ export class WithholdingTaxService implements IWithholdingTaxService {
     const skipped: WithholdingTaxJobCountResult['skipped'] = []
     body.forEach((row, index) => {
       const parsed = jobCountRowSchema.safeParse(row)
-      if (parsed.success) {
+      if (parsed.success && parsed.data.incomeYear !== incomeYear) {
+        // A row for another year is not this year's band.
+        skipped.push({ index, issues: ['incomeYear: mismatch'] })
+      } else if (parsed.success) {
         companies.push(toJobCount(parsed.data))
       } else {
         // Paths and codes only: the values are company data.
@@ -235,18 +242,22 @@ export class WithholdingTaxService implements IWithholdingTaxService {
       )
     }
 
-    const body = await this.readJson(sent, base)
+    const body = await this.readJson(
+      sent,
+      base,
+      WITHHOLDING_TAX_TOKEN_TIMEOUT_MS,
+    )
     const parsed = tokenResponseSchema.safeParse(body)
     if (!parsed.success) {
-      throw this.fail(
-        'INVALID_RESPONSE',
-        'Token response has no access_token',
-        {
-          ...base,
-          status,
-          bodyShape: shapeOf(body),
-        },
-      )
+      throw this.fail('INVALID_RESPONSE', 'Token response failed validation', {
+        ...base,
+        status,
+        bodyShape: shapeOf(body),
+        // Paths and codes only: a value could be the token.
+        issues: parsed.error.issues.map(
+          (issue) => `${issue.path.join('.') || '(body)'}: ${issue.code}`,
+        ),
+      })
     }
 
     this.logger.info('Skatturinn token obtained', {
@@ -286,9 +297,7 @@ export class WithholdingTaxService implements IWithholdingTaxService {
       return { response, durationMs }
     } catch (error) {
       const durationMs = Date.now() - started
-      const timedOut =
-        error instanceof Error &&
-        (error.name === 'TimeoutError' || error.name === 'AbortError')
+      const timedOut = isTimeout(error)
       throw this.fail(
         timedOut ? 'TIMEOUT' : 'NETWORK_ERROR',
         timedOut
@@ -305,11 +314,24 @@ export class WithholdingTaxService implements IWithholdingTaxService {
     }
   }
 
-  private async readJson(sent: Sent, base: LogMeta): Promise<unknown> {
+  private async readJson(
+    sent: Sent,
+    base: LogMeta,
+    timeoutMs: number,
+  ): Promise<unknown> {
     const contentType = sent.response.headers.get('content-type')
     try {
       return await sent.response.json()
-    } catch {
+    } catch (error) {
+      // The fetch's timeout signal still covers the body after the headers
+      // arrive, so a stalled download lands here, not in `send`.
+      if (isTimeout(error)) {
+        throw this.fail(
+          'TIMEOUT',
+          `${base.operation} timed out reading the body after ${timeoutMs} ms`,
+          { ...base, status: sent.response.status, timeoutMs, contentType },
+        )
+      }
       throw this.fail(
         'INVALID_RESPONSE',
         `${base.operation} returned a body that is not JSON`,
@@ -320,8 +342,9 @@ export class WithholdingTaxService implements IWithholdingTaxService {
 
   /**
    * Adds Skatturinn's error body to a failure's log fields: truncated, with
-   * the username, password and token replaced. Error bodies are short messages
-   * and the logger masks kennitölur besides, so this carries no company data.
+   * the username, password and token replaced. Error bodies are short
+   * messages, not the row payload. Nothing else is masked here: the logger
+   * masks personal kennitölur only, not company ones.
    */
   private async withUpstreamBody(
     sent: Sent,
@@ -330,6 +353,9 @@ export class WithholdingTaxService implements IWithholdingTaxService {
     base: LogMeta,
   ): Promise<LogMeta> {
     let upstreamBody: string | null = null
+    // The failure already has its reason (the HTTP status); a body that
+    // stalls is recorded beside it rather than replacing it.
+    let upstreamBodyTimedOut: true | undefined
     try {
       const text = await sent.response.text()
       const secrets = [config.password, config.username, token]
@@ -340,8 +366,9 @@ export class WithholdingTaxService implements IWithholdingTaxService {
           .replace(/\s+/g, ' ')
           .trim()
           .slice(0, UPSTREAM_BODY_LOG_LIMIT) || null
-    } catch {
+    } catch (error) {
       // An unreadable body is not worth masking the original failure.
+      if (isTimeout(error)) upstreamBodyTimedOut = true
     }
     return {
       ...base,
@@ -349,6 +376,7 @@ export class WithholdingTaxService implements IWithholdingTaxService {
       durationMs: sent.durationMs,
       contentType: sent.response.headers.get('content-type'),
       upstreamBody,
+      ...(upstreamBodyTimedOut && { upstreamBodyTimedOut }),
     }
   }
 
@@ -383,6 +411,16 @@ function hostOf(baseUrl: string): string {
   } catch {
     return 'invalid-url'
   }
+}
+
+/**
+ * What `AbortSignal.timeout` throws, from `fetch` or from reading the body.
+ * Read by name, not `instanceof`: it is a `DOMException` from Node's own
+ * realm, which is not an instance of a sandboxed (e.g. Jest) `Error`.
+ */
+function isTimeout(error: unknown): boolean {
+  const name = (error as { name?: unknown } | null)?.name
+  return name === 'TimeoutError' || name === 'AbortError'
 }
 
 /** Type and top-level keys of an unexpected body — never its values. */

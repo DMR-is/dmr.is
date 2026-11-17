@@ -58,7 +58,11 @@ describe('WithholdingTaxService', () => {
       RSK_WITHHOLDING_TAX_USERNAME: 'user',
       RSK_WITHHOLDING_TAX_PASSWORD: 'secret',
     }
-    fetchMock = jest.spyOn(global, 'fetch')
+    // Anything not queued with `mockResolvedValueOnce` must fail loudly, never
+    // reach the network.
+    fetchMock = jest.spyOn(global, 'fetch').mockImplementation(() => {
+      throw new Error('unexpected fetch')
+    })
   })
 
   afterEach(() => {
@@ -146,6 +150,7 @@ describe('WithholdingTaxService', () => {
     const result = await service.getJobCounts(2025)
 
     expect(result.companies).toHaveLength(1)
+    expect(fetchMock).toHaveBeenCalledTimes(4)
     expect(fetchMock.mock.calls[3][1].headers).toEqual({
       Authorization: 'Bearer new',
     })
@@ -163,6 +168,7 @@ describe('WithholdingTaxService', () => {
       reason: 'AUTH_FAILED',
       operation: 'getJobCount',
     })
+    expect(fetchMock).toHaveBeenCalledTimes(4)
   })
 
   it('fails AUTH_FAILED when the credentials are rejected', async () => {
@@ -243,15 +249,84 @@ describe('WithholdingTaxService', () => {
   })
 
   it('never puts the password or token in a log', async () => {
+    // The token shares no substring with the password, and Skatturinn echoes
+    // it back, so only the scrub keeps it out.
     fetchMock
-      .mockResolvedValueOnce(tokenResponse('tok-secret'))
-      .mockResolvedValueOnce(new Response('boom', { status: 500 }))
+      .mockResolvedValueOnce(tokenResponse('tok-xyz789'))
+      .mockResolvedValueOnce(
+        new Response('Bad token tok-xyz789 for user', { status: 500 }),
+      )
     const log = logger()
     const service = new WithholdingTaxService(log)
 
     await service.getJobCounts(2025).catch(() => undefined)
 
+    expect(log.error).toHaveBeenCalledWith(
+      'GetJobCount returned HTTP 500',
+      expect.objectContaining({
+        upstreamBody: 'Bad token [REDACTED] for [REDACTED]',
+      }),
+    )
+    expect(allLogs(log)).not.toContain('tok-xyz789')
     expect(allLogs(log)).not.toContain('secret')
+  })
+
+  it('fails TIMEOUT when the request times out', async () => {
+    fetchMock.mockRejectedValueOnce(
+      new DOMException('The operation timed out.', 'TimeoutError'),
+    )
+    const service = new WithholdingTaxService(logger())
+
+    await expect(service.checkConnection()).rejects.toMatchObject({
+      reason: 'TIMEOUT',
+      operation: 'token',
+    })
+  })
+
+  it('fails TIMEOUT, not INVALID_RESPONSE, when the body stalls', async () => {
+    const stalled = json([ROW])
+    jest
+      .spyOn(stalled, 'json')
+      .mockRejectedValueOnce(
+        new DOMException('The operation timed out.', 'TimeoutError'),
+      )
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(stalled)
+    const service = new WithholdingTaxService(logger())
+
+    await expect(service.getJobCounts(2025)).rejects.toMatchObject({
+      reason: 'TIMEOUT',
+      operation: 'getJobCount',
+    })
+  })
+
+  it('accepts a token with expires_in: null', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json({ access_token: 'tok', expires_in: null }))
+      .mockResolvedValueOnce(json([]))
+    const service = new WithholdingTaxService(logger())
+
+    await expect(service.getJobCounts(2025)).resolves.toMatchObject({
+      companies: [],
+    })
+  })
+
+  it('skips rows for another income year, or with none', async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(
+        json([ROW, { ...ROW, incomeYear: 2024 }, { ...ROW, incomeYear: null }]),
+      )
+    const service = new WithholdingTaxService(logger())
+
+    const result = await service.getJobCounts(2025)
+
+    expect(result.companies).toHaveLength(1)
+    expect(result.skipped).toEqual([
+      { index: 1, issues: ['incomeYear: mismatch'] },
+      { index: 2, issues: [expect.stringMatching(/^incomeYear:/)] },
+    ])
   })
 
   it('logs Skatturinn’s error text with credentials scrubbed', async () => {
@@ -366,6 +441,35 @@ describe('WithholdingTaxTokenCache', () => {
 
     await expect(cache.get(login)).rejects.toThrow('down')
     expect(await cache.get(login)).toBe('ok')
+  })
+
+  it('invalidate drops the rejected token, so the next get logs in', async () => {
+    const cache = new WithholdingTaxTokenCache(() => 0)
+    let n = 0
+    const login = jest.fn(async () => ({
+      value: `t${++n}`,
+      expiresAt: 10_000,
+    }))
+
+    expect(await cache.get(login)).toBe('t1')
+    cache.invalidate('t1')
+    expect(await cache.get(login)).toBe('t2')
+    expect(login).toHaveBeenCalledTimes(2)
+  })
+
+  it('invalidate of an older token keeps a newer one', async () => {
+    const cache = new WithholdingTaxTokenCache(() => 0)
+    let n = 0
+    const login = jest.fn(async () => ({
+      value: `t${++n}`,
+      expiresAt: 10_000,
+    }))
+
+    await cache.get(login)
+    await cache.refreshNow(login)
+    cache.invalidate('t1')
+    expect(await cache.get(login)).toBe('t2')
+    expect(login).toHaveBeenCalledTimes(2)
   })
 
   it('expires a token the skew before expires_in', () => {

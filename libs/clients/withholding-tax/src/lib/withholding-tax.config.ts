@@ -13,8 +13,13 @@
 
 export const WITHHOLDING_TAX_TOKEN_TIMEOUT_MS = 15_000
 
-/** `GetJobCount` returns every company at 25+ positions in one response. */
-export const WITHHOLDING_TAX_JOB_COUNT_TIMEOUT_MS = 120_000
+/**
+ * `GetJobCount` returns every company at 25+ positions in one response (~20 s).
+ * Kept so a login plus one call (15 s + 90 s) stays inside the ALB's 120 s idle
+ * timeout: past it the ALB answers 504 and the page never sees the API's
+ * `TIMEOUT`. The 401 re-login path can still exceed it.
+ */
+export const WITHHOLDING_TAX_JOB_COUNT_TIMEOUT_MS = 90_000
 
 export interface WithholdingTaxConfig {
   baseUrl: string

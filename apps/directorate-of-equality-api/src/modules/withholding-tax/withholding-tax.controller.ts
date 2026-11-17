@@ -1,5 +1,6 @@
 import {
   BadGatewayException,
+  BadRequestException,
   Controller,
   Get,
   HttpCode,
@@ -25,6 +26,9 @@ import {
   WithholdingTaxCheckDto,
   WithholdingTaxJobCountsDto,
 } from './dto/withholding-tax.dto'
+
+/** The service refuses anything earlier. */
+const MIN_INCOME_YEAR = 1900
 
 /**
  * Skatturinn's WithholdingTaxApi (staðgreiðsla), for checking the integration
@@ -75,6 +79,14 @@ export class WithholdingTaxController {
   async getJobCounts(
     @Param('incomeYear', ParseIntPipe) incomeYear: number,
   ): Promise<WithholdingTaxJobCountsDto> {
+    // Checked here so a bad year is a 400, not the service's RangeError (a
+    // 500), and a future year never costs a full download from Skatturinn.
+    const maxYear = new Date().getFullYear()
+    if (incomeYear < MIN_INCOME_YEAR || incomeYear > maxYear) {
+      throw new BadRequestException(
+        `incomeYear must be between ${MIN_INCOME_YEAR} and ${maxYear}`,
+      )
+    }
     try {
       return await this.withholdingTaxService.getJobCounts(incomeYear)
     } catch (error) {

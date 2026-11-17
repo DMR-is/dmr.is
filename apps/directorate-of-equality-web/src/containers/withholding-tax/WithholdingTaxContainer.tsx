@@ -30,17 +30,17 @@ import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
 
 import { useMutation } from '@tanstack/react-query'
-import { type ColumnDef } from '@tanstack/react-table'
+import { type ColumnDef, type SortingState } from '@tanstack/react-table'
 
 const t = withholdingTaxText
 
 const PAGE_SIZE = 50
 
-const lastYear = new Date().getFullYear() - 1
-const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) => {
-  const year = lastYear - i
-  return { label: String(year), value: year }
-})
+const yearOptions = (lastYear: number) =>
+  Array.from({ length: 5 }, (_, i) => {
+    const year = lastYear - i
+    return { label: String(year), value: year }
+  })
 
 const isatLabel = (c: WithholdingTaxJobCountDto) =>
   [c.isatCode, c.isatText].filter(Boolean).join(' ')
@@ -81,6 +81,25 @@ const optionsOf = (
     .sort((a, b) => a.label.localeCompare(b.label, 'is'))
 }
 
+type SortKey = 'name' | 'nationalId' | 'city' | 'jobCountBand'
+
+/**
+ * Sorts the whole filtered list, so a sorted column is the year's order and
+ * not just the page's: `Table` runs controlled and only reports the state.
+ */
+const sortCompanies = (
+  companies: WithholdingTaxJobCountDto[],
+  sorting: SortingState,
+): WithholdingTaxJobCountDto[] => {
+  const [sort] = sorting
+  if (!sort) return companies
+  const key = sort.id as SortKey
+  const dir = sort.desc ? -1 : 1
+  return [...companies].sort(
+    (a, b) => dir * (a[key] ?? '').localeCompare(b[key] ?? '', 'is'),
+  )
+}
+
 const matches = (selected: string[], value: string | null | undefined) =>
   selected.length === 0 || (value != null && selected.includes(value))
 
@@ -92,11 +111,16 @@ const matches = (selected: string[], value: string | null | undefined) =>
 export const WithholdingTaxContainer = () => {
   const trpc = useTRPC()
   const { isMobile } = useIsMobile()
+  // Per render, not module load: a server that runs past 1 January must
+  // offer the new year.
+  const lastYear = new Date().getFullYear() - 1
+  const years = useMemo(() => yearOptions(lastYear), [lastYear])
   const [year, setYear] = useState(lastYear)
   // Set by the fetch button, so changing the select alone does not call
   // Skatturinn: every call downloads the whole 25+ list for the year.
   const [requestedYear, setRequestedYear] = useState<number | null>(null)
   const [page, setPage] = useState(1)
+  const [sorting, setSorting] = useState<SortingState>([])
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState<WithholdingTaxFilters>(
     EMPTY_WITHHOLDING_TAX_FILTERS,
@@ -136,7 +160,9 @@ export const WithholdingTaxContainer = () => {
 
   const companies = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const qDigits = q.replace(/\D/g, '')
+    // Only a query of digits and separators is a kennitala: "66°Norður" must
+    // not match every kennitala containing 66.
+    const qDigits = /^[\d\s-]+$/.test(q) ? q.replace(/\D/g, '') : ''
     return allCompanies.filter(
       (c) =>
         (!q ||
@@ -150,7 +176,15 @@ export const WithholdingTaxContainer = () => {
   }, [allCompanies, query, filters])
 
   const totalPages = Math.max(1, Math.ceil(companies.length / PAGE_SIZE))
-  const pageRows = companies.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const sortedCompanies = useMemo(
+    () => sortCompanies(companies, sorting),
+    [companies, sorting],
+  )
+  // Memoised: `Table` collapses expanded rows whenever `data` changes identity.
+  const pageRows = useMemo(
+    () => sortedCompanies.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [sortedCompanies, page],
+  )
 
   const onQueryChange = (val: string) => {
     setQuery(val)
@@ -158,6 +192,10 @@ export const WithholdingTaxContainer = () => {
   }
   const onFiltersChange = (key: keyof WithholdingTaxFilters, val: string[]) => {
     setFilters((prev) => ({ ...prev, [key]: val }))
+    setPage(1)
+  }
+  const onSortingChange = (next: SortingState) => {
+    setSorting(next)
     setPage(1)
   }
   const onReset = () => {
@@ -182,8 +220,8 @@ export const WithholdingTaxContainer = () => {
         name="withholding-tax-income-year"
         size="xs"
         label={t.incomeYearLabel}
-        options={YEAR_OPTIONS}
-        value={YEAR_OPTIONS.find((o) => o.value === year) ?? null}
+        options={years}
+        value={years.find((o) => o.value === year) ?? null}
         onChange={(opt) => {
           if (opt) setYear(opt.value)
         }}
@@ -265,6 +303,8 @@ export const WithholdingTaxContainer = () => {
                     getRowExpanded={(row) => (
                       <WithholdingTaxExpandedRow row={row} />
                     )}
+                    sorting={sorting}
+                    onSortingChange={onSortingChange}
                     noDataMessage={requestedYear === null ? t.idle : t.noData}
                     paging={{
                       page,

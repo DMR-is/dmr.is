@@ -10,15 +10,22 @@ import { z } from 'zod'
 export const tokenResponseSchema = z.object({
   access_token: z.string().min(1),
   token_type: z.string().optional(),
-  /** Seconds. The PDF's example is 25200 (7 hours). */
-  expires_in: z.coerce.number().positive().optional(),
+  /**
+   * Seconds. The PDF's example is 25200 (7 hours). `null` or `""` means "not
+   * given" — coerced, they would be 0 and fail the whole token parse.
+   */
+  expires_in: z.preprocess(
+    (v) => (v === null || v === '' ? undefined : v),
+    z.coerce.number().positive().optional(),
+  ),
 })
 
 export const JOB_COUNT_BANDS = ['25-49', '50+'] as const
 export type JobCountBand = (typeof JOB_COUNT_BANDS)[number]
 
 export const jobCountRowSchema = z.object({
-  incomeYear: z.coerce.number().int(),
+  // Not `z.coerce` alone: it would read `null` as year 0.
+  incomeYear: z.preprocess((v) => v ?? undefined, z.coerce.number().int()),
   companyId: z.string().regex(/^\d{10}$/),
   companyName: z.string().nullish(),
   legalAddress: z.string().nullish(),
