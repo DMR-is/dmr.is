@@ -7,6 +7,11 @@ export type NavPath = {
    * entry here is all that is needed to protect a new admin route.
    */
   adminOnly: boolean
+  /**
+   * Left out of the nav, reachable only by URL. Not access control: `adminOnly`
+   * still decides who may open the page.
+   */
+  hidden?: boolean
 }
 
 export const NAV_PATHS = {
@@ -38,11 +43,13 @@ export const NAV_PATHS = {
     adminOnly: true,
   },
   // Temporary: trying Skatturinn's job-count feed before anything consumes it.
-  // ADMIN-only in the API too.
+  // ADMIN-only in the API too, and kept out of the nav so it is not
+  // discoverable — open it by URL.
   skatturinn: {
     title: 'Skatturinn',
     href: '/skatturinn',
     adminOnly: true,
+    hidden: true,
   },
 } satisfies Record<string, NavPath>
 

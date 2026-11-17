@@ -11,7 +11,7 @@ import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { NAV_PATHS } from '../../lib/constants'
+import { NAV_PATHS, type NavPath } from '../../lib/constants'
 import { headerText } from '../../lib/text'
 import * as styles from './ControlPanel.css'
 
@@ -22,7 +22,7 @@ export const ControlPanel = () => {
   const isAdmin = session?.user?.role === 'ADMIN'
 
   const navPaths = Object.values(NAV_PATHS).filter(
-    (path) => isAdmin || !path.adminOnly,
+    (path: NavPath) => !path.hidden && (isAdmin || !path.adminOnly),
   )
 
   useEffect(() => {
