@@ -113,6 +113,13 @@
         "cwd": "apps/directorate-of-equality-api"
       }
     },
+    "withholding-tax-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node --project tsconfig.app.json -O '{\"module\":\"commonjs\"}' scripts/withholding-tax-check.ts",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
     "generate-test-workbooks": {
       "executor": "nx:run-commands",
       "options": {

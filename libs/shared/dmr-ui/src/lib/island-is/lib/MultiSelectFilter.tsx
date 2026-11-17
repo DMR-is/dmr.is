@@ -35,6 +35,7 @@ type Props = {
   options: MultiSelectOption[]
   selected: string[]
   isLoading?: boolean
+  isDisabled?: boolean
   /** Enable the in-control search box (default true). */
   isSearchable?: boolean
   /** Renders the summary pill text; defaults to `${n} valdir`. */
@@ -60,6 +61,7 @@ export const MultiSelectFilter = ({
   options,
   selected,
   isLoading,
+  isDisabled,
   isSearchable = true,
   countLabel,
   onChange,
@@ -108,6 +110,7 @@ export const MultiSelectFilter = ({
         hideSelectedOptions={false}
         backspaceRemovesValue={false}
         isLoading={isLoading}
+        isDisabled={isDisabled}
         options={displayedOptions}
         value={value}
         placeholder={placeholder}

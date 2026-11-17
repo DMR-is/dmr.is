@@ -17,6 +17,7 @@ import { ReportPdfApiModule } from '../report-pdf/report-pdf.api.module'
 import { ReportStatisticsApiModule } from '../report-statistics/report-statistics.api.module'
 import { ReportWorkflowApiModule } from '../report-workflow/report-workflow.api.module'
 import { UserApiModule } from '../user/user.api.module'
+import { WithholdingTaxApiModule } from '../withholding-tax/withholding-tax.api.module'
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { UserApiModule } from '../user/user.api.module'
     ReportWorkflowApiModule,
     ReportStatisticsApiModule,
     ReportPdfApiModule,
+    WithholdingTaxApiModule,
   ],
 })
 export class DoeWebSwaggerModule {}

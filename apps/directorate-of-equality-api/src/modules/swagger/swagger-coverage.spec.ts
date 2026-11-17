@@ -179,6 +179,11 @@ const ADMIN_ONLY_HANDLERS: readonly string[] = [
   // other reason to do.
   'UserController.lookupNationalRegistry',
   'UserController.updateUser',
+  // An integration check against Skatturinn: the job-count read returns the
+  // whole 25+ register for a year from an external source, which is not a
+  // reviewer action, and the credential check is a system setting.
+  'WithholdingTaxController.check',
+  'WithholdingTaxController.getJobCounts',
 ]
 
 /**

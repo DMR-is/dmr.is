@@ -14,6 +14,7 @@
       "libs/clients/national-registry",
       "libs/clients/onesystems",
       "libs/clients/rsk-client",
+      "libs/clients/withholding-tax",
       "libs/directorate-of-equality/modules",
       "libs/directorate-of-equality/shared",
       "libs/legal-gazette/dto",

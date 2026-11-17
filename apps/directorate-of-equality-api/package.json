@@ -6,6 +6,7 @@
     "@dmr.is/apm": "*",
     "@dmr.is/clients-national-registry": "*",
     "@dmr.is/clients-rsk-client": "*",
+    "@dmr.is/clients-withholding-tax": "*",
     "@dmr.is/constants": "*",
     "@dmr.is/db": "*",
     "@dmr.is/decorators": "*",

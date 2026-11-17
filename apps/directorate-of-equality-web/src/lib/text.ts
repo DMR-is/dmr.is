@@ -1843,3 +1843,52 @@ export const noticeIssuesText = {
     unknown: 'Óþekkt',
   },
 }
+
+export const withholdingTaxText = {
+  heroTitle: 'Skatturinn',
+  heroDescription:
+    'Prófun á vefþjónustu Skattsins um meðalfjölda starfsmanna. Sýnir fyrirtæki með 25–49 eða 50+ starfsmenn á völdu tekjuári. Engu er breytt í fyrirtækjaskránni.',
+  heroImageAlt: 'Mynd af skjölum',
+  incomeYearLabel: 'Tekjuár',
+  fetch: 'Sækja',
+  check: 'Prófa tengingu',
+  checkOk: 'Tenging við Skattinn tókst',
+  checkFailed: (reason: string | null | undefined) =>
+    reason
+      ? `Tenging við Skattinn tókst ekki: ${reason}`
+      : 'Tenging við Skattinn tókst ekki',
+  fetchError: 'Ekki tókst að sækja gögn frá Skattinum',
+  idle: 'Veldu tekjuár og smelltu á Sækja.',
+  absentNote:
+    'Fyrirtæki sem vantar á listann eru með færri en 25 starfsmenn eða óþekkt hjá Skattinum.',
+  skippedHeading: 'Línur sem stóðust ekki staðfestingu',
+  skippedRow: (index: number) => `Lína ${index}`,
+  noData: 'Engin fyrirtæki',
+  resultsText: (incomeYear: number, total: number) =>
+    `af ${total} fyrirtækjum á tekjuárinu ${incomeYear}`,
+  resultsIdle: 'fyrirtæki',
+  filter: {
+    heading: 'Sía',
+    queryPlaceholder: 'Leita eftir nafni eða kennitölu',
+    noResults: 'Engar niðurstöður',
+    band: 'Starfsmenn',
+    isat: 'ÍSAT',
+    isatPlaceholder: 'Veldu atvinnugrein',
+    city: 'Staður',
+    cityPlaceholder: 'Veldu stað',
+    postcode: 'Póstnúmer',
+    postcodePlaceholder: 'Veldu póstnúmer',
+  },
+  columns: {
+    nationalId: 'Kennitala',
+    name: 'Nafn',
+    address: 'Lögheimili',
+    postcode: 'Póstnúmer',
+    city: 'Staður',
+    cityId: 'Staðarnúmer',
+    isatCode: 'ÍSAT-númer',
+    isatText: 'ÍSAT-heiti',
+    band: 'Starfsmenn',
+    incomeYear: 'Tekjuár',
+  },
+}
