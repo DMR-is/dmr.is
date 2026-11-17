@@ -4,7 +4,11 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { CompanyResourceGuard } from '../company-resource/company-resource.guard'
 import { PartnerClientResourceGuard } from '../partner-client-resource/partner-client-resource.guard'
-import { ISLAND_IS_APPLICATION_SCOPE, PARTNER_WEB_SCOPE } from './token-surface'
+import {
+  ISLAND_IS_APPLICATION_SCOPE,
+  ISLAND_IS_SALARY_APPLICATION_SCOPE,
+  MY_PAGES_SCOPE,
+} from './token-surface'
 
 /**
  * For the applicant controller specs: proves a controller's routes sit behind
@@ -19,6 +23,12 @@ import { ISLAND_IS_APPLICATION_SCOPE, PARTNER_WEB_SCOPE } from './token-surface'
 const GUARDS_METADATA = '__guards__'
 
 const NATIONAL_ID = '5501234567'
+
+/**
+ * partner-web's scope, retired when My Pages took over self-service. Held here
+ * as a literal because the guards no longer name it: every route must refuse it.
+ */
+export const RETIRED_PARTNER_WEB_SCOPE = '@jafnretti.is/doe-partner-web'
 
 const silentLogger = {
   debug: () => undefined,
@@ -68,11 +78,20 @@ const buildGuard = (expected: IdentityGuard) =>
         { getAllAndOverride: () => false } as never,
       )
 
-const contextFor = (user: Record<string, unknown>) =>
+/**
+ * The route's real handler and class go on the context, because the guard
+ * reads the route's declared surface (`@CompanyReadTokenSurface()`,
+ * `@SelfServiceTokenSurface()` or neither) from them.
+ */
+const contextFor = (
+  controller: Type<unknown>,
+  method: string,
+  user: Record<string, unknown>,
+) =>
   ({
     switchToHttp: () => ({ getRequest: () => ({ user }) }),
-    getHandler: () => undefined,
-    getClass: () => undefined,
+    getHandler: () => (controller.prototype as Record<string, unknown>)[method],
+    getClass: () => controller,
   }) as never
 
 /** Throws unless `method` runs `TokenJwtAuthGuard` first and then `expected`. */
@@ -91,42 +110,55 @@ export const assertIdentityGuarded = (
 }
 
 /**
- * Throws unless the identity guard admits every scope in `accepts`, and
- * refuses with 403 a token for an unrelated client, an id_token (no scope) and
- * every scope in `refuses`.
+ * Throws unless `method`'s identity guard admits every scope in `accepts`, and
+ * refuses with 403 a token for an unrelated client, an id_token (no scope),
+ * partner-web's retired scope and every scope in `refuses`.
  */
 export const assertTokenSurface = async (
+  controller: Type<unknown>,
+  method: string,
   expected: IdentityGuard,
   { accepts, refuses = [] }: { accepts: string[]; refuses?: string[] },
 ): Promise<void> => {
   const guard = buildGuard(expected)
+  const route = `${controller.name}.${method}`
 
   for (const scope of accepts) {
     const admitted = await guard.canActivate(
-      contextFor({ nationalId: NATIONAL_ID, scope: [scope] }),
+      contextFor(controller, method, {
+        nationalId: NATIONAL_ID,
+        scope: [scope],
+      }),
     )
     if (admitted !== true) {
-      throw new Error(`${expected.name} refused its own scope ${scope}`)
+      throw new Error(`${route} refused its own scope ${scope}`)
     }
   }
 
   const foreign: Array<Record<string, unknown>> = [
     { nationalId: NATIONAL_ID, scope: ['@island.is/documents'] },
     { nationalId: NATIONAL_ID, aud: 'doe-web-client' },
+    { nationalId: NATIONAL_ID, scope: [RETIRED_PARTNER_WEB_SCOPE] },
     ...refuses.map((scope) => ({ nationalId: NATIONAL_ID, scope: [scope] })),
   ]
 
   for (const user of foreign) {
-    const refused = await guard.canActivate(contextFor(user)).then(
-      () => false,
-      (error) => error instanceof ForbiddenException,
-    )
+    const refused = await guard
+      .canActivate(contextFor(controller, method, user))
+      .then(
+        () => false,
+        (error) => error instanceof ForbiddenException,
+      )
     if (!refused) {
       throw new Error(
-        `${expected.name} did not refuse ${JSON.stringify(user.scope ?? user.aud)} with 403`,
+        `${route} did not refuse ${JSON.stringify(user.scope ?? user.aud)} with 403`,
       )
     }
   }
 }
 
-export { ISLAND_IS_APPLICATION_SCOPE, PARTNER_WEB_SCOPE }
+export {
+  ISLAND_IS_APPLICATION_SCOPE,
+  ISLAND_IS_SALARY_APPLICATION_SCOPE,
+  MY_PAGES_SCOPE,
+}

@@ -19,6 +19,7 @@ import {
 } from '@dmr.is/doe-modules/report-comment'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { CompanyReadTokenSurface } from '../../core/decorators/company-read-token-surface.decorator'
 import { CurrentReportResourceContext } from '../../core/decorators/current-report-resource-context.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
@@ -38,6 +39,7 @@ export class ReportCommentController {
   ) {}
 
   @Get()
+  @CompanyReadTokenSurface()
   @DoeResponse({
     operationId: 'getReportComments',
     type: [ReportCommentDto],

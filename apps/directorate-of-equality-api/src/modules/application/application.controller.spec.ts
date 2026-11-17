@@ -8,7 +8,8 @@ import {
   assertIdentityGuarded,
   assertTokenSurface,
   ISLAND_IS_APPLICATION_SCOPE,
-  PARTNER_WEB_SCOPE,
+  ISLAND_IS_SALARY_APPLICATION_SCOPE,
+  MY_PAGES_SCOPE,
 } from '../../core/guards/token-surface/token-surface.testing'
 import { ApplicationController } from './application.controller'
 
@@ -44,32 +45,80 @@ const partnerClientTable = (
 })
 
 describe('ApplicationController', () => {
-  // Both channels My Pages and partner-web use reach these routes.
   describe('token surface (#1568)', () => {
-    const methods = [
+    // My Pages lists and opens reports but never changes them: these read
+    // routes admit it beside the application system.
+    const reads = [
       'getCompany',
       'getReports',
+      'getActiveEqualityReport',
       'getReport',
+      'getEqualityContentPdf',
+      'getReportOutliers',
       'getReportComments',
     ]
 
-    it.each(methods)('%s runs behind the identity guard', (method) => {
-      expect(() =>
-        assertIdentityGuarded(
-          ApplicationController,
-          method,
-          CompanyResourceGuard,
-        ),
-      ).not.toThrow()
-    })
+    // A sample of the write routes, which stay with the application system,
+    // plus the one GET that does too: the attachment list reaches drafts.
+    const writes = [
+      'submitComment',
+      'editEqualityContent',
+      'withdrawReport',
+      'listEqualityAttachments',
+    ]
 
-    it('that guard admits its own surface and refuses any other token', async () => {
-      await expect(
-        assertTokenSurface(CompanyResourceGuard, {
-          accepts: [ISLAND_IS_APPLICATION_SCOPE, PARTNER_WEB_SCOPE],
-        }),
-      ).resolves.toBeUndefined()
-    })
+    it.each([...reads, ...writes])(
+      '%s runs behind the identity guard',
+      (method) => {
+        expect(() =>
+          assertIdentityGuarded(
+            ApplicationController,
+            method,
+            CompanyResourceGuard,
+          ),
+        ).not.toThrow()
+      },
+    )
+
+    it.each(reads)(
+      '%s admits the application system and My Pages, and refuses any other token',
+      async (method) => {
+        await expect(
+          assertTokenSurface(
+            ApplicationController,
+            method,
+            CompanyResourceGuard,
+            {
+              accepts: [
+                ISLAND_IS_APPLICATION_SCOPE,
+                ISLAND_IS_SALARY_APPLICATION_SCOPE,
+                MY_PAGES_SCOPE,
+              ],
+            },
+          ),
+        ).resolves.toBeUndefined()
+      },
+    )
+
+    it.each(writes)(
+      '%s admits the application system and refuses My Pages',
+      async (method) => {
+        await expect(
+          assertTokenSurface(
+            ApplicationController,
+            method,
+            CompanyResourceGuard,
+            {
+              accepts: [
+                ISLAND_IS_APPLICATION_SCOPE,
+                ISLAND_IS_SALARY_APPLICATION_SCOPE,
+              ],
+              refuses: [MY_PAGES_SCOPE],
+            },
+          ),
+        ).resolves.toBeUndefined()
+      },
+    )
   })
 
   describe('getCompany — isServiceProvider', () => {
@@ -91,9 +140,9 @@ describe('ApplicationController', () => {
       try {
         await guard.canActivate({
           switchToHttp: () => ({
-            // A partner-web token: since #1568 these routes take no other.
+            // A My Pages token: the provider routes take no other.
             getRequest: () => ({
-              user: { nationalId, scope: [PARTNER_WEB_SCOPE] },
+              user: { nationalId, scope: [MY_PAGES_SCOPE] },
             }),
           }),
         } as never)

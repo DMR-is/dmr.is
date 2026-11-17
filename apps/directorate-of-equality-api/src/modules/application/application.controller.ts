@@ -60,6 +60,7 @@ import { PagingQuery } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AutoProvisionCompany } from '../../core/decorators/auto-provision-company.decorator'
+import { CompanyReadTokenSurface } from '../../core/decorators/company-read-token-surface.decorator'
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
@@ -90,6 +91,7 @@ export class ApplicationController {
   ) {}
 
   @Get('company')
+  @CompanyReadTokenSurface()
   @DoeResponse({
     operationId: 'getApplicationCompany',
     description:
@@ -110,6 +112,7 @@ export class ApplicationController {
   }
 
   @Get('reports')
+  @CompanyReadTokenSurface()
   @DoeResponse({
     operationId: 'getApplicationReports',
     description:
@@ -208,6 +211,7 @@ export class ApplicationController {
   }
 
   @Get('reports/equality/active')
+  @CompanyReadTokenSurface()
   @DoeResponse({
     operationId: 'getApplicationActiveEqualityReport',
     include404: true,
@@ -294,6 +298,7 @@ export class ApplicationController {
   }
 
   @Get('reports/:providerId')
+  @CompanyReadTokenSurface()
   @ApiParam({
     name: 'providerId',
     type: String,
@@ -323,6 +328,7 @@ export class ApplicationController {
    * they would otherwise have no way to look at.
    */
   @Get('reports/:providerId/equality-content/pdf')
+  @CompanyReadTokenSurface()
   @ApiParam({
     name: 'providerId',
     type: String,
@@ -352,6 +358,7 @@ export class ApplicationController {
   }
 
   @Get('reports/:providerId/outliers')
+  @CompanyReadTokenSurface()
   @ApiParam({
     name: 'providerId',
     type: String,
@@ -374,6 +381,7 @@ export class ApplicationController {
   }
 
   @Get('reports/:providerId/comments')
+  @CompanyReadTokenSurface()
   @ApiParam({
     name: 'providerId',
     type: String,
@@ -526,6 +534,9 @@ export class ApplicationController {
     )
   }
 
+  // Not a My Pages read, though a GET: the lookup also reaches the company's
+  // DRAFT, and it resolves island.is-filed reports only, not the `partner:` /
+  // `system:` handles `GET /application/reports` hands out.
   @Get('reports/:providerId/equality-attachments')
   @ApiParam({
     name: 'providerId',

@@ -3,13 +3,15 @@ import {
   assertIdentityGuarded,
   assertTokenSurface,
   ISLAND_IS_APPLICATION_SCOPE,
-  PARTNER_WEB_SCOPE,
+  ISLAND_IS_SALARY_APPLICATION_SCOPE,
+  MY_PAGES_SCOPE,
 } from '../../core/guards/token-surface/token-surface.testing'
 import { ApplicationApiKeyController } from './application-api-key.controller'
 
 /**
- * Company API keys are self-service on both channels: My Pages on island.is
- * and partner-web both reach these routes, so both scopes are admitted.
+ * Company API keys are self-service: My Pages on island.is is the only caller,
+ * so its scope is the only one admitted. An application-system token is
+ * refused, because minting a key is not something a filing should do.
  */
 describe('ApplicationApiKeyController', () => {
   describe('token surface (#1568)', () => {
@@ -25,12 +27,24 @@ describe('ApplicationApiKeyController', () => {
       ).not.toThrow()
     })
 
-    it('that guard admits its own surface and refuses any other token', async () => {
-      await expect(
-        assertTokenSurface(CompanyResourceGuard, {
-          accepts: [ISLAND_IS_APPLICATION_SCOPE, PARTNER_WEB_SCOPE],
-        }),
-      ).resolves.toBeUndefined()
-    })
+    it.each(methods)(
+      '%s admits My Pages only and refuses any other token',
+      async (method) => {
+        await expect(
+          assertTokenSurface(
+            ApplicationApiKeyController,
+            method,
+            CompanyResourceGuard,
+            {
+              accepts: [MY_PAGES_SCOPE],
+              refuses: [
+                ISLAND_IS_APPLICATION_SCOPE,
+                ISLAND_IS_SALARY_APPLICATION_SCOPE,
+              ],
+            },
+          ),
+        ).resolves.toBeUndefined()
+      },
+    )
   })
 })
