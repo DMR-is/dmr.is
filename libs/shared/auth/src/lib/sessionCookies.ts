@@ -10,7 +10,7 @@ import type { CookiesOptions } from 'next-auth'
  * own `NEXTAUTH_SECRET`) and reads as a logout. The same holds for any two apps
  * ever served from one hostname.
  *
- * An app opts in by passing a short prefix, e.g. `doe-partner-web`, to all three
+ * An app opts in by passing a short prefix, e.g. `lg-web`, to all three
  * places that name the session cookie — they must agree, or the middleware
  * refreshes a cookie NextAuth never reads:
  *

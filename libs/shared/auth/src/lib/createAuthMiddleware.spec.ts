@@ -34,10 +34,10 @@ describe('createAuthMiddleware', () => {
   })
 
   it('tells withAuth the session cookie of an app on its own prefix', () => {
-    createAuthMiddleware({ ...base, cookiePrefix: 'doe-partner-web' })
+    createAuthMiddleware({ ...base, cookiePrefix: 'lg-web' })
 
     expect(optionsPassed().cookies).toEqual({
-      sessionToken: { name: 'doe-partner-web.session-token' },
+      sessionToken: { name: 'lg-web.session-token' },
     })
   })
 

@@ -102,9 +102,7 @@ describe('sessionCookies', () => {
 
     it('leaves another app’s session alone', () => {
       expect(isAppAuthCookie('next-auth.session-token', 'doe-web')).toBe(false)
-      expect(isAppAuthCookie('doe-partner-web.session-token', 'doe-web')).toBe(
-        false,
-      )
+      expect(isAppAuthCookie('oj-web.session-token', 'doe-web')).toBe(false)
       // A longer prefix that merely starts the same way is not this app's.
       expect(isAppAuthCookie('doe-web-x.session-token', 'doe-web')).toBe(false)
     })
