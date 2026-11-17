@@ -16,6 +16,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Table } from '@dmr.is/ui/components/Tables/Table/Table'
 
+import { WithholdingTaxExpandedRow } from '../../components/withholding-tax/WithholdingTaxExpandedRow'
 import {
   EMPTY_WITHHOLDING_TAX_FILTERS,
   type FilterOption,
@@ -44,6 +45,7 @@ const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) => {
 const isatLabel = (c: WithholdingTaxJobCountDto) =>
   [c.isatCode, c.isatText].filter(Boolean).join(' ')
 
+// A few columns only; every value is in the expanded row.
 const columns: ColumnDef<WithholdingTaxJobCountDto>[] = [
   {
     accessorKey: 'name',
@@ -56,26 +58,9 @@ const columns: ColumnDef<WithholdingTaxJobCountDto>[] = [
     cell: ({ row }) => formatNationalId(row.original.nationalId),
   },
   {
-    accessorKey: 'legalAddress',
-    header: t.columns.address,
-    enableSorting: false,
-    cell: ({ row }) => row.original.legalAddress ?? '',
-  },
-  {
-    accessorKey: 'postcode',
-    header: t.columns.postcode,
-    cell: ({ row }) => row.original.postcode ?? '',
-  },
-  {
     accessorKey: 'city',
     header: t.columns.city,
     cell: ({ row }) => row.original.city ?? '',
-  },
-  {
-    accessorKey: 'isatCode',
-    header: t.columns.isat,
-    enableSorting: false,
-    cell: ({ row }) => isatLabel(row.original),
   },
   { accessorKey: 'jobCountBand', header: t.columns.band },
 ]
@@ -277,6 +262,9 @@ export const WithholdingTaxContainer = () => {
                     columns={columns}
                     data={pageRows}
                     loading={isFetching}
+                    getRowExpanded={(row) => (
+                      <WithholdingTaxExpandedRow row={row} />
+                    )}
                     noDataMessage={requestedYear === null ? t.idle : t.noData}
                     paging={{
                       page,

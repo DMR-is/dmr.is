@@ -1847,7 +1847,7 @@ export const noticeIssuesText = {
 export const withholdingTaxText = {
   heroTitle: 'Skatturinn',
   heroDescription:
-    'Prófun á vefþjónustu Skattsins um meðalfjölda ársverka. Sýnir fyrirtæki með 25–49 eða 50+ ársverk á völdu tekjuári. Engu er breytt í fyrirtækjaskránni.',
+    'Prófun á vefþjónustu Skattsins um meðalfjölda starfsmanna. Sýnir fyrirtæki með 25–49 eða 50+ starfsmenn á völdu tekjuári. Engu er breytt í fyrirtækjaskránni.',
   heroImageAlt: 'Mynd af skjölum',
   incomeYearLabel: 'Tekjuár',
   fetch: 'Sækja',
@@ -1860,7 +1860,7 @@ export const withholdingTaxText = {
   fetchError: 'Ekki tókst að sækja gögn frá Skattinum',
   idle: 'Veldu tekjuár og smelltu á Sækja.',
   absentNote:
-    'Fyrirtæki sem vantar á listann eru með færri en 25 ársverk eða óþekkt hjá Skattinum.',
+    'Fyrirtæki sem vantar á listann eru með færri en 25 starfsmenn eða óþekkt hjá Skattinum.',
   skippedHeading: 'Línur sem stóðust ekki staðfestingu',
   skippedRow: (index: number) => `Lína ${index}`,
   noData: 'Engin fyrirtæki',
@@ -1871,7 +1871,7 @@ export const withholdingTaxText = {
     heading: 'Sía',
     queryPlaceholder: 'Leita eftir nafni eða kennitölu',
     noResults: 'Engar niðurstöður',
-    band: 'Ársverk',
+    band: 'Starfsmenn',
     isat: 'ÍSAT',
     isatPlaceholder: 'Veldu atvinnugrein',
     city: 'Staður',
@@ -1885,7 +1885,10 @@ export const withholdingTaxText = {
     address: 'Lögheimili',
     postcode: 'Póstnúmer',
     city: 'Staður',
-    isat: 'ÍSAT',
-    band: 'Ársverk',
+    cityId: 'Staðarnúmer',
+    isatCode: 'ÍSAT-númer',
+    isatText: 'ÍSAT-heiti',
+    band: 'Starfsmenn',
+    incomeYear: 'Tekjuár',
   },
 }
