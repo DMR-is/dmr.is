@@ -109,6 +109,19 @@ describe('WithholdingTaxService', () => {
     })
   })
 
+  it('unwraps rows Skatturinn returns as { result: [...] }', async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(json({ result: [ROW] }))
+    const service = new WithholdingTaxService(logger())
+
+    const result = await service.getJobCounts(2025)
+
+    expect(result.companies).toHaveLength(1)
+    expect(result.companies[0].nationalId).toBe('1234567890')
+    expect(result.skipped).toEqual([])
+  })
+
   it('reuses the token across calls', async () => {
     fetchMock
       .mockResolvedValueOnce(tokenResponse())

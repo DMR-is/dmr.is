@@ -74,6 +74,13 @@ export class WithholdingTaxService implements IWithholdingTaxService {
     await this.tokenCache.refreshNow(() => this.login(config))
   }
 
+  /**
+   * Not cached: every call downloads the year's whole 25+ list from Skatturinn
+   * (~20 s). The data changes at most yearly, so once something real consumes
+   * it, cache it per income year. doe has no Redis/CacheModule, so either an
+   * in-memory per-year cache here (single-flight like the token cache; one copy
+   * per instance, lost on restart) or set up a shared cache first.
+   */
   async getJobCounts(
     incomeYear: number,
   ): Promise<WithholdingTaxJobCountResult> {
@@ -134,7 +141,13 @@ export class WithholdingTaxService implements IWithholdingTaxService {
       )
     }
 
-    const body = await this.readJson(sent, { ...base, attempt })
+    const raw = await this.readJson(sent, { ...base, attempt })
+    // The live API wraps the rows as `{ result: [...] }`; the PDF shows a bare
+    // array. Accept both.
+    const body =
+      raw !== null && typeof raw === 'object' && 'result' in raw
+        ? (raw as { result: unknown }).result
+        : raw
     if (!Array.isArray(body)) {
       throw this.fail(
         'INVALID_RESPONSE',
@@ -142,7 +155,8 @@ export class WithholdingTaxService implements IWithholdingTaxService {
         {
           ...base,
           status: sent.response.status,
-          bodyShape: shapeOf(body),
+          bodyShape: shapeOf(raw),
+          resultShape: body === raw ? undefined : shapeOf(body),
         },
       )
     }
