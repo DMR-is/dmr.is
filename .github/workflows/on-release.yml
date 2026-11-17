@@ -28,11 +28,11 @@ jobs:
             legal-gazette-application-web,
             legal-gazette-public-web,
             directorate-of-equality-api,
-            # directorate-of-equality-partner-api and -partner-web are dev-only
-            # for now: prod is held back (deploy_doe_partner: false in the infra
-            # repo's DMR-Jafnrettisstofa/config/prod.yml, no prod unit dirs).
-            # Re-add both here, to update-terragrunt-jafnrettisstofa and to
-            # wait-jafnrettisstofa's SERVICES, in the PR that enables them in prod.
+            # directorate-of-equality-partner-api is dev-only for now: prod is
+            # held back (deploy_doe_partner: false in the infra repo's
+            # DMR-Jafnrettisstofa/config/prod.yml, no prod unit dirs). Add it
+            # here, to update-terragrunt-jafnrettisstofa and to
+            # wait-jafnrettisstofa's SERVICES, in the PR that enables it in prod.
             directorate-of-equality-web,
           ]
     steps:
@@ -93,7 +93,7 @@ jobs:
         with:
           AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
           CLUSTER: ${{ env.ENV }}-dmr-jafnrettisstofa
-          # The partner api and web are dev-only for now; see the version-tag matrix.
+          # The partner api is dev-only for now; see the version-tag matrix.
           SERVICES: directorate-of-equality-api directorate-of-equality-web
           VERSION_TAG: ${{ github.ref_name }}
 

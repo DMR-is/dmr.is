@@ -105,8 +105,7 @@ jobs:
             {"name":"legal-gazette-public-web",          "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"directorate-of-equality-api",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"},
             {"name":"directorate-of-equality-web",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"},
-            {"name":"directorate-of-equality-partner-api", "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"},
-            {"name":"directorate-of-equality-partner-web", "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"}
+            {"name":"directorate-of-equality-partner-api", "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"}
           ]'
 
           mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1
