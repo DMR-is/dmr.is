@@ -1,4 +1,7 @@
-import { JOB_COUNT_BANDS, type JobCountBand } from '@dmr.is/clients-withholding-tax'
+import {
+  JOB_COUNT_BANDS,
+  type JobCountBand,
+} from '@dmr.is/clients-withholding-tax'
 import {
   ApiArray,
   ApiBoolean,
