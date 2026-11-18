@@ -756,13 +756,21 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     if (caseLookup.applicationId) {
       try {
+        const categories = ResultWrapper.unwrap(
+          await this.utilityService.categoriesLookup(ids, transaction),
+        )
+
         ResultWrapper.unwrap(
           await this.applicationService.updateApplication(
             caseLookup.applicationId,
             {
               answers: {
                 advert: {
-                  categories: ids,
+                  categories: categories.map(({ id, title, slug }) => ({
+                    id,
+                    title,
+                    slug,
+                  })),
                 },
               },
             },

@@ -26,21 +26,31 @@ const KNOWN_CATEGORIES = ['cat-a', 'cat-b']
 const setup = async () => {
   const ownTransaction = { commit: jest.fn(), rollback: jest.fn() }
 
-  const caseModel = { update: jest.fn().mockResolvedValue([1]) }
+  const caseModel = {
+    update: jest.fn().mockResolvedValue([1]),
+    findByPk: jest.fn(),
+  }
   const caseCategoriesModel = {
     destroy: jest.fn().mockResolvedValue(0),
     bulkCreate: jest.fn().mockResolvedValue([]),
+    findAll: jest.fn(),
   }
   const utilityService = {
-    categoriesLookup: jest
-      .fn()
-      .mockImplementation(async (ids: string[]) =>
-        ResultWrapper.ok(
-          ids
-            .filter((id) => KNOWN_CATEGORIES.includes(id))
-            .map((id) => ({ id })),
-        ),
+    categoriesLookup: jest.fn().mockImplementation(async (ids: string[]) =>
+      ResultWrapper.ok(
+        ids
+          .filter((id) => KNOWN_CATEGORIES.includes(id))
+          .map((id) => ({
+            id,
+            title: `Title ${id}`,
+            slug: `slug-${id}`,
+            createdAt: new Date(),
+          })),
       ),
+    ),
+    categoryLookup: jest
+      .fn()
+      .mockImplementation(async (id: string) => ResultWrapper.ok({ id })),
   }
   const applicationService = { updateApplication: jest.fn() }
   const sequelize = {
@@ -77,6 +87,7 @@ const setup = async () => {
   return {
     service: app.get(CaseUpdateService),
     ownTransaction,
+    caseModel,
     caseCategoriesModel,
     utilityService,
     applicationService,
@@ -189,5 +200,41 @@ describe('CaseUpdateService.updateCase categories', () => {
     expect(utilityService.categoriesLookup).not.toHaveBeenCalled()
     expect(caseCategoriesModel.destroy).not.toHaveBeenCalled()
     expect(caseCategoriesModel.bulkCreate).not.toHaveBeenCalled()
+  })
+})
+
+describe('CaseUpdateService.updateCaseCategories write-back', () => {
+  it('writes the categories back to the application as entities, not ids', async () => {
+    // island.is validates answers against the template, which stores
+    // categories as { id, title, slug }; a list of bare ids is rejected.
+    const { service, caseModel, caseCategoriesModel, applicationService } =
+      await setup()
+    caseModel.findByPk.mockResolvedValue({
+      id: CASE_ID,
+      applicationId: 'application-1',
+    })
+    caseCategoriesModel.findAll
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        { caseId: CASE_ID, categoryId: 'cat-a' },
+        { caseId: CASE_ID, categoryId: 'cat-b' },
+      ])
+    applicationService.updateApplication.mockResolvedValue(ResultWrapper.ok())
+
+    await service.updateCaseCategories(CASE_ID, { categoryIds: ['cat-b'] })
+
+    expect(applicationService.updateApplication).toHaveBeenCalledWith(
+      'application-1',
+      {
+        answers: {
+          advert: {
+            categories: [
+              { id: 'cat-a', title: 'Title cat-a', slug: 'slug-cat-a' },
+              { id: 'cat-b', title: 'Title cat-b', slug: 'slug-cat-b' },
+            ],
+          },
+        },
+      },
+    )
   })
 })
