@@ -502,7 +502,11 @@ export class ApplicationService implements IApplicationService {
       advertTypeId: application.answers.advert?.type?.id,
       requestedPublicationDate: application.answers.advert?.requestedDate,
       message: application.answers.advert?.message,
-      categoryIds: application.answers.advert?.categories?.map((c) => c.id),
+      // The template stores categories as entities, but the admin toggle's
+      // write-back sends plain ids, so accept both.
+      categoryIds: application.answers.advert?.categories?.map((c) =>
+        typeof c === 'string' ? c : c.id,
+      ),
       advertHtml: application.answers.advert.html,
       ...(isRegulation
         ? {

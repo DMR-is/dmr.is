@@ -244,9 +244,17 @@ export class CaseUpdateService implements ICaseUpdateService {
   ): Promise<void> {
     const uniqueIds = [...new Set(categoryIds)]
 
-    for (const categoryId of uniqueIds) {
-      ResultWrapper.unwrap(
-        await this.utilityService.categoryLookup(categoryId, transaction),
+    // A 404 here would reach postApplication's catch, which reads any 404 as
+    // "no case yet" and creates a new case, so report unknown ids as a 400.
+    const found = ResultWrapper.unwrap(
+      await this.utilityService.categoriesLookup(uniqueIds, transaction),
+    )
+    const foundIds = new Set(found.map((category) => category.id))
+    const unknownIds = uniqueIds.filter((id) => !foundIds.has(id))
+
+    if (unknownIds.length) {
+      throw new BadRequestException(
+        `Unknown categories: ${unknownIds.join(', ')}`,
       )
     }
 
