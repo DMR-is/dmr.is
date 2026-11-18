@@ -224,16 +224,44 @@ export class CaseUpdateService implements ICaseUpdateService {
     // TODO: ApplicationCommunicationChannels?
 
     if (body.categoryIds?.length) {
-      this.updateCaseCategories(
-        caseId,
-        {
-          categoryIds: body.categoryIds,
-        },
-        transaction,
-      )
+      await this.replaceCaseCategories(caseId, body.categoryIds, transaction)
     }
 
     return ResultWrapper.ok()
+  }
+
+  /**
+   * Makes the case's categories exactly `categoryIds`. Unlike
+   * `updateCaseCategories`, which toggles each id it is given (the admin UI
+   * sends one click at a time), this sets the whole list, so applying an
+   * unchanged list is a no-op. It does not write back to the application,
+   * because the list comes from the application.
+   */
+  private async replaceCaseCategories(
+    caseId: string,
+    categoryIds: string[],
+    transaction?: Transaction,
+  ): Promise<void> {
+    const uniqueIds = [...new Set(categoryIds)]
+
+    for (const categoryId of uniqueIds) {
+      ResultWrapper.unwrap(
+        await this.utilityService.categoryLookup(categoryId, transaction),
+      )
+    }
+
+    await this.caseCategoriesModel.destroy({
+      where: {
+        caseId,
+        categoryId: { [Op.notIn]: uniqueIds },
+      },
+      transaction,
+    })
+
+    await this.caseCategoriesModel.bulkCreate(
+      uniqueIds.map((categoryId) => ({ caseId, categoryId })),
+      { ignoreDuplicates: true, transaction },
+    )
   }
 
   @LogAndHandle()
