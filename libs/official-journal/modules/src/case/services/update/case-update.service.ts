@@ -244,18 +244,28 @@ export class CaseUpdateService implements ICaseUpdateService {
   ): Promise<void> {
     const uniqueIds = [...new Set(categoryIds)]
 
-    // A 404 here would reach postApplication's catch, which reads any 404 as
-    // "no case yet" and creates a new case, so report unknown ids as a 400.
     const found = ResultWrapper.unwrap(
       await this.utilityService.categoriesLookup(uniqueIds, transaction),
     )
     const foundIds = new Set(found.map((category) => category.id))
     const unknownIds = uniqueIds.filter((id) => !foundIds.has(id))
 
+    // A category merged or deleted after the applicant picked it leaves a
+    // stale id in the application. A merge already moved the case's rows to
+    // the target category, and the stale list does not name it, so applying
+    // the list would drop it. Keep the case's categories instead of failing
+    // the re-post.
     if (unknownIds.length) {
-      throw new BadRequestException(
-        `Unknown categories: ${unknownIds.join(', ')}`,
+      this.logger.warn(
+        `Application lists unknown categories; keeping case<${caseId}> categories`,
+        {
+          context: LOGGING_CONTEXT,
+          category: LOGGING_CATEGORY,
+          caseId,
+          unknownIds,
+        },
       )
+      return
     }
 
     await this.caseCategoriesModel.destroy({

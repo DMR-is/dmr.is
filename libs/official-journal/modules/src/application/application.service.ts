@@ -5,7 +5,6 @@ import { Sequelize } from 'sequelize-typescript'
 import {
   BadRequestException,
   forwardRef,
-  HttpException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -346,83 +345,75 @@ export class ApplicationService implements IApplicationService {
     applicationId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    try {
-      const caseLookup = (
-        await this.utilityService.caseLookupByApplicationId(
-          applicationId,
-          transaction,
-        )
-      ).unwrap()
+    const caseResult = await this.utilityService.caseLookupByApplicationId(
+      applicationId,
+      transaction,
+    )
 
-      const { application } = ResultWrapper.unwrap(
-        await this.getApplication(applicationId),
-      )
-
-      const updateBody = await this.buildUpdateCaseBody(
-        caseLookup.id,
+    // Only a missing case means "not posted yet". Any other failure below
+    // throws, so the transaction rolls back instead of committing half a
+    // re-post, and a 404 from a later step cannot create a duplicate case.
+    if (!caseResult.result.ok && caseResult.result.error.code === 404) {
+      return await this.caseService.createCaseByApplication({
         applicationId,
-        application,
-      )
-
-      ResultWrapper.unwrap(
-        await this.caseService.updateCase(
-          caseLookup.id,
-          updateBody,
-          transaction,
-        ),
-      )
-
-      await this.additionalPartiesService.syncCaseAdditionalParties(
-        caseLookup.id,
-        application,
-        transaction,
-        caseLookup.advertId,
-      )
-
-      const commStatus = ResultWrapper.unwrap(
-        await this.utilityService.caseCommunicationStatusLookup(
-          CaseCommunicationStatus.HasAnswers,
-          transaction,
-        ),
-      )
-
-      ResultWrapper.unwrap(
-        await this.caseService.updateCaseCommunicationStatus(
-          caseLookup.id,
-          {
-            statusId: commStatus.id,
-          },
-          transaction,
-        ),
-      )
-
-      ResultWrapper.unwrap(
-        await this.commentService.createSubmitComment(
-          caseLookup.id,
-          {
-            institutionCreatorId: caseLookup.involvedParty.id,
-          },
-          transaction,
-        ),
-      )
-
-      ResultWrapper.unwrap(
-        await this.caseService.createCaseHistory(caseLookup.id, transaction),
-      )
-
-      return ResultWrapper.ok()
-    } catch (error) {
-      if (error instanceof HttpException && error.getStatus() === 404) {
-        return await this.caseService.createCaseByApplication({
-          applicationId,
-        })
-      }
+      })
     }
 
-    return ResultWrapper.err({
-      code: 500,
-      message: 'Could not post application',
-    })
+    const caseLookup = caseResult.unwrap()
+
+    const { application } = ResultWrapper.unwrap(
+      await this.getApplication(applicationId),
+    )
+
+    const updateBody = await this.buildUpdateCaseBody(
+      caseLookup.id,
+      applicationId,
+      application,
+    )
+
+    ResultWrapper.unwrap(
+      await this.caseService.updateCase(caseLookup.id, updateBody, transaction),
+    )
+
+    await this.additionalPartiesService.syncCaseAdditionalParties(
+      caseLookup.id,
+      application,
+      transaction,
+      caseLookup.advertId,
+    )
+
+    const commStatus = ResultWrapper.unwrap(
+      await this.utilityService.caseCommunicationStatusLookup(
+        CaseCommunicationStatus.HasAnswers,
+        transaction,
+      ),
+    )
+
+    ResultWrapper.unwrap(
+      await this.caseService.updateCaseCommunicationStatus(
+        caseLookup.id,
+        {
+          statusId: commStatus.id,
+        },
+        transaction,
+      ),
+    )
+
+    ResultWrapper.unwrap(
+      await this.commentService.createSubmitComment(
+        caseLookup.id,
+        {
+          institutionCreatorId: caseLookup.involvedParty.id,
+        },
+        transaction,
+      ),
+    )
+
+    ResultWrapper.unwrap(
+      await this.caseService.createCaseHistory(caseLookup.id, transaction),
+    )
+
+    return ResultWrapper.ok()
   }
 
   private async getMainTextAttachment(
@@ -502,8 +493,9 @@ export class ApplicationService implements IApplicationService {
       advertTypeId: application.answers.advert?.type?.id,
       requestedPublicationDate: application.answers.advert?.requestedDate,
       message: application.answers.advert?.message,
-      // The template stores categories as entities, but the admin toggle's
-      // write-back sends plain ids, so accept both.
+      // The template stores categories as entities. Bare ids are accepted
+      // defensively: island.is validation should have rejected the old
+      // write-back that sent them, but stored answers are not re-validated.
       categoryIds: application.answers.advert?.categories?.map((c) =>
         typeof c === 'string' ? c : c.id,
       ),

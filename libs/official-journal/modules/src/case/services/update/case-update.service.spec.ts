@@ -57,18 +57,17 @@ const setup = async () => {
     transaction: jest.fn().mockResolvedValue(ownTransaction),
   }
 
+  const logger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }
+
   const app = await Test.createTestingModule({
     providers: [
       CaseUpdateService,
-      {
-        provide: LOGGER_PROVIDER,
-        useValue: {
-          debug: jest.fn(),
-          info: jest.fn(),
-          warn: jest.fn(),
-          error: jest.fn(),
-        },
-      },
+      { provide: LOGGER_PROVIDER, useValue: logger },
       { provide: IUtilityService, useValue: utilityService },
       { provide: IApplicationService, useValue: applicationService },
       { provide: ICommentServiceV2, useValue: {} },
@@ -86,6 +85,7 @@ const setup = async () => {
 
   return {
     service: app.get(CaseUpdateService),
+    logger,
     ownTransaction,
     caseModel,
     caseCategoriesModel,
@@ -132,42 +132,25 @@ describe('CaseUpdateService.updateCase categories', () => {
     ).toBeLessThan(ownTransaction.commit.mock.invocationCallOrder[0])
   })
 
-  it('rolls back its own transaction when a category does not exist', async () => {
-    const { service, ownTransaction, caseCategoriesModel } = await setup()
-
-    const result = await service.updateCase(CASE_ID, {
-      ...BASE_BODY,
-      categoryIds: ['cat-a', 'unknown'],
-    })
-
-    expect(result.result.ok).toBe(false)
-    expect(caseCategoriesModel.destroy).not.toHaveBeenCalled()
-    expect(caseCategoriesModel.bulkCreate).not.toHaveBeenCalled()
-    expect(ownTransaction.rollback).toHaveBeenCalled()
-    expect(ownTransaction.commit).not.toHaveBeenCalled()
-  })
-
-  it('reports an unknown category as a 400 in the caller transaction, never a 404', async () => {
-    // postApplication reads any 404 from updateCase as "no case yet" and
-    // creates a new case, so this must not be a 404.
-    const { service, ownTransaction, caseCategoriesModel } = await setup()
-    const transaction = outerTransaction()
+  it('keeps the case categories and succeeds when the application lists an unknown category', async () => {
+    // A merged or deleted category leaves a stale id in the application.
+    // Failing would block every re-post; applying the rest would drop the
+    // merge target the case already has.
+    const { service, logger, caseCategoriesModel } = await setup()
 
     const result = await service.updateCase(
       CASE_ID,
-      { ...BASE_BODY, categoryIds: ['unknown'] },
-      transaction,
+      { ...BASE_BODY, categoryIds: ['cat-a', 'merged-away'] },
+      outerTransaction(),
     )
 
-    expect(result.result).toEqual({
-      ok: false,
-      error: expect.objectContaining({ code: 400 }),
-    })
+    expect(result.result.ok).toBe(true)
     expect(caseCategoriesModel.destroy).not.toHaveBeenCalled()
     expect(caseCategoriesModel.bulkCreate).not.toHaveBeenCalled()
-    // The caller owns the transaction; updateCase must not open its own.
-    expect(ownTransaction.commit).not.toHaveBeenCalled()
-    expect(ownTransaction.rollback).not.toHaveBeenCalled()
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('unknown categories'),
+      expect.objectContaining({ unknownIds: ['merged-away'] }),
+    )
   })
 
   it('writes inside the caller transaction when one is passed', async () => {
