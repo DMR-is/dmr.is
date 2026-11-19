@@ -13,6 +13,7 @@ import {
   generatePaging,
   getLimitAndOffset,
 } from '@dmr.is/utils-server/serverUtils'
+import { sanitizeLegalGazetteHtml } from '@dmr.is/utils-server/sanitizeLegalGazetteHtml'
 
 import { LegalGazetteEvents } from '../../core/constants'
 import { AdvertDetailedDto } from '../../models/advert.dto'
@@ -650,7 +651,7 @@ export class AdvertService implements IAdvertService {
         categoryId: body.categoryId,
         caseId: body.caseId,
         title: body.title,
-        content: body.content,
+        content: sanitizeLegalGazetteHtml(body.content),
         createdBy: body.createdBy,
         caption: body.caption,
         createdByNationalId: body.createdByNationalId,
@@ -877,7 +878,7 @@ export class AdvertService implements IAdvertService {
       typeId: body.typeId,
       categoryId,
       title: body.title,
-      content: body.content,
+      content: sanitizeLegalGazetteHtml(body.content),
       additionalText: body.additionalText,
       divisionMeetingDate: body.divisionMeetingDate,
       divisionMeetingLocation: body.divisionMeetingLocation,

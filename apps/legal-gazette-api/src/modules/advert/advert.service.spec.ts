@@ -392,6 +392,29 @@ describe('updateAdvert', () => {
         }),
       )
     })
+    it('should sanitize the content before storing it', async () => {
+      const updateDto = createMockUpdateDto({
+        content:
+          '<p><span style="color: red">Texti</span><img src=x onerror="alert(1)"></p>',
+      })
+
+      await service.updateAdvert('advert-123', updateDto)
+
+      const advert = await advertModel.findByPkOrThrow('advert-123')
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ content: '<p>Texti</p>' }),
+      )
+    })
+    it('should leave the content alone when the update omits it', async () => {
+      const updateDto = createMockUpdateDto({ content: undefined })
+
+      await service.updateAdvert('advert-123', updateDto)
+
+      const advert = await advertModel.findByPkOrThrow('advert-123')
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ content: undefined }),
+      )
+    })
   })
   // A type is assignable to several categories, so a type change must not
   // silently re-derive the category and discard the editor's choice.
