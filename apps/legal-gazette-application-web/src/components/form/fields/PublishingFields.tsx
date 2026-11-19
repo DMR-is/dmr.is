@@ -75,12 +75,17 @@ export const PublishingFields = ({ applicationType }: Props) => {
   const addDate = useCallback(() => {
     if (currentDates.length > 2) return
 
-    const lastDate =
+    // A follow-up publication defaults to a week after the previous one, the
+    // norm the editors expect. The first date keeps a two-day lead time.
+    const newDate =
       currentDates.length > 0
-        ? fromCalendarDateIso(currentDates[currentDates.length - 1])
-        : new Date()
-
-    const newDate = getNextValidPublishingDate(addDays(lastDate, 2))
+        ? getNextValidPublishingDate(
+            addDays(
+              fromCalendarDateIso(currentDates[currentDates.length - 1]),
+              7,
+            ),
+          )
+        : getNextValidPublishingDate(addDays(new Date(), 2))
     const newDates = [...currentDates, toCalendarDateIso(newDate)]
     updatePublishingDates(newDates)
   }, [currentDates, updatePublishingDates])
