@@ -208,9 +208,9 @@ const OPTIONS: sanitizeHtml.IOptions = {
 }
 
 /**
- * Cleans a Legal Gazette advert body before it is stored. Null and undefined
- * pass through unchanged, so an update that leaves the body out does not
- * clear it.
+ * Cleans the body of a newly submitted Legal Gazette advert before it is
+ * stored. Existing adverts are not run through it: they change only through
+ * the editor. Null and undefined pass through unchanged.
  */
 export function sanitizeLegalGazetteHtml<T extends string | null | undefined>(
   html: T,

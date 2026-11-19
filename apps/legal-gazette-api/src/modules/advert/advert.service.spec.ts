@@ -392,27 +392,16 @@ describe('updateAdvert', () => {
         }),
       )
     })
-    it('should sanitize the content before storing it', async () => {
-      const updateDto = createMockUpdateDto({
-        content:
-          '<p><span style="color: red">Texti</span><img src=x onerror="alert(1)"></p>',
-      })
+    it('should store edited content as given, without sanitizing it', async () => {
+      // Only new submissions are sanitized; see createAdvert.
+      const content = '<p style="margin-left: 2em"><span>Texti</span></p>'
+      const updateDto = createMockUpdateDto({ content })
 
       await service.updateAdvert('advert-123', updateDto)
 
       const advert = await advertModel.findByPkOrThrow('advert-123')
       expect(advert.update).toHaveBeenCalledWith(
-        expect.objectContaining({ content: '<p>Texti</p>' }),
-      )
-    })
-    it('should leave the content alone when the update omits it', async () => {
-      const updateDto = createMockUpdateDto({ content: undefined })
-
-      await service.updateAdvert('advert-123', updateDto)
-
-      const advert = await advertModel.findByPkOrThrow('advert-123')
-      expect(advert.update).toHaveBeenCalledWith(
-        expect.objectContaining({ content: undefined }),
+        expect.objectContaining({ content }),
       )
     })
   })
@@ -560,6 +549,72 @@ describe('updateAdvert', () => {
 // ==========================================
 // reactivateAdvert - Reactivate rejected adverts
 // ==========================================
+describe('createAdvert', () => {
+  let service: AdvertService
+  let create: jest.Mock
+
+  beforeEach(async () => {
+    create = jest.fn().mockResolvedValue({
+      id: 'advert-123',
+      reload: jest.fn(),
+      fromModelToDetailed: jest.fn(),
+    })
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AdvertService,
+        { provide: LOGGER_PROVIDER, useValue: createMockLogger() },
+        { provide: ILGNationalRegistryService, useValue: {} },
+        { provide: ITypeCategoriesService, useValue: {} },
+        {
+          provide: getModelToken(AdvertModel),
+          useValue: { scope: jest.fn().mockReturnValue({ create }) },
+        },
+        { provide: getModelToken(UserModel), useValue: {} },
+        {
+          provide: getModelToken(AdvertPublicationModel),
+          useValue: { bulkCreate: jest.fn() },
+        },
+        { provide: getModelToken(ApplicationModel), useValue: {} },
+        { provide: getModelToken(CaseModel), useValue: {} },
+        { provide: EventEmitter2, useValue: { emitAsync: jest.fn() } },
+        { provide: Sequelize, useValue: {} },
+      ],
+    }).compile()
+    service = module.get<AdvertService>(AdvertService)
+  })
+
+  const createWith = (content?: string) =>
+    service.createAdvert({
+      typeId: 'type-123',
+      categoryId: 'category-123',
+      title: 'Test Advert',
+      content,
+      createdBy: 'Test User',
+      createdByNationalId: '1234567890',
+      scheduledAt: ['2026-12-01'],
+    } as unknown as Parameters<AdvertService['createAdvert']>[0])
+
+  it('should sanitize the content of a new submission', async () => {
+    await createWith(
+      '<p><span style="color: red">Texti</span><img src=x onerror="alert(1)"></p>',
+    )
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ content: '<p>Texti</p>' }),
+      expect.anything(),
+    )
+  })
+
+  it('should leave missing content missing', async () => {
+    await createWith(undefined)
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ content: undefined }),
+      expect.anything(),
+    )
+  })
+})
+
 describe('reactivateAdvert', () => {
   let service: AdvertService
   let advertModel: any

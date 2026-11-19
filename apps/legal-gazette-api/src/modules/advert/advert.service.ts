@@ -878,7 +878,9 @@ export class AdvertService implements IAdvertService {
       typeId: body.typeId,
       categoryId,
       title: body.title,
-      content: sanitizeLegalGazetteHtml(body.content),
+      // Not sanitized: only new submissions are cleaned (createAdvert). An
+      // existing advert changes only through the editor.
+      content: body.content,
       additionalText: body.additionalText,
       divisionMeetingDate: body.divisionMeetingDate,
       divisionMeetingLocation: body.divisionMeetingLocation,
