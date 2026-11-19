@@ -54,6 +54,8 @@ describe('ApplicationController', () => {
       'getActiveEqualityReport',
       'getReport',
       'getEqualityContentPdf',
+      'getReportPdf',
+      'getImprovementPlanPdf',
       'getReportOutliers',
       'getReportComments',
     ]
@@ -121,6 +123,70 @@ describe('ApplicationController', () => {
     )
   })
 
+  describe('generated report PDFs', () => {
+    const REPORT_ID = '00000000-0000-0000-0000-0000000000cc'
+    const PDF = Buffer.from('%PDF-1.7')
+
+    const build = (pdfService: Record<string, jest.Mock>) => {
+      const getSignedOffReportId = jest.fn().mockResolvedValue(REPORT_ID)
+      const controller = new ApplicationController(
+        { getSignedOffReportId } as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        pdfService as never,
+      )
+      return { controller, getSignedOffReportId }
+    }
+
+    it('renders the report the signed-off gate resolved, never the handle', async () => {
+      const generateReportPdf = jest
+        .fn()
+        .mockResolvedValue({ pdf: PDF, fileName: 'launagreining-x.pdf' })
+      const { controller, getSignedOffReportId } = build({ generateReportPdf })
+
+      const file = await controller.getReportPdf('partner:vendor-42', COMPANY)
+
+      expect(getSignedOffReportId).toHaveBeenCalledWith(
+        'partner:vendor-42',
+        COMPANY,
+      )
+      expect(generateReportPdf).toHaveBeenCalledWith(REPORT_ID)
+      expect(file.getHeaders().type).toBe('application/pdf')
+    })
+
+    it('does not render when the gate refuses', async () => {
+      const generateReportPdf = jest.fn()
+      const { controller, getSignedOffReportId } = build({ generateReportPdf })
+      getSignedOffReportId.mockRejectedValue(new NotFoundException())
+
+      await expect(controller.getReportPdf('app-1', COMPANY)).rejects.toThrow(
+        NotFoundException,
+      )
+      expect(generateReportPdf).not.toHaveBeenCalled()
+    })
+
+    it('serves the úrbótaáætlun for the signed-off report', async () => {
+      const generateImprovementPlanPdf = jest
+        .fn()
+        .mockResolvedValue({ pdf: PDF, fileName: 'urbotaaetlun-x.pdf' })
+      const { controller } = build({ generateImprovementPlanPdf })
+
+      await controller.getImprovementPlanPdf('app-1', COMPANY)
+
+      expect(generateImprovementPlanPdf).toHaveBeenCalledWith(REPORT_ID)
+    })
+
+    it('404s when the report has no úrbótaáætlun', async () => {
+      const generateImprovementPlanPdf = jest.fn().mockResolvedValue(null)
+      const { controller } = build({ generateImprovementPlanPdf })
+
+      await expect(
+        controller.getImprovementPlanPdf('app-1', COMPANY),
+      ).rejects.toThrow(NotFoundException)
+    })
+  })
+
   describe('getCompany — isServiceProvider', () => {
     const build = (service: ReturnType<typeof partnerClientTable>) => ({
       controller: new ApplicationController(
@@ -128,6 +194,7 @@ describe('ApplicationController', () => {
         {} as never,
         {} as never,
         service as never,
+        {} as never,
       ),
       guard: new PartnerClientResourceGuard(logger as never, service as never),
     })
@@ -210,6 +277,7 @@ describe('ApplicationController', () => {
       const listReports = jest.fn().mockResolvedValue({ reports: [] })
       const controller = new ApplicationController(
         { listReports } as never,
+        {} as never,
         {} as never,
         {} as never,
         {} as never,

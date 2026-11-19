@@ -1587,6 +1587,44 @@ describe('ApplicationService', () => {
         )
       })
     })
+
+    describe('getSignedOffReportId — the gate on the generated PDFs', () => {
+      const withStatus = (status: ReportStatusEnum) =>
+        makeReportRow({ ...partnerReport(), status })
+
+      it.each([ReportStatusEnum.APPROVED, ReportStatusEnum.SUPERSEDED])(
+        'resolves a %s report to its internal id',
+        async (status) => {
+          storeReport(withStatus(status))
+
+          await expect(
+            service.getSignedOffReportId('partner:vendor-42', COMPANY),
+          ).resolves.toBe(REPORT_ID)
+        },
+      )
+
+      it.each(
+        Object.values(ReportStatusEnum).filter(
+          (status) =>
+            status !== ReportStatusEnum.APPROVED &&
+            status !== ReportStatusEnum.SUPERSEDED,
+        ),
+      )('404s a %s report — nothing signed off to print', async (status) => {
+        storeReport(withStatus(status))
+
+        await expect(
+          service.getSignedOffReportId('partner:vendor-42', COMPANY),
+        ).rejects.toThrow(NotFoundException)
+      })
+
+      it("404s an approved report that is another company's", async () => {
+        storeReport(withStatus(ReportStatusEnum.APPROVED), 'someone-else')
+
+        await expect(
+          service.getSignedOffReportId('partner:vendor-42', COMPANY),
+        ).rejects.toThrow(NotFoundException)
+      })
+    })
   })
 
   describe('getReport', () => {
