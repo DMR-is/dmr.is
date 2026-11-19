@@ -9,11 +9,11 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared-dto'
+import { sanitizeLegalGazetteHtml } from '@dmr.is/utils-server/sanitizeLegalGazetteHtml'
 import {
   generatePaging,
   getLimitAndOffset,
 } from '@dmr.is/utils-server/serverUtils'
-import { sanitizeLegalGazetteHtml } from '@dmr.is/utils-server/sanitizeLegalGazetteHtml'
 
 import { LegalGazetteEvents } from '../../core/constants'
 import { AdvertDetailedDto } from '../../models/advert.dto'
