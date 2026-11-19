@@ -110,6 +110,22 @@ describe('sanitizeLegalGazetteHtml', () => {
       ).toBe('\n  <p>Eitt</p><p>\n  <b>&lt;b&gt;</b> og <i>Tvö</i>\n</p>')
     })
 
+    it('does not nest paragraphs when an inline element wraps a block', () => {
+      expect(
+        sanitizeLegalGazetteHtml('<div><span><p>A</p></span>B</div>'),
+      ).toBe('<p>A</p><p>B</p>')
+      expect(
+        sanitizeLegalGazetteHtml('<div><b><p>A</p><p>C</p></b>B</div>'),
+      ).toBe('<b><p>A</p><p>C</p></b><p>B</p>')
+      for (const input of [
+        '<div><span><p>A</p></span>B</div>',
+        '<div><b><p>A</p><p>C</p></b>B</div>',
+      ]) {
+        const once = sanitizeLegalGazetteHtml(input)
+        expect(sanitizeLegalGazetteHtml(once)).toBe(once)
+      }
+    })
+
     it('keeps alignment from a legacy align attribute', () => {
       expect(sanitizeLegalGazetteHtml('<p align="center">x</p>')).toBe(
         '<p style="text-align:center">x</p>',

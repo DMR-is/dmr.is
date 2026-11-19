@@ -35,6 +35,13 @@ const isBlock = (node: ChildNode): boolean =>
   isTag(node) && BLOCK_TAGS.has(node.name.toLowerCase())
 
 /**
+ * A block, or an inline element with a block inside it, such as Word's
+ * `<span><p>…</p></span>`. Wrapping either in a `<p>` would nest paragraphs.
+ */
+const holdsBlock = (node: ChildNode): boolean =>
+  isBlock(node) || (isTag(node) && !!findOne(isBlock, node.children))
+
+/**
  * Wraps each run of loose inline content among a div's children in a `<p>`,
  * so that unwrapping the div does not run that text into its neighbours:
  * `<div><p>A</p>100</div><div>200</div>` would otherwise become "100200".
@@ -55,7 +62,7 @@ const wrapInlineRuns = (div: Element): void => {
     run = []
   }
   for (const child of div.children) {
-    if (isBlock(child)) {
+    if (holdsBlock(child)) {
       flush()
       children.push(child)
     } else {
