@@ -174,16 +174,22 @@ describe('ApplicationController', () => {
       )
     })
 
-    it('does not render when the download gate sheds', async () => {
-      const generateImprovementPlanPdf = jest.fn()
-      const { controller, run } = build({ generateImprovementPlanPdf })
-      run.mockRejectedValue(new ServiceUnavailableException())
+    it.each([
+      ['getReportPdf', 'generateReportPdf'],
+      ['getImprovementPlanPdf', 'generateImprovementPlanPdf'],
+    ] as const)(
+      '%s does not render when the download gate sheds',
+      async (method, generator) => {
+        const generate = jest.fn()
+        const { controller, run } = build({ [generator]: generate })
+        run.mockRejectedValue(new ServiceUnavailableException())
 
-      await expect(
-        controller.getImprovementPlanPdf('app-1', COMPANY),
-      ).rejects.toThrow(ServiceUnavailableException)
-      expect(generateImprovementPlanPdf).not.toHaveBeenCalled()
-    })
+        await expect(controller[method]('app-1', COMPANY)).rejects.toThrow(
+          ServiceUnavailableException,
+        )
+        expect(generate).not.toHaveBeenCalled()
+      },
+    )
 
     it('renders the report the signed-off gate resolved, never the handle', async () => {
       const generateReportPdf = jest

@@ -2,8 +2,8 @@ import { Inject, Injectable, ServiceUnavailableException } from '@nestjs/common'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-// By relative path, as the parse-gate barrel asks: this is a separate gate with
-// its own budget, not a second copy of the parse gate.
+// By relative path: the parse-gate barrel does not publish `Semaphore`. This is
+// a deliberately separate gate with its own budget, not a second parse gate.
 import { Semaphore, SemaphoreQueueFullError } from '../parse-gate/semaphore'
 import { IReportPdfDownloadGate } from './report-pdf-download-gate.service.interface'
 
