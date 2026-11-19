@@ -9,6 +9,7 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared-dto'
+import { sanitizeLegalGazetteHtml } from '@dmr.is/utils-server/sanitizeLegalGazetteHtml'
 import {
   generatePaging,
   getLimitAndOffset,
@@ -650,7 +651,7 @@ export class AdvertService implements IAdvertService {
         categoryId: body.categoryId,
         caseId: body.caseId,
         title: body.title,
-        content: body.content,
+        content: sanitizeLegalGazetteHtml(body.content),
         createdBy: body.createdBy,
         caption: body.caption,
         createdByNationalId: body.createdByNationalId,
@@ -877,6 +878,8 @@ export class AdvertService implements IAdvertService {
       typeId: body.typeId,
       categoryId,
       title: body.title,
+      // Not sanitized: only new submissions are cleaned (createAdvert). An
+      // existing advert changes only through the editor.
       content: body.content,
       additionalText: body.additionalText,
       divisionMeetingDate: body.divisionMeetingDate,
