@@ -53,7 +53,10 @@ import {
   IReportExcelService,
   ParsedReportDto,
 } from '@dmr.is/doe-modules/report-excel'
-import { IReportPdfService } from '@dmr.is/doe-modules/report-pdf'
+import {
+  IReportPdfDownloadGate,
+  IReportPdfService,
+} from '@dmr.is/doe-modules/report-pdf'
 import {
   SalaryAnalysisRequestDto,
   SalaryAnalysisResponseDto,
@@ -72,6 +75,10 @@ const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 const DOCX_MIME =
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+/** The `providerId` every cross-channel read route takes. */
+const READ_HANDLE_DESCRIPTION =
+  'Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.'
 
 @Controller({
   path: 'application',
@@ -92,6 +99,8 @@ export class ApplicationController {
     private readonly partnerClientService: IPartnerClientService,
     @Inject(IReportPdfService)
     private readonly reportPdfService: IReportPdfService,
+    @Inject(IReportPdfDownloadGate)
+    private readonly downloadGate: IReportPdfDownloadGate,
   ) {}
 
   @Get('company')
@@ -306,8 +315,7 @@ export class ApplicationController {
   @ApiParam({
     name: 'providerId',
     type: String,
-    description:
-      'Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.',
+    description: READ_HANDLE_DESCRIPTION,
   })
   @DoeResponse({
     operationId: 'getApplicationReport',
@@ -336,8 +344,7 @@ export class ApplicationController {
   @ApiParam({
     name: 'providerId',
     type: String,
-    description:
-      'Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.',
+    description: READ_HANDLE_DESCRIPTION,
   })
   @DoeResponse({
     operationId: 'getApplicationEqualityContentPdf',
@@ -362,32 +369,39 @@ export class ApplicationController {
   }
 
   /**
-   * The report as Jafnréttisstofa approved it — the same document the approval
-   * notice attaches — so My Pages can offer it for download.
+   * The signed-off report as a PDF, so My Pages can offer it for download.
    *
    * Signed-off reports only (APPROVED or SUPERSEDED). The admin route renders a
    * report still IN_REVIEW on purpose, for the reviewer; to an applicant that
    * would read as an assessment that has not been made.
+   *
+   * Rendered from the report as it stands, not read back from the copy the
+   * approval notice attached. For an APPROVED report the two match. A
+   * SUPERSEDED report's validity was closed at supersession, so its "Gildir
+   * til" shows that date rather than the one first issued.
    */
   @Get('reports/:providerId/pdf')
   @CompanyReadTokenSurface()
+  @Header('Cache-Control', 'private, no-store')
   @ApiParam({
     name: 'providerId',
     type: String,
-    description:
-      'Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.',
+    description: READ_HANDLE_DESCRIPTION,
   })
   @DoeResponse({
     operationId: 'getApplicationReportPdf',
     include404: true,
     produces: 'application/pdf',
     successDescription:
-      'Generates the approved report as a PDF — "Jafnlaunaúttekt" for a ' +
-      'salary report, "Jafnréttisáætlun" for an equality report — the same ' +
-      'document the approval notice attaches. Only for reports in status ' +
-      '`APPROVED` or `SUPERSEDED`; 404 for any other status, as for a report ' +
-      'that is not the company’s. Takes any read handle from ' +
-      '`GET /application/reports`, whichever channel filed the report.',
+      'Generates the signed-off report as a PDF — "Jafnlaunaúttekt" for a ' +
+      'salary report, "Jafnréttisáætlun" for an equality report — from the ' +
+      'report as it stands. For an `APPROVED` report this matches the document ' +
+      'the approval notice attached. A `SUPERSEDED` report shows its validity ' +
+      'as closed at supersession. Only for reports in status `APPROVED` or ' +
+      '`SUPERSEDED`; 404 for any other status, as for a report that is not the ' +
+      'company’s. 503 when too many PDFs are being generated; retry shortly. ' +
+      'Takes any read handle from `GET /application/reports`, whichever ' +
+      'channel filed the report.',
   })
   async getReportPdf(
     @Param('providerId') providerId: string,
@@ -397,8 +411,9 @@ export class ApplicationController {
       providerId,
       company,
     )
-    const { pdf, fileName } =
-      await this.reportPdfService.generateReportPdf(reportId)
+    const { pdf, fileName } = await this.downloadGate.run(() =>
+      this.reportPdfService.generateReportPdf(reportId),
+    )
 
     return new StreamableFile(pdf, {
       type: 'application/pdf',
@@ -413,11 +428,11 @@ export class ApplicationController {
    */
   @Get('reports/:providerId/pdf/urbotaaetlun')
   @CompanyReadTokenSurface()
+  @Header('Cache-Control', 'private, no-store')
   @ApiParam({
     name: 'providerId',
     type: String,
-    description:
-      'Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.',
+    description: READ_HANDLE_DESCRIPTION,
   })
   @DoeResponse({
     operationId: 'getApplicationReportImprovementPlanPdf',
@@ -430,7 +445,7 @@ export class ApplicationController {
       'only — 400 for an equality report. 404 when the report has no outlier ' +
       'groups (a compliant company has no plan, and its report PDF states that ' +
       'as a finding), and for any other status, as for a report that is not ' +
-      'the company’s.',
+      'the company’s. 503 when too many PDFs are being generated; retry shortly.',
   })
   async getImprovementPlanPdf(
     @Param('providerId') providerId: string,
@@ -440,8 +455,9 @@ export class ApplicationController {
       providerId,
       company,
     )
-    const result =
-      await this.reportPdfService.generateImprovementPlanPdf(reportId)
+    const result = await this.downloadGate.run(() =>
+      this.reportPdfService.generateImprovementPlanPdf(reportId),
+    )
 
     // Null means no outlier groups — no plan exists, as opposed to a plan that
     // failed to render.
@@ -462,8 +478,7 @@ export class ApplicationController {
   @ApiParam({
     name: 'providerId',
     type: String,
-    description:
-      'Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.',
+    description: READ_HANDLE_DESCRIPTION,
   })
   @DoeResponse({
     operationId: 'getApplicationReportOutliers',
@@ -485,8 +500,7 @@ export class ApplicationController {
   @ApiParam({
     name: 'providerId',
     type: String,
-    description:
-      'Read handle from `GET /application/reports`: the bare island.is application UUID, `partner:<provider’s own id>` for a report a service provider filed, or `system:<id>` for one Jafnréttisstofa entered. URL-encode it as one segment. Resolved only among reports whose parent company is the authenticated company.',
+    description: READ_HANDLE_DESCRIPTION,
   })
   @DoeResponse({
     operationId: 'getApplicationReportComments',

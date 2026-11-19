@@ -235,8 +235,8 @@ const COMPANY_READ_HANDLERS: readonly string[] = [
   'ApplicationController.getImprovementPlanPdf',
   'ApplicationController.getReport',
   'ApplicationController.getReportComments',
-  'ApplicationController.getReportPdf',
   'ApplicationController.getReportOutliers',
+  'ApplicationController.getReportPdf',
   'ApplicationController.getReports',
   'ReportCommentController.getByReportId',
 ]

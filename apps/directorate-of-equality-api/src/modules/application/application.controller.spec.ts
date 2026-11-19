@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common'
+import { NotFoundException, ServiceUnavailableException } from '@nestjs/common'
 
 import type { CompanyDto } from '@dmr.is/doe-modules/company'
 
@@ -129,15 +129,61 @@ describe('ApplicationController', () => {
 
     const build = (pdfService: Record<string, jest.Mock>) => {
       const getSignedOffReportId = jest.fn().mockResolvedValue(REPORT_ID)
+      // Runs the render straight through, as a gate with free slots does.
+      const run = jest.fn(<T>(render: () => Promise<T>) => render())
       const controller = new ApplicationController(
         { getSignedOffReportId } as never,
         {} as never,
         {} as never,
         {} as never,
         pdfService as never,
+        { run } as never,
       )
-      return { controller, getSignedOffReportId }
+      return { controller, getSignedOffReportId, run }
     }
+
+    it.each(['getReportPdf', 'getImprovementPlanPdf'])(
+      '%s is never cached',
+      (method) => {
+        const headers = Reflect.getMetadata(
+          '__headers__',
+          ApplicationController.prototype[
+            method as keyof ApplicationController
+          ],
+        )
+        expect(headers).toContainEqual({
+          name: 'Cache-Control',
+          value: 'private, no-store',
+        })
+      },
+    )
+
+    it('renders inside the download gate, after authorization', async () => {
+      const generateReportPdf = jest
+        .fn()
+        .mockResolvedValue({ pdf: PDF, fileName: 'launagreining-x.pdf' })
+      const { controller, getSignedOffReportId, run } = build({
+        generateReportPdf,
+      })
+
+      await controller.getReportPdf('app-1', COMPANY)
+
+      expect(run).toHaveBeenCalledTimes(1)
+      expect(getSignedOffReportId.mock.invocationCallOrder[0]).toBeLessThan(
+        run.mock.invocationCallOrder[0],
+      )
+    })
+
+    it('does not render when the download gate sheds', async () => {
+      const generateImprovementPlanPdf = jest.fn()
+      const { controller, run } = build({ generateImprovementPlanPdf })
+      run.mockRejectedValue(new ServiceUnavailableException())
+
+      await expect(
+        controller.getImprovementPlanPdf('app-1', COMPANY),
+      ).rejects.toThrow(ServiceUnavailableException)
+      expect(generateImprovementPlanPdf).not.toHaveBeenCalled()
+    })
 
     it('renders the report the signed-off gate resolved, never the handle', async () => {
       const generateReportPdf = jest
@@ -172,9 +218,10 @@ describe('ApplicationController', () => {
         .mockResolvedValue({ pdf: PDF, fileName: 'urbotaaetlun-x.pdf' })
       const { controller } = build({ generateImprovementPlanPdf })
 
-      await controller.getImprovementPlanPdf('app-1', COMPANY)
+      const file = await controller.getImprovementPlanPdf('app-1', COMPANY)
 
       expect(generateImprovementPlanPdf).toHaveBeenCalledWith(REPORT_ID)
+      expect(file.getHeaders().type).toBe('application/pdf')
     })
 
     it('404s when the report has no úrbótaáætlun', async () => {
@@ -194,6 +241,7 @@ describe('ApplicationController', () => {
         {} as never,
         {} as never,
         service as never,
+        {} as never,
         {} as never,
       ),
       guard: new PartnerClientResourceGuard(logger as never, service as never),
@@ -277,6 +325,7 @@ describe('ApplicationController', () => {
       const listReports = jest.fn().mockResolvedValue({ reports: [] })
       const controller = new ApplicationController(
         { listReports } as never,
+        {} as never,
         {} as never,
         {} as never,
         {} as never,

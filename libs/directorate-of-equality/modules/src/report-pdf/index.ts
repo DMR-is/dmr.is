@@ -8,3 +8,5 @@
 
 export * from './report-pdf.core.module'
 export * from './report-pdf.service.interface'
+export * from './report-pdf-download-gate.core.module'
+export * from './report-pdf-download-gate.service.interface'
