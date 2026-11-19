@@ -36,6 +36,9 @@ const EDITOR_SAMPLES = [
   '<p style="text-align: justify;">Jafnað</p><p style="text-align: right;">Hægri</p>',
   '<ol><li><p>Fyrsta</p></li><li><p>Annað</p></li></ol><ul><li><p>Punktur</p></li></ul>',
   '<ol start="3" type="a"><li><p>c-liður</p></li></ol>',
+  '<ol><li><p>Fyrsta</p></li><li value="7"><p>Sjöunda</p></li></ol>',
+  '<table class="layout"><tbody><tr><td>Án ramma</td></tr></tbody></table>',
+  '<table class="layout layout--list"><tbody><tr><td>a)</td><td>Upptalning</td></tr></tbody></table>',
   '<table><tbody><tr><th>Nafn</th><th style="text-align: center;">Kennitala</th></tr><tr><td colspan="2">Jón</td></tr></tbody></table>',
   '<p><a target="_blank" rel="noopener noreferrer" href="https://island.is">island.is</a> og <a href="mailto:a@b.is">netfang</a></p>',
   '<p>Lína<br>önnur lína</p>',
@@ -94,6 +97,19 @@ describe('sanitizeLegalGazetteHtml', () => {
       ).toBe('<p>Eitt</p><p>Tvö</p>')
     })
 
+    it('gives loose text beside blocks in a <div> its own paragraph', () => {
+      expect(
+        sanitizeLegalGazetteHtml(
+          '<div><p>Fjárhæðir</p>100</div><div>200<p>Samtals</p></div>',
+        ),
+      ).toBe('<p>Fjárhæðir</p><p>100</p><p>200</p><p>Samtals</p>')
+      expect(
+        sanitizeLegalGazetteHtml(
+          '<div>\n  <p>Eitt</p>\n  <b>&lt;b&gt;</b> og <i>Tvö</i>\n</div>',
+        ),
+      ).toBe('\n  <p>Eitt</p><p>\n  <b>&lt;b&gt;</b> og <i>Tvö</i>\n</p>')
+    })
+
     it('keeps alignment from a legacy align attribute', () => {
       expect(sanitizeLegalGazetteHtml('<p align="center">x</p>')).toBe(
         '<p style="text-align:center">x</p>',
@@ -113,6 +129,22 @@ describe('sanitizeLegalGazetteHtml', () => {
         '<p style="text-align:center">x</p><td style="text-align:left">y</td>',
       )
     })
+  })
+
+  it('keeps a whole-number list item value and drops anything else', () => {
+    expect(
+      sanitizeLegalGazetteHtml(
+        '<ol><li value="7"><p>a</p></li><li value="x"><p>b</p></li></ol>',
+      ),
+    ).toBe('<ol><li value="7"><p>a</p></li><li><p>b</p></li></ol>')
+  })
+
+  it('keeps only the table-style classes from the editor menu', () => {
+    expect(
+      sanitizeLegalGazetteHtml(
+        '<table class="layout layout--list MsoTableGrid"><tr><td class="x">a</td></tr></table>',
+      ),
+    ).toBe('<table class="layout layout--list"><tr><td>a</td></tr></table>')
   })
 
   it('keeps escaped text escaped, inside a <div> too', () => {
