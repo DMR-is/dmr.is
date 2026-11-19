@@ -83,6 +83,17 @@ export interface IApplicationService {
     providerId: string,
     company: CompanyDto,
   ): Promise<EqualityContentPdf>
+  /**
+   * Resolves a read handle to the internal id of a report Jafnréttisstofa has
+   * signed off on — APPROVED, or SUPERSEDED (approved, then replaced by a newer
+   * approved report of the same type). The generated report and úrbótaáætlun
+   * PDFs are served for these only: before approval the assessment they state
+   * has not been made, and after it the groups they render are frozen.
+   *
+   * Same ownership rule as every other read here. A report that is the
+   * company's own but not signed off answers 404, as an unknown one does.
+   */
+  getSignedOffReportId(providerId: string, company: CompanyDto): Promise<string>
   getReportOutliers(
     providerId: string,
     company: CompanyDto,
