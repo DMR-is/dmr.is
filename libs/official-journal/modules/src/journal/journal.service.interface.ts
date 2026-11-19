@@ -123,8 +123,6 @@ export interface IJournalService {
     categoryIds: string[],
     transaction?: Transaction,
   ): Promise<ResultWrapper>
-  // TODO Testing logging process only, remove later
-  error(): void
 }
 
 // Token for DI, based on https://stackoverflow.com/a/70088972

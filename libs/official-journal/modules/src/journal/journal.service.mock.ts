@@ -342,11 +342,4 @@ export class MockJournalService implements IJournalService {
       }),
     )
   }
-
-  error(): void {
-    this.logger.warn('about to throw error from service', {
-      category: LOGGING_CATEGORY,
-    })
-    throw new Error('error from service')
-  }
 }

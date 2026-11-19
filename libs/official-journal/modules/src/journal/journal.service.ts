@@ -369,11 +369,6 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  error(): void {
-    throw new NotImplementedException()
-  }
-
-  @LogAndHandle()
   @Transactional()
   async insertMainCategory(
     model: CreateMainCategory,

@@ -224,16 +224,62 @@ export class CaseUpdateService implements ICaseUpdateService {
     // TODO: ApplicationCommunicationChannels?
 
     if (body.categoryIds?.length) {
-      this.updateCaseCategories(
-        caseId,
-        {
-          categoryIds: body.categoryIds,
-        },
-        transaction,
-      )
+      await this.replaceCaseCategories(caseId, body.categoryIds, transaction)
     }
 
     return ResultWrapper.ok()
+  }
+
+  /**
+   * Makes the case's categories exactly `categoryIds`. Unlike
+   * `updateCaseCategories`, which toggles each id it is given (the admin UI
+   * sends one click at a time), this sets the whole list, so applying an
+   * unchanged list is a no-op. It does not write back to the application,
+   * because the list comes from the application.
+   */
+  private async replaceCaseCategories(
+    caseId: string,
+    categoryIds: string[],
+    transaction?: Transaction,
+  ): Promise<void> {
+    const uniqueIds = [...new Set(categoryIds)]
+
+    const found = ResultWrapper.unwrap(
+      await this.utilityService.categoriesLookup(uniqueIds, transaction),
+    )
+    const foundIds = new Set(found.map((category) => category.id))
+    const unknownIds = uniqueIds.filter((id) => !foundIds.has(id))
+
+    // A category merged or deleted after the applicant picked it leaves a
+    // stale id in the application. A merge already moved the case's rows to
+    // the target category, and the stale list does not name it, so applying
+    // the list would drop it. Keep the case's categories instead of failing
+    // the re-post.
+    if (unknownIds.length) {
+      this.logger.warn(
+        `Application lists unknown categories; keeping case<${caseId}> categories`,
+        {
+          context: LOGGING_CONTEXT,
+          category: LOGGING_CATEGORY,
+          caseId,
+          unknownIds,
+        },
+      )
+      return
+    }
+
+    await this.caseCategoriesModel.destroy({
+      where: {
+        caseId,
+        categoryId: { [Op.notIn]: uniqueIds },
+      },
+      transaction,
+    })
+
+    await this.caseCategoriesModel.bulkCreate(
+      uniqueIds.map((categoryId) => ({ caseId, categoryId })),
+      { ignoreDuplicates: true, transaction },
+    )
   }
 
   @LogAndHandle()
@@ -720,13 +766,21 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     if (caseLookup.applicationId) {
       try {
+        const categories = ResultWrapper.unwrap(
+          await this.utilityService.categoriesLookup(ids, transaction),
+        )
+
         ResultWrapper.unwrap(
           await this.applicationService.updateApplication(
             caseLookup.applicationId,
             {
               answers: {
                 advert: {
-                  categories: ids,
+                  categories: categories.map(({ id, title, slug }) => ({
+                    id,
+                    title,
+                    slug,
+                  })),
                 },
               },
             },

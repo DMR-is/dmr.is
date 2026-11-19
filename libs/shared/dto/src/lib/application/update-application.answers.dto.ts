@@ -2,6 +2,7 @@ import { IsOptional } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { BaseEntity } from '../entity'
 import { ApplicationCommunicationChannel } from './application-advert'
 export class ApplicationAdvert {
   @ApiProperty({
@@ -44,11 +45,13 @@ export class ApplicationAdvert {
   @IsOptional()
   requestedDate?: string
 
+  // The application template stores categories as entities, and island.is
+  // validates answers against it, so a list of bare ids is rejected.
   @ApiProperty({
-    type: [String],
+    type: [BaseEntity],
   })
   @IsOptional()
-  categories?: string[]
+  categories?: BaseEntity[]
 
   @ApiProperty({
     type: String,
