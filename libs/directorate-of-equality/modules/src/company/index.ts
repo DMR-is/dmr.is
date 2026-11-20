@@ -58,4 +58,8 @@ export * from './models/legacy-report.model'
  * disagree about who owes what, which is exactly the bug this export exists to
  * prevent.
  */
-export { equalityRequiredSql, salaryRequiredSql } from './utils/report-status'
+export {
+  equalityRequiredSql,
+  owesSalaryReport,
+  salaryRequiredSql,
+} from './utils/report-status'
