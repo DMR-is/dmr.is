@@ -205,6 +205,38 @@ function rewriteRootTablesOnly(html: string): string {
 }
 
 // ---------- sanitize-html config ----------
+const allowStyleOn = new Set(['p', 'table', 'tr', 'td', 'th', 'ol', 'ul'])
+
+/**
+ * Keeps styles on the tags that may carry them and unquotes legacy style values.
+ * With `convertSubSerial`, an `advertSubSerial` row becomes a centred
+ * paragraph, which suits the editor and the diff but not showing the advert as
+ * stored.
+ */
+const styleTransform =
+  ({
+    convertSubSerial,
+  }: {
+    convertSubSerial: boolean
+  }): sanitizeHtml.Transformer =>
+  (tagName, attribs) => {
+    if (!allowStyleOn.has(tagName)) delete attribs.style
+
+    if (attribs.style) {
+      attribs.style = normalizeStyle(attribs.style)
+    }
+
+    if (convertSubSerial && /\badvertSubSerial\b/.test(attribs.class || '')) {
+      const { class: _drop, ...rest } = attribs
+      return {
+        tagName: 'p',
+        attribs: { ...rest, style: ensureTextAlignCenter(rest.style) },
+      }
+    }
+
+    return { tagName, attribs }
+  }
+
 const baseOptions: sanitizeHtml.IOptions = {
   allowedTags: [
     'div',
@@ -274,26 +306,7 @@ const baseOptions: sanitizeHtml.IOptions = {
     },
   },
   transformTags: {
-    '*': (tagName, attribs) => {
-      const cls = attribs.class || ''
-
-      const allowStyleOn = new Set(['p', 'table', 'tr', 'td', 'th', 'ol', 'ul'])
-      if (!allowStyleOn.has(tagName)) delete attribs.style
-
-      if (attribs.style) {
-        attribs.style = normalizeStyle(attribs.style)
-      }
-
-      if (/\badvertSubSerial\b/.test(cls)) {
-        const { class: _drop, ...rest } = attribs
-        return {
-          tagName: 'p',
-          attribs: { ...rest, style: ensureTextAlignCenter(rest.style) },
-        }
-      }
-
-      return { tagName, attribs }
-    },
+    '*': styleTransform({ convertSubSerial: true }),
     body: 'div',
     meta: '',
   },
@@ -389,6 +402,69 @@ const displayOptions: sanitizeHtml.IOptions = {
 
 export const sanitizeForDisplay = (html: string) => {
   return sanitizeHtml(html, displayOptions)
+}
+
+const tableLayoutAttributes = ['width', 'height', 'valign', 'align']
+
+/**
+ * Like `sanitizeForDisplay`, for an Official Journal advert as stored: the
+ * same limits on styles, links, `id`/`name` and `data:`, but its tables are
+ * kept as they are. Legacy adverts lay out in tables, so this keeps
+ * `<colgroup>`/`<col>`, the table layout attributes (`border`, `cellpadding`,
+ * `valign`, `width`, …) and the advert classes the display styles target
+ * (`advertText`, `advertType`, `advertSubSerial`). Unlike `simpleSanitize`, it
+ * leaves `advertSubSerial` rows in place rather than turning them into
+ * paragraphs.
+ */
+const advertDisplayOptions: sanitizeHtml.IOptions = {
+  ...displayOptions,
+  allowedTags: [
+    ...(baseOptions.allowedTags || []),
+    'colgroup',
+    'col',
+    'caption',
+  ],
+  allowedAttributes: {
+    ...displayOptions.allowedAttributes,
+    table: [
+      ...(displayOptions.allowedAttributes || {}).table,
+      'border',
+      'cellpadding',
+      'cellspacing',
+      'width',
+      'height',
+    ],
+    tr: [
+      ...(displayOptions.allowedAttributes || {}).tr,
+      ...tableLayoutAttributes,
+    ],
+    td: [
+      ...(displayOptions.allowedAttributes || {}).td,
+      ...tableLayoutAttributes,
+    ],
+    th: [
+      ...(displayOptions.allowedAttributes || {}).th,
+      ...tableLayoutAttributes,
+    ],
+    colgroup: ['span', 'width'],
+    col: ['span', 'width'],
+  },
+  allowedClasses: {
+    '*': [
+      ...((displayOptions.allowedClasses || {})['*'] as Array<string>),
+      'advertText',
+      'advertType',
+      'advertSubSerial',
+    ],
+  },
+  transformTags: {
+    ...displayOptions.transformTags,
+    '*': styleTransform({ convertSubSerial: false }),
+  },
+}
+
+export const sanitizeAdvertForDisplay = (html: string) => {
+  return sanitizeHtml(html, advertDisplayOptions)
 }
 
 export function cleanLegacyHtml(input: string): string {
