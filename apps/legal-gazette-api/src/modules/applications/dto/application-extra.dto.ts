@@ -1,7 +1,5 @@
 import { Type } from 'class-transformer'
 import {
-  ArrayMaxSize,
-  ArrayMinSize,
   IsDate,
   IsDefined,
   IsNumber,
@@ -10,7 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 
 import {
   ApiBoolean,
@@ -21,7 +19,6 @@ import {
   ApiOptionalNumber,
   ApiOptionalString,
   ApiString,
-  ApiUUId,
 } from '@dmr.is/decorators'
 import { Paging } from '@dmr.is/shared-dto'
 
@@ -96,34 +93,6 @@ export class CreateDivisionEndingDto {
 
   @ApiDto(CreateSignatureDto)
   signature!: CreateSignatureDto
-}
-
-export class IslandIsSubmitApplicationDto extends PickType(
-  CreateDivisionMeetingDto,
-  ['signature', 'additionalText'] as const,
-) {
-  @ApiUUId()
-  islandIsApplicationId!: string
-
-  @ApiUUId()
-  typeId!: string
-
-  @ApiUUId()
-  categoryId!: string
-
-  @ApiString()
-  caption!: string
-
-  @ApiHTML()
-  html!: string
-
-  @ApiProperty({ type: [String] })
-  @IsOptional()
-  @ArrayMinSize(1)
-  @ArrayMaxSize(3)
-  @Type(() => Date)
-  @IsDate({ each: true })
-  publishingDates!: Date[]
 }
 
 export class GetHTMLPreview {

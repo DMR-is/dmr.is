@@ -8,7 +8,6 @@ import {
 import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
 import {
   GetApplicationsDto,
-  IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../modules/applications/dto/application-extra.dto'
 
@@ -22,11 +21,6 @@ export interface IApplicationService {
     type: ApplicationTypeEnum,
     user: DMRUser,
   ): Promise<ApplicationDto>
-
-  submitIslandIsApplication(
-    body: IslandIsSubmitApplicationDto,
-    submittee: DMRUser,
-  ): Promise<void>
 
   submitApplication(applicationId: string, user: DMRUser): Promise<void>
 

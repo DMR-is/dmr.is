@@ -47,11 +47,6 @@ export enum ApplicationRequirementStatementEnum {
   CUSTOMLIQUIDATORURL = 'CUSTOM_LIQUIDATOR_URL',
   CUSTOMOTHER = 'CUSTOM_OTHER',
 }
-export enum IslandIsCommonApplicationEventsEnum {
-  APPROVE = 'APPROVE',
-  REJECT = 'REJECT',
-}
-
 export type ApplicationAnswers<
   T extends ApplicationTypeEnum = ApplicationTypeEnum,
 > = {
