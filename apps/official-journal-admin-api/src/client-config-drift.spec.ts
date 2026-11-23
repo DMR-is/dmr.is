@@ -20,6 +20,11 @@ import { buildSwaggerDocument } from './swagger-document'
  * generator consumes, and #1405 removed a separate snapshot copy for being
  * less faithful. Fix drift with `yarn nx run official-journal-web:update-schema`
  * against a running admin API.
+ *
+ * The web configs are inputs of this project's test target, so a cached pass
+ * is not replayed after a config changes. They are not implicit dependencies,
+ * though: a PR that edits only a web's clientConfig.json does not mark this API
+ * affected, and the gate first runs on the next PR that touches the API.
  */
 const REPO_ROOT = join(__dirname, '../../..')
 const CLIENT_CONFIG = 'apps/official-journal-web/clientConfig.json'
@@ -27,8 +32,7 @@ const CLIENT_CONFIG = 'apps/official-journal-web/clientConfig.json'
 /**
  * The schema as it goes over the wire: `JSON.stringify` drops in-memory
  * `undefined` keys, and neither parameter order nor key order is semantic
- * (ts-jest's emit can reorder reflected parameters depending on cache state,
- * see #1405).
+ * (the test transform's emit can reorder reflected parameters, see #1405).
  */
 const toWire = (doc: unknown): Record<string, any> => {
   const wire = JSON.parse(JSON.stringify(doc))
@@ -94,8 +98,15 @@ const describeDrift = (served: unknown, committedPath: string): string[] => {
       drift.push(`~ schema ${name}`)
   }
 
-  const { paths: _a, components: _b, ...liveRest } = live
-  const { paths: _c, components: _d, ...committedRest } = committed
+  // Everything outside paths and schemas: info, servers, tags, and the rest
+  // of components - notably securitySchemes, which decides how the generated
+  // client attaches credentials.
+  const { schemas: _a, ...liveComponents } = live.components ?? {}
+  const { schemas: _b, ...committedComponents } = committed.components ?? {}
+  if (!same(liveComponents, committedComponents))
+    drift.push('~ components (other than schemas)')
+  const { paths: _c, components: _d, ...liveRest } = live
+  const { paths: _e, components: _f, ...committedRest } = committed
   if (!same(liveRest, committedRest)) drift.push('~ document metadata')
 
   return drift

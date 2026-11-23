@@ -12,7 +12,7 @@ import { AppModule } from './app.module'
  * Smoke test: the real AppModule compiles and Swagger emits a document with
  * routes in it. This is what catches a module that no longer boots.
  *
- * Schema DRIFT is not gated here -- each web app's committed clientConfig.json
+ * Schema drift is gated by client-config-drift.spec.ts, not here -- each web app's committed clientConfig.json
  * is the schema baseline, and it is the wire format the generators actually
  * consume. See #1405 for why the snapshot gate was removed.
  *

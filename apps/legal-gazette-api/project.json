@@ -63,7 +63,15 @@
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/legal-gazette-api/jest.config.ts"
-      }
+      },
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js",
+        "{workspaceRoot}/apps/legal-gazette-web/clientConfig.json",
+        "{workspaceRoot}/apps/legal-gazette-application-web/clientConfig.json",
+        "{workspaceRoot}/apps/legal-gazette-public-web/clientConfig.json"
+      ]
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",

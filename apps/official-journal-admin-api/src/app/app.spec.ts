@@ -2,17 +2,16 @@ import { Sequelize } from 'sequelize-typescript'
 
 import { VersioningType } from '@nestjs/common'
 import { NestApplication } from '@nestjs/core'
-import { SwaggerModule } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
 
-import { openApi } from '../openApi'
+import { buildSwaggerDocument } from '../swagger-document'
 import { AppModule } from './app.module'
 
 /**
  * Smoke test: the real AppModule compiles and Swagger emits a document with
  * routes in it. This is what catches a module that no longer boots.
  *
- * Schema DRIFT is not gated here -- the committed clientConfig.json per web app
+ * Schema drift is gated by client-config-drift.spec.ts, not here -- the committed clientConfig.json per web app
  * is the schema baseline, and it is the wire format the generators actually
  * consume. See PR #1405 for why the snapshot gate was removed.
  *
@@ -44,9 +43,7 @@ describe('Swagger documentation', () => {
   })
 
   it('builds a non-empty OpenAPI document', () => {
-    const document = SwaggerModule.createDocument(app, openApi, {
-      autoTagControllers: false,
-    })
+    const document = buildSwaggerDocument(app)
 
     expect(Object.keys(document.paths).length).toBeGreaterThan(0)
   })
