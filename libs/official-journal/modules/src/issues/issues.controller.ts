@@ -1,30 +1,24 @@
-import { Controller, Get, Inject, Post, Query, UseGuards } from '@nestjs/common'
-import {
-  ApiBearerAuth,
-  ApiNoContentResponse,
-  ApiOperation,
-  ApiResponse,
-} from '@nestjs/swagger'
+import { Controller, Get, Inject, Query } from '@nestjs/common'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
-import { UserRoleEnum } from '@dmr.is/constants'
-import { Roles } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
-
-import { RoleGuard, StaffTokenGuard } from '../guards/auth'
 import {
-  GenerateMonthlyIssuesQueryDto,
   GetMonthlyIssuesQueryDto,
   GetMonthlyIssuesResponseDto,
 } from './issues.dto'
-import { IIssuesService } from './issues.service.interface'
+import { IIssuesReadService } from './issues-read.service'
 
+/**
+ * Public read of the monthly issues. Mounted on the public journal API and on
+ * the admin API; generating issues lives in `IssuesAdminController`.
+ */
 @Controller({
   version: '1',
   path: 'issues',
 })
 export class IssuesController {
   constructor(
-    @Inject(IIssuesService) private readonly issuesService: IIssuesService,
+    @Inject(IIssuesReadService)
+    private readonly issuesService: IIssuesReadService,
   ) {}
 
   @Get()
@@ -38,18 +32,5 @@ export class IssuesController {
     @Query() query: GetMonthlyIssuesQueryDto,
   ): Promise<GetMonthlyIssuesResponseDto> {
     return this.issuesService.getIssues(query)
-  }
-
-  @Post('generate')
-  @ApiOperation({ operationId: 'generateMonthlyIssues' })
-  @ApiNoContentResponse({ description: 'Monthly issues generation started' })
-  @ApiBearerAuth()
-  @UseGuards(TokenJwtAuthGuard, StaffTokenGuard, RoleGuard)
-  @Roles(UserRoleEnum.Admin)
-  async generateMonthlyIssues(@Query() query: GenerateMonthlyIssuesQueryDto) {
-    return this.issuesService.generateMonthlyIssues(
-      query.departmentId,
-      query.date,
-    )
   }
 }

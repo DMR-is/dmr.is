@@ -4,10 +4,10 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import {
   AdvertTypeController,
   AdvertTypeModule,
+  CaseListModule,
   IssuesModule,
   OpenSearchModule,
   OpsModule,
-  SharedCaseModule,
   SharedJournalModule,
 } from '@dmr.is/ojoi-modules'
 
@@ -18,7 +18,7 @@ import { LeanSearchTrackingService } from './lean-search-tracking.service'
   imports: [
     SequelizeModule.forFeature([AdvertSearchEventModel]),
     SharedJournalModule,
-    SharedCaseModule,
+    CaseListModule,
     AdvertTypeModule,
     OpenSearchModule,
     OpsModule,
