@@ -6,7 +6,6 @@ import { LoggingModule } from '@dmr.is/logging'
 import { AdditionalPartiesModel } from '../../additional-parties/models'
 import { AdvertTypeModel } from '../../advert-type/models'
 import { models as attachmentModels } from '../../attachments/models'
-import { models as caseCommentModels } from '../../comment/v1/models'
 import { CaseActionModel } from '../../comment/v2/models/case-action.model'
 import { CommentModel } from '../../comment/v2/models/comment.model'
 import { CommentsModel } from '../../comment/v2/models/comments.model'
@@ -53,7 +52,6 @@ import { ICaseListService } from './case-list.service.interface'
       AdvertDepartmentModel,
       AdvertInvolvedPartyModel,
       ...attachmentModels,
-      ...caseCommentModels,
       CommentModel,
       CommentsModel,
       CaseActionModel,
