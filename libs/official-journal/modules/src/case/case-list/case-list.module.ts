@@ -14,6 +14,7 @@ import { SignatureRecordModel } from '../../signature/models/signature-record.mo
 import { UserModel } from '../../user/models/user.model'
 import { UserInvolvedPartiesModel } from '../../user/models/user-involved-parties.model'
 import { UserRoleModel } from '../../user/models/user-role.model'
+import { CaseServiceMock } from '../case.service.mock'
 import caseModels from '../models'
 import { CaseListService } from './case-list.service'
 import { ICaseListService } from './case-list.service.interface'
@@ -22,11 +23,16 @@ import { ICaseListService } from './case-list.service.interface'
  * Read-only case listing, without the rest of the case module. The public
  * journal API imports this instead of `SharedCaseModule`.
  *
- * The models are registered explicitly, not just `CaseModel`: the list query
- * joins comments, case actions and users (`casesIncludes`), and `CaseModel`
- * declares associations to signatures and application attachments. Sequelize
- * needs every one of those models added to the instance, and nothing else in
- * the public API registers them now that `SharedCaseModule` is gone.
+ * The list query joins comments, case actions and users (`casesIncludes`),
+ * and `CaseModel` declares associations to signatures and application
+ * attachments, so every one of those models must be in the Sequelize
+ * instance. Today they get there anyway: `forFeature` records models when a
+ * module file is evaluated, and importing the `@dmr.is/ojoi-modules` barrel
+ * evaluates them all. The list below states the dependency instead of
+ * relying on that side effect.
+ *
+ * Mirrors `SharedCaseModule`'s `API_MOCK` switch, so mock mode still serves
+ * mock cases.
  */
 @Module({
   imports: [
@@ -46,7 +52,13 @@ import { ICaseListService } from './case-list.service.interface'
       UserInvolvedPartiesModel,
     ]),
   ],
-  providers: [{ provide: ICaseListService, useClass: CaseListService }],
+  providers: [
+    {
+      provide: ICaseListService,
+      useClass:
+        process.env.API_MOCK === 'true' ? CaseServiceMock : CaseListService,
+    },
+  ],
   exports: [ICaseListService],
 })
 export class CaseListModule {}

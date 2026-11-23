@@ -3,7 +3,6 @@ import { forwardRef, Module } from '@nestjs/common'
 import { LoggingModule } from '@dmr.is/logging'
 import { AwsModule } from '@dmr.is/shared-modules'
 
-import { UserModule } from '../user/user.module'
 import { UtilityModule } from '../utility/utility.module'
 import { PdfController } from './pdf.controller'
 import { PdfService } from './pdf.service'
@@ -32,12 +31,11 @@ export { IPdfService }
 export class PdfServiceModule {}
 
 /**
- * The `/pdf` routes. Mounted by the application API, which serves the PDF to
- * island.is. UserModule is here for RoleGuard, which resolves the caller
- * against the staff user table via IUserService.
+ * The `/pdf` routes. Mounted by the application API only, which serves the
+ * application PDF to island.is.
  */
 @Module({
-  imports: [PdfServiceModule, UserModule],
+  imports: [PdfServiceModule],
   controllers: [PdfController],
   exports: [PdfServiceModule],
 })
