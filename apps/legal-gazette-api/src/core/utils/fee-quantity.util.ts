@@ -1,3 +1,4 @@
+import { AdvertTemplateType } from '../../models/advert.model'
 import { TypeIdEnum } from '../../models/type.model'
 import { idEquals } from './id.util'
 
@@ -57,4 +58,46 @@ export const feeQuantityAfterChange = ({
   }
 
   return undefined
+}
+
+/**
+ * The single keep / recompute / clear decision for an advert whose type or
+ * content is being changed, shared by the editor and the bulk type move so
+ * their guards cannot drift apart.
+ *
+ * - A charged advert keeps its quantity: TBR billed it on publication A, and
+ *   the column is what a later correction reads to know what was billed.
+ * - A legacy advert was never billed here; it is left alone.
+ * - A template foreclosure counts its properties outside `content`, so it keeps
+ *   the externally set quantity while it stays a foreclosure, and is cleared
+ *   once it is retyped to something else.
+ * - Anything else follows `feeQuantityAfterChange`.
+ */
+export const feeQuantityForChange = ({
+  advert,
+  typeId,
+  content,
+}: {
+  advert: {
+    typeId: string | null | undefined
+    templateType: AdvertTemplateType
+    transactionId?: string | null
+    legacyId?: string | null
+  }
+  typeId: string | null | undefined
+  content: string | null | undefined
+}): number | null | undefined => {
+  if (advert.transactionId || advert.legacyId) {
+    return undefined
+  }
+
+  if (advert.templateType === AdvertTemplateType.FORECLOSURE) {
+    return isForeclosure(typeId) ? undefined : null
+  }
+
+  return feeQuantityAfterChange({
+    previousTypeId: advert.typeId,
+    typeId,
+    content,
+  })
 }

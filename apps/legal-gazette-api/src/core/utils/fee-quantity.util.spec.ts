@@ -1,5 +1,10 @@
+import { AdvertTemplateType } from '../../models/advert.model'
 import { TypeIdEnum } from '../../models/type.model'
-import { feeQuantityAfterChange, resolveFeeQuantity } from './fee-quantity.util'
+import {
+  feeQuantityAfterChange,
+  feeQuantityForChange,
+  resolveFeeQuantity,
+} from './fee-quantity.util'
 
 const property = (name: string) =>
   `<p><strong>Heiti eignar:</strong> ${name}</p><p>Gerðarbeiðandi: X</p>`
@@ -64,5 +69,63 @@ describe('feeQuantityAfterChange', () => {
         content,
       }),
     ).toBeUndefined()
+  })
+})
+
+describe('feeQuantityForChange', () => {
+  const FORECLOSURE = TypeIdEnum.FORECLOSURE.toLowerCase()
+  const content = property('A') + property('B')
+  const common = {
+    typeId: 'type-a',
+    templateType: AdvertTemplateType.COMMON,
+  }
+
+  it('re-derives a common advert retyped into a foreclosure', () => {
+    expect(
+      feeQuantityForChange({ advert: common, typeId: FORECLOSURE, content }),
+    ).toBe(2)
+  })
+
+  it('keeps the quantity of a charged advert', () => {
+    expect(
+      feeQuantityForChange({
+        advert: { ...common, transactionId: 'transaction-1' },
+        typeId: FORECLOSURE,
+        content,
+      }),
+    ).toBeUndefined()
+  })
+
+  it('leaves a legacy advert alone', () => {
+    expect(
+      feeQuantityForChange({
+        advert: { ...common, legacyId: 'legacy-1' },
+        typeId: FORECLOSURE,
+        content,
+      }),
+    ).toBeUndefined()
+  })
+
+  describe('template foreclosure', () => {
+    const template = {
+      typeId: FORECLOSURE,
+      templateType: AdvertTemplateType.FORECLOSURE,
+    }
+
+    it('keeps the external count while it stays a foreclosure', () => {
+      expect(
+        feeQuantityForChange({
+          advert: template,
+          typeId: FORECLOSURE,
+          content,
+        }),
+      ).toBeUndefined()
+    })
+
+    it('clears the count once retyped away', () => {
+      expect(
+        feeQuantityForChange({ advert: template, typeId: 'type-b', content }),
+      ).toBeNull()
+    })
   })
 })

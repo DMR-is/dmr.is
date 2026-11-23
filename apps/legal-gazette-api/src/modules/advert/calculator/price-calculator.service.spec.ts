@@ -400,13 +400,17 @@ describe('PriceCalculatorService - getEstimatedPriceForApplication', () => {
   let service: PriceCalculatorService
   let findByPkOrThrow: jest.Mock
 
-  const givenApplication = (typeId: string, html: string) => {
+  const givenApplication = (
+    typeId: string,
+    html: string,
+    previewHtml = html,
+  ) => {
     jest
       .mocked(getApplicationPreview)
-      .mockReturnValue({ html, error: null } as any)
+      .mockReturnValue({ html: previewHtml, error: null } as any)
     applicationService.getApplicationById.mockResolvedValue({
       type: 'COMMON',
-      answers: { fields: { type: { id: typeId } } },
+      answers: { fields: { type: { id: typeId }, html } },
     })
   }
 
@@ -444,6 +448,19 @@ describe('PriceCalculatorService - getEstimatedPriceForApplication', () => {
     await expect(
       service.getEstimatedPriceForApplication('application-1'),
     ).resolves.toBe(4500)
+  })
+
+  it('counts the advert body, not the additional text in the preview', async () => {
+    const body = '<p>Heiti eignar: A</p><p>Heiti eignar: B</p>'
+    givenApplication(
+      TypeIdEnum.FORECLOSURE.toLowerCase(),
+      body,
+      `${body}<p>Viðbótartexti: Heiti eignar: C</p>`,
+    )
+
+    await expect(
+      service.getEstimatedPriceForApplication('application-1'),
+    ).resolves.toBe(3000)
   })
 
   it('estimates the flat fee for other types', async () => {

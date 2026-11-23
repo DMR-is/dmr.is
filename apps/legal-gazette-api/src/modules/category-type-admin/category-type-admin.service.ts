@@ -15,8 +15,8 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { feeQuantityAfterChange } from '../../core/utils/fee-quantity.util'
-import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
+import { feeQuantityForChange } from '../../core/utils/fee-quantity.util'
+import { AdvertModel } from '../../models/advert.model'
 import { CategoryDto, CategoryModel } from '../../models/category.model'
 import {
   CategoryTypeChangeLogModel,
@@ -1006,8 +1006,15 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
       bucket.push(advert.id)
       groups.set(key, bucket)
     }
-    const toTypeId =
-      (audit.after?.toTypeId as string | null | undefined) ?? null
+    // Read each advert's type as it is now, not as the audited move left it: a
+    // later move may have retyped it since, and the fee quantity decision
+    // depends on the type it is actually leaving.
+    const current = await this.advertModel.findAll({
+      where: { id: { [Op.in]: adverts.map((a) => a.id) } },
+      attributes: ['id', 'typeId'],
+      transaction,
+    })
+    const currentTypeIds = new Map(current.map((a) => [a.id, a.typeId]))
 
     for (const [key, ids] of groups) {
       const [typeId, categoryId] = key.split('|')
@@ -1017,21 +1024,22 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
       )
     }
 
-    if (toTypeId) {
-      await this.syncFeeQuantities(
-        adverts.map((a) => ({ id: a.id, previousTypeId: toTypeId })),
-        transaction,
-      )
-    }
+    await this.syncFeeQuantities(
+      adverts.map((a) => ({
+        id: a.id,
+        previousTypeId: currentTypeIds.get(a.id) ?? a.typeId,
+      })),
+      transaction,
+    )
 
     return adverts.length
   }
 
   /**
    * A move can turn adverts into foreclosures, which are billed per property,
-   * or out of them. Re-derive the fee quantity of every moved advert that has
-   * not been charged yet. Charged and legacy adverts are left alone, and so
-   * are template foreclosures, whose properties live outside `content`.
+   * or out of them. Re-derive the fee quantity of every moved advert through
+   * the same rule the editor uses (`feeQuantityForChange`): charged and legacy
+   * adverts keep theirs, template foreclosures keep theirs unless retyped away.
    */
   private async syncFeeQuantities(
     changes: { id: string; previousTypeId: string }[],
@@ -1044,17 +1052,30 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     const adverts = await this.advertModel.findAll({
       where: {
         id: { [Op.in]: [...previousTypeIds.keys()] },
+        // Narrowing only; feeQuantityForChange applies the same rule.
         transactionId: null,
         legacyId: null,
-        templateType: { [Op.ne]: AdvertTemplateType.FORECLOSURE },
       },
-      attributes: ['id', 'typeId', 'content', 'feeQuantity'],
+      attributes: [
+        'id',
+        'typeId',
+        'templateType',
+        'content',
+        'feeQuantity',
+        'transactionId',
+        'legacyId',
+      ],
       transaction,
     })
 
     for (const advert of adverts) {
-      const feeQuantity = feeQuantityAfterChange({
-        previousTypeId: previousTypeIds.get(advert.id),
+      const feeQuantity = feeQuantityForChange({
+        advert: {
+          typeId: previousTypeIds.get(advert.id),
+          templateType: advert.templateType,
+          transactionId: advert.transactionId,
+          legacyId: advert.legacyId,
+        },
         typeId: advert.typeId,
         content: advert.content,
       })

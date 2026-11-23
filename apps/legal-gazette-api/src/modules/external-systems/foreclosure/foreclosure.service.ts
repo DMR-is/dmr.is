@@ -1,3 +1,6 @@
+import { Transaction } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -34,6 +37,7 @@ export class ForeclosureService implements IForeclosureService {
     private readonly foreclosurePropertyModel: typeof ForeclosurePropertyModel,
     @InjectModel(AdvertModel)
     private readonly advertModel: typeof AdvertModel,
+    private readonly sequelize: Sequelize,
   ) {}
 
   async deleteForclosureSale(id: string): Promise<void> {
@@ -130,22 +134,30 @@ export class ForeclosureService implements IForeclosureService {
 
     assertAdvertEditable(foreclosure.advert, 'foreclosure property')
 
-    // Escape HTML in all text fields to prevent XSS
-    const newProperty = await this.foreclosurePropertyModel.create(
-      {
-        foreclosureId: id,
-        propertyName: escapeHtml(body.propertyName) ?? '',
-        propertyNumber: body.propertyNumber,
-        propertyTotalPrice: body.propertyTotalPrice,
-        claimant: escapeHtml(body.claimant) ?? '',
-        respondent: escapeHtml(body.respondent) ?? '',
+    // The property write and the recount commit together, so a failure in
+    // between cannot leave the advert billing a stale count.
+    const newProperty = await this.sequelize.transaction(
+      async (transaction) => {
+        // Escape HTML in all text fields to prevent XSS
+        const property = await this.foreclosurePropertyModel.create(
+          {
+            foreclosureId: id,
+            propertyName: escapeHtml(body.propertyName) ?? '',
+            propertyNumber: body.propertyNumber,
+            propertyTotalPrice: body.propertyTotalPrice,
+            claimant: escapeHtml(body.claimant) ?? '',
+            respondent: escapeHtml(body.respondent) ?? '',
+          },
+          { returning: true, transaction },
+        )
+
+        await this.syncFeeQuantity(id, foreclosure.advertId, transaction)
+
+        return property
       },
-      { returning: true },
     )
 
     await newProperty.reload()
-
-    await this.syncFeeQuantity(id, foreclosure.advertId)
 
     return newProperty.fromModel()
   }
@@ -170,25 +182,34 @@ export class ForeclosureService implements IForeclosureService {
       where: { foreclosureId: id, propertyNumber },
     })
 
-    // force true (no soft delete)
-    await property.destroy({ force: true })
+    await this.sequelize.transaction(async (transaction) => {
+      // force true (no soft delete)
+      await property.destroy({ force: true, transaction })
 
-    await this.syncFeeQuantity(id, foreclosure.advertId)
+      await this.syncFeeQuantity(id, foreclosure.advertId, transaction)
+    })
   }
 
   /**
-   * A foreclosure is billed per property, and the quantity is fixed on the
+   * A foreclosure is billed per property, and the quantity is set on the
    * advert when the sale is created. Recount after every property change so
    * the charge at publication matches what is published.
    */
   private async syncFeeQuantity(
     foreclosureId: string,
     advertId: string,
+    transaction: Transaction,
   ): Promise<void> {
     const feeQuantity = await this.foreclosurePropertyModel.count({
       where: { foreclosureId },
+      transaction,
     })
 
-    await this.advertModel.update({ feeQuantity }, { where: { id: advertId } })
+    // Once publication A is out the advert has been charged; its quantity is
+    // the record of what TBR billed and is not rewritten.
+    await this.advertModel.update(
+      { feeQuantity },
+      { where: { id: advertId, transactionId: null }, transaction },
+    )
   }
 }

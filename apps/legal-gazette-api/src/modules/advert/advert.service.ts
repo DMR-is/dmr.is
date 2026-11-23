@@ -17,7 +17,7 @@ import {
 
 import { LegalGazetteEvents } from '../../core/constants'
 import {
-  feeQuantityAfterChange,
+  feeQuantityForChange,
   resolveFeeQuantity,
 } from '../../core/utils/fee-quantity.util'
 import { idEquals } from '../../core/utils/id.util'
@@ -649,6 +649,11 @@ export class AdvertService implements IAdvertService {
     })
 
     const content = sanitizeLegalGazetteHtml(body.content)
+    // An explicit quantity comes from a caller that knows its items (external
+    // foreclosure and company endpoints); everything else is derived from the
+    // content.
+    const feeQuantity =
+      body.feeQuantity ?? resolveFeeQuantity(body.typeId, content)
 
     const advert = await this.advertModel.scope('detailed').create(
       {
@@ -673,11 +678,7 @@ export class AdvertService implements IAdvertService {
         divisionMeetingDate: body.divisionMeetingDate,
         divisionMeetingLocation: body.divisionMeetingLocation,
         communicationChannels: body.communicationChannels,
-        // An explicit quantity comes from a caller that knows its items
-        // (external foreclosure and company endpoints); everything else is
-        // derived from the content.
-        feeQuantity:
-          body.feeQuantity ?? resolveFeeQuantity(body.typeId, content),
+        feeQuantity,
         settlementId: body.settlementId,
         settlement: body.settlement
           ? {
@@ -707,6 +708,8 @@ export class AdvertService implements IAdvertService {
         returning: true,
       },
     )
+
+    this.warnOnZeroFeeQuantity(advert.id, feeQuantity)
 
     await this.advertPublicationModel.bulkCreate(
       body.scheduledAt.map((scheduledAt, i) => ({
@@ -865,9 +868,9 @@ export class AdvertService implements IAdvertService {
 
   /**
    * Keeps a content-derived fee quantity in step with edits made before
-   * publication. Template adverts (external foreclosures) carry their items
-   * outside `content`, so their quantity is never re-derived from it.
-   * `undefined` leaves the column untouched; `null` clears it.
+   * publication. An explicit quantity from the editor wins; otherwise the
+   * shared rule in `feeQuantityForChange` decides. `undefined` leaves the
+   * column untouched; `null` clears it.
    */
   private feeQuantityForUpdate(
     advert: AdvertModel,
@@ -877,19 +880,38 @@ export class AdvertService implements IAdvertService {
       return body.feeQuantity
     }
 
-    if (advert.templateType === AdvertTemplateType.FORECLOSURE) {
-      return undefined
-    }
-
     if (body.content === undefined && body.typeId === undefined) {
       return undefined
     }
 
-    return feeQuantityAfterChange({
-      previousTypeId: advert.typeId,
+    return feeQuantityForChange({
+      advert,
       typeId: body.typeId ?? advert.typeId,
       content: body.content ?? advert.content,
     })
+  }
+
+  /**
+   * A per-item advert that resolves to no items is billed one flat unit by
+   * every price path, which is the failure per-property billing exists to
+   * prevent. Nobody can correct it in the editor for a content-derived
+   * foreclosure, so make it visible.
+   */
+  private warnOnZeroFeeQuantity(
+    advertId: string | undefined,
+    feeQuantity: number | null | undefined,
+  ): void {
+    if (feeQuantity !== 0) {
+      return
+    }
+
+    this.logger.warn(
+      'Per-item advert resolved to zero items, billing a flat fee',
+      {
+        advertId,
+        context: LOGGING_CONTEXT,
+      },
+    )
   }
 
   async updateAdvert(
@@ -912,6 +934,7 @@ export class AdvertService implements IAdvertService {
     }
 
     const categoryId = await this.resolveUpdatedCategoryId(advert, body)
+    const feeQuantity = this.feeQuantityForUpdate(advert, body)
 
     const updated = await advert.update({
       typeId: body.typeId,
@@ -926,8 +949,10 @@ export class AdvertService implements IAdvertService {
       caption: body.caption,
       courtDistrictId: body.courtDistrictId,
       judgementDate: body.judgementDate,
-      feeQuantity: this.feeQuantityForUpdate(advert, body),
+      feeQuantity,
     })
+
+    this.warnOnZeroFeeQuantity(advert.id, feeQuantity)
 
     return updated.fromModelToDetailed()
   }

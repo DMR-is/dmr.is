@@ -94,6 +94,7 @@ describe('updateAdvert', () => {
   let service: AdvertService
   let advertModel: any
   let typeCategoriesService: any
+  let moduleRef: TestingModule
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -172,6 +173,7 @@ describe('updateAdvert', () => {
         },
       ],
     }).compile()
+    moduleRef = module
     service = module.get<AdvertService>(AdvertService)
     advertModel = module.get(getModelToken(AdvertModel))
     typeCategoriesService = module.get(ITypeCategoriesService)
@@ -425,6 +427,59 @@ describe('updateAdvert', () => {
       advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(advert)
       return advert
     }
+
+    it('keeps the quantity of an advert that has already been charged', async () => {
+      // Publication A is billed on publish; later versions keep it editable.
+      const advert = givenAdvert({ transactionId: 'transaction-1' })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ content: properties(16) }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: undefined }),
+      )
+    })
+
+    it('clears a template foreclosure retyped to another type', async () => {
+      const advert = givenAdvert({
+        templateType: AdvertTemplateType.FORECLOSURE,
+        content: null,
+      })
+      typeCategoriesService.findByTypeId.mockResolvedValue({
+        type: {
+          id: 'type-other',
+          title: 'Annað',
+          slug: 'annad',
+          categories: [{ id: 'category-123', title: 'Flokkur', slug: 'f' }],
+        },
+      })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ typeId: 'type-other' }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: null }),
+      )
+    })
+
+    it('warns when an edit leaves a foreclosure with no properties', async () => {
+      givenAdvert()
+      const logger = moduleRef.get(LOGGER_PROVIDER)
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ content: '<p>Engin eign</p>' }),
+      )
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('zero items'),
+        expect.objectContaining({ advertId: 'advert-123' }),
+      )
+    })
 
     it('re-derives the quantity when a foreclosure is edited', async () => {
       const advert = givenAdvert()
