@@ -34,18 +34,4 @@ export const commentsRouter = router({
         },
       })
     }),
-
-  deleteComment: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        commentId: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      await ctx.api.deleteComment({
-        id: input.id,
-        commentId: input.commentId,
-      })
-    }),
 })
