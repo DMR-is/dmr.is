@@ -2,8 +2,6 @@ import * as z from 'zod'
 
 import { protectedProcedure, router } from '../trpc'
 
-const getChannelsSchema = z.object({ advertId: z.uuid() })
-
 const createCommunicationChannelSchema = z.object({
   advertId: z.uuid(),
   email: z.email(),
@@ -25,11 +23,6 @@ const deleteCommunicationChannelSchema = z.object({
 })
 
 export const channelsRouter = router({
-  getChannels: protectedProcedure
-    .input(getChannelsSchema)
-    .query(async ({ input, ctx }) => {
-      return await ctx.api.getCommunicationChannels(input)
-    }),
   createChannel: protectedProcedure
     .input(createCommunicationChannelSchema)
     .mutation(async ({ input, ctx }) => {
