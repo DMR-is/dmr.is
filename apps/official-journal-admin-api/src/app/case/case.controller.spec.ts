@@ -287,24 +287,4 @@ describe('CaseController', () => {
       expect(result.adverts[0]).not.toHaveProperty('document')
     })
   })
-
-  describe('deleteComment', () => {
-    it('should delete a comment', async () => {
-      jest
-        .spyOn(commentService, 'deleteComment')
-        .mockImplementation(() => Promise.resolve(ResultWrapper.ok()))
-      const deleteSpy = jest.spyOn(commentService, 'deleteComment')
-      await caseController.deleteComment('caseId', 'commentId')
-      expect(deleteSpy).toHaveBeenCalledWith('caseId', 'commentId')
-    })
-    // it('should throw error if comment not found', async () => {
-    //   const unknownId = 'fa81d7a9-934c-47c3-b45c-12f1014bd425'
-    //   jest.spyOn(commentService, 'deleteComment')
-    //   await caseController.deleteComment(unknownId, comment.id)
-    //   expect(commentService.deleteComment).toHaveBeenCalledWith(
-    //     unknownId,
-    //     comment.id,
-    //   )
-    // })
-  })
 })

@@ -11,7 +11,6 @@ export interface IInstitutionService {
   getInstitutions(
     query: InstitutionQuery,
   ): Promise<ResultWrapper<GetInstitutions>>
-  getInstitution(id: string): Promise<ResultWrapper<GetInstitution>>
   createInstitution(
     institution: CreateInstitution,
   ): Promise<ResultWrapper<GetInstitution>>

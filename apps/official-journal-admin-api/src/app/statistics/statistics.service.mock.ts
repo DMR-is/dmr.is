@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotImplementedException,
-} from '@nestjs/common'
+import { Inject, Injectable, NotImplementedException } from '@nestjs/common'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
@@ -15,14 +10,11 @@ import {
   GetSearchAnalyticsTrendsQuery,
   GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
-  GetStatisticsOverviewResponse,
   SearchAnalyticsBreakdownsResponse,
   SearchAnalyticsOverviewResponse,
   SearchAnalyticsQueriesResponse,
   SearchAnalyticsQueryTableType,
   SearchAnalyticsTrendsResponse,
-  StatisticsOverviewCategory,
-  StatisticsOverviewQueryType,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -146,102 +138,6 @@ export class MockStatisticsService implements IStatisticsService {
     return ResultWrapper.ok({
       type: query.type ?? SearchAnalyticsQueryTableType.Top,
       rows: [],
-    })
-  }
-
-  getOverview(
-    type: string,
-  ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
-    // check if type is in enum
-    if (!Object.values<string>(StatisticsOverviewQueryType).includes(type)) {
-      throw new BadRequestException('Invalid type')
-    }
-
-    let categories: StatisticsOverviewCategory[] = []
-    let totalCases = 0
-
-    if (type === StatisticsOverviewQueryType.General) {
-      let submitted = 0
-      let inProgress = 0
-      // let submittedFastTrack = 0
-      // let inReviewFastTrack = 0
-
-      // fast track functionality is not implemented yet
-
-      const adverts = ALL_MOCK_ADVERTS.filter((advert) => {
-        if (advert.status === AdvertStatus.Submitted) {
-          submitted++
-        }
-
-        if (advert.status === AdvertStatus.InProgress) {
-          inProgress++
-        }
-
-        // if(advert.status === JournalAdvertStatus.Active) {
-        //   submittedFastTrack++
-        // }
-
-        // if(advert.status === JournalAdvertStatus.ReadyForPublication) {
-        //   inReviewFastTrack++
-        // }
-      })
-
-      categories = [
-        {
-          text: `${adverts.length} innsend mál bíða úthlutunar`,
-          count: submitted,
-        },
-        {
-          text: `Borist hafa ný svör í ${inProgress} málum`,
-          count: inProgress,
-        },
-      ]
-      totalCases = adverts.length
-    }
-
-    if (type === StatisticsOverviewQueryType.Personal) {
-      throw new NotImplementedException()
-    }
-
-    if (type === StatisticsOverviewQueryType.Inactive) {
-      throw new NotImplementedException()
-    }
-
-    if (type === StatisticsOverviewQueryType.Publishing) {
-      let today = 0
-      let pastDue = 0
-
-      const adverts = ALL_MOCK_ADVERTS.filter((advert) => {
-        if (advert.status === AdvertStatus.ReadyForPublication) {
-          today++
-        }
-
-        if (
-          advert.publicationDate &&
-          new Date(advert.publicationDate) < new Date() &&
-          advert.status === AdvertStatus.ReadyForPublication
-        ) {
-          pastDue++
-        }
-      })
-
-      categories = [
-        {
-          text: `${today} tilbúin mál eru áætluð til útgáfu í dag.`,
-          count: today,
-        },
-        {
-          text: `${pastDue} mál í yfirlestri eru með liðinn birtingardag.`,
-          count: pastDue,
-        },
-      ]
-      totalCases = adverts.length
-    }
-
-    // @ts-expect-error FIXME: weird error
-    return ResultWrapper.ok({
-      categories: categories,
-      total: totalCases,
     })
   }
 }

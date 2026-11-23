@@ -114,37 +114,6 @@ export class StatisticsService implements IStatisticsService {
   }
 
   @LogAndHandle()
-  async getOverview(
-    type: StatisticsOverviewQueryType,
-    userId?: string,
-  ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
-    const personal = type === StatisticsOverviewQueryType.Personal && userId
-
-    switch (type) {
-      case StatisticsOverviewQueryType.General:
-        return this.getGeneralOverviewCount()
-      case StatisticsOverviewQueryType.Personal:
-        if (!personal) {
-          this.logger.warn(
-            'Personal statstic overview requested without userId',
-            LOGGING_CONTEXT,
-          )
-          return ResultWrapper.err({
-            code: 400,
-            message: 'No userId provided for personal overview',
-          })
-        }
-        return this.getPersonalOverviewCount(userId)
-      case StatisticsOverviewQueryType.Inactive:
-        return this.getInactiveOverviewCount()
-      case StatisticsOverviewQueryType.Publishing:
-        return this.getPublishingOverviewCount()
-      default:
-        return this.getGeneralOverviewCount()
-    }
-  }
-
-  @LogAndHandle()
   async getOverviewForDashboard(
     userId: string,
   ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse>> {
