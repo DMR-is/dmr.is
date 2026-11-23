@@ -17,7 +17,6 @@ import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 import {
   CompanyCommentDto,
   CompanyDto,
-  CompanyLookupDto,
   CompanyRskPreviewDto,
   CompanyTimelineItemDto,
   CreateCompanyDto,
@@ -89,19 +88,6 @@ export class CompanyController {
   })
   async listIsatSections(): Promise<IsatSectionDto[]> {
     return this.companyService.listIsatSections()
-  }
-
-  @Get('lookup/:nationalId')
-  @ApiParam({ name: 'nationalId', type: String })
-  @DoeResponse({
-    operationId: 'rskLookupCompany',
-    type: CompanyLookupDto,
-    include404: true,
-  })
-  async rskLookup(
-    @Param('nationalId', ParseNationalIdPipe) nationalId: string,
-  ): Promise<CompanyLookupDto> {
-    return this.companyService.rskLookup(nationalId)
   }
 
   @Get('preview/:nationalId')

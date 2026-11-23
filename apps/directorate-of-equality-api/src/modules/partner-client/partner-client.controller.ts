@@ -92,19 +92,6 @@ export class PartnerClientController {
     return { partnerClients: await this.partnerClientService.list() }
   }
 
-  @Get(':id')
-  @ApiParam({ name: 'id', type: String, format: 'uuid' })
-  @DoeResponse({
-    operationId: 'getPartnerClient',
-    type: PartnerClientDto,
-    include404: true,
-  })
-  getPartnerClient(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<PartnerClientDto> {
-    return this.partnerClientService.get(id)
-  }
-
   @Delete(':id')
   @UseGuards(RequireAdminRoleGuard)
   @ApiParam({ name: 'id', type: String, format: 'uuid' })

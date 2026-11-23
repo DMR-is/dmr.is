@@ -205,16 +205,6 @@ describe('PartnerClientService', () => {
     })
   })
 
-  describe('get', () => {
-    it('404s an unknown client', async () => {
-      clients.findByPk.mockResolvedValue(null)
-
-      await expect(service.get(CLIENT_ID)).rejects.toBeInstanceOf(
-        NotFoundException,
-      )
-    })
-  })
-
   describe('listProviders', () => {
     /**
      * What a company chooses from. Only live firms, so a revoked one can never

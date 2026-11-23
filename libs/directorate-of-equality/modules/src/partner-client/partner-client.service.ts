@@ -128,10 +128,6 @@ export class PartnerClientService implements IPartnerClientService {
     return clients.map((client) => client.fromModel())
   }
 
-  async get(id: string): Promise<PartnerClientDto> {
-    return (await this.findClient(id)).fromModel()
-  }
-
   async listProviders(): Promise<PartnerProviderDto[]> {
     const clients = await this.partnerClientModel.findAll({
       where: { revokedAt: null },
