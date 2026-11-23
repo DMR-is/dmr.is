@@ -12,7 +12,7 @@ import {
   ChangeLogAction,
   ChangeLogEntity,
 } from '../../models/category-type-change-log.model'
-import { TypeModel } from '../../models/type.model'
+import { TypeIdEnum, TypeModel } from '../../models/type.model'
 import { TypeCategoriesModel } from '../../models/type-categories.model'
 import { CategoryTypeActor } from './dto/category-type-admin.dto'
 import { CategoryTypeAdminService } from './category-type-admin.service'
@@ -579,6 +579,106 @@ describe('CategoryTypeAdminService', () => {
       expect(changeLogModel.create).toHaveBeenCalledWith(
         expect.objectContaining({ affectedAdvertCount: 0 }),
         { transaction: TRANSACTION },
+      )
+    })
+  })
+
+  describe('fee quantity on moves', () => {
+    const FORECLOSURE = TypeIdEnum.FORECLOSURE.toLowerCase()
+    const twoProperties = '<p>Heiti eignar: A</p><p>Heiti eignar: B</p>'
+
+    it('derives the property count for adverts moved into foreclosures', async () => {
+      advertModel.findAll
+        .mockResolvedValueOnce([
+          { id: 'a1', typeId: 'type-a', categoryId: 'cat-a' },
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'a1',
+            typeId: FORECLOSURE,
+            content: twoProperties,
+            feeQuantity: null,
+          },
+        ])
+
+      await service.moveAdverts(
+        { fromTypeId: 'type-a', toTypeId: FORECLOSURE },
+        ACTOR,
+      )
+
+      expect(advertModel.findAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            transactionId: null,
+            legacyId: null,
+          }),
+        }),
+      )
+      expect(advertModel.update).toHaveBeenCalledWith(
+        { feeQuantity: 2 },
+        { where: { id: 'a1' }, transaction: TRANSACTION },
+      )
+    })
+
+    it('clears the quantity of adverts moved out of foreclosures', async () => {
+      advertModel.findAll
+        .mockResolvedValueOnce([
+          { id: 'a1', typeId: FORECLOSURE, categoryId: 'cat-a' },
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'a1',
+            typeId: 'type-b',
+            content: twoProperties,
+            feeQuantity: 2,
+          },
+        ])
+
+      await service.moveAdverts(
+        { fromTypeId: FORECLOSURE, toTypeId: 'type-b' },
+        ACTOR,
+      )
+
+      expect(advertModel.update).toHaveBeenCalledWith(
+        { feeQuantity: null },
+        { where: { id: 'a1' }, transaction: TRANSACTION },
+      )
+    })
+
+    it('leaves the quantity alone on a category-only move', async () => {
+      advertModel.findAll.mockResolvedValueOnce([
+        { id: 'a1', typeId: FORECLOSURE, categoryId: 'cat-a' },
+      ])
+
+      await service.moveAdverts(
+        { fromTypeId: FORECLOSURE, toCategoryId: 'cat-b' },
+        ACTOR,
+      )
+
+      expect(advertModel.findAll).toHaveBeenCalledTimes(1)
+      expect(advertModel.update).toHaveBeenCalledTimes(1)
+    })
+
+    it('restores the quantity when a move into foreclosures is reverted', async () => {
+      changeLogModel.findByPk.mockResolvedValue(
+        createAudit({
+          action: ChangeLogAction.MOVE,
+          entityType: ChangeLogEntity.TYPE,
+          before: {
+            adverts: [{ id: 'a1', typeId: 'type-a', categoryId: 'cat-a' }],
+          },
+          after: { toTypeId: FORECLOSURE, toCategoryId: null },
+        }),
+      )
+      advertModel.findAll.mockResolvedValueOnce([
+        { id: 'a1', typeId: 'type-a', content: twoProperties, feeQuantity: 2 },
+      ])
+
+      await service.revert('audit-1', ACTOR)
+
+      expect(advertModel.update).toHaveBeenCalledWith(
+        { feeQuantity: null },
+        { where: { id: 'a1' }, transaction: TRANSACTION },
       )
     })
   })

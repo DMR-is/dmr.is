@@ -3,5 +3,7 @@
  * upper-case, so `advert.typeId === TypeIdEnum.X` is always false. Compare ids
  * through this, or let the database do the comparison.
  */
-export const idEquals = (a: string | null | undefined, b: string): boolean =>
-  a?.toLowerCase() === b.toLowerCase()
+export const idEquals = (
+  a: string | null | undefined,
+  b: string | null | undefined,
+): boolean => !!a && !!b && a.toLowerCase() === b.toLowerCase()

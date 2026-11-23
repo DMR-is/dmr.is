@@ -15,7 +15,8 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { AdvertModel } from '../../models/advert.model'
+import { feeQuantityAfterChange } from '../../core/utils/fee-quantity.util'
+import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
 import { CategoryDto, CategoryModel } from '../../models/category.model'
 import {
   CategoryTypeChangeLogModel,
@@ -692,6 +693,13 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
           where: { id: { [Op.in]: ids } },
           transaction,
         })
+
+        if (body.toTypeId) {
+          await this.syncFeeQuantities(
+            moved.map((m) => ({ id: m.id, previousTypeId: m.typeId })),
+            transaction,
+          )
+        }
       }
 
       await this.writeChangeLog(transaction, {
@@ -998,6 +1006,9 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
       bucket.push(advert.id)
       groups.set(key, bucket)
     }
+    const toTypeId =
+      (audit.after?.toTypeId as string | null | undefined) ?? null
+
     for (const [key, ids] of groups) {
       const [typeId, categoryId] = key.split('|')
       await this.advertModel.update(
@@ -1005,6 +1016,57 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
         { where: { id: { [Op.in]: ids } }, transaction },
       )
     }
+
+    if (toTypeId) {
+      await this.syncFeeQuantities(
+        adverts.map((a) => ({ id: a.id, previousTypeId: toTypeId })),
+        transaction,
+      )
+    }
+
     return adverts.length
+  }
+
+  /**
+   * A move can turn adverts into foreclosures, which are billed per property,
+   * or out of them. Re-derive the fee quantity of every moved advert that has
+   * not been charged yet. Charged and legacy adverts are left alone, and so
+   * are template foreclosures, whose properties live outside `content`.
+   */
+  private async syncFeeQuantities(
+    changes: { id: string; previousTypeId: string }[],
+    transaction: Transaction,
+  ): Promise<void> {
+    const previousTypeIds = new Map(
+      changes.map((c) => [c.id, c.previousTypeId]),
+    )
+
+    const adverts = await this.advertModel.findAll({
+      where: {
+        id: { [Op.in]: [...previousTypeIds.keys()] },
+        transactionId: null,
+        legacyId: null,
+        templateType: { [Op.ne]: AdvertTemplateType.FORECLOSURE },
+      },
+      attributes: ['id', 'typeId', 'content', 'feeQuantity'],
+      transaction,
+    })
+
+    for (const advert of adverts) {
+      const feeQuantity = feeQuantityAfterChange({
+        previousTypeId: previousTypeIds.get(advert.id),
+        typeId: advert.typeId,
+        content: advert.content,
+      })
+
+      if (feeQuantity === undefined || feeQuantity === advert.feeQuantity) {
+        continue
+      }
+
+      await this.advertModel.update(
+        { feeQuantity },
+        { where: { id: advert.id }, transaction },
+      )
+    }
   }
 }

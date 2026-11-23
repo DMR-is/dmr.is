@@ -32,6 +32,8 @@ export class ForeclosureService implements IForeclosureService {
     private readonly foreclosureModel: typeof ForeclosureModel,
     @InjectModel(ForeclosurePropertyModel)
     private readonly foreclosurePropertyModel: typeof ForeclosurePropertyModel,
+    @InjectModel(AdvertModel)
+    private readonly advertModel: typeof AdvertModel,
   ) {}
 
   async deleteForclosureSale(id: string): Promise<void> {
@@ -143,6 +145,8 @@ export class ForeclosureService implements IForeclosureService {
 
     await newProperty.reload()
 
+    await this.syncFeeQuantity(id, foreclosure.advertId)
+
     return newProperty.fromModel()
   }
 
@@ -168,5 +172,23 @@ export class ForeclosureService implements IForeclosureService {
 
     // force true (no soft delete)
     await property.destroy({ force: true })
+
+    await this.syncFeeQuantity(id, foreclosure.advertId)
+  }
+
+  /**
+   * A foreclosure is billed per property, and the quantity is fixed on the
+   * advert when the sale is created. Recount after every property change so
+   * the charge at publication matches what is published.
+   */
+  private async syncFeeQuantity(
+    foreclosureId: string,
+    advertId: string,
+  ): Promise<void> {
+    const feeQuantity = await this.foreclosurePropertyModel.count({
+      where: { foreclosureId },
+    })
+
+    await this.advertModel.update({ feeQuantity }, { where: { id: advertId } })
   }
 }

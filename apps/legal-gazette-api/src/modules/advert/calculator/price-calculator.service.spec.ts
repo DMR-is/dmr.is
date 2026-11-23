@@ -5,16 +5,21 @@ import { InternalServerErrorException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { getApplicationPreview } from '@dmr.is/legal-gazette-html'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { StatusIdEnum } from '../../../core/enums/status.enum'
 import { AdvertModel } from '../../../models/advert.model'
 import { TBRCompanySettingsModel } from '../../../models/tbr-company-settings.model'
-import { TypeModel } from '../../../models/type.model'
+import { TypeIdEnum, TypeModel } from '../../../models/type.model'
 import { IApplicationService } from '../../applications/application.service.interface'
 import { PriceCalculatorService } from './price-calculator.service'
 // Mock Kennitala module
 jest.mock('kennitala')
+jest.mock('@dmr.is/legal-gazette-html', () => ({
+  ...jest.requireActual('@dmr.is/legal-gazette-html'),
+  getApplicationPreview: jest.fn(),
+}))
 // Mock environment variables
 const MOCK_ENV = {
   LG_TBR_CHARGE_CATEGORY_PERSON: 'RL1',
@@ -388,5 +393,64 @@ describe('PriceCalculatorService', () => {
         },
       })
     })
+  })
+})
+
+describe('PriceCalculatorService - getEstimatedPriceForApplication', () => {
+  let service: PriceCalculatorService
+  let findByPkOrThrow: jest.Mock
+
+  const givenApplication = (typeId: string, html: string) => {
+    jest
+      .mocked(getApplicationPreview)
+      .mockReturnValue({ html, error: null } as any)
+    applicationService.getApplicationById.mockResolvedValue({
+      type: 'COMMON',
+      answers: { fields: { type: { id: typeId } } },
+    })
+  }
+
+  const applicationService = { getApplicationById: jest.fn() }
+
+  beforeEach(async () => {
+    jest.clearAllMocks()
+    findByPkOrThrow = jest.fn().mockResolvedValue({
+      feeCode: [{ value: 1500, isMultiplied: false }],
+    })
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        PriceCalculatorService,
+        {
+          provide: LOGGER_PROVIDER,
+          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn() },
+        },
+        { provide: IApplicationService, useValue: applicationService },
+        { provide: getModelToken(AdvertModel), useValue: {} },
+        { provide: getModelToken(TypeModel), useValue: { findByPkOrThrow } },
+        { provide: getModelToken(TBRCompanySettingsModel), useValue: {} },
+      ],
+    }).compile()
+
+    service = module.get(PriceCalculatorService)
+  })
+
+  it('estimates a foreclosure per property', async () => {
+    givenApplication(
+      TypeIdEnum.FORECLOSURE.toLowerCase(),
+      '<p>Heiti eignar: A</p><p>Heiti eignar: B</p><p>Heiti eignar: C</p>',
+    )
+
+    await expect(
+      service.getEstimatedPriceForApplication('application-1'),
+    ).resolves.toBe(4500)
+  })
+
+  it('estimates the flat fee for other types', async () => {
+    givenApplication('type-123', '<p>Heiti eignar: A</p><p>Heiti eignar: B</p>')
+
+    await expect(
+      service.getEstimatedPriceForApplication('application-1'),
+    ).resolves.toBe(1500)
   })
 })

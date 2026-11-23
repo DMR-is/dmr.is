@@ -62,6 +62,11 @@ const createMockUpdateDto = (
   content: '<p>Updated content</p>',
   ...overrides,
 })
+const properties = (count: number) =>
+  Array.from(
+    { length: count },
+    (_, i) => `<p>Heiti eignar: Eign ${i}</p>`,
+  ).join('')
 const createMockLogger = () => ({
   info: jest.fn(),
   warn: jest.fn(),
@@ -407,12 +412,6 @@ describe('updateAdvert', () => {
     })
   })
   describe('fee quantity', () => {
-    const properties = (count: number) =>
-      Array.from(
-        { length: count },
-        (_, i) => `<p>Heiti eignar: Eign ${i}</p>`,
-      ).join('')
-
     const givenAdvert = (overrides: Record<string, unknown> = {}) => {
       const advert = Object.assign(
         createMockAdvert({
@@ -450,6 +449,27 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: 3 }),
+      )
+    })
+
+    it('clears the quantity when a foreclosure becomes another type', async () => {
+      const advert = givenAdvert()
+      typeCategoriesService.findByTypeId.mockResolvedValue({
+        type: {
+          id: 'type-other',
+          title: 'Annað',
+          slug: 'annad',
+          categories: [{ id: 'category-123', title: 'Flokkur', slug: 'f' }],
+        },
+      })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ typeId: 'type-other' }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: null }),
       )
     })
 
@@ -679,12 +699,6 @@ describe('createAdvert', () => {
   })
 
   describe('fee quantity', () => {
-    const properties = (count: number) =>
-      Array.from(
-        { length: count },
-        (_, i) => `<p>Heiti eignar: Eign ${i}</p>`,
-      ).join('')
-
     const createAs = (typeId: string, content: string, feeQuantity?: number) =>
       service.createAdvert({
         typeId,

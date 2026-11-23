@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { AdvertModel } from '../../../models/advert.model'
 import { ForeclosureModel } from '../../../models/foreclosure.model'
 import { ForeclosurePropertyModel } from '../../../models/foreclosure-property.model'
 import { StatusIdEnum } from '../../../models/status.model'
@@ -30,7 +31,9 @@ describe('ForeclosureService - HTML Escaping', () => {
   const mockForeclosurePropertyModel = {
     create: jest.fn(),
     destroy: jest.fn(),
+    count: jest.fn().mockResolvedValue(1),
   }
+  const mockAdvertModel = { update: jest.fn() }
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -50,6 +53,10 @@ describe('ForeclosureService - HTML Escaping', () => {
         {
           provide: getModelToken(ForeclosurePropertyModel),
           useValue: mockForeclosurePropertyModel,
+        },
+        {
+          provide: getModelToken(AdvertModel),
+          useValue: mockAdvertModel,
         },
       ],
     }).compile()
@@ -363,6 +370,7 @@ describe('ForeclosureService - Status Protection', () => {
   let service: ForeclosureService
   let foreclosureModel: jest.Mocked<typeof ForeclosureModel>
   let foreclosurePropertyModel: jest.Mocked<typeof ForeclosurePropertyModel>
+  let mockAdvertModel: { update: jest.Mock }
   const mockLogger = {
     info: jest.fn(),
     warn: jest.fn(),
@@ -381,7 +389,9 @@ describe('ForeclosureService - Status Protection', () => {
       create: jest.fn(),
       findOneOrThrow: jest.fn(),
       destroy: jest.fn(),
+      count: jest.fn().mockResolvedValue(3),
     }
+    mockAdvertModel = { update: jest.fn() }
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ForeclosureService,
@@ -400,6 +410,10 @@ describe('ForeclosureService - Status Protection', () => {
         {
           provide: getModelToken(ForeclosurePropertyModel),
           useValue: mockForeclosurePropertyModel,
+        },
+        {
+          provide: getModelToken(AdvertModel),
+          useValue: mockAdvertModel,
         },
       ],
     }).compile()
@@ -502,6 +516,55 @@ describe('ForeclosureService - Status Protection', () => {
             }),
           ]),
         }),
+      )
+    })
+  })
+  describe('fee quantity', () => {
+    const editableForeclosure = {
+      id: 'foreclosure-123',
+      advertId: 'advert-123',
+      advert: { id: 'advert-123', statusId: StatusIdEnum.SUBMITTED },
+    }
+
+    it('recounts the properties after one is added', async () => {
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(
+        editableForeclosure as any,
+      )
+      foreclosurePropertyModel.create.mockResolvedValue({
+        reload: jest.fn(),
+        fromModel: jest.fn(),
+      } as any)
+
+      await service.createForeclosureProperty('foreclosure-123', {
+        propertyName: 'Eign',
+        propertyNumber: '123',
+        propertyTotalPrice: 1,
+        claimant: 'A',
+        respondent: 'B',
+      })
+
+      expect(foreclosurePropertyModel.count).toHaveBeenCalledWith({
+        where: { foreclosureId: 'foreclosure-123' },
+      })
+      expect(mockAdvertModel.update).toHaveBeenCalledWith(
+        { feeQuantity: 3 },
+        { where: { id: 'advert-123' } },
+      )
+    })
+
+    it('recounts the properties after one is deleted', async () => {
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(
+        editableForeclosure as any,
+      )
+      foreclosurePropertyModel.findOneOrThrow.mockResolvedValue({
+        destroy: jest.fn(),
+      } as any)
+
+      await service.deletePropertyFromForeclosure('foreclosure-123', '123')
+
+      expect(mockAdvertModel.update).toHaveBeenCalledWith(
+        { feeQuantity: 3 },
+        { where: { id: 'advert-123' } },
       )
     })
   })

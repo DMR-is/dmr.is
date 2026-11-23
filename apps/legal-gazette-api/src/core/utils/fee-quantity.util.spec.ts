@@ -1,5 +1,5 @@
 import { TypeIdEnum } from '../../models/type.model'
-import { resolveFeeQuantity } from './fee-quantity.util'
+import { feeQuantityAfterChange, resolveFeeQuantity } from './fee-quantity.util'
 
 const property = (name: string) =>
   `<p><strong>Heiti eignar:</strong> ${name}</p><p>Gerðarbeiðandi: X</p>`
@@ -29,5 +29,40 @@ describe('resolveFeeQuantity', () => {
       resolveFeeQuantity(TypeIdEnum.DIVISION_ENDING, property('A')),
     ).toBeUndefined()
     expect(resolveFeeQuantity(undefined, property('A'))).toBeUndefined()
+  })
+})
+
+describe('feeQuantityAfterChange', () => {
+  const FORECLOSURE = TypeIdEnum.FORECLOSURE.toLowerCase()
+  const content = property('A') + property('B')
+
+  it('re-derives the count while the advert is a foreclosure', () => {
+    expect(
+      feeQuantityAfterChange({
+        previousTypeId: 'type-a',
+        typeId: FORECLOSURE,
+        content,
+      }),
+    ).toBe(2)
+  })
+
+  it('clears the count when the advert stops being a foreclosure', () => {
+    expect(
+      feeQuantityAfterChange({
+        previousTypeId: FORECLOSURE,
+        typeId: 'type-b',
+        content,
+      }),
+    ).toBeNull()
+  })
+
+  it('leaves unrelated types untouched', () => {
+    expect(
+      feeQuantityAfterChange({
+        previousTypeId: 'type-a',
+        typeId: 'type-b',
+        content,
+      }),
+    ).toBeUndefined()
   })
 })

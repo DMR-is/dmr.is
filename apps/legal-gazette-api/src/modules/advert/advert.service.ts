@@ -16,7 +16,11 @@ import {
 } from '@dmr.is/utils-server/serverUtils'
 
 import { LegalGazetteEvents } from '../../core/constants'
-import { resolveFeeQuantity } from '../../core/utils/fee-quantity.util'
+import {
+  feeQuantityAfterChange,
+  resolveFeeQuantity,
+} from '../../core/utils/fee-quantity.util'
+import { idEquals } from '../../core/utils/id.util'
 import { AdvertDetailedDto } from '../../models/advert.dto'
 import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
@@ -816,9 +820,6 @@ export class AdvertService implements IAdvertService {
     }
 
     const typeId = body.typeId ?? advert.typeId
-    const sameId = (a?: string, b?: string) =>
-      !!a && !!b && a.toLowerCase() === b.toLowerCase()
-
     const { type } = await this.typeCategoriesService.findByTypeId(typeId)
 
     if (body.categoryId) {
@@ -826,7 +827,7 @@ export class AdvertService implements IAdvertService {
       // included - the editorial UI deliberately offers those as well.
       if (
         !type.categories.some((category) =>
-          sameId(category.id, body.categoryId),
+          idEquals(body.categoryId, category.id),
         )
       ) {
         throw new BadRequestException(
@@ -839,7 +840,9 @@ export class AdvertService implements IAdvertService {
 
     // Type-only change - keep the current category while the new type allows it.
     if (
-      type.categories.some((category) => sameId(category.id, advert.categoryId))
+      type.categories.some((category) =>
+        idEquals(category.id, advert.categoryId),
+      )
     ) {
       return undefined
     }
@@ -864,11 +867,12 @@ export class AdvertService implements IAdvertService {
    * Keeps a content-derived fee quantity in step with edits made before
    * publication. Template adverts (external foreclosures) carry their items
    * outside `content`, so their quantity is never re-derived from it.
+   * `undefined` leaves the column untouched; `null` clears it.
    */
-  private resolveUpdatedFeeQuantity(
+  private feeQuantityForUpdate(
     advert: AdvertModel,
     body: UpdateAdvertDto,
-  ): number | undefined {
+  ): number | null | undefined {
     if (body.feeQuantity !== undefined) {
       return body.feeQuantity
     }
@@ -881,10 +885,11 @@ export class AdvertService implements IAdvertService {
       return undefined
     }
 
-    return resolveFeeQuantity(
-      body.typeId ?? advert.typeId,
-      body.content ?? advert.content,
-    )
+    return feeQuantityAfterChange({
+      previousTypeId: advert.typeId,
+      typeId: body.typeId ?? advert.typeId,
+      content: body.content ?? advert.content,
+    })
   }
 
   async updateAdvert(
@@ -921,7 +926,7 @@ export class AdvertService implements IAdvertService {
       caption: body.caption,
       courtDistrictId: body.courtDistrictId,
       judgementDate: body.judgementDate,
-      feeQuantity: this.resolveUpdatedFeeQuantity(advert, body),
+      feeQuantity: this.feeQuantityForUpdate(advert, body),
     })
 
     return updated.fromModelToDetailed()
