@@ -685,11 +685,7 @@ describe('createAdvert', () => {
         (_, i) => `<p>Heiti eignar: Eign ${i}</p>`,
       ).join('')
 
-    const createAs = (
-      typeId: string,
-      content: string,
-      feeQuantity?: number,
-    ) =>
+    const createAs = (typeId: string, content: string, feeQuantity?: number) =>
       service.createAdvert({
         typeId,
         categoryId: 'category-123',

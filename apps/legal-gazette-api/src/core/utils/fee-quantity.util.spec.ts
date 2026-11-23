@@ -14,9 +14,9 @@ describe('resolveFeeQuantity', () => {
   it('matches the lower-cased type id Postgres returns', () => {
     const html = ['A', 'B'].map(property).join('')
 
-    expect(
-      resolveFeeQuantity(TypeIdEnum.FORECLOSURE.toLowerCase(), html),
-    ).toBe(2)
+    expect(resolveFeeQuantity(TypeIdEnum.FORECLOSURE.toLowerCase(), html)).toBe(
+      2,
+    )
   })
 
   it('returns 0 for a foreclosure without a property label', () => {
