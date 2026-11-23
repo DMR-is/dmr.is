@@ -1,17 +1,17 @@
 import { WinstonModule } from 'nest-winston'
 
-import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
+import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 
 import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
+import { applyApiRouting, GLOBAL_PREFIX } from './api-routing'
 import { setupSwaggerDocument } from './setupSwaggerDocument'
 import { SWAGGER_CONFIG } from './swagger.config'
 
 async function bootstrap() {
-  const globalPrefix = 'api'
   const version = 'v1'
 
   const app = await NestFactory.create(AppModule, {
@@ -30,11 +30,8 @@ async function bootstrap() {
       },
     }),
   )
-  app.setGlobalPrefix(globalPrefix)
+  applyApiRouting(app)
   app.enableCors()
-  app.enableVersioning({
-    type: VersioningType.URI,
-  })
 
   for (const config of SWAGGER_CONFIG) {
     setupSwaggerDocument(app, config)
@@ -48,7 +45,7 @@ async function bootstrap() {
   const tmpLogger = new Logger('LegalGazetteAPI')
 
   tmpLogger.log(
-    `🚀 Legal gazette API is running on: http://localhost:${port}/${globalPrefix}/${version}/`,
+    `🚀 Legal gazette API is running on: http://localhost:${port}/${GLOBAL_PREFIX}/${version}/`,
   )
 }
 
