@@ -2,6 +2,7 @@ import { Op, WhereOptions } from 'sequelize'
 
 import { TypeIdEnum } from '../../models/type.model'
 import { StatusIdEnum } from '../enums/status.enum'
+import { idEquals } from './id.util'
 
 /**
  * Advert statuses that take an advert out of play.
@@ -15,14 +16,6 @@ export const TERMINATED_ADVERT_STATUSES = [
   StatusIdEnum.REJECTED,
   StatusIdEnum.WITHDRAWN,
 ]
-
-/**
- * Postgres returns UUID columns lower-cased while the id enums are written
- * upper-case, so `advert.typeId === TypeIdEnum.X` is always false. Compare ids
- * through this, or let the database do the comparison.
- */
-const idEquals = (a: string | null | undefined, b: string): boolean =>
-  a?.toLowerCase() === b.toLowerCase()
 
 /**
  * A Skiptalok that still counts - either on its way to publication or already

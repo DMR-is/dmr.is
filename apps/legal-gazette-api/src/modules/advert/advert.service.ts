@@ -16,6 +16,7 @@ import {
 } from '@dmr.is/utils-server/serverUtils'
 
 import { LegalGazetteEvents } from '../../core/constants'
+import { resolveFeeQuantity } from '../../core/utils/fee-quantity.util'
 import { AdvertDetailedDto } from '../../models/advert.dto'
 import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
@@ -643,6 +644,8 @@ export class AdvertService implements IAdvertService {
       context: 'AdvertService',
     })
 
+    const content = sanitizeLegalGazetteHtml(body.content)
+
     const advert = await this.advertModel.scope('detailed').create(
       {
         applicationId: body.applicationId,
@@ -651,7 +654,7 @@ export class AdvertService implements IAdvertService {
         categoryId: body.categoryId,
         caseId: body.caseId,
         title: body.title,
-        content: sanitizeLegalGazetteHtml(body.content),
+        content,
         createdBy: body.createdBy,
         caption: body.caption,
         createdByNationalId: body.createdByNationalId,
@@ -666,7 +669,11 @@ export class AdvertService implements IAdvertService {
         divisionMeetingDate: body.divisionMeetingDate,
         divisionMeetingLocation: body.divisionMeetingLocation,
         communicationChannels: body.communicationChannels,
-        feeQuantity: body.feeQuantity,
+        // An explicit quantity comes from a caller that knows its items
+        // (external foreclosure and company endpoints); everything else is
+        // derived from the content.
+        feeQuantity:
+          body.feeQuantity ?? resolveFeeQuantity(body.typeId, content),
         settlementId: body.settlementId,
         settlement: body.settlement
           ? {
@@ -853,6 +860,33 @@ export class AdvertService implements IAdvertService {
     return assignableOnly.categories[0].id
   }
 
+  /**
+   * Keeps a content-derived fee quantity in step with edits made before
+   * publication. Template adverts (external foreclosures) carry their items
+   * outside `content`, so their quantity is never re-derived from it.
+   */
+  private resolveUpdatedFeeQuantity(
+    advert: AdvertModel,
+    body: UpdateAdvertDto,
+  ): number | undefined {
+    if (body.feeQuantity !== undefined) {
+      return body.feeQuantity
+    }
+
+    if (advert.templateType === AdvertTemplateType.FORECLOSURE) {
+      return undefined
+    }
+
+    if (body.content === undefined && body.typeId === undefined) {
+      return undefined
+    }
+
+    return resolveFeeQuantity(
+      body.typeId ?? advert.typeId,
+      body.content ?? advert.content,
+    )
+  }
+
   async updateAdvert(
     id: string,
     body: UpdateAdvertDto,
@@ -887,7 +921,7 @@ export class AdvertService implements IAdvertService {
       caption: body.caption,
       courtDistrictId: body.courtDistrictId,
       judgementDate: body.judgementDate,
-      feeQuantity: body.feeQuantity,
+      feeQuantity: this.resolveUpdatedFeeQuantity(advert, body),
     })
 
     return updated.fromModelToDetailed()

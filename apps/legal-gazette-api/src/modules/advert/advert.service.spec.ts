@@ -9,11 +9,12 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { AdvertModel } from '../../models/advert.model'
+import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { ApplicationModel } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import { StatusIdEnum } from '../../models/status.model'
+import { TypeIdEnum } from '../../models/type.model'
 import { UserModel } from '../../models/users.model'
 import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
@@ -405,6 +406,69 @@ describe('updateAdvert', () => {
       )
     })
   })
+  describe('fee quantity', () => {
+    const properties = (count: number) =>
+      Array.from(
+        { length: count },
+        (_, i) => `<p>Heiti eignar: Eign ${i}</p>`,
+      ).join('')
+
+    const givenAdvert = (overrides: Record<string, unknown> = {}) => {
+      const advert = Object.assign(
+        createMockAdvert({
+          statusId: StatusIdEnum.SUBMITTED,
+          typeId: TypeIdEnum.FORECLOSURE.toLowerCase(),
+          content: properties(2),
+        }),
+        overrides,
+      )
+      advertModel.withScope.mockReturnThis()
+      advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(advert)
+      return advert
+    }
+
+    it('re-derives the quantity when a foreclosure is edited', async () => {
+      const advert = givenAdvert()
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ content: properties(16) }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: 16 }),
+      )
+    })
+
+    it('keeps an explicit quantity from the editor', async () => {
+      const advert = givenAdvert()
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ content: properties(16), feeQuantity: 3 }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: 3 }),
+      )
+    })
+
+    it('never re-derives a template foreclosure from its content', async () => {
+      const advert = givenAdvert({
+        templateType: AdvertTemplateType.FORECLOSURE,
+        content: null,
+      })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ content: '' }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: undefined }),
+      )
+    })
+  })
   // A type is assignable to several categories, so a type change must not
   // silently re-derive the category and discard the editor's choice.
   describe('category resolution', () => {
@@ -612,6 +676,57 @@ describe('createAdvert', () => {
       expect.objectContaining({ content: undefined }),
       expect.anything(),
     )
+  })
+
+  describe('fee quantity', () => {
+    const properties = (count: number) =>
+      Array.from(
+        { length: count },
+        (_, i) => `<p>Heiti eignar: Eign ${i}</p>`,
+      ).join('')
+
+    const createAs = (
+      typeId: string,
+      content: string,
+      feeQuantity?: number,
+    ) =>
+      service.createAdvert({
+        typeId,
+        categoryId: 'category-123',
+        title: 'Nauðungarsölur',
+        content,
+        feeQuantity,
+        createdBy: 'Test User',
+        createdByNationalId: '1234567890',
+        scheduledAt: ['2026-12-01'],
+      } as unknown as Parameters<AdvertService['createAdvert']>[0])
+
+    it('derives one unit per property for a foreclosure with a lower-cased type id', async () => {
+      await createAs(TypeIdEnum.FORECLOSURE.toLowerCase(), properties(16))
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: 16 }),
+        expect.anything(),
+      )
+    })
+
+    it('keeps an explicit quantity from the caller', async () => {
+      await createAs(TypeIdEnum.FORECLOSURE, properties(2), 5)
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: 5 }),
+        expect.anything(),
+      )
+    })
+
+    it('leaves other types without a quantity', async () => {
+      await createAs('type-123', properties(3))
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: undefined }),
+        expect.anything(),
+      )
+    })
   })
 })
 
