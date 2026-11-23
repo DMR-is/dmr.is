@@ -15,8 +15,9 @@ export type SetupSwaggerOptions = {
 
 /**
  * Builds the OpenAPI document without serving it. Kept separate from
- * `setupSwaggerDocument` so the schema snapshot spec can assert on exactly the
- * document production serves, without registering Swagger UI routes.
+ * `setupSwaggerDocument` so `app.spec.ts` and `client-config-drift.spec.ts` can
+ * build exactly the document production serves, without registering Swagger UI
+ * routes.
  */
 export const buildSwaggerDocument = (
   app: INestApplication,

@@ -59,7 +59,13 @@
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/official-journal-admin-api/jest.config.ts"
-      }
+      },
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js",
+        "{workspaceRoot}/apps/official-journal-web/clientConfig.json"
+      ]
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",

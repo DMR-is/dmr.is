@@ -23,7 +23,13 @@
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/directorate-of-equality-api/jest.config.ts"
-      }
+      },
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js",
+        "{workspaceRoot}/apps/directorate-of-equality-web/clientConfig.json"
+      ]
     },
     "build": {
       "executor": "@nx/webpack:webpack",

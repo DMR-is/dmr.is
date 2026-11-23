@@ -1,23 +1,21 @@
 import { Sequelize } from 'sequelize-typescript'
 
-import { VersioningType } from '@nestjs/common'
 import { NestApplication } from '@nestjs/core'
-import { SwaggerModule } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
 
-import { openApi } from '../openApi'
+import { applyApiRouting } from '../api-routing'
+import { buildSwaggerDocument } from '../setupSwaggerDocument'
 import { AppModule } from './app.module'
 
 /**
  * Smoke test: the real AppModule compiles and Swagger emits a document with
  * routes in it. This is what catches a module that no longer boots.
  *
- * Schema DRIFT is not gated here -- the committed clientConfig.json per web app
- * is the schema baseline, and it is the wire format the generators actually
- * consume. See PR #1405 for why the snapshot gate was removed.
+ * Schema drift is not gated here: client-config-drift.spec.ts compares the
+ * served document with each web's committed clientConfig.json.
  *
- * The document is built from the real AppModule with the same DocumentBuilder
- * config, global prefix and versioning main.ts uses. Only the Sequelize
+ * The document is built from the real AppModule with the same builder and
+ * `applyApiRouting` as main.ts. Only the Sequelize
  * connection is stubbed -- Swagger needs route metadata, not a live database.
  */
 describe('Swagger documentation', () => {
@@ -32,8 +30,7 @@ describe('Swagger documentation', () => {
       .compile()
 
     app = module.createNestApplication()
-    app.setGlobalPrefix('api')
-    app.enableVersioning({ type: VersioningType.URI })
+    applyApiRouting(app)
   }, 60000)
 
   afterAll(async () => {
@@ -44,9 +41,7 @@ describe('Swagger documentation', () => {
   })
 
   it('builds a non-empty OpenAPI document', () => {
-    const document = SwaggerModule.createDocument(app, openApi, {
-      autoTagControllers: false,
-    })
+    const document = buildSwaggerDocument(app)
 
     expect(Object.keys(document.paths).length).toBeGreaterThan(0)
   })
