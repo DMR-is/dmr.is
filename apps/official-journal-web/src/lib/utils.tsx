@@ -14,7 +14,6 @@ import {
   CaseStatusEnum,
   CommentDto,
   DepartmentEnum,
-  GetCasesRequest,
   GetCasesWithDepartmentCountRequest,
   GetCasesWithStatusCountRequest,
   Signature,
@@ -500,9 +499,7 @@ const queryParamToEnumArray = <T extends string>(enumType: Record<string, T>) =>
 export const isDepartmentEnum = z.nativeEnum(DepartmentEnum)
 export const isCaseStatusEnum = z.nativeEnum(CaseStatusEnum)
 
-export const transformQueryToCaseParams = (
-  query: ParsedUrlQuery,
-): GetCasesRequest => {
+export const transformQueryToCaseParams = (query: ParsedUrlQuery) => {
   return {
     id: queryParamToStringArray.parse(query.id),
     applicationId: queryParamToString.parse(query.applicationId),

@@ -1,31 +1,6 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/v1/pdf/case/{id}": {
-      "get": {
-        "operationId": "getPdfByCaseId",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetPdfRespone" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
     "/api/v1/pdf/application/{id}": {
       "get": {
         "operationId": "getPdfByApplicationId",
@@ -941,32 +916,6 @@
         "summary": ""
       }
     },
-    "/api/v1/cases/{id}/correction": {
-      "post": {
-        "operationId": "postCorrection",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddCaseAdvertCorrection"
-              }
-            }
-          }
-        },
-        "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
     "/api/v1/cases/{id}/categories": {
       "put": {
         "operationId": "updateCategories",
@@ -1040,30 +989,6 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
-    "/api/v1/cases/{id}/status": {
-      "put": {
-        "operationId": "updateCaseStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateCaseStatusBody" }
-            }
-          }
-        },
         "responses": { "204": { "description": "" } },
         "security": [{ "bearer": [] }],
         "summary": ""
@@ -1575,20 +1500,6 @@
         "responses": { "204": { "description": "" } },
         "security": [{ "bearer": [] }],
         "summary": ""
-      },
-      "delete": {
-        "operationId": "deleteCaseRegulationDraft",
-        "parameters": [
-          {
-            "name": "caseId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }],
-        "summary": ""
       }
     },
     "/api/v1/cases/{caseId}/regulation-draft/changes": {
@@ -1798,135 +1709,6 @@
         },
         "security": [{ "bearer": [] }],
         "summary": ""
-      },
-      "get": {
-        "operationId": "getCases",
-        "parameters": [
-          {
-            "name": "id",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "applicationId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "year",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "status",
-            "required": false,
-            "in": "query",
-            "description": "Id, title or slug of the statuses",
-            "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "department",
-            "required": false,
-            "in": "query",
-            "description": "Id, title or slug of the departments",
-            "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "description": "Id, title or slug of the types",
-            "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "category",
-            "required": false,
-            "in": "query",
-            "description": "Id, title or slug of the categories",
-            "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "employeeId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "published",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "boolean" }
-          },
-          {
-            "name": "fastTrack",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "boolean" }
-          },
-          {
-            "name": "institution",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "fromDate",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "toDate",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": { "default": 1, "example": 1, "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "schema": { "default": 10, "example": 10, "type": "number" }
-          },
-          {
-            "name": "sortBy",
-            "required": false,
-            "in": "query",
-            "schema": { "example": "sortBy", "type": "string" }
-          },
-          {
-            "name": "direction",
-            "required": false,
-            "in": "query",
-            "schema": { "example": "ASC", "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCasesReponse" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": ""
       }
     },
     "/api/v1/cases/department-count/{department}": {
@@ -2078,22 +1860,6 @@
         "summary": ""
       }
     },
-    "/api/v1/cases/{id}/unpublish": {
-      "post": {
-        "operationId": "unpublish",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
     "/api/v1/cases/{id}/reject": {
       "post": {
         "operationId": "rejectCase",
@@ -2106,31 +1872,6 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
-    "/api/v1/cases/{id}/comments/v2": {
-      "get": {
-        "operationId": "getComments",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetComments" }
-              }
-            }
-          }
-        },
         "security": [{ "bearer": [] }],
         "summary": ""
       }
@@ -2201,28 +1942,6 @@
             }
           }
         },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
-    "/api/v1/cases/{id}/comments/{commentId}": {
-      "delete": {
-        "operationId": "deleteComment",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "commentId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "204": { "description": "" } },
         "security": [{ "bearer": [] }],
         "summary": ""
       }
@@ -2938,43 +2657,6 @@
         "summary": ""
       }
     },
-    "/api/v1/advert-types/main-types/bulk": {
-      "post": {
-        "operationId": "createMainTypesBulk",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAdvertMainTypeBulk"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
     "/api/v1/advert-types/main-types/{id}": {
       "put": {
         "operationId": "updateMainType",
@@ -3274,55 +2956,6 @@
         "summary": ""
       }
     },
-    "/api/v1/signatures/{caseId}": {
-      "post": {
-        "operationId": "createSignature",
-        "parameters": [
-          {
-            "name": "caseId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateSignature" }
-            }
-          }
-        },
-        "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
-    "/api/v1/signatures/signatures/{caseId}": {
-      "get": {
-        "operationId": "getSignatureByCaseId",
-        "parameters": [
-          {
-            "name": "caseId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetSignature" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
     "/api/v1/signatures/{signatureId}": {
       "get": {
         "operationId": "getSignature",
@@ -3349,28 +2982,6 @@
       }
     },
     "/api/v1/institutions/{id}": {
-      "get": {
-        "operationId": "getInstitution",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetInstitution" }
-              }
-            }
-          }
-        },
-        "summary": ""
-      },
       "put": {
         "operationId": "updateInstitution",
         "parameters": [
@@ -3890,35 +3501,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GetStatisticOverviewDashboardResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
-    "/api/v1/statistics/overview/{type}": {
-      "get": {
-        "operationId": "getStatisticsOverview",
-        "parameters": [
-          {
-            "name": "type",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "$ref": "#/components/schemas/StatisticsOverviewQueryType"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetStatisticsOverviewResponse"
                 }
               }
             }
@@ -5072,39 +4654,12 @@
         "properties": { "title": { "type": "string" } },
         "required": ["title"]
       },
-      "AddCaseAdvertCorrection": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "Title of the correction"
-          },
-          "description": {
-            "type": "string",
-            "description": "The correction description"
-          },
-          "documentHtml": { "type": "string", "nullable": true },
-          "documentPdfUrl": { "type": "string", "nullable": true }
-        },
-        "required": ["title", "description"]
-      },
       "UpdateCategoriesBody": {
         "type": "object",
         "properties": {
           "categoryIds": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["categoryIds"]
-      },
-      "UpdateCaseStatusBody": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "description": "Case status",
-            "example": "ready"
-          }
-        },
-        "required": ["status"]
       },
       "UpdateAdvertHtmlCorrection": {
         "type": "object",
@@ -6518,20 +6073,6 @@
         "properties": { "id": { "type": "string" } },
         "required": ["id"]
       },
-      "GetCasesReponse": {
-        "type": "object",
-        "properties": {
-          "cases": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Case" }
-          },
-          "paging": {
-            "description": "Paging info",
-            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
-          }
-        },
-        "required": ["cases", "paging"]
-      },
       "DepartmentEnum": {
         "type": "string",
         "enum": ["A deild", "B deild", "C deild"]
@@ -6573,16 +6114,6 @@
           }
         },
         "required": ["caseIds"]
-      },
-      "GetComments": {
-        "type": "object",
-        "properties": {
-          "comments": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CommentDto" }
-          }
-        },
-        "required": ["comments"]
       },
       "InternalCommentBodyDto": {
         "type": "object",
@@ -6759,16 +6290,6 @@
         },
         "required": ["mainType"]
       },
-      "CreateAdvertMainTypeBulk": {
-        "type": "object",
-        "properties": {
-          "mainTypes": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CreateAdvertMainTypeBody" }
-          }
-        },
-        "required": ["mainTypes"]
-      },
       "UpdateAdvertMainType": {
         "type": "object",
         "properties": {
@@ -6814,71 +6335,6 @@
           "signatureDate": { "type": "string" },
           "additional": { "type": "string" }
         }
-      },
-      "CreateSignatureMember": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name/title/w.e. of the signature member"
-          },
-          "textAbove": {
-            "type": "string",
-            "nullable": true,
-            "description": "The text comes above the signature name"
-          },
-          "textBefore": {
-            "type": "string",
-            "nullable": true,
-            "description": "The text that comes before the signature name"
-          },
-          "textBelow": {
-            "type": "string",
-            "nullable": true,
-            "description": "The text that comes below the signature name"
-          },
-          "textAfter": {
-            "type": "string",
-            "nullable": true,
-            "description": "The text that comes after the signature name"
-          }
-        },
-        "required": [
-          "name",
-          "textAbove",
-          "textBefore",
-          "textBelow",
-          "textAfter"
-        ]
-      },
-      "CreateSignatureRecord": {
-        "type": "object",
-        "properties": {
-          "institution": { "type": "string" },
-          "signatureDate": { "type": "string" },
-          "additional": { "type": "string" },
-          "chairman": { "$ref": "#/components/schemas/CreateSignatureMember" },
-          "members": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CreateSignatureMember" }
-          }
-        },
-        "required": ["institution", "signatureDate", "members"]
-      },
-      "CreateSignature": {
-        "type": "object",
-        "properties": {
-          "involvedPartyId": {
-            "type": "string",
-            "description": "The involved party of the signature"
-          },
-          "records": {
-            "description": "The signature records",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CreateSignatureRecord" }
-          }
-        },
-        "required": ["involvedPartyId", "records"]
       },
       "GetSignature": {
         "type": "object",
@@ -7069,7 +6525,11 @@
       "GetStatisticOverviewDashboardItem": {
         "type": "object",
         "properties": {
-          "overviewType": { "type": "string" },
+          "overviewType": {
+            "allOf": [
+              { "$ref": "#/components/schemas/StatisticsOverviewQueryType" }
+            ]
+          },
           "overview": {
             "$ref": "#/components/schemas/GetStatisticsOverviewResponse"
           }
@@ -7087,10 +6547,6 @@
           }
         },
         "required": ["items"]
-      },
-      "StatisticsOverviewQueryType": {
-        "type": "string",
-        "enum": ["general", "personal", "inactive", "publishing"]
       },
       "SearchAnalyticsOverviewResponse": {
         "type": "object",
@@ -7336,6 +6792,10 @@
           "categories",
           "involvedParty"
         ]
+      },
+      "StatisticsOverviewQueryType": {
+        "type": "string",
+        "enum": ["general", "personal", "inactive", "publishing"]
       }
     }
   }
