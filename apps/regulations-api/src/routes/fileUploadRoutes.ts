@@ -75,60 +75,6 @@ export const fileUploadRoutes: FastifyPluginCallback = (
   )
 
   /**
-   * Deletes a file from an S3 bucket
-   *
-   * Accepts an exact uri!
-   *
-   * Requires a valid `X-APIKey: [secretKey]` HTTP header
-   *
-   *  @returns {{ status: Boolean}}
-   */
-
-  /*fastify.delete(
-    '/file-upload',
-    {
-      ...opts,
-      onRequest: (request, reply, done) => {
-        try {
-          const uploadType = ensureUploadTypeHeader(request);
-          if (uploadType !== 'draft') {
-            throw new Error('Authentication needed');
-          }
-        } catch (error) {
-          reply.code(403);
-          done(error as Error);
-        }
-      },
-    },
-    async (request, reply) => {
-      const _body = ensureObject(request.body);
-      const _key = 'key' in _body ? _body.key : undefined;
-
-      console.log(_body)
-      console
-
-      if (!_key) {
-        reply.code(400).send({ error: 'Object not found. Nothing to delete' });
-        return;
-      }
-
-      const client = new S3Client({ region: AWS_REGION_NAME });
-      console.log(_key);
-      /*const data = await client.send(
-        new DeleteObjectCommand({
-          Bucket: AWS_BUCKET_NAME,
-          Key: _key as string,
-        }),
-      );
-
-      //console.log(data.DeleteMarker);
-
-      //reply.send({ status: data.DeleteMarker });
-      reply.send({ status: false });
-    },
-  );*/
-
-  /**
    * Uploads files from urls into S3 bucket and returns mappings for new urls.
    *
    * Accepts post body of type `{ urls: Array<string>, regName: RegName }`
