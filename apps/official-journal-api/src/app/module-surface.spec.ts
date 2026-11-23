@@ -16,8 +16,8 @@ import { AppModule } from './app.module'
  */
 describe('Public journal API module surface', () => {
   let moduleRef: TestingModule
-  let modules: Set<string>
-  let controllers: Set<string>
+  let modules: Set<string | undefined>
+  let controllers: Set<string | undefined>
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({ imports: [AppModule] })

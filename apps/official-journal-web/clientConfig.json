@@ -1,38 +1,6 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/v1/pdf/application/{id}": {
-      "get": {
-        "operationId": "getPdfByApplicationId",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "showDate",
-            "required": false,
-            "in": "query",
-            "description": "Show date in PDF",
-            "schema": { "default": true, "type": "boolean" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetPdfRespone" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
     "/api/v1/cases/{caseId}/communication-channels": {
       "post": {
         "operationId": "createCommunicationChannel",
@@ -3760,13 +3728,6 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
-      "GetPdfRespone": {
-        "type": "object",
-        "properties": {
-          "content": { "type": "string", "description": "Base64 encoded PDF" }
-        },
-        "required": ["content"]
-      },
       "CreateCaseChannelBody": {
         "type": "object",
         "properties": {
