@@ -3061,6 +3061,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": ""
       },
       "post": {
