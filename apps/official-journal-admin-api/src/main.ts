@@ -15,7 +15,7 @@ import { ExceptionFactoryPipe } from '@dmr.is/pipelines'
 
 import { AppModule } from './app/app.module'
 import { OJOIExceptionFilter } from './exceptionFilter'
-import { openApi } from './openApi'
+import { buildSwaggerDocument } from './swagger-document'
 // Added comment to trigger redeploy
 
 async function bootstrap() {
@@ -37,10 +37,7 @@ async function bootstrap() {
     type: VersioningType.URI,
   })
 
-  const document = SwaggerModule.createDocument(app, openApi, {
-    autoTagControllers: false,
-  })
-  SwaggerModule.setup(swaggerPath, app, document)
+  SwaggerModule.setup(swaggerPath, app, buildSwaggerDocument(app))
 
   apmInit()
 
