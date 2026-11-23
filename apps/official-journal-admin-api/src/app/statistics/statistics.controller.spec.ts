@@ -1,4 +1,3 @@
-import { NotImplementedException } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -8,8 +7,6 @@ import { StaffTokenGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import {
   DepartmentSlugEnum,
   SearchAnalyticsQueryTableType,
-  StatisticsOverviewQueryType,
-  UserDto,
 } from '@dmr.is/shared-dto'
 
 import { StatisticsController } from './statistics.controller'
@@ -56,28 +53,6 @@ describe('StatisticsController', () => {
         )
         expect(results.total).toBeGreaterThanOrEqual(0)
       })
-    })
-  })
-  describe('overview', () => {
-    it('Should return total count larger than 0', async () => {
-      const results = await controller.overview(
-        StatisticsOverviewQueryType.General,
-        {} as UserDto,
-      )
-      expect(results.total).toEqual(0)
-    })
-    it('Should throw not implemented error', async () => {
-      try {
-        await controller.overview(
-          StatisticsOverviewQueryType.General,
-          {} as UserDto,
-        )
-      } catch (error) {
-        if (error instanceof NotImplementedException) {
-          expect(error.message).toEqual('Not Implemented')
-          expect(error.getStatus()).toEqual(501)
-        }
-      }
     })
   })
 

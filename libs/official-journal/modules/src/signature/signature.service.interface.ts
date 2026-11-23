@@ -42,11 +42,6 @@ export interface ISignatureService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignature>>
 
-  getSignatureByCaseId(
-    caseId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetSignature>>
-
   createSignatureMember(
     signatureId: string,
     recordId: string,

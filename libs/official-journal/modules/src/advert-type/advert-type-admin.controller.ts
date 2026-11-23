@@ -1,5 +1,3 @@
-import { Sequelize } from 'sequelize-typescript'
-
 import {
   Body,
   Controller,
@@ -11,19 +9,13 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common'
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOperation,
-  ApiResponse,
-} from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateAdvertMainTypeBody,
-  CreateAdvertMainTypeBulk,
   CreateAdvertTypeBody,
   GetAdvertMainType,
   GetAdvertType,
@@ -45,7 +37,6 @@ export class AdvertTypeAdminController {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAdvertTypeService)
     private readonly advertTypeService: IAdvertTypeService,
-    private sequelize: Sequelize,
   ) {}
 
   @Post('/types')
@@ -123,31 +114,6 @@ export class AdvertTypeAdminController {
     }
 
     return results.result.value
-  }
-
-  @Post('/main-types/bulk')
-  @ApiOperation({ operationId: 'createMainTypesBulk' })
-  @ApiCreatedResponse()
-  @ApiResponse({ status: 400, type: AdvertTypeError })
-  @ApiResponse({ status: 500, type: AdvertTypeError })
-  async createMainTypesBulk(
-    @Body() body: CreateAdvertMainTypeBulk,
-  ): Promise<void> {
-    const transaction = await this.sequelize.transaction()
-    const promises = body.mainTypes.map((item) =>
-      this.advertTypeService.createMainType(item, transaction),
-    )
-
-    const bulkResults = await Promise.all(promises)
-
-    const errors = bulkResults.filter((result) => !result.result.ok)
-    if (errors.length > 0) {
-      await transaction.rollback()
-
-      throw new AdvertTypeError('Ekki tókst að búa til allar tegundir', 500)
-    }
-
-    await transaction.commit()
   }
 
   @Put('/main-types/:id')

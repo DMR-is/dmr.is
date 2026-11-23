@@ -53,7 +53,6 @@ import {
 } from '@dmr.is/pipelines'
 import {
   AddCaseAdditionalPartyBody,
-  AddCaseAdvertCorrection,
   CaseChannel,
   CaseCommunicationStatus,
   CaseStatusEnum,
@@ -74,8 +73,6 @@ import {
   GetAdvertsQueryParams,
   GetAdvertsResponse,
   GetCaseResponse,
-  GetCasesQuery,
-  GetCasesReponse,
   GetCasesWithDepartmentCount,
   GetCasesWithDepartmentCountQuery,
   GetCasesWithPublicationNumber,
@@ -84,7 +81,6 @@ import {
   GetCasesWithStatusCountQuery,
   GetCategoriesResponse,
   GetComment,
-  GetComments,
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
   GetInstitutionsFullResponse,
@@ -109,7 +105,6 @@ import {
   UpdateCaseInvolvedPartyBody,
   UpdateCasePriceBody,
   UpdateCaseSignatureDateDisplayBody,
-  UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCategory,
@@ -479,16 +474,6 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.updateCaseTitle(id, body))
   }
 
-  @Post(':id/correction')
-  @ApiOperation({ operationId: 'postCorrection' })
-  @ApiNoContentResponse()
-  async postCorrection(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: AddCaseAdvertCorrection,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.postCaseCorrection(id, body))
-  }
-
   @Put(':id/categories')
   @ApiOperation({ operationId: 'updateCategories' })
   @ApiNoContentResponse()
@@ -571,41 +556,6 @@ export class CaseController {
     ResultWrapper.unwrap(
       await this.caseService.updateEmployee(id, userId, user),
     )
-  }
-
-  @Put(':id/status')
-  @ApiOperation({ operationId: 'updateCaseStatus' })
-  @ApiNoContentResponse()
-  async updateStatus(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateCaseStatusBody,
-    @CurrentUser() user: UserDto,
-  ) {
-    const updateResults = await this.caseService.updateCaseStatus(
-      id,
-      body,
-      user,
-    )
-
-    if (!updateResults.result.ok) {
-      throw new HttpException(
-        updateResults.result.error.message,
-        updateResults.result.error.code,
-      )
-    }
-
-    const historyResults = await this.caseService.createCaseHistory(id)
-
-    if (!historyResults.result.ok) {
-      this.logger.warn('Failed to create case history', {
-        caseId: id,
-        error: historyResults.result.error,
-        category: LOG_CATEGORY,
-        context: 'CaseController',
-      })
-    }
-
-    return
   }
 
   @Put(':id/update')
@@ -873,16 +823,6 @@ export class CaseController {
     )
   }
 
-  @Delete(':caseId/regulation-draft')
-  @ApiOperation({ operationId: 'deleteCaseRegulationDraft' })
-  @HttpCode(204)
-  @ApiNoContentResponse()
-  async deleteCaseRegulationDraft(
-    @Param('caseId', new UUIDValidationPipe()) caseId: string,
-  ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.deleteRegulationDraft(caseId))
-  }
-
   @Post(':caseId/regulation-draft/changes')
   @ApiOperation({ operationId: 'createCaseRegulationChange' })
   @HttpCode(204)
@@ -984,13 +924,6 @@ export class CaseController {
     )
   }
 
-  @Get()
-  @ApiOperation({ operationId: 'getCases' })
-  @ApiResponse({ status: 200, type: GetCasesReponse })
-  async getCases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
-    return ResultWrapper.unwrap(await this.caseService.getCases(params))
-  }
-
   @Get('/department-count/:department')
   @ApiOperation({ operationId: 'getCasesWithDepartmentCount' })
   @ApiParam({
@@ -1016,27 +949,11 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.publishCases(body))
   }
 
-  @Post(':id/unpublish')
-  @ApiOperation({ operationId: 'unpublish' })
-  @ApiNoContentResponse()
-  async unpublish(@Param('id', new UUIDValidationPipe()) id: string) {
-    ResultWrapper.unwrap(await this.caseService.unpublishCase(id))
-  }
-
   @Post(':id/reject')
   @ApiOperation({ operationId: 'rejectCase' })
   @ApiNoContentResponse()
   async reject(@Param('id', new UUIDValidationPipe()) id: string) {
     ResultWrapper.unwrap(await this.caseService.rejectCase(id))
-  }
-
-  @Get(':id/comments/v2')
-  @ApiOperation({ operationId: 'getComments' })
-  @ApiResponse({ status: 200, type: GetComments })
-  async getComments(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<GetComments> {
-    return ResultWrapper.unwrap(await this.commentServiceV2.getComments(id))
   }
 
   @Post(':id/comments/v2/internal')
@@ -1086,18 +1003,6 @@ export class CaseController {
         adminUserCreatorId: user.id,
         comment: body.comment,
       }),
-    )
-  }
-
-  @Delete(':id/comments/:commentId')
-  @ApiOperation({ operationId: 'deleteComment' })
-  @ApiNoContentResponse()
-  async deleteComment(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Param('commentId', new UUIDValidationPipe()) commentId: string,
-  ) {
-    ResultWrapper.unwrap(
-      await this.commentServiceV2.deleteComment(id, commentId),
     )
   }
 

@@ -1,19 +1,8 @@
-import {
-  Controller,
-  Get,
-  HttpException,
-  Inject,
-  Param,
-  Query,
-} from '@nestjs/common'
+import { Controller, Get, HttpException, Inject, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  GetInstitution,
-  GetInstitutions,
-  InstitutionQuery,
-} from '@dmr.is/shared-dto'
+import { GetInstitutions, InstitutionQuery } from '@dmr.is/shared-dto'
 
 import { IInstitutionService } from '../institution.service.interface'
 
@@ -27,22 +16,6 @@ export class InstitutionController {
     @Inject(IInstitutionService)
     private readonly institutionService: IInstitutionService,
   ) {}
-
-  @Get('/:id')
-  @ApiOperation({ operationId: 'getInstitution' })
-  @ApiResponse({ status: 200, type: GetInstitution })
-  async getInstitution(@Param('id') id: string) {
-    const results = await this.institutionService.getInstitution(id)
-
-    if (!results.result.ok) {
-      throw new HttpException(
-        results.result.error.message,
-        results.result.error.code,
-      )
-    }
-
-    return results.result.value
-  }
 
   @Get()
   @ApiOperation({ operationId: 'getInstitutions' })

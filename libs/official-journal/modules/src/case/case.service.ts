@@ -489,81 +489,6 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async unpublishCase(id: string): Promise<ResultWrapper> {
-    const caseStatus = (
-      await this.utilityService.caseStatusLookup(CaseStatusEnum.Unpublished)
-    ).unwrap()
-
-    // TODO: Remove PUBLISHED_CASE_ADVERTS table
-    // Then remove all casePublishedAdvertsModel references
-    // Use advertId from case directly instead.
-    const hasAdvertPromise = await this.casePublishedAdvertsModel.findOne({
-      where: {
-        caseId: id,
-      },
-    })
-
-    const updateCasePromise = this.caseModel.update(
-      {
-        statusId: caseStatus.id,
-        publishedAt: null,
-      },
-      {
-        where: {
-          id: id,
-        },
-      },
-    )
-
-    const [_, hasAdvert] = await Promise.all([
-      updateCasePromise,
-      hasAdvertPromise,
-    ])
-
-    if (!hasAdvert) {
-      return ResultWrapper.ok()
-    }
-
-    const statusLookup = await this.utilityService.advertStatusLookup(
-      AdvertStatus.Revoked,
-    )
-
-    if (!statusLookup.result.ok) {
-      this.logger.error('Failed to get advert status', {
-        error: statusLookup.result.error,
-        category: LOGGING_CATEGORY,
-      })
-
-      return ResultWrapper.err({
-        code: 500,
-        message: 'Failed to get advert status',
-      })
-    }
-
-    const updateResult = await this.journalService.updateAdvert(
-      hasAdvert.advertId,
-      {
-        statusId: statusLookup.result.value.id,
-      },
-    )
-
-    if (!updateResult.result.ok) {
-      this.logger.error('Failed to update advert status', {
-        error: updateResult.result.error,
-        category: LOGGING_CATEGORY,
-      })
-
-      return ResultWrapper.err({
-        code: 500,
-        message: 'Failed to update advert status',
-      })
-    }
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  @Transactional()
   updateEmployee(
     caseId: string,
     userId: string,
@@ -2602,15 +2527,6 @@ export class CaseService implements ICaseService {
       draftIdResult.result.value,
       body,
     )
-  }
-
-  @LogAndHandle()
-  async deleteRegulationDraft(caseId: string): Promise<ResultWrapper> {
-    const draftIdResult = await this.getRegulationDraftId(caseId)
-    if (!draftIdResult.result.ok) {
-      return ResultWrapper.err(draftIdResult.result.error)
-    }
-    return this.regulationsAdminService.deleteDraft(draftIdResult.result.value)
   }
 
   @LogAndHandle()

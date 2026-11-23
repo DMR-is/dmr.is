@@ -377,31 +377,6 @@ export class SignatureService implements ISignatureService {
     })
   }
 
-  @LogAndHandle()
-  @Transactional()
-  async getSignatureByCaseId(
-    caseId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetSignature>> {
-    const signature = await this._findSignature({ caseId }, transaction)
-
-    if (!signature) {
-      this.logger.warn('Signature not found', {
-        context: LOGGING_CONTEXT,
-        category: LOGGING_CATEGORY,
-        case_id: caseId,
-      })
-
-      throw new NotFoundException('Signature not found')
-    }
-
-    const mapped = signatureMigrate(signature)
-
-    return ResultWrapper.ok({
-      signature: mapped,
-    })
-  }
-
   async createSignatureMember(
     signatureId: string,
     recordId: string,

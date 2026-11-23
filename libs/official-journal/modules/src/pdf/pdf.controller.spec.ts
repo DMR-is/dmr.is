@@ -5,52 +5,32 @@ import { RoleGuard } from '../guards/auth'
 import { PdfController } from './pdf.controller'
 
 /**
- * These routes were reachable unauthenticated on an internet-facing ALB. The
- * assertions below pin the guard stack per route so a dropped decorator fails
- * the build rather than silently reopening the hole.
+ * This route was reachable unauthenticated on an internet-facing ALB. The
+ * assertions below pin its guard stack so a dropped decorator fails the build
+ * rather than silently reopening the hole.
  */
 describe('PdfController route guards', () => {
-  const guardsOn = (handler: (...args: never[]) => unknown) =>
-    (Reflect.getMetadata('__guards__', handler) ?? []) as Array<unknown>
+  const handler = PdfController.prototype.getPdfByApplicationId
 
-  const rolesOn = (handler: (...args: never[]) => unknown) =>
-    Reflect.getMetadata(ROLES_KEY, handler) as Array<UserRoleEnum> | undefined
-
-  const routes = {
-    getPdfByCaseId: PdfController.prototype.getPdfByCaseId,
-    getPdfByApplicationId: PdfController.prototype.getPdfByApplicationId,
-  }
-
-  it.each(Object.entries(routes))(
-    '%s verifies the bearer token',
-    (_name, handler) => {
-      expect(guardsOn(handler)).toContain(TokenJwtAuthGuard)
-    },
-  )
-
-  // Staff-only, and no caller — same stack as CaseController.
-  it.each([['getPdfByCaseId', routes.getPdfByCaseId]])(
-    '%s is restricted to Admin',
-    (_name, handler) => {
-      expect(guardsOn(handler)).toContain(RoleGuard)
-      expect(rolesOn(handler)).toEqual([UserRoleEnum.Admin])
-    },
-  )
+  it('getPdfByApplicationId verifies the bearer token', () => {
+    expect(Reflect.getMetadata('__guards__', handler) ?? []).toContain(
+      TokenJwtAuthGuard,
+    )
+  })
 
   // Called by island.is for an applicant, who is not in the staff user table:
   // RoleGuard here would 403 the live consumer. Asserted so nobody "tightens"
-  // these to match the case routes without understanding why they differ.
-  it.each([['getPdfByApplicationId', routes.getPdfByApplicationId]])(
-    '%s authenticates without a staff role check',
-    (_name, handler) => {
-      expect(guardsOn(handler)).not.toContain(RoleGuard)
-      expect(rolesOn(handler)).toBeUndefined()
-    },
-  )
+  // it to a staff check without understanding why.
+  it('getPdfByApplicationId authenticates without a staff role check', () => {
+    expect(Reflect.getMetadata('__guards__', handler) ?? []).not.toContain(
+      RoleGuard,
+    )
+    expect(Reflect.getMetadata(ROLES_KEY, handler)).toBeUndefined()
+  })
 
-  it('no longer exposes the url companion routes', () => {
-    // Deleted rather than guarded: nothing called them, and the link they
-    // returned cannot carry the bearer header these routes now require.
+  it('no longer exposes the case route or the url companion routes', () => {
+    // Deleted rather than guarded: nothing called them.
+    expect('getPdfByCaseId' in PdfController.prototype).toBe(false)
     expect('getPdfUrlByCaseId' in PdfController.prototype).toBe(false)
     expect('getPdfUrlByApplicationId' in PdfController.prototype).toBe(false)
   })
