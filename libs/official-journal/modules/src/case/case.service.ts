@@ -1,5 +1,5 @@
 import Mail from 'nodemailer/lib/mailer'
-import { Op, OrderItem, Transaction } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
@@ -75,7 +75,6 @@ import { ResultWrapper } from '@dmr.is/types'
 import {
   enumMapper,
   generatePaging,
-  getLimitAndOffset,
   getPublicationTemplate,
   getS3Bucket,
 } from '@dmr.is/utils-server/serverUtils'
@@ -105,6 +104,7 @@ import { SignatureModel } from '../signature/models/signature.model'
 import { SignatureMemberModel } from '../signature/models/signature-member.model'
 import { SignatureRecordModel } from '../signature/models/signature-record.model'
 import { IUtilityService } from '../utility/utility.service.interface'
+import { findCases } from './case-list/find-cases.query'
 import { caseParameters } from './mappers/case-parameters.mapper'
 import { caseMigrate } from './migrations/case.migrate'
 import { caseAdditionMigrate } from './migrations/case-addition.migrate'
@@ -330,52 +330,7 @@ export class CaseService implements ICaseService {
   }
 
   private async getCasesSqlQuery(params: GetCasesQuery) {
-    const whereParams = caseParameters(params)
-    const sortKeys: { [key: string]: OrderItem } = {
-      caseRequestPublishDate: ['requestedPublicationDate', params.direction],
-      casePublishDate: Sequelize.literal(
-        `"publishedAt" ${params.direction} NULLS LAST`,
-      ),
-      caseRegistrationDate: ['createdAt', params.direction],
-      caseStatus: ['statusId', params.direction],
-    }
-    const sortBy = sortKeys[params.sortBy] || 'requestedPublicationDate'
-    const { limit, offset } = getLimitAndOffset(params)
-
-    return this.caseModel.findAndCountAll({
-      distinct: true,
-      benchmark: true,
-      offset: offset,
-      limit: limit,
-      attributes: [
-        'id',
-        'requestedPublicationDate',
-        'createdAt',
-        'year',
-        'advertTitle',
-        'fastTrack',
-        'publishedAt',
-        'publicationNumber',
-        'statusId',
-        'caseNumber',
-      ],
-      where: whereParams,
-      include: casesIncludes({
-        department: params?.department,
-        type: params?.type,
-        status: params?.status,
-        institution: params?.institution,
-        category: params?.category,
-      }),
-      order: [sortBy],
-      logging: (_, timing) => {
-        this.logger.info(`getCasesSqlQuery executed in ${timing}ms`, {
-          context: LOGGING_QUERY,
-          category: LOGGING_CATEGORY,
-          query: 'getCasesSqlQuery',
-        })
-      },
-    })
+    return findCases(this.caseModel, params, this.logger)
   }
 
   async getCasesWithPublicationNumber(
