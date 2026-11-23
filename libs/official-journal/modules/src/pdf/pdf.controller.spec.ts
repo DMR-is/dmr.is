@@ -5,9 +5,7 @@ import { RoleGuard } from '../guards/auth'
 import { PdfController } from './pdf.controller'
 
 /**
- * This route was reachable unauthenticated on an internet-facing ALB. The
- * assertions below pin its guard stack so a dropped decorator fails the build
- * rather than silently reopening the hole.
+ * Pins the route's guard stack, so a dropped decorator fails the build.
  */
 describe('PdfController route guards', () => {
   const handler = PdfController.prototype.getPdfByApplicationId
