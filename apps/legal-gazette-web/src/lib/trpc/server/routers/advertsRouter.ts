@@ -1,7 +1,5 @@
 import * as z from 'zod'
 
-import { communicationChannelSchema } from '@dmr.is/legal-gazette-schemas'
-
 import {
   RecallBankruptcyFieldsDtoRequirementStatementEnum,
   RecallDeceasedFieldsDtoRequirementStatementEnum,
@@ -49,15 +47,6 @@ const updateAdvertDtoSchema = z.object({
   feeQuantity: z.number().optional(),
 })
 
-export const createAdvertDtoSchema = z.object({
-  typeId: z.string(),
-  categoryId: z.string(),
-  title: z.string(),
-  content: z.string(),
-  scheduledAt: z.array(z.string()),
-  communicationChannels: z.array(communicationChannelSchema),
-})
-
 const toDate = (value: string | Date): Date =>
   value instanceof Date ? value : new Date(value)
 
@@ -86,16 +75,6 @@ const mapSignatureDates = <
 })
 
 export const advertsRouter = router({
-  createAdvert: protectedProcedure
-    .input(createAdvertDtoSchema)
-    .mutation(async ({ ctx, input }) => {
-      return await ctx.api.createAdvert({
-        createAdvertDto: {
-          ...input,
-          scheduledAt: input.scheduledAt.map((date) => toDate(date)),
-        },
-      })
-    }),
   getRelatedAdverts: protectedProcedure
     .input(z.object({ caseId: z.string() }))
     .query(async ({ ctx, input }) => {

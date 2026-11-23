@@ -1,6 +1,5 @@
 import { mergeRouters } from '../trpc'
 import { baseEntityRouter } from './baseEntityRouter'
-import { environmentRouter } from './environmentRouter'
 import { issuesRouter } from './issuesRouter'
 import { publicationRouter } from './publicationRouter'
 import { subscriberRouter } from './subscriberRouter'
@@ -10,7 +9,6 @@ export const appRouter = mergeRouters(
   subscriberRouter,
   baseEntityRouter,
   issuesRouter,
-  environmentRouter,
 )
 
 // export type definition of API
