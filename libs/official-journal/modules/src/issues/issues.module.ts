@@ -5,19 +5,20 @@ import { AwsModule } from '@dmr.is/shared-modules'
 
 import { AdditionalPartiesModel } from '../additional-parties/models'
 import { AdvertModel } from '../journal/models'
-import { PdfServiceModule } from '../pdf/pdf.module'
+import { PdfProviderModule } from '../pdf/pdf.module'
 import { UserModule } from '../user/user.module'
 import { IssuesController } from './issues.controller'
 import { IssuesModel } from './issues.model'
 import { IssusesService } from './issues.service'
 import { IIssuesService } from './issues.service.interface'
 import { IssuesAdminController } from './issues-admin.controller'
-import { IIssuesReadService, IssuesReadService } from './issues-read.service'
+import { IssuesReadService } from './issues-read.service'
+import { IIssuesReadService } from './issues-read.service.interface'
 
 /** The issues service, with no routes. */
 @Module({
   imports: [
-    PdfServiceModule,
+    PdfProviderModule,
     AwsModule,
     SequelizeModule.forFeature([
       AdvertModel,
@@ -33,7 +34,7 @@ import { IIssuesReadService, IssuesReadService } from './issues-read.service'
   ],
   exports: [IIssuesService],
 })
-export class IssuesServiceModule {}
+export class IssuesProviderModule {}
 
 /**
  * Public `GET /issues`. Reads `IssuesModel` only, so the public journal API
@@ -51,7 +52,7 @@ export class IssuesModule {}
  * resolves the caller against the staff user table.
  */
 @Module({
-  imports: [IssuesServiceModule, UserModule],
+  imports: [IssuesProviderModule, UserModule],
   controllers: [IssuesAdminController],
 })
 export class IssuesAdminModule {}

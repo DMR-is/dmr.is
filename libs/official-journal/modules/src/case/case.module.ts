@@ -13,7 +13,7 @@ import { ExternalModule } from '../external/external.module'
 import { SharedJournalModule } from '../journal/journal.module'
 import { AdvertDepartmentModel } from '../journal/models'
 import advertModels from '../journal/models'
-import { PdfServiceModule } from '../pdf/pdf.module'
+import { PdfProviderModule } from '../pdf/pdf.module'
 import { PriceModule } from '../price/price.module'
 import { RegulationPublishModule } from '../regulation-publish/regulation-publish.module'
 import { RegulationsAdminModule } from '../regulations-admin/regulations-admin.module'
@@ -65,7 +65,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
     OpenSearchModule,
     OpsModule,
     forwardRef(() => PriceModule),
-    forwardRef(() => PdfServiceModule),
+    forwardRef(() => PdfProviderModule),
     forwardRef(() => AwsModule),
     forwardRef(() => AttachmentsModule),
     forwardRef(() => UtilityModule),
