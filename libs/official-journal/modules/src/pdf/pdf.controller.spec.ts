@@ -1,4 +1,4 @@
-import { ROLES_KEY, UserRoleEnum } from '@dmr.is/constants'
+import { ROLES_KEY } from '@dmr.is/constants'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { RoleGuard } from '../guards/auth'
