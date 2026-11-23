@@ -21,11 +21,6 @@ import {
   ISSUES_ALLOWED_DEPARTMENT_IDS,
   ISSUES_LOGGING_CONTEXT,
 } from './constants'
-import { findIssues } from './find-issues.query'
-import {
-  GetMonthlyIssuesQueryDto,
-  GetMonthlyIssuesResponseDto,
-} from './issues.dto'
 import { IssuesModel } from './issues.model'
 import { IIssuesService } from './issues.service.interface'
 import {
@@ -44,11 +39,6 @@ export class IssusesService implements IIssuesService {
     private readonly advertModel: typeof AdvertModel,
     @InjectModel(IssuesModel) private readonly issuesModel: typeof IssuesModel,
   ) {}
-  async getIssues(
-    query: GetMonthlyIssuesQueryDto,
-  ): Promise<GetMonthlyIssuesResponseDto> {
-    return findIssues(this.issuesModel, query)
-  }
 
   async generateMonthlyIssues(departmentId: string, date: Date): Promise<void> {
     const now = new Date()

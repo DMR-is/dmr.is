@@ -5,7 +5,7 @@ import {
   GetMonthlyIssuesQueryDto,
   GetMonthlyIssuesResponseDto,
 } from './issues.dto'
-import { IIssuesReadService } from './issues-read.service'
+import { IIssuesReadService } from './issues-read.service.interface'
 
 /**
  * Public read of the monthly issues. Mounted on the public journal API and on

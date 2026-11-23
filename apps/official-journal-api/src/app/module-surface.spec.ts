@@ -38,17 +38,33 @@ describe('Public journal API module surface', () => {
     await moduleRef?.close()
   })
 
-  it.each([
-    'SharedCaseModule',
-    'ApplicationModule',
-    'UserModule',
-    'CommentModuleV2',
-    'PdfModule',
-    'PdfServiceModule',
-    'IssuesServiceModule',
-    'RegulationsAdminModule',
-  ])('does not load %s', (name) => {
-    expect(modules.has(name)).toBe(false)
+  // An exact set, not a deny-list: a renamed admin module, or one that was
+  // never listed, fails here as soon as it starts loading.
+  it('loads exactly the public modules', () => {
+    expect([...modules].filter((m) => m !== 'RootTestModule').sort()).toEqual([
+      'AdvertTypeModule',
+      'AppModule',
+      'AwsModule',
+      'CacheModule',
+      'CaseListModule',
+      'ConfigHostModule',
+      'ConfigModule',
+      'DMRSequelizeConfigModule',
+      'DiscoveryModule',
+      'HealthModule',
+      'InternalCoreModule',
+      'IssuesModule',
+      'JournalModule',
+      'LoggingModule',
+      'OpenSearchModule',
+      'OpsModule',
+      'RegulationAppendicesControllerModule',
+      'RegulationAppendicesModule',
+      'ScheduleModule',
+      'SequelizeCoreModule',
+      'SequelizeModule',
+      'SharedJournalModule',
+    ])
   })
 
   it('mounts only the public controllers', () => {

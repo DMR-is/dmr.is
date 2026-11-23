@@ -12,7 +12,7 @@ export { IPdfService }
 
 /**
  * The PDF service, with no routes. Import this to render PDFs; import
- * `PdfModule` only in an app that should serve the `/pdf` routes.
+ * `PdfControllerModule` only in an app that should serve the `/pdf` routes.
  */
 @Module({
   // `forwardRef` because UtilityModule reaches back here:
@@ -28,15 +28,14 @@ export { IPdfService }
   ],
   exports: [IPdfService],
 })
-export class PdfServiceModule {}
+export class PdfProviderModule {}
 
 /**
  * The `/pdf` routes. Mounted by the application API only, which serves the
  * application PDF to island.is.
  */
 @Module({
-  imports: [PdfServiceModule],
+  imports: [PdfProviderModule],
   controllers: [PdfController],
-  exports: [PdfServiceModule],
 })
-export class PdfModule {}
+export class PdfControllerModule {}

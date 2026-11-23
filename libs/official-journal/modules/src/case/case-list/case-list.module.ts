@@ -3,11 +3,18 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { LoggingModule } from '@dmr.is/logging'
 
+import { AdditionalPartiesModel } from '../../additional-parties/models'
+import { AdvertTypeModel } from '../../advert-type/models'
 import { models as attachmentModels } from '../../attachments/models'
 import { models as caseCommentModels } from '../../comment/v1/models'
 import { CaseActionModel } from '../../comment/v2/models/case-action.model'
 import { CommentModel } from '../../comment/v2/models/comment.model'
 import { CommentsModel } from '../../comment/v2/models/comments.model'
+import {
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
+} from '../../journal/models'
 import { SignatureModel } from '../../signature/models/signature.model'
 import { SignatureMemberModel } from '../../signature/models/signature-member.model'
 import { SignatureRecordModel } from '../../signature/models/signature-record.model'
@@ -23,22 +30,28 @@ import { ICaseListService } from './case-list.service.interface'
  * Read-only case listing, without the rest of the case module. The public
  * journal API imports this instead of `SharedCaseModule`.
  *
- * The list query joins comments, case actions and users (`casesIncludes`),
- * and `CaseModel` declares associations to signatures and application
- * attachments, so every one of those models must be in the Sequelize
- * instance. Today they get there anyway: `forFeature` records models when a
- * module file is evaluated, and importing the `@dmr.is/ojoi-modules` barrel
- * evaluates them all. The list below states the dependency instead of
+ * Registers every model the list query touches: `casesIncludes` joins the
+ * advert department, type, categories and involved party, additional
+ * parties, comments, case actions and users, and `CaseModel` declares
+ * associations to signatures and application attachments. Sequelize needs all
+ * of them on the instance. Today they get there anyway (`forFeature` records
+ * models when a module file is evaluated, and the `@dmr.is/ojoi-modules`
+ * barrel evaluates them all); the list states the dependency instead of
  * relying on that side effect.
  *
- * Mirrors `SharedCaseModule`'s `API_MOCK` switch, so mock mode still serves
- * mock cases.
+ * Keeps `SharedCaseModule`'s `API_MOCK` switch. As before, `CaseServiceMock`
+ * does not implement `getCases`, so mock mode throws on this route.
  */
 @Module({
   imports: [
     LoggingModule,
     SequelizeModule.forFeature([
       ...caseModels,
+      AdditionalPartiesModel,
+      AdvertTypeModel,
+      AdvertCategoryModel,
+      AdvertDepartmentModel,
+      AdvertInvolvedPartyModel,
       ...attachmentModels,
       ...caseCommentModels,
       CommentModel,
