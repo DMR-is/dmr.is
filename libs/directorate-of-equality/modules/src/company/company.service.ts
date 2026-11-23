@@ -29,7 +29,6 @@ import { PostcodeModel } from '../location/models/postcode.model'
 import { endOfUtcDay } from '../report/lib/day-boundaries'
 import { ReportTypeEnum } from '../report/models/report.enums'
 import { CompanyDto } from './dto/company.dto'
-import { CompanyLookupDto } from './dto/company-lookup.dto'
 import { CompanyRskPreviewDto } from './dto/company-rsk-preview.dto'
 import {
   CompanyTimelineItemDto,
@@ -281,26 +280,6 @@ export class CompanyService implements ICompanyService {
     })
 
     return this.loadCompanyDto(id)
-  }
-
-  async rskLookup(nationalId: string): Promise<CompanyLookupDto> {
-    this.logger.debug(
-      `Looking up company in national registry by national id "${nationalId}"`,
-      { context: LOGGING_CONTEXT },
-    )
-
-    assertLegalEntityKennitala(nationalId)
-
-    const result =
-      await this.nationalRegistryService.getEntityByNationalId(nationalId)
-
-    if (!result.entity) {
-      throw new NotFoundException(
-        companyMessages.registryEntityNotFound(nationalId),
-      )
-    }
-
-    return { name: result.entity.nafn, nationalId: result.entity.kennitala }
   }
 
   async create(input: CreateCompanyInput): Promise<CompanyDto> {
