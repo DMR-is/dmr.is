@@ -5,9 +5,7 @@ import { RoleGuard } from '../guards/auth'
 import { SignatureController } from './signature.controller'
 
 /**
- * Nine routes, seven of them mutating, previously reachable unauthenticated on
- * an internet-facing ALB. Guarded at class level, so the assertions read the
- * class metadata.
+ * Guarded at class level, so the assertions read the class metadata.
  */
 describe('SignatureController guards', () => {
   const guards = (Reflect.getMetadata('__guards__', SignatureController) ??
