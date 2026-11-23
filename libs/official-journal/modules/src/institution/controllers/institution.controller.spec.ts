@@ -5,8 +5,7 @@ import { RoleGuard, StaffTokenGuard } from '../../guards/auth'
 import { InstitutionController } from './institution.controller'
 
 /**
- * This controller was mounted on the internet-facing admin API with no guard.
- * Pinned so a dropped decorator fails the build instead of reopening it.
+ * Pins the guard stack, so a dropped decorator fails the build.
  */
 describe('InstitutionController guards', () => {
   it('requires a staff token with the Admin role', () => {

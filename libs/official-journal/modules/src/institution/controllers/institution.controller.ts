@@ -18,11 +18,9 @@ import { RoleGuard, StaffTokenGuard } from '../../guards/auth'
 import { IInstitutionService } from '../institution.service.interface'
 
 /**
- * Institution reads for the editorial web. This controller is mounted on the
- * admin API, which is internet-facing, and had no guard. It now takes the
- * same Admin stack as `InstitutionAdminController` and `CaseController`: the
- * editorial web signs in only `ritstjori` (Admin) users, so no other role
- * ever calls it.
+ * Institution reads for the editorial web. Same Admin stack as
+ * `InstitutionAdminController` and `CaseController`: the editorial web signs
+ * in only `ritstjori` (Admin) users, so no other role calls it.
  */
 @Controller({
   version: '1',
