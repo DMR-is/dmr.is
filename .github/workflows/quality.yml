@@ -35,6 +35,15 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v5
 
+      - name: 🗄️ Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/nx
+          key: nx-lint-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            nx-lint-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
+            nx-lint-${{ runner.os }}-
+
       - name: Linting
         run: yarn run nx affected -t lint
 
@@ -123,6 +132,15 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v5
 
+      - name: 🗄️ Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/nx
+          key: nx-test-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            nx-test-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
+            nx-test-${{ runner.os }}-
+
       - name: Run tests
         run: yarn run nx affected -t test
   tsc:
@@ -153,12 +171,58 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v5
 
+      - name: 🗄️ Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/nx
+          key: nx-tsc-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            nx-tsc-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
+            nx-tsc-${{ runner.os }}-
+
       - name: tsc
         run: yarn run nx affected -t tsc
 
-      # TODO: Removing build step for now, we will add again building all affected projects if needed
-      # - name: Build application
-      #   run: yarn nx run ${{matrix.project}}:build:production
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # No `submodules: true`, same reason as the tsc job: the sparse
+          # checkout step below fetches only the pinned island.is commit.
+
+      - name: 🌱 Apply submodule sparse-checkout
+        run: ./.gitscripts/checkout-submodules.sh
+
+      - name: ♻️ Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: 📥 Monorepo install
+        uses: ./.github/actions/yarn-install
+        with:
+          cache-install-state: true
+          cache-node-modules: true
+
+      - uses: nrwl/nx-set-shas@v5
+
+      - name: 🗄️ Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/nx
+          key: nx-build-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            nx-build-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
+            nx-build-${{ runner.os }}-
+
+      # Same target the deploy workflow reaches through `nx run <app>:container`
+      # (container dependsOn build, which defaults to the production
+      # configuration). Runs with the empty CI environment, like the image build.
+      - name: Build
+        run: yarn run nx affected -t build
 
   constraints:
     runs-on: ubuntu-latest
