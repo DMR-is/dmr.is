@@ -7,6 +7,11 @@ export interface IssuePdfAdvertInput {
   serial: number | string
 }
 
+export interface PdfCaller {
+  nationalId?: string
+  actorNationalId?: string
+}
+
 export interface IPdfService {
   generatePdfByCaseId(
     caseId: string,
@@ -17,6 +22,7 @@ export interface IPdfService {
 
   getPdfByApplicationId(
     applicationId: string,
+    caller: PdfCaller,
     showDate?: boolean,
   ): Promise<ResultWrapper<Buffer>>
 
