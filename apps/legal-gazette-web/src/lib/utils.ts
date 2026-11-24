@@ -1,4 +1,4 @@
-import { RitstjornTabs, Route } from './constants'
+import { Route } from './constants'
 import { QueryFilterParam, QueryFilterValue, RouteItem } from './types'
 
 export const routesToBreadcrumbs = (
@@ -70,20 +70,6 @@ export const toggleArrayOption = (
   return filter.filter((f) => f !== opt)
 }
 
-export const mapQueryToRitstjornTabs = (
-  query: string | string[] | undefined,
-): RitstjornTabs => {
-  const values = Object.values(RitstjornTabs)
-
-  const found = values.find((tab) => {
-    if (Array.isArray(query)) {
-      return query.includes(tab)
-    }
-    return query === tab
-  })
-  return found ?? RitstjornTabs.SUBMITTED
-}
-
 export const flattenMessages = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   messages: Record<string, any>,
@@ -102,27 +88,6 @@ export const flattenMessages = (
     },
     {} as Record<string, string>,
   )
-}
-
-export const getLoginRedirectUrl = (callbackUrl?: string) => {
-  const isRelativeUrl = callbackUrl && callbackUrl.startsWith('/')
-
-  if (callbackUrl && isRelativeUrl && callbackUrl !== '/') {
-    return `${Route.LOGIN}?callbackUrl=${callbackUrl}`
-  }
-
-  return Route.LOGIN
-}
-
-export const loginRedirect = (callbackUrl?: string) => {
-  const fullUrl = getLoginRedirectUrl(callbackUrl)
-
-  return {
-    redirect: {
-      destination: fullUrl,
-      permanent: false,
-    },
-  }
 }
 
 // Gets base url from server side environment variables

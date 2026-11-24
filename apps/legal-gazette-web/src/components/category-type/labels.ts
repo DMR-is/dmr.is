@@ -1,4 +1,4 @@
-import { ChangeLogAction, ChangeLogEntity } from '../../gen/fetch'
+import { ChangeLogAction } from '../../gen/fetch'
 
 export const changeLogActionLabels: Record<ChangeLogAction, string> = {
   [ChangeLogAction.CREATE]: 'Stofnað',
@@ -11,10 +11,4 @@ export const changeLogActionLabels: Record<ChangeLogAction, string> = {
   // how many adverts moved and where.
   [ChangeLogAction.MOVE]: 'Færsla',
   [ChangeLogAction.REVERT]: 'Afturkallað',
-}
-
-export const changeLogEntityLabels: Record<ChangeLogEntity, string> = {
-  [ChangeLogEntity.CATEGORY]: 'Flokkur',
-  [ChangeLogEntity.TYPE]: 'Tegund',
-  [ChangeLogEntity.CONNECTION]: 'Tenging',
 }
