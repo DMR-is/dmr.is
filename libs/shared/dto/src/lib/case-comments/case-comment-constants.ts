@@ -11,13 +11,3 @@ export enum CaseCommentTypeTitleEnum {
   Comment = 'gerir athugasemd.',
   Message = 'skráir skilaboð',
 }
-
-export enum CaseCommentSourceEnum {
-  API = 'API',
-  Application = 'Application',
-}
-
-export enum CaseCommentDirectionEnum {
-  Sent = 'sent',
-  Received = 'received',
-}

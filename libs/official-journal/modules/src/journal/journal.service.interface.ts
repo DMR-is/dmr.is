@@ -51,9 +51,6 @@ export interface IJournalService {
   getDepartments(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetDepartmentsResponse>>
-  insertDepartment(
-    model: Department,
-  ): Promise<ResultWrapper<GetDepartmentResponse>>
   updateDepartment(
     model: Department,
   ): Promise<ResultWrapper<GetDepartmentResponse>>
@@ -82,7 +79,6 @@ export interface IJournalService {
     categoryId: string,
   ): Promise<ResultWrapper>
 
-  getCategory(id: string): Promise<ResultWrapper<GetCategoryResponse>>
   getCategories(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetCategoriesResponse>>
@@ -94,13 +90,9 @@ export interface IJournalService {
     model: UpdateCategory,
   ): Promise<ResultWrapper<GetCategoryResponse>>
 
-  getInstitution(id: string): Promise<ResultWrapper<GetInstitutionResponse>>
   getInstitutions(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetInstitutionsResponse>>
-  insertInstitution(
-    model: Institution,
-  ): Promise<ResultWrapper<GetInstitutionResponse>>
   updateInstitution(
     model: Institution,
   ): Promise<ResultWrapper<GetInstitutionResponse>>

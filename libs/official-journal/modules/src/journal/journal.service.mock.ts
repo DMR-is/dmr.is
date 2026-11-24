@@ -88,11 +88,6 @@ export class MockJournalService implements IJournalService {
   getDepartment(id: string): Promise<ResultWrapper<GetDepartmentResponse>> {
     throw new Error('Method not implemented.')
   }
-  insertDepartment(
-    model: Department,
-  ): Promise<ResultWrapper<GetDepartmentResponse>> {
-    throw new Error('Method not implemented.')
-  }
   updateDepartment(
     model: Department,
   ): Promise<ResultWrapper<GetDepartmentResponse>> {
@@ -109,9 +104,6 @@ export class MockJournalService implements IJournalService {
   ): Promise<ResultWrapper<GetMainCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
-  getCategory(id: string): Promise<ResultWrapper<GetCategoryResponse>> {
-    throw new Error('Method not implemented.')
-  }
   insertCategory(title: string): Promise<ResultWrapper<GetCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
@@ -122,14 +114,6 @@ export class MockJournalService implements IJournalService {
     throw new Error('Method not implemented.')
   }
   mergeCategories(from: string, to: string): Promise<ResultWrapper> {
-    throw new Error('Method not implemented.')
-  }
-  getInstitution(id: string): Promise<ResultWrapper<GetInstitutionResponse>> {
-    throw new Error('Method not implemented.')
-  }
-  insertInstitution(
-    model: Institution,
-  ): Promise<ResultWrapper<GetInstitutionResponse>> {
     throw new Error('Method not implemented.')
   }
   updateInstitution(

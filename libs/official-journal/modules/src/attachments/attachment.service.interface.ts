@@ -8,8 +8,6 @@ import {
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { ApplicationAttachmentTypeModel } from './models'
-
 export interface CreateAttachmentParams {
   params: {
     applicationId: string
@@ -30,11 +28,6 @@ export interface IAttachmentService {
     key: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
-
-  getAttachment(
-    attachmentId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetApplicationAttachmentResponse>>
 
   getApplicationAttachment(
     applicationId: string,
@@ -58,11 +51,6 @@ export interface IAttachmentService {
     applicationId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>>
-
-  attachmentTypeLookup(
-    type: AttachmentTypeParam,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<ApplicationAttachmentTypeModel>>
 
   createCaseAttachment(
     caseId: string,

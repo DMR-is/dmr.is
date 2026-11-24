@@ -15,11 +15,6 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface ICommentServiceV2 {
-  getCommentById(
-    caseId: string,
-    commentId: string,
-  ): Promise<ResultWrapper<GetComment>>
-
   getComments(
     caseId: string,
     query?: GetCommentsQuery,
