@@ -127,6 +127,7 @@ export class ApplicationController {
 
   @Get(':id/price')
   @UseGuards(ApplicationOwnershipGuard)
+  @ApiParam({ name: 'id', type: String })
   @ApiOperation({ operationId: 'getPrice' })
   @ApiResponse({ type: CasePriceResponse })
   async getPrice(
@@ -139,6 +140,7 @@ export class ApplicationController {
 
   @Get(':id')
   @UseGuards(ApplicationOwnershipGuard)
+  @ApiParam({ name: 'id', type: String })
   @ApiOperation({ operationId: 'getApplication' })
   @ApiResponse({ type: GetApplicationResponse })
   getApplication(
@@ -149,6 +151,7 @@ export class ApplicationController {
 
   @Post(':id/post')
   @UseGuards(ApplicationOwnershipGuard)
+  @ApiParam({ name: 'id', type: String })
   @ApiOperation({ operationId: 'postApplication' })
   @ApiResponse({ status: 200 })
   async postApplication(

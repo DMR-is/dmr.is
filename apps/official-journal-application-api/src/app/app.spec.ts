@@ -50,4 +50,32 @@ describe('Swagger documentation', () => {
 
     expect(Object.keys(document.paths).length).toBeGreaterThan(0)
   })
+
+  // `CurrentApplication` is not a `@Param`, so Swagger infers nothing from it;
+  // these routes declare `id` with `@ApiParam`. `getComments` takes `@Param`
+  // directly and is the shape they must keep.
+  it('declares the id path parameter on the routes that read CurrentApplication', () => {
+    const document = SwaggerModule.createDocument(app, openApi, {
+      autoTagControllers: false,
+    })
+    const parametersOf = (operationId: string) =>
+      Object.values(document.paths)
+        .flatMap((item) => Object.values(item))
+        .find(
+          (operation) =>
+            (operation as { operationId?: string }).operationId === operationId,
+        ) as { parameters?: unknown[] }
+
+    const expected = parametersOf('getComments').parameters
+    expect(expected).toEqual([
+      expect.objectContaining({ name: 'id', in: 'path', required: true }),
+    ])
+    for (const operationId of [
+      'getPrice',
+      'getApplication',
+      'postApplication',
+    ]) {
+      expect(parametersOf(operationId).parameters).toEqual(expected)
+    }
+  })
 })
