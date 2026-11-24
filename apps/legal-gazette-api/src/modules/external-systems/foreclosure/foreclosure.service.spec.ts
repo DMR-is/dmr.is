@@ -12,7 +12,7 @@ import { StatusIdEnum } from '../../../models/status.model'
 import { TypeIdEnum } from '../../../models/type.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
 import { ForeclosureService } from './foreclosure.service'
-const TRANSACTION = { id: 'tx' }
+const TRANSACTION = { id: 'tx', LOCK: { UPDATE: 'UPDATE' } }
 
 /** The advert row syncFeeQuantity reads: an uncharged template foreclosure. */
 const templateForeclosureAdvert = (
@@ -590,12 +590,18 @@ describe('ForeclosureService - Status Protection', () => {
       expect(mockAdvertModel.update).toHaveBeenCalledWith(
         { feeQuantity: 3 },
         {
-          where: { id: 'advert-123', transactionId: null },
+          where: { id: 'advert-123', transactionId: null, legacyId: null },
           transaction: TRANSACTION,
         },
       )
-      // Write, then count, then update - a count before the write is stale.
+      // Lock, write, then count, then update - a count before the write is
+      // stale, and the lock must precede both so a concurrent request waits.
+      expect(mockAdvertModel.findByPk).toHaveBeenCalledWith(
+        'advert-123',
+        expect.objectContaining({ transaction: TRANSACTION, lock: 'UPDATE' }),
+      )
       const order = [
+        mockAdvertModel.findByPk,
         foreclosurePropertyModel.create,
         foreclosurePropertyModel.count,
         mockAdvertModel.update,
@@ -621,11 +627,16 @@ describe('ForeclosureService - Status Protection', () => {
       expect(mockAdvertModel.update).toHaveBeenCalledWith(
         { feeQuantity: 3 },
         {
-          where: { id: 'advert-123', transactionId: null },
+          where: { id: 'advert-123', transactionId: null, legacyId: null },
           transaction: TRANSACTION,
         },
       )
+      expect(mockAdvertModel.findByPk).toHaveBeenCalledWith(
+        'advert-123',
+        expect.objectContaining({ transaction: TRANSACTION, lock: 'UPDATE' }),
+      )
       const order = [
+        mockAdvertModel.findByPk,
         destroy,
         foreclosurePropertyModel.count,
         mockAdvertModel.update,
