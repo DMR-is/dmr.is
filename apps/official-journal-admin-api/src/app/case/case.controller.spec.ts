@@ -16,7 +16,6 @@ import {
 import { StaffTokenGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import {
   Case,
-  CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
   UserDto,
@@ -35,14 +34,14 @@ describe('CaseController', () => {
   let caseController: CaseController
   const comment = {
     id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
-    type: CaseCommentTypeTitleEnum.Submit,
+    type: 'Innsent af:',
     createdAt: '2024-03-12T12:45:48.21Z',
     caseStatus: CaseStatusEnum.Submitted,
     internal: false,
     task: {
       from: null,
       to: 'Stofnun x',
-      title: CaseCommentTypeTitleEnum.Submit,
+      title: 'Innsent af:',
       comment: null,
     },
   }
