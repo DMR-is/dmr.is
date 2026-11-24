@@ -13,19 +13,13 @@ import {
   ValidationError,
 } from 'sequelize'
 
-import {
-  FileTypeValidator,
-  HttpException,
-  MaxFileSizeValidator,
-} from '@nestjs/common'
+import { HttpException } from '@nestjs/common'
 
 import {
   APPLICATION_FILES_BUCKET,
   DEFAULT_PAGE_NUMBER,
   DEFAULT_PAGE_SIZE,
   FAST_TRACK_DAYS,
-  ONE_MEGA_BYTE,
-  PAGING_MAXIMUM_PAGE_SIZE,
   PDF_RETRY_ATTEMPTS,
   PDF_RETRY_DELAY,
 } from '@dmr.is/constants'
@@ -114,16 +108,6 @@ export function slicePagedData<T>(
   return data.slice((page - 1) * pageSize, page * pageSize)
 }
 
-export const FILE_VALIDATORS = [
-  new MaxFileSizeValidator({
-    maxSize: ONE_MEGA_BYTE * 10,
-    message: `File size exceeds the limit of 10MB.`,
-  }),
-  new FileTypeValidator({
-    fileType: '.(png|jpeg|jpg)',
-  }),
-]
-
 export const getS3Bucket = () =>
   process.env.AWS_APPLICATION_FILES_BUCKET ?? APPLICATION_FILES_BUCKET
 
@@ -138,29 +122,6 @@ export const getDoeImportsBucket = () => {
     throw new Error('AWS_SALARY_ANALYSIS_FILES_BUCKET is not set')
   }
   return bucket
-}
-
-/**
- * Creates the key for the application file
- * @param applicationId string
- * @param isOriginal boolean
- * @param fileName string
- * @param fileType string
- * @returns the key of the application file
- */
-export const createApplicationKey = (
-  applicationId: string,
-  isOriginal: boolean,
-  fileName: string,
-  fileType: string,
-) =>
-  `applications/${applicationId}/${
-    isOriginal ? 'frumrit' : 'fylgiskjol'
-  }/${fileName}.${fileType}`
-
-export const getKeyFromLocation = (location: string) => {
-  const splitKey = 'applications/'
-  return `${splitKey}${location.split(splitKey)[1]}`
 }
 
 type IsHolidayMap = Record<string, true | undefined>
@@ -472,16 +433,6 @@ export const mapSourceToDirection = (
     : CaseCommentDirectionEnum.Received
 }
 
-export const getPageSize = (pageSize: number | undefined): number => {
-  if (!pageSize || pageSize <= 0) return DEFAULT_PAGE_SIZE
-
-  if (pageSize > PAGING_MAXIMUM_PAGE_SIZE) {
-    return PAGING_MAXIMUM_PAGE_SIZE
-  }
-
-  return pageSize
-}
-
 export const retryAsync = async <T>(
   asyncFn: () => Promise<T>,
   retries: number | undefined = PDF_RETRY_ATTEMPTS,
@@ -751,21 +702,6 @@ export const getPublicationTemplate = (
   })
 
   return `<p align="center" style="margin-top: 1.5em;"><strong>${department} — Útgáfudagur: ${formatted}</strong></p>`
-}
-
-export const getNextWeekDay = (date: Date | string) => {
-  const dateToUse = typeof date === 'string' ? new Date(date) : date
-  const day = dateToUse.getDay()
-
-  if (day === 6) {
-    // Saturday
-    return new Date(dateToUse.setDate(dateToUse.getDate() + 2))
-  } else if (day === 0) {
-    // Sunday
-    return new Date(dateToUse.setDate(dateToUse.getDate() + 1))
-  }
-
-  return dateToUse
 }
 
 export const getBodyHTMLlength = (

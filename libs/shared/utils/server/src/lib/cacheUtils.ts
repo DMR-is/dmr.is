@@ -1,5 +1,4 @@
 /* eslint-disable local-rules/no-async-module-init */
-import { Cache } from 'cache-manager'
 import Keyv from 'keyv'
 
 import { CacheModule, CacheModuleAsyncOptions } from '@nestjs/cache-manager'
@@ -79,17 +78,3 @@ export const createRedisCacheOptions = (namespace: StoreKeyMapper) => {
 
   return CacheModule.registerAsync(options)
 }
-
-// helpers stay the same:
-export const clearNamespace = async (cacheManager: Cache) =>
-  cacheManager.clear()
-
-export const delCache = async (cacheManager: Cache, key: string) =>
-  cacheManager.del(key)
-
-export const setCache = async (
-  cacheManager: Cache,
-  key: string,
-  value: unknown,
-  ttlMs = 5000,
-) => cacheManager.set(key, value, ttlMs)

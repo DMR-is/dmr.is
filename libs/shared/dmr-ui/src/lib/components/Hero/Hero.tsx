@@ -31,8 +31,6 @@ export type HeroProps = {
   alignHeader?: ResponsiveProp<keyof typeof justifyContent>
 }
 
-export const BANNER_PORTAL_ID = 'banner-portal'
-
 export const Hero = ({
   breadcrumbs,
   title,

@@ -3,15 +3,11 @@ import { CreatedAt } from 'sequelize-typescript'
 import {
   AbstractDmrModel,
   AbstractDmrModelAttributes,
-  AbstractDmrModelStatic,
 } from './abstract-dmr.model'
 
 export type ImmutableModelAttributes = AbstractDmrModelAttributes & {
   createdAt: Date
 }
-
-export type ImmutableModelStatic<T extends ImmutableModel = ImmutableModel> =
-  AbstractDmrModelStatic<T>
 
 /**
  * Base class for tables where rows are never mutated after insert.

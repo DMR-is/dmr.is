@@ -3,16 +3,12 @@ import { CreatedAt, UpdatedAt } from 'sequelize-typescript'
 import {
   AbstractDmrModel,
   AbstractDmrModelAttributes,
-  AbstractDmrModelStatic,
 } from './abstract-dmr.model'
 
 export type MutableModelAttributes = AbstractDmrModelAttributes & {
   createdAt: Date
   updatedAt: Date
 }
-
-export type MutableModelStatic<T extends MutableModel = MutableModel> =
-  AbstractDmrModelStatic<T>
 
 /**
  * Base class for tables that track creation + mutation time but do NOT

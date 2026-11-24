@@ -1,4 +1,4 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 
 export class CaseChannel {
   @ApiProperty({
@@ -30,5 +30,3 @@ export class CaseChannel {
   })
   phone?: string
 }
-
-export class CreateCaseChannelDto extends OmitType(CaseChannel, ['id']) {}
