@@ -66,8 +66,6 @@ export enum ApplicationStates {
 
 export const ROLES_KEY = 'roles'
 
-export const WITH_CASE_KEY = 'withCase'
-
 export enum UserRoleEnum {
   Admin = 'Ritstjóri',
   Editor = 'Fulltrúi',
