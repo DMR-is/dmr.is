@@ -72,10 +72,6 @@ import { StatisticsModule } from './statistics/statistics.module'
       useClass: LoggingInterceptor,
     },
     {
-      provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor,
-    },
-    {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
     },
