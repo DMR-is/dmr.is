@@ -26,6 +26,10 @@ export interface IUserService {
     userNationalId?: string,
   ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>>
 
+  getAllInvolvedPartiesByNationalId(
+    nationalId: string,
+  ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>>
+
   getRolesByUser(
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetRolesByUserResponse>>

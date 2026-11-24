@@ -497,6 +497,24 @@ export class UserService implements IUserService {
     })
   }
 
+  /**
+   * Every involved party registered under the national id, primary first.
+   * A national id with no registered party gives an empty list.
+   */
+  @LogAndHandle()
+  async getAllInvolvedPartiesByNationalId(
+    nationalId: string,
+  ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>> {
+    const parties = await this.advertInvolvedPartyModel.findAll({
+      where: { nationalId: { [Op.eq]: nationalId } },
+      order: [['isPrimary', 'DESC NULLS LAST']],
+    })
+
+    return ResultWrapper.ok({
+      involvedParties: parties.map(advertInvolvedPartyMigrate),
+    })
+  }
+
   @LogAndHandle()
   async getMyUserInfo(
     currentUser: UserDto,

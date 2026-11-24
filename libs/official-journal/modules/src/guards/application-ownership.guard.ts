@@ -16,9 +16,11 @@ import { IApplicationService } from '../application/application.service.interfac
 import { isApplicationParty } from '../auth/application-party'
 import { APPLICATION_REQUEST_KEY } from './current-application.decorator'
 
-// Answers that say nothing about the id: our own credentials were refused
-// (401), the request timed out (408) or was throttled (429).
-const NOT_ABOUT_THE_ID = [401, 408, 429]
+// Answers that say nothing about the id. The fetch uses our own service
+// token, so a refused credential (401) or scope (403) affects every request,
+// and a timeout (408) or throttling (429) is transient. Answering 404 would
+// hide these.
+const NOT_ABOUT_THE_ID = [401, 403, 408, 429]
 const LOGGING_CATEGORY = 'application-ownership-guard'
 const LOGGING_CONTEXT = 'ApplicationOwnershipGuard'
 
@@ -29,10 +31,10 @@ const LOGGING_CONTEXT = 'ApplicationOwnershipGuard'
  * id is the token subject, which those guards leave on `req.user.nationalId`.
  *
  * A malformed id is a 400. A caller who is not a party gets the same 404 as a
- * missing application, and so does any 4xx answer for the id, so the route
- * does not distinguish kinds of unavailable ids. Any other failure to fetch the
- * application (5xx, timeout, network) is a logged 502. The fetched application
- * is left on `req.application`; handlers read it with `CurrentApplication`.
+ * missing application, and so does an upstream 400, 404, 410 or 422 for the
+ * id. Any other failure to fetch the application (401, 403, 408, 429, 5xx,
+ * timeout, network) is a logged 502. The fetched application is left on
+ * `req.application`; handlers read it with `CurrentApplication`.
  */
 @Injectable()
 export class ApplicationOwnershipGuard implements CanActivate {
@@ -64,9 +66,9 @@ export class ApplicationOwnershipGuard implements CanActivate {
         context: LOGGING_CONTEXT,
       })
 
-      // Any other 4xx says something about this id, and all of them read as
-      // "not found". The rest count as the system being unavailable, like 5xx
-      // and network errors.
+      // 400, 404, 410 and 422 say something about this id and read as "not
+      // found". The rest count as the system being unavailable, like 5xx and
+      // network errors.
       if (code >= 400 && code < 500 && !NOT_ABOUT_THE_ID.includes(code)) {
         throw new NotFoundException('Application not found')
       }

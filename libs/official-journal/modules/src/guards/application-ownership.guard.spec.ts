@@ -89,7 +89,7 @@ describe('ApplicationOwnershipGuard', () => {
     ).rejects.toThrow(NotFoundException)
   })
 
-  it.each([400, 403, 410, 422])(
+  it.each([400, 404, 410, 422])(
     'answers an upstream %s like a missing application, with a 404',
     async (code) => {
       getApplication.mockResolvedValue(
@@ -101,7 +101,7 @@ describe('ApplicationOwnershipGuard', () => {
     },
   )
 
-  it.each([500, 502, 503, 401, 408, 429])(
+  it.each([500, 502, 503, 401, 403, 408, 429])(
     'answers an upstream %s as a 502, not as a missing application',
     async (code) => {
       getApplication.mockResolvedValue(
@@ -113,18 +113,6 @@ describe('ApplicationOwnershipGuard', () => {
       expect(logger.warn).toHaveBeenCalled()
     },
   )
-
-  // `getApplication` is `@LogAndHandle()`: a thrown fetch error (timeout,
-  // network) comes back as an error result with code 500, never as a rejection.
-  it('answers a fetch that threw as a 502, not as a missing application', async () => {
-    getApplication.mockResolvedValue(
-      ResultWrapper.err({ code: 500, message: 'fetch failed' }),
-    )
-    await expect(
-      guard.canActivate(contextFor(request('0101010000'))),
-    ).rejects.toThrow(BadGatewayException)
-    expect(logger.warn).toHaveBeenCalled()
-  })
 
   it.each([undefined, 'not-a-uuid', '../secret'])(
     'answers id %p with a 400 before any fetch',

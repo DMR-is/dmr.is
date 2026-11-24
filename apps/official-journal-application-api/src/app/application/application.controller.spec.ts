@@ -86,12 +86,12 @@ describe('ApplicationController.postApplication', () => {
 })
 
 describe('ApplicationController handlers use the application the guard fetched', () => {
-  const getFeeForApplication = jest.fn()
+  const getPriceFromService = jest.fn()
   const getApplicationFromService = jest.fn()
   const controller = new ApplicationController(
     {
       getApplication: getApplicationFromService,
-      getPrice: getFeeForApplication,
+      getPrice: getPriceFromService,
     } as never,
     {} as never,
     {} as never,
@@ -107,10 +107,10 @@ describe('ApplicationController handlers use the application the guard fetched',
   })
 
   it('prices the same application', async () => {
-    getFeeForApplication.mockResolvedValue(ResultWrapper.ok({ price: 1 }))
+    getPriceFromService.mockResolvedValue(ResultWrapper.ok({ price: 1 }))
 
     await controller.getPrice(application)
 
-    expect(getFeeForApplication).toHaveBeenCalledWith(application)
+    expect(getPriceFromService).toHaveBeenCalledWith(application)
   })
 })

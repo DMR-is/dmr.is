@@ -711,12 +711,11 @@ export class CaseCreateService implements ICaseCreateService {
   /**
    * A case is filed for the involved party named in the application's
    * answers. The caller must be a party to the application, and the involved
-   * party must be one the party picker (`GET :id/involved-parties`) offers
-   * them: every institution for an editorial admin, otherwise the involved
-   * parties they belong to or act for (`caller.involvedPartyIds`, which is
-   * what `getInvolvedPartiesByUser` returns). The applicant is also offered
-   * what `getInvolvedPartiesByNationalId` finds for their own national id.
-   * An assignee is offered only their own parties.
+   * party must be one of: every institution for an editorial admin, the
+   * involved parties the caller belongs to or acts for
+   * (`caller.involvedPartyIds`), or any institution registered under the
+   * application's applicant national id. The same set applies to the
+   * applicant and to an assignee.
    * Every refusal is the same 403, so the answer does not reveal which
    * institution ids exist.
    */
@@ -756,23 +755,16 @@ export class CaseCreateService implements ICaseCreateService {
       return ResultWrapper.ok()
     }
 
-    // An assignee is offered only their own parties, checked above.
-    if (
-      normalizeNationalId(caller.nationalId) !==
-      normalizeNationalId(application.applicant)
-    ) {
-      return forbidden()
-    }
-
-    const offered = await this.userService.getInvolvedPartiesByNationalId(
+    // Every institution registered under the applicant's national id is
+    // allowed, for the applicant and for an assignee alike: the application
+    // enters `submitted` with whoever submitted it, and additional parties
+    // act with the applicant's view.
+    const offered = await this.userService.getAllInvolvedPartiesByNationalId(
       normalizeNationalId(application.applicant),
-      caller.actorNationalId,
     )
 
     if (!offered.result.ok) {
-      return offered.result.error.code === 404
-        ? forbidden()
-        : ResultWrapper.err(offered.result.error)
+      return ResultWrapper.err(offered.result.error)
     }
 
     if (
