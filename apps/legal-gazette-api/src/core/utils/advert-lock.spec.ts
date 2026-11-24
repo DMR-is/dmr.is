@@ -60,9 +60,46 @@ describe('advert-lock', () => {
         expect.objectContaining({ transaction: clsTx }),
       )
     })
+
+    it('prefers the explicit transaction over the CLS one', async () => {
+      const ns = createNamespace(CLS_NAMESPACE)
+      try {
+        await ns.runAndReturn(async () => {
+          ns.set('transaction', clsTx)
+          await lockAdvertRow(model, 'a', { transaction: tx })
+          await lockAdvertRows(model, { id: 'a' }, { transaction: tx })
+        })
+      } finally {
+        destroyNamespace(CLS_NAMESPACE)
+      }
+
+      expect(unscoped.findByPk).toHaveBeenCalledWith(
+        'a',
+        expect.objectContaining({ transaction: tx }),
+      )
+      expect(unscoped.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({ transaction: tx }),
+      )
+    })
   })
 
   describe('lockAdvertRows', () => {
+    it('uses the CLS transaction when none is passed', async () => {
+      const ns = createNamespace(CLS_NAMESPACE)
+      try {
+        await ns.runAndReturn(async () => {
+          ns.set('transaction', clsTx)
+          await lockAdvertRows(model, { id: 'a' })
+        })
+      } finally {
+        destroyNamespace(CLS_NAMESPACE)
+      }
+
+      expect(unscoped.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({ transaction: clsTx }),
+      )
+    })
+
     it('locks in id order on the unscoped model', async () => {
       const where = { id: ['b', 'a'] }
 

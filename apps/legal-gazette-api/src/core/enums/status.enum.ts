@@ -8,6 +8,16 @@ export enum StatusIdEnum {
   WITHDRAWN = 'e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
 }
 
+/**
+ * Statuses an advert can be published from. `AdvertModel.canPublish` uses
+ * exactly this list; `isStillPublishable` (advert-status.util.ts) extends it
+ * with PUBLISHED for the remaining publications of an advert.
+ */
+export const PUBLISHABLE_ADVERT_STATUS_IDS: ReadonlyArray<StatusIdEnum> = [
+  StatusIdEnum.READY_FOR_PUBLICATION,
+  StatusIdEnum.IN_PUBLISHING,
+]
+
 /** Statuses an advert can still be withdrawn (deleted) from. */
 export const DELETABLE_ADVERT_STATUS_IDS: ReadonlyArray<StatusIdEnum> = [
   StatusIdEnum.SUBMITTED,
