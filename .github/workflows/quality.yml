@@ -35,15 +35,6 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v5
 
-      - name: 🗄️ Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: .cache/nx
-          key: nx-lint-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
-          restore-keys: |
-            nx-lint-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
-            nx-lint-${{ runner.os }}-
-
       - name: Linting
         run: yarn run nx affected -t lint
 
@@ -132,15 +123,6 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v5
 
-      - name: 🗄️ Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: .cache/nx
-          key: nx-test-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
-          restore-keys: |
-            nx-test-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
-            nx-test-${{ runner.os }}-
-
       - name: Run tests
         run: yarn run nx affected -t test
   tsc:
@@ -171,19 +153,13 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v5
 
-      - name: 🗄️ Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: .cache/nx
-          key: nx-tsc-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
-          restore-keys: |
-            nx-tsc-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
-            nx-tsc-${{ runner.os }}-
-
       - name: tsc
         run: yarn run nx affected -t tsc
 
   build:
+    # PRs only: on main the deploy builds the same apps again, so this would
+    # only delay it.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -208,20 +184,11 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v5
 
-      - name: 🗄️ Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: .cache/nx
-          key: nx-build-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
-          restore-keys: |
-            nx-build-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
-            nx-build-${{ runner.os }}-
-
-      # Same target the deploy workflow reaches through `nx run <app>:container`
-      # (container dependsOn build, which defaults to the production
-      # configuration). Runs with the empty CI environment, like the image build.
+      # What the deploy builds through `nx run <app>:container`: `build`
+      # (production configuration, no build-time env) and, for the apps that
+      # boot under varlock, `flatten-env`, which `container` depends on there.
       - name: Build
-        run: yarn run nx affected -t build
+        run: yarn run nx affected -t build flatten-env
 
   constraints:
     runs-on: ubuntu-latest
