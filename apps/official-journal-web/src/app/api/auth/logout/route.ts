@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 
 import { endSessionHandler } from '@dmr.is/auth/logoutHandler'
-import { sessionCookieName } from '@dmr.is/auth/sessionCookies'
 
 import { AUTH_COOKIE_PREFIX } from '../../../../lib/auth/authOptions'
 
@@ -14,11 +13,7 @@ const handler = (request: NextRequest) => {
       : process.env.IDENTITY_SERVER_LOGOUT_URL
   ) as string
 
-  return endSessionHandler(
-    request,
-    postLogoutRedirectUri,
-    sessionCookieName(AUTH_COOKIE_PREFIX),
-  )
+  return endSessionHandler(request, postLogoutRedirectUri, AUTH_COOKIE_PREFIX)
 }
 
 export { handler as POST }

@@ -1,4 +1,4 @@
-import { signIn, signOut } from 'next-auth/react'
+import { signIn } from 'next-auth/react'
 
 import { identityServerId, signOutUrl } from './identityProvider'
 
@@ -11,23 +11,30 @@ const clearSessionStorage = () => {
   }
 }
 
+// A top-level POST rather than fetch: the server answers with a redirect to the
+// identity server and the expired session cookies in the same response, so the
+// id_token never reaches page JavaScript.
+const submitLogoutForm = (action: string) => {
+  const form = document.createElement('form')
+  form.method = 'POST'
+  form.action = action
+  document.body.appendChild(form)
+  form.submit()
+}
+
 export const useLogOut = () => {
   const logOut = async () => {
     clearSessionStorage()
 
-    // Revoke the refresh token and read the end-session URL while the session
-    // cookie is still present; signOut() below deletes it.
+    // Revoke the refresh token while the session cookie is still present; the
+    // logout response below expires it. next-auth's signOut() is not called
+    // first: it deletes the session cookie, and the id_token needed for the
+    // end-session request is read from it.
     await fetch('/api/auth/revoke-refresh', { method: 'POST' }).catch(
       () => undefined,
     )
 
-    const endSession = await fetch(signOutUrl(window), { method: 'POST' })
-      .then((res) => (res.ok ? res.json() : null))
-      .catch(() => null)
-
-    await signOut({ redirect: false })
-
-    window.location.assign(endSession?.url ?? window.location.origin)
+    submitLogoutForm(signOutUrl(window))
   }
   return logOut
 }
