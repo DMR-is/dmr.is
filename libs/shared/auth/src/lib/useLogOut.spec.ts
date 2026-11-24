@@ -34,49 +34,30 @@ describe('useLogOut', () => {
     })
   })
 
-  it('clears storage, revokes, then submits a top-level POST form', async () => {
-    fetchMock.mockImplementation(async (url: string) => {
-      calls.push(`fetch:${url}`)
-      return { ok: true }
-    })
-
+  it('clears storage, then submits a top-level POST form without calling fetch', async () => {
     await useLogOut()()
 
     expect(calls).toEqual([
       'sessionStorage.clear',
-      'fetch:/api/auth/revoke-refresh',
       'form.append',
       'form.submit',
     ])
-    expect(fetchMock).toHaveBeenCalledWith('/api/auth/revoke-refresh', {
-      method: 'POST',
-    })
+    // revocation happens in the logout route, after its origin check
+    expect(fetchMock).not.toHaveBeenCalled()
     expect(form.method).toBe('POST')
     expect(form.action).toBe('/api/auth/logout')
   })
 
   it('does not call next-auth signOut, which would delete the cookie first', async () => {
-    fetchMock.mockResolvedValue({ ok: true })
-
     await useLogOut()()
 
     expect(signOut).not.toHaveBeenCalled()
-  })
-
-  it('still submits the form when revocation fails', async () => {
-    fetchMock.mockRejectedValue(new Error('offline'))
-
-    await useLogOut()()
-
-    expect(form.submit).toHaveBeenCalled()
   })
 
   it('does not stop when sessionStorage throws', async () => {
     clear.mockImplementation(() => {
       throw new DOMException('blocked', 'SecurityError')
     })
-    fetchMock.mockResolvedValue({ ok: false })
-
     await useLogOut()()
 
     expect(form.submit).toHaveBeenCalled()

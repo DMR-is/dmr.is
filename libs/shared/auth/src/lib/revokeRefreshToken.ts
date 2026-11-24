@@ -4,7 +4,7 @@ import { getLogger } from '@dmr.is/logging-next'
 
 const logger = getLogger('logout-handler')
 
-const revokeRefreshToken = async (
+export const revokeRefreshToken = async (
   refreshToken: string,
   identityServerConfig: { clientId: string; clientSecret: string },
 ) => {

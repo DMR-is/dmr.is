@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { endSessionUrl } from '@dmr.is/auth/logoutHandler'
 import { expireAppAuthCookies } from '@dmr.is/auth/sessionCookies'
 
 import { AUTH_COOKIE_PREFIX } from '../../../../lib/auth/identityServerConfig'
@@ -13,19 +14,11 @@ export const dynamic = 'force-dynamic'
 function handler(request: NextRequest) {
   const idToken = request.cookies.get(LOGOUT_HINT_COOKIE)?.value
 
-  const params = new URLSearchParams({
-    post_logout_redirect_uri: process.env.BASE_URL as string,
-  })
-
-  if (idToken) {
-    params.set('id_token_hint', idToken)
-  }
-  // else: the handoff cookie is missing or expired. Degrade to an end-session
-  // request without the hint rather than sending the literal string "null" -
-  // IDS may show its own logout prompt in that case.
-
+  // No hint (the handoff cookie is missing or expired) degrades to an
+  // end-session request without it rather than sending the literal string
+  // "null" - IDS may show its own logout prompt in that case.
   const response = NextResponse.redirect(
-    `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?${params.toString()}`,
+    endSessionUrl(request, process.env.BASE_URL, idToken),
   )
 
   // This app's NextAuth cookies only, expired rather than deleted so

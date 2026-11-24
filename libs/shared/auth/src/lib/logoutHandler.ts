@@ -1,24 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { getLogger } from '@dmr.is/logging-next'
 
-import { expireAppAuthCookies, sessionCookieName } from './sessionCookies'
+import { revokeRefreshToken } from './revokeRefreshToken'
+import { expireAppAuthCookies, sessionCookieNames } from './sessionCookies'
+
+const logger = getLogger('logout-handler')
 
 /**
- * Origins this app is served from: the one Next sees, and the one the app is
- * configured with. Behind a load balancer `request.nextUrl.origin` can be the
- * internal host, so `NEXTAUTH_URL` (the public URL) is accepted as well.
+ * The origin the app is served from publicly: `NEXTAUTH_URL`'s, falling back
+ * to the one Next sees. Behind a load balancer `request.nextUrl.origin` can be
+ * the internal host. An unparsable `NEXTAUTH_URL` is ignored, never thrown.
  */
-const trustedOrigins = (request: NextRequest) => {
-  const origins = new Set([request.nextUrl.origin])
+const appOrigin = (request: NextRequest) => {
   try {
-    if (process.env.NEXTAUTH_URL) {
-      origins.add(new URL(process.env.NEXTAUTH_URL).origin)
-    }
+    if (process.env.NEXTAUTH_URL)
+      return new URL(process.env.NEXTAUTH_URL).origin
   } catch {
     // an unparsable NEXTAUTH_URL contributes nothing
   }
-  return origins
+  return request.nextUrl.origin
 }
+
+/** Origins this app is served from: the one Next sees and the public one. */
+const trustedOrigins = (request: NextRequest) =>
+  new Set([request.nextUrl.origin, appOrigin(request)])
 
 /**
  * Same-origin requests only. `Sec-Fetch-Site`, when sent, decides; otherwise
@@ -34,13 +40,16 @@ const isSameOrigin = (request: NextRequest) => {
 }
 
 /**
- * The post-logout URI as an absolute URL: a relative or missing value is
- * resolved against the app's own origin, so a redirect can always be built.
+ * The post-logout URI to send to the identity server. An absolute URI is
+ * returned byte for byte: the identity server may match registered URIs
+ * exactly, and normalising would turn a bare origin into `https://<host>/`.
+ * Only a relative or empty value is resolved, against the app's origin; empty
+ * becomes the origin root (`<origin>/`).
  */
 const resolveRedirectUri = (request: NextRequest, uri?: string) => {
-  const base = process.env.NEXTAUTH_URL
-    ? new URL(process.env.NEXTAUTH_URL).origin
-    : request.nextUrl.origin
+  if (uri && URL.canParse(uri)) return uri
+
+  const base = appOrigin(request)
   try {
     return new URL(uri || '/', base).toString()
   } catch {
@@ -49,27 +58,67 @@ const resolveRedirectUri = (request: NextRequest, uri?: string) => {
 }
 
 /**
+ * The identity server's end-session URL. The one place it is built, for logout
+ * and the access-denied routes, so both send the same `post_logout_redirect_uri`
+ * for one configured value.
+ */
+export const endSessionUrl = (
+  request: NextRequest,
+  postLogoutRedirectUri: string | undefined,
+  idTokenHint?: string,
+) => {
+  const params = new URLSearchParams({
+    post_logout_redirect_uri: resolveRedirectUri(
+      request,
+      postLogoutRedirectUri,
+    ),
+  })
+  if (idTokenHint) params.set('id_token_hint', idTokenHint)
+
+  return `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?${params.toString()}`
+}
+
+// The first session cookie name that yields a token. An app on NextAuth's
+// default names is tried under both variants: NextAuth picks `__Secure-` from
+// the NEXTAUTH_URL scheme, which can disagree with NODE_ENV.
+const readSession = async (request: NextRequest, cookiePrefix?: string) => {
+  for (const cookieName of sessionCookieNames(cookiePrefix)) {
+    const token = await getToken({ req: request, cookieName })
+    if (token) return token
+  }
+  return null
+}
+
+/**
  * Ends the NextAuth session and sends the browser to the identity server's
  * end-session endpoint, in one response.
  *
- * Meant to be the target of a same-origin top-level form POST; any other
- * origin gets a 403 before a cookie is read or touched. The id_token is read
- * from the HttpOnly session cookie and appears only in the `Location` header
- * that points at the identity server; it is never in a response body or in a
- * URL this app serves.
+ * Meant to be the target of a same-origin top-level form POST. Any other
+ * request gets a 403 before a cookie is read or touched, and nothing is
+ * revoked. The id_token is read from the HttpOnly session cookie and appears
+ * only in the `Location` header that points at the identity server; it is
+ * never in a response body or in a URL this app serves.
  *
- * Every cookie of the app's NextAuth set is expired with the attributes it was
- * set with, including the chunks (`<session cookie>.0`, `.1`, …) of a large
- * session. Without a session the cookies are still cleared and the browser is
- * sent to `postLogoutRedirectUri`.
+ * After the origin check the refresh token is revoked (when
+ * `identityServerConfig` is given; a failure is logged and does not stop the
+ * logout), then every cookie of the app's NextAuth set is expired - `Secure`
+ * where the name is `__Secure-` / `__Host-` prefixed, and the chunks
+ * (`<session cookie>.0`, `.1`, ...) of a large session included. Without a
+ * session the cookies are still cleared and the browser is sent straight to the
+ * post-logout URI (a navigation to the app, so `NextResponse.redirect`
+ * normalising it is harmless). With a session, `post_logout_redirect_uri` is
+ * built by `endSessionUrl`: an absolute URI is passed through unchanged.
  *
  * @param cookiePrefix the app's cookie prefix when it has opted into its own
  * names (see sessionCookies.ts); omitted, NextAuth's default names are used.
+ * @param identityServerConfig the app's client credentials, used to revoke the
+ * refresh token.
  */
 export const endSessionHandler = async (
   request: NextRequest,
   postLogoutRedirectUri: string | undefined,
   cookiePrefix?: string,
+  identityServerConfig?: { clientId: string; clientSecret: string },
 ) => {
   if (!isSameOrigin(request)) {
     return new Response(null, {
@@ -78,25 +127,23 @@ export const endSessionHandler = async (
     })
   }
 
-  const token = await getToken({
-    req: request,
-    cookieName: sessionCookieName(cookiePrefix),
-  })
+  const token = await readSession(request, cookiePrefix)
 
-  const redirectUri = resolveRedirectUri(request, postLogoutRedirectUri)
-  let location = redirectUri
-
-  if (token) {
-    const params = new URLSearchParams({
-      post_logout_redirect_uri: redirectUri,
-    })
-
-    if (token.idToken) {
-      params.set('id_token_hint', token.idToken as string)
+  if (token && identityServerConfig && typeof token.refreshToken === 'string') {
+    try {
+      await revokeRefreshToken(token.refreshToken, identityServerConfig)
+    } catch (error) {
+      logger.error('Error revoking refresh token', { error })
     }
-
-    location = `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?${params.toString()}`
   }
+
+  const location = token
+    ? endSessionUrl(
+        request,
+        postLogoutRedirectUri,
+        typeof token.idToken === 'string' ? token.idToken : undefined,
+      )
+    : resolveRedirectUri(request, postLogoutRedirectUri)
 
   // 303 so the browser follows with a GET whatever the method of this request.
   const response = NextResponse.redirect(location, 303)

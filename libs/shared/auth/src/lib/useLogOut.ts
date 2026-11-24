@@ -23,17 +23,13 @@ const submitLogoutForm = (action: string) => {
 }
 
 export const useLogOut = () => {
-  const logOut = async () => {
+  const logOut = () => {
     clearSessionStorage()
 
-    // Revoke the refresh token while the session cookie is still present; the
-    // logout response below expires it. next-auth's signOut() is not called
-    // first: it deletes the session cookie, and the id_token needed for the
-    // end-session request is read from it.
-    await fetch('/api/auth/revoke-refresh', { method: 'POST' }).catch(
-      () => undefined,
-    )
-
+    // The logout route revokes the refresh token and expires the session
+    // cookie itself, once it has checked the request's origin. next-auth's
+    // signOut() is not called first: it deletes the session cookie, and the
+    // id_token needed for the end-session request is read from it.
     submitLogoutForm(signOutUrl(window))
   }
   return logOut

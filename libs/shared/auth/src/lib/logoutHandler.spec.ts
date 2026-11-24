@@ -2,11 +2,16 @@ import { NextRequest } from 'next/server'
 import type { JWT } from 'next-auth/jwt'
 import { getToken } from 'next-auth/jwt'
 
-import { endSessionHandler } from './logoutHandler'
+import { endSessionHandler, endSessionUrl } from './logoutHandler'
+import { revokeRefreshToken } from './revokeRefreshToken'
 import { appAuthCookies } from './sessionCookies'
 
 jest.mock('next-auth/jwt', () => ({
   getToken: jest.fn(),
+}))
+
+jest.mock('./revokeRefreshToken', () => ({
+  revokeRefreshToken: jest.fn(),
 }))
 
 const LOGOUT_URL = 'http://localhost:3000/api/auth/logout'
@@ -108,7 +113,7 @@ describe('endSessionHandler', () => {
 
     expect(url.searchParams.has('id_token_hint')).toBe(false)
     expect(url.searchParams.get('post_logout_redirect_uri')).toBe(
-      'https://web.example.is/',
+      'https://web.example.is',
     )
   })
 
@@ -149,17 +154,36 @@ describe('endSessionHandler', () => {
     })
   })
 
-  it('reads NextAuth’s default name when no prefix is given', async () => {
+  it('reads both variants of NextAuth’s default name when no prefix is given', async () => {
     mockedGetToken.mockResolvedValue(null)
     const request = post()
 
     await endSessionHandler(request, 'https://web.example.is')
 
-    expect(mockedGetToken).toHaveBeenCalledWith({
-      req: request,
-      cookieName: 'next-auth.session-token',
-    })
+    expect(mockedGetToken.mock.calls.map(([o]) => o.cookieName)).toEqual([
+      '__Secure-next-auth.session-token',
+      'next-auth.session-token',
+    ])
   })
+
+  it.each([
+    ['plain', 'next-auth.session-token'],
+    ['secure', '__Secure-next-auth.session-token'],
+  ])(
+    'finds the session under the %s default name whatever NODE_ENV says',
+    async (_variant, name) => {
+      mockedGetToken.mockImplementation((async ({ cookieName }) =>
+        cookieName === name ? { idToken: 'found' } : null) as typeof getToken)
+
+      const response = await endSessionHandler(post(), 'https://web.example.is')
+
+      expect(
+        new URL(response.headers.get('location') as string).searchParams.get(
+          'id_token_hint',
+        ),
+      ).toBe('found')
+    },
+  )
 
   describe('cookies', () => {
     it('expires the NextAuth set and every session chunk with matching attributes', async () => {
@@ -281,12 +305,13 @@ describe('endSessionHandler', () => {
 
       const response = await endSessionHandler(
         post({ 'lg-web.session-token.0': 'stale' }),
-        'https://web.example.is/',
+        'https://web.example.is',
         'lg-web',
       )
       const cookies = setCookies(response)
 
       expect(response.status).toBe(303)
+      // a plain navigation to the app, not a registered URI; Next normalises it
       expect(response.headers.get('location')).toBe('https://web.example.is/')
       expect(cookies['lg-web.session-token.0'].attrs).toContain('max-age=0')
       expect(cookies['lg-web.csrf-token']).toBeDefined()
@@ -294,6 +319,35 @@ describe('endSessionHandler', () => {
   })
 
   describe('post-logout URI', () => {
+    it.each([
+      'https://web.example.is',
+      'https://web.example.is/',
+      'https://web.example.is/signed-out?a=1',
+    ])('passes an absolute URI through unchanged: %s', async (uri) => {
+      mockedGetToken.mockResolvedValue({ idToken: 't' } as JWT)
+
+      const response = await endSessionHandler(post(), uri)
+
+      expect(
+        new URL(response.headers.get('location') as string).searchParams.get(
+          'post_logout_redirect_uri',
+        ),
+      ).toBe(uri)
+    })
+
+    it('does not 500 on an unparsable NEXTAUTH_URL; cookies are still expired', async () => {
+      env.NEXTAUTH_URL = 'not a url'
+      mockedGetToken.mockResolvedValue(null)
+
+      const response = await endSessionHandler(post(), '/innskraning', 'lg-web')
+
+      expect(response.status).toBe(303)
+      expect(response.headers.get('location')).toBe(
+        'http://localhost:3000/innskraning',
+      )
+      expect(setCookies(response)['lg-web.session-token']).toBeDefined()
+    })
+
     it.each([undefined, '', '/'])(
       'falls back to the origin root for %p and still clears cookies',
       async (uri) => {
@@ -325,6 +379,108 @@ describe('endSessionHandler', () => {
 
       expect(response.headers.get('location')).toBe(
         'https://public.example.is/innskraning',
+      )
+    })
+  })
+
+  describe('refresh token revocation', () => {
+    const config = { clientId: 'id', clientSecret: 'secret' }
+    const mockedRevoke = revokeRefreshToken as jest.MockedFunction<
+      typeof revokeRefreshToken
+    >
+
+    it('revokes the refresh token before redirecting', async () => {
+      mockedGetToken.mockResolvedValue({
+        idToken: 't',
+        refreshToken: 'rt',
+      } as JWT)
+
+      const response = await endSessionHandler(
+        post(),
+        'https://web.example.is',
+        'lg-web',
+        config,
+      )
+
+      expect(mockedRevoke).toHaveBeenCalledWith('rt', config)
+      expect(response.status).toBe(303)
+    })
+
+    it('still logs out when revocation fails', async () => {
+      mockedGetToken.mockResolvedValue({
+        idToken: 't',
+        refreshToken: 'rt',
+      } as JWT)
+      mockedRevoke.mockRejectedValueOnce(new Error('ids down'))
+
+      const response = await endSessionHandler(
+        post(),
+        'https://web.example.is',
+        'lg-web',
+        config,
+      )
+
+      expect(response.status).toBe(303)
+      expect(response.headers.get('location')).toContain('id_token_hint=t')
+      expect(setCookies(response)['lg-web.session-token']).toBeDefined()
+    })
+
+    it('does not revoke without client config, a session or a refresh token', async () => {
+      mockedGetToken.mockResolvedValue({ refreshToken: 'rt' } as JWT)
+      await endSessionHandler(post(), 'https://web.example.is')
+
+      mockedGetToken.mockResolvedValue(null)
+      await endSessionHandler(
+        post(),
+        'https://web.example.is',
+        undefined,
+        config,
+      )
+
+      mockedGetToken.mockResolvedValue({ idToken: 't' } as JWT)
+      await endSessionHandler(
+        post(),
+        'https://web.example.is',
+        undefined,
+        config,
+      )
+
+      expect(mockedRevoke).not.toHaveBeenCalled()
+    })
+
+    it('does not revoke a refused request', async () => {
+      mockedGetToken.mockResolvedValue({ refreshToken: 'rt' } as JWT)
+
+      const response = await endSessionHandler(
+        post({}, LOGOUT_URL, { 'sec-fetch-site': 'cross-site' }),
+        'https://web.example.is',
+        'lg-web',
+        config,
+      )
+
+      expect(response.status).toBe(403)
+      expect(mockedRevoke).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('endSessionUrl', () => {
+    it('sends the same post_logout_redirect_uri as logout does', async () => {
+      mockedGetToken.mockResolvedValue({ idToken: 't' } as JWT)
+      const request = post()
+
+      const logout = await endSessionHandler(request, 'https://web.example.is')
+
+      expect(endSessionUrl(request, 'https://web.example.is', 't')).toBe(
+        logout.headers.get('location'),
+      )
+    })
+
+    it('omits id_token_hint without one', () => {
+      const url = new URL(endSessionUrl(post(), 'https://web.example.is'))
+
+      expect(url.searchParams.has('id_token_hint')).toBe(false)
+      expect(url.searchParams.get('post_logout_redirect_uri')).toBe(
+        'https://web.example.is',
       )
     })
   })

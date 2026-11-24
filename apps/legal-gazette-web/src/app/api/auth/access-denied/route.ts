@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { endSessionUrl } from '@dmr.is/auth/logoutHandler'
 import { expireAppAuthCookies } from '@dmr.is/auth/sessionCookies'
 
 import { AUTH_COOKIE_PREFIX } from '../../../../lib/auth/authOptions'
@@ -26,13 +27,8 @@ function handler(request: NextRequest) {
 
   const postLogoutRedirectUri = process.env.BASE_URL as string
 
-  const params = new URLSearchParams({
-    post_logout_redirect_uri: postLogoutRedirectUri,
-    id_token_hint: idToken,
-  })
-
   const response = NextResponse.redirect(
-    `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?${params.toString()}`,
+    endSessionUrl(request, postLogoutRedirectUri, idToken),
   )
 
   // This app's NextAuth cookies only, so a session from an earlier sign-in

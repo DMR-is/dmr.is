@@ -50,7 +50,26 @@ const securePrefix = (secure: boolean) => (secure ? '__Secure-' : '')
  * hands `withAuth` a name for a non-empty one.
  */
 export const sessionCookieName = (prefix?: string) =>
-  `${securePrefix(isSecureSessionCookie())}${prefix || DEFAULT_COOKIE_PREFIX}.session-token`
+  sessionTokenName(prefix || DEFAULT_COOKIE_PREFIX, isSecureSessionCookie())
+
+// The one template for the session cookie's name, shared by `sessionCookieName`
+// and `authCookiesFor`.
+const sessionTokenName = (prefix: string, secure: boolean) =>
+  `${securePrefix(secure)}${prefix}.session-token`
+
+/**
+ * The session cookie names to read a token from, first match wins. An app with
+ * its own prefix has one. An app on NextAuth's defaults has both variants,
+ * because NextAuth picks `__Secure-` from the `NEXTAUTH_URL` scheme, which can
+ * disagree with the `NODE_ENV` rule `sessionCookieName` follows.
+ */
+export const sessionCookieNames = (prefix?: string) =>
+  prefix
+    ? [sessionCookieName(prefix)]
+    : [
+        sessionTokenName(DEFAULT_COOKIE_PREFIX, true),
+        sessionTokenName(DEFAULT_COOKIE_PREFIX, false),
+      ]
 
 /**
  * Every cookie NextAuth sets, renamed under `prefix`, with NextAuth's own
@@ -70,7 +89,7 @@ const authCookiesFor = (
 
   return {
     sessionToken: {
-      name: `${pre}${prefix}.session-token`,
+      name: sessionTokenName(prefix, secure),
       options: base,
     },
     callbackUrl: { name: `${pre}${prefix}.callback-url`, options: base },
@@ -93,8 +112,11 @@ const authCookiesFor = (
 }
 
 /**
- * Whether a cookie belongs to this app's NextAuth set — for routes that clear
- * the session by hand, so they clear their own and leave another app's alone.
+ * Whether a cookie belongs to this app's NextAuth set: its name is `prefix`
+ * followed by a dot, with or without a `__Secure-` / `__Host-` prefix. Covers
+ * the session chunks (`<session cookie>.0`, ...) as well. Used by
+ * `expireAppAuthCookies`, and by routes that clear the session by hand, so they
+ * clear their own cookies and leave another app's alone.
  */
 export const isAppAuthCookie = (cookieName: string, prefix: string) =>
   ['', '__Secure-', '__Host-'].some((pre) =>
