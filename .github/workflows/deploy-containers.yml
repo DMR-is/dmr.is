@@ -108,7 +108,7 @@ jobs:
             {"name":"directorate-of-equality-partner-api", "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"}
           ]'
 
-          mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1
+          mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.7.12
           cp -r /tmp/nx-tmp/node_modules/. node_modules/
 
           # Two ways to end up rebuilding everything, and both produce a set of
