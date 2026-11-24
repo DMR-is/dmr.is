@@ -1,5 +1,3 @@
-import { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
 import { getLogger } from '@dmr.is/logging-next'
 
 const logger = getLogger('logout-handler')
@@ -32,35 +30,4 @@ export const revokeRefreshToken = async (
   } else {
     logger.info('Successfully revoked refresh token')
   }
-}
-
-/**
- * @param cookieName the app's session cookie when it has opted into its own
- * names (see sessionCookies.ts); omitted, NextAuth's default is read.
- */
-export const revokeRefreshTokenHandler = async (
-  req: NextRequest,
-  identityServerConfig: { clientId: string; clientSecret: string },
-  cookieName?: string,
-) => {
-  const token = await getToken({
-    req: req,
-    cookieName,
-  })
-  if (!token) {
-    return Response.json({ message: 'No token found' }, { status: 401 })
-  }
-  try {
-    await revokeRefreshToken(token.refreshToken as string, identityServerConfig)
-  } catch (error) {
-    logger.error('Error revoking refresh token', { error })
-    return Response.json(
-      { message: 'Error revoking refresh token' },
-      { status: 500 },
-    )
-  }
-  return Response.json(
-    { message: 'Successfully revoked refresh token' },
-    { status: 200 },
-  )
 }
