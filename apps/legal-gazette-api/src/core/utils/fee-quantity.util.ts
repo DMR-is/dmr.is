@@ -1,7 +1,7 @@
 import { type Logger } from '@dmr.is/logging'
 
-import { AdvertTemplateType } from '../../models/advert.model'
-import { TypeIdEnum } from '../../models/type.model'
+import { AdvertTemplateType } from '../enums/advert-template-type.enum'
+import { TypeIdEnum } from '../enums/type-id.enum'
 import { idEquals } from './id.util'
 
 /**
