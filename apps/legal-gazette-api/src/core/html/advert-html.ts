@@ -10,9 +10,9 @@ import {
 } from '@dmr.is/legal-gazette-schemas'
 
 import type { AdvertModel } from '../../models/advert.model'
-import { AdvertTemplateType } from '../../models/advert.model'
 import { AdvertVersionEnum } from '../../models/advert-publication.model'
 import { PENDING_PUBLICATION_NUMBER } from '../constants'
+import { AdvertTemplateType } from '../enums/advert-template-type.enum'
 
 type HTMLVersion = 'A' | 'B' | 'C'
 
