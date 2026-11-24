@@ -5,7 +5,6 @@ const { readFile } = require('fs/promises')
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface) {
-
     const typeSeed = await readFile(
       './src/modules/base-entity/type/type.seed.sql',
       'utf8',
