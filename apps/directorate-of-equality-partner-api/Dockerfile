@@ -1,5 +1,5 @@
 # Install dependencies only when needed
-FROM docker.io/node:24-alpine as deps
+FROM docker.io/node:24.19.0-alpine as deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 COPY ./apps/directorate-of-equality-partner-api/dist/package.json ./
@@ -11,7 +11,7 @@ RUN npm install pg --legacy-peer-deps
 RUN npm install --omit=dev --legacy-peer-deps
 
 # Production image
-FROM docker.io/node:24-alpine as runner
+FROM docker.io/node:24.19.0-alpine as runner
 RUN apk add --no-cache dumb-init
 ENV NODE_ENV production
 WORKDIR /usr/src/app
