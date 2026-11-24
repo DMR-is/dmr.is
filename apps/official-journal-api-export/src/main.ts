@@ -4,6 +4,8 @@ import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { hrtime } from 'node:process'
 
+import { getLogger } from '@dmr.is/logging'
+
 import {
   connect,
   getAdvertDocuments,
@@ -43,12 +45,13 @@ import {
   generateTypeInserts,
 } from './lib/inserts.js'
 
+const logger = getLogger('official-journal-api-export')
+
 const ROOT_SQL_DIR = './apps/official-journal-api-export/sql'
 // Added comment to trigger redeploy
 
 function log(message: string) {
-  // eslint-disable-next-line no-console
-  console.log(message)
+  logger.info(message)
 }
 
 function write(path: string, data: string) {
@@ -96,17 +99,14 @@ async function exportFromCsvToSQL() {
     records.push(record)
   }
   // Group by a field, e.g., 'category'
-  const grouped = records.reduce(
-    (acc, record) => {
-      const key = record.Department
-      if (!acc[key]) {
-        acc[key] = []
-      }
-      acc[key].push(record)
-      return acc
-    },
-    {} as Record<string, SQLInsert[]>,
-  )
+  const grouped = records.reduce((acc, record) => {
+    const key = record.Department
+    if (!acc[key]) {
+      acc[key] = []
+    }
+    acc[key].push(record)
+    return acc
+  }, {} as Record<string, SQLInsert[]>)
 
   //create SQL inserts per each group
   let departmentString = ''
@@ -126,7 +126,9 @@ COMMIT;*/
       const delegationScopeNormal = `insert into delegation_scope(delegation_id,scope_name,valid_from,valid_to,id) values (delegation_id_return,'@island.is/applications/dmr:stjornartidindi','2025-05-22 00:00:00+00','2026-05-22 00:00:00+00',gen_random_uuid()) ON CONFLICT DO NOTHING;`
       const delegationScopeWrite = `insert into delegation_scope(delegation_id,scope_name,valid_from,valid_to,id) values (delegation_id_return,'@island.is/auth/delegations:write','2025-05-22 00:00:00+00','2026-05-22 00:00:00+00',gen_random_uuid());`
 
-      const returnString = `DO $$\nDECLARE delegation_id_return DELEGATION.id%TYPE;\nBEGIN\n${delegationString}\n${delegationScopeNormal}\n${record.Role === 'Fulltrúi' ? delegationScopeWrite : ''}\nEND $$;\n\n`
+      const returnString = `DO $$\nDECLARE delegation_id_return DELEGATION.id%TYPE;\nBEGIN\n${delegationString}\n${delegationScopeNormal}\n${
+        record.Role === 'Fulltrúi' ? delegationScopeWrite : ''
+      }\nEND $$;\n\n`
       return returnString
     })
     departmentString += `${apiScopeString}\n${apiScopeAccessString}\n\n`
@@ -1879,8 +1881,9 @@ async function main() {
       inserts.advertStatuses = generateAdvertStatusesInserts(dbAdvertStatuses)
       inserts.involvedParties = generateInvolvedPartiesInserts(parties)
       inserts.adverts = generateAdvertsInserts(adverts)
-      inserts.advertsCategories =
-        generateAdvertsCategoriesInserts(advertsCategories)
+      inserts.advertsCategories = generateAdvertsCategoriesInserts(
+        advertsCategories,
+      )
       /*inserts.categoryDepartments =
         generateCategoryDepartmentInserts(categoryDepartments)*/
       return Promise.resolve()
@@ -1946,8 +1949,9 @@ async function legalGazetteMain() {
       //inserts.superCategories = generateSuperCategoryInserts(superCategories)
       inserts.categories = generateLBCategoryInserts(dbCategories)
       inserts.adverts = generateLBAdvertsInserts(dbAdverts)
-      inserts.advertsAndCategories =
-        generateLBAdvertsAndCategoriesInsert(typesCategoriesMap)
+      inserts.advertsAndCategories = generateLBAdvertsAndCategoriesInsert(
+        typesCategoriesMap,
+      )
       return Promise.resolve()
     },
     '🔨',

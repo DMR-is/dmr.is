@@ -4510,6 +4510,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/official-journal-api-export@workspace:apps/official-journal-api-export"
   dependencies:
+    "@dmr.is/logging": "npm:*"
     "@types/mssql": "npm:^9.1.7"
     csv-parse: "npm:^7.0.2"
     date-fns: "npm:2.30.0"

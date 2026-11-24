@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 
+import { getLogger } from '@dmr.is/logging-next'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
@@ -17,8 +18,7 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log(error)
+    getLogger('global-error').error('Unhandled error', { error })
   }, [error])
 
   return (
