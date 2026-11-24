@@ -1309,53 +1309,6 @@ export class AdvertService implements IAdvertService {
     return advert.fromModelToDetailed(user?.id)
   }
 
-  async getMyAdverts(
-    query: PagingQuery,
-    user: DMRUser,
-  ): Promise<GetMyAdvertsDto> {
-    const { limit, offset } = getLimitAndOffset(query)
-
-    const adverts = await this.advertModel.unscoped().findAndCountAll({
-      limit,
-      offset,
-      where: {
-        createdByNationalId: user.nationalId,
-      },
-      include: [
-        { model: TypeModel, attributes: ['id', 'title', 'slug'] },
-        { model: CategoryModel, attributes: ['id', 'title', 'slug'] },
-        { model: StatusModel, attributes: ['id', 'title', 'slug'] },
-        {
-          model: AdvertPublicationModel,
-          attributes: ['publishedAt', 'versionNumber', 'scheduledAt'],
-        },
-      ],
-      order: [['createdAt', 'DESC']],
-    })
-
-    const mapped: MyAdvertListItemDto[] = adverts.rows.map((advert) => ({
-      id: advert.id,
-      legacyId: advert.legacyId,
-      title: advert.title,
-      publicationNumber: advert.publicationNumber,
-      type: advert.type.fromModel(),
-      category: advert.category.fromModel(),
-      status: advert.status.fromModel(),
-      createdAt: advert.createdAt,
-      publishedAt: advert.publications?.[0]?.publishedAt ?? null,
-      html: advert.htmlMarkup(),
-    }))
-
-    const paging = generatePaging(
-      adverts.rows,
-      query.page,
-      query.pageSize,
-      adverts.count,
-    )
-
-    return { adverts: mapped, paging }
-  }
-
   async getMyLegacyAdverts(
     query: PagingQuery,
     user: DMRUser,

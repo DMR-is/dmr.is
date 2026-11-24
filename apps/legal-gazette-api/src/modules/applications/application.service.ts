@@ -240,16 +240,6 @@ export class ApplicationService implements IApplicationService {
 
     return application.fromModelToDetailedDto()
   }
-
-  async getApplicationByCaseId(
-    caseId: string,
-  ): Promise<ApplicationDetailedDto> {
-    const application = await this.applicationModel.findOneOrThrow({
-      where: { caseId: caseId },
-    })
-
-    return application.fromModelToDetailedDto()
-  }
   async getApplicationById(
     applicationId: string,
   ): Promise<ApplicationDetailedDto> {

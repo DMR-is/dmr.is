@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   Inject,
   Param,
   Patch,
@@ -30,23 +29,6 @@ export class SignatureController {
     @Inject(ISignatureService)
     private readonly signatureService: ISignatureService,
   ) {}
-
-  @Get('/signatures/:signatureId')
-  @LGResponse({ operationId: 'getSignatureById', type: SignatureDto })
-  async getSignatureById(
-    @Param('signatureId') signatureId: string,
-  ): Promise<SignatureDto> {
-    return this.signatureService.getSignatureById(signatureId)
-  }
-
-  @Get('/:advertId/signatures')
-  @ApiParam({ name: 'advertId', required: true })
-  @LGResponse({ operationId: 'getAdvertSignature', type: SignatureDto })
-  async getAdvertSignature(
-    @Param('advertId') advertId: string,
-  ): Promise<SignatureDto> {
-    return this.signatureService.getAdvertSignature(advertId)
-  }
 
   @Post('/:advertId/signatures')
   @ApiParam({ name: 'advertId', required: true })

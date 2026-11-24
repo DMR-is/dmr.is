@@ -393,10 +393,6 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     })
   }
 
-  async getCategoryImpact(id: string): Promise<ImpactDto> {
-    return this.advertImpact({ categoryId: id })
-  }
-
   async deleteCategory(id: string, actor: CategoryTypeActor): Promise<void> {
     await this.sequelize.transaction(async (transaction) => {
       const category = await this.categoryModel
@@ -533,10 +529,6 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
       })
       return type.fromModel()
     })
-  }
-
-  async getTypeImpact(id: string): Promise<ImpactDto> {
-    return this.advertImpact({ typeId: id })
   }
 
   async deleteType(id: string, actor: CategoryTypeActor): Promise<void> {

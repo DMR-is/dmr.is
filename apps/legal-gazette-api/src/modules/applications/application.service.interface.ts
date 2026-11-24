@@ -32,8 +32,6 @@ export interface IApplicationService {
 
   getApplicationById(applicationId: string): Promise<ApplicationDetailedDto>
 
-  getApplicationByCaseId(caseId: string): Promise<ApplicationDetailedDto>
-
   updateApplication(
     applicationId: string,
     body: UpdateApplicationDto,

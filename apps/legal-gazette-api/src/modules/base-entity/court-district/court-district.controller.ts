@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common'
+import { Controller, Get, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
@@ -39,17 +39,5 @@ export class CourtDistrictController extends BaseEntityController<
     return {
       courtDistricts: courtDistricts,
     }
-  }
-
-  @Get(':id')
-  @LGResponse({ operationId: 'getCourtDistrictById', type: CourtDistrictDto })
-  findById(@Param('id') id: string): Promise<CourtDistrictDto> {
-    return super.findById(id)
-  }
-
-  @Get('slug/:slug')
-  @LGResponse({ operationId: 'getCourtDistrictBySlug', type: CourtDistrictDto })
-  findBySlug(@Param('slug') slug: string): Promise<CourtDistrictDto> {
-    return super.findBySlug(slug)
   }
 }

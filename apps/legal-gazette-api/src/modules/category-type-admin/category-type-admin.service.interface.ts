@@ -35,7 +35,6 @@ export interface ICategoryTypeAdminService {
     body: SetActiveBody,
     actor: CategoryTypeActor,
   ): Promise<CategoryDto>
-  getCategoryImpact(id: string): Promise<ImpactDto>
 
   // Types
   createType(body: CreateTypeBody, actor: CategoryTypeActor): Promise<TypeDto>
@@ -50,7 +49,6 @@ export interface ICategoryTypeAdminService {
     body: SetActiveBody,
     actor: CategoryTypeActor,
   ): Promise<TypeDto>
-  getTypeImpact(id: string): Promise<ImpactDto>
 
   // Connections (type <-> category)
   attach(body: ConnectionBody, actor: CategoryTypeActor): Promise<void>
