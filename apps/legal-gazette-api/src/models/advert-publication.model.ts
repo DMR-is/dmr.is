@@ -20,6 +20,7 @@ import { ApiDateTime, ApiOptionalDateTime } from '@dmr.is/decorators'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
+import { AdvertVersionEnum } from '../core/enums/advert-version.enum'
 import { mapVersionToIndex } from '../core/utils'
 import type { GetPublicationsQueryDto } from '../modules/advert/publications/dto/publication.dto'
 import type { AdvertModel as AdvertModelRef } from './advert.model'
@@ -27,11 +28,7 @@ import { AdvertModel } from './advert.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
 
-export enum AdvertVersionEnum {
-  A = 'A',
-  B = 'B',
-  C = 'C',
-}
+export { AdvertVersionEnum }
 
 export type AdvertPublicationsAttributes = {
   advertId: string

@@ -1,4 +1,4 @@
-import { AdvertVersionEnum } from '../models/advert-publication.model'
+import { AdvertVersionEnum } from './enums/advert-version.enum'
 
 export const mapVersionToIndex = (version: AdvertVersionEnum) => {
   switch (version) {
