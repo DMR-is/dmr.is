@@ -9,8 +9,8 @@ import { IAWSService } from '@dmr.is/shared-modules'
 import { withRetry } from '@dmr.is/utils-server/withRetry'
 
 import { LegalGazetteEvents } from '../../../../core/constants'
-import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertVersionEnum } from '../../../../core/enums/advert-version.enum'
+import { AdvertModel } from '../../../../models/advert.model'
 import {
   TBRTransactionModel,
   TBRTransactionStatus,

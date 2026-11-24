@@ -7,8 +7,8 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IAWSService } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertVersionEnum } from '../../../../core/enums/advert-version.enum'
+import { AdvertModel } from '../../../../models/advert.model'
 import {
   TBRTransactionModel,
   TBRTransactionStatus,
