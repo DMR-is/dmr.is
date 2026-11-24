@@ -1,13 +1,11 @@
 'use strict'
 
-const { cwd } = require('process')
 const { readFile } = require('fs/promises')
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface) {
     // eslint-disable-next-line no-console
-    console.log(cwd())
 
     // ⚠️ ON CONFLICT DO NOTHING on both inserts, because this seeder is NOT
     // idempotent by default and nothing makes it so: `sequelize.config.js` sets
