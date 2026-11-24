@@ -118,14 +118,10 @@ export class PublishingTaskService implements IPublishingTaskService {
           model: AdvertModel.scope('detailed'),
           as: 'advert',
           where: {
-            // PUBLISHED too: the first publication of an advert sets it, and
-            // its remaining ones are still due. Rejected or withdrawn
-            // adverts are not selected (and re-checked after the lock).
-            statusId: [
-              StatusIdEnum.READY_FOR_PUBLICATION,
-              StatusIdEnum.IN_PUBLISHING,
-              StatusIdEnum.PUBLISHED,
-            ],
+            // Unchanged selection. A second same-day publication of an advert
+            // selected here still publishes in this run: after the lock,
+            // isStillPublishable only refuses rejected or withdrawn adverts.
+            statusId: StatusIdEnum.READY_FOR_PUBLICATION,
           },
         },
       ],

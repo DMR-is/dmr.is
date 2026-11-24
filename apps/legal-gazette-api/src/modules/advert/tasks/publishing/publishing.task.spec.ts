@@ -405,11 +405,7 @@ describe('PublishingTaskService - Event Emission', () => {
               model: expect.anything(),
               as: 'advert',
               where: {
-                statusId: [
-                  StatusIdEnum.READY_FOR_PUBLICATION,
-                  StatusIdEnum.IN_PUBLISHING,
-                  StatusIdEnum.PUBLISHED,
-                ],
+                statusId: StatusIdEnum.READY_FOR_PUBLICATION,
               },
             },
           ],
