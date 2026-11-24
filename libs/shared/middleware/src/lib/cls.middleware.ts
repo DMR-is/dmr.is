@@ -31,20 +31,54 @@ export class CLSMiddleware implements NestMiddleware {
       const transaction = await this.sequelize.transaction()
       transactionNamespace.set('transaction', transaction)
 
-      res.on('finish', async () => {
-        if (res.statusCode >= 200 && res.statusCode < 400) {
-          this.logger.debug('Committing transaction', {
-            context: 'CLSMiddleware',
-            traceId,
-          })
-          await transaction.commit()
-        } else {
-          this.logger.debug('Rolling back transaction', {
-            context: 'CLSMiddleware',
-            traceId,
-          })
-          await transaction.rollback()
+      // One flag so the transaction ends exactly once: `close` also fires
+      // after a normal `finish`, and an abort must never roll back a
+      // transaction that `finish` is committing.
+      let finalised = false
+
+      const finalise = async (action: 'commit' | 'rollback') => {
+        if (finalised) {
+          return
         }
+        finalised = true
+
+        this.logger.debug(
+          action === 'commit'
+            ? 'Committing transaction'
+            : 'Rolling back transaction',
+          { context: 'CLSMiddleware', traceId },
+        )
+
+        try {
+          await transaction[action]()
+        } catch (error) {
+          this.logger.error(`Failed to ${action} transaction`, {
+            context: 'CLSMiddleware',
+            traceId,
+            error,
+          })
+        }
+      }
+
+      res.on('finish', () => {
+        void finalise(
+          res.statusCode >= 200 && res.statusCode < 400 ? 'commit' : 'rollback',
+        )
+      })
+
+      // The client went away before the response was sent: only `close`
+      // fires, so without this the transaction would hold its row locks until
+      // the connection is killed.
+      res.on('close', () => {
+        if (res.writableFinished || finalised) {
+          return
+        }
+
+        this.logger.warn('Request aborted before the response finished', {
+          context: 'CLSMiddleware',
+          traceId,
+        })
+        void finalise('rollback')
       })
 
       next()
