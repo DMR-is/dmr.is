@@ -20,10 +20,10 @@ import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../../core/constants'
+import { AdvertVersionEnum } from '../../../core/enums/advert-version.enum'
 import { StatusIdEnum } from '../../../core/enums/status.enum'
 import { resolveFeeQuantity } from '../../../core/utils/fee-quantity.util'
 import { AdvertModel } from '../../../models/advert.model'
-import { AdvertVersionEnum } from '../../../core/enums/advert-version.enum'
 import { FeeCodeModel } from '../../../models/fee-code.model'
 import { TBRCompanySettingsModel } from '../../../models/tbr-company-settings.model'
 import { TypeModel } from '../../../models/type.model'

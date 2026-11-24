@@ -157,12 +157,9 @@ describe('isStillPublishable', () => {
     StatusIdEnum.IN_PROGRESS,
     StatusIdEnum.REJECTED,
     StatusIdEnum.WITHDRAWN,
-  ])(
-    'refuses a publication of an advert in %s',
-    (statusId) => {
-      expect(isStillPublishable(unpublished, { statusId })).toBe(false)
-    },
-  )
+  ])('refuses a publication of an advert in %s', (statusId) => {
+    expect(isStillPublishable(unpublished, { statusId })).toBe(false)
+  })
 
   it('refuses a publication that is already published', () => {
     expect(

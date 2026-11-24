@@ -17,13 +17,13 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules/guards/auth'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AdvertVersionEnum } from '../../../core/enums/advert-version.enum'
 import { CanEditGuard, CanEditOrPublishGuard } from '../../../core/guards'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
   PublicOrApplicationWebScopes,
   PublicWebScopes,
 } from '../../../core/guards/scope-guards/scopes.decorator'
-import { AdvertVersionEnum } from '../../../core/enums/advert-version.enum'
 import {
   AdvertPublicationDetailedDto,
   GetCombinedHTMLDto,

@@ -1,6 +1,6 @@
+import { AdvertVersionEnum } from '../../core/enums/advert-version.enum'
 import type { AdvertModel } from '../../models/advert.model'
 import { AdvertTemplateType } from '../../models/advert.model'
-import { AdvertVersionEnum } from '../../core/enums/advert-version.enum'
 import { formatCompanyAnnouncement } from '../../modules/external-systems/company/utils'
 import { PENDING_PUBLICATION_NUMBER } from '../constants'
 import { getAdvertHtmlMarkup } from './advert-html'
