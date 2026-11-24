@@ -4660,6 +4660,7 @@ __metadata:
   dependencies:
     "@dmr.is/constants": "npm:*"
     "@dmr.is/decorators": "npm:*"
+    "@dmr.is/island-auth-nest": "npm:*"
     "@dmr.is/logging": "npm:*"
     "@dmr.is/mocks": "npm:*"
     "@dmr.is/pipelines": "npm:*"

@@ -22,6 +22,7 @@
   "dependencies": {
     "@dmr.is/constants": "*",
     "@dmr.is/decorators": "*",
+    "@dmr.is/island-auth-nest": "*",
     "@dmr.is/logging": "*",
     "@dmr.is/mocks": "*",
     "@dmr.is/pipelines": "*",
