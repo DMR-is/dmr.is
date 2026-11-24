@@ -4,20 +4,17 @@ import {
   Inject,
   Param,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
+import { CurrentUser } from '@dmr.is/decorators'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { GetPdfBody, GetPdfRespone } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { IPdfService } from './pdf.service.interface'
-
-interface PdfRequest {
-  user?: { nationalId?: string }
-}
 
 /**
  * Renders an application as PDF.
@@ -46,12 +43,12 @@ export class PdfController {
   async getPdfByApplicationId(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Query() params: GetPdfBody,
-    @Req() req: PdfRequest,
+    @CurrentUser() user: DMRUser,
   ): Promise<GetPdfRespone> {
     const pdf = (
       await this.pdfService.getPdfByApplicationId(
         id,
-        { nationalId: req.user?.nationalId },
+        { nationalId: user.nationalId },
         params.showDate,
       )
     ).unwrap()

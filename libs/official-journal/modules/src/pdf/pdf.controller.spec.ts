@@ -42,7 +42,8 @@ describe('PdfController caller identity', () => {
     const controller = new PdfController({ getPdfByApplicationId } as never)
 
     await controller.getPdfByApplicationId('id', { showDate: false }, {
-      user: { nationalId: '0101010000', actor: { nationalId: '0202020000' } },
+      nationalId: '0101010000',
+      actor: { nationalId: '0202020000' },
     } as never)
 
     expect(getPdfByApplicationId).toHaveBeenCalledWith(
