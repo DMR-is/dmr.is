@@ -36,7 +36,7 @@ import {
 import { CaseModel } from '../../models/case.model'
 import { CategoryModel } from '../../models/category.model'
 import { DELETABLE_ADVERT_STATUS_IDS } from '../../models/status.model'
-import { TypeIdEnum, TypeModel } from '../../models/type.model'
+import { TypeModel } from '../../models/type.model'
 import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
 import {
   GetApplicationsDto,
@@ -156,16 +156,6 @@ export class ApplicationService implements IApplicationService {
       )
     }
 
-    let feeQuantity: number | undefined = undefined
-    if (parsed.fields.type.id === TypeIdEnum.FORECLOSURE) {
-      const searchString = 'Heiti eignar:'
-      const regex = new RegExp(searchString, 'g')
-
-      const matches = parsed.fields.html.match(regex)
-
-      feeQuantity = matches ? matches.length : 0
-    }
-
     await this.advertService.createAdvert({
       caseId: application.caseId,
       applicationId: application.id,
@@ -187,7 +177,6 @@ export class ApplicationService implements IApplicationService {
       scheduledAt: parsed.publishingDates.map(
         (publishingDate) => new Date(publishingDate),
       ),
-      feeQuantity: feeQuantity,
     })
 
     await application.update({
