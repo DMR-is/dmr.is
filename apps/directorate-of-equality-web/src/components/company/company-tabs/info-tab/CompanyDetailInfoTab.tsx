@@ -67,10 +67,8 @@ export const CompanyDetailInfoTab = ({ company }: Props) => {
             children: <CompanySectorField company={company} />,
           },
 
-          // Read-only. The admin-owned ÍSAT code is set by the annual
-          // classification pass, not from here — `PATCH /companies/{id}/isat`
-          // exists but is not exposed through tRPC, so there is nothing to edit
-          // against yet. `undefined` falls through to InfoItems' "Óþekkt".
+          // Read-only: the admin-owned ÍSAT code is set by the annual
+          // classification pass. `undefined` falls through to InfoItems' "Óþekkt".
           {
             label: companiesText.isatCategory,
             children: formatIsatCategory(company),

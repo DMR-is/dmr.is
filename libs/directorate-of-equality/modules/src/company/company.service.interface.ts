@@ -13,7 +13,6 @@ import { SubsidiaryReportSnapshotSourceDto } from './dto/subsidiary-report-snaps
 import { UpdateCompanyDueDateDto } from './dto/update-company-due-date.dto'
 import { UpdateCompanyEmailDto } from './dto/update-company-email.dto'
 import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
-import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
 import { UpdateCompanySectorDto } from './dto/update-company-sector.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
@@ -93,11 +92,6 @@ export interface ICompanyService {
   updateStatus(
     id: string,
     dto: UpdateCompanyStatusDto,
-    actorUserId: string,
-  ): Promise<CompanyDto>
-  updateIsat(
-    id: string,
-    dto: UpdateCompanyIsatDto,
     actorUserId: string,
   ): Promise<CompanyDto>
   updateEmail(

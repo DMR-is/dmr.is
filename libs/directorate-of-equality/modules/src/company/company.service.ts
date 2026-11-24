@@ -46,7 +46,6 @@ import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query
 import { UpdateCompanyDueDateDto } from './dto/update-company-due-date.dto'
 import { UpdateCompanyEmailDto } from './dto/update-company-email.dto'
 import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
-import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
 import { UpdateCompanySectorDto } from './dto/update-company-sector.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
@@ -982,46 +981,6 @@ export class CompanyService implements ICompanyService {
   }
 
   /**
-   * Admin-owned ÍSAT2008 classification (statistics data). Independent of the
-   * report-submission snapshot — see db/README.md. Pass `isatCategoryCode: null`
-   * to clear. The FK also guards bad codes; we validate up-front for a clean 400.
-   */
-  async updateIsat(
-    id: string,
-    dto: UpdateCompanyIsatDto,
-    actorUserId: string,
-  ): Promise<CompanyDto> {
-    const company = await this.companyModel.findOneOrThrow(
-      { where: { id } },
-      `Company "${id}" not found`,
-    )
-
-    const code = dto.isatCategoryCode ?? null
-
-    if (code !== null) {
-      const category = await this.isatCategoryModel.findByPk(code)
-      if (!category) {
-        throw new BadRequestException(`Unknown ÍSAT2008 code "${code}"`)
-      }
-    }
-
-    this.logger.info(
-      `Updating company ${id} ÍSAT: ${company.isatCategoryCode ?? '∅'} → ${
-        code ?? '∅'
-      } (by ${actorUserId})`,
-      { context: LOGGING_CONTEXT },
-    )
-
-    await company.update({ isatCategoryCode: code })
-
-    // Re-read rather than mapping the in-memory instance: the derived columns
-    // (reportStatus, the two overdue flags, hasLegacyReports) are virtuals only
-    // the `withReportStatus` scope selects, and the response has to carry the
-    // newly resolved ÍSAT category. `loadCompanyDto` does both.
-    return this.loadCompanyDto(id)
-  }
-
-  /**
    * Admin-set contact email read by the report-deadline-reminder task. Empty
    * string is normalized to null (clears it). No timeline event — the reminder
    * task's NO_EMAIL event already records the gap this fills.
@@ -1075,7 +1034,7 @@ export class CompanyService implements ICompanyService {
    * ours, and keeping them lets a corrected mapping be re-derived later.
    *
    * An admin's sector change is recorded as a SECTOR_CHANGED `company_event`,
-   * unlike `updateIsat`, because sector decides what the company owes and may
+   * unlike the ÍSAT code, because sector decides what the company owes and may
    * file: a RADUNEYTI company owes a salary report whatever its size, and a
    * SVEITARFELAG company may file one without equality coverage
    * (`SALARY_EQUALITY_EXEMPT_SECTORS`). An override-only change (same sector,

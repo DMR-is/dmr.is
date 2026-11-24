@@ -73,15 +73,6 @@ export class CompanyImportErrorDto {
   reason!: string
 }
 
-export class CompanyImportTotalsDto {
-  @ApiNumber() created!: number
-  @ApiNumber() updated!: number
-  @ApiNumber() unchanged!: number
-  @ApiNumber() deactivated!: number
-  @ApiNumber() reactivated!: number
-  @ApiNumber() invalid!: number
-}
-
 export class CompanyImportResultDto {
   @ApiBoolean({
     description: 'false = preview (no writes); true = applied (committed).',
