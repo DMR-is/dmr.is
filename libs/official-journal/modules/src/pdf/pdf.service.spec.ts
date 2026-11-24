@@ -47,31 +47,12 @@ describe('isApplicationParty', () => {
   const application = {
     applicant: '0101010000',
     assignees: ['0202020000'],
-    applicantActors: ['0303030000'],
   }
 
-  it('allows the applicant', () => {
+  it('allows the applicant, comparing digits only', () => {
     expect(isApplicationParty(application, { nationalId: '010101-0000' })).toBe(
       true,
     )
-  })
-
-  it('allows a delegate acting for the applicant', () => {
-    expect(
-      isApplicationParty(application, {
-        nationalId: '0101010000',
-        actorNationalId: '0909090000',
-      }),
-    ).toBe(true)
-  })
-
-  it('allows an applicant actor signed in as actor', () => {
-    expect(
-      isApplicationParty(application, {
-        nationalId: '0404040000',
-        actorNationalId: '0303030000',
-      }),
-    ).toBe(true)
   })
 
   it('allows an assignee', () => {
@@ -81,15 +62,20 @@ describe('isApplicationParty', () => {
   })
 
   it('denies an unrelated caller', () => {
-    expect(
-      isApplicationParty(application, {
-        nationalId: '0505050000',
-        actorNationalId: '0606060000',
-      }),
-    ).toBe(false)
+    expect(isApplicationParty(application, { nationalId: '0505050000' })).toBe(
+      false,
+    )
   })
 
-  it('denies a caller with no identity', () => {
+  it('denies someone who once acted for the applicant, signed in as themselves', () => {
+    const withActors = { ...application, applicantActors: ['0303030000'] }
+
+    expect(isApplicationParty(withActors, { nationalId: '0303030000' })).toBe(
+      false,
+    )
+  })
+
+  it('denies a caller with no identity, even against an empty applicant', () => {
     expect(isApplicationParty(application, {})).toBe(false)
     expect(isApplicationParty({ ...application, applicant: '' }, {})).toBe(
       false,
