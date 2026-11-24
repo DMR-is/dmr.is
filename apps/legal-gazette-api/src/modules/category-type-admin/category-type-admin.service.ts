@@ -18,6 +18,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { lockAdvertRows } from '../../core/utils/advert-lock'
 import {
   feeQuantityForChange,
   warnOnZeroFeeQuantity,
@@ -680,13 +681,11 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
       // other) before reading them: a publish or a property change on one of
       // these sales finishes first, and the quantities decided below are
       // based on its result.
-      const adverts = await this.advertModel.findAll({
-        where: this.moveWhere(body),
-        attributes: ['id', 'typeId', 'categoryId'],
-        order: [['id', 'ASC']],
-        transaction,
-        lock: transaction.LOCK.UPDATE,
-      })
+      const adverts = await lockAdvertRows(
+        this.advertModel,
+        this.moveWhere(body),
+        { transaction, attributes: ['typeId', 'categoryId'] },
+      )
       const moved: MovedAdvert[] = adverts.map((a) => ({
         id: a.id,
         typeId: a.typeId as string,
@@ -1019,13 +1018,11 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     // later move may have retyped it since, and the fee quantity decision
     // depends on the type it is actually leaving.
     // The same read takes the row locks, in id order, before any write.
-    const current = await this.advertModel.findAll({
-      where: { id: { [Op.in]: adverts.map((a) => a.id) } },
-      attributes: ['id', 'typeId'],
-      order: [['id', 'ASC']],
-      transaction,
-      lock: transaction.LOCK.UPDATE,
-    })
+    const current = await lockAdvertRows(
+      this.advertModel,
+      { id: { [Op.in]: adverts.map((a) => a.id) } },
+      { transaction, attributes: ['typeId'] },
+    )
     const currentTypeIds = new Map(current.map((a) => [a.id, a.typeId]))
 
     for (const [key, ids] of groups) {

@@ -1,4 +1,4 @@
-import { Op, UniqueConstraintError } from 'sequelize'
+import { Op, Transaction, UniqueConstraintError } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
 import { BadRequestException, ConflictException } from '@nestjs/common'
@@ -20,7 +20,7 @@ import { CategoryTypeActor } from './dto/category-type-admin.dto'
 import { CategoryTypeAdminService } from './category-type-admin.service'
 
 const ACTOR: CategoryTypeActor = { id: 'admin-1', name: 'Admin' }
-const TRANSACTION = { id: 'tx', LOCK: { UPDATE: 'UPDATE' } }
+const TRANSACTION = { id: 'tx' }
 
 // `unscoped()` returns the same mock, so a test can stub `findByPk` once and have
 // it answer both `model.findByPk` and `model.unscoped().findByPk`.
@@ -90,6 +90,7 @@ describe('CategoryTypeAdminService', () => {
       findAll: jest.fn().mockResolvedValue([]),
       update: jest.fn().mockResolvedValue([0]),
     }
+    advertModel.unscoped = jest.fn().mockReturnValue(advertModel)
 
     changeLogModel = {
       create: jest.fn().mockResolvedValue({ id: 'log-1' }),
@@ -615,8 +616,9 @@ describe('CategoryTypeAdminService', () => {
       expect(advertModel.findAll).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({
+          where: { typeId: 'type-a' },
           order: [['id', 'ASC']],
-          lock: 'UPDATE',
+          lock: Transaction.LOCK.NO_KEY_UPDATE,
           transaction: TRANSACTION,
         }),
       )
@@ -790,6 +792,27 @@ describe('CategoryTypeAdminService', () => {
       expect(advertModel.update).toHaveBeenCalledWith(
         { feeQuantity: null },
         { where: { id: 'a1' }, transaction: TRANSACTION },
+      )
+    })
+
+    it('locks the reverted advert rows in id order, on the revert transaction, before updating them', async () => {
+      givenMoveAudit('type-a', 'type-b')
+      advertModel.findAll.mockResolvedValueOnce([
+        { id: 'a1', typeId: 'type-b' },
+      ])
+
+      await service.revert('audit-1', ACTOR)
+
+      expect(advertModel.unscoped).toHaveBeenCalled()
+      expect(advertModel.findAll).toHaveBeenNthCalledWith(1, {
+        where: { id: { [Op.in]: ['a1'] } },
+        attributes: ['id', 'typeId'],
+        order: [['id', 'ASC']],
+        transaction: TRANSACTION,
+        lock: Transaction.LOCK.NO_KEY_UPDATE,
+      })
+      expect(advertModel.findAll.mock.invocationCallOrder[0]).toBeLessThan(
+        advertModel.update.mock.invocationCallOrder[0],
       )
     })
   })

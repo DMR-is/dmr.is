@@ -17,6 +17,10 @@ import {
 import { StatusIdEnum } from '../../../../models/status.model'
 import { PgAdvisoryLockService } from '../lock.service'
 import { PublishingTaskService } from './publishing.task'
+const TRANSACTION = {
+  commit: jest.fn(),
+  rollback: jest.fn(),
+}
 describe('PublishingTaskService - Event Emission', () => {
   let service: PublishingTaskService
   let eventEmitter: jest.Mocked<EventEmitter2>
@@ -76,12 +80,7 @@ describe('PublishingTaskService - Event Emission', () => {
     }
     // Mock Sequelize transaction
     const mockTransaction = jest.fn().mockImplementation(async (callback) => {
-      const transactionObj = {
-        commit: jest.fn(),
-        rollback: jest.fn(),
-        LOCK: { UPDATE: 'UPDATE' },
-      }
-      return callback(transactionObj)
+      return callback(TRANSACTION)
     })
     const mockSequelize = {
       transaction: mockTransaction,
@@ -90,7 +89,10 @@ describe('PublishingTaskService - Event Emission', () => {
     // Mock models
     const mockPublicationModel = {
       findAll: jest.fn(),
-      count: jest.fn().mockResolvedValue(1),
+      // The locked re-read of the publication: not yet published
+      findByPk: jest
+        .fn()
+        .mockResolvedValue({ id: 'publication-123', publishedAt: null }),
     }
     const mockAdvertModel = {
       findOne: jest.fn(),
@@ -198,7 +200,6 @@ describe('PublishingTaskService - Event Emission', () => {
           const tx = {
             commit: jest.fn(),
             rollback: jest.fn(),
-            LOCK: { UPDATE: 'UPDATE' },
           } as unknown as Transaction
           await callback(tx)
           emitOrder.push('commit')
@@ -218,10 +219,11 @@ describe('PublishingTaskService - Event Emission', () => {
       await service.publishAdverts()
 
       expect(advertModel.unscoped).toHaveBeenCalled()
-      expect(advertModel.findByPk).toHaveBeenCalledWith(
-        'advert-123',
-        expect.objectContaining({ attributes: ['id'], lock: 'UPDATE' }),
-      )
+      expect(advertModel.findByPk).toHaveBeenCalledWith('advert-123', {
+        attributes: ['id'],
+        transaction: TRANSACTION,
+        lock: Transaction.LOCK.NO_KEY_UPDATE,
+      })
       expect(advertModel.findByPk.mock.invocationCallOrder[0]).toBeLessThan(
         mockPublication.advert.reload.mock.invocationCallOrder[0],
       )
@@ -230,10 +232,10 @@ describe('PublishingTaskService - Event Emission', () => {
       ).toBeLessThan(mockPublication.advert.update.mock.invocationCallOrder[0])
     })
 
-    it('skips a publication whose advert left READY_FOR_PUBLICATION while waiting for the lock', async () => {
+    it('skips a publication whose advert was withdrawn while waiting for the lock', async () => {
       const mockPublication = createMockPublication()
       mockPublication.advert.reload.mockImplementation(async () => {
-        mockPublication.advert.statusId = StatusIdEnum.PUBLISHED
+        mockPublication.advert.statusId = StatusIdEnum.WITHDRAWN
       })
       publicationModel.findAll.mockResolvedValue([
         mockPublication,
@@ -245,28 +247,45 @@ describe('PublishingTaskService - Event Emission', () => {
       expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
     })
 
-    it('locks adverts in id order', async () => {
-      const pubB = createMockPublication({
-        id: 'pub-b',
-        advertId: 'advert-b',
-        advert: createMockAdvert({ id: 'advert-b' }),
-      })
-      const pubA = createMockPublication({
-        id: 'pub-a',
-        advertId: 'advert-a',
-        advert: createMockAdvert({ id: 'advert-a' }),
-      })
+    it('skips a publication that was published while waiting for the lock', async () => {
+      const mockPublication = createMockPublication()
+      publicationModel.findByPk.mockResolvedValue({
+        id: 'publication-123',
+        publishedAt: new Date(),
+      } as any)
       publicationModel.findAll.mockResolvedValue([
-        pubB,
-        pubA,
+        mockPublication,
       ] as unknown as AdvertPublicationModel[])
 
       await service.publishAdverts()
 
-      expect(advertModel.findByPk.mock.calls.map((c) => c[0])).toEqual([
-        'advert-a',
-        'advert-b',
-      ])
+      expect(mockPublication.update).not.toHaveBeenCalled()
+      expect(mockPublication.advert.update).not.toHaveBeenCalled()
+      expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
+    })
+
+    it('still publishes a second same-day publication of an advert the first one set PUBLISHED', async () => {
+      const advert = createMockAdvert()
+      const first = createMockPublication({ id: 'pub-1', advert })
+      const second = createMockPublication({ id: 'pub-2', advert })
+      publicationModel.findAll.mockResolvedValue([
+        first,
+        second,
+      ] as unknown as AdvertPublicationModel[])
+      advert.update.mockImplementation(async (values: any) => {
+        Object.assign(advert, values)
+      })
+      publicationModel.findByPk.mockImplementation((async (id: string) => ({
+        id,
+        publishedAt: null,
+      })) as any)
+
+      await service.publishAdverts()
+
+      expect(advert.statusId).toBe(StatusIdEnum.PUBLISHED)
+      expect(first.update).toHaveBeenCalled()
+      expect(second.update).toHaveBeenCalled()
+      expect(eventEmitter.emitAsync).toHaveBeenCalledTimes(2)
     })
 
     it('should catch and log errors from emitAsync', async () => {
@@ -299,7 +318,6 @@ describe('PublishingTaskService - Event Emission', () => {
           const tx = {
             commit: jest.fn(),
             rollback: jest.fn(),
-            LOCK: { UPDATE: 'UPDATE' },
           } as unknown as Transaction
           await callback(tx)
           return tx
@@ -387,7 +405,11 @@ describe('PublishingTaskService - Event Emission', () => {
               model: expect.anything(),
               as: 'advert',
               where: {
-                statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+                statusId: [
+                  StatusIdEnum.READY_FOR_PUBLICATION,
+                  StatusIdEnum.IN_PUBLISHING,
+                  StatusIdEnum.PUBLISHED,
+                ],
               },
             },
           ],
@@ -481,7 +503,6 @@ describe('PublishingTaskService - Event Emission', () => {
           const tx = {
             commit: jest.fn(),
             rollback: jest.fn(),
-            LOCK: { UPDATE: 'UPDATE' },
           } as unknown as Transaction
           await callback(tx)
           transactionCompleted = true

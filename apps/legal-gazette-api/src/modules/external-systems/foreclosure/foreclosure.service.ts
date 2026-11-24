@@ -1,12 +1,13 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { escapeHtml } from '@dmr.is/utils-server/escapeHtml'
 
+import { lockAdvertRow } from '../../../core/utils/advert-lock'
 import { assertAdvertEditable } from '../../../core/utils/advert-status.util'
 import {
   feeQuantityForChange,
@@ -143,13 +144,13 @@ export class ForeclosureService implements IForeclosureService {
     const newProperty = await this.sequelize.transaction(
       async (transaction) => {
         // Lock first: a concurrent change on this sale waits here, so its
-        // count sees this write, and a publish in flight (which holds the
-        // same row lock from its status update) finishes charging first.
+        // count sees this write, and a publish in flight (both publish paths
+        // take the same row lock before charging) finishes charging first.
         const advert = await this.lockAdvert(foreclosure.advertId, transaction)
 
         // The check above was read before the lock; a publish may have
         // finished since, so check again on the locked row.
-        if (advert) assertAdvertEditable(advert, 'foreclosure property')
+        assertAdvertEditable(advert, 'foreclosure property')
 
         // Escape HTML in all text fields to prevent XSS
         const property = await this.foreclosurePropertyModel.create(
@@ -199,7 +200,7 @@ export class ForeclosureService implements IForeclosureService {
       const advert = await this.lockAdvert(foreclosure.advertId, transaction)
 
       // Re-check on the locked row; the check above ran before the lock.
-      if (advert) assertAdvertEditable(advert, 'foreclosure property')
+      assertAdvertEditable(advert, 'foreclosure property')
 
       // force true (no soft delete)
       await property.destroy({ force: true, transaction })
@@ -209,19 +210,19 @@ export class ForeclosureService implements IForeclosureService {
   }
 
   /**
-   * Row-locks the advert (`SELECT ... FOR UPDATE`) for the rest of the
-   * transaction. Property changes on one sale take it before they read the
-   * quantity, so they run one at a time. A publish holds the same row lock
-   * from its status update until its charge commits, so the frozen check
-   * below is always read after any charge.
+   * Row-locks the advert (`lockAdvertRow`) for the rest of the transaction.
+   * Property changes on one sale take it before they read the quantity, so
+   * they run one at a time. Both publish paths take the same lock before they
+   * charge and hold it until the charge commits, so the frozen check below is
+   * always read after any charge. Throws when the advert no longer exists.
    */
   private async lockAdvert(
     advertId: string,
     transaction: Transaction,
-  ): Promise<AdvertModel | null> {
-    return this.advertModel.unscoped().findByPk(advertId, {
+  ): Promise<AdvertModel> {
+    const advert = await lockAdvertRow(this.advertModel, advertId, {
+      transaction,
       attributes: [
-        'id',
         'statusId',
         'typeId',
         'templateType',
@@ -230,9 +231,13 @@ export class ForeclosureService implements IForeclosureService {
         'transactionId',
         'legacyId',
       ],
-      transaction,
-      lock: transaction.LOCK.UPDATE,
     })
+
+    if (!advert) {
+      throw new NotFoundException('Advert not found')
+    }
+
+    return advert
   }
 
   /**
@@ -244,13 +249,9 @@ export class ForeclosureService implements IForeclosureService {
    */
   private async syncFeeQuantity(
     foreclosureId: string,
-    advert: AdvertModel | null,
+    advert: AdvertModel,
     transaction: Transaction,
   ): Promise<void> {
-    if (!advert) {
-      return
-    }
-
     const propertyCount = await this.foreclosurePropertyModel.count({
       where: { foreclosureId },
       transaction,

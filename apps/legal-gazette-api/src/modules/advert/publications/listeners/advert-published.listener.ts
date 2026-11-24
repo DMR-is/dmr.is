@@ -51,7 +51,8 @@ export class AdvertPublishedListener {
     })
 
     // No lock of its own: this runs inside the publish transaction (CLS),
-    // which has already updated the advert row and so holds its row lock.
+    // which took the advert row lock first (`lockAdvertRow`) and holds it
+    // until commit.
     // A concurrent foreclosure property change locks the same row first, so
     // it either commits before this reads `feeQuantity` or waits until
     // `transactionId` below is committed and then leaves the quantity alone.

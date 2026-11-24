@@ -1,6 +1,7 @@
+import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
-import { BadRequestException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
@@ -13,7 +14,7 @@ import { StatusIdEnum } from '../../../models/status.model'
 import { TypeIdEnum } from '../../../models/type.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
 import { ForeclosureService } from './foreclosure.service'
-const TRANSACTION = { id: 'tx', LOCK: { UPDATE: 'UPDATE' } }
+const TRANSACTION = { id: 'tx' }
 
 /** The advert row syncFeeQuantity reads: an uncharged template foreclosure. */
 const templateForeclosureAdvert = (
@@ -599,7 +600,10 @@ describe('ForeclosureService - Status Protection', () => {
       // stale, and the lock must precede both so a concurrent request waits.
       expect(mockAdvertModel.findByPk).toHaveBeenCalledWith(
         'advert-123',
-        expect.objectContaining({ transaction: TRANSACTION, lock: 'UPDATE' }),
+        expect.objectContaining({
+          transaction: TRANSACTION,
+          lock: Transaction.LOCK.NO_KEY_UPDATE,
+        }),
       )
       const order = [
         mockAdvertModel.findByPk,
@@ -634,7 +638,10 @@ describe('ForeclosureService - Status Protection', () => {
       )
       expect(mockAdvertModel.findByPk).toHaveBeenCalledWith(
         'advert-123',
-        expect.objectContaining({ transaction: TRANSACTION, lock: 'UPDATE' }),
+        expect.objectContaining({
+          transaction: TRANSACTION,
+          lock: Transaction.LOCK.NO_KEY_UPDATE,
+        }),
       )
       const order = [
         mockAdvertModel.findByPk,
@@ -748,6 +755,36 @@ describe('ForeclosureService - Status Protection', () => {
       expect(mockAdvertModel.update).not.toHaveBeenCalled()
     })
 
+    it('throws NotFound when the locked read finds no advert, creating nothing', async () => {
+      mockAdvertModel.findByPk.mockResolvedValue(null)
+
+      await expect(
+        service.createForeclosureProperty('foreclosure-123', {
+          propertyName: 'Eign',
+          propertyNumber: '1',
+          propertyTotalPrice: 1,
+          claimant: 'a',
+          respondent: 'b',
+        }),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(foreclosurePropertyModel.create).not.toHaveBeenCalled()
+    })
+
+    it('throws NotFound when the locked read finds no advert, destroying nothing', async () => {
+      const destroy = jest.fn()
+      foreclosurePropertyModel.findOneOrThrow.mockResolvedValue({
+        destroy,
+      } as any)
+      mockAdvertModel.findByPk.mockResolvedValue(null)
+
+      await expect(
+        service.deletePropertyFromForeclosure('foreclosure-123', '123'),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(destroy).not.toHaveBeenCalled()
+    })
+
     it('rejects a delete when the locked row is PUBLISHED and destroys nothing', async () => {
       const destroy = jest.fn()
       foreclosurePropertyModel.findOneOrThrow.mockResolvedValue({
@@ -762,7 +799,7 @@ describe('ForeclosureService - Status Protection', () => {
       expect(mockAdvertModel.update).not.toHaveBeenCalled()
     })
 
-    it('locks the unscoped advert row FOR UPDATE and reads its status', async () => {
+    it('locks the unscoped advert row FOR NO KEY UPDATE and reads its status', async () => {
       mockAdvertModel.findByPk.mockResolvedValue(templateForeclosureAdvert())
       foreclosurePropertyModel.create.mockResolvedValue({
         reload: jest.fn(),
@@ -785,7 +822,7 @@ describe('ForeclosureService - Status Protection', () => {
         expect.objectContaining({
           attributes: expect.arrayContaining(['id', 'statusId']),
           transaction: TRANSACTION,
-          lock: 'UPDATE',
+          lock: Transaction.LOCK.NO_KEY_UPDATE,
         }),
       )
     })
