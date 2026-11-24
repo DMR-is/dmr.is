@@ -793,7 +793,9 @@ export class AdvertService implements IAdvertService {
         { context: LOGGING_CONTEXT },
       )
 
-      throw new BadRequestException('Published advert cannot be withdrawn')
+      throw new BadRequestException(
+        'Advert is already published and published adverts are final: it cannot be withdrawn',
+      )
     }
 
     await advert.update({ statusId: StatusIdEnum.WITHDRAWN })

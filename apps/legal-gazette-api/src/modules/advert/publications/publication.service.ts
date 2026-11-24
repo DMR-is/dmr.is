@@ -367,6 +367,13 @@ export class PublicationService implements IPublicationService {
       where: { id: publicationId },
     })
 
+    // A published publication is final: it cannot be rescheduled
+    if (publication.publishedAt) {
+      throw new BadRequestException(
+        'Publication is already published and cannot be rescheduled',
+      )
+    }
+
     const prevDate = publication.scheduledAt.toISOString()
     const incomingDate = body.scheduledAt
 

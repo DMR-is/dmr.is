@@ -14,6 +14,20 @@ import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import { PublicationService } from './publication.service'
 import { IPublicationService } from './publication.service.interface'
+// The request's CLS transaction the advert lock is taken on
+const CLS_TRANSACTION = { id: 'request-transaction' }
+jest.mock('cls-hooked', () => {
+  const { CLS_NAMESPACE } = jest.requireActual('@dmr.is/constants')
+  return {
+    getNamespace: (name: string) =>
+      name === CLS_NAMESPACE
+        ? {
+            get: (key: string) =>
+              key === 'transaction' ? CLS_TRANSACTION : undefined,
+          }
+        : undefined,
+  }
+})
 // Mock logger
 const mockLogger = {
   info: jest.fn(),
@@ -300,5 +314,88 @@ describe('PublicationService - Delete Publication Protection', () => {
         ],
       })
     })
+  })
+})
+
+describe('PublicationService - updatePublication', () => {
+  let service: IPublicationService
+  let advertModel: any
+  let publicationModel: any
+
+  const scheduled = new Date('2030-01-10T09:00:00.000Z')
+  const incoming = new Date('2030-01-20T09:00:00.000Z')
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        PublicationService,
+        {
+          provide: getModelToken(AdvertModel),
+          useValue: {
+            unscoped: jest.fn().mockReturnThis(),
+            findByPk: jest.fn().mockResolvedValue({ id: 'advert-1' }),
+          },
+        },
+        {
+          provide: getModelToken(AdvertPublicationModel),
+          useValue: {
+            findOneOrThrow: jest.fn(),
+            findAll: jest.fn().mockResolvedValue([]),
+          },
+        },
+        { provide: CACHE_MANAGER, useValue: mockCacheManager },
+        { provide: Sequelize, useValue: mockSequelize },
+        { provide: LOGGER_PROVIDER, useValue: mockLogger },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
+        { provide: UserContext, useValue: { user: undefined } },
+      ],
+    }).compile()
+    service = module.get<IPublicationService>(PublicationService)
+    advertModel = module.get(getModelToken(AdvertModel))
+    publicationModel = module.get(getModelToken(AdvertPublicationModel))
+  })
+
+  const givenPublication = (publishedAt: Date | null) => {
+    const publication = {
+      id: 'pub-1',
+      advertId: 'advert-1',
+      versionNumber: 1,
+      scheduledAt: scheduled,
+      publishedAt,
+      update: jest.fn(),
+    }
+    publicationModel.findOneOrThrow.mockResolvedValue(publication)
+    return publication
+  }
+
+  it('locks the advert on the request transaction before the re-read', async () => {
+    const publication = givenPublication(null)
+
+    await service.updatePublication('pub-1', { scheduledAt: incoming })
+
+    expect(advertModel.findByPk).toHaveBeenCalledWith('advert-1', {
+      attributes: ['id'],
+      transaction: CLS_TRANSACTION,
+      lock: Transaction.LOCK.NO_KEY_UPDATE,
+    })
+    // First read finds the advert id, the lock follows, then the re-read
+    expect(publicationModel.findOneOrThrow).toHaveBeenCalledTimes(2)
+    const [firstRead, reread] =
+      publicationModel.findOneOrThrow.mock.invocationCallOrder
+    const [lock] = advertModel.findByPk.mock.invocationCallOrder
+    expect(firstRead).toBeLessThan(lock)
+    expect(lock).toBeLessThan(reread)
+    expect(publication.update).toHaveBeenCalledWith({ scheduledAt: incoming })
+  })
+
+  it('refuses to reschedule a published publication', async () => {
+    const publication = givenPublication(new Date('2030-01-10T09:00:00.000Z'))
+
+    await expect(
+      service.updatePublication('pub-1', { scheduledAt: incoming }),
+    ).rejects.toThrow(BadRequestException)
+
+    expect(advertModel.findByPk).toHaveBeenCalled()
+    expect(publication.update).not.toHaveBeenCalled()
   })
 })

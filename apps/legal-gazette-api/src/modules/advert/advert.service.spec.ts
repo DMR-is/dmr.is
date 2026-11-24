@@ -96,6 +96,8 @@ const CLS_TRANSACTION = {
   id: 'request-transaction',
   afterCommit: jest.fn((cb: () => void) => cb()),
 }
+// Flip to false to simulate code running outside a request
+const mockCls = { hasTransaction: true }
 // Only for the CLS namespace and the `transaction` key Sequelize uses; any
 // other namespace or key gets nothing, so a wrong one in advert-lock.ts fails.
 jest.mock('cls-hooked', () => {
@@ -105,7 +107,9 @@ jest.mock('cls-hooked', () => {
       name === CLS_NAMESPACE
         ? {
             get: (key: string) =>
-              key === 'transaction' ? CLS_TRANSACTION : undefined,
+              key === 'transaction' && mockCls.hasTransaction
+                ? CLS_TRANSACTION
+                : undefined,
           }
         : undefined,
   }
@@ -2152,7 +2156,6 @@ describe('getAdvertsCount', () => {
 describe('status transitions', () => {
   let service: AdvertService
   let advertModel: any
-  let userModel: any
   let eventEmitter: { emit: jest.Mock }
   let sequelize: { transaction: jest.Mock }
 
@@ -2190,10 +2193,15 @@ describe('status transitions', () => {
     }).compile()
     service = module.get(AdvertService)
     advertModel = module.get(getModelToken(AdvertModel))
-    userModel = module.get(getModelToken(UserModel))
     eventEmitter = module.get(EventEmitter2)
     sequelize = module.get(Sequelize)
-    CLS_TRANSACTION.afterCommit.mockClear()
+    CLS_TRANSACTION.afterCommit.mockReset()
+    mockCls.hasTransaction = true
+  })
+
+  afterEach(() => {
+    CLS_TRANSACTION.afterCommit.mockImplementation((cb: () => void) => cb())
+    mockCls.hasTransaction = true
   })
 
   const user = createMockDMRUser('1234567890') as any
@@ -2231,11 +2239,13 @@ describe('status transitions', () => {
     run: () => Promise<void>
     refuses: StatusIdEnum
     writes: (advert: any) => void
+    emits?: StatusIdEnum
   }> = [
     {
       name: 'rejectAdvert',
       status: StatusIdEnum.SUBMITTED,
       refuses: StatusIdEnum.PUBLISHED,
+      emits: StatusIdEnum.REJECTED,
       run: () => service.rejectAdvert('advert-123', user),
       writes: (advert) =>
         expect(advert.update).toHaveBeenCalledWith({
@@ -2246,6 +2256,7 @@ describe('status transitions', () => {
       name: 'moveAdvertToNextStatus',
       status: StatusIdEnum.SUBMITTED,
       refuses: StatusIdEnum.PUBLISHED,
+      emits: StatusIdEnum.IN_PROGRESS,
       run: () => service.moveAdvertToNextStatus('advert-123', user),
       writes: () =>
         expect(advertModel.update).toHaveBeenCalledWith(
@@ -2257,6 +2268,7 @@ describe('status transitions', () => {
       name: 'moveAdvertToPreviousStatus',
       status: StatusIdEnum.IN_PROGRESS,
       refuses: StatusIdEnum.PUBLISHED,
+      emits: StatusIdEnum.SUBMITTED,
       run: () => service.moveAdvertToPreviousStatus('advert-123', user),
       writes: () =>
         expect(advertModel.update).toHaveBeenCalledWith(
@@ -2276,37 +2288,64 @@ describe('status transitions', () => {
     },
   ]
 
-  describe.each(transitions)('$name', ({ status, run, refuses, writes }) => {
-    it('locks the advert row on the request transaction before reading', async () => {
-      const advert = givenAdvert(status)
+  describe.each(transitions)(
+    '$name',
+    ({ status, run, refuses, writes, emits }) => {
+      it('locks the advert row on the request transaction before reading', async () => {
+        const advert = givenAdvert(status)
 
-      await run()
+        await run()
 
-      expectLockedFirst()
-      writes(advert)
-    })
+        expectLockedFirst()
+        writes(advert)
+      })
 
-    it('is refused when the locked re-read shows PUBLISHED', async () => {
-      const advert = givenAdvert(refuses)
+      it('is refused when the locked re-read shows PUBLISHED', async () => {
+        const advert = givenAdvert(refuses)
 
-      await expect(run()).rejects.toThrow(BadRequestException)
+        await expect(run()).rejects.toThrow(BadRequestException)
 
-      expectLockedFirst()
-      expect(advert.update).not.toHaveBeenCalled()
-      expect(advertModel.update).not.toHaveBeenCalled()
-      expect(eventEmitter.emit).not.toHaveBeenCalled()
-    })
-  })
+        expectLockedFirst()
+        expect(advert.update).not.toHaveBeenCalled()
+        expect(advertModel.update).not.toHaveBeenCalled()
+        expect(eventEmitter.emit).not.toHaveBeenCalled()
+      })
 
-  it('emits the status change after the request transaction commits', async () => {
-    givenAdvert(StatusIdEnum.SUBMITTED)
+      it('refuses before any read when there is no transaction', async () => {
+        mockCls.hasTransaction = false
+        givenAdvert(status)
 
-    await service.moveAdvertToNextStatus('advert-123', user)
+        await expect(run()).rejects.toThrow(/needs a transaction/)
 
-    expect(CLS_TRANSACTION.afterCommit).toHaveBeenCalledTimes(1)
-    expect(eventEmitter.emit).toHaveBeenCalledWith(
-      'advert.status.changed',
-      expect.objectContaining({ statusId: StatusIdEnum.IN_PROGRESS }),
-    )
-  })
+        expect(advertModel.findByPk).not.toHaveBeenCalled()
+        expect(advertModel.findByPkOrThrow).not.toHaveBeenCalled()
+        expect(advertModel.update).not.toHaveBeenCalled()
+      })
+
+      if (emits) {
+        it('emits the status change only after the transaction commits', async () => {
+          givenAdvert(status)
+          const callbacks: Array<() => void> = []
+          CLS_TRANSACTION.afterCommit.mockImplementation((cb: () => void) => {
+            callbacks.push(cb)
+          })
+
+          await run()
+
+          expect(callbacks).toHaveLength(1)
+          expect(eventEmitter.emit).not.toHaveBeenCalled()
+
+          callbacks[0]()
+
+          expect(eventEmitter.emit).toHaveBeenCalledWith(
+            'advert.status.changed',
+            expect.objectContaining({
+              advertId: 'advert-123',
+              statusId: emits,
+            }),
+          )
+        })
+      }
+    },
+  )
 })

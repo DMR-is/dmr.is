@@ -29,7 +29,6 @@ export class CLSMiddleware implements NestMiddleware {
         traceId,
       })
       const transaction = await this.sequelize.transaction()
-      transactionNamespace.set('transaction', transaction)
 
       // One flag so the transaction ends exactly once: `close` also fires
       // after a normal `finish`, and an abort must never roll back a
@@ -60,6 +59,24 @@ export class CLSMiddleware implements NestMiddleware {
         }
       }
 
+      const abort = () => {
+        this.logger.warn('Request aborted before the response finished', {
+          context: 'CLSMiddleware',
+          traceId,
+        })
+        void finalise('rollback')
+      }
+
+      // The client may have gone away while the request waited for a pool
+      // connection: `close` has already fired, so no listener below would
+      // ever hear it. Roll back now and never run the handler.
+      if (res.closed || res.destroyed) {
+        abort()
+        return
+      }
+
+      transactionNamespace.set('transaction', transaction)
+
       res.on('finish', () => {
         void finalise(
           res.statusCode >= 200 && res.statusCode < 400 ? 'commit' : 'rollback',
@@ -74,11 +91,7 @@ export class CLSMiddleware implements NestMiddleware {
           return
         }
 
-        this.logger.warn('Request aborted before the response finished', {
-          context: 'CLSMiddleware',
-          traceId,
-        })
-        void finalise('rollback')
+        abort()
       })
 
       next()

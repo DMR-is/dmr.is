@@ -8,9 +8,10 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam, ApiResponse } from '@nestjs/swagger'
 import { ThrottlerGuard } from '@nestjs/throttler'
 
+import { ApiErrorDto } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
@@ -60,11 +61,17 @@ export class ForeclosureController {
   }
 
   @Delete('/sale/:id')
+  @ApiResponse({
+    status: 400,
+    type: ApiErrorDto,
+    description:
+      'The sale advert is already published. Published adverts are final and can no longer be changed or withdrawn by this API.',
+  })
   @LGResponse({
     status: 204,
     operationId: 'deleteForeclosureSale',
     description:
-      'Deletes a foreclosure sale by its ID, marks the advert as withdrawn',
+      'Deletes a foreclosure sale by its ID and withdraws its advert. Returns 204 on success. Returns 400 once the advert is published: published adverts are final and neither the sale nor the advert is changed.',
   })
   @ApiParam({ name: 'id', description: 'The ID of the foreclosure sale' })
   async deleteForeclosureSale(@Param('id') id: string): Promise<void> {
