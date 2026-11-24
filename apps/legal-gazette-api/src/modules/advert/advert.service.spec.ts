@@ -125,6 +125,7 @@ describe('updateAdvert', () => {
           useValue: {
             withScope: jest.fn().mockReturnThis(),
             unscoped: jest.fn().mockReturnThis(),
+            findByPk: jest.fn().mockResolvedValue(null),
             findByPkOrThrow: jest.fn(),
             findAll: jest.fn(),
             findOne: jest.fn(),
@@ -165,6 +166,7 @@ describe('updateAdvert', () => {
                 commit: jest.fn(),
                 rollback: jest.fn(),
                 afterCommit: jest.fn((cb) => cb()),
+                LOCK: { UPDATE: 'UPDATE' },
               }
               return callback(mockTransaction)
             }),
@@ -179,6 +181,21 @@ describe('updateAdvert', () => {
     typeCategoriesService = module.get(ITypeCategoriesService)
   })
   describe('when advert is PUBLISHED (C-1 Critical Issue)', () => {
+    it('takes the advert row lock before reading the advert', async () => {
+      const advert = createMockAdvert({ statusId: StatusIdEnum.SUBMITTED })
+      advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(advert)
+
+      await service.updateAdvert('advert-123', createMockUpdateDto())
+
+      expect(advertModel.findByPk).toHaveBeenCalledWith(
+        'advert-123',
+        expect.objectContaining({ attributes: ['id'], lock: 'UPDATE' }),
+      )
+      expect(advertModel.findByPk.mock.invocationCallOrder[0]).toBeLessThan(
+        advertModel.findByPkOrThrow.mock.invocationCallOrder[0],
+      )
+    })
+
     it('should throw BadRequestException when trying to modify title of published advert', async () => {
       // Arrange: Create a published advert
       const publishedAdvert = createMockAdvert({
@@ -308,6 +325,7 @@ describe('updateAdvert', () => {
         expect.objectContaining({
           title: 'Updated Title',
         }),
+        expect.anything(),
       )
       expect(result).toBeDefined()
     })
@@ -344,6 +362,7 @@ describe('updateAdvert', () => {
         expect.objectContaining({
           content: '<p>Updated content</p>',
         }),
+        expect.anything(),
       )
       expect(result).toBeDefined()
     })
@@ -385,6 +404,7 @@ describe('updateAdvert', () => {
           typeId: 'new-type-id',
           categoryId: 'derived-category-id',
         }),
+        expect.anything(),
       )
     })
     it('should update caption when provided', async () => {
@@ -398,6 +418,7 @@ describe('updateAdvert', () => {
         expect.objectContaining({
           caption: 'New Caption',
         }),
+        expect.anything(),
       )
     })
     it('should store edited content as given, without sanitizing it', async () => {
@@ -410,6 +431,7 @@ describe('updateAdvert', () => {
       const advert = await advertModel.findByPkOrThrow('advert-123')
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ content }),
+        expect.anything(),
       )
     })
   })
@@ -439,6 +461,7 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: undefined }),
+        expect.anything(),
       )
     })
 
@@ -470,6 +493,7 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: undefined }),
+        expect.anything(),
       )
     })
 
@@ -497,6 +521,7 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: 4 }),
+        expect.anything(),
       )
     })
 
@@ -521,6 +546,7 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: null }),
+        expect.anything(),
       )
     })
 
@@ -549,6 +575,7 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: 16 }),
+        expect.anything(),
       )
     })
 
@@ -562,6 +589,7 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: 3 }),
+        expect.anything(),
       )
     })
 
@@ -583,6 +611,7 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: null }),
+        expect.anything(),
       )
     })
 
@@ -599,6 +628,7 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: undefined }),
+        expect.anything(),
       )
     })
   })
@@ -644,6 +674,7 @@ describe('updateAdvert', () => {
           typeId: 'new-type-id',
           categoryId: 'fyrirkoll-id',
         }),
+        expect.anything(),
       )
     })
     it('should throw when the supplied categoryId is not assignable to the type', async () => {
@@ -674,6 +705,7 @@ describe('updateAdvert', () => {
       )
       expect(editableAdvert.update).toHaveBeenCalledWith(
         expect.objectContaining({ categoryId: 'fyrirkoll-id' }),
+        expect.anything(),
       )
     })
     it('should leave the category untouched on a type-only change when it is still assignable', async () => {
@@ -689,6 +721,7 @@ describe('updateAdvert', () => {
           typeId: 'new-type-id',
           categoryId: undefined,
         }),
+        expect.anything(),
       )
       // No fallback derivation needed, so no second (filtered) lookup.
       expect(typeCategoriesService.findByTypeId).toHaveBeenCalledTimes(1)
@@ -714,6 +747,7 @@ describe('updateAdvert', () => {
       )
       expect(editableAdvert.update).toHaveBeenCalledWith(
         expect.objectContaining({ categoryId: 'fyrirkoll-id' }),
+        expect.anything(),
       )
     })
     it('should throw when the new type has no assignable category', async () => {
@@ -739,6 +773,7 @@ describe('updateAdvert', () => {
       expect(typeCategoriesService.findByTypeId).not.toHaveBeenCalled()
       expect(editableAdvert.update).toHaveBeenCalledWith(
         expect.objectContaining({ categoryId: undefined }),
+        expect.anything(),
       )
     })
   })

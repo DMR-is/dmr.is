@@ -921,39 +921,61 @@ export class AdvertService implements IAdvertService {
     id: string,
     body: UpdateAdvertDto,
   ): Promise<AdvertDetailedDto> {
-    const advert = await this.advertModel
-      .withScope('detailed')
-      .findByPkOrThrow(id)
+    // Read, decide and write under the advert row lock. A property change
+    // on a foreclosure and a publish both take it, so the quantity decided
+    // below is never based on properties they are changing, and a publish in
+    // flight has finished before the status is read. The only caller is the
+    // update controller, outside any transaction.
+    const { advert, updated, feeQuantity } = await this.sequelize.transaction(
+      async (transaction) => {
+        // Plain read: FOR UPDATE cannot combine with the detailed scope's
+        // outer joins.
+        await this.advertModel.unscoped().findByPk(id, {
+          attributes: ['id'],
+          transaction,
+          lock: transaction.LOCK.UPDATE,
+        })
 
-    // Prevent modification of adverts in terminal states
-    const nonEditableStatuses = [
-      StatusIdEnum.PUBLISHED,
-      StatusIdEnum.REJECTED,
-      StatusIdEnum.WITHDRAWN,
-    ]
+        const advert = await this.advertModel
+          .withScope('detailed')
+          .findByPkOrThrow(id)
 
-    if (nonEditableStatuses.includes(advert.statusId)) {
-      throw new BadRequestException('Cannot modify published adverts')
-    }
+        // Prevent modification of adverts in terminal states
+        const nonEditableStatuses = [
+          StatusIdEnum.PUBLISHED,
+          StatusIdEnum.REJECTED,
+          StatusIdEnum.WITHDRAWN,
+        ]
 
-    const categoryId = await this.resolveUpdatedCategoryId(advert, body)
-    const feeQuantity = this.feeQuantityForUpdate(advert, body)
+        if (nonEditableStatuses.includes(advert.statusId)) {
+          throw new BadRequestException('Cannot modify published adverts')
+        }
 
-    const updated = await advert.update({
-      typeId: body.typeId,
-      categoryId,
-      title: body.title,
-      // Not sanitized: only new submissions are cleaned (createAdvert). An
-      // existing advert changes only through the editor.
-      content: body.content,
-      additionalText: body.additionalText,
-      divisionMeetingDate: body.divisionMeetingDate,
-      divisionMeetingLocation: body.divisionMeetingLocation,
-      caption: body.caption,
-      courtDistrictId: body.courtDistrictId,
-      judgementDate: body.judgementDate,
-      feeQuantity,
-    })
+        const categoryId = await this.resolveUpdatedCategoryId(advert, body)
+        const feeQuantity = this.feeQuantityForUpdate(advert, body)
+
+        const updated = await advert.update(
+          {
+            typeId: body.typeId,
+            categoryId,
+            title: body.title,
+            // Not sanitized: only new submissions are cleaned (createAdvert).
+            // An existing advert changes only through the editor.
+            content: body.content,
+            additionalText: body.additionalText,
+            divisionMeetingDate: body.divisionMeetingDate,
+            divisionMeetingLocation: body.divisionMeetingLocation,
+            caption: body.caption,
+            courtDistrictId: body.courtDistrictId,
+            judgementDate: body.judgementDate,
+            feeQuantity,
+          },
+          { transaction },
+        )
+
+        return { advert, updated, feeQuantity }
+      },
+    )
 
     warnOnZeroFeeQuantity(this.logger, {
       advertId: advert.id,

@@ -676,10 +676,16 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
   ): Promise<ImpactDto> {
     this.assertMoveTargets(body)
     return this.sequelize.transaction(async (transaction) => {
+      // Lock the moved rows (in id order, so two moves cannot wait on each
+      // other) before reading them: a publish or a property change on one of
+      // these sales finishes first, and the quantities decided below are
+      // based on its result.
       const adverts = await this.advertModel.findAll({
         where: this.moveWhere(body),
         attributes: ['id', 'typeId', 'categoryId'],
+        order: [['id', 'ASC']],
         transaction,
+        lock: transaction.LOCK.UPDATE,
       })
       const moved: MovedAdvert[] = adverts.map((a) => ({
         id: a.id,
@@ -1012,10 +1018,13 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     // Read each advert's type as it is now, not as the audited move left it: a
     // later move may have retyped it since, and the fee quantity decision
     // depends on the type it is actually leaving.
+    // The same read takes the row locks, in id order, before any write.
     const current = await this.advertModel.findAll({
       where: { id: { [Op.in]: adverts.map((a) => a.id) } },
       attributes: ['id', 'typeId'],
+      order: [['id', 'ASC']],
       transaction,
+      lock: transaction.LOCK.UPDATE,
     })
     const currentTypeIds = new Map(current.map((a) => [a.id, a.typeId]))
 

@@ -20,7 +20,7 @@ import { CategoryTypeActor } from './dto/category-type-admin.dto'
 import { CategoryTypeAdminService } from './category-type-admin.service'
 
 const ACTOR: CategoryTypeActor = { id: 'admin-1', name: 'Admin' }
-const TRANSACTION = { id: 'tx' }
+const TRANSACTION = { id: 'tx', LOCK: { UPDATE: 'UPDATE' } }
 
 // `unscoped()` returns the same mock, so a test can stub `findByPk` once and have
 // it answer both `model.findByPk` and `model.unscoped().findByPk`.
@@ -600,6 +600,26 @@ describe('CategoryTypeAdminService', () => {
       content: twoProperties,
       feeQuantity: null,
       ...overrides,
+    })
+
+    it('locks the moved advert rows in id order before reading them', async () => {
+      advertModel.findAll.mockResolvedValueOnce([
+        { id: 'a1', typeId: 'type-a', categoryId: 'cat-a' },
+      ])
+
+      await service.moveAdverts(
+        { fromTypeId: 'type-a', toTypeId: FORECLOSURE },
+        ACTOR,
+      )
+
+      expect(advertModel.findAll).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          order: [['id', 'ASC']],
+          lock: 'UPDATE',
+          transaction: TRANSACTION,
+        }),
+      )
     })
 
     it('derives the property count for adverts moved into foreclosures', async () => {
