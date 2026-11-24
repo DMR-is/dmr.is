@@ -15,13 +15,11 @@ import {
 
 import { LegalGazetteEvents } from '../../../core/constants'
 import { UserContext } from '../../../core/context/user/user.context'
+import { AdvertVersionEnum } from '../../../core/enums/advert-version.enum'
 import { StatusIdEnum } from '../../../core/enums/status.enum'
 import { mapVersionToIndex } from '../../../core/utils'
 import { AdvertModel } from '../../../models/advert.model'
-import {
-  AdvertPublicationModel,
-  AdvertVersionEnum,
-} from '../../../models/advert-publication.model'
+import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import {
   AdvertPublicationDetailedDto,
   GetCombinedHTMLDto,

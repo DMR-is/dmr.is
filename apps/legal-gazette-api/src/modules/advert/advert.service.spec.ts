@@ -90,6 +90,12 @@ const createMockDMRUser = (nationalId: string = '1234567890') => ({
 // ==========================================
 // C-1: Published Adverts Modification Prevention
 // ==========================================
+// The request's CLS transaction the editor locks on
+const CLS_TRANSACTION = { id: 'request-transaction' }
+jest.mock('cls-hooked', () => ({
+  getNamespace: () => ({ get: () => CLS_TRANSACTION }),
+}))
+
 describe('updateAdvert', () => {
   let service: AdvertService
   let advertModel: any
@@ -166,7 +172,6 @@ describe('updateAdvert', () => {
                 commit: jest.fn(),
                 rollback: jest.fn(),
                 afterCommit: jest.fn((cb) => cb()),
-                LOCK: { UPDATE: 'UPDATE' },
               }
               return callback(mockTransaction)
             }),
@@ -187,12 +192,11 @@ describe('updateAdvert', () => {
 
       await service.updateAdvert('advert-123', createMockUpdateDto())
 
-      // Locked on the request's own (CLS) transaction: no `transaction`
-      // option of its own, and no second transaction opened.
+      // Locked on the request's own (CLS) transaction, no second one opened.
       expect(advertModel.unscoped).toHaveBeenCalled()
       expect(advertModel.findByPk).toHaveBeenCalledWith('advert-123', {
         attributes: ['id'],
-        transaction: undefined,
+        transaction: CLS_TRANSACTION,
         lock: Transaction.LOCK.NO_KEY_UPDATE,
       })
       expect(advertModel.findByPk.mock.invocationCallOrder[0]).toBeLessThan(
@@ -214,7 +218,7 @@ describe('updateAdvert', () => {
       // Act & Assert: Should throw BadRequestException
       await expect(
         service.updateAdvert('advert-123', updateDto),
-      ).rejects.toThrow('Cannot modify published adverts')
+      ).rejects.toThrow('Cannot modify advert - advert is in a terminal state')
       // Verify update was NOT called
       expect(publishedAdvert.update).not.toHaveBeenCalled()
     })
@@ -232,7 +236,7 @@ describe('updateAdvert', () => {
       // Act & Assert
       await expect(
         service.updateAdvert('advert-123', updateDto),
-      ).rejects.toThrow('Cannot modify published adverts')
+      ).rejects.toThrow('Cannot modify advert - advert is in a terminal state')
       expect(publishedAdvert.update).not.toHaveBeenCalled()
     })
     it('should throw BadRequestException when trying to modify category of published advert', async () => {
@@ -247,7 +251,7 @@ describe('updateAdvert', () => {
       // Act & Assert
       await expect(
         service.updateAdvert('advert-123', updateDto),
-      ).rejects.toThrow('Cannot modify published adverts')
+      ).rejects.toThrow('Cannot modify advert - advert is in a terminal state')
       expect(publishedAdvert.update).not.toHaveBeenCalled()
     })
     it('should throw BadRequestException when trying to modify type of published advert', async () => {
@@ -262,7 +266,7 @@ describe('updateAdvert', () => {
       // Act & Assert
       await expect(
         service.updateAdvert('advert-123', updateDto),
-      ).rejects.toThrow('Cannot modify published adverts')
+      ).rejects.toThrow('Cannot modify advert - advert is in a terminal state')
       expect(publishedAdvert.update).not.toHaveBeenCalled()
       expect(typeCategoriesService.findByTypeId).not.toHaveBeenCalled()
     })
@@ -296,7 +300,7 @@ describe('updateAdvert', () => {
       // Act & Assert
       await expect(
         service.updateAdvert('advert-123', updateDto),
-      ).rejects.toThrow('Cannot modify published adverts')
+      ).rejects.toThrow('Cannot modify advert - advert is in a terminal state')
     })
   })
   describe('when advert is WITHDRAWN', () => {
@@ -311,7 +315,7 @@ describe('updateAdvert', () => {
       // Act & Assert
       await expect(
         service.updateAdvert('advert-123', updateDto),
-      ).rejects.toThrow('Cannot modify published adverts')
+      ).rejects.toThrow('Cannot modify advert - advert is in a terminal state')
     })
   })
   describe('when advert is in editable status', () => {

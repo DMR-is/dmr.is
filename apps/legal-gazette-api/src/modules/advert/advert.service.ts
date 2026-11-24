@@ -17,6 +17,7 @@ import {
 
 import { LegalGazetteEvents } from '../../core/constants'
 import { lockAdvertRow } from '../../core/utils/advert-lock'
+import { assertAdvertEditable } from '../../core/utils/advert-status.util'
 import {
   feeQuantityForChange,
   isFeeQuantityFrozen,
@@ -935,16 +936,7 @@ export class AdvertService implements IAdvertService {
       .withScope('detailed')
       .findByPkOrThrow(id)
 
-    // Prevent modification of adverts in terminal states
-    const nonEditableStatuses = [
-      StatusIdEnum.PUBLISHED,
-      StatusIdEnum.REJECTED,
-      StatusIdEnum.WITHDRAWN,
-    ]
-
-    if (nonEditableStatuses.includes(advert.statusId)) {
-      throw new BadRequestException('Cannot modify published adverts')
-    }
+    assertAdvertEditable(advert)
 
     const categoryId = await this.resolveUpdatedCategoryId(advert, body)
     const feeQuantity = this.feeQuantityForUpdate(advert, body)

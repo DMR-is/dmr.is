@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common'
 
-import { StatusIdEnum } from '../../models/status.model'
+import { StatusIdEnum } from '../enums/status.enum'
 
 /**
  * Non-editable statuses - adverts in these states cannot be modified
@@ -54,23 +54,23 @@ export function assertAdvertsEditable(
 }
 
 /**
- * Statuses an advert can be in with none of its publications publishable:
- * a rejected or withdrawn advert is never published. A PUBLISHED or
- * IN_PUBLISHING advert still publishes its remaining publications.
+ * Statuses an advert may be in for a publication to be published: the ones
+ * `AdvertModel.canPublish` allows, plus PUBLISHED, for a second same-day
+ * publication of an advert the first one already set PUBLISHED.
  */
-const NON_PUBLISHABLE_STATUSES: readonly StatusIdEnum[] = [
-  StatusIdEnum.REJECTED,
-  StatusIdEnum.WITHDRAWN,
+const PUBLISHABLE_STATUSES: readonly StatusIdEnum[] = [
+  StatusIdEnum.READY_FOR_PUBLICATION,
+  StatusIdEnum.IN_PUBLISHING,
+  StatusIdEnum.PUBLISHED,
 ]
 
 /**
  * The check both publish paths make after taking the advert row lock, on the
- * freshly read rows: the publication is not out yet and the advert has not
- * been rejected or withdrawn since it was selected.
+ * freshly read rows: the publication is not out yet and the advert is still in
+ * a status it may be published from.
  */
 export const isStillPublishable = (
   publication: { publishedAt?: Date | null },
   advert: { statusId: StatusIdEnum },
 ): boolean =>
-  !publication.publishedAt &&
-  !NON_PUBLISHABLE_STATUSES.includes(advert.statusId)
+  !publication.publishedAt && PUBLISHABLE_STATUSES.includes(advert.statusId)

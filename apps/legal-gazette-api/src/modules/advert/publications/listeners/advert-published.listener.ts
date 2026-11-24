@@ -10,7 +10,7 @@ import { withRetry } from '@dmr.is/utils-server/withRetry'
 
 import { LegalGazetteEvents } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'
-import { AdvertVersionEnum } from '../../../../models/advert-publication.model'
+import { AdvertVersionEnum } from '../../../../core/enums/advert-version.enum'
 import {
   TBRTransactionModel,
   TBRTransactionStatus,
