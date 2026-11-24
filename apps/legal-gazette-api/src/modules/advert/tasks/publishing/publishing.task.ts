@@ -177,15 +177,22 @@ export class PublishingTaskService implements IPublishingTaskService {
             current.scheduledAt.getTime() >= start &&
             current.scheduledAt.getTime() <= end
 
-          if (!current || !dueToday || !isStillPublishable(current, advert)) {
-            this.logger.info(
-              'Publication is no longer due after taking the advert lock, skipping',
-              {
-                context: LOGGER_CONTEXT,
-                publicationId: pub.id,
-                advertId: advert.id,
-              },
-            )
+          const skipReason = !current
+            ? 'Publication no longer exists after taking the advert lock, skipping'
+            : !dueToday
+              ? 'Publication was rescheduled away from today, skipping'
+              : !isStillPublishable(current, advert)
+                ? 'Advert is no longer publishable, skipping'
+                : null
+
+          if (skipReason) {
+            this.logger.info(skipReason, {
+              context: LOGGER_CONTEXT,
+              publicationId: pub.id,
+              advertId: advert.id,
+              scheduledAt: current?.scheduledAt,
+              statusId: advert.statusId,
+            })
             skipped = true
             return
           }

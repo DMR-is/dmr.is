@@ -96,9 +96,20 @@ const CLS_TRANSACTION = {
   id: 'request-transaction',
   afterCommit: jest.fn((cb: () => void) => cb()),
 }
-jest.mock('cls-hooked', () => ({
-  getNamespace: () => ({ get: () => CLS_TRANSACTION }),
-}))
+// Only for the CLS namespace and the `transaction` key Sequelize uses; any
+// other namespace or key gets nothing, so a wrong one in advert-lock.ts fails.
+jest.mock('cls-hooked', () => {
+  const { CLS_NAMESPACE } = jest.requireActual('@dmr.is/constants')
+  return {
+    getNamespace: (name: string) =>
+      name === CLS_NAMESPACE
+        ? {
+            get: (key: string) =>
+              key === 'transaction' ? CLS_TRANSACTION : undefined,
+          }
+        : undefined,
+  }
+})
 
 describe('updateAdvert', () => {
   let service: AdvertService

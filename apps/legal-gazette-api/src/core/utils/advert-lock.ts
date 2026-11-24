@@ -8,7 +8,7 @@ import type { AdvertModel } from '../../models/advert.model'
 /**
  * The one way to lock an advert row. The writers that take it are the editor
  * (`updateAdvert`), both publish paths (`advert-publish.service.ts` and the
- * publishing task), foreclosure property add and delete, the bulk move and
+ * publishing task), the publication reschedule (`updatePublication`), foreclosure property add and delete, the bulk move and
  * its undo, and the status transitions in `advert.service.ts` (`rejectAdvert`,
  * `moveAdvertToNextStatus`, `moveAdvertToPreviousStatus`,
  * `markAdvertAsWithdrawn`). Each takes it before it reads what its decision

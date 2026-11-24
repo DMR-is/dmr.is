@@ -1,6 +1,9 @@
 import { BadRequestException } from '@nestjs/common'
 
-import { StatusIdEnum } from '../enums/status.enum'
+import {
+  PUBLISHABLE_ADVERT_STATUS_IDS,
+  StatusIdEnum,
+} from '../enums/status.enum'
 
 /**
  * Non-editable statuses - adverts in these states cannot be modified
@@ -54,13 +57,13 @@ export function assertAdvertsEditable(
 }
 
 /**
- * Statuses an advert may be in for a publication to be published: the ones
- * `AdvertModel.canPublish` allows, plus PUBLISHED, for a second same-day
- * publication of an advert the first one already set PUBLISHED.
+ * Statuses an advert may be in for a publication to be published: the shared
+ * `PUBLISHABLE_ADVERT_STATUS_IDS` (what `AdvertModel.canPublish` allows), plus
+ * PUBLISHED, for a second same-day publication of an advert the first one
+ * already set PUBLISHED. `canPublish` does not allow PUBLISHED.
  */
 const PUBLISHABLE_STATUSES: readonly StatusIdEnum[] = [
-  StatusIdEnum.READY_FOR_PUBLICATION,
-  StatusIdEnum.IN_PUBLISHING,
+  ...PUBLISHABLE_ADVERT_STATUS_IDS,
   StatusIdEnum.PUBLISHED,
 ]
 

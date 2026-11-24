@@ -18,6 +18,7 @@ import { UserContext } from '../../../core/context/user/user.context'
 import { AdvertVersionEnum } from '../../../core/enums/advert-version.enum'
 import { StatusIdEnum } from '../../../core/enums/status.enum'
 import { mapVersionToIndex } from '../../../core/utils'
+import { lockAdvertRow } from '../../../core/utils/advert-lock'
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import {
@@ -355,6 +356,13 @@ export class PublicationService implements IPublicationService {
     publicationId: string,
     body: UpdateAdvertPublicationDto,
   ): Promise<void> {
+    const found = await this.publicationModel.findOneOrThrow({
+      where: { id: publicationId },
+    })
+
+    // Serialise with the publishing task's re-read: lock the advert row on the
+    // request transaction, then read the publication again for its current state.
+    await lockAdvertRow(this.advertModel, found.advertId)
     const publication = await this.publicationModel.findOneOrThrow({
       where: { id: publicationId },
     })

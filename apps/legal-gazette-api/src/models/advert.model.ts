@@ -22,7 +22,10 @@ import { getHtmlTextLength } from '@dmr.is/utils-server/serverUtils'
 import { LegalGazetteModels } from '../core/constants'
 import { AdvertTemplateType } from '../core/enums/advert-template-type.enum'
 import { AdvertVersionEnum } from '../core/enums/advert-version.enum'
-import { StatusIdEnum } from '../core/enums/status.enum'
+import {
+  PUBLISHABLE_ADVERT_STATUS_IDS,
+  StatusIdEnum,
+} from '../core/enums/status.enum'
 import { getAdvertHtmlMarkup } from '../core/html/advert-html'
 // Type-only: `advert.dto.ts` imports this module back, and the DTOs are only
 // ever mapper return types here - never constructed - so no runtime read is
@@ -549,12 +552,7 @@ export class AdvertModel extends ParanoidModel<
    */
   static canPublish(model: AdvertModel): boolean {
     try {
-      const allowedStatuses = [
-        StatusIdEnum.READY_FOR_PUBLICATION,
-        StatusIdEnum.IN_PUBLISHING,
-      ]
-
-      return allowedStatuses.includes(model.statusId)
+      return PUBLISHABLE_ADVERT_STATUS_IDS.includes(model.statusId)
     } catch (error) {
       this.logger.error('Error checking canPublish permission', {
         context: 'AdvertModel',

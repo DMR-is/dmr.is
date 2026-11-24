@@ -280,6 +280,58 @@ describe('PublishingTaskService - Event Emission', () => {
       expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
     })
 
+    describe('dueToday window (local day, fixed clock)', () => {
+      const NOW = new Date(2026, 0, 14, 12, 0, 0, 0)
+
+      beforeEach(() => {
+        jest.useFakeTimers({ now: NOW })
+      })
+
+      afterEach(() => {
+        jest.useRealTimers()
+      })
+
+      const run = async (scheduledAt: Date) => {
+        const mockPublication = createMockPublication()
+        publicationModel.findByPk.mockResolvedValue({
+          id: 'publication-123',
+          publishedAt: null,
+          scheduledAt,
+        } as any)
+        publicationModel.findAll.mockResolvedValue([
+          mockPublication,
+        ] as unknown as AdvertPublicationModel[])
+        await service.publishAdverts()
+        return mockPublication
+      }
+
+      it('skips a publication rescheduled to the past', async () => {
+        const pub = await run(new Date(2026, 0, 13, 23, 59, 59, 999))
+
+        expect(pub.update).not.toHaveBeenCalled()
+        expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
+      })
+
+      it('skips a publication rescheduled to the start of tomorrow', async () => {
+        const pub = await run(new Date(2026, 0, 15, 0, 0, 0, 0))
+
+        expect(pub.update).not.toHaveBeenCalled()
+        expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
+      })
+
+      it('publishes a publication scheduled at the first millisecond of today', async () => {
+        const pub = await run(new Date(2026, 0, 14, 0, 0, 0, 0))
+
+        expect(pub.update).toHaveBeenCalled()
+      })
+
+      it('publishes a publication scheduled at the last millisecond of today', async () => {
+        const pub = await run(new Date(2026, 0, 14, 23, 59, 59, 999))
+
+        expect(pub.update).toHaveBeenCalled()
+      })
+    })
+
     it('skips a publication whose advert was withdrawn while waiting for the lock', async () => {
       const mockPublication = createMockPublication()
       mockPublication.advert.reload.mockImplementation(async () => {
