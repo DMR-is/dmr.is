@@ -68,6 +68,7 @@ describe('AdvertPublishService', () => {
           commit: jest.fn(),
           rollback: jest.fn(),
           afterCommit: jest.fn((cb) => cb()),
+          LOCK: { UPDATE: 'UPDATE' },
         }
         return callback(mockTransaction)
       }),
@@ -84,6 +85,8 @@ describe('AdvertPublishService', () => {
           provide: getModelToken(AdvertModel),
           useValue: {
             withScope: jest.fn().mockReturnThis(),
+            unscoped: jest.fn().mockReturnThis(),
+            findByPk: jest.fn().mockResolvedValue(null),
             findByPkOrThrow: jest.fn(),
             findOne: jest.fn(),
           },
@@ -162,6 +165,32 @@ describe('AdvertPublishService', () => {
         publishedHtml: expect.any(String),
       })
     })
+    it('takes the advert row lock before reading the advert to render', async () => {
+      const advertId = 'advert-123'
+      const publication = createMockPublication({ advertId })
+      publicationModel.findOneOrThrow.mockResolvedValue(publication)
+      advertModel.findByPkOrThrow.mockResolvedValue(
+        createMockAdvert({ id: advertId }),
+      )
+      advertModel.findOne.mockResolvedValue(null)
+      publicationModel.findAll.mockResolvedValue([publication])
+
+      await service.publishNextPublication(advertId)
+
+      expect(advertModel.unscoped).toHaveBeenCalled()
+      expect(advertModel.findByPk).toHaveBeenCalledWith(
+        advertId,
+        expect.objectContaining({
+          attributes: ['id'],
+          lock: 'UPDATE',
+          transaction: expect.objectContaining({ LOCK: { UPDATE: 'UPDATE' } }),
+        }),
+      )
+      expect(advertModel.findByPk.mock.invocationCallOrder[0]).toBeLessThan(
+        advertModel.findByPkOrThrow.mock.invocationCallOrder[0],
+      )
+    })
+
     it('should throw error when no unpublished publication found', async () => {
       // Arrange
       const advertId = 'advert-123'

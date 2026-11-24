@@ -139,6 +139,12 @@ export class PublishingTaskService implements IPublishingTaskService {
       },
     )
 
+    // A stable order, so two publishers that lock adverts one after another
+    // cannot wait on each other in opposite orders.
+    publicationsToBePublished.sort((a, b) =>
+      a.advertId.localeCompare(b.advertId),
+    )
+
     for (const [index, pub] of publicationsToBePublished.entries()) {
       const advert = pub.advert
       this.logger.info(
@@ -152,7 +158,41 @@ export class PublishingTaskService implements IPublishingTaskService {
       )
 
       try {
+        let skipped = false
+
         await this.sequelize.transaction(async (transaction) => {
+          // Lock the advert row first, then re-read what the charge depends
+          // on: a property change on this sale waits for the commit, and one
+          // already in flight has finished. Plain read: FOR UPDATE cannot
+          // combine with the detailed scope's outer joins.
+          await this.advertModel.unscoped().findByPk(advert.id, {
+            attributes: ['id'],
+            transaction,
+            lock: transaction.LOCK.UPDATE,
+          })
+          await advert.reload({ transaction })
+
+          const stillDue = await this.publicationModel.count({
+            where: { id: pub.id, publishedAt: { [Op.is]: null } },
+            transaction,
+          })
+
+          if (
+            stillDue === 0 ||
+            advert.statusId !== StatusIdEnum.READY_FOR_PUBLICATION
+          ) {
+            this.logger.info(
+              'Publication is no longer due after taking the advert lock, skipping',
+              {
+                context: LOGGER_CONTEXT,
+                publicationId: pub.id,
+                advertId: advert.id,
+              },
+            )
+            skipped = true
+            return
+          }
+
           const publicationNumber = isEmpty(advert.publicationNumber)
             ? await this.getNextPublicationNumber(pub.scheduledAt, transaction)
             : advert.publicationNumber
@@ -212,6 +252,10 @@ export class PublishingTaskService implements IPublishingTaskService {
             throw error
           }
         })
+
+        if (skipped) {
+          continue
+        }
 
         this.logger.info(`Published advert publication with ID: ${pub.id}`, {
           context: LOGGER_CONTEXT,
