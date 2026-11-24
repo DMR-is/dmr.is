@@ -142,6 +142,11 @@ export class ForeclosureService implements IForeclosureService {
     // between cannot leave the advert billing a stale count.
     const newProperty = await this.sequelize.transaction(
       async (transaction) => {
+        // Lock first: a concurrent change on this sale waits here, so its
+        // count sees this write, and the publish listener's charge cannot
+        // interleave with the recount.
+        const advert = await this.lockAdvert(foreclosure.advertId, transaction)
+
         // Escape HTML in all text fields to prevent XSS
         const property = await this.foreclosurePropertyModel.create(
           {
@@ -155,7 +160,7 @@ export class ForeclosureService implements IForeclosureService {
           { returning: true, transaction },
         )
 
-        await this.syncFeeQuantity(id, foreclosure.advertId, transaction)
+        await this.syncFeeQuantity(id, advert, transaction)
 
         return property
       },
@@ -187,10 +192,37 @@ export class ForeclosureService implements IForeclosureService {
     })
 
     await this.sequelize.transaction(async (transaction) => {
+      const advert = await this.lockAdvert(foreclosure.advertId, transaction)
+
       // force true (no soft delete)
       await property.destroy({ force: true, transaction })
 
-      await this.syncFeeQuantity(id, foreclosure.advertId, transaction)
+      await this.syncFeeQuantity(id, advert, transaction)
+    })
+  }
+
+  /**
+   * Row-locks the advert (`SELECT ... FOR UPDATE`) for the rest of the
+   * transaction. Property changes on one sale and the publish listener's
+   * charge all take this lock before they read the quantity, so they run one
+   * at a time and the frozen check below is read after any charge committed.
+   */
+  private async lockAdvert(
+    advertId: string,
+    transaction: Transaction,
+  ): Promise<AdvertModel | null> {
+    return this.advertModel.unscoped().findByPk(advertId, {
+      attributes: [
+        'id',
+        'typeId',
+        'templateType',
+        'content',
+        'feeQuantity',
+        'transactionId',
+        'legacyId',
+      ],
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     })
   }
 
@@ -203,22 +235,9 @@ export class ForeclosureService implements IForeclosureService {
    */
   private async syncFeeQuantity(
     foreclosureId: string,
-    advertId: string,
+    advert: AdvertModel | null,
     transaction: Transaction,
   ): Promise<void> {
-    const advert = await this.advertModel.unscoped().findByPk(advertId, {
-      attributes: [
-        'id',
-        'typeId',
-        'templateType',
-        'content',
-        'feeQuantity',
-        'transactionId',
-        'legacyId',
-      ],
-      transaction,
-    })
-
     if (!advert) {
       return
     }
@@ -240,14 +259,17 @@ export class ForeclosureService implements IForeclosureService {
       return
     }
 
-    // The transactionId condition repeats the frozen check at write time.
+    // transactionId and legacyId repeat the frozen check at write time.
     await this.advertModel.update(
       { feeQuantity },
-      { where: { id: advertId, transactionId: null }, transaction },
+      {
+        where: { id: advert.id, transactionId: null, legacyId: null },
+        transaction,
+      },
     )
 
     warnOnZeroFeeQuantity(this.logger, {
-      advertId,
+      advertId: advert.id,
       typeId: advert.typeId,
       feeQuantity,
       context: LOGGING_CONTEXT,
