@@ -4,6 +4,7 @@ import {
   Inject,
   Param,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
@@ -14,13 +15,19 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { IPdfService } from './pdf.service.interface'
 
+interface PdfRequest {
+  user?: { nationalId?: string; actor?: { nationalId?: string } }
+}
+
 /**
  * Renders an application as PDF.
  *
  * Called by island.is on behalf of an applicant
  * (`ojoiApplicationClient.getPdf`). The caller is not a staff user, so this
- * route takes token verification only, not `RoleGuard`. Further access checks
- * are tracked separately.
+ * route takes token verification only, not `RoleGuard`. The service then
+ * allows only the application's applicant, assignees or applicant actors,
+ * matched against the token subject and delegation actor, and answers 404
+ * otherwise.
  *
  * The staff-only `GET pdf/case/:id` and the two `.../url` companions were
  * deleted rather than kept: nothing called them.
@@ -40,9 +47,17 @@ export class PdfController {
   async getPdfByApplicationId(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Query() params: GetPdfBody,
+    @Req() req: PdfRequest,
   ): Promise<GetPdfRespone> {
     const pdf = (
-      await this.pdfService.getPdfByApplicationId(id, params.showDate)
+      await this.pdfService.getPdfByApplicationId(
+        id,
+        {
+          nationalId: req.user?.nationalId,
+          actorNationalId: req.user?.actor?.nationalId,
+        },
+        params.showDate,
+      )
     ).unwrap()
 
     const result = pdf.toString('base64')

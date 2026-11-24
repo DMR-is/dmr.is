@@ -12,6 +12,7 @@ import {
 import { LogAndHandle } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
+import type { Application } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { simpleSanitize } from '@dmr.is/utils-server/cleanLegacyHtml'
 import {
@@ -24,7 +25,11 @@ import {
 import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { pdfCss } from './pdf.css'
-import { IPdfService, IssuePdfAdvertInput } from './pdf.service.interface'
+import {
+  IPdfService,
+  IssuePdfAdvertInput,
+  PdfCaller,
+} from './pdf.service.interface'
 import { advertPdfTemplate } from './pdf-advert-template'
 import { getBrowser } from './puppetBrowser'
 
@@ -35,6 +40,33 @@ const LOGGING_CATEGORY = 'pdf-service'
  * Exported so `pdfjs-legacy-build.spec.ts` loads pdfjs with the same options.
  */
 export const PDFJS_DOCUMENT_OPTIONS = { isEvalSupported: false } as const
+
+const digits = (value?: string) => (value ?? '').replace(/\D/g, '')
+
+/**
+ * The caller must be the applicant (set by island.is from the token subject),
+ * an assignee, or an applicant actor. A delegation token's actor is checked
+ * the same way as the subject.
+ */
+export const isApplicationParty = (
+  application: Pick<Application, 'applicant' | 'assignees' | 'applicantActors'>,
+  caller: PdfCaller,
+): boolean => {
+  const callerIds = [caller.nationalId, caller.actorNationalId]
+    .map(digits)
+    .filter(Boolean)
+  if (callerIds.length === 0) return false
+
+  const partyIds = [
+    application.applicant,
+    ...(application.assignees ?? []),
+    ...(application.applicantActors ?? []),
+  ]
+    .map(digits)
+    .filter(Boolean)
+
+  return callerIds.some((id) => partyIds.includes(id))
+}
 
 @Injectable()
 export class PdfService implements OnModuleDestroy, IPdfService {
@@ -369,6 +401,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
   async getPdfByApplicationId(
     applicationId: string,
+    caller: PdfCaller,
     showDate = true,
   ): Promise<ResultWrapper<Buffer>> {
     const applicationLookup =
@@ -388,7 +421,21 @@ export class PdfService implements OnModuleDestroy, IPdfService {
       })
     }
 
-    const { answers } = applicationLookup.result.value.application
+    const { application } = applicationLookup.result.value
+
+    // Same 404 as a missing application, so the route does not confirm ids.
+    if (!isApplicationParty(application, caller)) {
+      this.logger.warn(
+        `Caller is not a party to application<${applicationId}>, PDF denied`,
+        { category: LOGGING_CATEGORY },
+      )
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Application not found',
+      })
+    }
+
+    const { answers } = application
     const signatureType =
       answers.misc?.signatureType === SignatureType.Committee
         ? SignatureType.Committee
