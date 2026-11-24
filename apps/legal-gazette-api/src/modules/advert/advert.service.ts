@@ -16,7 +16,7 @@ import {
 } from '@dmr.is/utils-server/serverUtils'
 
 import { LegalGazetteEvents } from '../../core/constants'
-import { lockAdvertRow } from '../../core/utils/advert-lock'
+import { lockAdvertRow, resolveTransaction } from '../../core/utils/advert-lock'
 import { assertAdvertEditable } from '../../core/utils/advert-status.util'
 import {
   feeQuantityForChange,
@@ -413,37 +413,37 @@ export class AdvertService implements IAdvertService {
   }
 
   async rejectAdvert(advertId: string, currentUser: DMRUser): Promise<void> {
-    await this.sequelize.transaction(async (t) => {
-      const user = await this.userModel.unscoped().findOneOrThrow({
-        attributes: ['id', 'nationalId'],
-        where: { nationalId: currentUser.nationalId },
-      })
-      const advert = await this.advertModel
-        .unscoped()
-        .findByPkOrThrow(advertId, {
-          attributes: ['id', 'statusId', 'assignedUserId'],
-        })
+    // Lock first, then read the status and write, all on the request's own
+    // (CLS) transaction: a publish in flight has finished before the status is
+    // read, so a transition cannot overwrite PUBLISHED. No transaction of our
+    // own: it would be a second connection that waits on the lock held here.
+    await lockAdvertRow(this.advertModel, advertId)
 
-      const isEditable = advert.canEdit(user.id)
+    const user = await this.userModel.unscoped().findOneOrThrow({
+      attributes: ['id', 'nationalId'],
+      where: { nationalId: currentUser.nationalId },
+    })
+    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
+      attributes: ['id', 'statusId', 'assignedUserId'],
+    })
 
-      if (!isEditable) {
-        this.logger.warn(
-          `User with id ${user.id} is not allowed to reject advert with id ${advertId}`,
-        )
+    const isEditable = advert.canEdit(user.id)
 
-        throw new BadRequestException(
-          'User is not allowed to reject this advert',
-        )
-      }
+    if (!isEditable) {
+      this.logger.warn(
+        `User with id ${user.id} is not allowed to reject advert with id ${advertId}`,
+      )
 
-      await advert.update({ statusId: StatusIdEnum.REJECTED })
+      throw new BadRequestException('User is not allowed to reject this advert')
+    }
 
-      t.afterCommit(() => {
-        this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
-          advertId,
-          actorId: currentUser.nationalId,
-          statusId: StatusIdEnum.REJECTED,
-        })
+    await advert.update({ statusId: StatusIdEnum.REJECTED })
+
+    resolveTransaction().afterCommit(() => {
+      this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
+        advertId,
+        actorId: currentUser.nationalId,
+        statusId: StatusIdEnum.REJECTED,
       })
     })
   }
@@ -503,53 +503,52 @@ export class AdvertService implements IAdvertService {
     advertId: string,
     currentUser: DMRUser,
   ): Promise<void> {
-    await this.sequelize.transaction(async (t) => {
-      const moveableStatuses = [
-        StatusIdEnum.SUBMITTED,
-        StatusIdEnum.IN_PROGRESS,
-      ]
+    // Lock first, then read the status and write, all on the request's own
+    // (CLS) transaction; see rejectAdvert.
+    await lockAdvertRow(this.advertModel, advertId)
 
-      const currentStatusId = await this.advertModel
-        .unscoped()
-        .findByPkOrThrow(advertId, {
-          attributes: ['id', 'statusId'],
-        })
+    const moveableStatuses = [StatusIdEnum.SUBMITTED, StatusIdEnum.IN_PROGRESS]
 
-      if (!moveableStatuses.includes(currentStatusId.statusId)) {
-        this.logger.warn(
-          `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to next status`,
-          {
-            context: LOGGING_CONTEXT,
-          },
-        )
+    const currentStatusId = await this.advertModel
+      .unscoped()
+      .findByPkOrThrow(advertId, {
+        attributes: ['id', 'statusId'],
+      })
 
-        throw new BadRequestException('Advert cannot be moved to next status')
-      }
-
-      let nextStatusId: StatusIdEnum
-
-      switch (currentStatusId.statusId) {
-        case StatusIdEnum.SUBMITTED:
-          nextStatusId = StatusIdEnum.IN_PROGRESS
-          break
-        case StatusIdEnum.IN_PROGRESS:
-          nextStatusId = StatusIdEnum.READY_FOR_PUBLICATION
-          break
-        default:
-          throw new BadRequestException(`Advert cannot be moved to next status`)
-      }
-
-      await this.advertModel.update(
-        { statusId: nextStatusId },
-        { where: { id: advertId } },
+    if (!moveableStatuses.includes(currentStatusId.statusId)) {
+      this.logger.warn(
+        `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to next status`,
+        {
+          context: LOGGING_CONTEXT,
+        },
       )
 
-      t.afterCommit(() => {
-        this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
-          advertId,
-          actorId: currentUser.nationalId,
-          statusId: nextStatusId,
-        })
+      throw new BadRequestException('Advert cannot be moved to next status')
+    }
+
+    let nextStatusId: StatusIdEnum
+
+    switch (currentStatusId.statusId) {
+      case StatusIdEnum.SUBMITTED:
+        nextStatusId = StatusIdEnum.IN_PROGRESS
+        break
+      case StatusIdEnum.IN_PROGRESS:
+        nextStatusId = StatusIdEnum.READY_FOR_PUBLICATION
+        break
+      default:
+        throw new BadRequestException(`Advert cannot be moved to next status`)
+    }
+
+    await this.advertModel.update(
+      { statusId: nextStatusId },
+      { where: { id: advertId } },
+    )
+
+    resolveTransaction().afterCommit(() => {
+      this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
+        advertId,
+        actorId: currentUser.nationalId,
+        statusId: nextStatusId,
       })
     })
   }
@@ -557,57 +556,57 @@ export class AdvertService implements IAdvertService {
     advertId: string,
     currentUser: DMRUser,
   ): Promise<void> {
-    await this.sequelize.transaction(async (t) => {
-      const moveableStatuses = [
-        StatusIdEnum.IN_PROGRESS,
-        StatusIdEnum.READY_FOR_PUBLICATION,
-      ]
+    // Lock first, then read the status and write, all on the request's own
+    // (CLS) transaction; see rejectAdvert.
+    await lockAdvertRow(this.advertModel, advertId)
 
-      const currentStatusId = await this.advertModel
-        .unscoped()
-        .findByPkOrThrow(advertId, {
-          attributes: ['id', 'statusId'],
-        })
+    const moveableStatuses = [
+      StatusIdEnum.IN_PROGRESS,
+      StatusIdEnum.READY_FOR_PUBLICATION,
+    ]
 
-      if (!moveableStatuses.includes(currentStatusId.statusId)) {
-        this.logger.warn(
-          `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to previous status`,
-          {
-            context: LOGGING_CONTEXT,
-          },
-        )
+    const currentStatusId = await this.advertModel
+      .unscoped()
+      .findByPkOrThrow(advertId, {
+        attributes: ['id', 'statusId'],
+      })
 
-        throw new BadRequestException(
-          'Advert cannot be moved to previous status',
-        )
-      }
-
-      let previousStatusId: StatusIdEnum
-
-      switch (currentStatusId.statusId) {
-        case StatusIdEnum.IN_PROGRESS:
-          previousStatusId = StatusIdEnum.SUBMITTED
-          break
-        case StatusIdEnum.READY_FOR_PUBLICATION:
-          previousStatusId = StatusIdEnum.IN_PROGRESS
-          break
-        default:
-          throw new BadRequestException(
-            `Advert cannot be moved to previous status`,
-          )
-      }
-
-      await this.advertModel.update(
-        { statusId: previousStatusId },
-        { where: { id: advertId } },
+    if (!moveableStatuses.includes(currentStatusId.statusId)) {
+      this.logger.warn(
+        `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to previous status`,
+        {
+          context: LOGGING_CONTEXT,
+        },
       )
 
-      t.afterCommit(() => {
-        this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
-          advertId,
-          actorId: currentUser.nationalId,
-          statusId: previousStatusId,
-        })
+      throw new BadRequestException('Advert cannot be moved to previous status')
+    }
+
+    let previousStatusId: StatusIdEnum
+
+    switch (currentStatusId.statusId) {
+      case StatusIdEnum.IN_PROGRESS:
+        previousStatusId = StatusIdEnum.SUBMITTED
+        break
+      case StatusIdEnum.READY_FOR_PUBLICATION:
+        previousStatusId = StatusIdEnum.IN_PROGRESS
+        break
+      default:
+        throw new BadRequestException(
+          `Advert cannot be moved to previous status`,
+        )
+    }
+
+    await this.advertModel.update(
+      { statusId: previousStatusId },
+      { where: { id: advertId } },
+    )
+
+    resolveTransaction().afterCommit(() => {
+      this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
+        advertId,
+        actorId: currentUser.nationalId,
+        statusId: previousStatusId,
       })
     })
   }
@@ -780,9 +779,22 @@ export class AdvertService implements IAdvertService {
   }
 
   async markAdvertAsWithdrawn(advertId: string): Promise<void> {
+    // Lock first, on the request's own (CLS) transaction; see rejectAdvert.
+    await lockAdvertRow(this.advertModel, advertId)
+
     const advert = await this.advertModel.findByPkOrThrow(advertId, {
       attributes: ['id', 'statusId'],
     })
+
+    // A publish that committed meanwhile is final; never overwrite it.
+    if (advert.statusId === StatusIdEnum.PUBLISHED) {
+      this.logger.warn(
+        `Advert with id ${advertId} is published and cannot be withdrawn`,
+        { context: LOGGING_CONTEXT },
+      )
+
+      throw new BadRequestException('Published advert cannot be withdrawn')
+    }
 
     await advert.update({ statusId: StatusIdEnum.WITHDRAWN })
   }

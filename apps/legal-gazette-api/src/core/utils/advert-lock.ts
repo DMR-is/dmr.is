@@ -8,10 +8,11 @@ import type { AdvertModel } from '../../models/advert.model'
 /**
  * The one way to lock an advert row. The writers that take it are the editor
  * (`updateAdvert`), both publish paths (`advert-publish.service.ts` and the
- * publishing task), foreclosure property add and delete, and the bulk move and
- * its undo. Each takes it before it reads what its decision depends on, so
- * these run one at a time per advert. The status transitions in
- * `advert.service.ts` do not take it.
+ * publishing task), foreclosure property add and delete, the bulk move and
+ * its undo, and the status transitions in `advert.service.ts` (`rejectAdvert`,
+ * `moveAdvertToNextStatus`, `moveAdvertToPreviousStatus`,
+ * `markAdvertAsWithdrawn`). Each takes it before it reads what its decision
+ * depends on, so these run one at a time per advert.
  *
  * `NO_KEY_UPDATE` (`FOR NO KEY UPDATE`), not `UPDATE`: it conflicts with
  * itself, so it serialises the same writers, but it does not conflict with the
@@ -42,7 +43,7 @@ type LockOptions = {
 }
 
 /** The explicit transaction, else the request's CLS one; throws with neither. */
-const resolveTransaction = (explicit?: Transaction): Transaction => {
+export const resolveTransaction = (explicit?: Transaction): Transaction => {
   const transaction: Transaction | undefined =
     explicit ?? getNamespace(CLS_NAMESPACE)?.get('transaction')
 
