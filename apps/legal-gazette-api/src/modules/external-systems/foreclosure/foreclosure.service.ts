@@ -8,6 +8,10 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { escapeHtml } from '@dmr.is/utils-server/escapeHtml'
 
 import { assertAdvertEditable } from '../../../core/utils/advert-status.util'
+import {
+  feeQuantityForChange,
+  warnOnZeroFeeQuantity,
+} from '../../../core/utils/fee-quantity.util'
 import { AdvertModel, AdvertTemplateType } from '../../../models/advert.model'
 import { CategoryDefaultIdEnum } from '../../../models/category.model'
 import { ForeclosureDto } from '../../../models/foreclosure.dto'
@@ -193,23 +197,60 @@ export class ForeclosureService implements IForeclosureService {
   /**
    * A foreclosure is billed per property, and the quantity is set on the
    * advert when the sale is created. Recount after every property change so
-   * the charge at publication matches what is published.
+   * the charge at publication matches what is published, through the same
+   * rule as the editor and the bulk move: a charged or legacy advert keeps its
+   * quantity, and an advert retyped away from foreclosures is not given one.
    */
   private async syncFeeQuantity(
     foreclosureId: string,
     advertId: string,
     transaction: Transaction,
   ): Promise<void> {
-    const feeQuantity = await this.foreclosurePropertyModel.count({
+    const advert = await this.advertModel.unscoped().findByPk(advertId, {
+      attributes: [
+        'id',
+        'typeId',
+        'templateType',
+        'content',
+        'feeQuantity',
+        'transactionId',
+        'legacyId',
+      ],
+      transaction,
+    })
+
+    if (!advert) {
+      return
+    }
+
+    const propertyCount = await this.foreclosurePropertyModel.count({
       where: { foreclosureId },
       transaction,
     })
 
-    // Once publication A is out the advert has been charged; its quantity is
-    // the record of what TBR billed and is not rewritten.
+    const feeQuantity = feeQuantityForChange({
+      advert,
+      previousTypeId: advert.typeId,
+      typeId: advert.typeId,
+      content: advert.content,
+      propertyCount,
+    })
+
+    if (feeQuantity === undefined || feeQuantity === advert.feeQuantity) {
+      return
+    }
+
+    // The transactionId condition repeats the frozen check at write time.
     await this.advertModel.update(
       { feeQuantity },
       { where: { id: advertId, transactionId: null }, transaction },
     )
+
+    warnOnZeroFeeQuantity(this.logger, {
+      advertId,
+      typeId: advert.typeId,
+      feeQuantity,
+      context: LOGGING_CONTEXT,
+    })
   }
 }

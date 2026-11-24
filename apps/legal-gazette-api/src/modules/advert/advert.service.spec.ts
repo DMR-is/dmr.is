@@ -442,6 +442,64 @@ describe('updateAdvert', () => {
       )
     })
 
+    it("refuses an explicit change to a charged advert's quantity", async () => {
+      const advert = givenAdvert({
+        transactionId: 'transaction-1',
+        feeQuantity: 2,
+      })
+
+      await expect(
+        service.updateAdvert(
+          'advert-123',
+          createMockUpdateDto({ feeQuantity: 5 }),
+        ),
+      ).rejects.toThrow('gjaldfærð')
+      expect(advert.update).not.toHaveBeenCalled()
+    })
+
+    it("accepts a charged advert's unchanged quantity", async () => {
+      const advert = givenAdvert({
+        legacyId: 'legacy-1',
+        feeQuantity: 2,
+      })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ feeQuantity: 2 }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: undefined }),
+      )
+    })
+
+    it("restores a template foreclosure's count from its properties when moved back", async () => {
+      const advert = givenAdvert({
+        templateType: AdvertTemplateType.FORECLOSURE,
+        typeId: 'type-other',
+        content: null,
+        feeQuantity: null,
+        foreclosure: { properties: [{}, {}, {}, {}] },
+      })
+      typeCategoriesService.findByTypeId.mockResolvedValue({
+        type: {
+          id: TypeIdEnum.FORECLOSURE,
+          title: 'Nauðungarsala',
+          slug: 'naudungarsala',
+          categories: [{ id: 'category-123', title: 'Flokkur', slug: 'f' }],
+        },
+      })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ typeId: TypeIdEnum.FORECLOSURE }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: 4 }),
+      )
+    })
+
     it('clears a template foreclosure retyped to another type', async () => {
       const advert = givenAdvert({
         templateType: AdvertTemplateType.FORECLOSURE,

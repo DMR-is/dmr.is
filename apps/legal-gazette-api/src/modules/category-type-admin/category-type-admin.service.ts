@@ -10,12 +10,18 @@ import slugify from 'slugify'
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { feeQuantityForChange } from '../../core/utils/fee-quantity.util'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
+import {
+  feeQuantityForChange,
+  warnOnZeroFeeQuantity,
+} from '../../core/utils/fee-quantity.util'
 import { AdvertModel } from '../../models/advert.model'
 import { CategoryDto, CategoryModel } from '../../models/category.model'
 import {
@@ -24,6 +30,8 @@ import {
   ChangeLogEntity,
   ChangeLogSnapshot,
 } from '../../models/category-type-change-log.model'
+import { ForeclosureModel } from '../../models/foreclosure.model'
+import { ForeclosurePropertyModel } from '../../models/foreclosure-property.model'
 import { TypeDto, TypeModel } from '../../models/type.model'
 import { TypeCategoriesModel } from '../../models/type-categories.model'
 import {
@@ -75,6 +83,8 @@ function isRevertsAuditIdConflict(error: unknown): boolean {
   )
 }
 
+const LOGGING_CONTEXT = 'CategoryTypeAdminService'
+
 @Injectable()
 export class CategoryTypeAdminService implements ICategoryTypeAdminService {
   constructor(
@@ -87,6 +97,7 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     @InjectModel(CategoryTypeChangeLogModel)
     private readonly changeLogModel: typeof CategoryTypeChangeLogModel,
     private readonly sequelize: Sequelize,
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
   async getOverview(): Promise<CategoryTypeOverviewDto> {
@@ -1039,7 +1050,8 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
    * A move can turn adverts into foreclosures, which are billed per property,
    * or out of them. Re-derive the fee quantity of every moved advert through
    * the same rule the editor uses (`feeQuantityForChange`): charged and legacy
-   * adverts keep theirs, template foreclosures keep theirs unless retyped away.
+   * adverts keep theirs, a template foreclosure is recounted from its
+   * properties while it is a foreclosure and cleared while it is not.
    */
   private async syncFeeQuantities(
     changes: { id: string; previousTypeId: string }[],
@@ -1065,19 +1077,23 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
         'transactionId',
         'legacyId',
       ],
+      include: [
+        {
+          model: ForeclosureModel,
+          attributes: ['id'],
+          include: [{ model: ForeclosurePropertyModel, attributes: ['id'] }],
+        },
+      ],
       transaction,
     })
 
     for (const advert of adverts) {
       const feeQuantity = feeQuantityForChange({
-        advert: {
-          typeId: previousTypeIds.get(advert.id),
-          templateType: advert.templateType,
-          transactionId: advert.transactionId,
-          legacyId: advert.legacyId,
-        },
+        advert,
+        previousTypeId: previousTypeIds.get(advert.id),
         typeId: advert.typeId,
         content: advert.content,
+        propertyCount: advert.foreclosure?.properties?.length,
       })
 
       if (feeQuantity === undefined || feeQuantity === advert.feeQuantity) {
@@ -1088,6 +1104,13 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
         { feeQuantity },
         { where: { id: advert.id }, transaction },
       )
+
+      warnOnZeroFeeQuantity(this.logger, {
+        advertId: advert.id,
+        typeId: advert.typeId,
+        feeQuantity,
+        context: LOGGING_CONTEXT,
+      })
     }
   }
 }

@@ -5,6 +5,8 @@ import { BadRequestException, ConflictException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { LOGGER_PROVIDER } from '@dmr.is/logging'
+
 import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
 import { CategoryModel } from '../../models/category.model'
 import {
@@ -115,6 +117,10 @@ describe('CategoryTypeAdminService', () => {
           useValue: changeLogModel,
         },
         { provide: Sequelize, useValue: sequelize },
+        {
+          provide: LOGGER_PROVIDER,
+          useValue: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+        },
       ],
     }).compile()
 
@@ -652,6 +658,7 @@ describe('CategoryTypeAdminService', () => {
             templateType: AdvertTemplateType.FORECLOSURE,
             content: null,
             feeQuantity: 7,
+            foreclosure: { properties: Array.from({ length: 7 }, () => ({})) },
           }),
         ])
 
@@ -662,6 +669,32 @@ describe('CategoryTypeAdminService', () => {
 
       // Only the type move itself; no fee quantity write.
       expect(advertModel.update).toHaveBeenCalledTimes(1)
+    })
+
+    it('recounts a template foreclosure moved back into foreclosures', async () => {
+      advertModel.findAll
+        .mockResolvedValueOnce([
+          { id: 'a1', typeId: 'type-b', categoryId: 'cat-a' },
+        ])
+        .mockResolvedValueOnce([
+          row({
+            typeId: FORECLOSURE,
+            templateType: AdvertTemplateType.FORECLOSURE,
+            content: null,
+            feeQuantity: null,
+            foreclosure: { properties: [{}, {}, {}] },
+          }),
+        ])
+
+      await service.moveAdverts(
+        { fromTypeId: 'type-b', toTypeId: FORECLOSURE },
+        ACTOR,
+      )
+
+      expect(advertModel.update).toHaveBeenCalledWith(
+        { feeQuantity: 3 },
+        { where: { id: 'a1' }, transaction: TRANSACTION },
+      )
     })
 
     it('leaves the quantity alone on a category-only move', async () => {
@@ -729,6 +762,11 @@ describe('CategoryTypeAdminService', () => {
 
       await service.revert('audit-1', ACTOR)
 
+      // The current types are read inside the revert's transaction.
+      expect(advertModel.findAll).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ transaction: TRANSACTION }),
+      )
       expect(advertModel.update).toHaveBeenCalledWith(
         { feeQuantity: null },
         { where: { id: 'a1' }, transaction: TRANSACTION },

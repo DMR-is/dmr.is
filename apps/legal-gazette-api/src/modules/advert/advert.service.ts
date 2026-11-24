@@ -18,7 +18,9 @@ import {
 import { LegalGazetteEvents } from '../../core/constants'
 import {
   feeQuantityForChange,
+  isFeeQuantityFrozen,
   resolveFeeQuantity,
+  warnOnZeroFeeQuantity,
 } from '../../core/utils/fee-quantity.util'
 import { idEquals } from '../../core/utils/id.util'
 import { AdvertDetailedDto } from '../../models/advert.dto'
@@ -709,7 +711,12 @@ export class AdvertService implements IAdvertService {
       },
     )
 
-    this.warnOnZeroFeeQuantity(advert.id, feeQuantity)
+    warnOnZeroFeeQuantity(this.logger, {
+      advertId: advert.id,
+      typeId: advert.typeId,
+      feeQuantity,
+      context: LOGGING_CONTEXT,
+    })
 
     await this.advertPublicationModel.bulkCreate(
       body.scheduledAt.map((scheduledAt, i) => ({
@@ -867,51 +874,47 @@ export class AdvertService implements IAdvertService {
   }
 
   /**
-   * Keeps a content-derived fee quantity in step with edits made before
-   * publication. An explicit quantity from the editor wins; otherwise the
-   * shared rule in `feeQuantityForChange` decides. `undefined` leaves the
-   * column untouched; `null` clears it.
+   * Keeps the fee quantity in step with edits made before publication, through
+   * the shared rule in `feeQuantityForChange`. `undefined` leaves the column
+   * untouched; `null` clears it.
+   *
+   * Once an advert is charged (or came from the old system) its quantity is
+   * the record of what was billed. The editor keeps it editable until every
+   * publication is out, so an explicit change to it is refused here rather
+   * than silently dropped.
    */
   private feeQuantityForUpdate(
     advert: AdvertModel,
     body: UpdateAdvertDto,
   ): number | null | undefined {
-    if (body.feeQuantity !== undefined) {
-      return body.feeQuantity
+    if (
+      body.feeQuantity !== undefined &&
+      body.feeQuantity !== advert.feeQuantity &&
+      isFeeQuantityFrozen(advert)
+    ) {
+      throw new BadRequestException(
+        'Ekki er hægt að breyta fjölda eininga á auglýsingu sem hefur verið gjaldfærð',
+      )
     }
 
-    if (body.content === undefined && body.typeId === undefined) {
+    if (
+      body.feeQuantity === undefined &&
+      body.content === undefined &&
+      body.typeId === undefined
+    ) {
       return undefined
     }
 
     return feeQuantityForChange({
       advert,
+      previousTypeId: advert.typeId,
       typeId: body.typeId ?? advert.typeId,
       content: body.content ?? advert.content,
+      // The detailed scope loads the sale's properties; only a template
+      // foreclosure reads this.
+      propertyCount: advert.foreclosure?.properties?.length,
+      explicitQuantity: body.feeQuantity,
     })
-  }
-
-  /**
-   * A per-item advert that resolves to no items is billed one flat unit by
-   * every price path, which is the failure per-property billing exists to
-   * prevent. Nobody can correct it in the editor for a content-derived
-   * foreclosure, so make it visible.
-   */
-  private warnOnZeroFeeQuantity(
-    advertId: string | undefined,
-    feeQuantity: number | null | undefined,
-  ): void {
-    if (feeQuantity !== 0) {
-      return
-    }
-
-    this.logger.warn(
-      'Per-item advert resolved to zero items, billing a flat fee',
-      {
-        advertId,
-        context: LOGGING_CONTEXT,
-      },
-    )
   }
 
   async updateAdvert(
@@ -952,7 +955,12 @@ export class AdvertService implements IAdvertService {
       feeQuantity,
     })
 
-    this.warnOnZeroFeeQuantity(advert.id, feeQuantity)
+    warnOnZeroFeeQuantity(this.logger, {
+      advertId: advert.id,
+      typeId: updated.typeId,
+      feeQuantity,
+      context: LOGGING_CONTEXT,
+    })
 
     return updated.fromModelToDetailed()
   }
