@@ -1,7 +1,7 @@
 import { Op, WhereOptions } from 'sequelize'
 
-import { TypeIdEnum } from '../../models/type.model'
 import { StatusIdEnum } from '../enums/status.enum'
+import { TypeIdEnum } from '../enums/type-id.enum'
 import { idEquals } from './id.util'
 
 /**
