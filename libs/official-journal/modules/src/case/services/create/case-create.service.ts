@@ -30,12 +30,11 @@ import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack } from '@dmr.is/utils-server/serverUtils'
 
 import { AdditionalPartiesService } from '../../../additional-parties'
-import { IApplicationService } from '../../../application/application.service.interface'
 import { IAttachmentService } from '../../../attachments/attachment.service.interface'
 import {
   ApplicationCaller,
-  digits,
   isApplicationParty,
+  normalizeNationalId,
 } from '../../../auth/application-party'
 import { ICommentServiceV2 } from '../../../comment/v2'
 import { IPriceService } from '../../../price/price.service.interface'
@@ -112,8 +111,6 @@ export class CaseCreateService implements ICaseCreateService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
-    @Inject(IApplicationService)
-    private readonly applicationService: IApplicationService,
     @Inject(IUserService) private readonly userService: IUserService,
     @Inject(IAttachmentService)
     private readonly attachmentService: IAttachmentService,
@@ -714,9 +711,12 @@ export class CaseCreateService implements ICaseCreateService {
   /**
    * A case is filed for the involved party named in the application's
    * answers. The caller must be a party to the application, and the involved
-   * party must be one they may file for: any institution for an editorial
-   * admin, otherwise one of the caller's own involved parties or one the party
-   * picker offers for the applicant (`getInvolvedPartiesByNationalId`).
+   * party must be one the party picker (`GET :id/involved-parties`) offers
+   * them: every institution for an editorial admin, otherwise the involved
+   * parties they belong to or act for (`caller.involvedPartyIds`, which is
+   * what `getInvolvedPartiesByUser` returns). The applicant is also offered
+   * what `getInvolvedPartiesByNationalId` finds for their own national id.
+   * An assignee is offered only their own parties.
    * Every refusal is the same 403, so the answer does not reveal which
    * institution ids exist.
    */
@@ -756,8 +756,16 @@ export class CaseCreateService implements ICaseCreateService {
       return ResultWrapper.ok()
     }
 
+    // An assignee is offered only their own parties, checked above.
+    if (
+      normalizeNationalId(caller.nationalId) !==
+      normalizeNationalId(application.applicant)
+    ) {
+      return forbidden()
+    }
+
     const offered = await this.userService.getInvolvedPartiesByNationalId(
-      digits(application.applicant),
+      normalizeNationalId(application.applicant),
       caller.actorNationalId,
     )
 

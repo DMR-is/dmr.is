@@ -1,4 +1,8 @@
-import { involvedPartyIdsOf, isApplicationParty } from './application-party'
+import {
+  involvedPartyIdsOf,
+  isApplicationParty,
+  normalizeNationalId,
+} from './application-party'
 
 describe('isApplicationParty', () => {
   const application = {
@@ -45,5 +49,12 @@ describe('involvedPartyIdsOf', () => {
     expect(involvedPartyIdsOf(['a', 'b'])).toEqual(['a', 'b'])
     expect(involvedPartyIdsOf([{ id: 'a' }])).toEqual(['a'])
     expect(involvedPartyIdsOf(undefined)).toEqual([])
+  })
+})
+
+describe('normalizeNationalId', () => {
+  it('keeps digits only, and tolerates a missing id', () => {
+    expect(normalizeNationalId('010101-0000')).toBe('0101010000')
+    expect(normalizeNationalId(undefined)).toBe('')
   })
 })

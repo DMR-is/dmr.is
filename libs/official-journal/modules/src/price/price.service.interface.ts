@@ -13,10 +13,6 @@ import { ResultWrapper } from '@dmr.is/types'
 import 'multer'
 
 export interface IPriceService {
-  getFeeByApplication(
-    applicationId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<CasePriceResponse>>
   getFeeForApplication(
     application: Application,
     transaction?: Transaction,

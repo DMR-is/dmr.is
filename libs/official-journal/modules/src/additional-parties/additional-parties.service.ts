@@ -9,6 +9,7 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Application } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { normalizeNationalId } from '../auth/application-party'
 import { AdvertInvolvedPartyModel } from '../journal/models/advert-involved-party.model'
 import { AdditionalPartiesModel } from './models'
 
@@ -164,7 +165,7 @@ export class AdditionalPartiesService {
       },
     )
     const primaryNationalId = primaryInvolvedParty
-      ? this.normalizeNationalId(primaryInvolvedParty.nationalId)
+      ? normalizeNationalId(primaryInvolvedParty.nationalId)
       : null
     const additionalNationalIds = primaryNationalId
       ? normalizedAssignees.filter(
@@ -200,7 +201,7 @@ export class AdditionalPartiesService {
     >()
 
     involvedParties.forEach((party) => {
-      const nationalId = this.normalizeNationalId(party.nationalId)
+      const nationalId = normalizeNationalId(party.nationalId)
 
       if (
         party.id === primaryInvolvedPartyId ||
@@ -237,14 +238,10 @@ export class AdditionalPartiesService {
 
   private normalizeNationalIds(nationalIds: string[]): string[] {
     const normalized = nationalIds
-      .map((nationalId) => this.normalizeNationalId(nationalId))
+      .map((nationalId) => normalizeNationalId(nationalId))
       .filter((nationalId) => nationalId.length > 0)
 
     return [...new Set(normalized)]
-  }
-
-  private normalizeNationalId(nationalId: string): string {
-    return nationalId.replace(/\D/g, '')
   }
 
   private getLookupValues(nationalId: string): string[] {

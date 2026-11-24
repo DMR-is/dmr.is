@@ -9,6 +9,7 @@ import { UserRoleEnum } from '@dmr.is/constants'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { ApplicationOwnershipGuard } from './application-ownership.guard'
+import { APPLICATION_REQUEST_KEY } from './current-application.decorator'
 import { InvolvedPartyGuard } from './involved-party.guard'
 import { OwnInvolvedPartyGuard } from './own-involved-party.guard'
 
@@ -50,7 +51,7 @@ describe('ApplicationOwnershipGuard', () => {
     const req = request('0101010000')
 
     await expect(guard.canActivate(contextFor(req))).resolves.toBe(true)
-    expect(req).toHaveProperty('application', application)
+    expect(req).toHaveProperty(APPLICATION_REQUEST_KEY, application)
     expect(getApplication).toHaveBeenCalledTimes(1)
     expect(getApplication).toHaveBeenCalledWith(APPLICATION_ID)
   })
@@ -88,7 +89,19 @@ describe('ApplicationOwnershipGuard', () => {
     ).rejects.toThrow(NotFoundException)
   })
 
-  it.each([500, 502, 503, 401])(
+  it.each([400, 401, 403, 410, 422])(
+    'answers an upstream %s like a missing application, with a 404',
+    async (code) => {
+      getApplication.mockResolvedValue(
+        ResultWrapper.err({ code, message: 'x' }),
+      )
+      await expect(
+        guard.canActivate(contextFor(request('0101010000'))),
+      ).rejects.toThrow(NotFoundException)
+    },
+  )
+
+  it.each([500, 502, 503, 408, 429])(
     'answers an upstream %s as a 502, not as a missing application',
     async (code) => {
       getApplication.mockResolvedValue(
@@ -101,11 +114,16 @@ describe('ApplicationOwnershipGuard', () => {
     },
   )
 
-  it('lets a thrown fetch error surface instead of calling it a 404', async () => {
-    getApplication.mockRejectedValue(new Error('boom'))
+  // `getApplication` is `@LogAndHandle()`: a thrown fetch error (timeout,
+  // network) comes back as an error result with code 500, never as a rejection.
+  it('answers a fetch that threw as a 502, not as a missing application', async () => {
+    getApplication.mockResolvedValue(
+      ResultWrapper.err({ code: 500, message: 'fetch failed' }),
+    )
     await expect(
       guard.canActivate(contextFor(request('0101010000'))),
-    ).rejects.toThrow('boom')
+    ).rejects.toThrow(BadGatewayException)
+    expect(logger.warn).toHaveBeenCalled()
   })
 
   it.each([undefined, 'not-a-uuid', '../secret'])(

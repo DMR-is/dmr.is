@@ -337,7 +337,8 @@ export class ApplicationService implements IApplicationService {
    * If case with the given applicationId does not exist, it will be created.
    * If case with the given applicationId already exists, it will be reposted.
    *
-   * @param applicationId - The ID of the application to be posted.
+   * @param application - The application to be posted, already fetched and authorised.
+   * @param caller - Who is posting; checked against the application's involved party.
    * @returns A `ResultWrapper` containing the result of the operation.
    * @throws {InternalServerErrorException} If an error occurs while posting the application.
    */

@@ -1,7 +1,7 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
@@ -27,7 +27,6 @@ import {
   MAX_CHARACTER_HTML,
 } from '@dmr.is/utils-server/serverUtils'
 
-import { IApplicationService } from '../application/application.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
 import { TransactionFeeCodeMigrate } from '../case/migrations/transaction-fee-codes.migrate'
 import {
@@ -63,9 +62,6 @@ export class PriceService implements IPriceService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
 
-    @Inject(forwardRef(() => IApplicationService))
-    private applicationService: IApplicationService,
-
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
 
     @InjectModel(AdvertDepartmentModel)
@@ -82,27 +78,6 @@ export class PriceService implements IPriceService {
 
     private readonly sequelize: Sequelize,
   ) {}
-
-  @LogAndHandle()
-  @Transactional()
-  async getFeeByApplication(
-    applicationId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<CasePriceResponse>> {
-    const { application } = (
-      await this.applicationService.getApplication(applicationId)
-    ).unwrap()
-
-    if (!application) {
-      return ResultWrapper.err({
-        code: 404,
-        message: `Application <${applicationId}> not found`,
-        category: LOGGING_CATEGORY,
-      })
-    }
-
-    return this.getFeeForApplication(application, transaction)
-  }
 
   /** The fee for an application the caller has already fetched. */
   @LogAndHandle()

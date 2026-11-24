@@ -12,7 +12,9 @@ export interface ApplicationCaller {
   isAdmin?: boolean
 }
 
-export const digits = (value?: string) => (value ?? '').replace(/\D/g, '')
+/** A national id with everything but its digits removed. */
+export const normalizeNationalId = (value?: string): string =>
+  (value ?? '').replace(/\D/g, '')
 
 /**
  * Only the token subject counts, and it must be the applicant or an assignee.
@@ -26,17 +28,18 @@ export const isApplicationParty = (
   application: Pick<Application, 'applicant' | 'assignees'>,
   caller: Pick<ApplicationCaller, 'nationalId'>,
 ): boolean => {
-  const callerId = digits(caller.nationalId)
+  const callerId = normalizeNationalId(caller.nationalId)
   if (!callerId) return false
 
   return [application.applicant, ...(application.assignees ?? [])]
-    .map(digits)
+    .map(normalizeNationalId)
     .includes(callerId)
 }
 
 /**
- * The involved-party ids on a request user. The role guard stores ids, the
- * party guard stores the party objects.
+ * The involved-party ids on a request user. `RoleGuard` stores ids, the party
+ * guard stores the party objects, and a user loaded from the DB carries
+ * objects too, so compare by id whichever shape arrives.
  */
 export const involvedPartyIdsOf = (
   involvedParties: ReadonlyArray<string | { id: string }> | undefined,

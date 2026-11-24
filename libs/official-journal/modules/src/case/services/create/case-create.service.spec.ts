@@ -22,14 +22,13 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
   const institutionLookup = jest.fn()
   const logger = { warn: jest.fn(), error: jest.fn(), info: jest.fn() }
 
-  // Only the first four constructor dependencies are reached before the
+  // Only the first three constructor dependencies are reached before the
   // party check; getCreateCaseBody is stubbed to stop right after it.
   const service = new (CaseCreateService as unknown as new (
     ...args: unknown[]
   ) => CaseCreateService)(
     logger,
     { institutionLookup },
-    {},
     { getInvolvedPartiesByNationalId },
   )
   let getCreateCaseBody: jest.SpyInstance
@@ -98,6 +97,44 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
     )
 
     expectRefusal(result, 403, FORBIDDEN_MESSAGE)
+  })
+
+  describe('an assignee', () => {
+    const assignee = { nationalId: '0202020000' }
+    const applicationFor = (involvedPartyId: string) => ({
+      ...applicationWith(involvedPartyId),
+      assignees: [assignee.nationalId],
+    })
+    const submitAsAssignee = (
+      caller: ApplicationCaller,
+      involvedPartyId: string,
+    ) =>
+      service.createCaseByApplication(
+        applicationFor(involvedPartyId) as never,
+        caller,
+      )
+
+    it('may file for a non-primary party the picker offers them', async () => {
+      await submitAsAssignee(
+        { ...assignee, involvedPartyIds: [OTHER_PARTY_ID, PARTY_ID] },
+        PARTY_ID,
+      )
+
+      expect(getCreateCaseBody).toHaveBeenCalled()
+      expect(getInvolvedPartiesByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('is not offered the applicant institution just because the applicant is', async () => {
+      offeredParties(PARTY_ID)
+
+      const result = await submitAsAssignee(
+        { ...assignee, involvedPartyIds: [OTHER_PARTY_ID] },
+        PARTY_ID,
+      )
+
+      expectRefusal(result, 403, FORBIDDEN_MESSAGE)
+      expect(getInvolvedPartiesByNationalId).not.toHaveBeenCalled()
+    })
   })
 
   it('answers an unknown institution with the same 403 as any other refusal', async () => {

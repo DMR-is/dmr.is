@@ -72,6 +72,12 @@ const setup = async () => {
     syncCaseAdditionalParties: jest.fn().mockResolvedValue(undefined),
   }
 
+  const priceService = {
+    getFeeForApplication: jest
+      .fn()
+      .mockResolvedValue(ResultWrapper.ok({ price: 1 })),
+  }
+
   const app = await Test.createTestingModule({
     providers: [
       ApplicationService,
@@ -90,7 +96,7 @@ const setup = async () => {
       { provide: ICaseService, useValue: caseService },
       { provide: IAuthService, useValue: authService },
       { provide: ISignatureService, useValue: {} },
-      { provide: IPriceService, useValue: {} },
+      { provide: IPriceService, useValue: priceService },
       { provide: IAWSService, useValue: {} },
       { provide: AdditionalPartiesService, useValue: additionalPartiesService },
       { provide: getModelToken(AdvertModel), useValue: {} },
@@ -107,6 +113,7 @@ const setup = async () => {
     utilityService,
     caseService,
     authService,
+    priceService,
   }
 }
 
@@ -182,5 +189,17 @@ describe('ApplicationService.postApplication', () => {
     expect(caseService.createCaseHistory).not.toHaveBeenCalled()
     expect(ownTransaction.rollback).toHaveBeenCalled()
     expect(ownTransaction.commit).not.toHaveBeenCalled()
+  })
+})
+
+describe('ApplicationService.getPrice', () => {
+  it('prices the application it is given, without fetching it again', async () => {
+    const { service, authService, priceService } = await setup()
+
+    const result = await service.getPrice(APPLICATION)
+
+    expect(priceService.getFeeForApplication).toHaveBeenCalledWith(APPLICATION)
+    expect(authService.xroadFetch).not.toHaveBeenCalled()
+    expect(result.result.ok).toBe(true)
   })
 })
