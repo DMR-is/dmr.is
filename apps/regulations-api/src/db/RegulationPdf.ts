@@ -261,10 +261,8 @@ const pdfTmplate = (
         ({ title, text: aptext }) => `
     <section class="appendix">
       <h2 class="appendix__title${fylgiskjalClass(title)}">${
-          regulation.showingDiff
-            ? title
-            : sanitizeTextContent(title as PlainText)
-        }</h2>
+        regulation.showingDiff ? title : sanitizeTextContent(title as PlainText)
+      }</h2>
       <div class="appendix__text">
         ${aptext}
       </div>
@@ -463,9 +461,8 @@ const cleanUpRegulationBodyInput = (
   const ministry = String(body.ministry ?? '')
   const dirtyText = String(body.text) as HTMLText
   const dirtyCommments = String(body.comments || '') as HTMLText
-  const dirtyAppendixes = (Array.isArray(body.appendixes)
-    ? body.appendixes
-    : []
+  const dirtyAppendixes = (
+    Array.isArray(body.appendixes) ? body.appendixes : []
   )
     .map((wat: unknown): Appendix | undefined => {
       if (typeof wat !== 'object' || wat == null) {
@@ -611,8 +608,8 @@ const getPrettyPdfFilename = (
   const earlierDateTxt = !earlierDate
     ? ''
     : earlierDate === 'original'
-    ? ' frá upphafi'
-    : ` síðan ${toISODate(earlierDate)}`
+      ? ' frá upphafi'
+      : ` síðan ${toISODate(earlierDate)}`
 
   return `Reglugerð ${nameTxt} (${dateTxt + diffTxt + earlierDateTxt})`
 }
