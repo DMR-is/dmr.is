@@ -1,3 +1,4 @@
+import { isUUID } from 'class-validator'
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
@@ -31,15 +32,17 @@ import { getFastTrack } from '@dmr.is/utils-server/serverUtils'
 
 import { AdditionalPartiesService } from '../../../additional-parties'
 import { IApplicationService } from '../../../application/application.service.interface'
+import { IAttachmentService } from '../../../attachments/attachment.service.interface'
 import {
   ApplicationCaller,
-  isApplicant,
-} from '../../../application/lib/application-party'
-import { IAttachmentService } from '../../../attachments/attachment.service.interface'
+  digits,
+  isApplicationParty,
+} from '../../../auth/application-party'
 import { ICommentServiceV2 } from '../../../comment/v2'
 import { IPriceService } from '../../../price/price.service.interface'
 import { IRegulationsAdminService } from '../../../regulations-admin/regulations-admin.service.interface'
 import { ISignatureService } from '../../../signature/signature.service.interface'
+import { IUserService } from '../../../user/user.service.interface'
 import { IUtilityService } from '../../../utility/utility.service.interface'
 import { caseChannelMigrate } from '../../migrations/case-channel.migrate'
 import {
@@ -112,6 +115,7 @@ export class CaseCreateService implements ICaseCreateService {
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
+    @Inject(IUserService) private readonly userService: IUserService,
     @Inject(IAttachmentService)
     private readonly attachmentService: IAttachmentService,
     @Inject(ISignatureService)
@@ -710,8 +714,12 @@ export class CaseCreateService implements ICaseCreateService {
 
   /**
    * A case is filed for the involved party named in the application's
-   * answers. That party must be the applicant's own, or one of the involved
-   * parties the submitting user belongs to or acts for.
+   * answers. The caller must be a party to the application, and the involved
+   * party must be one they may file for: any institution for an editorial
+   * admin, otherwise one of the caller's own involved parties or one the party
+   * picker offers for the applicant (`getInvolvedPartiesByNationalId`).
+   * Every refusal is the same 403, so the answer does not reveal which
+   * institution ids exist.
    */
   private async checkSubmitterMayFileFor(
     application: Application,
@@ -719,10 +727,20 @@ export class CaseCreateService implements ICaseCreateService {
   ): Promise<ResultWrapper> {
     const involvedPartyId = application.answers?.advert?.involvedPartyId
 
-    const forbidden = ResultWrapper.err({
-      code: 403,
-      message: 'Þú hefur ekki heimild til að senda inn fyrir þessa stofnun',
-    })
+    const forbidden = () => {
+      this.logger.warn('Submitter may not file for the involved party', {
+        applicationId: application.id,
+        category: LOGGING_CATEGORY,
+      })
+      return ResultWrapper.err({
+        code: 403,
+        message: 'Þú hefur ekki heimild til að senda inn fyrir þessa stofnun',
+      })
+    }
+
+    if (!isApplicationParty(application, caller)) {
+      return forbidden()
+    }
 
     if (!involvedPartyId) {
       return ResultWrapper.err({
@@ -731,26 +749,34 @@ export class CaseCreateService implements ICaseCreateService {
       })
     }
 
-    if (caller.involvedPartyIds?.includes(involvedPartyId)) {
+    if (!isUUID(involvedPartyId)) {
+      return forbidden()
+    }
+
+    if (caller.isAdmin || caller.involvedPartyIds?.includes(involvedPartyId)) {
       return ResultWrapper.ok()
     }
 
-    const institution =
-      await this.utilityService.institutionLookup(involvedPartyId)
-    if (!institution.result.ok) {
-      return forbidden
+    const offered = await this.userService.getInvolvedPartiesByNationalId(
+      digits(application.applicant),
+      caller.actorNationalId,
+    )
+
+    if (!offered.result.ok) {
+      return offered.result.error.code === 404
+        ? forbidden()
+        : ResultWrapper.err(offered.result.error)
     }
 
-    if (isApplicant(application, institution.result.value.nationalId)) {
+    if (
+      offered.result.value.involvedParties.some(
+        (party) => party.id === involvedPartyId,
+      )
+    ) {
       return ResultWrapper.ok()
     }
 
-    this.logger.warn('Submitter may not file for the involved party', {
-      applicationId: application.id,
-      involvedPartyId,
-      category: LOGGING_CATEGORY,
-    })
-    return forbidden
+    return forbidden()
   }
 
   @LogAndHandle()

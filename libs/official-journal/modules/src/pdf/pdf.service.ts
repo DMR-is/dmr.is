@@ -21,15 +21,14 @@ import {
   retryAsync,
 } from '@dmr.is/utils-server/serverUtils'
 
-import { isApplicationParty } from '../application/lib/application-party'
+import {
+  ApplicationCaller,
+  isApplicationParty,
+} from '../auth/application-party'
 import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { pdfCss } from './pdf.css'
-import {
-  IPdfService,
-  IssuePdfAdvertInput,
-  PdfCaller,
-} from './pdf.service.interface'
+import { IPdfService, IssuePdfAdvertInput } from './pdf.service.interface'
 import { advertPdfTemplate } from './pdf-advert-template'
 import { getBrowser } from './puppetBrowser'
 
@@ -374,7 +373,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
   async getPdfByApplicationId(
     applicationId: string,
-    caller: PdfCaller,
+    caller: Pick<ApplicationCaller, 'nationalId'>,
     showDate = true,
   ): Promise<ResultWrapper<Buffer>> {
     const applicationLookup =

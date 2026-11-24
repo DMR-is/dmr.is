@@ -79,12 +79,12 @@ import {
 
 import { AdditionalPartiesService } from '../additional-parties'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
-import { ApplicationCaller } from '../application/lib/application-party'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import {
   ApplicationAttachmentModel,
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
+import { ApplicationCaller } from '../auth/application-party'
 import { IExternalService } from '../external/external.service.interface'
 import { IJournalService } from '../journal'
 import {

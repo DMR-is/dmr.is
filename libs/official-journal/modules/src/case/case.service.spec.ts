@@ -511,4 +511,31 @@ describe('CaseService', () => {
       )
     })
   })
+
+  describe('createCaseByApplication', () => {
+    it('hands the create service the caller it was given', async () => {
+      const createCaseByApplication = jest
+        .fn()
+        .mockResolvedValue(ResultWrapper.ok({ id: 'case-1' }))
+      Object.assign(caseCreateService, { createCaseByApplication })
+      jest
+        .spyOn(caseService, 'createCaseHistory')
+        .mockResolvedValue(ResultWrapper.ok())
+      const caller = {
+        nationalId: '0101010000',
+        involvedPartyIds: ['party-1'],
+        isAdmin: false,
+      }
+
+      await caseService.createCaseByApplication(
+        { applicationId: 'app-1' },
+        caller,
+      )
+
+      expect(createCaseByApplication).toHaveBeenCalledWith(
+        { applicationId: 'app-1' },
+        caller,
+      )
+    })
+  })
 })

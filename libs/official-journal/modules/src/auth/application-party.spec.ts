@@ -1,8 +1,4 @@
-import {
-  involvedPartyIdsOf,
-  isApplicant,
-  isApplicationParty,
-} from './application-party'
+import { involvedPartyIdsOf, isApplicationParty } from './application-party'
 
 describe('isApplicationParty', () => {
   const application = {
@@ -41,16 +37,6 @@ describe('isApplicationParty', () => {
     expect(isApplicationParty({ ...application, applicant: '' }, {})).toBe(
       false,
     )
-  })
-})
-
-describe('isApplicant', () => {
-  it('matches the applicant only, digits only', () => {
-    const application = { applicant: '0101010000', assignees: ['0202020000'] }
-    expect(isApplicant(application, '010101-0000')).toBe(true)
-    expect(isApplicant(application, '0202020000')).toBe(false)
-    expect(isApplicant(application, undefined)).toBe(false)
-    expect(isApplicant({ applicant: '' }, '')).toBe(false)
   })
 })
 

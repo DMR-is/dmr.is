@@ -1,8 +1,10 @@
+import { UserRoleEnum } from '@dmr.is/constants'
 import {
   ApplicationOwnershipGuard,
   InvolvedPartyGuard,
   OwnInvolvedPartyGuard,
 } from '@dmr.is/ojoi-modules'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { ApplicationController } from './application.controller'
 
@@ -36,4 +38,48 @@ describe('ApplicationController guards', () => {
       expect(guardsOf(method)).toEqual([InvolvedPartyGuard])
     },
   )
+})
+
+describe('ApplicationController.postApplication', () => {
+  const postApplication = jest.fn()
+  const controller = new ApplicationController(
+    { postApplication } as never,
+    {} as never,
+    {} as never,
+    {} as never,
+  )
+
+  beforeEach(() => {
+    jest.resetAllMocks()
+    postApplication.mockResolvedValue(ResultWrapper.ok())
+  })
+
+  it('hands the service who is calling, not an empty caller', async () => {
+    await controller.postApplication('app-1', {
+      nationalId: '0101010000',
+      actor: { nationalId: '0202020000' },
+      role: { title: UserRoleEnum.Editor },
+      involvedParties: [{ id: 'party-1' }],
+    } as never)
+
+    expect(postApplication).toHaveBeenCalledWith('app-1', {
+      nationalId: '0101010000',
+      actorNationalId: '0202020000',
+      involvedPartyIds: ['party-1'],
+      isAdmin: false,
+    })
+  })
+
+  it('marks an editorial admin', async () => {
+    await controller.postApplication('app-1', {
+      nationalId: '0101010000',
+      role: { title: UserRoleEnum.Admin },
+      involvedParties: ['party-1'],
+    } as never)
+
+    expect(postApplication).toHaveBeenCalledWith(
+      'app-1',
+      expect.objectContaining({ isAdmin: true, involvedPartyIds: ['party-1'] }),
+    )
+  })
 })

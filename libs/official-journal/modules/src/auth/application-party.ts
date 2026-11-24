@@ -4,11 +4,15 @@ import type { Application } from '@dmr.is/shared-dto'
 export interface ApplicationCaller {
   /** The token subject: the applicant, or the party a delegate acts for. */
   nationalId?: string
+  /** The delegate acting for the token subject, when there is one. */
+  actorNationalId?: string
   /** Ids of the involved parties the caller belongs to or acts for. */
   involvedPartyIds?: string[]
+  /** True when the caller is signed in as an editorial admin. */
+  isAdmin?: boolean
 }
 
-const digits = (value?: string) => (value ?? '').replace(/\D/g, '')
+export const digits = (value?: string) => (value ?? '').replace(/\D/g, '')
 
 /**
  * Only the token subject counts, and it must be the applicant or an assignee.
@@ -28,15 +32,6 @@ export const isApplicationParty = (
   return [application.applicant, ...(application.assignees ?? [])]
     .map(digits)
     .includes(callerId)
-}
-
-/** True when `nationalId` is the applicant's. */
-export const isApplicant = (
-  application: Pick<Application, 'applicant'>,
-  nationalId?: string,
-): boolean => {
-  const id = digits(nationalId)
-  return !!id && digits(application.applicant) === id
 }
 
 /**

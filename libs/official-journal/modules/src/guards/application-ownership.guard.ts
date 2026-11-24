@@ -9,7 +9,7 @@ import {
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { IApplicationService } from '../application/application.service.interface'
-import { isApplicationParty } from '../application/lib/application-party'
+import { isApplicationParty } from '../auth/application-party'
 
 const LOGGING_CATEGORY = 'application-ownership-guard'
 const LOGGING_CONTEXT = 'ApplicationOwnershipGuard'

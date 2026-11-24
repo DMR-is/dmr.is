@@ -51,7 +51,7 @@ import {
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { ApplicationCaller } from '../application/lib/application-party'
+import { ApplicationCaller } from '../auth/application-party'
 
 export interface ICaseService {
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>

@@ -1,8 +1,10 @@
 import { ExecutionContext, NotFoundException } from '@nestjs/common'
 
+import { UserRoleEnum } from '@dmr.is/constants'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { ApplicationOwnershipGuard } from './application-ownership.guard'
+import { InvolvedPartyGuard } from './involved-party.guard'
 import { OwnInvolvedPartyGuard } from './own-involved-party.guard'
 
 const APPLICATION_ID = '6f1c1a3e-2b4d-4c5e-9f60-7a8b9c0d1e2f'
@@ -116,5 +118,76 @@ describe('OwnInvolvedPartyGuard', () => {
     expect(() => guard.canActivate(requestFor(undefined))).toThrow(
       NotFoundException,
     )
+  })
+})
+
+describe('OwnInvolvedPartyGuard admin', () => {
+  const guard = new OwnInvolvedPartyGuard()
+
+  it('lets an editorial admin read any involved party', () => {
+    expect(
+      guard.canActivate(
+        contextFor({
+          params: { involvedPartyId: 'party-9' },
+          user: { role: { title: UserRoleEnum.Admin }, involvedParties: [] },
+        }),
+      ),
+    ).toBe(true)
+  })
+
+  it('does not extend that to other roles', () => {
+    expect(() =>
+      guard.canActivate(
+        contextFor({
+          params: { involvedPartyId: 'party-9' },
+          user: { role: { title: UserRoleEnum.Editor }, involvedParties: [] },
+        }),
+      ),
+    ).toThrow(NotFoundException)
+  })
+})
+
+describe('InvolvedPartyGuard', () => {
+  const getCaseInvolvedPartyByApplicationId = jest.fn()
+  const institutionLookup = jest.fn()
+  const logger = { warn: jest.fn(), error: jest.fn(), info: jest.fn() }
+  const guard = new InvolvedPartyGuard(
+    logger as never,
+    { getCaseInvolvedPartyByApplicationId, institutionLookup } as never,
+  )
+  const requestFor = (involvedParties: unknown) =>
+    contextFor({
+      params: { id: 'app-1' },
+      user: {
+        role: { title: UserRoleEnum.Editor },
+        nationalId: '0101010000',
+        involvedParties,
+      },
+    })
+
+  beforeEach(() => {
+    jest.resetAllMocks()
+    getCaseInvolvedPartyByApplicationId.mockResolvedValue(
+      ResultWrapper.ok({ involvedPartyId: 'party-1' }),
+    )
+  })
+
+  it('accepts ids from the role guard', async () => {
+    await expect(guard.canActivate(requestFor(['party-1']))).resolves.toBe(true)
+  })
+
+  it('accepts party objects from the party guard', async () => {
+    await expect(
+      guard.canActivate(requestFor([{ id: 'party-1' }])),
+    ).resolves.toBe(true)
+  })
+
+  it('refuses a caller with no matching party', async () => {
+    institutionLookup.mockResolvedValue(
+      ResultWrapper.ok({ nationalId: '0909090000' }),
+    )
+    await expect(
+      guard.canActivate(requestFor([{ id: 'party-2' }])),
+    ).resolves.toBe(false)
   })
 })
