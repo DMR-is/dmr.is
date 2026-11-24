@@ -200,8 +200,9 @@ download a PDF version.
 
   - The endpoint then returns a JSON response of type
     `Array<{ oldUrl: URLString, newUrl: URLString }>`.  
-    All the `newUrl`s point to `https://files.reglugerd.is/` (or
-    `process.env.DEV_FILE_SERVER`)
+    All the `newUrl`s point to `https://files.reglugerd.is/` (`FILE_SERVER`
+    from `@dmr.is/regulations-tools`; its old `DEV_FILE_SERVER` override was
+    inlined as empty when that package was built, so setting it has no effect)
 
   - Incoming URLs that start with `/` are assumed to be relative to
     `https://www.reglugerd.is` (provides sane back-compat with older content)
