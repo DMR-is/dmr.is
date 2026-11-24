@@ -20,6 +20,7 @@ import { cleanLegalGazetteLegacyHtml } from '@dmr.is/utils-server/cleanLegacyHtm
 import { getHtmlTextLength } from '@dmr.is/utils-server/serverUtils'
 
 import { LegalGazetteModels } from '../core/constants'
+import { AdvertTemplateType } from '../core/enums/advert-template-type.enum'
 import { StatusIdEnum } from '../core/enums/status.enum'
 import { getAdvertHtmlMarkup } from '../core/html/advert-html'
 // Type-only: `advert.dto.ts` imports this module back, and the DTOs are only
@@ -64,16 +65,7 @@ import { TypeIdEnum, TypeModel } from './type.model'
 import type { UserModel as UserModelRef } from './users.model'
 import { UserModel } from './users.model'
 
-export enum AdvertTemplateType {
-  COMMON = 'COMMON',
-  RECALL_BANKRUPTCY = 'RECALL_BANKRUPTCY',
-  RECALL_DECEASED = 'RECALL_DECEASED',
-  DIVISION_MEETING_BANKRUPTCY = 'DIVISION_MEETING_BANKRUPTCY',
-  DIVISION_MEETING_DECEASED = 'DIVISION_MEETING_DECEASED',
-  DIVISION_ENDING = 'DIVISION_ENDING',
-  FORECLOSURE = 'FORECLOSURE',
-  ADDITIONAL_ANNOUNCEMENT = 'ADDITIONAL_ANNOUNCEMENT',
-}
+export { AdvertTemplateType }
 
 type AdvertAttributes = {
   caseId: string | null
