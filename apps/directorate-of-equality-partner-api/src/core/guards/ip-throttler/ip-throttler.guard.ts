@@ -41,6 +41,10 @@ export class IpThrottlerGuard extends ThrottlerGuard {
    * handler — so `@SkipThrottle` cannot tell them apart. Narrowing the list the
    * guard iterates is what keeps the two buckets from crossing: this one owns
    * the per-IP bucket and must not also apply the per-key allowance to an IP.
+   *
+   * Throws if no per-IP throttler is configured. An empty list makes
+   * `canActivate` iterate nothing and allow every request, so a renamed or
+   * removed throttler would silently turn the only unauthenticated bound off.
    */
   async onModuleInit(): Promise<void> {
     await super.onModuleInit()
@@ -48,6 +52,12 @@ export class IpThrottlerGuard extends ThrottlerGuard {
     this.throttlers = this.throttlers.filter(
       (throttler) => throttler.name === PER_IP_THROTTLER,
     )
+
+    if (this.throttlers.length === 0) {
+      throw new Error(
+        `IpThrottlerGuard requires a throttler named "${PER_IP_THROTTLER}" in the ThrottlerModule config; none found, so the guard would allow every request`,
+      )
+    }
   }
 
   protected async getTracker(req: Record<string, unknown>): Promise<string> {
