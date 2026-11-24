@@ -50,6 +50,12 @@ export class AdvertPublishedListener {
       publication: publication, // -- || --
     })
 
+    // No lock of its own: this runs inside the publish transaction (CLS),
+    // which has already updated the advert row and so holds its row lock.
+    // A concurrent foreclosure property change locks the same row first, so
+    // it either commits before this reads `feeQuantity` or waits until
+    // `transactionId` below is committed and then leaves the quantity alone.
+    // A separate transaction here would wait on that lock and hang the publish.
     const { feeCodeId, paymentData } =
       await this.priceCalculatorService.getPaymentData(advert.id)
 
