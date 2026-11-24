@@ -13,6 +13,8 @@ import { evictByTopics } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents, TASK_JOB_IDS } from '../../../../core/constants'
+import { lockAdvertRow } from '../../../../core/utils/advert-lock'
+import { isStillPublishable } from '../../../../core/utils/advert-status.util'
 import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
 import { StatusIdEnum } from '../../../../models/status.model'
@@ -116,7 +118,14 @@ export class PublishingTaskService implements IPublishingTaskService {
           model: AdvertModel.scope('detailed'),
           as: 'advert',
           where: {
-            statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+            // PUBLISHED too: the first publication of an advert sets it, and
+            // its remaining ones are still due. Rejected or withdrawn
+            // adverts are not selected (and re-checked after the lock).
+            statusId: [
+              StatusIdEnum.READY_FOR_PUBLICATION,
+              StatusIdEnum.IN_PUBLISHING,
+              StatusIdEnum.PUBLISHED,
+            ],
           },
         },
       ],
@@ -139,12 +148,6 @@ export class PublishingTaskService implements IPublishingTaskService {
       },
     )
 
-    // A stable order, so two publishers that lock adverts one after another
-    // cannot wait on each other in opposite orders.
-    publicationsToBePublished.sort((a, b) =>
-      a.advertId.localeCompare(b.advertId),
-    )
-
     for (const [index, pub] of publicationsToBePublished.entries()) {
       const advert = pub.advert
       this.logger.info(
@@ -163,24 +166,16 @@ export class PublishingTaskService implements IPublishingTaskService {
         await this.sequelize.transaction(async (transaction) => {
           // Lock the advert row first, then re-read what the charge depends
           // on: a property change on this sale waits for the commit, and one
-          // already in flight has finished. Plain read: FOR UPDATE cannot
-          // combine with the detailed scope's outer joins.
-          await this.advertModel.unscoped().findByPk(advert.id, {
-            attributes: ['id'],
-            transaction,
-            lock: transaction.LOCK.UPDATE,
-          })
+          // already in flight has finished.
+          await lockAdvertRow(this.advertModel, advert.id, { transaction })
           await advert.reload({ transaction })
 
-          const stillDue = await this.publicationModel.count({
-            where: { id: pub.id, publishedAt: { [Op.is]: null } },
+          const current = await this.publicationModel.findByPk(pub.id, {
+            attributes: ['id', 'publishedAt'],
             transaction,
           })
 
-          if (
-            stillDue === 0 ||
-            advert.statusId !== StatusIdEnum.READY_FOR_PUBLICATION
-          ) {
+          if (!current || !isStillPublishable(current, advert)) {
             this.logger.info(
               'Publication is no longer due after taking the advert lock, skipping',
               {

@@ -1,5 +1,5 @@
 // ...existing code for other tests...
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
@@ -187,13 +187,19 @@ describe('updateAdvert', () => {
 
       await service.updateAdvert('advert-123', createMockUpdateDto())
 
-      expect(advertModel.findByPk).toHaveBeenCalledWith(
-        'advert-123',
-        expect.objectContaining({ attributes: ['id'], lock: 'UPDATE' }),
-      )
+      // Locked on the request's own (CLS) transaction: no `transaction`
+      // option of its own, and no second transaction opened.
+      expect(advertModel.unscoped).toHaveBeenCalled()
+      expect(advertModel.findByPk).toHaveBeenCalledWith('advert-123', {
+        attributes: ['id'],
+        transaction: undefined,
+        lock: Transaction.LOCK.NO_KEY_UPDATE,
+      })
       expect(advertModel.findByPk.mock.invocationCallOrder[0]).toBeLessThan(
         advertModel.findByPkOrThrow.mock.invocationCallOrder[0],
       )
+      expect(moduleRef.get(Sequelize).transaction).not.toHaveBeenCalled()
+      expect(advert.update).toHaveBeenCalledWith(expect.any(Object))
     })
 
     it('should throw BadRequestException when trying to modify title of published advert', async () => {
@@ -325,7 +331,6 @@ describe('updateAdvert', () => {
         expect.objectContaining({
           title: 'Updated Title',
         }),
-        expect.anything(),
       )
       expect(result).toBeDefined()
     })
@@ -362,7 +367,6 @@ describe('updateAdvert', () => {
         expect.objectContaining({
           content: '<p>Updated content</p>',
         }),
-        expect.anything(),
       )
       expect(result).toBeDefined()
     })
@@ -404,7 +408,6 @@ describe('updateAdvert', () => {
           typeId: 'new-type-id',
           categoryId: 'derived-category-id',
         }),
-        expect.anything(),
       )
     })
     it('should update caption when provided', async () => {
@@ -418,7 +421,6 @@ describe('updateAdvert', () => {
         expect.objectContaining({
           caption: 'New Caption',
         }),
-        expect.anything(),
       )
     })
     it('should store edited content as given, without sanitizing it', async () => {
@@ -431,7 +433,6 @@ describe('updateAdvert', () => {
       const advert = await advertModel.findByPkOrThrow('advert-123')
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ content }),
-        expect.anything(),
       )
     })
   })
@@ -461,7 +462,6 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: undefined }),
-        expect.anything(),
       )
     })
 
@@ -493,7 +493,6 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: undefined }),
-        expect.anything(),
       )
     })
 
@@ -521,7 +520,6 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: 4 }),
-        expect.anything(),
       )
     })
 
@@ -546,7 +544,6 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: null }),
-        expect.anything(),
       )
     })
 
@@ -575,7 +572,6 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: 16 }),
-        expect.anything(),
       )
     })
 
@@ -589,7 +585,6 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: 3 }),
-        expect.anything(),
       )
     })
 
@@ -611,7 +606,6 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: null }),
-        expect.anything(),
       )
     })
 
@@ -628,7 +622,6 @@ describe('updateAdvert', () => {
 
       expect(advert.update).toHaveBeenCalledWith(
         expect.objectContaining({ feeQuantity: undefined }),
-        expect.anything(),
       )
     })
   })
@@ -674,7 +667,6 @@ describe('updateAdvert', () => {
           typeId: 'new-type-id',
           categoryId: 'fyrirkoll-id',
         }),
-        expect.anything(),
       )
     })
     it('should throw when the supplied categoryId is not assignable to the type', async () => {
@@ -705,7 +697,6 @@ describe('updateAdvert', () => {
       )
       expect(editableAdvert.update).toHaveBeenCalledWith(
         expect.objectContaining({ categoryId: 'fyrirkoll-id' }),
-        expect.anything(),
       )
     })
     it('should leave the category untouched on a type-only change when it is still assignable', async () => {
@@ -721,7 +712,6 @@ describe('updateAdvert', () => {
           typeId: 'new-type-id',
           categoryId: undefined,
         }),
-        expect.anything(),
       )
       // No fallback derivation needed, so no second (filtered) lookup.
       expect(typeCategoriesService.findByTypeId).toHaveBeenCalledTimes(1)
@@ -747,7 +737,6 @@ describe('updateAdvert', () => {
       )
       expect(editableAdvert.update).toHaveBeenCalledWith(
         expect.objectContaining({ categoryId: 'fyrirkoll-id' }),
-        expect.anything(),
       )
     })
     it('should throw when the new type has no assignable category', async () => {
@@ -773,7 +762,6 @@ describe('updateAdvert', () => {
       expect(typeCategoriesService.findByTypeId).not.toHaveBeenCalled()
       expect(editableAdvert.update).toHaveBeenCalledWith(
         expect.objectContaining({ categoryId: undefined }),
-        expect.anything(),
       )
     })
   })

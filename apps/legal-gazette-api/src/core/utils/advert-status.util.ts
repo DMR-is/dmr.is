@@ -52,3 +52,25 @@ export function assertAdvertsEditable(
     )
   }
 }
+
+/**
+ * Statuses an advert can be in with none of its publications publishable:
+ * a rejected or withdrawn advert is never published. A PUBLISHED or
+ * IN_PUBLISHING advert still publishes its remaining publications.
+ */
+const NON_PUBLISHABLE_STATUSES: readonly StatusIdEnum[] = [
+  StatusIdEnum.REJECTED,
+  StatusIdEnum.WITHDRAWN,
+]
+
+/**
+ * The check both publish paths make after taking the advert row lock, on the
+ * freshly read rows: the publication is not out yet and the advert has not
+ * been rejected or withdrawn since it was selected.
+ */
+export const isStillPublishable = (
+  publication: { publishedAt?: Date | null },
+  advert: { statusId: StatusIdEnum },
+): boolean =>
+  !publication.publishedAt &&
+  !NON_PUBLISHABLE_STATUSES.includes(advert.statusId)

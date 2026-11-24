@@ -1,4 +1,5 @@
 /* eslint-disable local-rules/disallow-kennitalas */
+import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager'
@@ -54,6 +55,11 @@ const createMockDMRUser = (nationalId = '1234567890') => ({
   name: 'Test User',
   scope: ['@logbirtingablad.is/logbirtingabladid'],
 })
+const TRANSACTION = {
+  commit: jest.fn(),
+  rollback: jest.fn(),
+  afterCommit: jest.fn((cb) => cb()),
+}
 describe('AdvertPublishService', () => {
   let service: AdvertPublishService
   let advertModel: any
@@ -64,13 +70,7 @@ describe('AdvertPublishService', () => {
   beforeEach(async () => {
     const mockSequelize = {
       transaction: jest.fn().mockImplementation(async (callback) => {
-        const mockTransaction = {
-          commit: jest.fn(),
-          rollback: jest.fn(),
-          afterCommit: jest.fn((cb) => cb()),
-          LOCK: { UPDATE: 'UPDATE' },
-        }
-        return callback(mockTransaction)
+        return callback(TRANSACTION)
       }),
       literal: jest.fn((sql: string) => ({ val: sql })),
     }
@@ -178,17 +178,29 @@ describe('AdvertPublishService', () => {
       await service.publishNextPublication(advertId)
 
       expect(advertModel.unscoped).toHaveBeenCalled()
-      expect(advertModel.findByPk).toHaveBeenCalledWith(
-        advertId,
-        expect.objectContaining({
-          attributes: ['id'],
-          lock: 'UPDATE',
-          transaction: expect.objectContaining({ LOCK: { UPDATE: 'UPDATE' } }),
-        }),
-      )
+      expect(advertModel.findByPk).toHaveBeenCalledWith(advertId, {
+        attributes: ['id'],
+        transaction: TRANSACTION,
+        lock: Transaction.LOCK.NO_KEY_UPDATE,
+      })
       expect(advertModel.findByPk.mock.invocationCallOrder[0]).toBeLessThan(
         advertModel.findByPkOrThrow.mock.invocationCallOrder[0],
       )
+    })
+
+    it('rejects a withdrawn advert after the lock, publishing nothing', async () => {
+      const advertId = 'advert-123'
+      const publication = createMockPublication({ advertId })
+      publicationModel.findOneOrThrow.mockResolvedValue(publication)
+      advertModel.findByPkOrThrow.mockResolvedValue(
+        createMockAdvert({ id: advertId, statusId: StatusIdEnum.WITHDRAWN }),
+      )
+
+      await expect(service.publishNextPublication(advertId)).rejects.toThrow(
+        BadRequestException,
+      )
+      expect(publication.update).not.toHaveBeenCalled()
+      expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
     })
 
     it('should throw error when no unpublished publication found', async () => {

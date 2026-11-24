@@ -16,6 +16,7 @@ import {
 } from '@dmr.is/utils-server/serverUtils'
 
 import { LegalGazetteEvents } from '../../core/constants'
+import { lockAdvertRow } from '../../core/utils/advert-lock'
 import {
   feeQuantityForChange,
   isFeeQuantityFrozen,
@@ -921,61 +922,48 @@ export class AdvertService implements IAdvertService {
     id: string,
     body: UpdateAdvertDto,
   ): Promise<AdvertDetailedDto> {
-    // Read, decide and write under the advert row lock. A property change
+    // Read, decide and write under the advert row lock, taken on the request's
+    // own (CLS) transaction and held until the response commits; the writes
+    // below roll back with the request as they always did. A property change
     // on a foreclosure and a publish both take it, so the quantity decided
     // below is never based on properties they are changing, and a publish in
-    // flight has finished before the status is read. The only caller is the
-    // update controller, outside any transaction.
-    const { advert, updated, feeQuantity } = await this.sequelize.transaction(
-      async (transaction) => {
-        // Plain read: FOR UPDATE cannot combine with the detailed scope's
-        // outer joins.
-        await this.advertModel.unscoped().findByPk(id, {
-          attributes: ['id'],
-          transaction,
-          lock: transaction.LOCK.UPDATE,
-        })
+    // flight has finished before the status is read. No transaction of our
+    // own: it would be a second connection, not a savepoint.
+    await lockAdvertRow(this.advertModel, id)
 
-        const advert = await this.advertModel
-          .withScope('detailed')
-          .findByPkOrThrow(id)
+    const advert = await this.advertModel
+      .withScope('detailed')
+      .findByPkOrThrow(id)
 
-        // Prevent modification of adverts in terminal states
-        const nonEditableStatuses = [
-          StatusIdEnum.PUBLISHED,
-          StatusIdEnum.REJECTED,
-          StatusIdEnum.WITHDRAWN,
-        ]
+    // Prevent modification of adverts in terminal states
+    const nonEditableStatuses = [
+      StatusIdEnum.PUBLISHED,
+      StatusIdEnum.REJECTED,
+      StatusIdEnum.WITHDRAWN,
+    ]
 
-        if (nonEditableStatuses.includes(advert.statusId)) {
-          throw new BadRequestException('Cannot modify published adverts')
-        }
+    if (nonEditableStatuses.includes(advert.statusId)) {
+      throw new BadRequestException('Cannot modify published adverts')
+    }
 
-        const categoryId = await this.resolveUpdatedCategoryId(advert, body)
-        const feeQuantity = this.feeQuantityForUpdate(advert, body)
+    const categoryId = await this.resolveUpdatedCategoryId(advert, body)
+    const feeQuantity = this.feeQuantityForUpdate(advert, body)
 
-        const updated = await advert.update(
-          {
-            typeId: body.typeId,
-            categoryId,
-            title: body.title,
-            // Not sanitized: only new submissions are cleaned (createAdvert).
-            // An existing advert changes only through the editor.
-            content: body.content,
-            additionalText: body.additionalText,
-            divisionMeetingDate: body.divisionMeetingDate,
-            divisionMeetingLocation: body.divisionMeetingLocation,
-            caption: body.caption,
-            courtDistrictId: body.courtDistrictId,
-            judgementDate: body.judgementDate,
-            feeQuantity,
-          },
-          { transaction },
-        )
-
-        return { advert, updated, feeQuantity }
-      },
-    )
+    const updated = await advert.update({
+      typeId: body.typeId,
+      categoryId,
+      title: body.title,
+      // Not sanitized: only new submissions are cleaned (createAdvert).
+      // An existing advert changes only through the editor.
+      content: body.content,
+      additionalText: body.additionalText,
+      divisionMeetingDate: body.divisionMeetingDate,
+      divisionMeetingLocation: body.divisionMeetingLocation,
+      caption: body.caption,
+      courtDistrictId: body.courtDistrictId,
+      judgementDate: body.judgementDate,
+      feeQuantity,
+    })
 
     warnOnZeroFeeQuantity(this.logger, {
       advertId: advert.id,

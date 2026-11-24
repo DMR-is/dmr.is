@@ -11,6 +11,8 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents, SYSTEM_ACTOR } from '../../../core/constants'
+import { lockAdvertRow } from '../../../core/utils/advert-lock'
+import { isStillPublishable } from '../../../core/utils/advert-status.util'
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import { StatusIdEnum } from '../../../models/status.model'
@@ -93,13 +95,8 @@ export class AdvertPublishService implements IAdvertPublishService {
       // Lock the advert row before reading anything the charge depends on:
       // a property change on this sale waits for the commit, and one already
       // in flight has finished, so the render and the charge below see its
-      // quantity. Plain read: FOR UPDATE cannot combine with the detailed
-      // scope's outer joins.
-      await this.advertModel.unscoped().findByPk(advertId, {
-        attributes: ['id'],
-        transaction: t,
-        lock: t.LOCK.UPDATE,
-      })
+      // quantity.
+      await lockAdvertRow(this.advertModel, advertId, { transaction: t })
 
       const advert = await this.advertModel
         .withScope('detailed')
@@ -109,8 +106,10 @@ export class AdvertPublishService implements IAdvertPublishService {
         where: { id: publicationId, advertId },
       })
 
-      if (publication.publishedAt) {
-        throw new BadRequestException('Publication already published')
+      if (!isStillPublishable(publication, advert)) {
+        throw new BadRequestException(
+          'Publication already published or advert cannot be published',
+        )
       }
 
       if (!advert.publicationNumber) {
