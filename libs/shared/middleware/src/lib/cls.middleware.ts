@@ -1,4 +1,4 @@
-import { getNamespace } from 'cls-hooked'
+import { getNamespace, type Namespace } from 'cls-hooked'
 import { NextFunction, Request, Response } from 'express'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 } from 'uuid'
@@ -22,79 +22,104 @@ export class CLSMiddleware implements NestMiddleware {
       throw new Error('Transaction namespace not found')
     }
 
-    transactionNamespace.run(async () => {
-      const traceId = v4()
-      this.logger.debug(`Starting transaction`, {
+    // `run` does not return the callback's promise, so keep it and await it
+    // below. A transaction that cannot start (e.g. a pool acquire timeout)
+    // then rejects `use`, and Nest answers through the exception filters
+    // instead of leaving an unhandled rejection and a request that never
+    // reaches its handler.
+    let started: Promise<void> = Promise.resolve()
+
+    transactionNamespace.run(() => {
+      started = this.start(transactionNamespace, res, next)
+    })
+
+    await started
+  }
+
+  private async start(
+    transactionNamespace: Namespace,
+    res: Response,
+    next: NextFunction,
+  ) {
+    const traceId = v4()
+    this.logger.debug(`Starting transaction`, {
+      context: 'CLSMiddleware',
+      traceId,
+    })
+
+    const transaction = await this.sequelize.transaction().catch((error) => {
+      this.logger.error('Failed to start transaction', {
+        context: 'CLSMiddleware',
+        traceId,
+        error,
+      })
+      throw error
+    })
+
+    // One flag so the transaction ends exactly once: `close` also fires
+    // after a normal `finish`, and an abort must never roll back a
+    // transaction that `finish` is committing.
+    let finalised = false
+
+    const finalise = async (action: 'commit' | 'rollback') => {
+      if (finalised) {
+        return
+      }
+      finalised = true
+
+      this.logger.debug(
+        action === 'commit'
+          ? 'Committing transaction'
+          : 'Rolling back transaction',
+        { context: 'CLSMiddleware', traceId },
+      )
+
+      try {
+        await transaction[action]()
+      } catch (error) {
+        this.logger.error(`Failed to ${action} transaction`, {
+          context: 'CLSMiddleware',
+          traceId,
+          error,
+        })
+      }
+    }
+
+    const abort = () => {
+      this.logger.warn('Request aborted before the response finished', {
         context: 'CLSMiddleware',
         traceId,
       })
-      const transaction = await this.sequelize.transaction()
+      void finalise('rollback')
+    }
 
-      // One flag so the transaction ends exactly once: `close` also fires
-      // after a normal `finish`, and an abort must never roll back a
-      // transaction that `finish` is committing.
-      let finalised = false
+    // The client may have gone away while the request waited for a pool
+    // connection: `close` has already fired, so no listener below would
+    // ever hear it. Roll back now and never run the handler.
+    if (res.closed || res.destroyed) {
+      abort()
+      return
+    }
 
-      const finalise = async (action: 'commit' | 'rollback') => {
-        if (finalised) {
-          return
-        }
-        finalised = true
+    transactionNamespace.set('transaction', transaction)
 
-        this.logger.debug(
-          action === 'commit'
-            ? 'Committing transaction'
-            : 'Rolling back transaction',
-          { context: 'CLSMiddleware', traceId },
-        )
+    res.on('finish', () => {
+      void finalise(
+        res.statusCode >= 200 && res.statusCode < 400 ? 'commit' : 'rollback',
+      )
+    })
 
-        try {
-          await transaction[action]()
-        } catch (error) {
-          this.logger.error(`Failed to ${action} transaction`, {
-            context: 'CLSMiddleware',
-            traceId,
-            error,
-          })
-        }
-      }
-
-      const abort = () => {
-        this.logger.warn('Request aborted before the response finished', {
-          context: 'CLSMiddleware',
-          traceId,
-        })
-        void finalise('rollback')
-      }
-
-      // The client may have gone away while the request waited for a pool
-      // connection: `close` has already fired, so no listener below would
-      // ever hear it. Roll back now and never run the handler.
-      if (res.closed || res.destroyed) {
-        abort()
+    // The client went away before the response was sent: only `close`
+    // fires, so without this the transaction would hold its row locks until
+    // the connection is killed.
+    res.on('close', () => {
+      if (res.writableFinished || finalised) {
         return
       }
 
-      transactionNamespace.set('transaction', transaction)
-
-      res.on('finish', () => {
-        void finalise(
-          res.statusCode >= 200 && res.statusCode < 400 ? 'commit' : 'rollback',
-        )
-      })
-
-      // The client went away before the response was sent: only `close`
-      // fires, so without this the transaction would hold its row locks until
-      // the connection is killed.
-      res.on('close', () => {
-        if (res.writableFinished || finalised) {
-          return
-        }
-
-        abort()
-      })
-
-      next()
+      abort()
     })
+
+    next()
   }
 }

@@ -2,13 +2,10 @@ import { EventEmitter } from 'events'
 
 import { CLSMiddleware } from './cls.middleware'
 
-// The promise of the callback handed to `run`, so a test can see whether it
-// settled cleanly
-let mockLastRun: Promise<void> | undefined
+// Like cls-hooked, `run` calls the callback and does not return its result
 const mockNamespace = {
-  run: jest.fn((fn: () => Promise<void>) => {
-    mockLastRun = fn()
-    return mockLastRun
+  run: jest.fn((fn: () => void) => {
+    fn()
   }),
   set: jest.fn(),
 }
@@ -33,7 +30,6 @@ describe('CLSMiddleware', () => {
 
   beforeEach(async () => {
     mockNamespace.set.mockClear()
-    mockLastRun = undefined
     transaction = {
       commit: jest.fn().mockResolvedValue(undefined),
       rollback: jest.fn().mockResolvedValue(undefined),
@@ -126,8 +122,6 @@ describe('CLSMiddleware', () => {
       'Failed to commit transaction',
       expect.objectContaining({ context: 'CLSMiddleware' }),
     )
-    // The request callback itself settled; nothing escaped it
-    await expect(mockLastRun).resolves.toBeUndefined()
   })
 
   it('logs instead of rejecting when the rollback throws', async () => {
@@ -161,11 +155,12 @@ describe('CLSMiddleware', () => {
       mockNamespace.set.mockClear()
       logger.warn.mockClear()
 
-      await middleware.use({} as never, pendingRes as never, pendingNext)
+      const used = middleware.use({} as never, pendingRes as never, pendingNext)
       // The client disconnects before the pool hands out a connection
       pendingRes[flag] = true
       pendingRes.emit('close')
       resolveTransaction(transaction)
+      await expect(used).resolves.toBeUndefined()
       await flush()
 
       expect(transaction.rollback).toHaveBeenCalledTimes(1)
@@ -173,7 +168,25 @@ describe('CLSMiddleware', () => {
       expect(pendingNext).not.toHaveBeenCalled()
       expect(mockNamespace.set).not.toHaveBeenCalled()
       expect(logger.warn).toHaveBeenCalledTimes(1)
-      await expect(mockLastRun).resolves.toBeUndefined()
     },
   )
+
+  it('rejects, logs and skips the handler when the transaction cannot start', async () => {
+    const timeout = new Error('pool acquire timeout')
+    sequelize.transaction.mockRejectedValue(timeout)
+    const failedNext = jest.fn()
+    mockNamespace.set.mockClear()
+    logger.error.mockClear()
+
+    await expect(
+      middleware.use({} as never, res as never, failedNext),
+    ).rejects.toBe(timeout)
+
+    expect(failedNext).not.toHaveBeenCalled()
+    expect(mockNamespace.set).not.toHaveBeenCalled()
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to start transaction',
+      expect.objectContaining({ context: 'CLSMiddleware', error: timeout }),
+    )
+  })
 })
