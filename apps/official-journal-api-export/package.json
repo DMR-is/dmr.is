@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@dmr.is/logging": "*",
     "csv-parse": "^7.0.2",
     "date-fns": "2.30.0",
     "jsdom": "^26.0.0",

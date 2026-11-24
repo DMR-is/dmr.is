@@ -4,8 +4,6 @@ import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { hrtime } from 'node:process'
 
-import { getLogger } from '@dmr.is/logging'
-
 import {
   connect,
   getAdvertDocuments,
@@ -45,13 +43,12 @@ import {
   generateTypeInserts,
 } from './lib/inserts.js'
 
-const logger = getLogger('official-journal-api-export')
-
 const ROOT_SQL_DIR = './apps/official-journal-api-export/sql'
 // Added comment to trigger redeploy
 
 function log(message: string) {
-  logger.info(message)
+  // eslint-disable-next-line no-console
+  console.log(message)
 }
 
 function write(path: string, data: string) {
@@ -1928,12 +1925,8 @@ async function legalGazetteMain() {
 
   // Step 1.1: Select all legacy data from GoPro
 
-  //const subscribers = await exec('get subscribers', getSubscribers)
-  //console.log(subscribers)
   const types = await exec('get types', getLogbirtingTypes)
-  //console.log(types)
   const dbCategories = await exec('get categories', getLogbirtingCategories)
-  //console.log(dbCategories)
   const typesCategoriesMap = await exec(
     'get categories mapped with types ',
     getLogbirtingTypesAndCategories,
@@ -1974,6 +1967,8 @@ async function legalGazetteMain() {
   return Promise.resolve()
 }
 
-//main().catch(console.error)
-// eslint-disable-next-line no-console
-legalGazetteMain().catch(console.error)
+legalGazetteMain().catch((error) => {
+  // eslint-disable-next-line no-console
+  console.error(error)
+  process.exitCode = 1
+})
