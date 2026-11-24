@@ -90,6 +90,17 @@ export class AdvertPublishService implements IAdvertPublishService {
         },
       )
 
+      // Lock the advert row before reading anything the charge depends on:
+      // a property change on this sale waits for the commit, and one already
+      // in flight has finished, so the render and the charge below see its
+      // quantity. Plain read: FOR UPDATE cannot combine with the detailed
+      // scope's outer joins.
+      await this.advertModel.unscoped().findByPk(advertId, {
+        attributes: ['id'],
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      })
+
       const advert = await this.advertModel
         .withScope('detailed')
         .findByPkOrThrow(advertId)
