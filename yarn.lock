@@ -4500,12 +4500,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dmr.is/official-journal-api-export-e2e@workspace:apps/official-journal-api-export-e2e":
-  version: 0.0.0-use.local
-  resolution: "@dmr.is/official-journal-api-export-e2e@workspace:apps/official-journal-api-export-e2e"
-  languageName: unknown
-  linkType: soft
-
 "@dmr.is/official-journal-api-export@workspace:apps/official-journal-api-export":
   version: 0.0.0-use.local
   resolution: "@dmr.is/official-journal-api-export@workspace:apps/official-journal-api-export"

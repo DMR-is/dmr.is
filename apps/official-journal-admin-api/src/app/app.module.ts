@@ -64,10 +64,6 @@ import { StatisticsModule } from './statistics/statistics.module'
         path: 'statistics',
         module: StatisticsModule,
       },
-      {
-        path: 'journal',
-        module: SharedJournalModule,
-      },
     ]),
   ],
   providers: [
