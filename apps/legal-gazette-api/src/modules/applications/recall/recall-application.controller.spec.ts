@@ -54,9 +54,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       getMinDateForDivisionMeeting: jest
         .fn()
         .mockResolvedValue(mockMinDateResponse),
-      getMinDateForDivisionEnding: jest
-        .fn()
-        .mockResolvedValue(mockMinDateResponse),
       addDivisionMeeting: jest.fn().mockResolvedValue(undefined),
       addDivisionEnding: jest.fn().mockResolvedValue(undefined),
     }
@@ -106,33 +103,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
         const guards = Reflect.getMetadata(
           '__guards__',
           controller.getMinDateForDivisionMeeting,
-        )
-        expect(guards).toBeDefined()
-        expect(guards).toContain(OwnershipGuard)
-      })
-    })
-  })
-  describe('getMinDateForDivisionEnding', () => {
-    it('should call service method when OwnershipGuard passes', async () => {
-      // Arrange
-      service.getMinDateForDivisionEnding.mockResolvedValue(mockMinDateResponse)
-      // Act
-      const result =
-        await controller.getMinDateForDivisionEnding(APPLICATION_ID)
-      // Assert
-      expect(result).toEqual(mockMinDateResponse)
-      expect(service.getMinDateForDivisionEnding).toHaveBeenCalledWith(
-        APPLICATION_ID,
-      )
-      expect(service.getMinDateForDivisionEnding).toHaveBeenCalledTimes(1)
-    })
-    describe('OwnershipGuard behavior', () => {
-      it('should have OwnershipGuard configured on method', () => {
-        // Verify the guard decorator is applied by checking the guards metadata
-        // This confirms the guard will be invoked at runtime
-        const guards = Reflect.getMetadata(
-          '__guards__',
-          controller.getMinDateForDivisionEnding,
         )
         expect(guards).toBeDefined()
         expect(guards).toContain(OwnershipGuard)
