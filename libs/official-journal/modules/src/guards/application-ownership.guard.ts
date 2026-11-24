@@ -16,7 +16,9 @@ import { IApplicationService } from '../application/application.service.interfac
 import { isApplicationParty } from '../auth/application-party'
 import { APPLICATION_REQUEST_KEY } from './current-application.decorator'
 
-const RETRYABLE_CODES = [408, 429]
+// Answers that say nothing about the id: our own credentials were refused
+// (401), the request timed out (408) or was throttled (429).
+const NOT_ABOUT_THE_ID = [401, 408, 429]
 const LOGGING_CATEGORY = 'application-ownership-guard'
 const LOGGING_CONTEXT = 'ApplicationOwnershipGuard'
 
@@ -62,11 +64,10 @@ export class ApplicationOwnershipGuard implements CanActivate {
         context: LOGGING_CONTEXT,
       })
 
-      // A 4xx says something about this id, and all of them read as "not
-      // found". A request that timed out (408) or was throttled (429) says
-      // nothing about the id, so those count as the system being unavailable,
-      // like 5xx and network errors.
-      if (code >= 400 && code < 500 && !RETRYABLE_CODES.includes(code)) {
+      // Any other 4xx says something about this id, and all of them read as
+      // "not found". The rest count as the system being unavailable, like 5xx
+      // and network errors.
+      if (code >= 400 && code < 500 && !NOT_ABOUT_THE_ID.includes(code)) {
         throw new NotFoundException('Application not found')
       }
       throw new BadGatewayException('Application system is unavailable')
