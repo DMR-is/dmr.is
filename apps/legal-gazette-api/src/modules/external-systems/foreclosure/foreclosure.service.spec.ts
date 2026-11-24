@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize-typescript'
 
+import { BadRequestException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
@@ -709,6 +710,84 @@ describe('ForeclosureService - Status Protection', () => {
         service.deletePropertyFromForeclosure('foreclosure-123', '123'),
       ).rejects.toThrow()
       expect(mockAdvertModel.update).not.toHaveBeenCalled()
+    })
+  })
+  describe('locked advert row', () => {
+    const editableForeclosure = {
+      id: 'foreclosure-123',
+      advertId: 'advert-123',
+      advert: { id: 'advert-123', statusId: StatusIdEnum.SUBMITTED },
+    }
+
+    beforeEach(() => {
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(
+        editableForeclosure as any,
+      )
+      foreclosurePropertyModel.findOneOrThrow.mockResolvedValue({
+        destroy: jest.fn(),
+      } as any)
+      // The pre-transaction read says editable; the locked read says a
+      // publish finished in between.
+      mockAdvertModel.findByPk.mockResolvedValue(
+        templateForeclosureAdvert({ statusId: StatusIdEnum.PUBLISHED }),
+      )
+    })
+
+    it('rejects an add when the locked row is PUBLISHED and writes nothing', async () => {
+      await expect(
+        service.createForeclosureProperty('foreclosure-123', {
+          propertyName: 'Eign',
+          propertyNumber: '1',
+          propertyTotalPrice: 1,
+          claimant: 'a',
+          respondent: 'b',
+        }),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(foreclosurePropertyModel.create).not.toHaveBeenCalled()
+      expect(mockAdvertModel.update).not.toHaveBeenCalled()
+    })
+
+    it('rejects a delete when the locked row is PUBLISHED and destroys nothing', async () => {
+      const destroy = jest.fn()
+      foreclosurePropertyModel.findOneOrThrow.mockResolvedValue({
+        destroy,
+      } as any)
+
+      await expect(
+        service.deletePropertyFromForeclosure('foreclosure-123', '123'),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(destroy).not.toHaveBeenCalled()
+      expect(mockAdvertModel.update).not.toHaveBeenCalled()
+    })
+
+    it('locks the unscoped advert row FOR UPDATE and reads its status', async () => {
+      mockAdvertModel.findByPk.mockResolvedValue(templateForeclosureAdvert())
+      foreclosurePropertyModel.create.mockResolvedValue({
+        reload: jest.fn(),
+        fromModel: jest.fn(),
+      } as any)
+
+      await service.createForeclosureProperty('foreclosure-123', {
+        propertyName: 'Eign',
+        propertyNumber: '1',
+        propertyTotalPrice: 1,
+        claimant: 'a',
+        respondent: 'b',
+      })
+
+      // A scoped read would add the detailed scope's outer joins, which
+      // FOR UPDATE cannot combine with.
+      expect(mockAdvertModel.unscoped).toHaveBeenCalled()
+      expect(mockAdvertModel.findByPk).toHaveBeenCalledWith(
+        'advert-123',
+        expect.objectContaining({
+          attributes: expect.arrayContaining(['id', 'statusId']),
+          transaction: TRANSACTION,
+          lock: 'UPDATE',
+        }),
+      )
     })
   })
   describe('deletePropertyFromForeclosure', () => {
