@@ -8,8 +8,9 @@ import type { AdvertModel } from '../../models/advert.model'
 /**
  * The one way to lock an advert row. The writers that take it are the editor
  * (`updateAdvert`), both publish paths (`advert-publish.service.ts` and the
- * publishing task), the publication reschedule (`updatePublication`), foreclosure property add and delete, the bulk move and
- * its undo, and the status transitions in `advert.service.ts` (`rejectAdvert`,
+ * publishing task), the publication reschedule (`updatePublication`),
+ * foreclosure property add and delete, the bulk move and its undo, and the
+ * status transitions in `advert.service.ts` (`rejectAdvert`,
  * `moveAdvertToNextStatus`, `moveAdvertToPreviousStatus`,
  * `markAdvertAsWithdrawn`). Each takes it before it reads what its decision
  * depends on, so these run one at a time per advert.
@@ -25,8 +26,8 @@ import type { AdvertModel } from '../../models/advert.model'
  * lock, never before.
  *
  * `NO_KEY_UPDATE` also means a publish does not wait for an uncommitted
- * publication insert, so the "all published" read in `advert-publish.service.ts`
- * can miss a publication added in the same window.
+ * publication insert, so the "all published" read in
+ * `advert-publish.service.ts` can miss a publication added in the same window.
  *
  * The lock is held until `transaction` ends. Without an explicit one, the
  * request's CLS transaction is used, so the lock is held until the response

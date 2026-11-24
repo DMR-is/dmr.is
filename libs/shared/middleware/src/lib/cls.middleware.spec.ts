@@ -2,9 +2,14 @@ import { EventEmitter } from 'events'
 
 import { CLSMiddleware } from './cls.middleware'
 
+// The promise of the callback handed to `run`, so a test can see whether it
+// settled cleanly
+let mockLastRun: Promise<void> | undefined
 const mockNamespace = {
-  // Runs the callback and hands back its promise so the test can await it
-  run: jest.fn((fn: () => Promise<void>) => fn()),
+  run: jest.fn((fn: () => Promise<void>) => {
+    mockLastRun = fn()
+    return mockLastRun
+  }),
   set: jest.fn(),
 }
 jest.mock('cls-hooked', () => ({ getNamespace: () => mockNamespace }))
@@ -12,6 +17,8 @@ jest.mock('cls-hooked', () => ({ getNamespace: () => mockNamespace }))
 type FakeResponse = EventEmitter & {
   statusCode: number
   writableFinished: boolean
+  closed: boolean
+  destroyed: boolean
 }
 
 const flush = () => new Promise((resolve) => setImmediate(resolve))
@@ -21,8 +28,12 @@ describe('CLSMiddleware', () => {
   let logger: Record<'debug' | 'info' | 'warn' | 'error', jest.Mock>
   let res: FakeResponse
   let next: jest.Mock
+  let middleware: CLSMiddleware
+  let sequelize: { transaction: jest.Mock }
 
   beforeEach(async () => {
+    mockNamespace.set.mockClear()
+    mockLastRun = undefined
     transaction = {
       commit: jest.fn().mockResolvedValue(undefined),
       rollback: jest.fn().mockResolvedValue(undefined),
@@ -36,15 +47,20 @@ describe('CLSMiddleware', () => {
     res = Object.assign(new EventEmitter(), {
       statusCode: 200,
       writableFinished: false,
+      closed: false,
+      destroyed: false,
     })
     next = jest.fn()
+    sequelize = { transaction: jest.fn().mockResolvedValue(transaction) }
 
-    const middleware = new CLSMiddleware(
-      { transaction: jest.fn().mockResolvedValue(transaction) } as never,
-      logger as never,
-    )
+    middleware = new CLSMiddleware(sequelize as never, logger as never)
     await middleware.use({} as never, res as never, next)
     await flush()
+  })
+
+  it('exposes the transaction and continues the request', () => {
+    expect(mockNamespace.set).toHaveBeenCalledWith('transaction', transaction)
+    expect(next).toHaveBeenCalledTimes(1)
   })
 
   const finish = (statusCode: number) => {
@@ -81,6 +97,7 @@ describe('CLSMiddleware', () => {
 
     expect(transaction.rollback).toHaveBeenCalledTimes(1)
     expect(transaction.commit).not.toHaveBeenCalled()
+    expect(logger.warn).toHaveBeenCalledTimes(1)
     expect(logger.warn).toHaveBeenCalledWith(
       'Request aborted before the response finished',
       expect.objectContaining({
@@ -100,19 +117,17 @@ describe('CLSMiddleware', () => {
   })
 
   it('logs instead of rejecting when the commit throws', async () => {
-    const unhandled = jest.fn()
-    process.on('unhandledRejection', unhandled)
     transaction.commit.mockRejectedValue(new Error('already finished'))
 
     finish(200)
     await flush()
-    process.off('unhandledRejection', unhandled)
 
     expect(logger.error).toHaveBeenCalledWith(
       'Failed to commit transaction',
       expect.objectContaining({ context: 'CLSMiddleware' }),
     )
-    expect(unhandled).not.toHaveBeenCalled()
+    // The request callback itself settled; nothing escaped it
+    await expect(mockLastRun).resolves.toBeUndefined()
   })
 
   it('logs instead of rejecting when the rollback throws', async () => {
@@ -126,4 +141,39 @@ describe('CLSMiddleware', () => {
       expect.objectContaining({ context: 'CLSMiddleware' }),
     )
   })
+
+  it.each(['closed', 'destroyed'] as const)(
+    'rolls back once and skips the handler when the client left while the transaction was pending (%s)',
+    async (flag) => {
+      let resolveTransaction!: (t: typeof transaction) => void
+      sequelize.transaction.mockReturnValue(
+        new Promise((resolve) => {
+          resolveTransaction = resolve
+        }),
+      )
+      const pendingRes = Object.assign(new EventEmitter(), {
+        statusCode: 200,
+        writableFinished: false,
+        closed: false,
+        destroyed: false,
+      })
+      const pendingNext = jest.fn()
+      mockNamespace.set.mockClear()
+      logger.warn.mockClear()
+
+      await middleware.use({} as never, pendingRes as never, pendingNext)
+      // The client disconnects before the pool hands out a connection
+      pendingRes[flag] = true
+      pendingRes.emit('close')
+      resolveTransaction(transaction)
+      await flush()
+
+      expect(transaction.rollback).toHaveBeenCalledTimes(1)
+      expect(transaction.commit).not.toHaveBeenCalled()
+      expect(pendingNext).not.toHaveBeenCalled()
+      expect(mockNamespace.set).not.toHaveBeenCalled()
+      expect(logger.warn).toHaveBeenCalledTimes(1)
+      await expect(mockLastRun).resolves.toBeUndefined()
+    },
+  )
 })
