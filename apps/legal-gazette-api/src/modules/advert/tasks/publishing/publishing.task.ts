@@ -120,7 +120,7 @@ export class PublishingTaskService implements IPublishingTaskService {
           where: {
             // Unchanged selection. A second same-day publication of an advert
             // selected here still publishes in this run: after the lock,
-            // isStillPublishable only refuses rejected or withdrawn adverts.
+            // isStillPublishable only refuses adverts outside the publishable statuses.
             statusId: StatusIdEnum.READY_FOR_PUBLICATION,
           },
         },
@@ -167,11 +167,17 @@ export class PublishingTaskService implements IPublishingTaskService {
           await advert.reload({ transaction })
 
           const current = await this.publicationModel.findByPk(pub.id, {
-            attributes: ['id', 'publishedAt'],
+            attributes: ['id', 'publishedAt', 'scheduledAt'],
             transaction,
           })
 
-          if (!current || !isStillPublishable(current, advert)) {
+          // Rescheduled while waiting for the lock: no longer due today
+          const dueToday =
+            !!current &&
+            current.scheduledAt.getTime() >= start &&
+            current.scheduledAt.getTime() <= end
+
+          if (!current || !dueToday || !isStillPublishable(current, advert)) {
             this.logger.info(
               'Publication is no longer due after taking the advert lock, skipping',
               {

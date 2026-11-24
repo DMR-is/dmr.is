@@ -11,10 +11,10 @@ import {
 } from '@dmr.is/decorators'
 import { Paging, PagingQuery } from '@dmr.is/shared-dto'
 
+import { AdvertVersionEnum } from '../../../../core/enums/advert-version.enum'
 import { AdvertDto } from '../../../../models/advert.dto'
 import {
   AdvertPublicationDto,
-  AdvertVersionEnum,
   PublishedPublicationDto,
 } from '../../../../models/advert-publication.model'
 

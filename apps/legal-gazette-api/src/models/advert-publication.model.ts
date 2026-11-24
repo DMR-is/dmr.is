@@ -28,8 +28,6 @@ import { AdvertModel } from './advert.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
 
-export { AdvertVersionEnum }
-
 export type AdvertPublicationsAttributes = {
   advertId: string
   scheduledAt: Date

@@ -23,7 +23,7 @@ import {
   PublicOrApplicationWebScopes,
   PublicWebScopes,
 } from '../../../core/guards/scope-guards/scopes.decorator'
-import { AdvertVersionEnum } from '../../../models/advert-publication.model'
+import { AdvertVersionEnum } from '../../../core/enums/advert-version.enum'
 import {
   AdvertPublicationDetailedDto,
   GetCombinedHTMLDto,

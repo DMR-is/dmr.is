@@ -8,7 +8,7 @@ import { IAWSService } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertModel } from '../../../../models/advert.model'
-import { AdvertVersionEnum } from '../../../../models/advert-publication.model'
+import { AdvertVersionEnum } from '../../../../core/enums/advert-version.enum'
 import {
   TBRTransactionModel,
   TBRTransactionStatus,

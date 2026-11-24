@@ -321,7 +321,7 @@ describe('AdvertPublishService', () => {
       publicationModel.findOneOrThrow.mockResolvedValue(publication)
       // Act & Assert
       await expect(service.publishNextPublication(advertId)).rejects.toThrow(
-        'Publication already published',
+        'Publication already published or advert cannot be published',
       )
     })
     it('should assign publication number if advert does not have one', async () => {

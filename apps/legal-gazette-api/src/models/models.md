@@ -64,11 +64,10 @@ the count will be an undercount - as every count in #1506 was.
 `application.dto.ts` each carry one today; both are safe only because neither
 file is in a cycle with the module the enum comes from.
 
-**Module-level constants count too.** `core/html/advert-html.ts` computed
-`const DEFAULT_VERSION = AdvertVersionEnum.A` at module scope, where the enum
-comes from `advert-publication.model.ts`, which imports `advert.model.ts` back,
-which imports that file. It now resolves per call. Any eval-time read of a value
-from a module you are in a cycle with is the same bug, decorator or not.
+**Module-level constants count too.** Any eval-time read of a value from a module
+you are in a cycle with is the same bug, decorator or not. `AdvertVersionEnum`
+lives in `core/enums/advert-version.enum.ts`, outside the model cycle, for this
+reason: import it from there, never via `advert-publication.model.ts`.
 
 ### Verifying a site - and the `PickType` trap
 

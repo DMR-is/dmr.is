@@ -24,7 +24,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { PublicWebScopes } from '../../../core/guards/scope-guards/scopes.decorator'
-import { AdvertVersionEnum } from '../../../models/advert-publication.model'
+import { AdvertVersionEnum } from '../../../core/enums/advert-version.enum'
 import { PdfService } from '../pdf/pdf.service'
 import { IPublicationService } from '../publications/publication.service.interface'
 

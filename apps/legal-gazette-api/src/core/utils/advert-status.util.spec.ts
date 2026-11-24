@@ -152,7 +152,12 @@ describe('isStillPublishable', () => {
     expect(isStillPublishable(unpublished, { statusId })).toBe(true)
   })
 
-  it.each([StatusIdEnum.REJECTED, StatusIdEnum.WITHDRAWN])(
+  it.each([
+    StatusIdEnum.SUBMITTED,
+    StatusIdEnum.IN_PROGRESS,
+    StatusIdEnum.REJECTED,
+    StatusIdEnum.WITHDRAWN,
+  ])(
     'refuses a publication of an advert in %s',
     (statusId) => {
       expect(isStillPublishable(unpublished, { statusId })).toBe(false)

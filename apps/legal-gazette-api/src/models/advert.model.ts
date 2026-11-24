@@ -21,6 +21,7 @@ import { getHtmlTextLength } from '@dmr.is/utils-server/serverUtils'
 
 import { LegalGazetteModels } from '../core/constants'
 import { AdvertTemplateType } from '../core/enums/advert-template-type.enum'
+import { AdvertVersionEnum } from '../core/enums/advert-version.enum'
 import { StatusIdEnum } from '../core/enums/status.enum'
 import { getAdvertHtmlMarkup } from '../core/html/advert-html'
 // Type-only: `advert.dto.ts` imports this module back, and the DTOs are only
@@ -34,7 +35,6 @@ import type {
 import {
   AdvertPublicationModel,
   AdvertPublicationsCreateAttributes,
-  AdvertVersionEnum,
 } from './advert-publication.model'
 import { ApplicationModel } from './application.model'
 import type { CaseModel as CaseModelRef } from './case.model'

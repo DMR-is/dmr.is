@@ -10,10 +10,8 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'
-import {
-  AdvertPublicationModel,
-  AdvertVersionEnum,
-} from '../../../../models/advert-publication.model'
+import { AdvertVersionEnum } from '../../../../core/enums/advert-version.enum'
+import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
 import { StatusIdEnum } from '../../../../models/status.model'
 import { PgAdvisoryLockService } from '../lock.service'
 import { PublishingTaskService } from './publishing.task'
@@ -90,9 +88,11 @@ describe('PublishingTaskService - Event Emission', () => {
     const mockPublicationModel = {
       findAll: jest.fn(),
       // The locked re-read of the publication: not yet published
-      findByPk: jest
-        .fn()
-        .mockResolvedValue({ id: 'publication-123', publishedAt: null }),
+      findByPk: jest.fn().mockResolvedValue({
+        id: 'publication-123',
+        publishedAt: null,
+        scheduledAt: new Date(),
+      }),
     }
     const mockAdvertModel = {
       findOne: jest.fn(),
@@ -232,6 +232,54 @@ describe('PublishingTaskService - Event Emission', () => {
       ).toBeLessThan(mockPublication.advert.update.mock.invocationCallOrder[0])
     })
 
+    it('re-reads the publication on the lock transaction', async () => {
+      const mockPublication = createMockPublication()
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
+
+      await service.publishAdverts()
+
+      expect(publicationModel.findByPk).toHaveBeenCalledWith(
+        'publication-123',
+        {
+          attributes: ['id', 'publishedAt', 'scheduledAt'],
+          transaction: TRANSACTION,
+        },
+      )
+    })
+
+    it('skips a publication that no longer exists after the lock', async () => {
+      const mockPublication = createMockPublication()
+      publicationModel.findByPk.mockResolvedValue(null)
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
+
+      await service.publishAdverts()
+
+      expect(mockPublication.update).not.toHaveBeenCalled()
+      expect(mockPublication.advert.update).not.toHaveBeenCalled()
+      expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
+    })
+
+    it('skips a publication rescheduled away from today while waiting for the lock', async () => {
+      const mockPublication = createMockPublication()
+      publicationModel.findByPk.mockResolvedValue({
+        id: 'publication-123',
+        publishedAt: null,
+        scheduledAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      } as any)
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
+
+      await service.publishAdverts()
+
+      expect(mockPublication.update).not.toHaveBeenCalled()
+      expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
+    })
+
     it('skips a publication whose advert was withdrawn while waiting for the lock', async () => {
       const mockPublication = createMockPublication()
       mockPublication.advert.reload.mockImplementation(async () => {
@@ -252,6 +300,7 @@ describe('PublishingTaskService - Event Emission', () => {
       publicationModel.findByPk.mockResolvedValue({
         id: 'publication-123',
         publishedAt: new Date(),
+        scheduledAt: new Date(),
       } as any)
       publicationModel.findAll.mockResolvedValue([
         mockPublication,
@@ -278,6 +327,7 @@ describe('PublishingTaskService - Event Emission', () => {
       publicationModel.findByPk.mockImplementation((async (id: string) => ({
         id,
         publishedAt: null,
+        scheduledAt: new Date(),
       })) as any)
 
       await service.publishAdverts()
