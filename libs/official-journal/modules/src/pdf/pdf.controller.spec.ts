@@ -35,23 +35,19 @@ describe('PdfController route guards', () => {
 })
 
 describe('PdfController caller identity', () => {
-  it('passes the token subject and delegation actor to the service', async () => {
+  it('passes only the token subject to the service', async () => {
     const getPdfByApplicationId = jest
       .fn()
       .mockResolvedValue({ unwrap: () => Buffer.from('x') })
     const controller = new PdfController({ getPdfByApplicationId } as never)
 
-    await controller.getPdfByApplicationId(
-      'id',
-      { showDate: false },
-      {
-        user: { nationalId: '0101010000', actor: { nationalId: '0202020000' } },
-      },
-    )
+    await controller.getPdfByApplicationId('id', { showDate: false }, {
+      user: { nationalId: '0101010000', actor: { nationalId: '0202020000' } },
+    } as never)
 
     expect(getPdfByApplicationId).toHaveBeenCalledWith(
       'id',
-      { nationalId: '0101010000', actorNationalId: '0202020000' },
+      { nationalId: '0101010000' },
       false,
     )
   })

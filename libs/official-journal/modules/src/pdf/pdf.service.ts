@@ -44,28 +44,23 @@ export const PDFJS_DOCUMENT_OPTIONS = { isEvalSupported: false } as const
 const digits = (value?: string) => (value ?? '').replace(/\D/g, '')
 
 /**
- * The caller must be the applicant (set by island.is from the token subject),
- * an assignee, or an applicant actor. A delegation token's actor is checked
- * the same way as the subject.
+ * Only the token subject counts, and it must be the applicant or an assignee.
+ * island.is sets `applicant` from the token subject, and a delegate's token
+ * carries the represented party as its subject, so a current delegate passes
+ * on the subject alone. The actor and `applicantActors` are deliberately not
+ * matched: they record who once acted for the applicant, and would keep a
+ * delegate's access after the delegation ends.
  */
 export const isApplicationParty = (
-  application: Pick<Application, 'applicant' | 'assignees' | 'applicantActors'>,
+  application: Pick<Application, 'applicant' | 'assignees'>,
   caller: PdfCaller,
 ): boolean => {
-  const callerIds = [caller.nationalId, caller.actorNationalId]
-    .map(digits)
-    .filter(Boolean)
-  if (callerIds.length === 0) return false
+  const callerId = digits(caller.nationalId)
+  if (!callerId) return false
 
-  const partyIds = [
-    application.applicant,
-    ...(application.assignees ?? []),
-    ...(application.applicantActors ?? []),
-  ]
+  return [application.applicant, ...(application.assignees ?? [])]
     .map(digits)
-    .filter(Boolean)
-
-  return callerIds.some((id) => partyIds.includes(id))
+    .includes(callerId)
 }
 
 @Injectable()

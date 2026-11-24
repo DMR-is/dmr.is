@@ -8,8 +8,8 @@ export interface IssuePdfAdvertInput {
 }
 
 export interface PdfCaller {
+  /** The token subject: the applicant, or the party a delegate acts for. */
   nationalId?: string
-  actorNationalId?: string
 }
 
 export interface IPdfService {

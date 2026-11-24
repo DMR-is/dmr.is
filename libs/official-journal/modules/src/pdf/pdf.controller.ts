@@ -16,7 +16,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { IPdfService } from './pdf.service.interface'
 
 interface PdfRequest {
-  user?: { nationalId?: string; actor?: { nationalId?: string } }
+  user?: { nationalId?: string }
 }
 
 /**
@@ -25,9 +25,8 @@ interface PdfRequest {
  * Called by island.is on behalf of an applicant
  * (`ojoiApplicationClient.getPdf`). The caller is not a staff user, so this
  * route takes token verification only, not `RoleGuard`. The service then
- * allows only the application's applicant, assignees or applicant actors,
- * matched against the token subject and delegation actor, and answers 404
- * otherwise.
+ * serves the PDF only when the token subject is the application's applicant
+ * or an assignee, and answers 404 otherwise.
  *
  * The staff-only `GET pdf/case/:id` and the two `.../url` companions were
  * deleted rather than kept: nothing called them.
@@ -52,10 +51,7 @@ export class PdfController {
     const pdf = (
       await this.pdfService.getPdfByApplicationId(
         id,
-        {
-          nationalId: req.user?.nationalId,
-          actorNationalId: req.user?.actor?.nationalId,
-        },
+        { nationalId: req.user?.nationalId },
         params.showDate,
       )
     ).unwrap()
