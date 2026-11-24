@@ -5,7 +5,6 @@ const { readFile } = require('fs/promises')
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface) {
-    // eslint-disable-next-line no-console
     const feeCodesSeed = await readFile('./seeders/sql/fee_codes.sql', 'utf8')
 
     const seed = `
