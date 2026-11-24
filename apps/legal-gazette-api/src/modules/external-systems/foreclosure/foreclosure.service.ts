@@ -143,8 +143,8 @@ export class ForeclosureService implements IForeclosureService {
     const newProperty = await this.sequelize.transaction(
       async (transaction) => {
         // Lock first: a concurrent change on this sale waits here, so its
-        // count sees this write, and the publish listener's charge cannot
-        // interleave with the recount.
+        // count sees this write, and a publish in flight (which holds the
+        // same row lock from its status update) finishes charging first.
         const advert = await this.lockAdvert(foreclosure.advertId, transaction)
 
         // Escape HTML in all text fields to prevent XSS
@@ -203,9 +203,10 @@ export class ForeclosureService implements IForeclosureService {
 
   /**
    * Row-locks the advert (`SELECT ... FOR UPDATE`) for the rest of the
-   * transaction. Property changes on one sale and the publish listener's
-   * charge all take this lock before they read the quantity, so they run one
-   * at a time and the frozen check below is read after any charge committed.
+   * transaction. Property changes on one sale take it before they read the
+   * quantity, so they run one at a time. A publish holds the same row lock
+   * from its status update until its charge commits, so the frozen check
+   * below is always read after any charge.
    */
   private async lockAdvert(
     advertId: string,
