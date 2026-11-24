@@ -147,6 +147,10 @@ export class ForeclosureService implements IForeclosureService {
         // same row lock from its status update) finishes charging first.
         const advert = await this.lockAdvert(foreclosure.advertId, transaction)
 
+        // The check above was read before the lock; a publish may have
+        // finished since, so check again on the locked row.
+        if (advert) assertAdvertEditable(advert, 'foreclosure property')
+
         // Escape HTML in all text fields to prevent XSS
         const property = await this.foreclosurePropertyModel.create(
           {
@@ -194,6 +198,9 @@ export class ForeclosureService implements IForeclosureService {
     await this.sequelize.transaction(async (transaction) => {
       const advert = await this.lockAdvert(foreclosure.advertId, transaction)
 
+      // Re-check on the locked row; the check above ran before the lock.
+      if (advert) assertAdvertEditable(advert, 'foreclosure property')
+
       // force true (no soft delete)
       await property.destroy({ force: true, transaction })
 
@@ -215,6 +222,7 @@ export class ForeclosureService implements IForeclosureService {
     return this.advertModel.unscoped().findByPk(advertId, {
       attributes: [
         'id',
+        'statusId',
         'typeId',
         'templateType',
         'content',
