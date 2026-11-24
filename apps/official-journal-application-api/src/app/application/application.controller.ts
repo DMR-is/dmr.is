@@ -33,10 +33,13 @@ import {
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  ApplicationOwnershipGuard,
   IApplicationService,
   InvolvedPartyGuard,
+  involvedPartyIdsOf,
   ISignatureService,
   IUserService,
+  OwnInvolvedPartyGuard,
 } from '@dmr.is/ojoi-modules'
 import {
   EnumValidationPipe,
@@ -110,6 +113,7 @@ export class ApplicationController {
   }
 
   @Get(':id/price')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'getPrice' })
   @ApiResponse({ type: CasePriceResponse })
   async getPrice(
@@ -121,6 +125,7 @@ export class ApplicationController {
   }
 
   @Get(':id')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'getApplication' })
   @ApiResponse({ type: GetApplicationResponse })
   async getApplication(
@@ -132,13 +137,18 @@ export class ApplicationController {
   }
 
   @Post(':id/post')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'postApplication' })
   @ApiResponse({ status: 200 })
   async postApplication(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
+    @CurrentUser() user: UserDto,
   ) {
     return ResultWrapper.unwrap(
-      await this.applicationService.postApplication(applicationId),
+      await this.applicationService.postApplication(applicationId, {
+        nationalId: user.nationalId,
+        involvedPartyIds: involvedPartyIdsOf(user.involvedParties),
+      }),
     )
   }
 
@@ -173,6 +183,7 @@ export class ApplicationController {
   }
 
   @Post(':id/upload')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'uploadApplicationAttachment' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -223,6 +234,7 @@ export class ApplicationController {
   }
 
   @Post(':id/presigned-url/:type')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'getPresignedUrl' })
   @ApiParam({ name: 'type', enum: AttachmentTypeParam })
   @ApiResponse({ type: PresignedUrlResponse })
@@ -243,6 +255,7 @@ export class ApplicationController {
   }
 
   @Post(':id/attachments/:type')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'addApplicationAttachment' })
   @ApiParam({ name: 'type', enum: AttachmentTypeParam })
   @ApiNoContentResponse()
@@ -262,6 +275,7 @@ export class ApplicationController {
   }
 
   @Get(':id/attachments/:type')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'getApplicationAttachments' })
   @ApiParam({ name: 'type', enum: AttachmentTypeParam })
   @ApiResponse({ type: GetApplicationAttachmentsResponse })
@@ -279,6 +293,7 @@ export class ApplicationController {
   }
 
   @Delete(':id/attachments/delete')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'deleteApplicationAttachment' })
   @ApiNoContentResponse()
   async deleteApplicationAttachment(
@@ -348,6 +363,7 @@ export class ApplicationController {
   }
 
   @Get('involved-party/:involvedPartyId')
+  @UseGuards(OwnInvolvedPartyGuard)
   @ApiOperation({ operationId: 'getSignaturesForInvolvedParty' })
   @ApiResponse({ status: 200, type: GetSignature })
   @ApiResponse({ status: 404 })

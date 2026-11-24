@@ -20,6 +20,7 @@ import { ApplicationService } from './application.service'
 
 const APPLICATION_ID = '6f1c1a3e-2b4d-4c5e-9f60-7a8b9c0d1e2f'
 const CASE_ID = 'case-1'
+const CALLER = { nationalId: '0101010000', involvedPartyIds: ['party-1'] }
 
 const islandIsResponse = (status: number, body: unknown = {}) => ({
   ok: status >= 200 && status < 300,
@@ -122,18 +123,19 @@ describe('ApplicationService.postApplication', () => {
       ResultWrapper.err({ code: 404, message: 'Case not found' }),
     )
 
-    await service.postApplication(APPLICATION_ID)
+    await service.postApplication(APPLICATION_ID, CALLER)
 
-    expect(caseService.createCaseByApplication).toHaveBeenCalledWith({
-      applicationId: APPLICATION_ID,
-    })
+    expect(caseService.createCaseByApplication).toHaveBeenCalledWith(
+      { applicationId: APPLICATION_ID },
+      CALLER,
+    )
     expect(caseService.updateCase).not.toHaveBeenCalled()
   })
 
   it('updates the existing case and commits on a re-post', async () => {
     const { service, ownTransaction, caseService } = await setup()
 
-    const result = await service.postApplication(APPLICATION_ID)
+    const result = await service.postApplication(APPLICATION_ID, CALLER)
 
     expect(result.result.ok).toBe(true)
     expect(caseService.updateCase).toHaveBeenCalled()
@@ -146,7 +148,7 @@ describe('ApplicationService.postApplication', () => {
     const { service, ownTransaction, caseService, authService } = await setup()
     authService.xroadFetch.mockResolvedValue(islandIsResponse(404))
 
-    const result = await service.postApplication(APPLICATION_ID)
+    const result = await service.postApplication(APPLICATION_ID, CALLER)
 
     expect(result.result.ok).toBe(false)
     expect(caseService.createCaseByApplication).not.toHaveBeenCalled()
@@ -160,7 +162,7 @@ describe('ApplicationService.postApplication', () => {
       ResultWrapper.err({ code: 400, message: 'Bad update' }),
     )
 
-    const result = await service.postApplication(APPLICATION_ID)
+    const result = await service.postApplication(APPLICATION_ID, CALLER)
 
     expect(result.result.ok).toBe(false)
     expect(caseService.createCaseByApplication).not.toHaveBeenCalled()

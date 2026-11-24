@@ -51,6 +51,8 @@ import {
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { ApplicationCaller } from '../application/lib/application-party'
+
 export interface ICaseService {
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>
   getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>>
@@ -66,6 +68,7 @@ export interface ICaseService {
   ): Promise<ResultWrapper<GetCasesWithDepartmentCount>>
   createCaseByApplication(
     body: PostApplicationBody,
+    caller: ApplicationCaller,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 

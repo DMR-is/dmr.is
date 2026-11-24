@@ -31,6 +31,10 @@ import { getFastTrack } from '@dmr.is/utils-server/serverUtils'
 
 import { AdditionalPartiesService } from '../../../additional-parties'
 import { IApplicationService } from '../../../application/application.service.interface'
+import {
+  ApplicationCaller,
+  isApplicant,
+} from '../../../application/lib/application-party'
 import { IAttachmentService } from '../../../attachments/attachment.service.interface'
 import { ICommentServiceV2 } from '../../../comment/v2'
 import { IPriceService } from '../../../price/price.service.interface'
@@ -704,13 +708,64 @@ export class CaseCreateService implements ICaseCreateService {
     return ResultWrapper.ok({ id: caseId })
   }
 
+  /**
+   * A case is filed for the involved party named in the application's
+   * answers. That party must be the applicant's own, or one of the involved
+   * parties the submitting user belongs to or acts for.
+   */
+  private async checkSubmitterMayFileFor(
+    application: Application,
+    caller: ApplicationCaller,
+  ): Promise<ResultWrapper> {
+    const involvedPartyId = application.answers?.advert?.involvedPartyId
+
+    const forbidden = ResultWrapper.err({
+      code: 403,
+      message: 'Þú hefur ekki heimild til að senda inn fyrir þessa stofnun',
+    })
+
+    if (!involvedPartyId) {
+      return ResultWrapper.err({
+        code: 400,
+        message: 'Stofnun vantar í umsókn',
+      })
+    }
+
+    if (caller.involvedPartyIds?.includes(involvedPartyId)) {
+      return ResultWrapper.ok()
+    }
+
+    const institution =
+      await this.utilityService.institutionLookup(involvedPartyId)
+    if (!institution.result.ok) {
+      return forbidden
+    }
+
+    if (isApplicant(application, institution.result.value.nationalId)) {
+      return ResultWrapper.ok()
+    }
+
+    this.logger.warn('Submitter may not file for the involved party', {
+      applicationId: application.id,
+      involvedPartyId,
+      category: LOGGING_CATEGORY,
+    })
+    return forbidden
+  }
+
   @LogAndHandle()
   async createCaseByApplication(
     body: PostApplicationBody,
+    caller: ApplicationCaller,
   ): Promise<ResultWrapper<{ id: string }>> {
     const { application } = (
       await this.applicationService.getApplication(body.applicationId)
     ).unwrap()
+
+    const partyCheck = await this.checkSubmitterMayFileFor(application, caller)
+    if (!partyCheck.result.ok) {
+      return ResultWrapper.err(partyCheck.result.error)
+    }
 
     const valuesResult = await this.getCreateCaseBody(application)
 

@@ -69,6 +69,7 @@ import {
 import { IPriceService } from '../price/price.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
+import { ApplicationCaller } from './lib/application-party'
 import { applicationAdvertMigrate } from './migrations/application-advert.migrate'
 import { IApplicationService } from './application.service.interface'
 import { applicationCaseMigrate } from './migrations'
@@ -343,6 +344,7 @@ export class ApplicationService implements IApplicationService {
   @Transactional()
   async postApplication(
     applicationId: string,
+    caller: ApplicationCaller,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseResult = await this.utilityService.caseLookupByApplicationId(
@@ -354,9 +356,10 @@ export class ApplicationService implements IApplicationService {
     // throws, so the transaction rolls back instead of committing half a
     // re-post, and a 404 from a later step cannot create a duplicate case.
     if (!caseResult.result.ok && caseResult.result.error.code === 404) {
-      return await this.caseService.createCaseByApplication({
-        applicationId,
-      })
+      return await this.caseService.createCaseByApplication(
+        { applicationId },
+        caller,
+      )
     }
 
     const caseLookup = caseResult.unwrap()

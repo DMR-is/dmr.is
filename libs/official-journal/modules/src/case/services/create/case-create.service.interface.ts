@@ -11,9 +11,12 @@ import {
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { ApplicationCaller } from '../../../application/lib/application-party'
+
 export interface ICaseCreateService {
   createCaseByApplication(
     body: PostApplicationBody,
+    caller: ApplicationCaller,
     transaction?: Transaction,
   ): Promise<ResultWrapper<{ id: string }>>
   createCaseByAdvert(

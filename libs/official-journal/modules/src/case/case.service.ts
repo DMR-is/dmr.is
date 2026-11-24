@@ -79,6 +79,7 @@ import {
 
 import { AdditionalPartiesService } from '../additional-parties'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
+import { ApplicationCaller } from '../application/lib/application-party'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import {
   ApplicationAttachmentModel,
@@ -1728,9 +1729,10 @@ export class CaseService implements ICaseService {
   @LogAndHandle()
   async createCaseByApplication(
     body: PostApplicationBody,
+    caller: ApplicationCaller,
   ): Promise<ResultWrapper> {
     const { id } = ResultWrapper.unwrap(
-      await this.createService.createCaseByApplication(body),
+      await this.createService.createCaseByApplication(body, caller),
     )
 
     await this.createCaseHistory(id)

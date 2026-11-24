@@ -21,6 +21,8 @@ import {
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { ApplicationCaller } from './lib/application-party'
+
 import 'multer'
 
 export interface IApplicationService {
@@ -42,7 +44,7 @@ export interface IApplicationService {
    */
   reopenApplication(id: string): Promise<ResultWrapper>
 
-  postApplication(id: string): Promise<ResultWrapper>
+  postApplication(id: string, caller: ApplicationCaller): Promise<ResultWrapper>
 
   getComments(applicationId: string): Promise<ResultWrapper<GetComments>>
 

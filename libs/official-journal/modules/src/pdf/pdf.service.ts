@@ -12,7 +12,6 @@ import {
 import { LogAndHandle } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
-import type { Application } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { simpleSanitize } from '@dmr.is/utils-server/cleanLegacyHtml'
 import {
@@ -22,6 +21,7 @@ import {
   retryAsync,
 } from '@dmr.is/utils-server/serverUtils'
 
+import { isApplicationParty } from '../application/lib/application-party'
 import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { pdfCss } from './pdf.css'
@@ -40,28 +40,6 @@ const LOGGING_CATEGORY = 'pdf-service'
  * Exported so `pdfjs-legacy-build.spec.ts` loads pdfjs with the same options.
  */
 export const PDFJS_DOCUMENT_OPTIONS = { isEvalSupported: false } as const
-
-const digits = (value?: string) => (value ?? '').replace(/\D/g, '')
-
-/**
- * Only the token subject counts, and it must be the applicant or an assignee.
- * island.is sets `applicant` from the token subject, and a delegate's token
- * carries the represented party as its subject, so a current delegate passes
- * on the subject alone. The actor and `applicantActors` are deliberately not
- * matched: they record who once acted for the applicant, and would keep a
- * delegate's access after the delegation ends.
- */
-export const isApplicationParty = (
-  application: Pick<Application, 'applicant' | 'assignees'>,
-  caller: PdfCaller,
-): boolean => {
-  const callerId = digits(caller.nationalId)
-  if (!callerId) return false
-
-  return [application.applicant, ...(application.assignees ?? [])]
-    .map(digits)
-    .includes(callerId)
-}
 
 @Injectable()
 export class PdfService implements OnModuleDestroy, IPdfService {

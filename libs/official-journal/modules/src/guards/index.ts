@@ -1,2 +1,4 @@
 export * from './involved-party.guard'
 export * from './search-admin.guard'
+export * from './application-ownership.guard'
+export * from './own-involved-party.guard'
