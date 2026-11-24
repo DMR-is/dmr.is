@@ -10,9 +10,9 @@ import {
 } from '@dmr.is/legal-gazette-schemas'
 
 import type { AdvertModel } from '../../models/advert.model'
-import { AdvertVersionEnum } from '../../models/advert-publication.model'
 import { PENDING_PUBLICATION_NUMBER } from '../constants'
 import { AdvertTemplateType } from '../enums/advert-template-type.enum'
+import { AdvertVersionEnum } from '../enums/advert-version.enum'
 
 type HTMLVersion = 'A' | 'B' | 'C'
 
@@ -24,15 +24,8 @@ const resolvePendingPublicationNumber = (
     ? content.replaceAll(PENDING_PUBLICATION_NUMBER, publicationNumber)
     : content
 
-// Resolved per call, never at module evaluation. `AdvertVersionEnum` comes from
-// `advert-publication.model`, which imports `advert.model` back, and
-// `advert.model` imports this file at module scope - so a module-level read
-// fires inside that cycle and yields `undefined` whenever the graph is entered
-// through `advert-publication.model`. See `models/models.md`.
-const defaultVersion = () => AdvertVersionEnum.A
-
 const mapVersion = (
-  version: AdvertVersionEnum | undefined = defaultVersion(),
+  version: AdvertVersionEnum | undefined = AdvertVersionEnum.A,
 ): HTMLVersion => version as HTMLVersion
 
 // Mirrored in libs/legal-gazette/html/src/lib/preview/application.ts - keep in sync.
@@ -101,10 +94,10 @@ const getPublicationData = (
     publishedAt?: Date | string | null
     scheduledAt: Date | string
   }>,
-  version: AdvertVersionEnum | undefined = defaultVersion(),
+  version: AdvertVersionEnum | undefined = AdvertVersionEnum.A,
   errorMessage: string,
 ) => {
-  const resolvedVersion = version ?? defaultVersion()
+  const resolvedVersion = version ?? AdvertVersionEnum.A
   const publication = publications.find(
     (pub) => pub.versionLetter === resolvedVersion,
   )
@@ -166,7 +159,7 @@ const buildBaseProps = ({
 
 export function getAdvertHtmlMarkup(
   model: AdvertModel,
-  version: AdvertVersionEnum | undefined = defaultVersion(),
+  version: AdvertVersionEnum | undefined = AdvertVersionEnum.A,
 ): string {
   const publication = getPublicationData(
     model.publications,
