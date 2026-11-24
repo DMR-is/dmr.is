@@ -3,6 +3,7 @@ import type { JWT } from 'next-auth/jwt'
 import { getToken } from 'next-auth/jwt'
 
 import { endSessionHandler } from './logoutHandler'
+import { appAuthCookies } from './sessionCookies'
 
 jest.mock('next-auth/jwt', () => ({
   getToken: jest.fn(),
@@ -10,10 +11,16 @@ jest.mock('next-auth/jwt', () => ({
 
 const LOGOUT_URL = 'http://localhost:3000/api/auth/logout'
 
-const post = (cookies: Record<string, string> = {}, url = LOGOUT_URL) =>
+// A same-origin request unless `headers` says otherwise
+const post = (
+  cookies: Record<string, string> = {},
+  url = LOGOUT_URL,
+  headers: Record<string, string> = { 'sec-fetch-site': 'same-origin' },
+) =>
   new NextRequest(url, {
     method: 'POST',
     headers: {
+      ...headers,
       cookie: Object.entries(cookies)
         .map(([k, v]) => `${k}=${v}`)
         .join('; '),
@@ -38,6 +45,7 @@ describe('endSessionHandler', () => {
   const original = {
     domain: env.IDENTITY_SERVER_DOMAIN,
     nodeEnv: env.NODE_ENV,
+    nextAuthUrl: env.NEXTAUTH_URL,
     secure: env.NEXTAUTH_COOKIE_SECURE,
   }
 
@@ -45,6 +53,7 @@ describe('endSessionHandler', () => {
     env.IDENTITY_SERVER_DOMAIN = 'ids.example.is'
     env.NODE_ENV = 'development'
     delete env.NEXTAUTH_COOKIE_SECURE
+    delete env.NEXTAUTH_URL
   })
 
   afterEach(() => {
@@ -55,6 +64,7 @@ describe('endSessionHandler', () => {
     for (const [key, value] of [
       ['IDENTITY_SERVER_DOMAIN', original.domain],
       ['NODE_ENV', original.nodeEnv],
+      ['NEXTAUTH_URL', original.nextAuthUrl],
       ['NEXTAUTH_COOKIE_SECURE', original.secure],
     ] as const) {
       if (value === undefined) delete env[key]
@@ -98,7 +108,7 @@ describe('endSessionHandler', () => {
 
     expect(url.searchParams.has('id_token_hint')).toBe(false)
     expect(url.searchParams.get('post_logout_redirect_uri')).toBe(
-      'https://web.example.is',
+      'https://web.example.is/',
     )
   })
 
@@ -167,13 +177,20 @@ describe('endSessionHandler', () => {
       )
       const cookies = setCookies(response)
 
-      for (const name of [
-        'lg-web.session-token',
+      const names = [
         'lg-web.session-token.0',
         'lg-web.session-token.1',
-        'lg-web.csrf-token',
-        'lg-web.callback-url',
-      ]) {
+        ...Object.values(appAuthCookies('lg-web')).map((c) => c.name),
+      ]
+      expect(names).toEqual(
+        expect.arrayContaining([
+          'lg-web.pkce.code_verifier',
+          'lg-web.state',
+          'lg-web.nonce',
+        ]),
+      )
+
+      for (const name of names) {
         expect(cookies[name]).toBeDefined()
         expect(cookies[name].pair).toBe(`${name}=`)
         expect(cookies[name].attrs).toEqual(
@@ -203,12 +220,20 @@ describe('endSessionHandler', () => {
       )
       const cookies = setCookies(response)
 
-      for (const name of [
-        '__Secure-lg-web.session-token',
+      const names = [
         '__Secure-lg-web.session-token.0',
-        '__Secure-lg-web.callback-url',
-        '__Host-lg-web.csrf-token',
-      ]) {
+        ...Object.values(appAuthCookies('lg-web')).map((c) => c.name),
+      ]
+      expect(names).toEqual(
+        expect.arrayContaining([
+          '__Host-lg-web.csrf-token',
+          '__Secure-lg-web.pkce.code_verifier',
+          '__Secure-lg-web.state',
+          '__Secure-lg-web.nonce',
+        ]),
+      )
+
+      for (const name of names) {
         expect(cookies[name]).toBeDefined()
         expect(cookies[name].attrs).toEqual(
           expect.arrayContaining(['secure', 'path=/', 'max-age=0']),
@@ -234,6 +259,20 @@ describe('endSessionHandler', () => {
         ]),
       )
     })
+
+    it('clears both the plain and the secure variants of the default names', async () => {
+      mockedGetToken.mockResolvedValue(null)
+
+      const response = await endSessionHandler(post(), 'https://web.example.is')
+      const cookies = setCookies(response)
+
+      expect(cookies['next-auth.session-token'].attrs).not.toContain('secure')
+      expect(cookies['__Secure-next-auth.session-token'].attrs).toEqual(
+        expect.arrayContaining(['secure', 'max-age=0']),
+      )
+      expect(cookies['__Host-next-auth.csrf-token'].attrs).toContain('secure')
+      expect(cookies['__Secure-next-auth.state']).toBeDefined()
+    })
   })
 
   describe('without a session', () => {
@@ -254,22 +293,111 @@ describe('endSessionHandler', () => {
     })
   })
 
-  describe('method', () => {
-    it.each(['GET', 'PUT', 'DELETE'])(
-      'rejects %s without touching cookies',
-      async (method) => {
-        mockedGetToken.mockResolvedValue({ idToken: 't' } as JWT)
+  describe('post-logout URI', () => {
+    it.each([undefined, '', '/'])(
+      'falls back to the origin root for %p and still clears cookies',
+      async (uri) => {
+        mockedGetToken.mockResolvedValue(null)
 
-        const response = await endSessionHandler(
-          new NextRequest(LOGOUT_URL, { method }),
-          'https://web.example.is',
-        )
+        const response = await endSessionHandler(post(), uri, 'lg-web')
 
-        expect(response.status).toBe(405)
-        expect(response.headers.get('allow')).toBe('POST')
-        expect(response.headers.getSetCookie()).toEqual([])
-        expect(mockedGetToken).not.toHaveBeenCalled()
+        expect(response.status).toBe(303)
+        expect(response.headers.get('location')).toBe('http://localhost:3000/')
+        expect(setCookies(response)['lg-web.session-token']).toBeDefined()
       },
     )
+
+    it('resolves a relative URI against the origin', async () => {
+      mockedGetToken.mockResolvedValue(null)
+
+      const response = await endSessionHandler(post(), '/innskraning', 'lg-web')
+
+      expect(response.headers.get('location')).toBe(
+        'http://localhost:3000/innskraning',
+      )
+    })
+
+    it('resolves against the NEXTAUTH_URL origin when it is set', async () => {
+      env.NEXTAUTH_URL = 'https://public.example.is/api/auth'
+      mockedGetToken.mockResolvedValue(null)
+
+      const response = await endSessionHandler(post(), '/innskraning')
+
+      expect(response.headers.get('location')).toBe(
+        'https://public.example.is/innskraning',
+      )
+    })
+  })
+
+  describe('origin check', () => {
+    const refusals = async (request: NextRequest) => {
+      mockedGetToken.mockResolvedValue({ idToken: 't' } as JWT)
+      const response = await endSessionHandler(
+        request,
+        'https://web.example.is',
+        'lg-web',
+      )
+
+      expect(response.status).toBe(403)
+      expect(response.headers.getSetCookie()).toEqual([])
+      expect(response.headers.get('location')).toBeNull()
+      expect(await response.text()).toBe('')
+      expect(mockedGetToken).not.toHaveBeenCalled()
+    }
+
+    it('allows Sec-Fetch-Site: same-origin', async () => {
+      mockedGetToken.mockResolvedValue(null)
+      const response = await endSessionHandler(
+        post({}, LOGOUT_URL, { 'sec-fetch-site': 'same-origin' }),
+        'https://web.example.is',
+      )
+
+      expect(response.status).toBe(303)
+    })
+
+    it.each(['cross-site', 'same-site', 'none'])(
+      'refuses Sec-Fetch-Site: %s, even with a matching Origin',
+      (site) =>
+        refusals(
+          post({ 'lg-web.session-token': 'a' }, LOGOUT_URL, {
+            'sec-fetch-site': site,
+            origin: 'http://localhost:3000',
+          }),
+        ),
+    )
+
+    it('allows a matching Origin when Sec-Fetch-Site is absent', async () => {
+      mockedGetToken.mockResolvedValue(null)
+      const response = await endSessionHandler(
+        post({}, LOGOUT_URL, { origin: 'http://localhost:3000' }),
+        'https://web.example.is',
+      )
+
+      expect(response.status).toBe(303)
+    })
+
+    it('allows the NEXTAUTH_URL origin when the request host is internal', async () => {
+      env.NEXTAUTH_URL = 'https://public.example.is/api/auth'
+      mockedGetToken.mockResolvedValue(null)
+      const response = await endSessionHandler(
+        post({}, LOGOUT_URL, { origin: 'https://public.example.is' }),
+        'https://web.example.is',
+      )
+
+      expect(response.status).toBe(303)
+    })
+
+    it('refuses a mismatched Origin', () =>
+      refusals(
+        post({ 'lg-web.session-token': 'a' }, LOGOUT_URL, {
+          origin: 'https://evil.example.com',
+        }),
+      ))
+
+    it('refuses Origin: null', () =>
+      refusals(post({}, LOGOUT_URL, { origin: 'null' })))
+
+    it('refuses a request with neither header', () =>
+      refusals(post({ 'lg-web.session-token': 'a' }, LOGOUT_URL, {})))
   })
 })

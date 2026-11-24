@@ -1,18 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
-import { appAuthCookies, sessionCookieName } from './sessionCookies'
+import { expireAppAuthCookies, sessionCookieName } from './sessionCookies'
 
-const DEFAULT_COOKIE_PREFIX = 'next-auth'
+/**
+ * Origins this app is served from: the one Next sees, and the one the app is
+ * configured with. Behind a load balancer `request.nextUrl.origin` can be the
+ * internal host, so `NEXTAUTH_URL` (the public URL) is accepted as well.
+ */
+const trustedOrigins = (request: NextRequest) => {
+  const origins = new Set([request.nextUrl.origin])
+  try {
+    if (process.env.NEXTAUTH_URL) {
+      origins.add(new URL(process.env.NEXTAUTH_URL).origin)
+    }
+  } catch {
+    // an unparsable NEXTAUTH_URL contributes nothing
+  }
+  return origins
+}
+
+/**
+ * Same-origin requests only. `Sec-Fetch-Site`, when sent, decides; otherwise
+ * the `Origin` header must be one of this app's own origins. A request with
+ * neither header is refused.
+ */
+const isSameOrigin = (request: NextRequest) => {
+  const fetchSite = request.headers.get('sec-fetch-site')
+  if (fetchSite !== null) return fetchSite === 'same-origin'
+
+  const origin = request.headers.get('origin')
+  return origin !== null && trustedOrigins(request).has(origin)
+}
+
+/**
+ * The post-logout URI as an absolute URL: a relative or missing value is
+ * resolved against the app's own origin, so a redirect can always be built.
+ */
+const resolveRedirectUri = (request: NextRequest, uri?: string) => {
+  const base = process.env.NEXTAUTH_URL
+    ? new URL(process.env.NEXTAUTH_URL).origin
+    : request.nextUrl.origin
+  try {
+    return new URL(uri || '/', base).toString()
+  } catch {
+    return new URL('/', base).toString()
+  }
+}
 
 /**
  * Ends the NextAuth session and sends the browser to the identity server's
  * end-session endpoint, in one response.
  *
- * Meant to be the target of a top-level form POST. The id_token is read from
- * the HttpOnly session cookie and appears only in the `Location` header that
- * points at the identity server; it is never in a response body or in a URL
- * this app serves.
+ * Meant to be the target of a same-origin top-level form POST; any other
+ * origin gets a 403 before a cookie is read or touched. The id_token is read
+ * from the HttpOnly session cookie and appears only in the `Location` header
+ * that points at the identity server; it is never in a response body or in a
+ * URL this app serves.
  *
  * Every cookie of the app's NextAuth set is expired with the attributes it was
  * set with, including the chunks (`<session cookie>.0`, `.1`, …) of a large
@@ -24,22 +68,27 @@ const DEFAULT_COOKIE_PREFIX = 'next-auth'
  */
 export const endSessionHandler = async (
   request: NextRequest,
-  postLogoutRedirectUri: string,
+  postLogoutRedirectUri: string | undefined,
   cookiePrefix?: string,
 ) => {
-  if (request.method !== 'POST') {
-    return new Response(null, { status: 405, headers: { Allow: 'POST' } })
+  if (!isSameOrigin(request)) {
+    return new Response(null, {
+      status: 403,
+      headers: { 'Cache-Control': 'no-store' },
+    })
   }
 
-  const prefix = cookiePrefix || DEFAULT_COOKIE_PREFIX
-  const sessionName = sessionCookieName(cookiePrefix)
-  const token = await getToken({ req: request, cookieName: sessionName })
+  const token = await getToken({
+    req: request,
+    cookieName: sessionCookieName(cookiePrefix),
+  })
 
-  let location = postLogoutRedirectUri
+  const redirectUri = resolveRedirectUri(request, postLogoutRedirectUri)
+  let location = redirectUri
 
   if (token) {
     const params = new URLSearchParams({
-      post_logout_redirect_uri: postLogoutRedirectUri,
+      post_logout_redirect_uri: redirectUri,
     })
 
     if (token.idToken) {
@@ -52,26 +101,7 @@ export const endSessionHandler = async (
   // 303 so the browser follows with a GET whatever the method of this request.
   const response = NextResponse.redirect(location, 303)
   response.headers.set('Cache-Control', 'no-store')
-
-  // Expire with the attributes the cookie was set with (notably `Secure`): a
-  // bare delete of a `__Secure-` / `__Host-` cookie is rejected by browsers.
-  const expire = (name: string, options: object) =>
-    response.cookies.set(name, '', {
-      ...options,
-      maxAge: 0,
-      expires: new Date(0),
-    })
-
-  for (const { name, options } of Object.values(appAuthCookies(prefix))) {
-    if (name && options) expire(name, options)
-  }
-
-  const sessionOptions = appAuthCookies(prefix).sessionToken?.options ?? {}
-  for (const cookie of request.cookies.getAll()) {
-    if (cookie.name.startsWith(sessionName)) {
-      expire(cookie.name, sessionOptions)
-    }
-  }
+  expireAppAuthCookies(request, response, cookiePrefix)
 
   return response
 }

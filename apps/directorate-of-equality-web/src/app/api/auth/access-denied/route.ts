@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import {
-  expiredAuthCookieOptions,
-  isAppAuthCookie,
-} from '@dmr.is/auth/sessionCookies'
+import { expireAppAuthCookies } from '@dmr.is/auth/sessionCookies'
 
 import { AUTH_COOKIE_PREFIX } from '../../../../lib/auth/identityServerConfig'
 import {
@@ -31,16 +28,9 @@ function handler(request: NextRequest) {
     `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?${params.toString()}`,
   )
 
-  for (const cookie of request.cookies.getAll()) {
-    // This app's NextAuth cookies only. Matching every `next-auth.*` cookie
-    // here once signed the user out of any other app on the same host.
-    if (isAppAuthCookie(cookie.name, AUTH_COOKIE_PREFIX)) {
-      // Expired with `Secure`, not deleted: a bare delete of a `__Secure-` or
-      // `__Host-` cookie is rejected by the browser, so in production it
-      // cleared nothing.
-      response.cookies.set(cookie.name, '', expiredAuthCookieOptions())
-    }
-  }
+  // This app's NextAuth cookies only, expired rather than deleted so
+  // __Secure- / __Host- cookies are cleared too.
+  expireAppAuthCookies(request, response, AUTH_COOKIE_PREFIX)
 
   response.cookies.set(LOGOUT_HINT_COOKIE, '', {
     path: LOGOUT_HINT_COOKIE_PATH,
