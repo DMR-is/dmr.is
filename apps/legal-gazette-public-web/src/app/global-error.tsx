@@ -10,15 +10,17 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+const logger = getLogger('global-error')
+
 export default function GlobalError({
   error,
   reset,
 }: {
-  error: Error
+  error: Error & { digest?: string }
   reset: () => void
 }) {
   useEffect(() => {
-    getLogger('global-error').error('Unhandled error', { error })
+    logger.error('Unhandled error', { error, digest: error.digest })
   }, [error])
 
   return (
