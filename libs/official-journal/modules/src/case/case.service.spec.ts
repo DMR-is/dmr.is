@@ -527,15 +527,11 @@ describe('CaseService', () => {
         isAdmin: false,
       }
 
-      await caseService.createCaseByApplication(
-        { applicationId: 'app-1' },
-        caller,
-      )
+      const application = { id: 'app-1' } as never
 
-      expect(createCaseByApplication).toHaveBeenCalledWith(
-        { applicationId: 'app-1' },
-        caller,
-      )
+      await caseService.createCaseByApplication(application, caller)
+
+      expect(createCaseByApplication).toHaveBeenCalledWith(application, caller)
     })
   })
 })

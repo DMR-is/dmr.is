@@ -20,6 +20,7 @@ import {
   AddCaseAdditionalPartyBody,
   AddCaseAdvertCorrection,
   AdvertStatus,
+  Application,
   Case,
   CaseChannel,
   CaseCommunicationStatus,
@@ -45,7 +46,6 @@ import {
   GetPaymentResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
-  PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
   RegulationDraft,
@@ -1728,11 +1728,11 @@ export class CaseService implements ICaseService {
    */
   @LogAndHandle()
   async createCaseByApplication(
-    body: PostApplicationBody,
+    application: Application,
     caller: ApplicationCaller,
   ): Promise<ResultWrapper> {
     const { id } = ResultWrapper.unwrap(
-      await this.createService.createCaseByApplication(body, caller),
+      await this.createService.createCaseByApplication(application, caller),
     )
 
     await this.createCaseHistory(id)

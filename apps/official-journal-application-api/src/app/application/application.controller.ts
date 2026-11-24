@@ -36,6 +36,7 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ApplicationCaller,
   ApplicationOwnershipGuard,
+  CurrentApplication,
   IApplicationService,
   InvolvedPartyGuard,
   involvedPartyIdsOf,
@@ -52,6 +53,7 @@ import {
 import {
   AdvertTemplateDetails,
   AdvertTemplateTypeEnums,
+  Application,
   CasePriceResponse,
   GetAdvertTemplateResponse,
   GetApplicationAdvertsQuery,
@@ -128,10 +130,10 @@ export class ApplicationController {
   @ApiOperation({ operationId: 'getPrice' })
   @ApiResponse({ type: CasePriceResponse })
   async getPrice(
-    @Param('id', new UUIDValidationPipe()) applicationId: string,
+    @CurrentApplication() application: Application,
   ): Promise<CasePriceResponse> {
     return ResultWrapper.unwrap(
-      await this.applicationService.getPrice(applicationId),
+      await this.applicationService.getPrice(application),
     )
   }
 
@@ -139,12 +141,10 @@ export class ApplicationController {
   @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'getApplication' })
   @ApiResponse({ type: GetApplicationResponse })
-  async getApplication(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<GetApplicationResponse> {
-    return ResultWrapper.unwrap(
-      await this.applicationService.getApplication(id),
-    )
+  getApplication(
+    @CurrentApplication() application: Application,
+  ): GetApplicationResponse {
+    return { application }
   }
 
   @Post(':id/post')
@@ -152,12 +152,12 @@ export class ApplicationController {
   @ApiOperation({ operationId: 'postApplication' })
   @ApiResponse({ status: 200 })
   async postApplication(
-    @Param('id', new UUIDValidationPipe()) applicationId: string,
+    @CurrentApplication() application: Application,
     @CurrentUser() user: UserDto,
   ) {
     return ResultWrapper.unwrap(
       await this.applicationService.postApplication(
-        applicationId,
+        application,
         callerOf(user),
       ),
     )

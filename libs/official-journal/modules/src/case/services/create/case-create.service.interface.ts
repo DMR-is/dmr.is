@@ -2,11 +2,11 @@ import { Transaction } from 'sequelize'
 
 import {
   Advert,
+  Application,
   CaseChannel,
   CreateCaseChannelBody,
   CreateCaseDto,
   CreateCaseResponseDto,
-  PostApplicationBody,
   UserDto,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -15,7 +15,7 @@ import { ApplicationCaller } from '../../../auth/application-party'
 
 export interface ICaseCreateService {
   createCaseByApplication(
-    body: PostApplicationBody,
+    application: Application,
     caller: ApplicationCaller,
     transaction?: Transaction,
   ): Promise<ResultWrapper<{ id: string }>>

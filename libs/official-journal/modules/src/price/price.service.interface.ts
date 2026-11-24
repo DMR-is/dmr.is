@@ -1,6 +1,7 @@
 import { Transaction } from 'sequelize'
 
 import {
+  Application,
   CasePriceResponse,
   GetPaymentQuery,
   GetPaymentResponse,
@@ -14,6 +15,10 @@ import 'multer'
 export interface IPriceService {
   getFeeByApplication(
     applicationId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CasePriceResponse>>
+  getFeeForApplication(
+    application: Application,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CasePriceResponse>>
   updateCasePriceByCaseId(

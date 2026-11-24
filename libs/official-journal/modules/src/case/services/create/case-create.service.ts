@@ -25,7 +25,6 @@ import {
   CaseTagEnum,
   CreateCaseBody,
   CreateCaseChannelBody,
-  PostApplicationBody,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack } from '@dmr.is/utils-server/serverUtils'
@@ -781,13 +780,9 @@ export class CaseCreateService implements ICaseCreateService {
 
   @LogAndHandle()
   async createCaseByApplication(
-    body: PostApplicationBody,
+    application: Application,
     caller: ApplicationCaller,
   ): Promise<ResultWrapper<{ id: string }>> {
-    const { application } = (
-      await this.applicationService.getApplication(body.applicationId)
-    ).unwrap()
-
     const partyCheck = await this.checkSubmitterMayFileFor(application, caller)
     if (!partyCheck.result.ok) {
       return ResultWrapper.err(partyCheck.result.error)

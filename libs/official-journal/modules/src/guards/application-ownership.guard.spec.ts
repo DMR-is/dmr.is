@@ -1,4 +1,9 @@
-import { ExecutionContext, NotFoundException } from '@nestjs/common'
+import {
+  BadGatewayException,
+  BadRequestException,
+  ExecutionContext,
+  NotFoundException,
+} from '@nestjs/common'
 
 import { UserRoleEnum } from '@dmr.is/constants'
 import { ResultWrapper } from '@dmr.is/types'
@@ -74,28 +79,46 @@ describe('ApplicationOwnershipGuard', () => {
     ).rejects.toThrow(NotFoundException)
   })
 
-  it('answers a failed fetch with a 404', async () => {
+  it('answers an application that does not exist with a 404', async () => {
     getApplication.mockResolvedValue(
-      ResultWrapper.err({ code: 500, message: 'x' }),
+      ResultWrapper.err({ code: 404, message: 'x' }),
     )
     await expect(
       guard.canActivate(contextFor(request('0101010000'))),
     ).rejects.toThrow(NotFoundException)
   })
 
-  it('answers a fetch that throws with a 404', async () => {
+  it.each([500, 502, 503, 401])(
+    'answers an upstream %s as a 502, not as a missing application',
+    async (code) => {
+      getApplication.mockResolvedValue(
+        ResultWrapper.err({ code, message: 'x' }),
+      )
+      await expect(
+        guard.canActivate(contextFor(request('0101010000'))),
+      ).rejects.toThrow(BadGatewayException)
+      expect(logger.warn).toHaveBeenCalled()
+    },
+  )
+
+  it('lets a thrown fetch error surface instead of calling it a 404', async () => {
     getApplication.mockRejectedValue(new Error('boom'))
     await expect(
       guard.canActivate(contextFor(request('0101010000'))),
-    ).rejects.toThrow(NotFoundException)
+    ).rejects.toThrow('boom')
   })
 
-  it('refuses a request with no application id', async () => {
-    await expect(
-      guard.canActivate(contextFor({ params: {}, user: {} })),
-    ).rejects.toThrow(NotFoundException)
-    expect(getApplication).not.toHaveBeenCalled()
-  })
+  it.each([undefined, 'not-a-uuid', '../secret'])(
+    'answers id %p with a 400 before any fetch',
+    async (id) => {
+      await expect(
+        guard.canActivate(
+          contextFor({ params: { id }, user: { nationalId: '0101010000' } }),
+        ),
+      ).rejects.toThrow(BadRequestException)
+      expect(getApplication).not.toHaveBeenCalled()
+    },
+  )
 })
 
 describe('OwnInvolvedPartyGuard', () => {

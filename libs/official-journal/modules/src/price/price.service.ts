@@ -8,6 +8,7 @@ import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertFeeType,
+  Application,
   CaseFeeCalculationBody,
   CasePriceResponse,
   CaseTransaction,
@@ -99,6 +100,17 @@ export class PriceService implements IPriceService {
         category: LOGGING_CATEGORY,
       })
     }
+
+    return this.getFeeForApplication(application, transaction)
+  }
+
+  /** The fee for an application the caller has already fetched. */
+  @LogAndHandle()
+  @Transactional()
+  async getFeeForApplication(
+    application: Application,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CasePriceResponse>> {
     // try {
     const isFastTrack = application.answers?.advert.requestedDate
       ? getFastTrack(new Date(application.answers?.advert.requestedDate))
@@ -128,7 +140,7 @@ export class PriceService implements IPriceService {
     if (!price) {
       return ResultWrapper.err({
         code: 404,
-        message: `No price found for <${applicationId}>`,
+        message: `No price found for <${application.id}>`,
         category: LOGGING_CATEGORY,
       })
     }

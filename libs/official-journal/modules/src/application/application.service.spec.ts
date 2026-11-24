@@ -20,6 +20,10 @@ import { ApplicationService } from './application.service'
 
 const APPLICATION_ID = '6f1c1a3e-2b4d-4c5e-9f60-7a8b9c0d1e2f'
 const CASE_ID = 'case-1'
+const APPLICATION = {
+  id: APPLICATION_ID,
+  answers: { advert: { title: 'Titill' } },
+} as never
 const CALLER = { nationalId: '0101010000', involvedPartyIds: ['party-1'] }
 
 const islandIsResponse = (status: number, body: unknown = {}) => ({
@@ -123,10 +127,10 @@ describe('ApplicationService.postApplication', () => {
       ResultWrapper.err({ code: 404, message: 'Case not found' }),
     )
 
-    await service.postApplication(APPLICATION_ID, CALLER)
+    await service.postApplication(APPLICATION, CALLER)
 
     expect(caseService.createCaseByApplication).toHaveBeenCalledWith(
-      { applicationId: APPLICATION_ID },
+      APPLICATION,
       CALLER,
     )
     expect(caseService.updateCase).not.toHaveBeenCalled()
@@ -135,7 +139,7 @@ describe('ApplicationService.postApplication', () => {
   it('updates the existing case and commits on a re-post', async () => {
     const { service, ownTransaction, caseService } = await setup()
 
-    const result = await service.postApplication(APPLICATION_ID, CALLER)
+    const result = await service.postApplication(APPLICATION, CALLER)
 
     expect(result.result.ok).toBe(true)
     expect(caseService.updateCase).toHaveBeenCalled()
@@ -143,12 +147,21 @@ describe('ApplicationService.postApplication', () => {
     expect(ownTransaction.commit).toHaveBeenCalled()
   })
 
-  it('does not create a duplicate case when a later step returns a 404', async () => {
-    // island.is answering 404 used to be read as "no case yet".
-    const { service, ownTransaction, caseService, authService } = await setup()
-    authService.xroadFetch.mockResolvedValue(islandIsResponse(404))
+  it('uses the application it was given instead of reading it again', async () => {
+    const { service, authService } = await setup()
 
-    const result = await service.postApplication(APPLICATION_ID, CALLER)
+    await service.postApplication(APPLICATION, CALLER)
+
+    expect(authService.xroadFetch).not.toHaveBeenCalled()
+  })
+
+  it('does not create a duplicate case when a later step returns a 404', async () => {
+    const { service, ownTransaction, caseService } = await setup()
+    caseService.updateCase.mockResolvedValue(
+      ResultWrapper.err({ code: 404, message: 'Case not found' }),
+    )
+
+    const result = await service.postApplication(APPLICATION, CALLER)
 
     expect(result.result.ok).toBe(false)
     expect(caseService.createCaseByApplication).not.toHaveBeenCalled()
@@ -162,7 +175,7 @@ describe('ApplicationService.postApplication', () => {
       ResultWrapper.err({ code: 400, message: 'Bad update' }),
     )
 
-    const result = await service.postApplication(APPLICATION_ID, CALLER)
+    const result = await service.postApplication(APPLICATION, CALLER)
 
     expect(result.result.ok).toBe(false)
     expect(caseService.createCaseByApplication).not.toHaveBeenCalled()

@@ -41,6 +41,7 @@ describe('ApplicationController guards', () => {
 })
 
 describe('ApplicationController.postApplication', () => {
+  const application = { id: 'app-1' } as never
   const postApplication = jest.fn()
   const controller = new ApplicationController(
     { postApplication } as never,
@@ -55,14 +56,14 @@ describe('ApplicationController.postApplication', () => {
   })
 
   it('hands the service who is calling, not an empty caller', async () => {
-    await controller.postApplication('app-1', {
+    await controller.postApplication(application, {
       nationalId: '0101010000',
       actor: { nationalId: '0202020000' },
       role: { title: UserRoleEnum.Editor },
       involvedParties: [{ id: 'party-1' }],
     } as never)
 
-    expect(postApplication).toHaveBeenCalledWith('app-1', {
+    expect(postApplication).toHaveBeenCalledWith(application, {
       nationalId: '0101010000',
       actorNationalId: '0202020000',
       involvedPartyIds: ['party-1'],
@@ -71,15 +72,45 @@ describe('ApplicationController.postApplication', () => {
   })
 
   it('marks an editorial admin', async () => {
-    await controller.postApplication('app-1', {
+    await controller.postApplication(application, {
       nationalId: '0101010000',
       role: { title: UserRoleEnum.Admin },
       involvedParties: ['party-1'],
     } as never)
 
     expect(postApplication).toHaveBeenCalledWith(
-      'app-1',
+      application,
       expect.objectContaining({ isAdmin: true, involvedPartyIds: ['party-1'] }),
     )
+  })
+})
+
+describe('ApplicationController handlers use the application the guard fetched', () => {
+  const getFeeForApplication = jest.fn()
+  const getApplicationFromService = jest.fn()
+  const controller = new ApplicationController(
+    {
+      getApplication: getApplicationFromService,
+      getPrice: getFeeForApplication,
+    } as never,
+    {} as never,
+    {} as never,
+    {} as never,
+  )
+  const application = { id: 'app-1' } as never
+
+  beforeEach(() => jest.resetAllMocks())
+
+  it('returns it from GET :id without reading the application again', () => {
+    expect(controller.getApplication(application)).toEqual({ application })
+    expect(getApplicationFromService).not.toHaveBeenCalled()
+  })
+
+  it('prices the same application', async () => {
+    getFeeForApplication.mockResolvedValue(ResultWrapper.ok({ price: 1 }))
+
+    await controller.getPrice(application)
+
+    expect(getFeeForApplication).toHaveBeenCalledWith(application)
   })
 })

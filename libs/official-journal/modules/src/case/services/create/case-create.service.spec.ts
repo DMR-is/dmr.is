@@ -18,7 +18,6 @@ const applicationWith = (involvedPartyId?: string) => ({
 const applicant = { nationalId: '0101010000' }
 
 describe('CaseCreateService.createCaseByApplication involved party', () => {
-  const getApplication = jest.fn()
   const getInvolvedPartiesByNationalId = jest.fn()
   const institutionLookup = jest.fn()
   const logger = { warn: jest.fn(), error: jest.fn(), info: jest.fn() }
@@ -30,7 +29,7 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
   ) => CaseCreateService)(
     logger,
     { institutionLookup },
-    { getApplication },
+    {},
     { getInvolvedPartiesByNationalId },
   )
   let getCreateCaseBody: jest.SpyInstance
@@ -41,10 +40,10 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
     )
 
   const submit = (caller: ApplicationCaller, involvedPartyId?: string) => {
-    getApplication.mockResolvedValue(
-      ResultWrapper.ok({ application: applicationWith(involvedPartyId) }),
+    return service.createCaseByApplication(
+      applicationWith(involvedPartyId) as never,
+      caller,
     )
-    return service.createCaseByApplication({ applicationId: 'app-1' }, caller)
   }
 
   const expectRefusal = (

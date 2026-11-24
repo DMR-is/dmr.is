@@ -1,4 +1,8 @@
+import { isUUID } from 'class-validator'
+
 import {
+  BadGatewayException,
+  BadRequestException,
   CanActivate,
   ExecutionContext,
   Inject,
@@ -20,9 +24,10 @@ const LOGGING_CONTEXT = 'ApplicationOwnershipGuard'
  * Runs after the guards that authenticate the caller; the caller's national
  * id is the token subject, which those guards leave on `req.user.nationalId`.
  *
- * A caller who is not a party gets the same 404 as a missing application, so
- * the route does not confirm which ids exist. The fetched application is left
- * on `req.application`.
+ * A malformed id is a 400. A caller who is not a party gets the same 404 as a
+ * missing application, so the route does not confirm which ids exist. Any
+ * other failure to fetch the application is a 502. The fetched application is
+ * left on `req.application`; handlers read it with `CurrentApplication`.
  */
 @Injectable()
 export class ApplicationOwnershipGuard implements CanActivate {
@@ -36,31 +41,30 @@ export class ApplicationOwnershipGuard implements CanActivate {
     const req = context.switchToHttp().getRequest()
     const applicationId: string | undefined = req.params?.id
 
-    if (!applicationId) {
-      throw new NotFoundException('Application not found')
+    // Guards run before route pipes, so the id is validated here.
+    if (!applicationId || !isUUID(applicationId)) {
+      throw new BadRequestException(
+        `Parameter <${applicationId}> is not a valid UUID`,
+      )
     }
 
-    let lookup
-    try {
-      lookup = await this.applicationService.getApplication(applicationId)
-    } catch (error) {
-      this.logger.warn('Could not fetch application', {
-        applicationId,
-        error,
-        category: LOGGING_CATEGORY,
-        context: LOGGING_CONTEXT,
-      })
-      throw new NotFoundException('Application not found')
-    }
+    const lookup = await this.applicationService.getApplication(applicationId)
 
     if (!lookup.result.ok) {
+      const { code } = lookup.result.error
       this.logger.warn('Could not fetch application', {
         applicationId,
         error: lookup.result.error,
         category: LOGGING_CATEGORY,
         context: LOGGING_CONTEXT,
       })
-      throw new NotFoundException('Application not found')
+
+      // Only a miss is "not found"; any other failure is the application
+      // system being unavailable, not a statement about the caller.
+      if (code === 404) {
+        throw new NotFoundException('Application not found')
+      }
+      throw new BadGatewayException('Application system is unavailable')
     }
 
     const { application } = lookup.result.value
