@@ -101,7 +101,7 @@ describe('ApplicationOwnershipGuard', () => {
     },
   )
 
-  it.each([500, 502, 503, 401, 403, 408, 429])(
+  it.each([500, 502, 503, 401, 403, 405, 408, 409, 415, 429])(
     'answers an upstream %s as a 502, not as a missing application',
     async (code) => {
       getApplication.mockResolvedValue(

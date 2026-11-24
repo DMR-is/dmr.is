@@ -19,7 +19,7 @@ const applicant = { nationalId: '0101010000' }
 const APPLICANT_DIGITS = '0101010000'
 
 describe('CaseCreateService.createCaseByApplication involved party', () => {
-  const getAllInvolvedPartiesByNationalId = jest.fn()
+  const getInvolvedPartiesByNationalId = jest.fn()
   const institutionLookup = jest.fn()
   const logger = { warn: jest.fn(), error: jest.fn(), info: jest.fn() }
 
@@ -30,12 +30,12 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
   ) => CaseCreateService)(
     logger,
     { institutionLookup },
-    { getAllInvolvedPartiesByNationalId },
+    { getInvolvedPartiesByNationalId },
   )
   let getCreateCaseBody: jest.SpyInstance
 
   const offeredParties = (...ids: string[]) =>
-    getAllInvolvedPartiesByNationalId.mockResolvedValue(
+    getInvolvedPartiesByNationalId.mockResolvedValue(
       ResultWrapper.ok({ involvedParties: ids.map((id) => ({ id })) }),
     )
 
@@ -71,10 +71,10 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
     await submit({ ...applicant, involvedPartyIds: [PARTY_ID] }, PARTY_ID)
 
     expect(getCreateCaseBody).toHaveBeenCalled()
-    expect(getAllInvolvedPartiesByNationalId).not.toHaveBeenCalled()
+    expect(getInvolvedPartiesByNationalId).not.toHaveBeenCalled()
   })
 
-  it('allows an institution registered under the applicant national id', async () => {
+  it('allows an institution the party picker offered the acting applicant', async () => {
     offeredParties(PARTY_ID)
 
     await submit(
@@ -83,12 +83,13 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
     )
 
     expect(getCreateCaseBody).toHaveBeenCalled()
-    expect(getAllInvolvedPartiesByNationalId).toHaveBeenCalledWith(
+    expect(getInvolvedPartiesByNationalId).toHaveBeenCalledWith(
       APPLICANT_DIGITS,
+      '0202020000',
     )
   })
 
-  it('refuses an institution that is not registered under the applicant national id', async () => {
+  it('refuses an institution the party picker did not offer the applicant', async () => {
     offeredParties(OTHER_PARTY_ID)
 
     const result = await submit(
@@ -121,10 +122,10 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
       )
 
       expect(getCreateCaseBody).toHaveBeenCalled()
-      expect(getAllInvolvedPartiesByNationalId).not.toHaveBeenCalled()
+      expect(getInvolvedPartiesByNationalId).not.toHaveBeenCalled()
     })
 
-    it('may file for an institution registered under the applicant national id', async () => {
+    it("may file for the applicant's primary institution", async () => {
       offeredParties(PARTY_ID)
 
       await submitAsAssignee(
@@ -133,9 +134,42 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
       )
 
       expect(getCreateCaseBody).toHaveBeenCalled()
-      expect(getAllInvolvedPartiesByNationalId).toHaveBeenCalledWith(
+      expect(getInvolvedPartiesByNationalId).toHaveBeenCalledWith(
         APPLICANT_DIGITS,
+        undefined,
       )
+    })
+
+    it("is not offered the applicant's sibling institutions through their own actor", async () => {
+      offeredParties(OTHER_PARTY_ID)
+
+      const result = await submitAsAssignee(
+        {
+          ...assignee,
+          actorNationalId: '0303030000',
+          involvedPartyIds: [],
+        },
+        PARTY_ID,
+      )
+
+      expectRefusal(result, 403, FORBIDDEN_MESSAGE)
+      expect(getInvolvedPartiesByNationalId).toHaveBeenCalledWith(
+        APPLICANT_DIGITS,
+        undefined,
+      )
+    })
+
+    it('is refused when no institution is registered under the applicant, e.g. a person', async () => {
+      getInvolvedPartiesByNationalId.mockResolvedValue(
+        ResultWrapper.err({ code: 404, message: 'Involved party not found' }),
+      )
+
+      const result = await submitAsAssignee(
+        { ...assignee, involvedPartyIds: [OTHER_PARTY_ID] },
+        PARTY_ID,
+      )
+
+      expectRefusal(result, 403, FORBIDDEN_MESSAGE)
     })
 
     it('is refused an unrelated institution', async () => {
@@ -163,7 +197,7 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
     const result = await submit({ ...applicant, isAdmin: true }, 'not-a-uuid')
 
     expectRefusal(result, 403, FORBIDDEN_MESSAGE)
-    expect(getAllInvolvedPartiesByNationalId).not.toHaveBeenCalled()
+    expect(getInvolvedPartiesByNationalId).not.toHaveBeenCalled()
   })
 
   it('lets an editorial admin file for an institution they are not linked to', async () => {
@@ -173,7 +207,7 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
     )
 
     expect(getCreateCaseBody).toHaveBeenCalled()
-    expect(getAllInvolvedPartiesByNationalId).not.toHaveBeenCalled()
+    expect(getInvolvedPartiesByNationalId).not.toHaveBeenCalled()
   })
 
   it('does not let an admin file for an application they are not a party to', async () => {
@@ -201,7 +235,7 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
   })
 
   it('passes an upstream failure through instead of calling it a refusal', async () => {
-    getAllInvolvedPartiesByNationalId.mockResolvedValue(
+    getInvolvedPartiesByNationalId.mockResolvedValue(
       ResultWrapper.err({ code: 500, message: 'db down' }),
     )
 

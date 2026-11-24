@@ -16,11 +16,12 @@ import { IApplicationService } from '../application/application.service.interfac
 import { isApplicationParty } from '../auth/application-party'
 import { APPLICATION_REQUEST_KEY } from './current-application.decorator'
 
-// Answers that say nothing about the id. The fetch uses our own service
-// token, so a refused credential (401) or scope (403) affects every request,
-// and a timeout (408) or throttling (429) is transient. Answering 404 would
-// hide these.
-const NOT_ABOUT_THE_ID = [401, 403, 408, 429]
+// The answers that say something about this id: a malformed id (400), no such
+// application (404), a deleted one (410) or one under another template
+// (422). Every other status, like 401, 403, 405 or 429 for our own service
+// request, and 5xx or network errors, means the system is unavailable;
+// answering 404 would hide it.
+const ABOUT_THE_ID = [400, 404, 410, 422]
 const LOGGING_CATEGORY = 'application-ownership-guard'
 const LOGGING_CONTEXT = 'ApplicationOwnershipGuard'
 
@@ -66,10 +67,7 @@ export class ApplicationOwnershipGuard implements CanActivate {
         context: LOGGING_CONTEXT,
       })
 
-      // 400, 404, 410 and 422 say something about this id and read as "not
-      // found". The rest count as the system being unavailable, like 5xx and
-      // network errors.
-      if (code >= 400 && code < 500 && !NOT_ABOUT_THE_ID.includes(code)) {
+      if (ABOUT_THE_ID.includes(code)) {
         throw new NotFoundException('Application not found')
       }
       throw new BadGatewayException('Application system is unavailable')

@@ -755,16 +755,26 @@ export class CaseCreateService implements ICaseCreateService {
       return ResultWrapper.ok()
     }
 
-    // Every institution registered under the applicant's national id is
-    // allowed, for the applicant and for an assignee alike: the application
-    // enters `submitted` with whoever submitted it, and additional parties
-    // act with the applicant's view.
-    const offered = await this.userService.getAllInvolvedPartiesByNationalId(
+    // Otherwise only what the party picker offered for the applicant: the
+    // applicant's primary institution, or, when several institutions share
+    // the applicant's national id, the ones linked to the acting user. The
+    // actor is known only when the applicant is the caller, so an assignee
+    // is offered the primary institution, never a sibling on the same
+    // national id.
+    const isApplicant =
+      normalizeNationalId(caller.nationalId) ===
+      normalizeNationalId(application.applicant)
+
+    const offered = await this.userService.getInvolvedPartiesByNationalId(
       normalizeNationalId(application.applicant),
+      isApplicant ? caller.actorNationalId : undefined,
     )
 
     if (!offered.result.ok) {
-      return ResultWrapper.err(offered.result.error)
+      // No institution registered under the applicant: nothing was offered.
+      return offered.result.error.code === 404
+        ? forbidden()
+        : ResultWrapper.err(offered.result.error)
     }
 
     if (
