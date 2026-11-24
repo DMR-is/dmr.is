@@ -1,5 +1,4 @@
 import { runCommandProcess } from '../../utils/command'
-import { OpenNextBuildExecutorSchema } from './schema'
 
 import {
   ExecutorContext,
@@ -7,6 +6,17 @@ import {
   readTargetOptions,
 } from '@nx/devkit'
 import { NextBuildBuilderOptions } from '@nx/next'
+
+/**
+ * Mirrors `schema.json`. Declared here rather than in a `schema.d.ts`: the
+ * root .gitignore ignores every `schema.d.ts` (a rule for generated schemas),
+ * so that file was never committed and the plugin's own build failed.
+ */
+export interface OpenNextBuildExecutorSchema {
+  buildCommand?: string
+  buildTarget: string
+  sourceRoot: string
+}
 
 export default async function openNextBuildExecutor(
   options: OpenNextBuildExecutorSchema,
