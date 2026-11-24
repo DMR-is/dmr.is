@@ -222,7 +222,7 @@ jobs:
       # (container dependsOn build, which defaults to the production
       # configuration). Runs with the empty CI environment, like the image build.
       - name: Build
-        run: yarn run nx affected -t build
+        run: yarn run nx run-many -t build
 
   constraints:
     runs-on: ubuntu-latest
