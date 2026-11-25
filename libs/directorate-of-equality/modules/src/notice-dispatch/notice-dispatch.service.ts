@@ -1342,7 +1342,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
         content: pdf,
         label:
           type === ReportTypeEnum.SALARY
-            ? 'jafnlaunaúttekt'
+            ? 'niðurstaða launagreiningar'
             : 'jafnréttisáætlun',
       }
     } catch (error) {

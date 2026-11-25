@@ -35,7 +35,7 @@ export class ReportPdfController {
     produces: 'application/pdf',
     successDescription:
       'Generates and returns the report as a PDF. The layout ' +
-      '("Jafnlaunaúttekt" or "Jafnréttisáætlun") is chosen from the report type.',
+      '("Niðurstaða launagreiningar" or "Jafnréttisáætlun") is chosen from the report type.',
   })
   async getReportPdf(
     @Param('reportId', ParseUUIDPipe) reportId: string,

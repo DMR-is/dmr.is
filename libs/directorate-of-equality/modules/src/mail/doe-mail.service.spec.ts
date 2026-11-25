@@ -498,7 +498,7 @@ describe('DoeMailService', () => {
 
       await service.sendReportApproved(
         makeReport({ type: ReportTypeEnum.SALARY }),
-        [pdf('jafnlaunaúttekt.pdf')],
+        [pdf('niðurstaða launagreiningar.pdf')],
       )
 
       const [message] = aws.sendMail.mock.calls[0]
@@ -510,14 +510,14 @@ describe('DoeMailService', () => {
 
       await service.sendReportApproved(
         makeReport({ type: ReportTypeEnum.SALARY }),
-        [pdf('jafnlaunaúttekt.pdf'), pdf('úrbótaáætlun.pdf')],
+        [pdf('niðurstaða launagreiningar.pdf'), pdf('úrbótaáætlun.pdf')],
       )
 
       const [message] = aws.sendMail.mock.calls[0]
       expect(message.attachments).toEqual([
         {
-          filename: 'jafnlaunaúttekt.pdf',
-          content: Buffer.from('jafnlaunaúttekt.pdf-bytes'),
+          filename: 'niðurstaða launagreiningar.pdf',
+          content: Buffer.from('niðurstaða launagreiningar.pdf-bytes'),
         },
         {
           filename: 'úrbótaáætlun.pdf',
@@ -535,12 +535,12 @@ describe('DoeMailService', () => {
 
       await service.sendReportApproved(
         makeReport({ type: ReportTypeEnum.SALARY }),
-        [pdf('jafnlaunaúttekt.pdf'), pdf('úrbótaáætlun.pdf')],
+        [pdf('niðurstaða launagreiningar.pdf'), pdf('úrbótaáætlun.pdf')],
       )
 
       const [message] = aws.sendMail.mock.calls[0]
-      expect(message.text).toContain('jafnlaunaúttekt, úrbótaáætlun')
-      expect(message.html).toContain('jafnlaunaúttekt, úrbótaáætlun')
+      expect(message.text).toContain('niðurstaða launagreiningar, úrbótaáætlun')
+      expect(message.html).toContain('niðurstaða launagreiningar, úrbótaáætlun')
     })
 
     it('states the validity period', async () => {

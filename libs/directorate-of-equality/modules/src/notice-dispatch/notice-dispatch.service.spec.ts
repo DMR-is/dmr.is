@@ -759,7 +759,7 @@ describe('NoticeDispatchService', () => {
         {
           filename: 'launagreining-report-1.pdf',
           content: Buffer.from('report-bytes'),
-          label: 'jafnlaunaúttekt',
+          label: 'niðurstaða launagreiningar',
         },
         {
           filename: 'urbotaaetlun-report-1.pdf',
@@ -970,7 +970,7 @@ describe('NoticeDispatchService', () => {
       expect(mailService.sendReportApproved).toHaveBeenCalledTimes(1)
       const [, attachments] = mailService.sendReportApproved.mock.calls[0]
       expect(attachments).toHaveLength(1)
-      expect(attachments[0].label).toBe('jafnlaunaúttekt')
+      expect(attachments[0].label).toBe('niðurstaða launagreiningar')
       expect(logger.error).toHaveBeenCalled()
     })
 
@@ -1852,7 +1852,7 @@ describe('NoticeDispatchService', () => {
         Buffer.from('plan-bytes'),
       ])
       expect(renderedHtml()).toContain(
-        'Fylgiskjöl: jafnlaunaúttekt, úrbótaáætlun.',
+        'Fylgiskjöl: niðurstaða launagreiningar, úrbótaáætlun.',
       )
       expect(companyFileService.archive).toHaveBeenCalledWith([
         expect.objectContaining({ filename: 'jafnrettisaaetlun-report-1.pdf' }),
