@@ -21,6 +21,7 @@ import {
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../../core/constants'
 import { StatusIdEnum } from '../../../core/enums/status.enum'
+import { resolveFeeQuantity } from '../../../core/utils/fee-quantity.util'
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertVersionEnum } from '../../../models/advert-publication.model'
 import { FeeCodeModel } from '../../../models/fee-code.model'
@@ -279,6 +280,19 @@ export class PriceCalculatorService implements IPriceCalculatorService {
       throw new InternalServerErrorException(
         'Fee code not found for advert type',
       )
+    }
+
+    // Mirror getEstimatedPrice: per-item billing takes precedence, so the
+    // applicant sees the price createAdvert will later derive.
+    // Count the same input createAdvert will: the advert body, not the preview,
+    // which also renders additionalText.
+    const quantity =
+      resolveFeeQuantity(
+        typeId,
+        get(application.answers, 'fields.html', null) as string | null,
+      ) ?? 0
+    if (quantity > 0) {
+      return feeCode.value * quantity
     }
 
     if (feeCode.isMultiplied) {

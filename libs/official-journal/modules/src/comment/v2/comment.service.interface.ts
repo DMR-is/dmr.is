@@ -26,12 +26,6 @@ export interface ICommentServiceV2 {
     involvedPartyId?: string,
   ): Promise<ResultWrapper<GetComments>>
 
-  deleteComment(
-    caseId: string,
-    commentId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
-
   createSubmitComment(
     caseId: string,
     body: SubmitCommentBody,

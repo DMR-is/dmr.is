@@ -20,12 +20,6 @@ export const typesRouter = router({
       return ctx.api.getTypes(input)
     }),
 
-  getType: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.api.getTypeById({ id: input.id })
-    }),
-
   createType: protectedProcedure
     .input(
       z.object({

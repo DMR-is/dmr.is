@@ -67,19 +67,6 @@ export class InstitutionService implements IInstitutionService {
 
     return ResultWrapper.ok({ institutions: mapped, paging })
   }
-  @LogMethod()
-  async getInstitution(id: string): Promise<ResultWrapper<GetInstitution>> {
-    const institution = await this.institutionModel.findByPk(id)
-
-    if (!institution) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Institution not found',
-      })
-    }
-
-    return ResultWrapper.ok({ institution: institutionMigrate(institution) })
-  }
 
   @LogMethod()
   async createInstitution(

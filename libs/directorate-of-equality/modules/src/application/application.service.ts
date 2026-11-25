@@ -118,6 +118,12 @@ import {
 
 const LOGGING_CONTEXT = 'ApplicationService'
 
+/** The statuses whose generated PDFs an applicant may download. */
+const SIGNED_OFF_STATUSES: readonly ReportStatusEnum[] = [
+  ReportStatusEnum.APPROVED,
+  ReportStatusEnum.SUPERSEDED,
+]
+
 /**
  * This module is bound to the island.is application portal. Other upstream
  * provider channels — when they exist — get their own controllers; we don't
@@ -1351,6 +1357,24 @@ export class ApplicationService implements IApplicationService {
     const { report } = await this.findOwnedReportForRead(providerId, company)
 
     return this.reportService.getEqualityContentPdf(report.id)
+  }
+
+  async getSignedOffReportId(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<string> {
+    const { report } = await this.findOwnedReportForRead(providerId, company)
+
+    // SUPERSEDED is only ever reached from APPROVED (`supersedePreviousApproved`
+    // in the report workflow), so these two are exactly the reports that were
+    // signed off. Anything else has no assessment to print yet, or never will.
+    if (!SIGNED_OFF_STATUSES.includes(report.status)) {
+      throw new NotFoundException(
+        `Report "${providerId}" has not been approved`,
+      )
+    }
+
+    return report.id
   }
 
   async getReportOutliers(

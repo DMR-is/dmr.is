@@ -559,30 +559,6 @@ describe('CompanyService', () => {
     })
   })
 
-  describe('rskLookup', () => {
-    it('returns the registry name for a legal entity', async () => {
-      getEntityByNationalId.mockResolvedValue({
-        entity: makeRegistryEntity({
-          kennitala: SUBSIDIARY_ID,
-          nafn: 'Acme ehf.',
-        }),
-      })
-
-      await expect(service.rskLookup(SUBSIDIARY_ID)).resolves.toEqual({
-        name: 'Acme ehf.',
-        nationalId: SUBSIDIARY_ID,
-      })
-    })
-
-    it('refuses a personal kennitala before asking the national registry', async () => {
-      await expect(service.rskLookup('0101302989')).rejects.toThrow(
-        new BadRequestException(companyMessages.notALegalEntity('0101302989')),
-      )
-
-      expect(findEntityByNationalId).not.toHaveBeenCalled()
-    })
-  })
-
   describe('create', () => {
     it('emits a CREATED event after inserting the company', async () => {
       findOne.mockResolvedValue(null)

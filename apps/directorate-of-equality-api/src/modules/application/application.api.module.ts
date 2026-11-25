@@ -8,6 +8,10 @@ import { CompanyCoreModule } from '@dmr.is/doe-modules/company'
 import { ImportUploadCoreModule } from '@dmr.is/doe-modules/import-upload'
 import { PartnerClientCoreModule } from '@dmr.is/doe-modules/partner-client'
 import { ReportExcelCoreModule } from '@dmr.is/doe-modules/report-excel'
+import {
+  ReportPdfCoreModule,
+  ReportPdfDownloadGateCoreModule,
+} from '@dmr.is/doe-modules/report-pdf'
 
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { ApplicationController } from './application.controller'
@@ -21,6 +25,11 @@ import { ApplicationController } from './application.controller'
     // `GET /application/company` reports `isServiceProvider` from the same
     // lookup `PartnerClientResourceGuard` uses.
     PartnerClientCoreModule,
+    // The generated report and úrbótaáætlun PDFs. Wired here, in this app, and
+    // not into `ApplicationCoreModule`: the partner API boots that module too,
+    // and the renderer needs Chromium, which only this image ships.
+    ReportPdfCoreModule,
+    ReportPdfDownloadGateCoreModule,
   ],
   controllers: [ApplicationController],
   providers: [CompanyResourceGuard],

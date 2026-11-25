@@ -5,7 +5,6 @@
 import { json, urlencoded } from 'express'
 import { WinstonModule } from 'nest-winston'
 
-import { VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { SwaggerModule } from '@nestjs/swagger'
 
@@ -14,12 +13,12 @@ import { logger } from '@dmr.is/logging'
 import { ExceptionFactoryPipe } from '@dmr.is/pipelines'
 
 import { AppModule } from './app/app.module'
+import { applyApiRouting, GLOBAL_PREFIX } from './api-routing'
 import { OJOIExceptionFilter } from './exceptionFilter'
-import { openApi } from './openApi'
+import { buildSwaggerDocument } from './setupSwaggerDocument'
 // Added comment to trigger redeploy
 
 async function bootstrap() {
-  const globalPrefix = 'api'
   const swaggerPath = 'swagger'
 
   const app = await NestFactory.create(AppModule, {
@@ -31,23 +30,17 @@ async function bootstrap() {
 
   app.useGlobalPipes(ExceptionFactoryPipe())
   app.useGlobalFilters(new OJOIExceptionFilter())
-  app.setGlobalPrefix(globalPrefix)
+  applyApiRouting(app)
   app.enableCors()
-  app.enableVersioning({
-    type: VersioningType.URI,
-  })
 
-  const document = SwaggerModule.createDocument(app, openApi, {
-    autoTagControllers: false,
-  })
-  SwaggerModule.setup(swaggerPath, app, document)
+  SwaggerModule.setup(swaggerPath, app, buildSwaggerDocument(app))
 
   apmInit()
 
   const port = process.env.ADMIN_PORT || 4000
   await app.listen(port)
   logger.info(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
+    `🚀 Application is running on: http://localhost:${port}/${GLOBAL_PREFIX}`,
   )
 }
 

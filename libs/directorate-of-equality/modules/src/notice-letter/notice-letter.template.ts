@@ -3,6 +3,7 @@ import {
   type ApprovedReport,
   buildReportApprovedHtml,
   buildReportApprovedSubject,
+  ReportApprovedMailOptions,
 } from '../mail/templates/report-approved.template'
 import {
   buildReportDeadlineReminderHtml,
@@ -75,6 +76,7 @@ export const buildApprovedLetter = (
   companyName: string,
   approvedAt: Date,
   enclosures: string[],
+  options: ReportApprovedMailOptions,
 ): NoticeLetter => {
   const subject = buildReportApprovedSubject(report)
 
@@ -84,7 +86,7 @@ export const buildApprovedLetter = (
       subject,
       companyName,
       date: approvedAt,
-      body: buildReportApprovedHtml(report, []),
+      body: buildReportApprovedHtml(report, [], options),
       enclosures,
     }),
   }

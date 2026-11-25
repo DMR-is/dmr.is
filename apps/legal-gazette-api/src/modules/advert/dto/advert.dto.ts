@@ -3,8 +3,10 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsInt,
   IsOptional,
   IsUUID,
+  Min,
 } from 'class-validator'
 
 import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
@@ -245,6 +247,8 @@ export class CreateAdvertInternalDto {
   settlement?: CreateSettlementDto | null
 
   @ApiOptionalNumber()
+  @IsInt()
+  @Min(0)
   feeQuantity?: number
 }
 
@@ -298,6 +302,8 @@ export class UpdateAdvertDto extends PartialType(
   courtDistrictId?: string
 
   @ApiOptionalNumber()
+  @IsInt()
+  @Min(0)
   feeQuantity?: number
 }
 

@@ -92,7 +92,7 @@ type AdvertAttributes = {
   legacyHtml?: string | null
   legacyId: string | null
   externalId?: string | null
-  feeQuantity?: number
+  feeQuantity?: number | null
 
   // Common specific properties
   caption: string | null

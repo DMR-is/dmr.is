@@ -67,9 +67,6 @@ export class CaseServiceMock {
     throw new Error('Method not implemented.')
   }
 
-  unpublishCase(id: string): Promise<ResultWrapper> {
-    throw new Error('Method not implemented.')
-  }
   rejectCase(id: string): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }

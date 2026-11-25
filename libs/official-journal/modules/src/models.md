@@ -14,8 +14,8 @@ case?: CaseModelRef
 ## The defect
 
 The model graph is inherently cyclic — `case.model.ts` imports
-`CaseStatusModel` for its `@BelongsTo`, and `case-status.model.ts` reaches back
-through `case-comment.model.ts` to `CaseModel`. The `() => Model` arrows are
+`CaseStatusModel` for its `@BelongsTo`, and `case-status.model.ts` imports
+`CaseModel` straight back for its `@HasMany`. The `() => Model` arrows are
 lazy and fine. What is not fine is `emitDecoratorMetadata`, which emits an
 **eager** read of the annotated type at class-decoration time, while the other
 module is still mid-evaluation.

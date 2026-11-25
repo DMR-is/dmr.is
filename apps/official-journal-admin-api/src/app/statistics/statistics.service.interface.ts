@@ -5,12 +5,10 @@ import {
   GetSearchAnalyticsTrendsQuery,
   GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
-  GetStatisticsOverviewResponse,
   SearchAnalyticsBreakdownsResponse,
   SearchAnalyticsOverviewResponse,
   SearchAnalyticsQueriesResponse,
   SearchAnalyticsTrendsResponse,
-  StatisticsOverviewQueryType,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -18,11 +16,6 @@ export interface IStatisticsService {
   getDepartment(
     slug: DepartmentSlugEnum,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>>
-
-  getOverview(
-    type: StatisticsOverviewQueryType,
-    userId?: string,
-  ): Promise<ResultWrapper<GetStatisticsOverviewResponse>>
 
   getOverviewForDashboard(
     userId?: string,

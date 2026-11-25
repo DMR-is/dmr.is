@@ -9,11 +9,12 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { AdvertModel } from '../../models/advert.model'
+import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { ApplicationModel } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import { StatusIdEnum } from '../../models/status.model'
+import { TypeIdEnum } from '../../models/type.model'
 import { UserModel } from '../../models/users.model'
 import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
@@ -61,6 +62,11 @@ const createMockUpdateDto = (
   content: '<p>Updated content</p>',
   ...overrides,
 })
+const properties = (count: number) =>
+  Array.from(
+    { length: count },
+    (_, i) => `<p>Heiti eignar: Eign ${i}</p>`,
+  ).join('')
 const createMockLogger = () => ({
   info: jest.fn(),
   warn: jest.fn(),
@@ -88,6 +94,7 @@ describe('updateAdvert', () => {
   let service: AdvertService
   let advertModel: any
   let typeCategoriesService: any
+  let moduleRef: TestingModule
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -166,6 +173,7 @@ describe('updateAdvert', () => {
         },
       ],
     }).compile()
+    moduleRef = module
     service = module.get<AdvertService>(AdvertService)
     advertModel = module.get(getModelToken(AdvertModel))
     typeCategoriesService = module.get(ITypeCategoriesService)
@@ -392,6 +400,207 @@ describe('updateAdvert', () => {
         }),
       )
     })
+    it('should store edited content as given, without sanitizing it', async () => {
+      // Only new submissions are sanitized; see createAdvert.
+      const content = '<p style="margin-left: 2em"><span>Texti</span></p>'
+      const updateDto = createMockUpdateDto({ content })
+
+      await service.updateAdvert('advert-123', updateDto)
+
+      const advert = await advertModel.findByPkOrThrow('advert-123')
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ content }),
+      )
+    })
+  })
+  describe('fee quantity', () => {
+    const givenAdvert = (overrides: Record<string, unknown> = {}) => {
+      const advert = Object.assign(
+        createMockAdvert({
+          statusId: StatusIdEnum.SUBMITTED,
+          typeId: TypeIdEnum.FORECLOSURE.toLowerCase(),
+          content: properties(2),
+        }),
+        overrides,
+      )
+      advertModel.withScope.mockReturnThis()
+      advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(advert)
+      return advert
+    }
+
+    it('keeps the quantity of an advert that has already been charged', async () => {
+      // Publication A is billed on publish; later versions keep it editable.
+      const advert = givenAdvert({ transactionId: 'transaction-1' })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ content: properties(16) }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: undefined }),
+      )
+    })
+
+    it("refuses an explicit change to a charged advert's quantity", async () => {
+      const advert = givenAdvert({
+        transactionId: 'transaction-1',
+        feeQuantity: 2,
+      })
+
+      await expect(
+        service.updateAdvert(
+          'advert-123',
+          createMockUpdateDto({ feeQuantity: 5 }),
+        ),
+      ).rejects.toThrow('gjaldfærð')
+      expect(advert.update).not.toHaveBeenCalled()
+    })
+
+    it("accepts a charged advert's unchanged quantity", async () => {
+      const advert = givenAdvert({
+        legacyId: 'legacy-1',
+        feeQuantity: 2,
+      })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ feeQuantity: 2 }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: undefined }),
+      )
+    })
+
+    it("restores a template foreclosure's count from its properties when moved back", async () => {
+      const advert = givenAdvert({
+        templateType: AdvertTemplateType.FORECLOSURE,
+        typeId: 'type-other',
+        content: null,
+        feeQuantity: null,
+        foreclosure: { properties: [{}, {}, {}, {}] },
+      })
+      typeCategoriesService.findByTypeId.mockResolvedValue({
+        type: {
+          id: TypeIdEnum.FORECLOSURE,
+          title: 'Nauðungarsala',
+          slug: 'naudungarsala',
+          categories: [{ id: 'category-123', title: 'Flokkur', slug: 'f' }],
+        },
+      })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ typeId: TypeIdEnum.FORECLOSURE }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: 4 }),
+      )
+    })
+
+    it('clears a template foreclosure retyped to another type', async () => {
+      const advert = givenAdvert({
+        templateType: AdvertTemplateType.FORECLOSURE,
+        content: null,
+      })
+      typeCategoriesService.findByTypeId.mockResolvedValue({
+        type: {
+          id: 'type-other',
+          title: 'Annað',
+          slug: 'annad',
+          categories: [{ id: 'category-123', title: 'Flokkur', slug: 'f' }],
+        },
+      })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ typeId: 'type-other' }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: null }),
+      )
+    })
+
+    it('warns when an edit leaves a foreclosure with no properties', async () => {
+      givenAdvert()
+      const logger = moduleRef.get(LOGGER_PROVIDER)
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ content: '<p>Engin eign</p>' }),
+      )
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('zero items'),
+        expect.objectContaining({ advertId: 'advert-123' }),
+      )
+    })
+
+    it('re-derives the quantity when a foreclosure is edited', async () => {
+      const advert = givenAdvert()
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ content: properties(16) }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: 16 }),
+      )
+    })
+
+    it('keeps an explicit quantity from the editor', async () => {
+      const advert = givenAdvert()
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ content: properties(16), feeQuantity: 3 }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: 3 }),
+      )
+    })
+
+    it('clears the quantity when a foreclosure becomes another type', async () => {
+      const advert = givenAdvert()
+      typeCategoriesService.findByTypeId.mockResolvedValue({
+        type: {
+          id: 'type-other',
+          title: 'Annað',
+          slug: 'annad',
+          categories: [{ id: 'category-123', title: 'Flokkur', slug: 'f' }],
+        },
+      })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ typeId: 'type-other' }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: null }),
+      )
+    })
+
+    it('never re-derives a template foreclosure from its content', async () => {
+      const advert = givenAdvert({
+        templateType: AdvertTemplateType.FORECLOSURE,
+        content: null,
+      })
+
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ content: '' }),
+      )
+
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: undefined }),
+      )
+    })
   })
   // A type is assignable to several categories, so a type change must not
   // silently re-derive the category and discard the editor's choice.
@@ -537,6 +746,113 @@ describe('updateAdvert', () => {
 // ==========================================
 // reactivateAdvert - Reactivate rejected adverts
 // ==========================================
+describe('createAdvert', () => {
+  let service: AdvertService
+  let create: jest.Mock
+
+  beforeEach(async () => {
+    create = jest.fn().mockResolvedValue({
+      id: 'advert-123',
+      reload: jest.fn(),
+      fromModelToDetailed: jest.fn(),
+    })
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AdvertService,
+        { provide: LOGGER_PROVIDER, useValue: createMockLogger() },
+        { provide: ILGNationalRegistryService, useValue: {} },
+        { provide: ITypeCategoriesService, useValue: {} },
+        {
+          provide: getModelToken(AdvertModel),
+          useValue: { scope: jest.fn().mockReturnValue({ create }) },
+        },
+        { provide: getModelToken(UserModel), useValue: {} },
+        {
+          provide: getModelToken(AdvertPublicationModel),
+          useValue: { bulkCreate: jest.fn() },
+        },
+        { provide: getModelToken(ApplicationModel), useValue: {} },
+        { provide: getModelToken(CaseModel), useValue: {} },
+        { provide: EventEmitter2, useValue: { emitAsync: jest.fn() } },
+        { provide: Sequelize, useValue: {} },
+      ],
+    }).compile()
+    service = module.get<AdvertService>(AdvertService)
+  })
+
+  const createWith = (content?: string) =>
+    service.createAdvert({
+      typeId: 'type-123',
+      categoryId: 'category-123',
+      title: 'Test Advert',
+      content,
+      createdBy: 'Test User',
+      createdByNationalId: '1234567890',
+      scheduledAt: ['2026-12-01'],
+    } as unknown as Parameters<AdvertService['createAdvert']>[0])
+
+  it('should sanitize the content of a new submission', async () => {
+    await createWith(
+      '<p><span style="color: red">Texti</span><img src=x onerror="alert(1)"></p>',
+    )
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ content: '<p>Texti</p>' }),
+      expect.anything(),
+    )
+  })
+
+  it('should leave missing content missing', async () => {
+    await createWith(undefined)
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ content: undefined }),
+      expect.anything(),
+    )
+  })
+
+  describe('fee quantity', () => {
+    const createAs = (typeId: string, content: string, feeQuantity?: number) =>
+      service.createAdvert({
+        typeId,
+        categoryId: 'category-123',
+        title: 'Nauðungarsölur',
+        content,
+        feeQuantity,
+        createdBy: 'Test User',
+        createdByNationalId: '1234567890',
+        scheduledAt: ['2026-12-01'],
+      } as unknown as Parameters<AdvertService['createAdvert']>[0])
+
+    it('derives one unit per property for a foreclosure with a lower-cased type id', async () => {
+      await createAs(TypeIdEnum.FORECLOSURE.toLowerCase(), properties(16))
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: 16 }),
+        expect.anything(),
+      )
+    })
+
+    it('keeps an explicit quantity from the caller', async () => {
+      await createAs(TypeIdEnum.FORECLOSURE, properties(2), 5)
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: 5 }),
+        expect.anything(),
+      )
+    })
+
+    it('leaves other types without a quantity', async () => {
+      await createAs('type-123', properties(3))
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({ feeQuantity: undefined }),
+        expect.anything(),
+      )
+    })
+  })
+})
+
 describe('reactivateAdvert', () => {
   let service: AdvertService
   let advertModel: any

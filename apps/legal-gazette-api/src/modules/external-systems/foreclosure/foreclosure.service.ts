@@ -1,3 +1,6 @@
+import { Transaction } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -5,6 +8,10 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { escapeHtml } from '@dmr.is/utils-server/escapeHtml'
 
 import { assertAdvertEditable } from '../../../core/utils/advert-status.util'
+import {
+  feeQuantityForChange,
+  warnOnZeroFeeQuantity,
+} from '../../../core/utils/fee-quantity.util'
 import { AdvertModel, AdvertTemplateType } from '../../../models/advert.model'
 import { CategoryDefaultIdEnum } from '../../../models/category.model'
 import { ForeclosureDto } from '../../../models/foreclosure.dto'
@@ -32,6 +39,9 @@ export class ForeclosureService implements IForeclosureService {
     private readonly foreclosureModel: typeof ForeclosureModel,
     @InjectModel(ForeclosurePropertyModel)
     private readonly foreclosurePropertyModel: typeof ForeclosurePropertyModel,
+    @InjectModel(AdvertModel)
+    private readonly advertModel: typeof AdvertModel,
+    private readonly sequelize: Sequelize,
   ) {}
 
   async deleteForclosureSale(id: string): Promise<void> {
@@ -128,17 +138,27 @@ export class ForeclosureService implements IForeclosureService {
 
     assertAdvertEditable(foreclosure.advert, 'foreclosure property')
 
-    // Escape HTML in all text fields to prevent XSS
-    const newProperty = await this.foreclosurePropertyModel.create(
-      {
-        foreclosureId: id,
-        propertyName: escapeHtml(body.propertyName) ?? '',
-        propertyNumber: body.propertyNumber,
-        propertyTotalPrice: body.propertyTotalPrice,
-        claimant: escapeHtml(body.claimant) ?? '',
-        respondent: escapeHtml(body.respondent) ?? '',
+    // The property write and the recount commit together, so a failure in
+    // between cannot leave the advert billing a stale count.
+    const newProperty = await this.sequelize.transaction(
+      async (transaction) => {
+        // Escape HTML in all text fields to prevent XSS
+        const property = await this.foreclosurePropertyModel.create(
+          {
+            foreclosureId: id,
+            propertyName: escapeHtml(body.propertyName) ?? '',
+            propertyNumber: body.propertyNumber,
+            propertyTotalPrice: body.propertyTotalPrice,
+            claimant: escapeHtml(body.claimant) ?? '',
+            respondent: escapeHtml(body.respondent) ?? '',
+          },
+          { returning: true, transaction },
+        )
+
+        await this.syncFeeQuantity(id, foreclosure.advertId, transaction)
+
+        return property
       },
-      { returning: true },
     )
 
     await newProperty.reload()
@@ -166,7 +186,71 @@ export class ForeclosureService implements IForeclosureService {
       where: { foreclosureId: id, propertyNumber },
     })
 
-    // force true (no soft delete)
-    await property.destroy({ force: true })
+    await this.sequelize.transaction(async (transaction) => {
+      // force true (no soft delete)
+      await property.destroy({ force: true, transaction })
+
+      await this.syncFeeQuantity(id, foreclosure.advertId, transaction)
+    })
+  }
+
+  /**
+   * A foreclosure is billed per property, and the quantity is set on the
+   * advert when the sale is created. Recount after every property change so
+   * the charge at publication matches what is published, through the same
+   * rule as the editor and the bulk move: a charged or legacy advert keeps its
+   * quantity, and an advert retyped away from foreclosures is not given one.
+   */
+  private async syncFeeQuantity(
+    foreclosureId: string,
+    advertId: string,
+    transaction: Transaction,
+  ): Promise<void> {
+    const advert = await this.advertModel.unscoped().findByPk(advertId, {
+      attributes: [
+        'id',
+        'typeId',
+        'templateType',
+        'content',
+        'feeQuantity',
+        'transactionId',
+        'legacyId',
+      ],
+      transaction,
+    })
+
+    if (!advert) {
+      return
+    }
+
+    const propertyCount = await this.foreclosurePropertyModel.count({
+      where: { foreclosureId },
+      transaction,
+    })
+
+    const feeQuantity = feeQuantityForChange({
+      advert,
+      previousTypeId: advert.typeId,
+      typeId: advert.typeId,
+      content: advert.content,
+      propertyCount,
+    })
+
+    if (feeQuantity === undefined || feeQuantity === advert.feeQuantity) {
+      return
+    }
+
+    // The transactionId condition repeats the frozen check at write time.
+    await this.advertModel.update(
+      { feeQuantity },
+      { where: { id: advertId, transactionId: null }, transaction },
+    )
+
+    warnOnZeroFeeQuantity(this.logger, {
+      advertId,
+      typeId: advert.typeId,
+      feeQuantity,
+      context: LOGGING_CONTEXT,
+    })
   }
 }

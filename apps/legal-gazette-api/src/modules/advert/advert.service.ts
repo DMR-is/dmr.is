@@ -9,12 +9,20 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared-dto'
+import { sanitizeLegalGazetteHtml } from '@dmr.is/utils-server/sanitizeLegalGazetteHtml'
 import {
   generatePaging,
   getLimitAndOffset,
 } from '@dmr.is/utils-server/serverUtils'
 
 import { LegalGazetteEvents } from '../../core/constants'
+import {
+  feeQuantityForChange,
+  isFeeQuantityFrozen,
+  resolveFeeQuantity,
+  warnOnZeroFeeQuantity,
+} from '../../core/utils/fee-quantity.util'
+import { idEquals } from '../../core/utils/id.util'
 import { AdvertDetailedDto } from '../../models/advert.dto'
 import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
@@ -642,6 +650,13 @@ export class AdvertService implements IAdvertService {
       context: 'AdvertService',
     })
 
+    const content = sanitizeLegalGazetteHtml(body.content)
+    // An explicit quantity comes from a caller that knows its items (external
+    // foreclosure and company endpoints); everything else is derived from the
+    // content.
+    const feeQuantity =
+      body.feeQuantity ?? resolveFeeQuantity(body.typeId, content)
+
     const advert = await this.advertModel.scope('detailed').create(
       {
         applicationId: body.applicationId,
@@ -650,7 +665,7 @@ export class AdvertService implements IAdvertService {
         categoryId: body.categoryId,
         caseId: body.caseId,
         title: body.title,
-        content: body.content,
+        content,
         createdBy: body.createdBy,
         caption: body.caption,
         createdByNationalId: body.createdByNationalId,
@@ -665,7 +680,7 @@ export class AdvertService implements IAdvertService {
         divisionMeetingDate: body.divisionMeetingDate,
         divisionMeetingLocation: body.divisionMeetingLocation,
         communicationChannels: body.communicationChannels,
-        feeQuantity: body.feeQuantity,
+        feeQuantity,
         settlementId: body.settlementId,
         settlement: body.settlement
           ? {
@@ -695,6 +710,13 @@ export class AdvertService implements IAdvertService {
         returning: true,
       },
     )
+
+    warnOnZeroFeeQuantity(this.logger, {
+      advertId: advert.id,
+      typeId: advert.typeId,
+      feeQuantity,
+      context: LOGGING_CONTEXT,
+    })
 
     await this.advertPublicationModel.bulkCreate(
       body.scheduledAt.map((scheduledAt, i) => ({
@@ -808,9 +830,6 @@ export class AdvertService implements IAdvertService {
     }
 
     const typeId = body.typeId ?? advert.typeId
-    const sameId = (a?: string, b?: string) =>
-      !!a && !!b && a.toLowerCase() === b.toLowerCase()
-
     const { type } = await this.typeCategoriesService.findByTypeId(typeId)
 
     if (body.categoryId) {
@@ -818,7 +837,7 @@ export class AdvertService implements IAdvertService {
       // included - the editorial UI deliberately offers those as well.
       if (
         !type.categories.some((category) =>
-          sameId(category.id, body.categoryId),
+          idEquals(body.categoryId, category.id),
         )
       ) {
         throw new BadRequestException(
@@ -831,7 +850,9 @@ export class AdvertService implements IAdvertService {
 
     // Type-only change - keep the current category while the new type allows it.
     if (
-      type.categories.some((category) => sameId(category.id, advert.categoryId))
+      type.categories.some((category) =>
+        idEquals(category.id, advert.categoryId),
+      )
     ) {
       return undefined
     }
@@ -850,6 +871,50 @@ export class AdvertService implements IAdvertService {
     // Deterministic now that findByTypeId orders by title and drops
     // unassignable categories - still a fallback, not a canonical mapping.
     return assignableOnly.categories[0].id
+  }
+
+  /**
+   * Keeps the fee quantity in step with edits made before publication, through
+   * the shared rule in `feeQuantityForChange`. `undefined` leaves the column
+   * untouched; `null` clears it.
+   *
+   * Once an advert is charged (or came from the old system) its quantity is
+   * the record of what was billed. The editor keeps it editable until every
+   * publication is out, so an explicit change to it is refused here rather
+   * than silently dropped.
+   */
+  private feeQuantityForUpdate(
+    advert: AdvertModel,
+    body: UpdateAdvertDto,
+  ): number | null | undefined {
+    if (
+      body.feeQuantity !== undefined &&
+      body.feeQuantity !== advert.feeQuantity &&
+      isFeeQuantityFrozen(advert)
+    ) {
+      throw new BadRequestException(
+        'Ekki er hægt að breyta fjölda eininga á auglýsingu sem hefur verið gjaldfærð',
+      )
+    }
+
+    if (
+      body.feeQuantity === undefined &&
+      body.content === undefined &&
+      body.typeId === undefined
+    ) {
+      return undefined
+    }
+
+    return feeQuantityForChange({
+      advert,
+      previousTypeId: advert.typeId,
+      typeId: body.typeId ?? advert.typeId,
+      content: body.content ?? advert.content,
+      // The detailed scope loads the sale's properties; only a template
+      // foreclosure reads this.
+      propertyCount: advert.foreclosure?.properties?.length,
+      explicitQuantity: body.feeQuantity,
+    })
   }
 
   async updateAdvert(
@@ -872,11 +937,14 @@ export class AdvertService implements IAdvertService {
     }
 
     const categoryId = await this.resolveUpdatedCategoryId(advert, body)
+    const feeQuantity = this.feeQuantityForUpdate(advert, body)
 
     const updated = await advert.update({
       typeId: body.typeId,
       categoryId,
       title: body.title,
+      // Not sanitized: only new submissions are cleaned (createAdvert). An
+      // existing advert changes only through the editor.
       content: body.content,
       additionalText: body.additionalText,
       divisionMeetingDate: body.divisionMeetingDate,
@@ -884,7 +952,14 @@ export class AdvertService implements IAdvertService {
       caption: body.caption,
       courtDistrictId: body.courtDistrictId,
       judgementDate: body.judgementDate,
-      feeQuantity: body.feeQuantity,
+      feeQuantity,
+    })
+
+    warnOnZeroFeeQuantity(this.logger, {
+      advertId: advert.id,
+      typeId: updated.typeId,
+      feeQuantity,
+      context: LOGGING_CONTEXT,
     })
 
     return updated.fromModelToDetailed()

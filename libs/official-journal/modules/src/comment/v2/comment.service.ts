@@ -80,33 +80,6 @@ export class CommentServiceV2 implements ICommentServiceV2 {
   }
 
   @LogAndHandle()
-  async deleteComment(
-    caseId: string,
-    commentId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    const commentsPromise = this.commentsModel.destroy({
-      where: {
-        commentId: commentId,
-        caseId: caseId,
-      },
-      transaction,
-    })
-
-    const commentPromise = this.commentModel.destroy({
-      where: {
-        id: commentId,
-        caseId: caseId,
-      },
-      transaction,
-    })
-
-    await Promise.all([commentsPromise, commentPromise])
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
   async getCommentById(
     caseId: string,
     commentId: string,

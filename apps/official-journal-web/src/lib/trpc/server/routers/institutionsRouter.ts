@@ -15,12 +15,6 @@ export const institutionsRouter = router({
       return ctx.api.getInstitutions(input)
     }),
 
-  getInstitution: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.api.getInstitution({ id: input.id })
-    }),
-
   createInstitution: protectedProcedure
     .input(
       z.object({

@@ -11,6 +11,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import {
   ApplicationModule,
+  IssuesAdminModule,
   IssuesModule,
   IssuesTaskModule,
   SharedJournalModule,
@@ -52,6 +53,7 @@ import { StatisticsModule } from './statistics/statistics.module'
     SignatureModule,
     HealthModule,
     IssuesModule,
+    IssuesAdminModule,
     IssuesTaskModule,
     RouterModule.register([
       {

@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CaseServiceMock,
-  ICaseService,
+  ICaseListService,
   IJournalService,
   IReindexRunnerService,
   MockJournalService,
@@ -33,7 +33,7 @@ describe('JournalController', () => {
           useClass: MockJournalService,
         },
         {
-          provide: ICaseService,
+          provide: ICaseListService,
           useClass: CaseServiceMock,
         },
         {

@@ -3,7 +3,6 @@ import { forwardRef, Module } from '@nestjs/common'
 import { LoggingModule } from '@dmr.is/logging'
 import { AwsModule } from '@dmr.is/shared-modules'
 
-import { UserModule } from '../user/user.module'
 import { UtilityModule } from '../utility/utility.module'
 import { PdfController } from './pdf.controller'
 import { PdfService } from './pdf.service'
@@ -11,20 +10,16 @@ import { IPdfService } from './pdf.service.interface'
 
 export { IPdfService }
 
+/**
+ * The PDF service, with no routes. Import this to render PDFs; import
+ * `PdfControllerModule` only in an app that should serve the `/pdf` routes.
+ */
 @Module({
-  // UserModule is here for RoleGuard on the case routes, which resolves the
-  // caller against the staff user table via IUserService.
   // `forwardRef` because UtilityModule reaches back here:
   // utility -> application -> case -> pdf. Entering the cycle at
   // utility (pdf.service.ts imports IUtilityService from it) leaves
   // UtilityModule mid-evaluation when this array is built.
-  imports: [
-    LoggingModule,
-    forwardRef(() => UtilityModule),
-    AwsModule,
-    UserModule,
-  ],
-  controllers: [PdfController],
+  imports: [LoggingModule, forwardRef(() => UtilityModule), AwsModule],
   providers: [
     {
       provide: IPdfService,
@@ -33,4 +28,14 @@ export { IPdfService }
   ],
   exports: [IPdfService],
 })
-export class PdfModule {}
+export class PdfProviderModule {}
+
+/**
+ * The `/pdf` routes. Mounted by the application API only, which serves the
+ * application PDF to island.is.
+ */
+@Module({
+  imports: [PdfProviderModule],
+  controllers: [PdfController],
+})
+export class PdfControllerModule {}

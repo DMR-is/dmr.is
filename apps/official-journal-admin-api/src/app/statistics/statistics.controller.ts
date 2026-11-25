@@ -25,12 +25,10 @@ import {
   GetSearchAnalyticsTrendsQuery,
   GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
-  GetStatisticsOverviewResponse,
   SearchAnalyticsBreakdownsResponse,
   SearchAnalyticsOverviewResponse,
   SearchAnalyticsQueriesResponse,
   SearchAnalyticsTrendsResponse,
-  StatisticsOverviewQueryType,
   UserDto,
 } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
@@ -74,24 +72,6 @@ export class StatisticsController {
   async dashboardOverview(@CurrentUser() user: UserDto) {
     return ResultWrapper.unwrap(
       await this.statisticsService.getOverviewForDashboard(user.id),
-    )
-  }
-
-  @Get('/overview/:type')
-  @ApiOperation({ operationId: 'getStatisticsOverview' })
-  @ApiParam({
-    name: 'type',
-    enum: StatisticsOverviewQueryType,
-    enumName: 'StatisticsOverviewQueryType',
-  })
-  @ApiResponse({ status: 200, type: GetStatisticsOverviewResponse })
-  async overview(
-    @Param('type', new EnumValidationPipe(StatisticsOverviewQueryType))
-    type: StatisticsOverviewQueryType,
-    @CurrentUser() user: UserDto,
-  ): Promise<GetStatisticsOverviewResponse> {
-    return ResultWrapper.unwrap(
-      await this.statisticsService.getOverview(type, user?.id),
     )
   }
 

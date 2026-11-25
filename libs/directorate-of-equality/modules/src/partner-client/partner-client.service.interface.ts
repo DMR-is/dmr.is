@@ -57,8 +57,6 @@ export interface IPartnerClientService {
   /** Every firm ever approved, newest first, revoked ones included. */
   list(): Promise<PartnerClientDto[]>
 
-  get(id: string): Promise<PartnerClientDto>
-
   /**
    * The providers a company may choose from: active firms only, with name and
    * kennitala. Built from this table and nothing else, so no link a firm hands

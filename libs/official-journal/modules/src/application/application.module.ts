@@ -9,7 +9,6 @@ import { AttachmentsModule } from '../attachments/attachments.module'
 import { AuthModule } from '../auth/auth.module'
 import { SharedCaseModule } from '../case/case.module'
 import caseModels from '../case/models'
-import commentModels from '../comment/v1/models'
 import { CommentModuleV2 } from '../comment/v2'
 import advertModels from '../journal/models'
 import { PriceModule } from '../price/price.module'
@@ -23,11 +22,7 @@ export { ApplicationService } from './application.service'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([
-      ...caseModels,
-      ...advertModels,
-      ...commentModels,
-    ]),
+    SequelizeModule.forFeature([...caseModels, ...advertModels]),
     AwsModule,
     // `forwardRef` because price.module.ts imports this module back.
     // Named bare, this resolves to `undefined` whenever the cycle is

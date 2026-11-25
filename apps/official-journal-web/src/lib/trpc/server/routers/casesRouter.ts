@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
-import { AdvertStatus, CaseStatusEnum } from '../../../../gen/fetch'
-import { getParamsWithoutNullOrEmpty } from '../../../utils'
+import { AdvertStatus } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 import { TRPCError } from '@trpc/server'
@@ -35,44 +34,10 @@ export const casesRouter = router({
       return ctx.api.getCase({ id: input.id })
     }),
 
-  getCases: protectedProcedure
-    .input(
-      z.object({
-        id: z.array(z.string()).optional(),
-        applicationId: z.string().optional(),
-        search: z.string().optional(),
-        year: z.number().optional(),
-        status: z.array(z.string()).optional(),
-        department: z.array(z.string()).optional(),
-        type: z.array(z.string()).optional(),
-        category: z.array(z.string()).optional(),
-        employeeId: z.string().optional(),
-        published: z.boolean().optional(),
-        fastTrack: z.boolean().optional(),
-        institution: z.string().optional(),
-        fromDate: z.string().optional(),
-        toDate: z.string().optional(),
-        page: z.number().optional(),
-        pageSize: z.number().optional(),
-        sortBy: z.string().optional(),
-        direction: z.string().optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const castedInput = getParamsWithoutNullOrEmpty(input)
-      return ctx.api.getCases(castedInput)
-    }),
-
   rejectCase: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.api.rejectCase({ id: input.id })
-    }),
-
-  unpublishCase: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      await ctx.api.unpublish({ id: input.id })
     }),
 
   updateNextStatus: protectedProcedure
@@ -85,22 +50,6 @@ export const casesRouter = router({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.api.updatePreviousStatus({ id: input.id })
-    }),
-
-  updateStatus: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        statusId: z.nativeEnum(CaseStatusEnum),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      await ctx.api.updateCaseStatus({
-        id: input.id,
-        updateCaseStatusBody: {
-          status: input.statusId,
-        },
-      })
     }),
 
   updateAdvertHtml: protectedProcedure
@@ -358,12 +307,6 @@ export const casesRouter = router({
         caseId,
         updateRegulationDraftBody: body,
       })
-    }),
-
-  deleteRegulationDraft: protectedProcedure
-    .input(z.object({ caseId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      await ctx.api.deleteCaseRegulationDraft({ caseId: input.caseId })
     }),
 
   createRegulationChange: protectedProcedure

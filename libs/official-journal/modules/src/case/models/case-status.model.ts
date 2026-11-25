@@ -1,6 +1,5 @@
 // Association annotations use a type-only alias - see `src/models.md`.
 import {
-  BelongsTo,
   Column,
   DataType,
   DefaultScope,
@@ -11,8 +10,6 @@ import {
 
 import { CaseStatusEnum } from '@dmr.is/shared-dto'
 
-import type { CaseCommentModel as CaseCommentModelRef } from '../../comment/v1/models'
-import { CaseCommentModel } from '../../comment/v1/models'
 import { CaseModel } from './case.model'
 
 @Table({ tableName: 'case_status', timestamps: false })
@@ -41,9 +38,6 @@ export class CaseStatusModel extends Model {
     allowNull: false,
   })
   slug!: string
-
-  @BelongsTo(() => CaseCommentModel, 'id')
-  comment?: CaseCommentModelRef
 
   @HasMany(() => CaseModel, 'statusId')
   cases?: CaseModel[]

@@ -10,11 +10,18 @@ import slugify from 'slugify'
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
+import {
+  feeQuantityForChange,
+  warnOnZeroFeeQuantity,
+} from '../../core/utils/fee-quantity.util'
 import { AdvertModel } from '../../models/advert.model'
 import { CategoryDto, CategoryModel } from '../../models/category.model'
 import {
@@ -23,6 +30,8 @@ import {
   ChangeLogEntity,
   ChangeLogSnapshot,
 } from '../../models/category-type-change-log.model'
+import { ForeclosureModel } from '../../models/foreclosure.model'
+import { ForeclosurePropertyModel } from '../../models/foreclosure-property.model'
 import { TypeDto, TypeModel } from '../../models/type.model'
 import { TypeCategoriesModel } from '../../models/type-categories.model'
 import {
@@ -74,6 +83,8 @@ function isRevertsAuditIdConflict(error: unknown): boolean {
   )
 }
 
+const LOGGING_CONTEXT = 'CategoryTypeAdminService'
+
 @Injectable()
 export class CategoryTypeAdminService implements ICategoryTypeAdminService {
   constructor(
@@ -86,6 +97,7 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     @InjectModel(CategoryTypeChangeLogModel)
     private readonly changeLogModel: typeof CategoryTypeChangeLogModel,
     private readonly sequelize: Sequelize,
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
   async getOverview(): Promise<CategoryTypeOverviewDto> {
@@ -692,6 +704,13 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
           where: { id: { [Op.in]: ids } },
           transaction,
         })
+
+        if (body.toTypeId) {
+          await this.syncFeeQuantities(
+            moved.map((m) => ({ id: m.id, previousTypeId: m.typeId })),
+            transaction,
+          )
+        }
       }
 
       await this.writeChangeLog(transaction, {
@@ -998,6 +1017,16 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
       bucket.push(advert.id)
       groups.set(key, bucket)
     }
+    // Read each advert's type as it is now, not as the audited move left it: a
+    // later move may have retyped it since, and the fee quantity decision
+    // depends on the type it is actually leaving.
+    const current = await this.advertModel.findAll({
+      where: { id: { [Op.in]: adverts.map((a) => a.id) } },
+      attributes: ['id', 'typeId'],
+      transaction,
+    })
+    const currentTypeIds = new Map(current.map((a) => [a.id, a.typeId]))
+
     for (const [key, ids] of groups) {
       const [typeId, categoryId] = key.split('|')
       await this.advertModel.update(
@@ -1005,6 +1034,83 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
         { where: { id: { [Op.in]: ids } }, transaction },
       )
     }
+
+    await this.syncFeeQuantities(
+      adverts.map((a) => ({
+        id: a.id,
+        previousTypeId: currentTypeIds.get(a.id) ?? a.typeId,
+      })),
+      transaction,
+    )
+
     return adverts.length
+  }
+
+  /**
+   * A move can turn adverts into foreclosures, which are billed per property,
+   * or out of them. Re-derive the fee quantity of every moved advert through
+   * the same rule the editor uses (`feeQuantityForChange`): charged and legacy
+   * adverts keep theirs, a template foreclosure is recounted from its
+   * properties while it is a foreclosure and cleared while it is not.
+   */
+  private async syncFeeQuantities(
+    changes: { id: string; previousTypeId: string }[],
+    transaction: Transaction,
+  ): Promise<void> {
+    const previousTypeIds = new Map(
+      changes.map((c) => [c.id, c.previousTypeId]),
+    )
+
+    const adverts = await this.advertModel.findAll({
+      where: {
+        id: { [Op.in]: [...previousTypeIds.keys()] },
+        // Narrowing only; feeQuantityForChange applies the same rule.
+        transactionId: null,
+        legacyId: null,
+      },
+      attributes: [
+        'id',
+        'typeId',
+        'templateType',
+        'content',
+        'feeQuantity',
+        'transactionId',
+        'legacyId',
+      ],
+      include: [
+        {
+          model: ForeclosureModel,
+          attributes: ['id'],
+          include: [{ model: ForeclosurePropertyModel, attributes: ['id'] }],
+        },
+      ],
+      transaction,
+    })
+
+    for (const advert of adverts) {
+      const feeQuantity = feeQuantityForChange({
+        advert,
+        previousTypeId: previousTypeIds.get(advert.id),
+        typeId: advert.typeId,
+        content: advert.content,
+        propertyCount: advert.foreclosure?.properties?.length,
+      })
+
+      if (feeQuantity === undefined || feeQuantity === advert.feeQuantity) {
+        continue
+      }
+
+      await this.advertModel.update(
+        { feeQuantity },
+        { where: { id: advert.id }, transaction },
+      )
+
+      warnOnZeroFeeQuantity(this.logger, {
+        advertId: advert.id,
+        typeId: advert.typeId,
+        feeQuantity,
+        context: LOGGING_CONTEXT,
+      })
+    }
   }
 }

@@ -122,7 +122,6 @@ export interface ICaseService {
 
   rejectCase(id: string): Promise<ResultWrapper>
 
-  unpublishCase(id: string): Promise<ResultWrapper>
   updateCasePrice(
     caseId: string,
     body: UpdateCasePriceBody,
@@ -290,8 +289,6 @@ export interface ICaseService {
     caseId: string,
     body: UpdateRegulationDraftBody,
   ): Promise<ResultWrapper>
-
-  deleteRegulationDraft(caseId: string): Promise<ResultWrapper>
 
   createRegulationChange(
     caseId: string,

@@ -18,7 +18,6 @@ import { CaseControllerModule } from '../case/case.controller.module'
 import { CategoryTypeAdminControllerModule } from '../category-type-admin/category-type-admin.controller.module'
 import { CommentControllerModule } from '../comment/comment.controller.module'
 import { CommunicationChannelControllerModule } from '../communication-channel/communication-channel.module'
-import { FeeCodeModule } from '../fee-code/fee-code.controller.module'
 import { LGNationalRegistryControllerModule } from '../national-registry/national-registry.controller.module'
 import { PaymentsControllerModule } from '../payments/payment.controller.module'
 import { TBRCompanySettingsControllerModule } from '../settings/tbr-company/tbr-company-settings.controller.module'
@@ -41,7 +40,6 @@ import { UserControllerModule } from '../users/users.controller.module'
     TypeControllerModule,
     CaseControllerModule,
     CommentControllerModule,
-    FeeCodeModule,
     SettlementControllerModule,
     UserControllerModule,
     SubscriberAdminControllerModule,

@@ -1140,72 +1140,6 @@
         "tags": ["Companies"]
       }
     },
-    "/api/v1/companies/lookup/{nationalId}": {
-      "get": {
-        "operationId": "rskLookupCompany",
-        "parameters": [
-          {
-            "name": "nationalId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CompanyLookupDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Companies"]
-      }
-    },
     "/api/v1/companies/preview/{nationalId}": {
       "get": {
         "operationId": "getRskCompanyPreview",
@@ -4348,70 +4282,6 @@
       }
     },
     "/api/v1/partner-clients/{id}": {
-      "get": {
-        "operationId": "getPartnerClient",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/PartnerClientDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Partner clients"]
-      },
       "delete": {
         "description": "Cuts a firm off. Requires the ADMIN role. It then authenticates nowhere, whatever keys or delegations it still holds; those are left as they are, as their own audit trail. Idempotent.",
         "operationId": "revokePartnerClient",
@@ -8025,14 +7895,6 @@
           "paging": { "$ref": "#/components/schemas/Paging" }
         },
         "required": ["companies", "paging"]
-      },
-      "CompanyLookupDto": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string" },
-          "nationalId": { "type": "string" }
-        },
-        "required": ["name", "nationalId"]
       },
       "CompanyRskPreviewDto": {
         "type": "object",

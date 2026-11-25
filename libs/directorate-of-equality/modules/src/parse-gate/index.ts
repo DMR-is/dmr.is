@@ -19,5 +19,7 @@ export * from './parse-gate.token'
 // the barrel is publishing the `new Semaphore(...)` this module exists to
 // prevent — a second, unshared gate that leaves both importers looking bounded
 // while the process holds twice the budgeted heap. The two specs that need the
-// class reach it by relative path; nothing outside this directory should.
+// class reach it by relative path. The one other importer is
+// `report-pdf/report-pdf-download-gate.service.ts`, which owns a deliberately
+// separate gate for PDF downloads; nothing else outside this directory should.
 export { SemaphoreQueueFullError } from './semaphore'

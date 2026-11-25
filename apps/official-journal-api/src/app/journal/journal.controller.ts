@@ -24,7 +24,7 @@ import {
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdminGuard,
-  ICaseService,
+  ICaseListService,
   IJournalService,
   IReindexRunnerService,
   searchLeanAdverts,
@@ -65,7 +65,8 @@ type SearchOptions = {
 export class JournalController {
   constructor(
     @Inject(IJournalService) private readonly journalService: IJournalService,
-    @Inject(ICaseService) private readonly caseService: ICaseService,
+    @Inject(ICaseListService)
+    private readonly caseListService: ICaseListService,
     @Inject(IReindexRunnerService)
     private readonly runner: IReindexRunnerService,
     private readonly openSearch: Client,
@@ -188,7 +189,7 @@ export class JournalController {
     ]
 
     const casesResponse = ResultWrapper.unwrap(
-      await this.caseService.getCases({
+      await this.caseListService.getCases({
         sortBy: DEFAULT_CASE_SORT_BY,
         direction: DEFAULT_CASE_SORT_DIRECTION,
         page: params?.page ?? DEFAULT_PAGE_NUMBER,

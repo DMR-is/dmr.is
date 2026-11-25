@@ -55,11 +55,6 @@ const parseOptionalNullableDate = (value?: string | null) => {
 }
 
 export const applicationRouter = router({
-  getTypes: protectedProcedure.query(async ({ ctx }) => {
-    return await ctx.api.getTypes({
-      excludeUnassignable: true,
-    })
-  }),
   getCategories: protectedProcedure
     .input(getCategoriesSchema)
     .query(async ({ ctx, input }) => {
@@ -128,13 +123,6 @@ export const applicationRouter = router({
         applicationId: input.applicationId,
       })
     }),
-  getMinumDateForDivisionEnding: protectedProcedure
-    .input(z.object({ applicationId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return await ctx.api.getMinDateForDivisionEnding({
-        applicationId: input.applicationId,
-      })
-    }),
   addDivisionMeeting: protectedProcedure
     .input(createDivisionMeetingWithIdInput)
     .mutation(async ({ ctx, input }) => {
@@ -164,14 +152,6 @@ export const applicationRouter = router({
             date: parseOptionalNullableDate(rest.signature.date),
           },
         },
-      })
-    }),
-  getMyAdverts: protectedProcedure
-    .input(getApplicationsSchema.optional())
-    .query(async ({ ctx, input }) => {
-      return await ctx.api.getMyAdverts({
-        page: input?.page,
-        pageSize: input?.pageSize,
       })
     }),
   getMyLegacyAdverts: protectedProcedure

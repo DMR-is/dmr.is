@@ -2668,8 +2668,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "enum": ["COMMON", "RECALL_BANKRUPTCY", "RECALL_DECEASED"],
-              "type": "string"
+              "type": "string",
+              "enum": ["COMMON", "RECALL_BANKRUPTCY", "RECALL_DECEASED"]
             }
           }
         ],
@@ -4132,6 +4132,9 @@
               "Unauthorized",
               "Forbidden",
               "BadRequest",
+              "Conflict",
+              "PayloadTooLarge",
+              "TooManyRequests",
               "InternalServerError",
               "ConnectionAcquireTimeoutError",
               "UnknownError"
@@ -4145,6 +4148,9 @@
               "Unauthorized",
               "Forbidden",
               "BadRequest",
+              "Conflict",
+              "PayloadTooLarge",
+              "TooManyRequests",
               "InternalServerError",
               "ConnectionAcquireTimeoutError",
               "UnknownError"
@@ -4771,7 +4777,7 @@
           "date": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z",
+            "example": "2026-02-19T00:00:00.000Z",
             "nullable": true
           },
           "name": { "type": "string", "nullable": true },
@@ -4820,24 +4826,24 @@
           "deadline": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "dateOfDeath": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "endingDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "partnerNationalId": { "type": "string", "maxLength": 10 },
           "partnerName": { "type": "string", "maxLength": 255 },
           "partnerDateOfDeath": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "companies": {
             "type": "array",
@@ -4876,13 +4882,13 @@
           "signatureDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z",
+            "example": "2026-02-19T00:00:00.000Z",
             "description": "Date of signature"
           },
           "judgementDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "divisionMeetingDate": {
             "type": "string",
@@ -4971,7 +4977,7 @@
           "judgmentDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "settlementType": {
             "type": "string",
@@ -4983,7 +4989,7 @@
           "settlementDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
@@ -5058,7 +5064,7 @@
           "judgmentDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "settlementType": {
             "type": "string",
@@ -5070,7 +5076,7 @@
           "settlementDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
@@ -5094,7 +5100,7 @@
           "partnerDateOfDeath": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           }
         },
         "required": [
@@ -5272,7 +5278,7 @@
           "endingDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "declaredClaims": { "type": "number" },
           "signature": { "$ref": "#/components/schemas/CreateSignatureDto" }

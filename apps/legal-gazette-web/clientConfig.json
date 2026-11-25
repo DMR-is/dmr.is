@@ -4166,131 +4166,6 @@
         "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/fee-codes": {
-      "get": {
-        "operationId": "getFeeCodes",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetFeeCodesResponse" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Legal gazette - internal API"]
-      }
-    },
-    "/api/v1/fee-codes/{id}": {
-      "get": {
-        "operationId": "getFeeCodeById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/FeeCodeDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Legal gazette - internal API"]
-      }
-    },
     "/api/v1/settlements/{id}": {
       "patch": {
         "operationId": "updateSettlement",
@@ -7527,6 +7402,9 @@
               "Unauthorized",
               "Forbidden",
               "BadRequest",
+              "Conflict",
+              "PayloadTooLarge",
+              "TooManyRequests",
               "InternalServerError",
               "ConnectionAcquireTimeoutError",
               "UnknownError"
@@ -7540,6 +7418,9 @@
               "Unauthorized",
               "Forbidden",
               "BadRequest",
+              "Conflict",
+              "PayloadTooLarge",
+              "TooManyRequests",
               "InternalServerError",
               "ConnectionAcquireTimeoutError",
               "UnknownError"
@@ -8285,7 +8166,7 @@
           "date": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z",
+            "example": "2026-02-19T00:00:00.000Z",
             "nullable": true
           },
           "name": { "type": "string", "nullable": true },
@@ -8334,24 +8215,24 @@
           "deadline": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "dateOfDeath": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "endingDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "partnerNationalId": { "type": "string", "maxLength": 10 },
           "partnerName": { "type": "string", "maxLength": 255 },
           "partnerDateOfDeath": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "companies": {
             "type": "array",
@@ -8390,13 +8271,13 @@
           "signatureDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z",
+            "example": "2026-02-19T00:00:00.000Z",
             "description": "Date of signature"
           },
           "judgementDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "divisionMeetingDate": {
             "type": "string",
@@ -8485,7 +8366,7 @@
           "judgmentDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "settlementType": {
             "type": "string",
@@ -8497,7 +8378,7 @@
           "settlementDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
@@ -8572,7 +8453,7 @@
           "judgmentDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "settlementType": {
             "type": "string",
@@ -8584,7 +8465,7 @@
           "settlementDate": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
@@ -8608,7 +8489,7 @@
           "partnerDateOfDeath": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z"
+            "example": "2026-02-19T00:00:00.000Z"
           }
         },
         "required": [
@@ -8942,27 +8823,6 @@
         "properties": { "comment": { "type": "string" } },
         "required": ["comment"]
       },
-      "FeeCodeDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "feeCode": { "type": "string" },
-          "description": { "type": "string" },
-          "value": { "type": "number" },
-          "isMultiplied": { "type": "boolean" }
-        },
-        "required": ["id", "feeCode", "description", "value", "isMultiplied"]
-      },
-      "GetFeeCodesResponse": {
-        "type": "object",
-        "properties": {
-          "feeCodes": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/FeeCodeDto" }
-          }
-        },
-        "required": ["feeCodes"]
-      },
       "UpdateSettlementDto": {
         "type": "object",
         "properties": {
@@ -9124,7 +8984,7 @@
           "date": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z",
+            "example": "2026-02-19T00:00:00.000Z",
             "nullable": true
           },
           "name": { "type": "string", "nullable": true },

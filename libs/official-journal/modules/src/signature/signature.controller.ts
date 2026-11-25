@@ -21,7 +21,6 @@ import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
-  CreateSignature,
   GetSignature,
   UpdateSignatureMember,
   UpdateSignatureRecord,
@@ -39,10 +38,6 @@ import { ISignatureService } from './signature.service.interface'
  * signature UI is rendered inside the case-update screen, which loads through
  * `getCase` on that `@Roles(Admin)` controller, so an Editor cannot reach these
  * routes by any supported path anyway.
- *
- * These routes carried no guard at all until this commit, which left all nine
- * of them — seven of which mutate (2 PUT, 3 POST, 2 DELETE) — reachable
- * unauthenticated on an internet-facing ALB.
  */
 @Controller({
   version: '1',
@@ -149,29 +144,6 @@ export class SignatureController {
   ): Promise<void> {
     ResultWrapper.unwrap(
       await this.signatureService.createSignatureRecord(signatureId),
-    )
-  }
-
-  @Post(':caseId')
-  @ApiOperation({ operationId: 'createSignature' })
-  @ApiNoContentResponse()
-  async createSignature(
-    @Param('caseId') caseId: string,
-    @Body() body: CreateSignature,
-  ): Promise<void> {
-    ResultWrapper.unwrap(
-      await this.signatureService.createSignature(caseId, body),
-    )
-  }
-
-  @Get('signatures/:caseId')
-  @ApiOperation({ operationId: 'getSignatureByCaseId' })
-  @ApiResponse({ type: GetSignature })
-  async getSignatureByCaseId(
-    @Param('caseId', new UUIDValidationPipe()) caseId: string,
-  ): Promise<GetSignature> {
-    return ResultWrapper.unwrap(
-      await this.signatureService.getSignatureByCaseId(caseId),
     )
   }
 

@@ -26,7 +26,7 @@ import { Test } from '@nestjs/testing'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CaseServiceMock,
-  ICaseService,
+  ICaseListService,
   IJournalService,
   IReindexRunnerService,
   MockRunnerService,
@@ -49,7 +49,7 @@ describe('GET /legacy-pdf (Express 5 path syntax)', () => {
       controllers: [JournalController],
       providers: [
         { provide: IJournalService, useValue: { handleLegacyPdfUrl } },
-        { provide: ICaseService, useClass: CaseServiceMock },
+        { provide: ICaseListService, useClass: CaseServiceMock },
         { provide: IReindexRunnerService, useClass: MockRunnerService },
         {
           provide: LOGGER_PROVIDER,

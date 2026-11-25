@@ -232,9 +232,11 @@ const COMPANY_READ_HANDLERS: readonly string[] = [
   'ApplicationController.getActiveEqualityReport',
   'ApplicationController.getCompany',
   'ApplicationController.getEqualityContentPdf',
+  'ApplicationController.getImprovementPlanPdf',
   'ApplicationController.getReport',
   'ApplicationController.getReportComments',
   'ApplicationController.getReportOutliers',
+  'ApplicationController.getReportPdf',
   'ApplicationController.getReports',
   'ReportCommentController.getByReportId',
 ]

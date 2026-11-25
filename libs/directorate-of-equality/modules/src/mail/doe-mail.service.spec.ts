@@ -6,6 +6,7 @@ import {
   ReportTypeEnum,
 } from '../report/models/report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
+import { SERVICE_SURVEY_URL } from './templates/report-approved.template'
 import { DoeMailService } from './doe-mail.service'
 import { ReportMailOutcome } from './doe-mail.service.interface'
 
@@ -503,6 +504,41 @@ describe('DoeMailService', () => {
 
       const [message] = aws.sendMail.mock.calls[0]
       expect(message.subject).toBe('Skýrslugjöf samþykkt')
+    })
+
+    it('appends the service survey link when asked', async () => {
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+
+      await service.sendReportApproved(
+        makeReport({ type: ReportTypeEnum.EQUALITY }),
+        [pdf('jafnréttisáætlun.pdf')],
+        { serviceSurvey: true },
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      // Each paragraph and the link line stand apart in plain text.
+      expect(message.text).toContain(
+        `Svörin eru ekki persónugreinanleg.\n\nÞitt svar`,
+      )
+      expect(message.text).toContain(
+        `þjónustu okkar.\n\nSvara könnun: ${SERVICE_SURVEY_URL}`,
+      )
+      expect(message.html).toContain(
+        `<a href="${SERVICE_SURVEY_URL}">${SERVICE_SURVEY_URL}</a>`,
+      )
+    })
+
+    it('leaves the survey out by default', async () => {
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+
+      await service.sendReportApproved(
+        makeReport({ type: ReportTypeEnum.SALARY }),
+        [pdf('jafnlaunaúttekt.pdf')],
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.text).not.toContain('könnun')
+      expect(message.html).not.toContain('qualtrics')
     })
 
     it('attaches the documents it is handed, stripped of the label', async () => {

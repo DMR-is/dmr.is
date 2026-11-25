@@ -10,7 +10,6 @@ export * from './company.core.module'
 export * from './company.service.interface'
 export * from './dto/company-comment.dto'
 export * from './dto/company-event.dto'
-export * from './dto/company-lookup.dto'
 export * from './dto/company-report.dto'
 export * from './dto/company-rsk-preview.dto'
 export * from './dto/company-timeline-item.dto'
@@ -58,4 +57,8 @@ export * from './models/legacy-report.model'
  * disagree about who owes what, which is exactly the bug this export exists to
  * prevent.
  */
-export { equalityRequiredSql, salaryRequiredSql } from './utils/report-status'
+export {
+  equalityRequiredSql,
+  owesSalaryReport,
+  salaryRequiredSql,
+} from './utils/report-status'

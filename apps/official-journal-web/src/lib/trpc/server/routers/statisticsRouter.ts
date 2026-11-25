@@ -4,7 +4,6 @@ import {
   DepartmentSlugEnum,
   SearchAnalyticsInterval,
   SearchAnalyticsQueryTableType,
-  StatisticsOverviewQueryType,
 } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
@@ -17,16 +16,6 @@ export const statisticsRouter = router({
     )
     .query(async ({ ctx, input }) => {
       return ctx.api.getStatisticsForDepartment({ slug: input.slug })
-    }),
-
-  getStatisticsOverview: protectedProcedure
-    .input(
-      z.object({
-        type: z.enum(StatisticsOverviewQueryType),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      return ctx.api.getStatisticsOverview({ type: input.type })
     }),
 
   getStatisticsOverviewDashboard: protectedProcedure.query(async ({ ctx }) => {
