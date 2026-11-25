@@ -244,11 +244,6 @@ module.exports = {
    * - @UseGuards(TokenJwtAuthGuard, MachineClientGuard) for authentication
    * - No @AdminAccess() or scope decorators needed
    *
-   * Island.is Application Controllers (citizen submissions):
-   * - @ApiBearerAuth() for Swagger documentation
-   * - @UseGuards(TokenJwtAuthGuard, CurrentNationalRegistryPersonGuard) for authentication
-   * - No @AdminAccess() or scope decorators needed
-   *
    * Public Controllers (no auth required):
    * - Use @PublicController() decorator to bypass all auth checks
    *
@@ -256,7 +251,7 @@ module.exports = {
    * - Automatically skipped - these are meant to be extended by other controllers
    * - Child controllers must have proper guards and decorators
    *
-   * Note: Cannot mix AuthorizationGuard with MachineClientGuard or CurrentNationalRegistryPersonGuard
+   * Note: Cannot mix AuthorizationGuard with MachineClientGuard
    *
    * This ensures all endpoints are properly secured and documented.
    */
@@ -273,16 +268,16 @@ module.exports = {
         missingApiBearerAuth:
           'Controller is missing @ApiBearerAuth() decorator for Swagger documentation.',
         missingUseGuards:
-          'Controller is missing @UseGuards() decorator. Use either @UseGuards(TokenJwtAuthGuard, AuthorizationGuard) for user-facing endpoints, @UseGuards(TokenJwtAuthGuard, MachineClientGuard) for external systems, or @UseGuards(TokenJwtAuthGuard, CurrentNationalRegistryPersonGuard) for island.is submissions.',
+          'Controller is missing @UseGuards() decorator. Use either @UseGuards(TokenJwtAuthGuard, AuthorizationGuard) for user-facing endpoints or @UseGuards(TokenJwtAuthGuard, MachineClientGuard) for external systems.',
         missingAuthorizationDecorator:
           'Controller or method is missing authorization decorator. Use @AdminAccess() or a scope decorator (@ApplicationWebScopes(), @PublicWebScopes(), @PublicOrApplicationWebScopes()).',
         missingTokenJwtAuthGuard: '@UseGuards() is missing TokenJwtAuthGuard.',
         missingSecondGuard:
-          '@UseGuards() is missing a second guard. Use AuthorizationGuard (for user-facing), MachineClientGuard (for external systems), or CurrentNationalRegistryPersonGuard (for island.is submissions).',
+          '@UseGuards() is missing a second guard. Use AuthorizationGuard (for user-facing) or MachineClientGuard (for external systems).',
         mixedGuards:
-          'Cannot mix AuthorizationGuard with MachineClientGuard or CurrentNationalRegistryPersonGuard. Use one or the other.',
+          'Cannot mix AuthorizationGuard with MachineClientGuard. Use one or the other.',
         unnecessaryAuthDecorator:
-          '@AdminAccess() and scope decorators (@ApplicationWebScopes, @PublicWebScopes, etc.) should only be used with AuthorizationGuard. Remove these decorators when using MachineClientGuard or CurrentNationalRegistryPersonGuard.',
+          '@AdminAccess() and scope decorators (@ApplicationWebScopes, @PublicWebScopes, etc.) should only be used with AuthorizationGuard. Remove these decorators when using MachineClientGuard.',
       },
       schema: [],
     },
@@ -317,7 +312,6 @@ module.exports = {
             hasTokenJwt: false,
             hasAuthGuard: false,
             hasMachineClient: false,
-            hasNationalRegistryGuard: false,
           }
 
         for (const decorator of decorators) {
@@ -336,9 +330,6 @@ module.exports = {
               hasTokenJwt: guardNames.includes('TokenJwtAuthGuard'),
               hasAuthGuard: guardNames.includes('AuthorizationGuard'),
               hasMachineClient: guardNames.includes('MachineClientGuard'),
-              hasNationalRegistryGuard: guardNames.includes(
-                'CurrentNationalRegistryPersonGuard',
-              ),
             }
           }
         }
@@ -347,7 +338,6 @@ module.exports = {
           hasTokenJwt: false,
           hasAuthGuard: false,
           hasMachineClient: false,
-          hasNationalRegistryGuard: false,
         }
       }
 
@@ -418,11 +408,8 @@ module.exports = {
             })
           }
 
-          // Cannot mix AuthorizationGuard with MachineClientGuard or CurrentNationalRegistryPersonGuard
-          if (
-            guards.hasAuthGuard &&
-            (guards.hasMachineClient || guards.hasNationalRegistryGuard)
-          ) {
+          // Cannot mix AuthorizationGuard with MachineClientGuard
+          if (guards.hasAuthGuard && guards.hasMachineClient) {
             context.report({
               node,
               messageId: 'mixedGuards',
@@ -430,12 +417,8 @@ module.exports = {
             return
           }
 
-          // Must have either AuthorizationGuard, MachineClientGuard, or CurrentNationalRegistryPersonGuard
-          if (
-            !guards.hasAuthGuard &&
-            !guards.hasMachineClient &&
-            !guards.hasNationalRegistryGuard
-          ) {
+          // Must have either AuthorizationGuard or MachineClientGuard
+          if (!guards.hasAuthGuard && !guards.hasMachineClient) {
             context.report({
               node,
               messageId: 'missingSecondGuard',
@@ -443,8 +426,8 @@ module.exports = {
             return
           }
 
-          // If using MachineClientGuard or CurrentNationalRegistryPersonGuard, no need for auth decorators
-          if (guards.hasMachineClient || guards.hasNationalRegistryGuard) {
+          // If using MachineClientGuard, no need for auth decorators
+          if (guards.hasMachineClient) {
             // Check that auth decorators are NOT used with these guards
             const hasClassAuth = hasAnyAuthDecorator(decorators)
             if (hasClassAuth) {
