@@ -711,11 +711,10 @@ export class CaseCreateService implements ICaseCreateService {
   /**
    * A case is filed for the involved party named in the application's
    * answers. The caller must be a party to the application, and the involved
-   * party must be one of: every institution for an editorial admin, the
+   * party must be one of: every institution for an editorial admin, or the
    * involved parties the caller belongs to or acts for
-   * (`caller.involvedPartyIds`), or any institution registered under the
-   * application's applicant national id. The same set applies to the
-   * applicant and to an assignee.
+   * (`caller.involvedPartyIds`, which is what the party picker offered them).
+   * An assignee may also file for the applicant's primary institution.
    * Every refusal is the same 403, so the answer does not reveal which
    * institution ids exist.
    */
@@ -755,19 +754,22 @@ export class CaseCreateService implements ICaseCreateService {
       return ResultWrapper.ok()
     }
 
-    // Otherwise only what the party picker offered for the applicant: the
-    // applicant's primary institution, or, when several institutions share
-    // the applicant's national id, the ones linked to the acting user. The
-    // actor is known only when the applicant is the caller, so an assignee
-    // is offered the primary institution, never a sibling on the same
-    // national id.
+    // For the applicant, `involvedPartyIds` already is what the party picker
+    // offered, so nothing else is allowed: a party merely registered under
+    // their national id (e.g. a sole proprietorship) was never offered.
     const isApplicant =
       normalizeNationalId(caller.nationalId) ===
       normalizeNationalId(application.applicant)
 
+    if (isApplicant) {
+      return forbidden()
+    }
+
+    // An assignee may file for the applicant's primary institution. The
+    // applicant's actor is not known here, so never a sibling institution on
+    // the same national id.
     const offered = await this.userService.getInvolvedPartiesByNationalId(
       normalizeNationalId(application.applicant),
-      isApplicant ? caller.actorNationalId : undefined,
     )
 
     if (!offered.result.ok) {

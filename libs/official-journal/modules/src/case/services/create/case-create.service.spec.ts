@@ -74,30 +74,32 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
     expect(getInvolvedPartiesByNationalId).not.toHaveBeenCalled()
   })
 
-  it('allows an institution the party picker offered the acting applicant', async () => {
+  it('refuses a delegate applicant an institution the picker did not offer, without another lookup', async () => {
     offeredParties(PARTY_ID)
 
-    await submit(
-      { ...applicant, actorNationalId: '0202020000', involvedPartyIds: [] },
-      PARTY_ID,
-    )
-
-    expect(getCreateCaseBody).toHaveBeenCalled()
-    expect(getInvolvedPartiesByNationalId).toHaveBeenCalledWith(
-      APPLICANT_DIGITS,
-      '0202020000',
-    )
-  })
-
-  it('refuses an institution the party picker did not offer the applicant', async () => {
-    offeredParties(OTHER_PARTY_ID)
-
     const result = await submit(
-      { ...applicant, actorNationalId: '0202020000', involvedPartyIds: [] },
+      {
+        ...applicant,
+        actorNationalId: '0202020000',
+        involvedPartyIds: [OTHER_PARTY_ID],
+      },
       PARTY_ID,
     )
 
     expectRefusal(result, 403, FORBIDDEN_MESSAGE)
+    expect(getInvolvedPartiesByNationalId).not.toHaveBeenCalled()
+  })
+
+  it('refuses an individual applicant a party merely registered under their national id', async () => {
+    offeredParties(PARTY_ID)
+
+    const result = await submit(
+      { ...applicant, involvedPartyIds: [] },
+      PARTY_ID,
+    )
+
+    expectRefusal(result, 403, FORBIDDEN_MESSAGE)
+    expect(getInvolvedPartiesByNationalId).not.toHaveBeenCalled()
   })
 
   describe('an assignee', () => {
@@ -136,12 +138,17 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
       expect(getCreateCaseBody).toHaveBeenCalled()
       expect(getInvolvedPartiesByNationalId).toHaveBeenCalledWith(
         APPLICANT_DIGITS,
-        undefined,
       )
     })
 
     it("is not offered the applicant's sibling institutions through their own actor", async () => {
-      offeredParties(OTHER_PARTY_ID)
+      // With an actor the lookup would return the sibling; without, the primary
+      getInvolvedPartiesByNationalId.mockImplementation(
+        async (_nationalId: string, actor?: string) =>
+          ResultWrapper.ok({
+            involvedParties: [{ id: actor ? PARTY_ID : OTHER_PARTY_ID }],
+          }),
+      )
 
       const result = await submitAsAssignee(
         {
@@ -155,7 +162,6 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
       expectRefusal(result, 403, FORBIDDEN_MESSAGE)
       expect(getInvolvedPartiesByNationalId).toHaveBeenCalledWith(
         APPLICANT_DIGITS,
-        undefined,
       )
     })
 
@@ -239,7 +245,14 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
       ResultWrapper.err({ code: 500, message: 'db down' }),
     )
 
-    const result = await submit(applicant, PARTY_ID)
+    const assignee = { nationalId: '020202-0000' }
+    const result = await service.createCaseByApplication(
+      {
+        ...applicationWith(PARTY_ID),
+        assignees: [assignee.nationalId],
+      } as never,
+      assignee,
+    )
 
     expectRefusal(result, 500)
   })
