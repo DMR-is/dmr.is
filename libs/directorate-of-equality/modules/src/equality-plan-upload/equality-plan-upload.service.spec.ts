@@ -1,6 +1,3 @@
-import { createHash } from 'crypto'
-import { inspect } from 'util'
-
 import {
   BadRequestException,
   HttpStatus,
@@ -80,10 +77,18 @@ describe('EqualityPlanUploadService', () => {
     cleanupAfter: jest.Mock
   }
   let reportModel: { findOne: jest.Mock }
+  /**
+   * The two reads the service makes, told apart by their options: the replay
+   * check runs inside the request (no `transaction` option), the post-commit
+   * landed check outside it (`transaction: null`).
+   */
+  let storedRow: { id: string } | null
+  let landedRow: { id: string } | null
 
   /** What the draft PATCH and the IN_REVIEW edit do with the content. */
-  const resolvingWrite = jest.fn(async (content: EqualityContentInput) =>
-    resolveEqualityContent(content),
+  const resolvingWrite = jest.fn(
+    async (content: EqualityContentInput | null) =>
+      content ? resolveEqualityContent(content) : null,
   )
 
   beforeEach(async () => {
@@ -98,7 +103,13 @@ describe('EqualityPlanUploadService', () => {
       fetchObject: jest.fn().mockResolvedValue(PDF_BYTES),
       cleanupAfter: jest.fn().mockResolvedValue(undefined),
     }
-    reportModel = { findOne: jest.fn().mockResolvedValue({ id: REPORT_ID }) }
+    storedRow = null
+    landedRow = { id: REPORT_ID }
+    reportModel = {
+      findOne: jest.fn(async (opts: { transaction?: null }) =>
+        opts.transaction === null ? landedRow : storedRow,
+      ),
+    }
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -168,6 +179,80 @@ describe('EqualityPlanUploadService', () => {
     )
   })
 
+  it('drops a registeredPdfKey the caller sent, on the inline path', async () => {
+    const write = jest.fn().mockResolvedValue('written')
+
+    await service.withStagedPlan(
+      REPORT_ID,
+      {
+        equalityReportPdf: PDF_BYTES.toString('base64'),
+        equalityReportPdfFilename: FILENAME,
+        registeredPdfKey: KEY,
+      },
+      write,
+    )
+
+    expect(write).toHaveBeenCalledWith({
+      equalityReportPdf: PDF_BYTES.toString('base64'),
+      equalityReportPdfFilename: FILENAME,
+    })
+  })
+
+  describe('withStagedPlan — a resent key', () => {
+    it('answers as a success and leaves the plan alone when the key delivered the current plan', async () => {
+      storedRow = { id: REPORT_ID }
+
+      await expect(
+        service.withStagedPlan(
+          REPORT_ID,
+          { equalityReportPdfKey: KEY, equalityReportPdfFilename: FILENAME },
+          resolvingWrite,
+        ),
+      ).resolves.toBeNull()
+
+      expect(reportModel.findOne).toHaveBeenCalledWith({
+        where: { id: REPORT_ID, equalityReportPdfKey: KEY },
+        attributes: ['id'],
+      })
+      expect(resolvingWrite).toHaveBeenCalledWith(null)
+      // Its object is already gone: nothing to read, nothing to delete.
+      expect(importUpload.fetchObject).not.toHaveBeenCalled()
+      expect(importUpload.cleanupAfter).not.toHaveBeenCalled()
+    })
+
+    it('reads the upload as usual when the report holds another plan', async () => {
+      // A key whose plan was replaced since: the column no longer names it.
+      storedRow = null
+
+      await service.withStagedPlan(
+        REPORT_ID,
+        { equalityReportPdfKey: KEY, equalityReportPdfFilename: FILENAME },
+        resolvingWrite,
+      )
+
+      expect(importUpload.fetchObject).toHaveBeenCalled()
+      expect(resolvingWrite).not.toHaveBeenCalledWith(null)
+    })
+
+    it('never answers for another report: the scope check runs first', async () => {
+      storedRow = { id: REPORT_ID }
+      importUpload.assertKeyWithinBoundary.mockImplementation(() => {
+        throw new BadRequestException('Invalid import upload key')
+      })
+
+      await expect(
+        service.withStagedPlan(
+          REPORT_ID,
+          { equalityReportPdfKey: KEY, equalityReportPdfFilename: FILENAME },
+          resolvingWrite,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(reportModel.findOne).not.toHaveBeenCalled()
+      expect(resolvingWrite).not.toHaveBeenCalled()
+    })
+  })
+
   describe('withStagedPlan — by key', () => {
     it('stores the staged PDF exactly as an inline base64 PDF', async () => {
       const result = await service.withStagedPlan(
@@ -187,14 +272,18 @@ describe('EqualityPlanUploadService', () => {
         BOUNDARY,
         MAX_EQUALITY_PDF_BYTES,
       )
-      // Byte-for-byte what the inline path stores for the same file.
-      expect(result).toEqual(
-        resolveEqualityContent({
+      // Byte-for-byte what the inline path stores for the same file, plus the
+      // key that delivered it.
+      expect(result).toEqual({
+        ...resolveEqualityContent({
           equalityReportPdf: PDF_BYTES.toString('base64'),
           equalityReportPdfFilename: FILENAME,
         }),
+        equalityReportPdfKey: KEY,
+      })
+      expect(result?.equalityReportContentType).toBe(
+        EqualityContentTypeEnum.PDF,
       )
-      expect(result.equalityReportContentType).toBe(EqualityContentTypeEnum.PDF)
     })
 
     it('ignores an explicit null on the inline fields alongside a key', async () => {
@@ -213,6 +302,7 @@ describe('EqualityPlanUploadService', () => {
         equalityReportContent: undefined,
         equalityReportPdf: PDF_BYTES.toString('base64'),
         equalityReportPdfFilename: FILENAME,
+        registeredPdfKey: KEY,
       })
     })
 
@@ -348,28 +438,19 @@ describe('EqualityPlanUploadService', () => {
       )
       await flush()
 
-      expect(reportModel.findOne).toHaveBeenCalledWith(
-        expect.objectContaining({ transaction: null }),
-      )
-      // The landed check must match this report, as a PDF, by the md5 of the
-      // exact base64 stored. `Op.and` is a symbol key, so inspect rather than
-      // JSON.stringify, which would drop the whole clause.
-      const where = inspect(reportModel.findOne.mock.calls[0][0].where, {
-        depth: null,
+      // Landed = the row records this key, which only this write sets and
+      // every other plan write clears.
+      expect(reportModel.findOne).toHaveBeenCalledWith({
+        where: { id: REPORT_ID, equalityReportPdfKey: KEY },
+        attributes: ['id'],
+        transaction: null,
       })
-      expect(where).toContain(REPORT_ID)
-      expect(where).toContain(EqualityContentTypeEnum.PDF)
-      expect(where).toContain("fn: 'md5'")
-      expect(where).toContain("col: 'equality_report_content'")
-      expect(where).toContain(
-        createHash('md5').update(PDF_BYTES.toString('base64')).digest('hex'),
-      )
       // Success: no error, so `cleanupAfter` treats it as terminal and deletes.
       expect(importUpload.cleanupAfter).toHaveBeenCalledWith(KEY, BOUNDARY)
     })
 
     it('keeps the staged object when the row does not hold the PDF', async () => {
-      reportModel.findOne.mockResolvedValue(null)
+      landedRow = null
 
       await service.withStagedPlan(
         REPORT_ID,

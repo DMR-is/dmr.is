@@ -195,8 +195,11 @@ export class ReportDraftService implements IReportDraftService {
       async (content) => {
         // Null when the patch mentions neither content field, which is the
         // common case — a PATCH setting only a phone number must not touch the
-        // narrative.
-        const equalityContent = resolveOptionalEqualityContent(content)
+        // narrative — and when `content` is null: a resent key whose plan is
+        // already stored, where the header fields still apply.
+        const equalityContent = content
+          ? resolveOptionalEqualityContent(content)
+          : null
 
         if (equalityContent) {
           Object.assign(patch, equalityContent)

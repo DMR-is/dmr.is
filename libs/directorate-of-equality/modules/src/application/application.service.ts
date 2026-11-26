@@ -658,23 +658,30 @@ export class ApplicationService implements IApplicationService {
     // Replaces content and representation together: a correction may switch a
     // report from HTML to PDF or back, and leaving the old type behind would
     // describe the new content wrongly.
-    await this.equalityPlanUploadService.withStagedPlan(
+    const written = await this.equalityPlanUploadService.withStagedPlan(
       report.id,
       input,
       async (content) => {
+        // A resent key whose plan is already stored: the edit happened, and
+        // was recorded, on the first request.
+        if (!content) return false
+
         await this.reportModel.update(resolveEqualityContent(content), {
           where: { id: report.id },
         })
+        return true
       },
     )
 
-    await this.markApplicantResponded(report.id)
+    if (written) {
+      await this.markApplicantResponded(report.id)
 
-    await this.reportEventService.emitEdited(
-      report.id,
-      report.status,
-      company.id,
-    )
+      await this.reportEventService.emitEdited(
+        report.id,
+        report.status,
+        company.id,
+      )
+    }
 
     return this.getReport(providerId, company)
   }

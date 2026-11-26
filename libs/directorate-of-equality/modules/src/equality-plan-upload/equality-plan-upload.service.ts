@@ -1,7 +1,5 @@
 import { getNamespace } from 'cls-hooked'
-import { createHash } from 'crypto'
 import { Transaction } from 'sequelize'
-import { Sequelize } from 'sequelize-typescript'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -18,11 +16,7 @@ import {
   EqualityContentInput,
   MAX_EQUALITY_PDF_BYTES,
 } from '../report/lib/equality-content'
-import {
-  EqualityContentTypeEnum,
-  ReportStatusEnum,
-  ReportTypeEnum,
-} from '../report/models/report.enums'
+import { ReportStatusEnum, ReportTypeEnum } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import {
   IEqualityPlanUploadService,
@@ -45,9 +39,6 @@ const REPLACEABLE_STATUSES: ReadonlySet<ReportStatusEnum> = new Set([
 
 const isPresent = (value?: string | null): value is string =>
   typeof value === 'string' && value.trim().length > 0
-
-const md5 = (value: string): string =>
-  createHash('md5').update(value).digest('hex')
 
 @Injectable()
 export class EqualityPlanUploadService implements IEqualityPlanUploadService {
@@ -84,9 +75,15 @@ export class EqualityPlanUploadService implements IEqualityPlanUploadService {
   async withStagedPlan<T>(
     reportId: string,
     input: StagedEqualityContentInput,
-    write: (content: EqualityContentInput) => Promise<T>,
+    write: (content: EqualityContentInput | null) => Promise<T>,
   ): Promise<T> {
-    const { equalityReportPdfKey: key, ...inline } = input
+    // `registeredPdfKey` is dropped whatever the caller sent: only this method
+    // may say which key a PDF came from.
+    const {
+      equalityReportPdfKey: key,
+      registeredPdfKey: _ignored,
+      ...inline
+    } = input
 
     if (!isPresent(key)) {
       return write(inline)
@@ -116,6 +113,27 @@ export class EqualityPlanUploadService implements IEqualityPlanUploadService {
       )
     }
 
+    /*
+     * A resend of the key that delivered the plan the report holds now: the
+     * first request succeeded and its response was lost, so the client
+     * retried. Its object is gone, so the fetch below could only fail; answer
+     * it as the success it was and leave the plan alone. After the scope check
+     * on purpose — this never answers for another report's key — and keyed on
+     * the column every other plan write clears, so a key whose plan has since
+     * been replaced is not a replay.
+     */
+    const alreadyStored = await this.reportModel.findOne({
+      where: { id: reportId, equalityReportPdfKey: key },
+      attributes: ['id'],
+    })
+    if (alreadyStored) {
+      this.logger.info('Equality plan key resent after it was registered', {
+        context: LOGGING_CONTEXT,
+        reportId,
+      })
+      return write(null)
+    }
+
     try {
       // The cap is pushed into the download; an oversized object is a 413 and
       // `fetchObject` deletes it itself.
@@ -141,9 +159,10 @@ export class EqualityPlanUploadService implements IEqualityPlanUploadService {
         equalityReportContent: undefined,
         equalityReportPdf: pdf,
         equalityReportPdfFilename: inline.equalityReportPdfFilename,
+        registeredPdfKey: key,
       })
 
-      this.cleanupAfterCommit(key, reportId, md5(pdf))
+      this.cleanupAfterCommit(key, reportId)
 
       this.logger.info('Registered equality plan PDF from staged upload', {
         context: LOGGING_CONTEXT,
@@ -166,31 +185,21 @@ export class EqualityPlanUploadService implements IEqualityPlanUploadService {
    * After commit, not now: a later error in the request rolls the write back,
    * and the company would be left with nothing to retry with. Sequelize also
    * runs `afterCommit` hooks when COMMIT throws, so the hook checks outside
-   * the transaction that the row holds this exact PDF before deleting. If it
-   * does not, the object is left for the bucket's 24-hour lifecycle rule.
+   * the transaction that the row holds the plan this key delivered before
+   * deleting. If it does not, the object is left for the bucket's 24-hour
+   * lifecycle rule.
    */
-  private cleanupAfterCommit(
-    key: string,
-    reportId: string,
-    pdfHash: string,
-  ): void {
+  private cleanupAfterCommit(key: string, reportId: string): void {
     const transaction = getNamespace(CLS_NAMESPACE)?.get('transaction') as
       | Transaction
       | undefined
 
     const cleanup = async () => {
       try {
-        // md5 computed in Postgres, so confirming the write does not pull 5 MB
-        // of base64 back over the wire.
+        // The key column is written with the plan and cleared by every other
+        // plan write, so it names exactly the commit this hook is for.
         const landed = await this.reportModel.findOne({
-          where: Sequelize.and(
-            { id: reportId },
-            { equalityReportContentType: EqualityContentTypeEnum.PDF },
-            Sequelize.where(
-              Sequelize.fn('md5', Sequelize.col('equality_report_content')),
-              pdfHash,
-            ),
-          ),
+          where: { id: reportId, equalityReportPdfKey: key },
           attributes: ['id'],
           transaction: null,
         })

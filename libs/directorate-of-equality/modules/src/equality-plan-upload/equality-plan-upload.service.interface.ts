@@ -29,10 +29,15 @@ export interface IEqualityPlanUploadService {
    *
    * Without `equalityReportPdfKey`, `write` receives `input` unchanged. With
    * it, the staged PDF is fetched (4 MB cap) and handed on as base64 in
-   * `equalityReportPdf`, so `resolveEqualityContent` is the one rule that
-   * validates a plan PDF whichever way it arrived. `write` must store the
-   * content on `reportId`: the staged object is deleted after the request
-   * commits, once the row is confirmed to hold this PDF.
+   * `equalityReportPdf`, with `registeredPdfKey` set, so
+   * `resolveEqualityContent` is the one rule that validates a plan PDF
+   * whichever way it arrived and records the key with it. `write` must store
+   * the content on `reportId`: the staged object is deleted after the request
+   * commits, once the row is confirmed to hold this key's plan.
+   *
+   * `write(null)` means the key already delivered the plan `reportId` holds —
+   * a client retrying after a lost response. Leave the plan as it is and
+   * answer as the original request did.
    *
    * Throws 400 when the key is combined with inline content, has no filename,
    * lies outside the plan boundary, or the file is empty or not a PDF; 413 when
@@ -41,7 +46,7 @@ export interface IEqualityPlanUploadService {
   withStagedPlan<T>(
     reportId: string,
     input: StagedEqualityContentInput,
-    write: (content: EqualityContentInput) => Promise<T>,
+    write: (content: EqualityContentInput | null) => Promise<T>,
   ): Promise<T>
 }
 
