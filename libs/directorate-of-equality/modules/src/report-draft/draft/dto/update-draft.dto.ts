@@ -98,14 +98,22 @@ export class UpdateDraftDto {
   @ApiOptionalBase64File({
     nullable: true,
     description:
-      'Narrative gender-equality plan as a base64-encoded PDF, stored verbatim. Mutually exclusive with `equalityReportContent`. Max 4MB decoded.',
+      'Narrative gender-equality plan as a base64-encoded PDF, stored verbatim. Mutually exclusive with `equalityReportContent` and `equalityReportPdfKey`. Max 4MB decoded.',
   })
   equalityReportPdf?: string | null
 
   @ApiOptionalString({
     nullable: true,
     description:
-      'File name of the uploaded PDF, shown in the review UI. Required when `equalityReportPdf` is supplied.',
+      'File name of the uploaded PDF, shown in the review UI. Required when `equalityReportPdf` or `equalityReportPdfKey` is supplied.',
   })
   equalityReportPdfFilename?: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    maxLength: 256,
+    description:
+      'Object key from `POST …/equality-content/presign` for a plan PDF already uploaded to the presigned URL. Stored exactly as an inline `equalityReportPdf` would be (max 4MB, must be a PDF). Mutually exclusive with `equalityReportPdf` and `equalityReportContent`; requires `equalityReportPdfFilename`. A null or empty key is ignored — clear the plan with `equalityReportContent: null`.',
+  })
+  equalityReportPdfKey?: string | null
 }

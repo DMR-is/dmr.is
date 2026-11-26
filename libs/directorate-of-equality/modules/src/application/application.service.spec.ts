@@ -25,6 +25,7 @@ import {
 } from '../company/models/company.enums'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
+import { IEqualityPlanUploadService } from '../equality-plan-upload/equality-plan-upload.service.interface'
 import { computeReportValidUntil } from '../report/lib/day-boundaries'
 import {
   padToSemanticValidity,
@@ -114,6 +115,12 @@ const COMPANY: CompanyDto = {
   email: null,
 }
 
+const equalityPlanPresign = jest.fn()
+const equalityPlanWithStagedPlan = jest.fn(
+  (_reportId: string, input: unknown, write: (content: unknown) => unknown) =>
+    write(input),
+)
+
 describe('ApplicationService', () => {
   let service: ApplicationService
   let createService: (
@@ -149,6 +156,8 @@ describe('ApplicationService', () => {
   let attachmentPresign: jest.Mock
 
   beforeEach(async () => {
+    equalityPlanPresign.mockClear()
+    equalityPlanWithStagedPlan.mockClear()
     configGetByKey = jest.fn().mockResolvedValue({
       key: 'salary_difference_threshold_percent',
       value: '3.9',
@@ -214,6 +223,15 @@ describe('ApplicationService', () => {
             useValue: channel,
           },
           { provide: LOGGER_PROVIDER, useValue: mockLogger },
+          {
+            // Passthrough: a request without a staged key reaches the write
+            // unchanged. The key path is covered by the service's own spec.
+            provide: IEqualityPlanUploadService,
+            useValue: {
+              presign: equalityPlanPresign,
+              withStagedPlan: equalityPlanWithStagedPlan,
+            },
+          },
           {
             provide: IConfigService,
             useValue: { getByKey: configGetByKey },
@@ -2409,6 +2427,79 @@ describe('ApplicationService', () => {
   describe('editEqualityContent', () => {
     const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
     const PROVIDER_ID = 'island-is-application-aa'
+
+    it('routes a staged plan PDF key through the plan upload service', async () => {
+      const equalityReport = makeReportRow({
+        id: REPORT_ID,
+        providerId: PROVIDER_ID,
+        type: ReportTypeEnum.EQUALITY,
+        status: ReportStatusEnum.IN_REVIEW,
+      })
+      reportFindOne
+        .mockResolvedValueOnce(equalityReport)
+        .mockResolvedValueOnce(equalityReport)
+      companyReportFindAll
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+      getCommentsByReportId.mockResolvedValueOnce([])
+      const pdf = Buffer.from('%PDF-1.7\n').toString('base64')
+      equalityPlanWithStagedPlan.mockImplementationOnce(
+        (_reportId: string, _input: unknown, write: (c: unknown) => unknown) =>
+          write({
+            equalityReportPdf: pdf,
+            equalityReportPdfFilename: 'plan.pdf',
+          }),
+      )
+      const input = {
+        equalityReportPdfKey:
+          'doe-imports/equality-plan/11111111-1111-4111-8111-111111111111.pdf',
+        equalityReportPdfFilename: 'plan.pdf',
+      }
+
+      await service.editEqualityContent(PROVIDER_ID, input, COMPANY)
+
+      expect(equalityPlanWithStagedPlan).toHaveBeenCalledWith(
+        REPORT_ID,
+        input,
+        expect.any(Function),
+      )
+      expect(reportUpdate).toHaveBeenCalledWith(
+        {
+          equalityReportContent: pdf,
+          equalityReportContentType: EqualityContentTypeEnum.PDF,
+          equalityReportContentFilename: 'plan.pdf',
+        },
+        { where: { id: REPORT_ID } },
+      )
+    })
+
+    it('checks the status before touching a staged upload', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.EQUALITY,
+          status: ReportStatusEnum.SUBMITTED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await expect(
+        service.editEqualityContent(
+          PROVIDER_ID,
+          {
+            equalityReportPdfKey:
+              'doe-imports/equality-plan/11111111-1111-4111-8111-111111111111.pdf',
+            equalityReportPdfFilename: 'plan.pdf',
+          },
+          COMPANY,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(equalityPlanWithStagedPlan).not.toHaveBeenCalled()
+    })
 
     it('updates content, emits EDITED, keeps IN_REVIEW status on success', async () => {
       const equalityReport = makeReportRow({

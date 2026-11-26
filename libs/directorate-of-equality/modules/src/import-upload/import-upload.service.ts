@@ -114,6 +114,8 @@ const BOUNDARY_EXTENSIONS: Record<ImportUploadBoundary, readonly string[]> = {
   ],
   // Mirrors ReportAttachmentExtensionEnum and the report_attachment CHECK.
   [ImportUploadBoundary.EQUALITY_ATTACHMENT]: ['pdf', 'docx', 'xlsx', 'xls'],
+  // The plan is stored as a PDF or as HTML; only the PDF arrives as a file.
+  [ImportUploadBoundary.EQUALITY_PLAN]: ['pdf'],
 }
 
 const extensionGroup = (boundary: ImportUploadBoundary) =>

@@ -114,6 +114,15 @@ export interface IApplicationService {
     company: CompanyDto,
   ): Promise<ApplicationReportDetailDto>
   /**
+   * A presigned upload for the plan PDF itself, registered afterwards by key on
+   * the draft PATCH or `editEqualityContent`. Same ownership as the
+   * fylgiskjöl; the rules live in `IEqualityPlanUploadService`.
+   */
+  presignEqualityPlan(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<PresignUploadResponseDto>
+  /**
    * Fylgiskjöl on the company's own equality report, while it is a DRAFT or
    * IN_REVIEW. Ownership is resolved here; the rules live in
    * `IReportAttachmentService`.

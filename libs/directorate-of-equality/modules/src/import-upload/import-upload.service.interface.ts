@@ -23,6 +23,14 @@ export enum ImportUploadBoundary {
    * APPLICATION, which is the xlsx-only, parse-gated workbook import.
    */
   EQUALITY_ATTACHMENT = 'equality-attachment',
+  /**
+   * The equality plan itself (jafnréttisáætlun) when a company uploads it as a
+   * PDF from the application portal. Staging only — the API stores the bytes as
+   * base64 on `report.equality_report_content`, exactly as an inline base64
+   * plan, and deletes the object. PDF only, so it does not share
+   * EQUALITY_ATTACHMENT's wider extension set.
+   */
+  EQUALITY_PLAN = 'equality-plan',
 }
 
 export interface IImportUploadService {

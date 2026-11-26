@@ -4,6 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { CompanyCoreModule } from '../company/company.core.module'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ConfigCoreModule } from '../config/config.core.module'
+import { EqualityPlanUploadCoreModule } from '../equality-plan-upload/equality-plan-upload.core.module'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
 import { ReportCoreModule } from '../report/report.core.module'
@@ -38,6 +39,7 @@ export class ApplicationCoreModule {
       imports: [
         CompanyCoreModule,
         ConfigCoreModule,
+        EqualityPlanUploadCoreModule,
         ReportCoreModule,
         ReportAttachmentCoreModule,
         ReportCreateCoreModule,

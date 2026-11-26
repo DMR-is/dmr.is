@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CompanyCoreModule } from '../company/company.core.module'
 import { ConfigCoreModule } from '../config/config.core.module'
+import { EqualityPlanUploadCoreModule } from '../equality-plan-upload/equality-plan-upload.core.module'
 import { ImportUploadCoreModule } from '../import-upload/import-upload.core.module'
 import { ReportModel } from '../report/models/report.model'
 import { ReportContentCoreModule } from '../report-content/report-content.core.module'
@@ -60,6 +61,7 @@ import { IReportDraftSyncService } from './sync/report-draft-sync.service.interf
     ]),
     ConfigCoreModule,
     CompanyCoreModule,
+    EqualityPlanUploadCoreModule,
     ReportFinalizeCoreModule,
     ReportResultCoreModule,
     ReportContentCoreModule,

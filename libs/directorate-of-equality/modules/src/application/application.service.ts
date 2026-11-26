@@ -23,6 +23,7 @@ import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../constants'
+import { IEqualityPlanUploadService } from '../equality-plan-upload/equality-plan-upload.service.interface'
 import { PresignUploadResponseDto } from '../import-upload/dto/presign-upload-response.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import { computeReportValidUntil } from '../report/lib/day-boundaries'
@@ -166,6 +167,8 @@ export class ApplicationService implements IApplicationService {
     private readonly reportResultService: IReportResultService,
     @Inject(IReportAttachmentService)
     private readonly reportAttachmentService: IReportAttachmentService,
+    @Inject(IEqualityPlanUploadService)
+    private readonly equalityPlanUploadService: IEqualityPlanUploadService,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
@@ -655,9 +658,15 @@ export class ApplicationService implements IApplicationService {
     // Replaces content and representation together: a correction may switch a
     // report from HTML to PDF or back, and leaving the old type behind would
     // describe the new content wrongly.
-    await this.reportModel.update(resolveEqualityContent(input), {
-      where: { id: report.id },
-    })
+    await this.equalityPlanUploadService.withStagedPlan(
+      report.id,
+      input,
+      async (content) => {
+        await this.reportModel.update(resolveEqualityContent(content), {
+          where: { id: report.id },
+        })
+      },
+    )
 
     await this.markApplicantResponded(report.id)
 
@@ -668,6 +677,14 @@ export class ApplicationService implements IApplicationService {
     )
 
     return this.getReport(providerId, company)
+  }
+
+  async presignEqualityPlan(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<PresignUploadResponseDto> {
+    const report = await this.findOwnedReportForAttachments(providerId, company)
+    return this.equalityPlanUploadService.presign(report)
   }
 
   async presignEqualityAttachment(

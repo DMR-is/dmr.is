@@ -570,6 +570,29 @@ export class ApplicationController {
     )
   }
 
+  @Post('reports/:providerId/equality-content/presign')
+  // A presign creates nothing on this API — the upload URL is the response.
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
+  @DoeResponse({
+    operationId: 'presignApplicationEqualityPlan',
+    include404: true,
+    description:
+      'Presigned PUT URL for the plan PDF of an EQUALITY report in status `DRAFT` or `IN_REVIEW`. PDF only; takes no body. Upload the bytes to `url`, then send `key` as `equalityReportPdfKey` (with `equalityReportPdfFilename`) on `PATCH …/draft` or `PUT …/equality-content`. The plan is then stored exactly as an inline `equalityReportPdf` would be: at most 4 MB, must be a PDF. An upload that is never registered expires after 24 hours.',
+    type: PresignUploadResponseDto,
+  })
+  async presignEqualityPlan(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<PresignUploadResponseDto> {
+    return this.applicationService.presignEqualityPlan(providerId, company)
+  }
+
   @Put('reports/:providerId/outliers')
   @ApiParam({
     name: 'providerId',
