@@ -47,6 +47,7 @@ export enum ApplicationRequirementStatementEnum {
   CUSTOMLIQUIDATORURL = 'CUSTOM_LIQUIDATOR_URL',
   CUSTOMOTHER = 'CUSTOM_OTHER',
 }
+
 export type ApplicationAnswers<
   T extends ApplicationTypeEnum = ApplicationTypeEnum,
 > = {

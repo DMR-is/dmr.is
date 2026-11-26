@@ -1,6 +1,6 @@
 import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
@@ -35,26 +35,4 @@ export class FeeCodeModel extends ParanoidModel<
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   @ApiProperty({ type: Boolean })
   isMultiplied!: boolean
-
-  static fromModel(model: FeeCodeModel): FeeCodeDto {
-    return {
-      id: model.id,
-      feeCode: model.feeCode,
-      description: model.description,
-      value: model.value,
-      isMultiplied: model.isMultiplied,
-    }
-  }
-
-  fromModel(): FeeCodeDto {
-    return FeeCodeModel.fromModel(this)
-  }
 }
-
-export class FeeCodeDto extends PickType(FeeCodeModel, [
-  'id',
-  'feeCode',
-  'description',
-  'value',
-  'isMultiplied',
-] as const) {}

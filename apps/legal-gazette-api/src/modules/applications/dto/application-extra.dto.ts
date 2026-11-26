@@ -95,11 +95,6 @@ export class CreateDivisionEndingDto {
   signature!: CreateSignatureDto
 }
 
-export class GetHTMLPreview {
-  @ApiProperty({ type: String })
-  preview!: string
-}
-
 export class GetMinDateResponseDto {
   @ApiProperty({ type: String, format: 'date-time' })
   @Type(() => Date)

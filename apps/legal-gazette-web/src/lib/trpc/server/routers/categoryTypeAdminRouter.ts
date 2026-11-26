@@ -52,11 +52,6 @@ export const categoryTypeAdminRouter = router({
     .mutation(async ({ input, ctx }) => {
       return ctx.api.deleteCategory({ id: input.id })
     }),
-  getCategoryImpact: protectedProcedure
-    .input(z.object({ id: z.uuid() }))
-    .query(async ({ input, ctx }) => {
-      return ctx.api.getCategoryImpact({ id: input.id })
-    }),
 
   // --- Types ---
   createType: protectedProcedure
@@ -88,11 +83,6 @@ export const categoryTypeAdminRouter = router({
     .input(z.object({ id: z.uuid() }))
     .mutation(async ({ input, ctx }) => {
       return ctx.api.deleteType({ id: input.id })
-    }),
-  getTypeImpact: protectedProcedure
-    .input(z.object({ id: z.uuid() }))
-    .query(async ({ input, ctx }) => {
-      return ctx.api.getTypeImpact({ id: input.id })
     }),
 
   // --- Connections ---

@@ -1,7 +1,6 @@
 import { SetMetadata } from '@nestjs/common'
 
 export const SCOPES_KEY = 'scopes'
-export const ACTOR_SCOPES_KEY = 'actor-scopes'
 
 /**
  * Generic scope decorator for custom scope-based authorization.
@@ -15,13 +14,6 @@ export const ACTOR_SCOPES_KEY = 'actor-scopes'
  * ```
  */
 export const Scopes = (...scopes: string[]) => SetMetadata(SCOPES_KEY, scopes)
-
-/**
- * Decorator for actor-based scope authorization.
- * Used when delegated access requires specific actor scopes.
- */
-export const ActorScopes = (...scopes: string[]) =>
-  SetMetadata(ACTOR_SCOPES_KEY, scopes)
 
 /**
  * Scope decorator for legal-gazette-public-web endpoints.
