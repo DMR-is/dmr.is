@@ -174,7 +174,7 @@ jobs:
       - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 24.19.0
+          node-version-file: .nvmrc
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
