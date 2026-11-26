@@ -154,35 +154,118 @@ describe('ImportUploadService', () => {
       },
     )
 
-    it('stages an equality plan as PDF only, under its own boundary', async () => {
-      aws.getPresignedUrl.mockResolvedValue(
-        ResultWrapper.ok({ url: 'https://s3/presigned' }),
-      )
-      aws.getObjectBuffer.mockResolvedValue(ResultWrapper.ok(bufferOfSize(10)))
+    describe('equality plan (scoped to its report)', () => {
+      const REPORT = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+      const OTHER_REPORT = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
 
-      const { key } = await service.createUpload(
-        ImportUploadBoundary.EQUALITY_PLAN,
-        { extension: 'pdf' },
-      )
+      beforeEach(() => {
+        aws.getPresignedUrl.mockResolvedValue(
+          ResultWrapper.ok({ url: 'https://s3/presigned' }),
+        )
+        aws.getObjectBuffer.mockResolvedValue(
+          ResultWrapper.ok(bufferOfSize(10)),
+        )
+      })
 
-      expect(key).toMatch(/^doe-imports\/equality-plan\/[0-9a-f-]{36}\.pdf$/)
-      await expect(
-        service.fetchObject(key, ImportUploadBoundary.EQUALITY_PLAN),
-      ).resolves.toBeDefined()
-
-      // The plan is stored as a PDF or as HTML; any other file is a forgery.
-      await expect(
-        service.createUpload(ImportUploadBoundary.EQUALITY_PLAN, {
-          extension: 'docx',
-        }),
-      ).rejects.toBeInstanceOf(BadRequestException)
-      // And a fylgiskjal key is not a plan key, though both may be PDFs.
-      expect(() =>
-        service.assertKeyWithinBoundary(
-          key.replace('equality-plan', 'equality-attachment'),
+      it('mints a PDF key under the report and reads it back', async () => {
+        const { key } = await service.createUpload(
           ImportUploadBoundary.EQUALITY_PLAN,
-        ),
-      ).toThrow(BadRequestException)
+          { extension: 'pdf', scope: REPORT },
+        )
+
+        expect(key).toMatch(
+          new RegExp(
+            `^doe-imports/equality-plan/${REPORT}/[0-9a-f-]{36}\\.pdf$`,
+          ),
+        )
+        expect(() =>
+          service.assertKeyWithinBoundary(
+            key,
+            ImportUploadBoundary.EQUALITY_PLAN,
+            REPORT,
+          ),
+        ).not.toThrow()
+        await expect(
+          service.fetchObject(key, ImportUploadBoundary.EQUALITY_PLAN),
+        ).resolves.toBeDefined()
+      })
+
+      it('refuses a key minted for another report, before touching S3', async () => {
+        const { key } = await service.createUpload(
+          ImportUploadBoundary.EQUALITY_PLAN,
+          { extension: 'pdf', scope: OTHER_REPORT },
+        )
+
+        expect(() =>
+          service.assertKeyWithinBoundary(
+            key,
+            ImportUploadBoundary.EQUALITY_PLAN,
+            REPORT,
+          ),
+        ).toThrow(BadRequestException)
+        expect(aws.getObjectBuffer).not.toHaveBeenCalled()
+      })
+
+      it.each([
+        [
+          'unscoped',
+          'doe-imports/equality-plan/11111111-1111-4111-8111-111111111111.pdf',
+        ],
+        [
+          'fylgiskjal',
+          `doe-imports/equality-attachment/${REPORT}/11111111-1111-4111-8111-111111111111.pdf`,
+        ],
+        [
+          'nested scope',
+          `doe-imports/equality-plan/${REPORT}/${REPORT}/11111111-1111-4111-8111-111111111111.pdf`,
+        ],
+      ])('refuses a %s key as a plan key', (_label, key) => {
+        expect(() =>
+          service.assertKeyWithinBoundary(
+            key,
+            ImportUploadBoundary.EQUALITY_PLAN,
+            REPORT,
+          ),
+        ).toThrow(BadRequestException)
+      })
+
+      it('stages PDF only', async () => {
+        await expect(
+          service.createUpload(ImportUploadBoundary.EQUALITY_PLAN, {
+            extension: 'docx',
+            scope: REPORT,
+          }),
+        ).rejects.toBeInstanceOf(BadRequestException)
+      })
+
+      it('requires a UUID scope, and refuses one on an unscoped boundary', async () => {
+        await expect(
+          service.createUpload(ImportUploadBoundary.EQUALITY_PLAN, {
+            extension: 'pdf',
+          }),
+        ).rejects.toThrow('requires a key scope')
+        await expect(
+          service.createUpload(ImportUploadBoundary.EQUALITY_PLAN, {
+            extension: 'pdf',
+            scope: '../admin',
+          }),
+        ).rejects.toThrow('lowercase UUID')
+        await expect(
+          service.createUpload(ImportUploadBoundary.EQUALITY_ATTACHMENT, {
+            extension: 'pdf',
+            scope: REPORT,
+          }),
+        ).rejects.toThrow('does not take a key scope')
+      })
+
+      it('logs a hash of the key, never the key', async () => {
+        const { key } = await service.createUpload(
+          ImportUploadBoundary.EQUALITY_PLAN,
+          { extension: 'pdf', scope: REPORT },
+        )
+
+        expect(JSON.stringify(mockLogger.debug.mock.calls)).not.toContain(key)
+      })
     })
 
     it('does not let the mail-attachment extensions leak into the import boundaries', async () => {

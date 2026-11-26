@@ -49,7 +49,7 @@ jest.mock('cls-hooked', () => {
 
 const BOUNDARY = ImportUploadBoundary.EQUALITY_PLAN
 const REPORT_ID = '00000000-0000-0000-0000-0000000000cc'
-const KEY = 'doe-imports/equality-plan/11111111-1111-4111-8111-111111111111.pdf'
+const KEY = `doe-imports/equality-plan/${REPORT_ID}/11111111-1111-4111-8111-111111111111.pdf`
 const PDF_BYTES = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF\n')
 const FILENAME = 'jafnrettisaaetlun.pdf'
 
@@ -122,6 +122,7 @@ describe('EqualityPlanUploadService', () => {
         })
         expect(importUpload.createUpload).toHaveBeenCalledWith(BOUNDARY, {
           extension: 'pdf',
+          scope: REPORT_ID,
         })
       },
     )
@@ -175,6 +176,12 @@ describe('EqualityPlanUploadService', () => {
         resolvingWrite,
       )
 
+      // Checked against this report, so a key minted for another one is refused.
+      expect(importUpload.assertKeyWithinBoundary).toHaveBeenCalledWith(
+        KEY,
+        BOUNDARY,
+        REPORT_ID,
+      )
       expect(importUpload.fetchObject).toHaveBeenCalledWith(
         KEY,
         BOUNDARY,
@@ -266,6 +273,7 @@ describe('EqualityPlanUploadService', () => {
       expect(importUpload.assertKeyWithinBoundary).toHaveBeenCalledWith(
         expect.any(String),
         BOUNDARY,
+        REPORT_ID,
       )
       expect(importUpload.fetchObject).not.toHaveBeenCalled()
       expect(importUpload.cleanupAfter).not.toHaveBeenCalled()

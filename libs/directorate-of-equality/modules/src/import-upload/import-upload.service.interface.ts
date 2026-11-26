@@ -28,7 +28,8 @@ export enum ImportUploadBoundary {
    * PDF from the application portal. Staging only — the API stores the bytes as
    * base64 on `report.equality_report_content`, exactly as an inline base64
    * plan, and deletes the object. PDF only, so it does not share
-   * EQUALITY_ATTACHMENT's wider extension set.
+   * EQUALITY_ATTACHMENT's wider extension set. Keys are scoped to the report:
+   * `doe-imports/equality-plan/<reportId>/<uuid>.pdf`.
    */
   EQUALITY_PLAN = 'equality-plan',
 }
@@ -41,20 +42,29 @@ export interface IImportUploadService {
    * must be one the service allows; anything else is a 400. The extension ends
    * up in the key, so this is the boundary that decides what may be staged at
    * all.
+   *
+   * `scope` is required for a scoped boundary (EQUALITY_PLAN) and refused for
+   * any other: the id of the record the upload is for, written into the key so
+   * that only that record can register it.
    */
   createUpload(
     boundary: ImportUploadBoundary,
-    opts?: { extension?: string },
+    opts?: { extension?: string; scope?: string },
   ): Promise<PresignUploadResponseDto>
 
   /**
-   * Throw unless `key` sits inside `boundary`'s own prefix.
+   * Throw unless `key` sits inside `boundary`'s own prefix — and, given a
+   * `scope`, inside that record's own segment of it.
    *
    * Exposed separately from {@link fetchWorkbook} because the parse gate is
    * acquired before the download — a bad key must be rejectable without first
    * taking a slot.
    */
-  assertKeyWithinBoundary(key: string, boundary: ImportUploadBoundary): void
+  assertKeyWithinBoundary(
+    key: string,
+    boundary: ImportUploadBoundary,
+    scope?: string,
+  ): void
 
   /**
    * Validate the key against the boundary, fetch the object from S3 and enforce

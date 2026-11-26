@@ -72,8 +72,12 @@ export class EqualityPlanUploadService implements IEqualityPlanUploadService {
       )
     }
 
+    // Scoped to the report: the key is a bearer credential, and the stored plan
+    // can be read back by whoever registers it, so a key must not be
+    // registrable on any other report.
     return this.importUploadService.createUpload(BOUNDARY, {
       extension: 'pdf',
+      scope: report.id,
     })
   }
 
@@ -93,7 +97,9 @@ export class EqualityPlanUploadService implements IEqualityPlanUploadService {
      * a 400 inside it is terminal for the upload and would delete the object
      * the caller could otherwise resend with a fixed request.
      */
-    this.importUploadService.assertKeyWithinBoundary(key, BOUNDARY)
+    // Also the report check: a key minted for another report — another
+    // company's, if it leaked — is a 400 here, before anything is read.
+    this.importUploadService.assertKeyWithinBoundary(key, BOUNDARY, reportId)
 
     if (
       isPresent(inline.equalityReportPdf) ||
