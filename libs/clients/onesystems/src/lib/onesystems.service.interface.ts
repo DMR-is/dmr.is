@@ -47,12 +47,13 @@ export interface OneSystemsSendDocToIslandIsInput {
   documentItemId: string
   /** `IDNumber`: the recipient's kennitala. */
   nationalId: string
-  /** `Category`: the island.is classification. */
+  /**
+   * `Category`: one of Stafrænt Ísland's mailbox categories. Required by
+   * island.is, and unrelated to `CreateDocument`'s `DocCategory`.
+   */
   category?: string
-  /** `Type`: the island.is type. */
+  /** `Type`: one of Stafrænt Ísland's mailbox types. Required by island.is. */
   type?: string
-  /** `SendNotification`: notify the recipient. */
-  sendNotification?: boolean
 }
 
 export type OneSystemsSendDocToIslandIsResult =
@@ -166,7 +167,9 @@ export interface IOneSystemsService {
    * is `documentItemId` (case aside) and it carries no `ErrorNumber` or
    * `ErrorMessage`; otherwise it is thrown as REJECTED, which is not
    * definitive. `Success: true` without a `DocumentId` resolves with
-   * `islandIsDocumentId: null`.
+   * `islandIsDocumentId: null`. Safe to repeat with the same `documentItemId`:
+   * `Success: false` means the mailbox did not take it (OneSystems,
+   * 26 Nov 2026).
    */
   sendDocToIslandIs(
     input: OneSystemsSendDocToIslandIsInput,

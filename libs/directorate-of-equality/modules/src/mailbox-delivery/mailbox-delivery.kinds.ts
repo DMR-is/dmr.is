@@ -6,9 +6,11 @@ import { MailboxDeliveryKindEnum } from './models/mailbox-delivery.enums'
  * How one notice kind is filed in One and classified in island.is.
  *
  * Every string is a value One or island.is defines, not one we choose, so none
- * can be guessed. `caseType` is required; the classification fields may be
- * empty strings, which One accepts (OneSystems, 9 Oct 2026). They stay empty
- * until Jafnréttisstofa asks for values.
+ * can be guessed. `caseType` is required. One's own classification
+ * (`docCategory`, `docType`, `author`) may be empty strings, which One accepts
+ * (OneSystems, 9 Oct 2026). The island.is pair is unrelated to it: it must be
+ * one of Stafrænt Ísland's values (see `ISLAND_IS_CATEGORY`), and island.is
+ * refuses a send without it ("Nauðsynleg gildi vantar").
  */
 export interface MailboxDeliveryKindConfig {
   /** CreateCase `CaseType`: the unique key of the case template. */
@@ -19,20 +21,15 @@ export interface MailboxDeliveryKindConfig {
   docType: string
   /** CreateDocument `Author`: shown as the document's author in One. May be `''`. */
   author: string
-  /** SendDocToIslandIs `Category`: Stafrænt Ísland's classification. May be `''`. */
+  /** SendDocToIslandIs `Category`: one of Stafrænt Ísland's categories. */
   islandIsCategory: string
-  /** SendDocToIslandIs `Type`: Stafrænt Ísland's type. May be `''`. */
+  /** SendDocToIslandIs `Type`: one of Stafrænt Ísland's types. */
   islandIsType: string
   /**
    * CreateCase / CreateDocument `Portal`. Left unset (One's default) until
    * OneSystems says what the flag does.
    */
   portal?: boolean
-  /**
-   * SendDocToIslandIs `SendNotification`. Left unset (One's default) until
-   * OneSystems says what it actually sends.
-   */
-  sendNotification?: boolean
 }
 
 export type MailboxDeliveryKindConfigs = Record<
@@ -66,24 +63,40 @@ export const MAILBOX_DELIVERY_KIND_CONFIGS = Symbol(
 const SALARY_CASE_TYPE: string | undefined = 'SKYRSLA'
 const EQUALITY_CASE_TYPE: string | undefined = 'J-AAETLUN'
 
-/** No classification: One and island.is accept empty strings. */
-const UNCLASSIFIED = {
+/**
+ * The island.is mailbox classification of every DoE notice. Both must be
+ * values from Stafrænt Ísland's lists (Pósthólf skjalatilkynning interface,
+ * docs.devland.is/products/postholf/postholf-02-interface-skjalatilkynning).
+ * As of 26 Nov 2026 the categories are Fjármál, Börn og ungmenni, Líf og
+ * heilsa, Húsnæði og eignir, Atvinna, Menntun og tómstundir, Starfsleyfi,
+ * Umhverfi og skipulag, Stjórnir og samþykktir, Annað, Inn- og útflutningur
+ * and Dómsmál; the types are Launaseðill, Greiðsluseðill, Yfirlit, Tilkynning,
+ * Kvittun, Staða and Launamiði (OneSystems, 26 Nov 2026). Stafrænt Ísland may
+ * change the lists.
+ */
+const ISLAND_IS_CATEGORY = 'Atvinna'
+const ISLAND_IS_TYPE = 'Tilkynning'
+
+/**
+ * One's own classification stays empty, which One accepts, until
+ * Jafnréttisstofa asks for values. Unrelated to the island.is pair.
+ */
+const CLASSIFICATION = {
   docCategory: '',
   docType: '',
   author: '',
-  islandIsCategory: '',
-  islandIsType: '',
+  islandIsCategory: ISLAND_IS_CATEGORY,
+  islandIsType: ISLAND_IS_TYPE,
 } as const satisfies Partial<MailboxDeliveryKindConfig>
 
-const salary = { caseType: SALARY_CASE_TYPE, ...UNCLASSIFIED }
-const equality = { caseType: EQUALITY_CASE_TYPE, ...UNCLASSIFIED }
+const salary = { caseType: SALARY_CASE_TYPE, ...CLASSIFICATION }
+const equality = { caseType: EQUALITY_CASE_TYPE, ...CLASSIFICATION }
 
 /**
  * The classification of each notice kind.
  *
- * No kind has a confirmed case template yet (see `SALARY_CASE_TYPE`), so
- * `deliverToMailbox` answers `UNCONFIGURED` for every one and none can reach
- * One.
+ * The report kinds use their report type's case template (see
+ * `SALARY_CASE_TYPE`).
  * `OVERDUE_NOTICE` and `FINES_PRECURSOR` have no template at all: whether
  * those notices go to the mailbox is still open.
  */

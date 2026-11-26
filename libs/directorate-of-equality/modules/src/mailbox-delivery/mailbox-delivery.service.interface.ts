@@ -137,9 +137,10 @@ export type MailboxDeliveryState = {
   /** One confirmed the send: `sent_at` is saved. */
   sent: boolean
   /**
-   * A call's marker is still set and its lease has lapsed: the process died
-   * mid-call, so whether One acted is unknown, as for UNCERTAIN. The next
-   * claim would mark it UNCERTAIN.
+   * A CreateDocument marker is still set and its lease has lapsed: the
+   * process died mid-call, so whether One filed the document is unknown, as
+   * for UNCERTAIN. The next claim would mark it UNCERTAIN. A lapsed send
+   * marker is not interrupted: the next claim sends again.
    */
   interrupted: boolean
   /** A worker holds a live lease on it and may be calling One right now. */
@@ -154,9 +155,9 @@ export type MailboxDeliveryState = {
 /**
  * Why a delivery needs a person:
  * - `UNCERTAIN`: whether One acted is unknown. Reconcile it against One.
- * - `INTERRUPTED`: a call's marker is still set and its lease has lapsed, so
- *   the process died mid-call. The next call with its key marks it UNCERTAIN;
- *   an outbox row that has already given up never makes that call.
+ * - `INTERRUPTED`: a CreateDocument marker is still set and its lease has
+ *   lapsed, so the process died mid-call. The next call with its key marks it
+ *   UNCERTAIN; an outbox row that has already given up never makes that call.
  * - `ATTEMPTS_EXHAUSTED`: claimed `MAILBOX_DELIVERY_MAX_ATTEMPTS` times
  *   without being sent. Fix the cause and re-arm it.
  */
@@ -267,7 +268,9 @@ export interface IMailboxDeliveryService {
    * The README's "Reconciling an UNCERTAIN row", for an UNCERTAIN or
    * interrupted row a person has checked against One: SENT records it as
    * sent; NOT_SENT lets it go again with its attempts back, from
-   * `documentItemId` when One holds the document. Only while the row still
+   * `documentItemId` when One holds the document. NOT_SENT is safe for a row
+   * that holds a document even if it did reach the mailbox: the resend is
+   * answered as already sent and settles SENT. Only while the row still
    * holds what it was read with (`read`) and no lease is live. `note` is the
    * audit text for `last_error`. False when it has moved since.
    */

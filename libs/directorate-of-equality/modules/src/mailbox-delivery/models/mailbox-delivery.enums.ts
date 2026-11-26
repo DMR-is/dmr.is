@@ -30,13 +30,17 @@ export enum MailboxDeliveryKindEnum {
  *   SENT             → One confirmed the send to island.is (`sent_at` set;
  *                      `island_is_document_id` too, unless One confirmed
  *                      without a `DocumentId`).
- *   FAILED           → One clearly rejected a call. Safe to retry.
- *   UNCERTAIN        → a call's outcome is unknown: a timeout, a 5xx, a
- *                      `Success: false`, a success with no usable id, or a
+ *   FAILED           → the failed call is safe to retry: One clearly
+ *                      rejected it, or it was SendDocToIslandIs, which is
+ *                      safe to repeat with the same document (a repeat is
+ *                      answered as already in the mailbox).
+ *   UNCERTAIN        → CreateDocument's outcome is unknown: a timeout, a 5xx,
+ *                      a `Success: false`, a success with no usable id, or a
  *                      crash mid-call. Never retried automatically, because
- *                      repeating CreateDocument or SendDocToIslandIs could
- *                      file or send a second copy. No code path leaves it; a
- *                      person reconciles it (see the module README).
+ *                      repeating CreateDocument could file a second copy. No
+ *                      code path leaves it; a person reconciles it (see the
+ *                      module README). Rows from before 26 Nov 2026 may be
+ *                      UNCERTAIN at the send as well.
  *
  * Resume is driven by which ids are saved (and `sent_at`), not by this column:
  * a FAILED row that already has `one_document_item_id` resumes at the send.
@@ -53,9 +57,10 @@ export enum MailboxDeliveryStatusEnum {
 }
 
 /**
- * The non-idempotent call a delivery is in the middle of, written just before
- * the call and cleared once its outcome is recorded. Still set when the row is
- * next claimed means the process died mid-call, so the row becomes UNCERTAIN.
+ * The document call a delivery is in the middle of, written just before the
+ * call and cleared once its outcome is recorded. Still set when the row is
+ * next claimed means the process died mid-call: a CreateDocument marker makes
+ * the row UNCERTAIN, a send marker is cleared and the send made again.
  *
  * CreateCase has no marker: One finds-or-creates the case, so repeating it is
  * safe.

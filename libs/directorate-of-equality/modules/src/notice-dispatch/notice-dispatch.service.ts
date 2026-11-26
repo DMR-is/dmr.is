@@ -678,9 +678,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
    *
    * - One confirmed the send: the company has it. The row is DONE by mailbox,
    *   and an approval's documents are archived as after any mailbox send.
-   * - UNCERTAIN, or interrupted mid-call (`interrupted`, which the next claim
-   *   would mark UNCERTAIN): One may have sent it. Given up for a person, as
-   *   with the flag on, rather than emailed on top.
+   * - UNCERTAIN, or interrupted mid-CreateDocument (`interrupted`, which the
+   *   next claim would mark UNCERTAIN): One may have filed or sent it. Given
+   *   up for a person, as with the flag on, rather than emailed on top. A row
+   *   interrupted mid-send holds its document, so it is held below.
    * - A worker holds a live lease on it: held until that call finishes, and
    *   the next run reads what it left.
    * - One holds the document but has not sent it: held until the flag is back

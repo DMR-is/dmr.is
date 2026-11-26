@@ -32,7 +32,20 @@ Login -> CreateCase -> CreateDocument -> SendDocToIslandIs (-> CloseCase)
 **`createDocument` is not idempotent**: a repeated `CreateDocument` files a
 second document with a new `ItemId` (OneSystems, 9 Oct 2026). A repeated
 `SendDocToIslandIs` is refused by island.is with "Færsla þegar skráð.", so the
-document is not delivered twice (OneSystems, 20 Oct 2026); see below.
+document is not delivered twice (OneSystems, 20 Oct 2026); see below. The same
+`ItemID` may be sent again without a new `CreateDocument`, and `Success: true`
+is the only sign the mailbox took it: every error comes from
+Pósthólfsþjónustan, and `Success: false` means it was not taken (OneSystems,
+26 Nov 2026). So `sendDocToIslandIs` is safe to repeat.
+
+`SendDocToIslandIs`'s `Category` and `Type` are Stafrænt Ísland's own
+classification, required by island.is ("Nauðsynleg gildi vantar" without
+them), and unrelated to `CreateDocument`'s `DocCategory` / `DocType`, which
+classify the document in OneCRM. Their values are listed in the Pósthólf
+interface spec (docs.devland.is/products/postholf/postholf-02-interface-skjalatilkynning).
+`SendNotification` is not sent: island.is no longer acts on it ("hnipp"
+replaced it), and One keeps the field only for compatibility (OneSystems,
+26 Nov 2026).
 
 `SendDocToIslandIs` does not answer with the spec's `GeneralResponse`. It
 returns `{ Kennitala, DocumentId, Success, Errors }`, where `DocumentId` is the
@@ -59,8 +72,9 @@ when all of these hold:
 
 A false "sent" is never retried, so the company would silently miss the
 notice. Any other duplicate answer logs a warning (with both ids and which
-condition failed) and is thrown as `REJECTED`, which is not definitive: the
-delivery ends UNCERTAIN for a person. Any other `Errors` is a rejection too,
+condition failed) and is thrown as `REJECTED`, which is not definitive; the
+caller decides what to do with it (DoE's mailbox delivery retries every failed
+send). Any other `Errors` is a rejection too,
 and `Errors` becomes the error's `errorMessage`. Whether a document
 was sent can otherwise only be checked by a person, in OneCRM's list of
 documents sent to the mailbox.
@@ -114,13 +128,13 @@ anything here, and any new consumer must do the same.
   and one with a body is One's `GeneralResponse` or a `ProblemDetails`. It is
   never re-sent, and is thrown as not definitive. So an expired token on
   either of those two calls is recovered only if One's challenge looks like
-  that; otherwise the delivery ends UNCERTAIN, never duplicated.
+  that; otherwise it is thrown as not definitive, never duplicated.
 - **Timeout.** Every request, including Login and the retry, has its own
   timeout: 30s (`ONESYSTEMS_REQUEST_TIMEOUT_MS`), except `CreateDocument` and
   `SendDocToIslandIs`, which get 120s (`ONESYSTEMS_DOCUMENT_TIMEOUT_MS`).
-  Both must never repeat, so a timeout on either leaves the outcome unknown:
-  `CreateDocument` uploads the PDF, and inside `SendDocToIslandIs` One makes
-  its own round trip to island.is. `oneSystemsTimeoutMs(operation)` returns
+  Neither is repeated by the client, so a timeout on either leaves the outcome
+  unknown: `CreateDocument` uploads the PDF, and inside `SendDocToIslandIs` One
+  makes its own round trip to island.is. `oneSystemsTimeoutMs(operation)` returns
   the timeout for any operation. One call can take up to 2 x (Login + action),
   2 x (30s + 120s) = 5 min for either of the two: a 401 can arrive as the
   first action times out, and the Login and retry after it each get a full
@@ -184,9 +198,8 @@ the outcome is unknown and the call must not be retried automatically.
 
 For `CreateDocument` and `SendDocToIslandIs`, `Success: false`, an empty 403
 or 404, other 4xx, 5xx, `TRANSPORT` and `UNEXPECTED_RESPONSE` are **not**
-definitive. One calls
-island.is itself inside `SendDocToIslandIs`, so a rejection may arrive after
-the document was registered. The exception is an `errorNumber` listed in
+definitive. For `SendDocToIslandIs` that is now moot to DoE's mailbox
+delivery, which retries any failed send, since a repeat is safe. The exception is an `errorNumber` listed in
 `ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS` for that operation, which is **empty**
 until OneSystems confirms which error numbers are raised before a document is
 filed or sent.
@@ -203,8 +216,8 @@ or 404 never counts for these two calls. A wrong base URL already fails at
 `CreateCase`, which runs first, is idempotent, and treats any 4xx as
 definitive. A missing permission fails there too only if `CreateCase` needs the
 same One permission as `CreateDocument` and `SendDocToIslandIs`, which is
-unconfirmed; if it does not, that call's empty 403 leaves the delivery
-UNCERTAIN (never a duplicate). A 401, 403 or 404 with any body
+unconfirmed; if it does not, that call's empty 403 is not definitive (never a
+duplicate). A 401, 403 or 404 with any body
 (One's `GeneralResponse`, a `ProblemDetails`, plain text or even `{}`) never
 counts either.
 
@@ -245,10 +258,17 @@ code.
   `Challenge()` is indistinguishable client-side from a real expired-token
   challenge, which is treated as definitive and retried. Is the 401 challenge
   body empty, and does it carry `WWW-Authenticate: Bearer`? If it does not carry
-  the header, an expired token on `CreateDocument` or `SendDocToIslandIs`
-  ends UNCERTAIN instead of being retried.
-- Which `ErrorNumber`s are raised before a document is filed or sent
-  (`ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS`)?
+  the header, an expired token on `CreateDocument` is thrown as not
+  definitive instead of being retried.
+- Which `ErrorNumber`s are raised before a document is filed
+  (`ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS`)? Settled for the send: every
+  `SendDocToIslandIs` error comes from Pósthólfsþjónustan, `Success: false`
+  means the document was not taken, and a resend of the same `ItemID` is safe
+  (OneSystems, 26 Nov 2026).
+- ~~What are `Category` and `Type`, and what does `SendNotification` do?~~
+  Stafrænt Ísland's classification, from its Pósthólf spec; DoE sends
+  `Atvinna` / `Tilkynning`. `SendNotification` is ignored by island.is and is
+  no longer sent (OneSystems, 26 Nov 2026).
 - ~~What does a failed `SendDocToIslandIs` look like?~~ A 200 with
   `Success: false` and `Errors` as an array of strings; the duplicate is
   `["Færsla þegar skráð."]` (OneSystems, 20 Oct 2026).

@@ -94,7 +94,8 @@ const LEASE_MARGIN_MS = 2 * MINUTE_MS
  * up to whole minutes (7 with today's timeouts). It is renewed each time a
  * marker is written, so it only has to cover one call to One, or the claim's
  * CreateCase and the render before the first marker. A lease shorter than a
- * call lets another worker take the row mid-call and mark it UNCERTAIN.
+ * call lets another worker take the row mid-call: mid-CreateDocument it marks
+ * it UNCERTAIN, mid-send it sends again.
  */
 export const MAILBOX_DELIVERY_LEASE_MINUTES = Math.ceil(
   (MAILBOX_DELIVERY_SLOWEST_CALL_MS + LEASE_MARGIN_MS) / MINUTE_MS,
@@ -114,8 +115,9 @@ export const MAILBOX_DELIVERY_LEASE_MINUTES = Math.ceil(
  *
  * An exhausted row is left as it is and reported as `ATTEMPTS_EXHAUSTED`. A
  * person fixes the cause and re-arms it by resetting `attempts` (see the
- * module README). A row whose last claim died mid-call is still claimed, so
- * its marker turns it UNCERTAIN without a call to One.
+ * module README). A row whose last claim died mid-call is still claimed: a
+ * CreateDocument marker turns it UNCERTAIN without a call to One, a send
+ * marker has the send made once more.
  */
 export const MAILBOX_DELIVERY_MAX_ATTEMPTS = 5
 
@@ -156,7 +158,8 @@ const SETTLED_STATUSES = [
 
 /**
  * The rows that need a person, one filter per reason. A row matches at most
- * one: UNCERTAIN is settled, and an exhausted row has no marker.
+ * one: UNCERTAIN is settled, and an exhausted row has no marker. A lapsed send
+ * marker needs nobody: the next call with its key sends again.
  */
 const STUCK_WHERE: Record<
   StuckMailboxDeliveryReason,
@@ -165,7 +168,7 @@ const STUCK_WHERE: Record<
   UNCERTAIN: { status: MailboxDeliveryStatusEnum.UNCERTAIN },
   INTERRUPTED: {
     status: { [Op.notIn]: SETTLED_STATUSES },
-    inFlightStep: { [Op.ne]: null },
+    inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
     [Op.or]: LEASE_FREE,
   },
   // The same test as `findExhausted`: a row whose last attempt still holds its
@@ -217,12 +220,19 @@ type DeliveryCompany = Pick<
  *   repeating it is harmless and it has no marker. Any failure of it leaves
  *   the row FAILED (retryable). A case id that loses the race to be saved is
  *   logged.
- * - CreateDocument and SendDocToIslandIs are not safe to repeat. Each is
- *   preceded by an `in_flight_step` marker. A failure that
+ * - CreateDocument is not safe to repeat: it would file a second copy. It
+ *   is preceded by an `in_flight_step` marker. A failure that
  *   `isDefinitiveOneSystemsFailure` says never reached the action leaves the
  *   row FAILED; anything else leaves it UNCERTAIN, which nothing retries. A
  *   marker still set when the row is next claimed means the process died
  *   mid-call, and the row becomes UNCERTAIN then.
+ * - SendDocToIslandIs is safe to repeat with the same document `ItemID`:
+ *   island.is answers a repeat with "Færsla þegar skráð.", which resolves as
+ *   SENT, and `Success: false` means the mailbox did not take the document
+ *   (OneSystems, 26 Nov 2026). So every failure of the send leaves the row
+ *   FAILED, and a send marker found at claim time is resumed, not marked
+ *   UNCERTAIN. The marker is still written, to renew the lease and to show
+ *   the step in flight.
  * - Each id One returns is logged the moment the call returns, then written
  *   only while the step's result is unsaved (`one_document_item_id` /
  *   `sent_at` IS NULL), without requiring the lease, so an id One returned is
@@ -385,8 +395,19 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       )
     }
 
-    if (claimed.inFlightStep) {
+    if (claimed.inFlightStep === MailboxDeliveryStepEnum.CREATE_DOCUMENT) {
       return this.markInterrupted(claimed, claimed.inFlightStep, leaseToken)
+    }
+    if (
+      claimed.inFlightStep === MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS
+    ) {
+      const settledMeanwhile = await this.resumeInterruptedSend(
+        claimed,
+        leaseToken,
+      )
+      if (settledMeanwhile) {
+        return settledMeanwhile
+      }
     }
 
     return this.run(claimed, leaseToken, input, company, config)
@@ -798,8 +819,9 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
    * a connection open across the calls to One.
    *
    * A row with a marker is claimed even with no attempts left: its last claim
-   * died mid-call, and claiming it is what turns it UNCERTAIN (no call to One
-   * follows). Refusing it would leave it looking merely exhausted.
+   * died mid-call. For CreateDocument, claiming it is what turns it UNCERTAIN
+   * (no call to One follows); refusing it would leave it looking merely
+   * exhausted. For the send, the send is made once more, past the cap.
    */
   private async claim(
     id: string,
@@ -895,15 +917,65 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       `Mailbox delivery ${row.id}'s ${step} marker cleared before it could be marked UNCERTAIN`,
       { context: LOGGING_CONTEXT, deliveryId: row.id, step },
     )
-    await this.release(row.id, leaseToken)
+    return this.markerClearedMeanwhile(row.id, leaseToken)
+  }
+
+  /**
+   * A send marker left by a process that died mid-send. The send is safe to
+   * repeat with the same document (a repeat is answered as already in the
+   * mailbox), so the marker is cleared and the caller sends again: null.
+   *
+   * Matches the marker as `markInterrupted` does: if that send was merely slow
+   * and its late save cleared the marker first, the row's current result is
+   * returned instead and nothing is sent.
+   */
+  private async resumeInterruptedSend(
+    row: MailboxDeliveryModel,
+    leaseToken: string,
+  ): Promise<DeliverToMailboxResult | null> {
+    const step = MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS
+    const [count] = await this.deliveryModel.update(
+      { inFlightStep: null },
+      {
+        where: { id: row.id, leaseToken, inFlightStep: step },
+        transaction: null,
+      },
+    )
+
+    if (count > 0) {
+      this.logger.warn(
+        `Mailbox delivery ${row.id} was interrupted during ${step}; sending the saved document again`,
+        { context: LOGGING_CONTEXT, deliveryId: row.id, step },
+      )
+      return null
+    }
+
+    this.logger.warn(
+      `Mailbox delivery ${row.id}'s ${step} marker cleared before the send could be resumed`,
+      { context: LOGGING_CONTEXT, deliveryId: row.id, step },
+    )
+    return this.markerClearedMeanwhile(row.id, leaseToken)
+  }
+
+  /**
+   * A late save cleared the marker between the claim and the write that acts
+   * on it: hands the lease back and answers the row as it now stands
+   * (IN_PROGRESS if it still has work left, which the next call resumes from
+   * the saved ids).
+   */
+  private async markerClearedMeanwhile(
+    id: string,
+    leaseToken: string,
+  ): Promise<DeliverToMailboxResult> {
+    await this.release(id, leaseToken)
     const current = await this.deliveryModel.findOne({
-      where: { id: row.id },
+      where: { id },
       transaction: null,
     })
     return (
       (current && this.settledResult(current)) ?? {
         status: 'IN_PROGRESS',
-        deliveryId: row.id,
+        deliveryId: id,
       }
     )
   }
@@ -995,7 +1067,6 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
           nationalId: row.nationalId,
           category: config.islandIsCategory,
           type: config.islandIsType,
-          sendNotification: config.sendNotification,
         })
         sentAt = new Date()
         islandIsDocumentId = sent.islandIsDocumentId
@@ -1050,10 +1121,13 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         return this.unavailableResult(input, this.loginUnavailable(error))
       }
 
-      // Only a non-idempotent call whose outcome is unclear is UNCERTAIN.
-      // Anything before its marker (a render, CreateCase) left One untouched.
+      // Only CreateDocument, whose outcome is unclear, is UNCERTAIN: repeating
+      // it would file a second copy. A failed send is repeated with the same
+      // document, which island.is answers as already sent if it got there.
+      // Anything before a marker (a render, CreateCase) left One untouched.
       const outcome =
-        inFlight && !isDefinitiveFor(inFlight, error)
+        inFlight === MailboxDeliveryStepEnum.CREATE_DOCUMENT &&
+        !isDefinitiveFor(inFlight, error)
           ? MailboxDeliveryStatusEnum.UNCERTAIN
           : MailboxDeliveryStatusEnum.FAILED
       await this.recordFailure(row.id, leaseToken, outcome, inFlight, error)
@@ -1365,7 +1439,8 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
   /**
    * Records FAILED or UNCERTAIN, clears the marker and releases the lease in one
    * write. If this write itself fails, the marker (if any) stays in the row, so
-   * the next claim still finds the row UNCERTAIN.
+   * the next claim still finds it: UNCERTAIN for CreateDocument, a resent send
+   * otherwise.
    *
    * Skipped when the step's result is already saved (`SAVED_WHEN_SET`): the
    * save committed but its reply was lost, or another worker's save won. The
@@ -1461,7 +1536,12 @@ export function classifyDelivery(
   )
   const unsettled = !SETTLED_STATUSES.includes(row.status)
   return {
-    interrupted: unsettled && Boolean(row.inFlightStep) && !leaseLive,
+    // Only an interrupted CreateDocument needs a person: an interrupted send
+    // is resumed by the next claim.
+    interrupted:
+      unsettled &&
+      row.inFlightStep === MailboxDeliveryStepEnum.CREATE_DOCUMENT &&
+      !leaseLive,
     inProgress: unsettled && leaseLive,
     exhausted:
       unsettled &&

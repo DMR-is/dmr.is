@@ -211,7 +211,12 @@ export function isOneSystemsError(error: unknown): error is OneSystemsError {
   return error instanceof OneSystemsError
 }
 
-/** The operations that file or deliver a document and must never repeat. */
+/**
+ * The operations that file or deliver a document, which the client never
+ * repeats on its own. A repeated SendDocToIslandIs with the same `ItemID` is
+ * answered as already in the mailbox (OneSystems, 26 Nov 2026), so a caller
+ * may retry it; a repeated CreateDocument files a second copy.
+ */
 export type OneSystemsNonIdempotentOperation =
   | 'CreateDocument'
   | 'SendDocToIslandIs'
@@ -245,12 +250,12 @@ export const ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS: Readonly<
  * (and retried) here, and nothing client-side can tell it apart from a real
  * auth failure, so only OneSystems can rule it out. If the challenge turns out
  * not to carry the header, every expired token on CreateDocument or
- * SendDocToIslandIs ends UNCERTAIN (never a duplicate).
+ * SendDocToIslandIs is thrown as not definitive (never a duplicate).
  *
  * Also: do CreateCase, CreateDocument and SendDocToIslandIs need the same One
  * permission? The empty-403 rule below counts on a missing permission failing
  * at CreateCase first; if the permissions differ, it fails at the later call
- * instead and that row ends UNCERTAIN.
+ * instead, as not definitive.
  */
 /**
  * True when One certainly did NOT act on the action call, so repeating it
@@ -287,7 +292,7 @@ export const ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS: Readonly<
  *   which is idempotent and runs first. A missing permission is caught there
  *   only if CreateCase needs the same One permission as CreateDocument and
  *   SendDocToIslandIs, which is unconfirmed (see the TODO above); if it does
- *   not, a missing permission on either ends UNCERTAIN, never a duplicate;
+ *   not, a missing permission on either is not definitive, never a duplicate;
  * - a 401, 403 or 404 with any body, a `GeneralResponse` or a
  *   `ProblemDetails`, may have come from inside the action;
  * - a 400 with any other body (empty, plain text, HTML, a `ProblemDetails`

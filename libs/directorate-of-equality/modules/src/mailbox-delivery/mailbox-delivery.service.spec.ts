@@ -589,6 +589,16 @@ describe('MailboxDeliveryService', () => {
         { interrupted: true, inProgress: false, exhausted: false },
       ],
       [
+        'none of them: a lapsed send marker, which the next claim resumes',
+        {
+          status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+          oneDocumentItemId: 'doc-saved',
+          inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+          leaseExpiresAt: new Date(Date.now() - MINUTE),
+        },
+        { interrupted: false, inProgress: false, exhausted: false },
+      ],
+      [
         'in progress: a live lease',
         {
           status: MailboxDeliveryStatusEnum.CASE_CREATED,
@@ -723,14 +733,14 @@ describe('MailboxDeliveryService', () => {
       store.seed({
         idempotencyKey: keyFor('A'),
         status: MailboxDeliveryStatusEnum.UNCERTAIN,
-        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
         leaseExpiresAt: lapsed,
       })
       store.seed({
         idempotencyKey: keyFor('B'),
-        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        status: MailboxDeliveryStatusEnum.CASE_CREATED,
         attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
-        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
         leaseExpiresAt: lapsed,
       })
 
@@ -1069,7 +1079,6 @@ describe('MailboxDeliveryService', () => {
         nationalId: COMPANY.nationalId,
         category: CONFIG.islandIsCategory,
         type: CONFIG.islandIsType,
-        sendNotification: undefined,
       })
       expect(oneCalls()).toBe(3)
       expect(pdf).toHaveBeenCalledTimes(1)
@@ -1729,40 +1738,59 @@ describe('MailboxDeliveryService', () => {
   })
 
   describe('an interrupted call', () => {
-    it.each([
-      MailboxDeliveryStepEnum.CREATE_DOCUMENT,
-      MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
-    ])(
-      'turns a stale %s marker into UNCERTAIN without calling One',
-      async (step) => {
-        const seeded = store.seed({
-          status: MailboxDeliveryStatusEnum.CASE_CREATED,
-          oneCaseItemId: 'case-saved',
-          oneDocumentItemId:
-            step === MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS
-              ? 'doc-saved'
-              : null,
-          inFlightStep: step,
-          leaseToken: 'crashed-worker',
-          leaseExpiresAt: new Date(Date.now() - MINUTE),
-        })
+    it('turns a stale CREATE_DOCUMENT marker into UNCERTAIN without calling One', async () => {
+      const step = MailboxDeliveryStepEnum.CREATE_DOCUMENT
+      const seeded = store.seed({
+        status: MailboxDeliveryStatusEnum.CASE_CREATED,
+        oneCaseItemId: 'case-saved',
+        inFlightStep: step,
+        leaseToken: 'crashed-worker',
+        leaseExpiresAt: new Date(Date.now() - MINUTE),
+      })
 
-        await expect(service.deliverToMailbox(input())).resolves.toEqual({
-          status: 'UNCERTAIN',
-          deliveryId: seeded.id,
-        })
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'UNCERTAIN',
+        deliveryId: seeded.id,
+      })
 
-        expect(oneCalls()).toBe(0)
-        expect(pdf).not.toHaveBeenCalled()
-        expect(onlyRow()).toMatchObject({
-          status: MailboxDeliveryStatusEnum.UNCERTAIN,
-          inFlightStep: null,
-          lastError: expect.stringContaining(step),
-          leaseToken: null,
-          leaseExpiresAt: null,
-        })
-      },
-    )
+      expect(oneCalls()).toBe(0)
+      expect(pdf).not.toHaveBeenCalled()
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        inFlightStep: null,
+        lastError: expect.stringContaining(step),
+        leaseToken: null,
+        leaseExpiresAt: null,
+      })
+    })
+
+    it('resumes a stale SEND_DOC_TO_ISLAND_IS marker by sending the saved document again', async () => {
+      store.seed({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        oneCaseItemId: 'case-saved',
+        oneDocumentItemId: 'doc-saved',
+        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        leaseToken: 'crashed-worker',
+        leaseExpiresAt: new Date(Date.now() - MINUTE),
+      })
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'SENT',
+        alreadySent: false,
+      })
+
+      expect(one.createCase).not.toHaveBeenCalled()
+      expect(one.createDocument).not.toHaveBeenCalled()
+      expect(pdf).not.toHaveBeenCalled()
+      expect(one.sendDocToIslandIs).toHaveBeenCalledWith(
+        expect.objectContaining({ documentItemId: 'doc-saved' }),
+      )
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.SENT,
+        inFlightStep: null,
+        leaseToken: null,
+      })
+    })
   })
 
   describe('failures', () => {
@@ -1820,22 +1848,31 @@ describe('MailboxDeliveryService', () => {
       expect(one.createDocument).toHaveBeenCalledTimes(1)
     })
 
-    it('records a TRANSPORT send as UNCERTAIN and keeps the document id', async () => {
+    it('records a TRANSPORT send as FAILED, and a retry sends the same document without filing another', async () => {
       const error = transport('SendDocToIslandIs')
       one.sendDocToIslandIs.mockRejectedValueOnce(error)
 
       await expect(service.deliverToMailbox(input())).rejects.toBe(error)
 
       expect(onlyRow()).toMatchObject({
-        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        status: MailboxDeliveryStatusEnum.FAILED,
         oneDocumentItemId: 'doc-1',
         islandIsDocumentId: null,
         inFlightStep: null,
         leaseToken: null,
       })
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'SENT',
+      })
+      expect(one.createDocument).toHaveBeenCalledTimes(1)
+      expect(one.sendDocToIslandIs).toHaveBeenCalledTimes(2)
+      expect(one.sendDocToIslandIs).toHaveBeenLastCalledWith(
+        expect.objectContaining({ documentItemId: 'doc-1' }),
+      )
     })
 
-    it('records a 5xx send as UNCERTAIN', async () => {
+    it('records a 5xx send as FAILED', async () => {
       one.sendDocToIslandIs.mockRejectedValueOnce(
         new OneSystemsError('SendDocToIslandIs failed', {
           operation: 'SendDocToIslandIs',
@@ -1847,7 +1884,7 @@ describe('MailboxDeliveryService', () => {
       await expect(service.deliverToMailbox(input())).rejects.toThrow(
         OneSystemsError,
       )
-      expect(onlyRow().status).toBe(MailboxDeliveryStatusEnum.UNCERTAIN)
+      expect(onlyRow().status).toBe(MailboxDeliveryStatusEnum.FAILED)
     })
 
     it('records any CreateCase failure as FAILED, since CreateCase is safe to repeat', async () => {
@@ -2010,20 +2047,40 @@ describe('MailboxDeliveryService', () => {
           () => http('CreateCase', 400, { isValidationProblemBody: true }),
         ],
         ['an error that is not a OneSystemsError', () => new Error('boom')],
-      ])('records %s as UNCERTAIN', async (_why, makeError) => {
-        fail(makeError())
+      ])(
+        // CreateDocument would file a second copy, so an unclear outcome is
+        // UNCERTAIN. A repeated send is answered as already in the mailbox
+        // (OneSystems, 26 Nov 2026), so every send failure is retryable.
+        `records %s as ${operation === 'CreateDocument' ? 'UNCERTAIN' : 'FAILED, and retries the send'}`,
+        async (_why, makeError) => {
+          fail(makeError())
 
-        await expect(service.deliverToMailbox(input())).rejects.toThrow()
+          await expect(service.deliverToMailbox(input())).rejects.toThrow()
 
-        expect(onlyRow()).toMatchObject({
-          status: MailboxDeliveryStatusEnum.UNCERTAIN,
-          inFlightStep: null,
-          leaseToken: null,
-        })
-        await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
-          status: 'UNCERTAIN',
-        })
-      })
+          if (operation === 'CreateDocument') {
+            expect(onlyRow()).toMatchObject({
+              status: MailboxDeliveryStatusEnum.UNCERTAIN,
+              inFlightStep: null,
+              leaseToken: null,
+            })
+            await expect(
+              service.deliverToMailbox(input()),
+            ).resolves.toMatchObject({ status: 'UNCERTAIN' })
+            return
+          }
+
+          expect(onlyRow()).toMatchObject({
+            status: MailboxDeliveryStatusEnum.FAILED,
+            oneDocumentItemId: 'doc-1',
+            inFlightStep: null,
+            leaseToken: null,
+          })
+          await expect(
+            service.deliverToMailbox(input()),
+          ).resolves.toMatchObject({ status: 'SENT' })
+          expect(one.createDocument).toHaveBeenCalledTimes(1)
+        },
+      )
 
       it.each([
         [
@@ -2793,7 +2850,7 @@ describe('MailboxDeliveryService', () => {
         },
       },
     ])(
-      'does not mark UNCERTAIN when a late $step save clears the marker first',
+      'neither marks UNCERTAIN nor sends again when a late $step save clears the marker first',
       async ({ step, lateSave, expected }) => {
         store.seed({
           status: MailboxDeliveryStatusEnum.CASE_CREATED,

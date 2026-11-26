@@ -747,7 +747,6 @@ describe('OneSystemsService', () => {
           nationalId: NATIONAL_ID,
           category: 'c',
           type: 't',
-          sendNotification: true,
         }),
       ).resolves.toEqual({
         islandIsDocumentId: 'island-doc-1',
@@ -759,7 +758,6 @@ describe('OneSystemsService', () => {
         IDNumber: NATIONAL_ID,
         Category: 'c',
         Type: 't',
-        SendNotification: true,
       })
     })
 
