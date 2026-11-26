@@ -1,3 +1,4 @@
+import type { NextRequest, NextResponse } from 'next/server'
 import type { CookiesOptions } from 'next-auth'
 
 /**
@@ -18,6 +19,8 @@ import type { CookiesOptions } from 'next-auth'
  * - the middleware              → `createAuthMiddleware({ cookiePrefix })`, or
  *                                 `withAuth({ cookies: { sessionToken: { name } } })`
  * - `getToken` in route handlers → `sessionCookieName(prefix)`
+ * - the logout route          → `endSessionHandler(request, uri, prefix)`, which
+ *                                 derives the session cookie name itself
  *
  * An app that passes nothing keeps NextAuth's default names, so this is
  * behaviour-neutral for everyone who has not opted in.
@@ -36,6 +39,9 @@ export const isSecureSessionCookie = () =>
   process.env.NODE_ENV === 'production' &&
   process.env.NEXTAUTH_COOKIE_SECURE !== 'false'
 
+/** NextAuth's own cookie prefix, used when an app has not opted in. */
+export const DEFAULT_COOKIE_PREFIX = 'next-auth'
+
 const securePrefix = (secure: boolean) => (secure ? '__Secure-' : '')
 
 /**
@@ -44,7 +50,26 @@ const securePrefix = (secure: boolean) => (secure ? '__Secure-' : '')
  * hands `withAuth` a name for a non-empty one.
  */
 export const sessionCookieName = (prefix?: string) =>
-  `${securePrefix(isSecureSessionCookie())}${prefix || 'next-auth'}.session-token`
+  sessionTokenName(prefix || DEFAULT_COOKIE_PREFIX, isSecureSessionCookie())
+
+// The one template for the session cookie's name, shared by `sessionCookieName`
+// and `authCookiesFor`.
+const sessionTokenName = (prefix: string, secure: boolean) =>
+  `${securePrefix(secure)}${prefix}.session-token`
+
+/**
+ * The session cookie names to read a token from, first match wins. An app with
+ * its own prefix has one. An app on NextAuth's defaults has both variants,
+ * because NextAuth picks `__Secure-` from the `NEXTAUTH_URL` scheme, which can
+ * disagree with the `NODE_ENV` rule `sessionCookieName` follows.
+ */
+export const sessionCookieNames = (prefix?: string) =>
+  prefix
+    ? [sessionCookieName(prefix)]
+    : [
+        sessionTokenName(DEFAULT_COOKIE_PREFIX, true),
+        sessionTokenName(DEFAULT_COOKIE_PREFIX, false),
+      ]
 
 /**
  * Every cookie NextAuth sets, renamed under `prefix`, with NextAuth's own
@@ -52,13 +77,21 @@ export const sessionCookieName = (prefix?: string) =>
  * would otherwise still trample each other's state, PKCE verifier and
  * callback URL.
  */
-export const appAuthCookies = (prefix: string): Partial<CookiesOptions> => {
-  const secure = isSecureSessionCookie()
+export const appAuthCookies = (prefix: string): Partial<CookiesOptions> =>
+  authCookiesFor(prefix, isSecureSessionCookie())
+
+const authCookiesFor = (
+  prefix: string,
+  secure: boolean,
+): Partial<CookiesOptions> => {
   const pre = securePrefix(secure)
   const base = { httpOnly: true, sameSite: 'lax' as const, path: '/', secure }
 
   return {
-    sessionToken: { name: sessionCookieName(prefix), options: base },
+    sessionToken: {
+      name: sessionTokenName(prefix, secure),
+      options: base,
+    },
     callbackUrl: { name: `${pre}${prefix}.callback-url`, options: base },
     csrfToken: {
       // `__Host-` rather than `__Secure-`, as NextAuth's default does: the CSRF
@@ -79,8 +112,11 @@ export const appAuthCookies = (prefix: string): Partial<CookiesOptions> => {
 }
 
 /**
- * Whether a cookie belongs to this app's NextAuth set — for routes that clear
- * the session by hand, so they clear their own and leave another app's alone.
+ * Whether a cookie belongs to this app's NextAuth set: its name is `prefix`
+ * followed by a dot, with or without a `__Secure-` / `__Host-` prefix. Covers
+ * the session chunks (`<session cookie>.0`, ...) as well. Used by
+ * `expireAppAuthCookies`, and by routes that clear the session by hand, so they
+ * clear their own cookies and leave another app's alone.
  */
 export const isAppAuthCookie = (cookieName: string, prefix: string) =>
   ['', '__Secure-', '__Host-'].some((pre) =>
@@ -96,10 +132,56 @@ export const isAppAuthCookie = (cookieName: string, prefix: string) =>
  * cookie survives. `path: '/'` is required by `__Host-` and is where NextAuth
  * sets them all.
  */
-export const expiredAuthCookieOptions = () => ({
+export const expiredAuthCookieOptions = (
+  secure: boolean = isSecureSessionCookie(),
+) => ({
   path: '/',
   maxAge: 0,
+  expires: new Date(0),
   httpOnly: true,
   sameSite: 'lax' as const,
-  secure: isSecureSessionCookie(),
+  secure,
 })
+
+/**
+ * Expires every NextAuth cookie of one app on `response`: the full set under
+ * the app's names, plus whatever of the app's cookies the request carries
+ * (session chunks `<session cookie>.0`, `.1`, …). Another app's cookies are
+ * left alone.
+ *
+ * An app on NextAuth's default names gets both the `__Secure-` and the plain
+ * variants expired: NextAuth picks the variant from the `NEXTAUTH_URL` scheme,
+ * not from `NODE_ENV`, so which one is in the browser is not known here.
+ * Expiring a cookie that is absent is harmless.
+ *
+ * @param prefix the app's cookie prefix; omitted for NextAuth's default names.
+ */
+export const expireAppAuthCookies = (
+  request: NextRequest,
+  response: NextResponse,
+  prefix?: string,
+) => {
+  const effective = prefix || DEFAULT_COOKIE_PREFIX
+  const variants = prefix
+    ? [isSecureSessionCookie()]
+    : [isSecureSessionCookie(), !isSecureSessionCookie()]
+
+  const expire = (name: string) =>
+    response.cookies.set(
+      name,
+      '',
+      expiredAuthCookieOptions(
+        name.startsWith('__Secure-') || name.startsWith('__Host-'),
+      ),
+    )
+
+  for (const secure of variants) {
+    for (const cookie of Object.values(authCookiesFor(effective, secure))) {
+      if (cookie?.name) expire(cookie.name)
+    }
+  }
+
+  for (const cookie of request.cookies.getAll()) {
+    if (isAppAuthCookie(cookie.name, effective)) expire(cookie.name)
+  }
+}

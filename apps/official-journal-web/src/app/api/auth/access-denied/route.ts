@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import {
-  expiredAuthCookieOptions,
-  isAppAuthCookie,
-} from '@dmr.is/auth/sessionCookies'
+import { endSessionUrl } from '@dmr.is/auth/logoutHandler'
+import { expireAppAuthCookies } from '@dmr.is/auth/sessionCookies'
 
 import { AUTH_COOKIE_PREFIX } from '../../../../lib/auth/authOptions'
 import {
@@ -33,23 +31,14 @@ function handler(request: NextRequest) {
       : process.env.IDENTITY_SERVER_LOGOUT_URL
   ) as string
 
-  const params = new URLSearchParams({
-    post_logout_redirect_uri: postLogoutRedirectUri,
-    id_token_hint: idToken,
-  })
-
   const response = NextResponse.redirect(
-    `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?${params.toString()}`,
+    endSessionUrl(request, postLogoutRedirectUri, idToken),
   )
 
   // This app's NextAuth cookies only, so a session from an earlier sign-in
   // can't carry on after a refused one. Expired rather than deleted, so
   // __Secure- cookies are cleared too.
-  for (const cookie of request.cookies.getAll()) {
-    if (isAppAuthCookie(cookie.name, AUTH_COOKIE_PREFIX)) {
-      response.cookies.set(cookie.name, '', expiredAuthCookieOptions())
-    }
-  }
+  expireAppAuthCookies(request, response, AUTH_COOKIE_PREFIX)
 
   response.cookies.set(LOGOUT_HINT_COOKIE, '', {
     path: LOGOUT_HINT_COOKIE_PATH,
