@@ -31,7 +31,6 @@ import {
   UserRoleEnum,
 } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
-import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ApplicationCaller,
@@ -79,11 +78,8 @@ import { ApplicationGuard } from '../guards/application.guard'
 
 import 'multer'
 
-const callerOf = (
-  user: UserDto & Pick<DMRUser, 'actor'>,
-): ApplicationCaller => ({
+const callerOf = (user: UserDto): ApplicationCaller => ({
   nationalId: user.nationalId,
-  actorNationalId: user.actor?.nationalId,
   involvedPartyIds: involvedPartyIdsOf(user.involvedParties),
   isAdmin: user.role?.title === UserRoleEnum.Admin,
 })

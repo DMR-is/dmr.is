@@ -15,6 +15,7 @@ import {
   CaseChannel,
   CreateCaseDto,
   CreateCaseResponseDto,
+  GetInvoledPartiesByUserResponse,
   UserDto,
 } from '@dmr.is/shared-dto'
 import {
@@ -713,8 +714,10 @@ export class CaseCreateService implements ICaseCreateService {
    * answers. The caller must be a party to the application, and the involved
    * party must be one of: every institution for an editorial admin, or the
    * involved parties the caller belongs to or acts for
-   * (`caller.involvedPartyIds`, which is what the party picker offered them).
-   * An assignee may also file for the applicant's primary institution.
+   * (`caller.involvedPartyIds`, which is what the party picker offers them).
+   * An assignee may also file for any institution the picker offered the
+   * applicant, since the applicant picks the institution and the assignee
+   * (another ministry the applicant added) may be the one who submits.
    * Every refusal is the same 403, so the answer does not reveal which
    * institution ids exist.
    */
@@ -765,15 +768,11 @@ export class CaseCreateService implements ICaseCreateService {
       return forbidden()
     }
 
-    // An assignee may file for the applicant's primary institution. The
-    // applicant's actor is not known here, so never a sibling institution on
-    // the same national id.
-    const offered = await this.userService.getInvolvedPartiesByNationalId(
-      normalizeNationalId(application.applicant),
-    )
+    // An assignee may file for what the picker offered the applicant.
+    const offered = await this.partiesOfferedToApplicant(application)
 
     if (!offered.result.ok) {
-      // No institution registered under the applicant: nothing was offered.
+      // The applicant is unknown to us: nothing was offered.
       return offered.result.error.code === 404
         ? forbidden()
         : ResultWrapper.err(offered.result.error)
@@ -788,6 +787,48 @@ export class CaseCreateService implements ICaseCreateService {
     }
 
     return forbidden()
+  }
+
+  /**
+   * The involved parties the party picker (`GET :id/involved-parties`)
+   * offers the applicant, worked out the way the picker does. An applicant
+   * acting through a delegation is answered by `PartyGuard`'s lookup: the
+   * parties under the represented national id that are linked to the actor.
+   * Every actor recorded on the application counts, since any of them may
+   * have picked. An applicant signed in as themselves gets their own linked
+   * parties, or every party when they are an editorial admin.
+   */
+  private async partiesOfferedToApplicant(
+    application: Application,
+  ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>> {
+    const applicant = normalizeNationalId(application.applicant)
+    const actors = (application.applicantActors ?? [])
+      .map(normalizeNationalId)
+      .filter(Boolean)
+
+    if (actors.length > 0) {
+      const involvedParties: GetInvoledPartiesByUserResponse['involvedParties'] =
+        []
+      for (const actor of new Set(actors)) {
+        const lookup = await this.userService.getInvolvedPartiesByNationalId(
+          applicant,
+          actor,
+        )
+        if (!lookup.result.ok) {
+          if (lookup.result.error.code === 404) continue
+          return ResultWrapper.err(lookup.result.error)
+        }
+        involvedParties.push(...lookup.result.value.involvedParties)
+      }
+      return ResultWrapper.ok({ involvedParties })
+    }
+
+    const user = await this.userService.getUserByNationalId(applicant)
+    if (!user.result.ok) {
+      return ResultWrapper.err(user.result.error)
+    }
+
+    return this.userService.getInvolvedPartiesByUser(user.result.value.user)
   }
 
   @LogAndHandle()

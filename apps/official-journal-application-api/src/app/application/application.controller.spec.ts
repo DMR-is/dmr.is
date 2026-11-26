@@ -65,7 +65,6 @@ describe('ApplicationController.postApplication', () => {
 
     expect(postApplication).toHaveBeenCalledWith(application, {
       nationalId: '0101010000',
-      actorNationalId: '0202020000',
       involvedPartyIds: ['party-1'],
       isAdmin: false,
     })
