@@ -156,9 +156,39 @@ jobs:
       - name: tsc
         run: yarn run nx affected -t tsc
 
-      # TODO: Removing build step for now, we will add again building all affected projects if needed
-      # - name: Build application
-      #   run: yarn nx run ${{matrix.project}}:build:production
+  build:
+    # PRs only: on main the deploy builds the same apps again, so this would
+    # only delay it.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # No `submodules: true`, same reason as the tsc job: the sparse
+          # checkout step below fetches only the pinned island.is commit.
+
+      - name: 🌱 Apply submodule sparse-checkout
+        run: ./.gitscripts/checkout-submodules.sh
+
+      - name: ♻️ Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: 📥 Monorepo install
+        uses: ./.github/actions/yarn-install
+        with:
+          cache-install-state: true
+          cache-node-modules: true
+
+      - uses: nrwl/nx-set-shas@v5
+
+      # What the deploy builds through `nx run <app>:container`: `build`
+      # (production configuration, no build-time env) and, for the apps that
+      # boot under varlock, `flatten-env`, which `container` depends on there.
+      - name: Build
+        run: yarn run nx affected -t build flatten-env
 
   constraints:
     runs-on: ubuntu-latest
