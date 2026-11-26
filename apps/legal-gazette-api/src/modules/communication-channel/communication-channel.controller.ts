@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   Inject,
   Param,
   Patch,
@@ -19,7 +18,6 @@ import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { CommunicationChannelDto } from '../../models/communication-channel.model'
 import {
   CreateCommunicationChannelDto,
-  GetCommunicationChannelsDto,
   UpdateCommunicationChannelDto,
 } from './dto/communication-channel.dto'
 import { ICommunicationChannelService } from './communication-channel.service.interface'
@@ -36,17 +34,6 @@ export class CommunicationChannelController {
     @Inject(ICommunicationChannelService)
     private readonly communicationChannelService: ICommunicationChannelService,
   ) {}
-
-  @Get()
-  @LGResponse({
-    operationId: 'getCommunicationChannels',
-    type: GetCommunicationChannelsDto,
-  })
-  async getChannelsByAdvertId(
-    @Param('advertId') advertId: string,
-  ): Promise<GetCommunicationChannelsDto> {
-    return this.communicationChannelService.getChannelsByAdvertId(advertId)
-  }
 
   @Post()
   @LGResponse({

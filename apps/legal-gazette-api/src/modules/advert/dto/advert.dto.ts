@@ -306,17 +306,3 @@ export class UpdateAdvertDto extends PartialType(
   @Min(0)
   feeQuantity?: number
 }
-
-export class PublishAdvertsBody {
-  @ApiProperty({
-    type: [String],
-  })
-  @IsArray()
-  @IsUUID(undefined, { each: true })
-  advertIds!: string[]
-}
-
-export class CreateAdvertResponseDto {
-  @ApiProperty({ type: String })
-  id!: string
-}

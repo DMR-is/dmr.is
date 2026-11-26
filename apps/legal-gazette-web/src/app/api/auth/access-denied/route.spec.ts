@@ -91,4 +91,33 @@ describe('GET /api/auth/access-denied', () => {
     )
     expect(cookies.some((cookie) => cookie.startsWith('doe-web.'))).toBe(false)
   })
+
+  it('expires the whole auth cookie set with its attributes', async () => {
+    const request = new NextRequest(
+      'http://localhost:4200/api/auth/access-denied',
+      { headers: { cookie: 'lg.logout_hint=the-id-token' } },
+    )
+
+    const cookies = Object.fromEntries(
+      GET(request)
+        .headers.getSetCookie()
+        .map((header) => {
+          const [pair, ...attrs] = header.split(/;\s*/)
+          return [pair.split('=')[0], attrs.map((a) => a.toLowerCase())]
+        }),
+    )
+
+    for (const name of [
+      'lg-web.session-token',
+      'lg-web.csrf-token',
+      'lg-web.callback-url',
+      'lg-web.pkce.code_verifier',
+      'lg-web.state',
+      'lg-web.nonce',
+    ]) {
+      expect(cookies[name]).toEqual(
+        expect.arrayContaining(['path=/', 'max-age=0', 'httponly']),
+      )
+    }
+  })
 })

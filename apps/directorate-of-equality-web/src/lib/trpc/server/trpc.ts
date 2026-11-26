@@ -1,5 +1,3 @@
-import { getServerSession } from 'next-auth'
-
 import { cache } from 'react'
 
 import { bindSdk } from '@dmr.is/trpc/utils/bindSdk'
@@ -7,20 +5,20 @@ import { apiErrorMiddleware } from '@dmr.is/trpc/utils/errorHandler'
 
 import * as doeApiSdk from '../../../gen/fetch/sdk.gen'
 import { getServerClient } from '../../api/serverClient'
-import { authOptions } from '../../auth/authOptions'
+import { getServerIdToken } from '../../auth/getServerToken'
 
 import { initTRPC, TRPCError } from '@trpc/server'
 
 export const createTRPCContext = cache(async () => {
-  const session = await getServerSession(authOptions)
-  if (session?.invalid || !session?.idToken) {
+  const idToken = await getServerIdToken()
+  if (!idToken) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'No session found',
     })
   }
 
-  const client = await getServerClient(session.idToken)
+  const client = await getServerClient(idToken)
 
   return {
     api: bindSdk(client, doeApiSdk),

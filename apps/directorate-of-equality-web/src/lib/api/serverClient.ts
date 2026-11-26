@@ -1,10 +1,6 @@
-import { getServerSession } from 'next-auth'
-
-import { authOptions } from '../auth/authOptions'
+import { getServerIdToken } from '../auth/getServerToken'
 import { getDoEClient } from './createClient'
 
 export async function getServerClient(token?: string) {
-  return getDoEClient(
-    token ?? ((await getServerSession(authOptions))?.idToken as string),
-  )
+  return getDoEClient(token ?? ((await getServerIdToken()) as string))
 }

@@ -285,22 +285,6 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  async insertDepartment(
-    model: Department,
-  ): Promise<ResultWrapper<GetDepartmentResponse>> {
-    if (!model) {
-      throw new BadRequestException()
-    }
-
-    const dep = await this.advertDepartmentModel.create({
-      title: model.title,
-      slug: model.slug,
-    })
-
-    return ResultWrapper.ok({ department: advertDepartmentMigrate(dep) })
-  }
-
-  @LogAndHandle()
   async updateDepartment(
     model: Department,
   ): Promise<ResultWrapper<GetDepartmentResponse>> {
@@ -320,22 +304,6 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({
       department: advertDepartmentMigrate(dep[1][0]),
     })
-  }
-
-  @LogAndHandle()
-  async insertInstitution(
-    model: Institution,
-  ): Promise<ResultWrapper<GetInstitutionResponse>> {
-    if (!model) {
-      throw new BadRequestException()
-    }
-
-    const inst = await this.advertInvolvedPartyModel.create({
-      title: model.title,
-      slug: model.slug,
-    })
-
-    return ResultWrapper.ok({ institution: advertInvolvedPartyMigrate(inst) })
   }
 
   @LogAndHandle()
@@ -796,23 +764,6 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  async getInstitution(
-    id: string,
-  ): Promise<ResultWrapper<GetInstitutionResponse>> {
-    if (!id) {
-      throw new BadRequestException()
-    }
-    const party = await this.advertInvolvedPartyModel.findOne({
-      where: { id },
-    })
-    if (!party) {
-      throw new NotFoundException(`Institution<${id}> not found`)
-    }
-
-    return ResultWrapper.ok({ institution: advertInvolvedPartyMigrate(party) })
-  }
-
-  @LogAndHandle()
   @Cacheable({ tagBy: [0], topic: 'institutions:all' })
   async getInstitutions(
     params?: DefaultSearchParams,
@@ -839,24 +790,6 @@ export class JournalService implements IJournalService {
       institutions: mapped,
       paging,
     })
-  }
-
-  @LogAndHandle()
-  async getCategory(id: string): Promise<ResultWrapper<GetCategoryResponse>> {
-    if (!id) {
-      throw new BadRequestException()
-    }
-
-    const category = await this.advertCategoryModel.findOne({
-      where: { id },
-      include: AdvertMainCategoryModel,
-    })
-
-    if (!category) {
-      throw new NotFoundException(`Category<${id}> not found`)
-    }
-
-    return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
   }
 
   @LogAndHandle()

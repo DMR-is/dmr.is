@@ -148,9 +148,6 @@ describe('ApplicationController - Guard Authorization', () => {
     it('getApplicationById should have @UseGuards(OwnershipGuard)', () => {
       expect(true).toBe(true)
     })
-    it('getApplicationByCaseId should have @UseGuards(OwnershipGuard)', () => {
-      expect(true).toBe(true)
-    })
     it('updateApplication should have @UseGuards(OwnershipGuard)', () => {
       expect(true).toBe(true)
     })
@@ -251,24 +248,6 @@ describe('ApplicationController - Guard Authorization', () => {
       await expect(ownershipGuard.canActivate(context)).rejects.toThrow(
         NotFoundException,
       )
-    })
-  })
-  describe('getApplicationByCaseId - OwnershipGuard', () => {
-    it('should verify OwnershipGuard checks caseId parameter', async () => {
-      const user = createApplicantUser()
-      const mockCaseModel = {
-        id: 'case-123',
-      }
-      const context = createMockContext(user, 'getApplicationByCaseId', {
-        caseId: 'case-123',
-      })
-      // The guard will look up the case by caseId
-      // Note: Case ownership logic may need to be enhanced to check
-      // case -> application ownership relationship
-      const caseModelMock = Test.createTestingModule({}).compile()
-      // Currently the guard only checks if case exists (used by admins)
-      // For non-admin users, the guard may need to be enhanced
-      expect(context.switchToHttp().getRequest().params.caseId).toBe('case-123')
     })
   })
   describe('updateApplication - OwnershipGuard', () => {

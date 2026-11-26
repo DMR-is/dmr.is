@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
@@ -30,18 +30,6 @@ export class CategoryController extends BaseEntityController<
 > {
   constructor() {
     super(CategoryModel)
-  }
-
-  @Get('slug/:slug')
-  @LGResponse({ operationId: 'getCategoryBySlug', type: CategoryDto })
-  async findBySlug(@Param('slug') slug: string): Promise<CategoryDto> {
-    return super.findBySlug(slug)
-  }
-
-  @Get(':id')
-  @LGResponse({ operationId: 'getCategory', type: CategoryDto })
-  async findById(@Param('id') id: string): Promise<CategoryDto> {
-    return super.findById(id)
   }
 
   @Get()

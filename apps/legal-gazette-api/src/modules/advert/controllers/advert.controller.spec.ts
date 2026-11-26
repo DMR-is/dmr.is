@@ -6,7 +6,6 @@ import { UserContext } from '../../../core/context/user/user.context'
 import { ADMIN_KEY } from '../../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { SCOPES_KEY } from '../../../core/guards/scope-guards/scopes.decorator'
-import { ScopesGuard } from '../../../core/guards/scope-guards/scopes-guard'
 import { asStaffToken } from '../../../core/guards/token-surface/staff-token.testing'
 import { UserDto } from '../../../models/users.model'
 import { IUsersService } from '../../users/users.service.interface'
@@ -84,7 +83,6 @@ describe('AdvertController - Guard Authorization', () => {
     }
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ScopesGuard,
         AuthorizationGuard,
         Reflector, // Use REAL Reflector to read actual decorators
         {

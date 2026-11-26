@@ -1,11 +1,10 @@
 import { Op, WhereOptions } from 'sequelize'
 
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
-import { COMMON_ADVERT_TYPES_IDS } from '../../../core/constants'
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
@@ -30,30 +29,6 @@ export class TypeController extends BaseEntityController<
 > {
   constructor() {
     super(TypeModel)
-  }
-
-  @Get('slug/:slug')
-  @LGResponse({ operationId: 'getTypeBySlug', type: TypeModel })
-  async findBySlug(@Param('slug') slug: string): Promise<TypeModel> {
-    return super.findBySlug(slug)
-  }
-
-  @Get('common')
-  @LGResponse({ operationId: 'getCommonAdvertTypes', type: GetTypesDto })
-  async getCommonAdvertTypes(): Promise<GetTypesDto> {
-    const types = await this.model.findAll({
-      where: { id: { [Op.in]: COMMON_ADVERT_TYPES_IDS } },
-    })
-
-    return {
-      types: types,
-    }
-  }
-
-  @Get(':id')
-  @LGResponse({ operationId: 'getType', type: TypeModel })
-  async findById(@Param('id') id: string): Promise<TypeModel> {
-    return super.findById(id)
   }
 
   @Get()

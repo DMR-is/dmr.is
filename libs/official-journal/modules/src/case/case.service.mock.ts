@@ -7,15 +7,11 @@ import { Inject } from '@nestjs/common'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdditionalPartyBody,
-  AddCaseAdvertCorrection,
-  CaseComment,
   CaseCommunicationStatus,
   CaseDetailed,
   CreateCaseChannelBody,
   CreateCaseResponse,
-  DeleteCaseAdvertCorrection,
   DepartmentEnum,
-  GetCaseCommentsQuery,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -25,11 +21,9 @@ import {
   GetCasesWithPublicationNumberQuery,
   GetCasesWithStatusCount,
   GetCommunicationSatusesResponse,
-  GetNextPublicationNumberResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
-  PostCaseCommentBody,
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
@@ -39,7 +33,6 @@ import {
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
-  UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
   UpdateNextStatusBody,
   UpdatePublishDateBody,
@@ -155,11 +148,6 @@ export class CaseServiceMock {
   > {
     throw new Error('Method not implemented.')
   }
-  getNextCasePublicationNumber(
-    departmentId: string,
-  ): Promise<ResultWrapper<GetNextPublicationNumberResponse, GenericError>> {
-    throw new Error('Method not implemented.')
-  }
   getCaseTags(): Promise<ResultWrapper<GetTagsResponse>> {
     throw new Error('Method not implemented.')
   }
@@ -175,12 +163,6 @@ export class CaseServiceMock {
   updateCaseType(
     caseId: string,
     body: UpdateCaseTypeBody,
-  ): Promise<ResultWrapper<undefined>> {
-    throw new Error('Method not implemented.')
-  }
-  updateCaseCategories(
-    caseId: string,
-    body: UpdateCategoriesBody,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
@@ -233,44 +215,12 @@ export class CaseServiceMock {
     throw new Error('Method not implemented.')
   }
 
-  getComments(
-    caseId: string,
-    params?: GetCaseCommentsQuery | undefined,
-  ): Promise<CaseComment[]> {
-    this.logger.info('getComments', caseId, params)
-    throw new Error('Method not implemented.')
-  }
-  postComment(
-    caseId: string,
-    body: PostCaseCommentBody,
-  ): Promise<CaseComment[]> {
-    this.logger.info('postComment', caseId, body)
-    throw new Error('Method not implemented.')
-  }
-  deleteComment(caseId: string, commentId: string): Promise<CaseComment[]> {
-    this.logger.info('deleteComment', caseId, commentId)
-    throw new Error('Method not implemented.')
-  }
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     this.logger.info('getCase', id)
     throw new Error('Method not implemented.')
   }
 
   getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
-    throw new Error('Method not implemented.')
-  }
-
-  postCaseCorrection(
-    caseId: string,
-    body: AddCaseAdvertCorrection,
-  ): Promise<ResultWrapper> {
-    throw new Error('Method not implemented.')
-  }
-
-  deleteCorrection(
-    caseId: string,
-    body: DeleteCaseAdvertCorrection,
-  ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }
 

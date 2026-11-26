@@ -1,14 +1,10 @@
 'use strict'
 
-const { cwd } = require('process')
 const { readFile } = require('fs/promises')
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface) {
-    // eslint-disable-next-line no-console
-    console.log(cwd())
-
     const typeSeed = await readFile(
       './src/modules/base-entity/type/type.seed.sql',
       'utf8',

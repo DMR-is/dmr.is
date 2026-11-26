@@ -99,18 +99,6 @@ export class ApplicationController {
     return this.applicationService.getApplicationById(applicationId)
   }
 
-  @Get('getApplicationByCaseId/:caseId')
-  @LGResponse({
-    operationId: 'getApplicationByCaseId',
-    type: ApplicationDetailedDto,
-  })
-  @UseGuards(OwnershipGuard)
-  async getApplicationByCaseId(
-    @Param('caseId') caseId: string,
-  ): Promise<ApplicationDetailedDto> {
-    return this.applicationService.getApplicationByCaseId(caseId)
-  }
-
   @Patch(':applicationId')
   @LGResponse({
     operationId: 'updateApplication',

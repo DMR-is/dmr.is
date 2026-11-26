@@ -96,14 +96,6 @@ export class CategoryTypeAdminController {
     return this.service.setCategoryActive(id, body, this.actor(user))
   }
 
-  @Get('/categories/:id/impact')
-  @LGResponse({ operationId: 'getCategoryImpact', type: ImpactDto })
-  getCategoryImpact(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<ImpactDto> {
-    return this.service.getCategoryImpact(id)
-  }
-
   @Delete('/categories/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @LGResponse({ operationId: 'deleteCategory' })
@@ -143,14 +135,6 @@ export class CategoryTypeAdminController {
     @CurrentUser() user: DMRUser,
   ): Promise<TypeDto> {
     return this.service.setTypeActive(id, body, this.actor(user))
-  }
-
-  @Get('/types/:id/impact')
-  @LGResponse({ operationId: 'getTypeImpact', type: ImpactDto })
-  getTypeImpact(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<ImpactDto> {
-    return this.service.getTypeImpact(id)
   }
 
   @Delete('/types/:id')

@@ -1,9 +1,6 @@
 import { AdvertTemplateType } from '../gen/fetch'
 import { RouteItem } from './types'
 
-export const DEFAULT_PAGE = 1
-export const DEFAULT_PAGE_SIZE = 10
-
 export const StatusIdEnum = {
   SUBMITTED: 'cd3bf301-52a1-493e-8c80-a391c310c840',
   IN_PROGRESS: '7ef679c4-4f66-4892-b6ad-ee05e0be4359',
@@ -41,19 +38,6 @@ export enum QueryParams {
   SORT_BY = 'sortBy',
   DIRECTION = 'direction',
 }
-
-export enum SortDirection {
-  ASC = 'asc',
-  DESC = 'desc',
-}
-
-export const DEFAULT_SORT_DIRECTION = SortDirection.ASC
-
-export const FILTERS_TO_SHOW = [
-  QueryParams.PUBLICATION,
-  QueryParams.TYPE,
-  QueryParams.CATEGORY,
-]
 
 export enum Route {
   STJORNBORD = '/',

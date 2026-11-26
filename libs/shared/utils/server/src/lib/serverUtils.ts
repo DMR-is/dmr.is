@@ -38,8 +38,6 @@ import {
   ApplicationSignatureMember,
   ApplicationSignatureRecord,
   CaseAddition,
-  CaseCommentDirectionEnum,
-  CaseCommentSourceEnum,
   CaseStatusEnum,
   GetAdvertTemplateResponse,
 } from '@dmr.is/shared-dto'
@@ -332,6 +330,14 @@ export const handleException = <T>({
         `${error.name} in ${service}.${method}, reason: ${error.message}`,
       )
 
+      // SQL can carry personal data, so only log it in local development.
+      if (process.env.NODE_ENV === 'development') {
+        logger.warn(`${error.name} detail in ${service}.${method}`, {
+          stack: error.stack,
+          sql: error.sql,
+        })
+      }
+
       return ResultWrapper.err({
         code: 500,
         message: 'Internal server error',
@@ -461,15 +467,6 @@ export const withTryCatch = <T>(cb: () => T, message: string): T => {
       error,
     }).unwrap()
   }
-}
-
-export const mapSourceToDirection = (
-  source: CaseCommentSourceEnum,
-  forSource: CaseCommentSourceEnum,
-): CaseCommentDirectionEnum => {
-  return source === forSource
-    ? CaseCommentDirectionEnum.Sent
-    : CaseCommentDirectionEnum.Received
 }
 
 export const getPageSize = (pageSize: number | undefined): number => {

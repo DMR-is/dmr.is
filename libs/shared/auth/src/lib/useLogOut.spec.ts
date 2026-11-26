@@ -14,68 +14,53 @@ jest.mock('./identityProvider', () => ({
 
 describe('useLogOut', () => {
   const calls: string[] = []
-  const assign = jest.fn((url: string) => calls.push(`assign:${url}`))
   const clear = jest.fn(() => calls.push('sessionStorage.clear'))
   const fetchMock = jest.fn()
+  const form: Record<string, unknown> = {}
 
   beforeEach(() => {
     calls.length = 0
     jest.clearAllMocks()
+    for (const key of Object.keys(form)) delete form[key]
+    form.submit = jest.fn(() => calls.push('form.submit'))
     Object.assign(globalThis, {
-      window: { location: { assign, origin: 'https://app.example.is' } },
+      window: { location: { origin: 'https://app.example.is' } },
+      document: {
+        createElement: jest.fn(() => form),
+        body: { appendChild: jest.fn(() => calls.push('form.append')) },
+      },
       sessionStorage: { clear },
       fetch: fetchMock,
     })
-    jest.mocked(signOut).mockImplementation(async () => {
-      calls.push('signOut')
-      return undefined as never
-    })
   })
 
-  it('clears storage, revokes, ends the session, signs out, then redirects', async () => {
-    fetchMock.mockImplementation(async (url: string) => {
-      calls.push(`fetch:${url}`)
-      return url === '/api/auth/logout'
-        ? {
-            ok: true,
-            json: async () => ({ url: 'https://ids.example.is/end' }),
-          }
-        : { ok: true }
-    })
-
+  it('clears storage, then submits a top-level POST form without calling fetch', async () => {
     await useLogOut()()
 
     expect(calls).toEqual([
       'sessionStorage.clear',
-      'fetch:/api/auth/revoke-refresh',
-      'fetch:/api/auth/logout',
-      'signOut',
-      'assign:https://ids.example.is/end',
+      'form.append',
+      'form.submit',
     ])
-    expect(fetchMock).toHaveBeenCalledWith('/api/auth/revoke-refresh', {
-      method: 'POST',
-    })
+    // revocation happens in the logout route, after its origin check
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(form.method).toBe('POST')
+    expect(form.action).toBe('/api/auth/logout')
   })
 
-  it('still signs out and falls back to the app origin when both requests fail', async () => {
-    fetchMock.mockRejectedValue(new Error('offline'))
-
+  it('does not call next-auth signOut, which would delete the cookie first', async () => {
     await useLogOut()()
 
-    expect(signOut).toHaveBeenCalledWith({ redirect: false })
-    expect(assign).toHaveBeenCalledWith('https://app.example.is')
+    expect(signOut).not.toHaveBeenCalled()
   })
 
   it('does not stop when sessionStorage throws', async () => {
     clear.mockImplementation(() => {
       throw new DOMException('blocked', 'SecurityError')
     })
-    fetchMock.mockResolvedValue({ ok: false })
-
     await useLogOut()()
 
-    expect(signOut).toHaveBeenCalled()
-    expect(assign).toHaveBeenCalledWith('https://app.example.is')
+    expect(form.submit).toHaveBeenCalled()
   })
 })
 

@@ -7,7 +7,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   GetApplicationResponse,
   GetInstitutionsFullResponse,
@@ -274,38 +273,6 @@ export class UtilityService implements IUtilityService {
     }
 
     return ResultWrapper.ok(typeLookup)
-  }
-
-  @LogAndHandle()
-  async userLookup(userId: string): Promise<ResultWrapper> {
-    const userLookup = ALL_MOCK_USERS.find((u) => u.id === userId)
-
-    if (!userLookup) {
-      throw new NotFoundException(`User<${userId}> not found`)
-    }
-
-    return ResultWrapper.ok(userLookup)
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async getNextCaseNumber(
-    departmentId: string,
-    publicationYear: number,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<number>> {
-    const serialNumber: number | null = await this.advertModel.max(
-      'serialNumber',
-      {
-        where: {
-          departmentId,
-          publicationYear,
-        },
-        transaction,
-      },
-    )
-
-    return ResultWrapper.ok(serialNumber ? serialNumber + 1 : 1)
   }
 
   @LogAndHandle()

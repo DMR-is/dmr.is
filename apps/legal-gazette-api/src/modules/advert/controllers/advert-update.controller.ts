@@ -49,17 +49,6 @@ export class AdvertUpdateController {
     )
   }
 
-  @Patch('category/:categoryId')
-  @LGResponse({ operationId: 'updateAdvertCategory' })
-  @ApiParam({ name: 'categoryId', type: String })
-  async updateAdvertCategory(
-    @Param('id') advertId: string,
-    @Param('categoryId', new UUIDValidationPipe())
-    categoryId: string,
-  ): Promise<void> {
-    await this.advertService.updateAdvert(advertId, { categoryId })
-  }
-
   @Patch()
   @LGResponse({ operationId: 'updateAdvert', type: AdvertDetailedDto })
   updateAdvert(

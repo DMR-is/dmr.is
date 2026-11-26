@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsOptional } from 'class-validator'
+import { IsEmail, IsOptional } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -33,11 +33,4 @@ export class CreateSubscriberAdminDto {
 export class UpdateSubscriberEndDateDto {
   @ApiDateTime()
   subscribedTo!: Date
-}
-
-export class GetSubscribersQueryDto {
-  @ApiProperty({ type: Boolean, required: false, default: false })
-  @IsOptional()
-  @IsBoolean()
-  includeInactive?: boolean
 }
