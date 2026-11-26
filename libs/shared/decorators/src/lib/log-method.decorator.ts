@@ -33,7 +33,3 @@ export function LogMethod(logArgs: boolean | undefined = true) {
     return descriptor
   }
 }
-
-export function TestLogMethod(logArgs = true): MethodDecorator {
-  return LogMethod(logArgs)
-}

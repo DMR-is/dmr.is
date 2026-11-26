@@ -1360,80 +1360,6 @@
         "tags": ["Companies"]
       }
     },
-    "/api/v1/companies/{id}/isat": {
-      "patch": {
-        "operationId": "updateCompanyIsat",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateCompanyIsatDto" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CompanyDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Companies"]
-      }
-    },
     "/api/v1/companies/{id}/fines": {
       "patch": {
         "operationId": "updateCompanyFines",
@@ -7966,16 +7892,6 @@
           }
         },
         "required": ["sector"]
-      },
-      "UpdateCompanyIsatDto": {
-        "type": "object",
-        "properties": {
-          "isatCategoryCode": {
-            "type": "string",
-            "nullable": true,
-            "description": "Normalized ÍSAT2008 leaf code, e.g. \"01110\". Null clears the classification."
-          }
-        }
       },
       "UpdateCompanyFinesDto": {
         "type": "object",

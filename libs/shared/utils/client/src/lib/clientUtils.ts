@@ -1,10 +1,5 @@
 import differenceInCalendarDays from 'date-fns/differenceInCalendarDays'
 
-export const isSingular = (n: number | string): boolean => {
-  const c = '' + Number(n)
-  return c.slice(-1) === '1' && c.slice(-2) !== '11'
-}
-
 export const isResponse = (error: unknown): error is Response => {
   return typeof error === 'object' && error !== null && 'json' in error
 }

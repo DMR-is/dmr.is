@@ -5,10 +5,7 @@ import {
   IsString,
 } from 'class-validator'
 
-import { ApiProperty, IntersectionType } from '@nestjs/swagger'
-
-import { PagingQuery } from '../paging'
-import { SortingQuery } from '../sorting'
+import { ApiProperty } from '@nestjs/swagger'
 
 export class GetAdvertsQueryParams {
   @ApiProperty({
@@ -139,9 +136,3 @@ export class GetAdvertsQueryParams {
   @IsOptional()
   direction?: string
 }
-
-export class GetAdvertsQuery extends IntersectionType(
-  GetAdvertsQueryParams,
-  PagingQuery,
-  SortingQuery,
-) {}

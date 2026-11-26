@@ -15,4 +15,3 @@ export const BASE_ENTITY_ATTRIBUTES_DETAILED: Array<
 > = ['id', 'title', 'slug', 'createdAt', 'updatedAt', 'deletedAt']
 
 export const BASE_ENTITY_ORDER_ASC: Order = [['title', 'ASC']]
-export const BASE_ENTITY_ORDER_DESC: Order = [['title', 'DESC']]

@@ -321,18 +321,6 @@ export async function createTRPCError(error: unknown): Promise<ApiTRPCError> {
   })
 }
 
-export async function trpcProcedureHandler<T>(
-  procedure: () => Promise<T>,
-): Promise<T> {
-  try {
-    const result = await procedure()
-    return result
-  } catch (error) {
-    const trpcError = await createTRPCError(error)
-    throw trpcError
-  }
-}
-
 /**
  * tRPC middleware that converts API errors (Response objects) to TRPCError.
  * The OpenAPI client throws raw Response objects on non-2xx status codes.

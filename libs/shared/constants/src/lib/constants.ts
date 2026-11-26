@@ -10,7 +10,6 @@ export const DEFAULT_CASE_SORT_DIRECTION = 'ASC'
 export const ONE_MINUTE = 60
 export const ONE_HOUR = ONE_MINUTE * 60
 
-export const ONE_KILO_BYTE = 1000
 export const ONE_MEGA_BYTE = 1000 * 1000
 
 export const PDF_RETRY_ATTEMPTS = 3
@@ -26,11 +25,6 @@ export const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]
 
-export enum Filenames {
-  Documents = 'Fylgiskjal',
-  Appendix = 'Viðauki',
-}
-
 export const FAST_TRACK_DAYS = 10
 
 export enum ApplicationEvent {
@@ -39,19 +33,9 @@ export enum ApplicationEvent {
   Edit = 'EDIT',
 }
 
-export enum SignatureTypeTitle {
-  Regular = 'Hefðbundin undirritun',
-  Committee = 'Undirritun nefndar',
-}
-
 export enum SignatureType {
   Regular = 'regular',
   Committee = 'committee',
-}
-
-export enum SignatureTypeSlug {
-  Regular = 'hefdbundin-undirritun',
-  Committee = 'undirritun-nefndar',
 }
 
 /**
@@ -81,8 +65,6 @@ export enum ApplicationStates {
 }
 
 export const ROLES_KEY = 'roles'
-
-export const WITH_CASE_KEY = 'withCase'
 
 export enum UserRoleEnum {
   Admin = 'Ritstjóri',

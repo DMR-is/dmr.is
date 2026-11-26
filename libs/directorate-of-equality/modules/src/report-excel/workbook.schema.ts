@@ -21,7 +21,7 @@
  * header text) lives in the xlsx, not here.
  */
 
-import { GenderEnum, ReportTypeEnum } from '../report/models/report.model'
+import { GenderEnum } from '../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
 
 /**
@@ -110,26 +110,6 @@ export const SHEETS = {
 } as const
 
 /**
- * `SUB_CRITERIA_CATALOG` as templates before 2026-09-24 name it. Workbooks
- * downloaded before the rename are filled in offline and uploaded later, so
- * both generations reach the parser. No parser looks either tab up, so the
- * rename never affected parsing.
- */
-export const LEGACY_SUB_CRITERIA_CATALOG_SHEET = 'Undirviðmiðalisti (Lýsigögn)'
-
-/**
- * The tabs the parser does not read. Descriptive only: nothing checks this set,
- * and a tab is ignored because no parser asks for it, not because it is listed
- * here.
- */
-export const IGNORED_SHEETS: ReadonlySet<string> = new Set([
-  SHEETS.INSTRUCTIONS,
-  SHEETS.OVERVIEW,
-  SHEETS.SUB_CRITERIA_CATALOG,
-  LEGACY_SUB_CRITERIA_CATALOG_SHEET,
-])
-
-/**
  * Named ranges defined in the template. The parser should look these up by
  * name on the loaded workbook rather than hard-coding cell addresses — the
  * named ranges are the template's stable contract.
@@ -169,9 +149,6 @@ export const NAMED_RANGES = {
  */
 export const TABLE_HEADER_ROW = 5
 export const TABLE_FIRST_DATA_ROW = 6
-
-/** Report type this template supports. (Equality reports use a different flow.) */
-export const TEMPLATE_REPORT_TYPE = ReportTypeEnum.SALARY
 
 /**
  * The four mandatory job-based criterion types every submission must contain.
@@ -213,13 +190,6 @@ export const JOB_BASED_TITLE_TO_TYPE: Readonly<
   Vinnuaðstæður: ReportCriterionTypeEnum.CONDITION,
   Hæfni: ReportCriterionTypeEnum.COMPETENCE,
 }
-
-export const TYPE_TO_JOB_BASED_TITLE: Readonly<
-  Record<ReportCriterionTypeEnum, string | undefined>
-> = Object.entries(JOB_BASED_TITLE_TO_TYPE).reduce(
-  (acc, [title, type]) => ({ ...acc, [type]: title }),
-  {} as Record<ReportCriterionTypeEnum, string>,
-)
 
 /**
  * Icelandic gender display → `GenderEnum`. The current template's dropdown is

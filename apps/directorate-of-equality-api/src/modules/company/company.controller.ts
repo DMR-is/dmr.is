@@ -30,7 +30,6 @@ import {
   UpdateCompanyDueDateDto,
   UpdateCompanyEmailDto,
   UpdateCompanyFinesDto,
-  UpdateCompanyIsatDto,
   UpdateCompanyQuarantineDto,
   UpdateCompanySectorDto,
   UpdateCompanyStatusDto,
@@ -141,21 +140,6 @@ export class CompanyController {
     @CurrentAdminUser() admin: UserModel,
   ): Promise<CompanyDto> {
     return this.companyService.updateSector(id, dto, admin.id)
-  }
-
-  @Patch(':id/isat')
-  @ApiParam({ name: 'id', type: String })
-  @DoeResponse({
-    operationId: 'updateCompanyIsat',
-    type: CompanyDto,
-    include404: true,
-  })
-  async updateIsat(
-    @Param('id') id: string,
-    @Body() dto: UpdateCompanyIsatDto,
-    @CurrentAdminUser() admin: UserModel,
-  ): Promise<CompanyDto> {
-    return this.companyService.updateIsat(id, dto, admin.id)
   }
 
   @Patch(':id/fines')

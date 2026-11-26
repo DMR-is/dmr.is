@@ -67,10 +67,3 @@ export class GetSignature {
   })
   signature!: Signature
 }
-
-export class GetSignatures {
-  @ApiProperty({
-    type: [Signature],
-  })
-  signatures!: Signature[]
-}
