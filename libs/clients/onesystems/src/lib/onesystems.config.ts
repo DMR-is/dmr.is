@@ -7,8 +7,9 @@ export const ONESYSTEMS_REQUEST_TIMEOUT_MS = 30_000
 
 /**
  * Per-request timeout for CreateDocument and SendDocToIslandIs, the two calls
- * that must never repeat. A timeout on either leaves the delivery's outcome
- * unknown (a stranded UNCERTAIN row), so waiting is cheaper than giving up.
+ * the client never repeats. A timeout on either leaves the outcome unknown (for
+ * CreateDocument a stranded UNCERTAIN delivery, for the send a retry), so
+ * waiting is cheaper than giving up.
  * CreateDocument uploads the PDF base64-encoded and One files it; inside
  * SendDocToIslandIs One makes its own round trip to island.is.
  */

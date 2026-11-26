@@ -46,7 +46,8 @@ export interface DeliverToMailboxInput {
  * - `DISABLED`: `ONESYSTEMS_ENABLED` is not `'true'`. Nothing was written,
  *   rendered or sent. The key is checked first, so a malformed key throws
  *   rather than returning DISABLED.
- * - `UNCONFIGURED`: `kind` has no case template in `mailbox-delivery.kinds.ts`
+ * - `UNCONFIGURED`: `kind` has no case template, or no valid island.is
+ *   Category/Type, in `mailbox-delivery.kinds.ts`
  *   (`isKindConfigured`), and no delivery with this key has reached One.
  *   Nothing was written, rendered or sent, and it is logged at error. Not a
  *   failure of this delivery: the notice dispatcher holds the notice,
@@ -65,9 +66,12 @@ export interface DeliverToMailboxInput {
  * - `SENT`: One confirmed the send. `alreadySent` is true when an earlier call
  *   had done it and this one made no call to One. `islandIsDocumentId` is null
  *   when One confirmed the send without a `DocumentId`.
- * - `UNCERTAIN`: a call's outcome is unknown (an earlier one, a crash mid-call
- *   found just now, or a late reply saved into a row already UNCERTAIN). Needs
- *   a person to check One before anything is repeated; see the module README.
+ * - `UNCERTAIN`: whether CreateDocument filed the document is unknown (an
+ *   earlier call, a crash mid-CreateDocument found just now, or a late reply
+ *   saved into a row already UNCERTAIN), or the row went UNCERTAIN at the
+ *   send before 26 Nov 2026. Needs a person to check One before anything is
+ *   repeated; see the module README. A failed or interrupted send is never
+ *   UNCERTAIN now: it is retried.
  * - `IN_PROGRESS`: another worker holds the delivery's lease, or its call
  *   finished while this one was claiming the row. Nothing was sent by this
  *   call; the next call resumes from the saved ids.
@@ -77,7 +81,8 @@ export interface DeliverToMailboxInput {
  *     `MAILBOX_DELIVERY_MAX_ATTEMPTS` times without being sent. Nothing
  *     retries it until a person fixes the cause and resets `attempts` (see
  *     the module README). Logged as an error on every call.
- *   - `UNCONFIGURED`: the kind has no case template, but the row already
+ *   - `UNCONFIGURED`: the kind has no case template or island.is
+ *     classification, but the row already
  *     holds a filed document or an in-flight marker, so One may hold or have
  *     sent the notice. Not claimed and not counted; it resumes once the
  *     template is back. Never send the notice another way on this answer.
@@ -137,9 +142,10 @@ export type MailboxDeliveryState = {
   /** One confirmed the send: `sent_at` is saved. */
   sent: boolean
   /**
-   * A call's marker is still set and its lease has lapsed: the process died
-   * mid-call, so whether One acted is unknown, as for UNCERTAIN. The next
-   * claim would mark it UNCERTAIN.
+   * A CreateDocument marker is still set and its lease has lapsed: the
+   * process died mid-call, so whether One filed the document is unknown, as
+   * for UNCERTAIN. The next claim would mark it UNCERTAIN. A lapsed send
+   * marker is not interrupted: the next claim sends again.
    */
   interrupted: boolean
   /** A worker holds a live lease on it and may be calling One right now. */
@@ -154,9 +160,9 @@ export type MailboxDeliveryState = {
 /**
  * Why a delivery needs a person:
  * - `UNCERTAIN`: whether One acted is unknown. Reconcile it against One.
- * - `INTERRUPTED`: a call's marker is still set and its lease has lapsed, so
- *   the process died mid-call. The next call with its key marks it UNCERTAIN;
- *   an outbox row that has already given up never makes that call.
+ * - `INTERRUPTED`: a CreateDocument marker is still set and its lease has
+ *   lapsed, so the process died mid-call. The next call with its key marks it
+ *   UNCERTAIN; an outbox row that has already given up never makes that call.
  * - `ATTEMPTS_EXHAUSTED`: claimed `MAILBOX_DELIVERY_MAX_ATTEMPTS` times
  *   without being sent. Fix the cause and re-arm it.
  */
@@ -265,9 +271,12 @@ export interface IMailboxDeliveryService {
 
   /**
    * The README's "Reconciling an UNCERTAIN row", for an UNCERTAIN or
-   * interrupted row a person has checked against One: SENT records it as
-   * sent; NOT_SENT lets it go again with its attempts back, from
-   * `documentItemId` when One holds the document. Only while the row still
+   * interrupted row, or an exhausted one holding a filed document, that a
+   * person has checked against One: SENT records it as sent; NOT_SENT lets it
+   * go again with its attempts back, from `documentItemId` when One holds the
+   * document. A resend of a document that did reach the mailbox is answered
+   * as already sent; if that answer is not recognised, the row ends exhausted
+   * again and a person settles it SENT. Only while the row still
    * holds what it was read with (`read`) and no lease is live. `note` is the
    * audit text for `last_error`. False when it has moved since.
    */
@@ -294,7 +303,8 @@ export interface IMailboxDeliveryService {
   isMailboxOpenFor(companyId: string): Promise<boolean>
 
   /**
-   * The kinds in use (`MAILBOX_DELIVERY_KINDS_IN_USE`) with no case template.
+   * The kinds in use (`MAILBOX_DELIVERY_KINDS_IN_USE`) with no case template
+   * or island.is classification (`isKindConfigured`).
    * Each answers `UNCONFIGURED` while the flag is on.
    */
   unconfiguredKinds(): MailboxDeliveryKindEnum[]

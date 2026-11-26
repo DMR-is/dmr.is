@@ -1818,7 +1818,7 @@ export const noticeIssuesText = {
     title: 'Staðfesta stöðu í One',
     warningTitle: 'Óvíst hvort bréfið barst',
     warningMessage:
-      'Kerfið veit ekki hvort bréfið fór í pósthólf fyrirtækisins. Skoðaðu málið í One áður en þú velur, því annars gæti fyrirtækið fengið bréfið tvisvar.',
+      'Kerfið veit ekki hvort bréfið fór í pósthólf fyrirtækisins. Skoðaðu málið í One áður en þú velur.',
     caseNumberLabel: 'Málsnúmer í One',
     documentIdLabel: 'Auðkenni skjals í One (ItemID)',
     documentIdHelp:
@@ -1833,9 +1833,9 @@ export const noticeIssuesText = {
       'Áminning er aðeins send aftur ef fyrirtækið er enn á sama tímabili og skilafresturinn hefur ekki breyst.',
     stepHint: {
       CREATE_DOCUMENT:
-        'Óvíst er hvort skjalið var vistað í One. Leitaðu að því undir málinu.',
+        'Óvíst er hvort skjalið var vistað í One. Leitaðu að því undir málinu, því ef það var vistað og er vistað aftur gæti fyrirtækið fengið bréfið tvisvar.',
       SEND_DOC_TO_ISLAND_IS:
-        'Skjalið er vistað í One. Athugaðu hvort það var sent í pósthólfið.',
+        'Skjalið er vistað í One. Athugaðu hvort það var sent í pósthólfið. Ef þú ert ekki viss er óhætt að velja „Var ekki sent“: hafi skjalið þegar borist svarar pósthólfið því og bréfið fer ekki tvisvar.',
     } as Record<string, string>,
     sentButton: 'Var sent: merkja lokið',
     success: 'Staða vistuð',

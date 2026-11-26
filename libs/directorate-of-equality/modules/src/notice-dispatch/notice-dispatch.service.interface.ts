@@ -42,7 +42,8 @@ export interface INoticeDispatchService {
   /**
    * PENDING rows older than `NOTICE_OVERDUE_AFTER_MS` that the dispatcher
    * should have settled by now: held on a document One has filed but not sent
-   * with the flag off, held on a kind with no case template with the flag on,
+   * with the flag off, held on a kind with no case template or island.is
+   * classification with the flag on,
    * or failing on every run. Not the rows that wait by design: a quarantined
    * company's, and receipts while the flag is off. Oldest first, at most
    * `limit`; `total` counts them all. Reads only, outside any transaction.

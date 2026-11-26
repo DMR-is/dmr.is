@@ -211,7 +211,14 @@ export function isOneSystemsError(error: unknown): error is OneSystemsError {
   return error instanceof OneSystemsError
 }
 
-/** The operations that file or deliver a document and must never repeat. */
+/**
+ * The operations that file or deliver a document, which the client never
+ * repeats on its own: it leaves the decision to the caller. Only
+ * CreateDocument is unsafe to repeat (a second copy is filed). SendDocToIslandIs
+ * with the same `ItemID` is safe to repeat: island.is answers a repeat as
+ * already in the mailbox (OneSystems, 26 Nov 2026), and the mailbox delivery
+ * retries every send failure.
+ */
 export type OneSystemsNonIdempotentOperation =
   | 'CreateDocument'
   | 'SendDocToIslandIs'
@@ -221,11 +228,13 @@ export type OneSystemsNonIdempotentOperation =
  * (CreateDocument) or sent to island.is (SendDocToIslandIs). An error carrying
  * one of these is definitive for that operation whatever its reason or status.
  *
- * TODO(OneSystems): empty on purpose. The spec has no `ErrorNumber` catalogue,
- * and One calls island.is itself inside SendDocToIslandIs, so a
- * `Success: false` may come back after island.is registered the document.
- * OneSystems must confirm which error numbers are raised before a document is
- * filed or sent; add only those, per operation.
+ * TODO(OneSystems): empty on purpose. The spec has no `ErrorNumber` catalogue.
+ * For CreateDocument, OneSystems must confirm which error numbers are raised
+ * before a document is filed; add only those. For SendDocToIslandIs the list
+ * no longer matters: `Success: false` means the mailbox did not take the
+ * document, every error is passed through from the Pósthólf service, and a
+ * repeat is safe (OneSystems, 26 Nov 2026), so the mailbox delivery retries
+ * every send failure whatever this list says.
  */
 export const ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS: Readonly<
   Record<OneSystemsNonIdempotentOperation, ReadonlyArray<string>>
@@ -245,12 +254,12 @@ export const ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS: Readonly<
  * (and retried) here, and nothing client-side can tell it apart from a real
  * auth failure, so only OneSystems can rule it out. If the challenge turns out
  * not to carry the header, every expired token on CreateDocument or
- * SendDocToIslandIs ends UNCERTAIN (never a duplicate).
+ * SendDocToIslandIs is thrown as not definitive (never a duplicate).
  *
  * Also: do CreateCase, CreateDocument and SendDocToIslandIs need the same One
  * permission? The empty-403 rule below counts on a missing permission failing
  * at CreateCase first; if the permissions differ, it fails at the later call
- * instead and that row ends UNCERTAIN.
+ * instead, as not definitive.
  */
 /**
  * True when One certainly did NOT act on the action call, so repeating it
@@ -287,7 +296,7 @@ export const ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS: Readonly<
  *   which is idempotent and runs first. A missing permission is caught there
  *   only if CreateCase needs the same One permission as CreateDocument and
  *   SendDocToIslandIs, which is unconfirmed (see the TODO above); if it does
- *   not, a missing permission on either ends UNCERTAIN, never a duplicate;
+ *   not, a missing permission on either is not definitive, never a duplicate;
  * - a 401, 403 or 404 with any body, a `GeneralResponse` or a
  *   `ProblemDetails`, may have come from inside the action;
  * - a 400 with any other body (empty, plain text, HTML, a `ProblemDetails`

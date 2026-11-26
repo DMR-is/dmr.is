@@ -261,8 +261,8 @@ type SendResult =
  * This is what keeps the receipts held with the flag off from arriving after
  * the decision once it goes on.
  *
- * With the flag on, a mailbox kind with no case template (`UNCONFIGURED`)
- * holds its rows without counting an attempt, so switching the flag on before
+ * With the flag on, a mailbox kind with no case template or island.is
+ * classification (`UNCONFIGURED`) holds its rows without counting an attempt, so switching the flag on before
  * the templates are confirmed loses no notice. A held row goes to the back of
  * the pick, so held rows cannot starve the ones that can go. The daily alert
  * names the kind, and every row overdue for another reason
@@ -678,9 +678,10 @@ export class NoticeDispatchService implements INoticeDispatchService {
    *
    * - One confirmed the send: the company has it. The row is DONE by mailbox,
    *   and an approval's documents are archived as after any mailbox send.
-   * - UNCERTAIN, or interrupted mid-call (`interrupted`, which the next claim
-   *   would mark UNCERTAIN): One may have sent it. Given up for a person, as
-   *   with the flag on, rather than emailed on top.
+   * - UNCERTAIN, or interrupted mid-CreateDocument (`interrupted`, which the
+   *   next claim would mark UNCERTAIN): One may have filed or sent it. Given
+   *   up for a person, as with the flag on, rather than emailed on top. A row
+   *   interrupted mid-send holds its document, so it is held below.
    * - A worker holds a live lease on it: held until that call finishes, and
    *   the next run reads what it left.
    * - One holds the document but has not sent it: held until the flag is back
@@ -1048,7 +1049,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
         // the row.
         return {
           outcome: 'HELD',
-          reason: `mailbox kind ${result.kind} has no case template; waiting for it in mailbox-delivery.kinds.ts`,
+          reason: `mailbox kind ${result.kind} has no case template or island.is classification; waiting for them in mailbox-delivery.kinds.ts`,
           alert: true,
         }
       default:
@@ -1067,7 +1068,7 @@ export class NoticeDispatchService implements INoticeDispatchService {
           // its saved ids once the template is back.
           return {
             outcome: 'HELD',
-            reason: `mailbox delivery ${result.deliveryId} already reached One but its kind has no case template; waiting for it in mailbox-delivery.kinds.ts`,
+            reason: `mailbox delivery ${result.deliveryId} already reached One but its kind has no case template or island.is classification; waiting for them in mailbox-delivery.kinds.ts`,
             alert: true,
           }
         }

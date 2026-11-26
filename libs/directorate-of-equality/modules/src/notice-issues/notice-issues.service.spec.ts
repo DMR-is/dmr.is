@@ -187,6 +187,27 @@ describe('NoticeIssuesService', () => {
       })
     })
 
+    it('offers reconciling, not a retry, for an exhausted delivery holding a filed document', async () => {
+      notices.findAll.mockResolvedValueOnce([notice()])
+      notices.count.mockResolvedValueOnce(1)
+      deliveries.findAll.mockResolvedValueOnce([
+        delivery({
+          status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+          oneDocumentItemId: 'doc-1',
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+          inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        }),
+      ])
+
+      const issues = await service.getIssues()
+
+      expect(issues.failed[0].delivery).toMatchObject({
+        exhausted: true,
+        needsReconciling: true,
+        uncertainStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+      })
+    })
+
     it('lists failed notices oldest first, with no time window', async () => {
       await service.getIssues()
 
@@ -420,6 +441,14 @@ describe('NoticeIssuesService', () => {
         },
       ],
       ['in progress', { leaseExpiresAt: new Date(Date.now() + 60_000) }],
+      [
+        'out of attempts with a filed document',
+        {
+          status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+          oneDocumentItemId: 'doc-1',
+          attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        },
+      ],
     ])('refuses while the delivery is %s', async (_state, overrides) => {
       deliveries.findAll.mockResolvedValueOnce([delivery(overrides)])
 
@@ -541,6 +570,48 @@ describe('NoticeIssuesService', () => {
         null,
         expect.stringMatching(AUDIT),
       )
+    })
+
+    it.each(['SENT', 'NOT_SENT'] as const)(
+      'settles an exhausted delivery holding a filed document as %s, then re-drives its notice',
+      async (outcome) => {
+        deliveries.findByPk.mockResolvedValueOnce(
+          delivery({
+            status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+            oneDocumentItemId: 'doc-1',
+            attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+            inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+          }),
+        )
+        notices.findOne.mockResolvedValueOnce(notice())
+
+        await service.reconcileDelivery(DELIVERY_ID, { outcome }, ACTOR)
+
+        expect(mailbox.settleUncertain).toHaveBeenCalledWith(
+          DELIVERY_ID,
+          {
+            status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+            inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+            oneDocumentItemId: 'doc-1',
+            sentAt: null,
+          },
+          outcome,
+          'doc-1',
+          expect.stringMatching(AUDIT),
+        )
+        expect(notices.update.mock.calls[0][0]).toEqual(REDRIVEN)
+      },
+    )
+
+    it('still refuses an exhausted delivery with nothing filed: that one is retried', async () => {
+      deliveries.findByPk.mockResolvedValueOnce(
+        delivery({ attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS }),
+      )
+
+      await expect(
+        service.reconcileDelivery(DELIVERY_ID, { outcome: 'SENT' }, ACTOR),
+      ).rejects.toThrow(ConflictException)
+      expect(mailbox.settleUncertain).not.toHaveBeenCalled()
     })
 
     it('refuses NOT_SENT once One confirmed the send', async () => {

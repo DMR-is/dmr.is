@@ -107,8 +107,9 @@ export class MailboxDeliveryModel extends MutableModel<
   status!: MailboxDeliveryStatusEnum
 
   /**
-   * The non-idempotent call in progress. If it is still set when the row is
-   * next claimed, the process died mid-call and the row becomes UNCERTAIN.
+   * The marked call in progress. If it is still set when the row is next
+   * claimed, the process died mid-call: a CreateDocument marker turns the row
+   * UNCERTAIN, a send marker is resumed (the send is safe to repeat).
    */
   @Column({
     type: DataType.ENUM(...Object.values(MailboxDeliveryStepEnum)),

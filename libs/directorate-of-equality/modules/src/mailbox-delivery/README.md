@@ -16,12 +16,14 @@ A company gets a letter only when all three hold:
    it with `PATCH /api/v1/config/onesystems_mailbox_allowlist` (`none`, `*`, or
    comma-separated kennitölur); no deploy. Dev talks to production One, so on
    dev it names only Jafnréttisstofa's own kennitala.
-3. The kind has a case template in `mailbox-delivery.kinds.ts`. Every kind in
-   use has one (`SKYRSLA` salary, `J-AAETLUN` equality, confirmed by
-   Jafnréttisstofa 30 Sep 2026). A kind without one answers `UNCONFIGURED`,
-   logged at error, before it writes a row. (A delivery whose template is unset
-   after it reached One, by a rollback, answers as its row stands instead; see
-   [Statuses](#statuses).) The dispatcher holds the notice without counting an
+3. The kind has a case template and a valid island.is Category/Type in
+   `mailbox-delivery.kinds.ts`. Every kind in use has both (`SKYRSLA` salary,
+   `J-AAETLUN` equality, confirmed by Jafnréttisstofa 30 Sep 2026; Atvinna /
+   Tilkynning, chosen 26 Nov 2026). `OVERDUE_NOTICE` and `FINES_PRECURSOR`
+   have neither: nothing sends them yet. A kind without them answers
+   `UNCONFIGURED`, logged at error, before it writes a row. (A delivery whose
+   template is unset after it reached One, by a rollback, answers as its row
+   stands instead; see [Statuses](#statuses).) The dispatcher holds the notice without counting an
    attempt, and the reminder task emails the reminder instead.
 
 A company failing 1 or 2 is treated as though mailbox delivery were off: the
@@ -70,24 +72,38 @@ key after the quarantine is lifted carries on.
 
 ## Statuses
 
-| Status             | Meaning                                                                                                                                                                                                                            | What happens next                                                                                                           |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `PENDING`          | Row written, nothing sent to One yet.                                                                                                                                                                                              | The next call starts it.                                                                                                    |
-| `CASE_CREATED`     | One has a case (`one_case_item_id`).                                                                                                                                                                                               | The next call creates the document.                                                                                         |
-| `DOCUMENT_CREATED` | The PDF is filed under the case (`one_document_item_id`).                                                                                                                                                                          | The next call sends it.                                                                                                     |
-| `SENT`             | One confirmed the send (`sent_at`), or island.is answered that it already had this very document ([below](#a-duplicate-answer)). `island_is_document_id` is set too, unless One confirmed without a `DocumentId`.                  | Nothing. A repeat call returns SENT with `alreadySent: true`.                                                               |
-| `FAILED`           | One certainly did not act on the failed call: a CreateCase failure, a failed render, or a CreateDocument or send rejected before it reached One's action.                                                                          | The next call with the same key resumes from the saved ids, until `attempts` reaches 5 ([Exhausted rows](#exhausted-rows)). |
-| `UNCERTAIN`        | Whether One acted is unknown: a timeout, a 5xx, a `Success: false` (other than the duplicate answer for this document, which is SENT), a response with no usable id, or a process that died mid-call (`in_flight_step` still set). | **Nothing. No code path leaves UNCERTAIN.** A person reconciles it (below).                                                 |
+| Status             | Meaning                                                                                                                                                                                                           | What happens next                                                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `PENDING`          | Row written, nothing sent to One yet.                                                                                                                                                                             | The next call starts it.                                                                                                    |
+| `CASE_CREATED`     | One has a case (`one_case_item_id`).                                                                                                                                                                              | The next call creates the document.                                                                                         |
+| `DOCUMENT_CREATED` | The PDF is filed under the case (`one_document_item_id`).                                                                                                                                                         | The next call sends it.                                                                                                     |
+| `SENT`             | One confirmed the send (`sent_at`), or island.is answered that it already had this very document ([below](#a-duplicate-answer)). `island_is_document_id` is set too, unless One confirmed without a `DocumentId`. | Nothing. A repeat call returns SENT with `alreadySent: true`.                                                               |
+| `FAILED`           | The failed call is safe to repeat: a CreateCase failure, a failed render, a CreateDocument rejected before it reached One's action, or any SendDocToIslandIs failure.                                             | The next call with the same key resumes from the saved ids, until `attempts` reaches 5 ([Exhausted rows](#exhausted-rows)). |
+| `UNCERTAIN`        | Whether CreateDocument filed the document is unknown: a timeout, a 5xx, a `Success: false`, a response with no usable id, or a process that died mid-CreateDocument (`in_flight_step` still set).                 | **Nothing. No code path leaves UNCERTAIN.** A person reconciles it (below).                                                 |
 
 The saved ids and `sent_at` decide what runs next, not `status`. A `FAILED`
 row that already has `one_document_item_id` resumes at the send.
 
-`Success: false` from CreateDocument or SendDocToIslandIs is UNCERTAIN, not
-FAILED. One calls island.is itself inside SendDocToIslandIs, so a
-`Success: false` may come back after island.is registered the document. Error
-numbers that OneSystems confirms are raised before anything is filed or sent go
-into `ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS` in the client, which makes them FAILED.
+`Success: false` from CreateDocument is UNCERTAIN, not FAILED: repeating
+CreateDocument would file a second copy. Error numbers that OneSystems confirms
+are raised before anything is filed go into
+`ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS` in the client, which makes them FAILED.
 That list is empty until OneSystems confirms it.
+
+SendDocToIslandIs is safe to repeat with the same document `ItemID`, so every
+failure of it (a `Success: false`, a timeout, a 5xx, an odd body) is FAILED,
+and the next call sends the saved document again without a new CreateDocument.
+`Success: false` means the mailbox did not take the document, every error comes
+from Pósthólfsþjónustan, and a repeat of a document already in the mailbox is
+answered as [a duplicate](#a-duplicate-answer), which is SENT (OneSystems,
+26 Nov 2026). A stale send marker is not UNCERTAIN either: the next claim
+clears it and sends again.
+
+The send carries island.is's own classification, `Category` `Atvinna` and
+`Type` `Tilkynning` for every kind (`mailbox-delivery.kinds.ts`), from Stafrænt
+Ísland's lists. It is unrelated to One's `DocCategory`/`DocType`, which stay
+empty. A send without it is refused with "Nauðsynleg gildi vantar".
+`SendNotification` is not sent: island.is no longer acts on it.
 
 ### A duplicate answer
 
@@ -101,10 +117,10 @@ it as sent, and the row becomes SENT, only when all of these hold:
 - the answer has no `ErrorNumber` and no `ErrorMessage`.
 
 Anything else, including that text without a `DocumentId` or with another
-document's, is a rejection, and the row is UNCERTAIN like any other
-`Success: false`. The client logs
+document's, is a rejection, and the row is FAILED like any other failed send.
+The client logs
 `… answered that the document was already sent, but not for certain of this document, treating it as rejected` with both ids, which is where to start
-reconciling it.
+when the row runs out of attempts.
 
 A row settled this way looks like any other SENT row. `sent_at` is when the
 repeat was confirmed, not when the document first reached the mailbox, and no
@@ -121,8 +137,10 @@ claim adds one to `attempts`, except one whose Login fails (see
 returns the row's own status with `skipped: 'ATTEMPTS_EXHAUSTED'`, and logs an
 error with the `deliveryId` and `attempts`. Without the cap a permanent
 rejection would be retried on every call. See
-[Exhausted rows](#exhausted-rows). A row whose last claim died mid-call is still
-claimed once more, so it becomes UNCERTAIN as usual.
+[Exhausted rows](#exhausted-rows). A row whose last claim died
+mid-CreateDocument is still claimed past the cap, so it becomes UNCERTAIN as
+usual. One that died mid-send is not: resuming the send spends an attempt, and
+a row out of attempts with a send marker is exhausted like any other.
 
 ## One unreachable
 
@@ -170,9 +188,11 @@ under its own advisory lock): one error-level log line,
 service's alerting watches. `findStuckDeliveries` is the query, and it finds:
 
 - `UNCERTAIN` rows: reconcile them ([below](#reconciling-an-uncertain-row)).
-- `INTERRUPTED` rows: a marker still set with its lease lapsed. They become
-  UNCERTAIN only on the next call with their key, which an outbox row that has
-  already given up never makes, so they are listed too.
+- `INTERRUPTED` rows: a CreateDocument marker still set with its lease
+  lapsed. They become UNCERTAIN only on the next call with their key, which an
+  outbox row that has already given up never makes, so they are listed too. A
+  lapsed send marker is not listed: it reads as a filed document not yet sent,
+  and the next call with its key sends again.
 - `ATTEMPTS_EXHAUSTED` rows ([Exhausted rows](#exhausted-rows)).
 
 It runs whatever `ONESYSTEMS_ENABLED` says, since rows left from before the
@@ -213,10 +233,24 @@ for when the page is not an option.
 An exhausted row has used all its attempts without being sent or becoming
 UNCERTAIN. It is usually FAILED, and `last_error_number` says why. A forward
 status (`PENDING`, `CASE_CREATED`, `DOCUMENT_CREATED`) means the last attempt
-ended while no call was marked (the process died, or it lost the lease), so
-no document call of that attempt is in doubt: anything it got back from One
-is saved in the row's ids. Only an unanswered CreateCase can have left
-something in One that the row does not name (see below).
+ended without recording its outcome (the process died, or it lost the lease).
+No CreateDocument of that attempt is in doubt: a CreateDocument marker would
+have made the row UNCERTAIN, not exhausted. It may still hold a send marker
+(`in_flight_step = 'SEND_DOC_TO_ISLAND_IS'`), which the next call resumes.
+Anything else the attempt got back from One is saved in the row's ids. Only an
+unanswered CreateCase can have left something in One that the row does not
+name (see below).
+
+**A row holding a filed document** (`one_document_item_id` set) is reconciled,
+not re-armed: its send may have reached the mailbox, with a repeat answer the
+client did not recognise as one (only "Færsla þegar skráð." naming this
+document counts; see [A duplicate answer](#a-duplicate-answer)), and re-arming
+it would only buy more of that answer. Check OneCRM's list of documents sent
+to the mailbox. On the Tilkynningar page, **Staðfesta stöðu** offers it:
+"Var sent" settles it SENT, "Var ekki sent" re-arms it from the filed document.
+By SQL, settle it SENT as in step 4 of
+[Reconciling an UNCERTAIN row](#reconciling-an-uncertain-row), matching its
+own status instead of `'UNCERTAIN'`, or re-arm it as below.
 
 ```sql
 SELECT id, company_id, kind, idempotency_key, status,
@@ -225,7 +259,7 @@ SELECT id, company_id, kind, idempotency_key, status,
 FROM mailbox_delivery
 WHERE status <> 'SENT'
   AND status <> 'UNCERTAIN'
-  AND in_flight_step IS NULL
+  AND (in_flight_step IS NULL OR in_flight_step = 'SEND_DOC_TO_ISLAND_IS')
   AND attempts >= 5
 ORDER BY last_attempt_at;
 ```
@@ -244,11 +278,15 @@ UPDATE mailbox_delivery
 SET attempts = 0,
     last_error = 'Re-armed by <name> on <date>: <what was fixed>'
 WHERE id = '<delivery id>'
-  AND status = 'FAILED'
-  AND in_flight_step IS NULL;
+  AND status = '<status as listed>'
+  AND attempts >= 5
+  AND (in_flight_step IS NULL OR in_flight_step = 'SEND_DOC_TO_ISLAND_IS');
 ```
 
-For a row in a forward status, put that status in place of `'FAILED'`.
+Use the status the list showed: `FAILED`, or the forward status it stopped at
+(a `DOCUMENT_CREATED` row with a send marker is one). A send marker left on an
+exhausted row is harmless: the next call clears it and sends the filed
+document again.
 Re-arming does not send anything by itself; the next `deliverToMailbox` call
 with the same key does. Who makes that call depends on the kind:
 
@@ -271,8 +309,8 @@ with the same key does. Who makes that call depends on the kind:
 A reminder delivery that is neither sent nor stuck is left behind when the
 task stops calling its key: the company left the tier's band, or its due date
 moved. Typically One failed SendDocToIslandIs once, which leaves the row
-`DOCUMENT_CREATED` or `FAILED` with attempts left and no event, and the date
-moved before the next run. That is a document filed in One and never sent,
+`DOCUMENT_CREATED` or `FAILED` (possibly with a lapsed send marker) with
+attempts left and no event, and the date moved before the next run. That is a document filed in One and never sent,
 outside UNCERTAIN, INTERRUPTED and ATTEMPTS_EXHAUSTED, so the daily alert does
 not name it. The task runs daily, so a row it still calls was tried within the
 last day. Find the rest with:
@@ -284,7 +322,7 @@ FROM mailbox_delivery
 WHERE kind IN ('SALARY_REPORT_DEADLINE_REMINDER',
                'EQUALITY_REPORT_DEADLINE_REMINDER')
   AND status NOT IN ('SENT', 'UNCERTAIN')
-  AND in_flight_step IS NULL
+  AND (in_flight_step IS NULL OR in_flight_step = 'SEND_DOC_TO_ISLAND_IS')
   AND attempts < 5
   AND last_attempt_at < now() - interval '2 days'
 ORDER BY last_attempt_at;
@@ -318,25 +356,30 @@ the id is in the logs.
    ORDER BY last_attempt_at;
    ```
 
-   `uncertain_step` = `SEND_DOC_TO_ISLAND_IS` can also mean the row was
-   interrupted at CreateDocument and a late reply saved the document id
-   afterwards: then the send may never have been attempted at all.
-   `last_error` says which (`Interrupted during CREATE_DOCUMENT: ...`).
+   Since 26 Nov 2026 a send never leaves a row UNCERTAIN, so
+   `uncertain_step` = `SEND_DOC_TO_ISLAND_IS` is either a row from before then
+   or one interrupted at CreateDocument whose late reply saved the document id
+   afterwards (then the send may never have been attempted at all).
+   `last_error` says which (`Interrupted during CREATE_DOCUMENT: ...`). Either
+   way, settle it as "filed, not sent" (step 4) unless it is clearly sent: a
+   resend of a document already in the mailbox is answered as
+   [a duplicate](#a-duplicate-answer) and becomes SENT.
 
    `last_error` is left out on purpose: it may hold One's message, which can
    echo the recipient's details. Read it for one row at a time, and do not
    paste it into a ticket or a chat.
 
-   Rows whose process died mid-call are not UNCERTAIN yet: they still have
-   `in_flight_step` set, and become UNCERTAIN only when the next call with
-   their key claims them. Find them with:
+   Rows whose process died mid-CreateDocument are not UNCERTAIN yet: they
+   still have `in_flight_step` set, and become UNCERTAIN only when the next
+   call with their key claims them. (A row that died mid-send is not one of
+   them: the next call sends again.) Find them with:
 
    ```sql
    SELECT id, company_id, kind, idempotency_key, status, in_flight_step,
           one_case_item_id, one_document_item_id, lease_expires_at,
           attempts, last_attempt_at
    FROM mailbox_delivery
-   WHERE in_flight_step IS NOT NULL
+   WHERE in_flight_step = 'CREATE_DOCUMENT'
      AND (lease_expires_at IS NULL OR lease_expires_at < now())
    ORDER BY last_attempt_at;
    ```
@@ -353,7 +396,7 @@ the id is in the logs.
        lease_token = NULL, lease_expires_at = NULL,
        last_error = 'Interrupted during ' || in_flight_step || ': marked by <name> on <date>'
    WHERE id = '<delivery id>'
-     AND in_flight_step IS NOT NULL
+     AND in_flight_step = 'CREATE_DOCUMENT'
      AND (lease_expires_at IS NULL OR lease_expires_at < now());
    ```
 
@@ -365,14 +408,16 @@ the id is in the logs.
    - `one_document_item_id` NULL: the outcome of CreateDocument is unknown.
      Look in One under the case (`one_case_item_id`) for a document with the
      row's subject.
-   - `one_document_item_id` set: the outcome of the send is unknown. Look up
-     that document in One and check whether it was sent to island.is.
+   - `one_document_item_id` set: the outcome of the send is unknown. Unless
+     One clearly shows it sent, settle it as filed, not sent: the next call
+     sends it again, and island.is answers a repeat as already sent.
 
 3. Ask Jafnréttisstofa or OneSystems to check in One, or check island.is,
-   whenever One does not show it clearly. A row left UNCERTAIN by a duplicate
-   answer that did not name the document ([A duplicate answer](#a-duplicate-answer))
-   was most likely sent before; confirm it in OneCRM's list of documents sent
-   to the mailbox before settling it SENT.
+   whenever One does not show it clearly. A row from before 26 Nov 2026 left
+   UNCERTAIN by a duplicate answer that did not name the document was most
+   likely sent before; confirm it in OneCRM's list of documents sent to the
+   mailbox before settling it SENT. Such an answer now leaves the row FAILED
+   ([A duplicate answer](#a-duplicate-answer)).
 
 4. Set the status by hand, each in its own statement. Match on `status` too,
    so a row that has changed since you looked is left alone. Clear the lease in
@@ -423,7 +468,9 @@ the id is in the logs.
    ```
 
    A `FAILED` row is resumed by the next `deliverToMailbox` call with **the
-   same idempotency key**. Both FAILED statements reset `attempts`: without
+   same idempotency key**. One with a document id resumes at the send, which
+   is safe even if the document did reach the mailbox: the repeat is answered
+   as [a duplicate](#a-duplicate-answer) and the row becomes SENT. Both FAILED statements reset `attempts`: without
    that, a row that went UNCERTAIN on its last attempt would come back as
    `ATTEMPTS_EXHAUSTED` and never be sent. The CHECK constraints reject a status that gets
    ahead of its ids. For example, SENT needs `one_case_item_id`,

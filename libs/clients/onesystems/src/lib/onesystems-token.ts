@@ -26,8 +26,9 @@ export const TOKEN_FALLBACK_LIFETIME_MS = 10 * 60_000
  * every 401 for CreateCase and CloseCase, but for CreateDocument and
  * SendDocToIslandIs only on the JwtBearer challenge (an empty-bodied 401 with
  * `WWW-Authenticate: Bearer`). If One's challenge does not look like that,
- * an expired token on either of those two leaves the delivery UNCERTAIN for a
- * person to check. It never sends a duplicate: the 401 is not retried.
+ * an expired token on either of those two is thrown as not definitive (DoE's
+ * mailbox delivery then leaves a CreateDocument UNCERTAIN for a person and
+ * retries a send). It never sends a duplicate: the 401 is not retried.
  */
 export const TOKEN_MIN_LIFETIME_MS = 30_000
 

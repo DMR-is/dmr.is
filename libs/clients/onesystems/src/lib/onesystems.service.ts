@@ -169,9 +169,12 @@ export class OneSystemsService implements IOneSystemsService {
         input.documentItemId,
       ),
       IDNumber: this.requireText(operation, 'nationalId', input.nationalId),
-      Category: input.category,
-      Type: input.type,
-      SendNotification: input.sendNotification,
+      // Required by island.is ("Nauðsynleg gildi vantar" without them).
+      Category: this.requireText(operation, 'category', input.category),
+      Type: this.requireText(operation, 'type', input.type),
+      // `SendNotification` is left out: island.is no longer acts on it (its
+      // "hnipp" replaced it) and One keeps it only for compatibility
+      // (OneSystems, 26 Nov 2026).
     }
     const { itemId, alreadyInMailbox } = await this.callAction(
       operation,
@@ -353,7 +356,8 @@ export class OneSystemsService implements IOneSystemsService {
     // `DocumentId`. A false SENT is never retried, so it counts as sent only
     // when all of it holds: that error alone, a `DocumentId` naming the
     // document sent, and no `ErrorNumber` or `ErrorMessage`. Anything else
-    // is a rejection, which leaves the delivery UNCERTAIN for a person.
+    // is a rejection, thrown as REJECTED; DoE's mailbox delivery retries the
+    // send, which is safe (OneSystems, 26 Nov 2026).
     if (
       operation === 'SendDocToIslandIs' &&
       !body.Success &&

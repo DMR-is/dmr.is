@@ -553,29 +553,33 @@ written, gains a case id, a document id, a send time, and may fail and resume in
 went out, but could not hold one that is halfway there. This table is a mutable resume
 record.
 
-**Why each id is saved as it arrives.** None of the three calls is documented as
-idempotent, and CreateDocument and SendDocToIslandIs really are not: repeating them files
-or sends a second copy. Each id One returns is written the moment its call returns, and a
-resume skips every step whose id (or `sent_at`) is already here, so a retry never repeats
-a non-idempotent call. Just before either of those two calls, `in_flight_step` is written;
-still set when the row is next claimed means the process died mid-call.
+**Why each id is saved as it arrives.** CreateDocument is not idempotent: repeating it
+files a second copy. SendDocToIslandIs is safe to repeat with the same document: island.is
+answers a repeat with "Færsla þegar skráð." (OneSystems, 26 Nov 2026). Each id One returns
+is written the moment its call returns, and a resume skips every step whose id (or
+`sent_at`) is already here, so a retry never files a second document. Just before either
+of those two calls, `in_flight_step` is written; still set when the row is next claimed
+means the process died mid-call: mid-CreateDocument the row becomes `UNCERTAIN`, mid-send
+the send is made again.
 
 **The lease.** `lease_token` / `lease_expires_at` stop two workers resuming one row at
 once. A claim is one conditional `UPDATE ... RETURNING` on an unsettled row with no live
 lease, compared on the database clock. Not `FOR UPDATE`, which would hold a connection
 open across the calls to One.
 
-**UNCERTAIN is terminal.** When the outcome of CreateDocument or SendDocToIslandIs is
-unknown (a timeout, a 5xx, a `Success: false`, a process that died mid-call) the row
-becomes `UNCERTAIN` and no code path moves it on. One `Success: false` is not unknown:
-island.is's duplicate answer to SendDocToIslandIs (`Errors: ["Færsla þegar skráð."]`
-and nothing else) whose `DocumentId` is the document's own `ItemID` (case aside), with no
-`ErrorNumber` or `ErrorMessage`, means the document is already in the mailbox, and the row
-is `SENT`. A duplicate answer missing any of those is a rejection like any other, and
-`UNCERTAIN`. A person reconciles it by hand against
-One, following the runbook in the module README. Retrying it automatically could put the
-same statutory notice in the mailbox twice. A CreateCase failure of any kind, and a
-definitive failure of either later call, leaves the row `FAILED` and retryable instead.
+**UNCERTAIN is terminal.** When the outcome of CreateDocument is unknown (a timeout, a
+5xx, a `Success: false`, a process that died mid-call) the row becomes `UNCERTAIN` and no
+code path moves it on. A person reconciles it by hand against One, following the runbook
+in the module README. Retrying it automatically could file the same statutory notice
+twice. A CreateCase failure of any kind, a definitive CreateDocument failure, and **any**
+SendDocToIslandIs failure leave the row `FAILED` and retryable instead: `Success: false`
+from the send means the mailbox did not take the document, and a resend of the same
+document is safe (OneSystems, 26 Nov 2026). island.is's duplicate answer to it
+(`Errors: ["Færsla þegar skráð."]` and nothing else) whose `DocumentId` is the document's
+own `ItemID` (case aside), with no `ErrorNumber` or `ErrorMessage`, means the document is
+already in the mailbox, and the row is `SENT`. A duplicate answer missing any of those is
+a rejection like any other, and `FAILED`. Rows from before 26 Nov 2026 may be `UNCERTAIN`
+at the send.
 
 **The attempts cap.** A row is claimed at most `MAILBOX_DELIVERY_MAX_ATTEMPTS` (5) times;
 every claim adds one to `attempts`. After that the service makes no call and reports the
@@ -660,9 +664,10 @@ delivery" above) and the row records `channel = MAILBOX`, but only for a filing 
 the `onesystems_mailbox_allowlist` config row. Every other company's rows go as with the
 flag off: approvals and denials emailed, receipts not picked. An approval or denial whose
 mailbox delivery already got somewhere is not emailed when the flag goes off: one One
-sent is recorded `DONE` by mailbox, an UNCERTAIN or interrupted one is `FAILED` for a person,
+sent is recorded `DONE` by mailbox, an UNCERTAIN or interrupted-at-CreateDocument one is `FAILED` for a person,
 and one whose document One holds unsent waits `PENDING` for the flag. With the flag on, a
-mailbox kind with no case template holds its rows `PENDING` without counting an attempt.
+mailbox kind with no case template or island.is classification holds its rows `PENDING`
+without counting an attempt.
 
 **Still owed.** A row is sent only while the report has a status its notice is owed in,
 checked when it is sent: a receipt while the report is `SUBMITTED`, `POSTPONED` or
@@ -771,8 +776,9 @@ SELECT id, kind, idempotency_key, status, attempts, in_flight_step,
        ) || ':' || upper('<report id>');
 ```
 
-- `UNCERTAIN`, or `in_flight_step` set: reconcile it first, under "Reconciling an UNCERTAIN
-  row" in the mailbox-delivery module README. If One sent it, the row becomes `SENT` and the
+- `UNCERTAIN`, or `in_flight_step` = `CREATE_DOCUMENT`: reconcile it first, under
+  "Reconciling an UNCERTAIN row" in the mailbox-delivery module README. (A send marker
+  needs nothing: the next call sends again.) If One sent it, the row becomes `SENT` and the
   re-driven notice is recorded `DONE` without a second send.
 - `attempts` at 5: fix the cause and re-arm it ("Exhausted rows" in the same README).
 - No row, or `SENT`: nothing to do first.
