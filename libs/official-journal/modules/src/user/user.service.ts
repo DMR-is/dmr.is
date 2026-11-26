@@ -388,7 +388,8 @@ export class UserService implements IUserService {
     return ResultWrapper.ok()
   }
 
-  @LogAndHandle()
+  // Takes national ids or a user: never log the arguments
+  @LogAndHandle({ logArgs: false })
   async getInvolvedPartiesByUser(
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>> {
@@ -422,7 +423,8 @@ export class UserService implements IUserService {
     })
   }
 
-  @LogAndHandle()
+  // Takes national ids or a user: never log the arguments
+  @LogAndHandle({ logArgs: false })
   async getInvolvedPartiesByNationalId(
     nationalId: string,
     userNationalId?: string,
@@ -636,7 +638,8 @@ export class UserService implements IUserService {
    * ## ☢️ Should only be used by role guard! ☢️
    * @returns
    */
-  @LogAndHandle()
+  // Takes national ids or a user: never log the arguments
+  @LogAndHandle({ logArgs: false })
   async getUserByNationalId(
     nationalId: string,
   ): Promise<ResultWrapper<GetUserResponse>> {

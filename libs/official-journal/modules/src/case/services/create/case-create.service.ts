@@ -796,45 +796,61 @@ export class CaseCreateService implements ICaseCreateService {
   }
 
   /**
-   * The involved parties the party picker (`GET :id/involved-parties`)
-   * offers the applicant, worked out the way the picker does. An applicant
-   * acting through a delegation is answered by `PartyGuard`'s lookup: the
-   * parties under the represented national id that are linked to the actor.
-   * Every actor recorded on the application counts, since any of them may
-   * have picked. An applicant signed in as themselves gets their own linked
-   * parties, or every party when they are an editorial admin.
+   * The involved parties the party picker (`GET :id/involved-parties`) may
+   * have offered the applicant. The picker answers per request: a token with
+   * an actor goes through `PartyGuard`'s lookup (the parties under the
+   * represented national id, narrowed to those linked to the actor when
+   * several share it), any other token gets the applicant's own linked
+   * parties (every party for an editorial admin). The same applicant can
+   * sign in either way, so this is the union of both: the `PartyGuard` lookup
+   * for every actor recorded on the application, and the applicant's own
+   * links. A 404 from either path means that path offered nothing.
+   *
+   * `applicantActors` grants no access here: the submitter is checked as a
+   * party on their own token (`isApplicationParty`). The actors only
+   * reconstruct what the applicant could have picked.
    */
   private async partiesOfferedToApplicant(
     application: Application,
   ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>> {
     const applicant = normalizeNationalId(application.applicant)
-    const actors = (application.applicantActors ?? [])
-      .map(normalizeNationalId)
-      .filter(Boolean)
+    const actors = new Set(
+      (application.applicantActors ?? [])
+        .map(normalizeNationalId)
+        .filter(Boolean),
+    )
+    const involvedParties: GetInvoledPartiesByUserResponse['involvedParties'] =
+      []
 
-    if (actors.length > 0) {
-      const involvedParties: GetInvoledPartiesByUserResponse['involvedParties'] =
-        []
-      for (const actor of new Set(actors)) {
-        const lookup = await this.userService.getInvolvedPartiesByNationalId(
-          applicant,
-          actor,
-        )
-        if (!lookup.result.ok) {
-          if (lookup.result.error.code === 404) continue
-          return ResultWrapper.err(lookup.result.error)
-        }
-        involvedParties.push(...lookup.result.value.involvedParties)
+    for (const actor of actors) {
+      const lookup = await this.userService.getInvolvedPartiesByNationalId(
+        applicant,
+        actor,
+      )
+      if (!lookup.result.ok) {
+        if (lookup.result.error.code === 404) continue
+        return ResultWrapper.err(lookup.result.error)
       }
-      return ResultWrapper.ok({ involvedParties })
+      involvedParties.push(...lookup.result.value.involvedParties)
     }
 
     const user = await this.userService.getUserByNationalId(applicant)
     if (!user.result.ok) {
+      if (user.result.error.code === 404) {
+        return ResultWrapper.ok({ involvedParties })
+      }
       return ResultWrapper.err(user.result.error)
     }
 
-    return this.userService.getInvolvedPartiesByUser(user.result.value.user)
+    const own = await this.userService.getInvolvedPartiesByUser(
+      user.result.value.user,
+    )
+    if (!own.result.ok) {
+      return ResultWrapper.err(own.result.error)
+    }
+    involvedParties.push(...own.result.value.involvedParties)
+
+    return ResultWrapper.ok({ involvedParties })
   }
 
   // The application carries answers and national ids: never log it

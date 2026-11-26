@@ -71,6 +71,10 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
       .mockResolvedValue(
         ResultWrapper.err({ code: 500, message: 'stop' }) as never,
       )
+    // By default the applicant is not a user here (e.g. an institution)
+    getUserByNationalId.mockResolvedValue(
+      ResultWrapper.err({ code: 404, message: 'User not found' }),
+    )
   })
 
   it("matches the caller's own party whatever the case of the answer's id", async () => {
@@ -188,7 +192,114 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
         APPLICANT_DIGITS,
         '0404040000',
       )
-      expect(getUserByNationalId).not.toHaveBeenCalled()
+      expect(getInvolvedPartiesByUser).not.toHaveBeenCalled()
+    })
+
+    it('may file for what the applicant was offered signed in as themselves, when an actor is also recorded', async () => {
+      // A person applicant who also had a delegate act for them: the actor
+      // path offers nothing, their own links offer the party
+      getInvolvedPartiesByNationalId.mockResolvedValue(
+        ResultWrapper.err({ code: 404, message: 'Involved party not found' }),
+      )
+      personApplicantOffered(PARTY_ID)
+
+      await submitAsAssignee({ ...assignee, involvedPartyIds: [] }, PARTY_ID, [
+        '030303-0000',
+      ])
+
+      expect(getCreateCaseBody).toHaveBeenCalled()
+      expect(getInvolvedPartiesByNationalId).toHaveBeenCalledWith(
+        APPLICANT_DIGITS,
+        '0303030000',
+      )
+      expect(getInvolvedPartiesByUser).toHaveBeenCalledWith(APPLICANT_USER)
+    })
+
+    it('skips an actor offered nothing and still uses the next one', async () => {
+      getInvolvedPartiesByNationalId.mockImplementation(
+        async (_nationalId: string, actor?: string) =>
+          actor === '0303030000'
+            ? ResultWrapper.err({
+                code: 404,
+                message: 'Involved party not found',
+              })
+            : ResultWrapper.ok({ involvedParties: [{ id: PARTY_ID }] }),
+      )
+
+      await submitAsAssignee({ ...assignee, involvedPartyIds: [] }, PARTY_ID, [
+        '030303-0000',
+        '040404-0000',
+      ])
+
+      expect(getCreateCaseBody).toHaveBeenCalled()
+    })
+
+    it('looks each actor up once, and ignores an empty one', async () => {
+      getInvolvedPartiesByNationalId.mockResolvedValue(
+        ResultWrapper.ok({ involvedParties: [{ id: PARTY_ID }] }),
+      )
+
+      await submitAsAssignee({ ...assignee, involvedPartyIds: [] }, PARTY_ID, [
+        '030303-0000',
+        '0303030000',
+        '',
+      ])
+
+      expect(getCreateCaseBody).toHaveBeenCalled()
+      expect(getInvolvedPartiesByNationalId).toHaveBeenCalledTimes(1)
+    })
+
+    it("uses only the applicant's own links when the recorded actor is empty", async () => {
+      personApplicantOffered(PARTY_ID)
+
+      await submitAsAssignee({ ...assignee, involvedPartyIds: [] }, PARTY_ID, [
+        '',
+      ])
+
+      expect(getCreateCaseBody).toHaveBeenCalled()
+      expect(getInvolvedPartiesByNationalId).not.toHaveBeenCalled()
+    })
+
+    it('is refused an institution a delegate applicant was not offered', async () => {
+      getInvolvedPartiesByNationalId.mockResolvedValue(
+        ResultWrapper.ok({ involvedParties: [{ id: OTHER_PARTY_ID }] }),
+      )
+
+      const result = await submitAsAssignee(
+        { ...assignee, involvedPartyIds: [] },
+        PARTY_ID,
+        ['030303-0000'],
+      )
+
+      expectRefusal(result, 403, FORBIDDEN_MESSAGE)
+    })
+
+    it('passes an actor lookup failure through instead of calling it a refusal', async () => {
+      getInvolvedPartiesByNationalId.mockResolvedValue(
+        ResultWrapper.err({ code: 500, message: 'db down' }),
+      )
+
+      const result = await submitAsAssignee(
+        { ...assignee, involvedPartyIds: [] },
+        PARTY_ID,
+        ['030303-0000'],
+      )
+
+      expectRefusal(result, 500)
+    })
+
+    it('passes a user lookup failure through instead of calling it a refusal', async () => {
+      getUserByNationalId.mockResolvedValue(
+        ResultWrapper.err({ code: 500, message: 'db down' }),
+      )
+
+      const result = await submitAsAssignee(
+        { ...assignee, involvedPartyIds: [] },
+        PARTY_ID,
+      )
+
+      expectRefusal(result, 500)
+      expect(getInvolvedPartiesByUser).not.toHaveBeenCalled()
     })
 
     it("matches what the applicant was offered whatever the case of the answer's id", async () => {

@@ -20,7 +20,9 @@ export const normalizeNationalId = (value?: string): string =>
  * carries the represented party as its subject, so a current delegate passes
  * on the subject alone. The actor and `applicantActors` are deliberately not
  * matched: they record who once acted for the applicant, and would keep a
- * delegate's access after the delegation ends.
+ * delegate's access after the delegation ends. (Case creation does read
+ * `applicantActors`, but only to work out which institutions the applicant
+ * could have picked, never to decide who may act on the application.)
  */
 export const isApplicationParty = (
   application: Pick<Application, 'applicant' | 'assignees'>,
