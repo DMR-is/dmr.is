@@ -735,7 +735,7 @@ function deadlineSection(report: ReportDetailDto): string {
  */
 export function buildSalaryReportHtml(data: SalaryReportPdfData): string {
   const { report, statistics, outliers, payComponents } = data
-  const title = `Jafnlaunaúttekt — ${escapeHtml(report.company?.name ?? '')}`
+  const title = `Niðurstaða launagreiningar — ${escapeHtml(report.company?.name ?? '')}`
 
   return `<!DOCTYPE html>
 <html lang="is">
@@ -744,7 +744,7 @@ export function buildSalaryReportHtml(data: SalaryReportPdfData): string {
     <title>${title}</title>
   </head>
   <body>
-    <h1 class="doc-title">Jafnlaunaúttekt</h1>
+    <h1 class="doc-title">Niðurstaða launagreiningar</h1>
     <p class="doc-intro">${escapeHtml(report.company?.name ?? '')} — kennitala ${orDash(report.company?.nationalId)}</p>
     ${companySection(report)}
     ${topManagerSection(report)}
