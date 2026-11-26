@@ -98,8 +98,9 @@ export const authOptions: AuthOptions = {
         role: token.role as 'ADMIN' | 'EDITOR',
       }
 
-      session.accessToken = token.accessToken as string
-      session.idToken = token.idToken as string
+      // Never copy accessToken / idToken / refreshToken onto the session: it is
+      // serialised to the browser. Server code reads them from the JWT via
+      // getServerToken().
 
       if (token.invalid) {
         session.invalid = true
