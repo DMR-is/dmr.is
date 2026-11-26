@@ -3,14 +3,50 @@ import { InternalServerErrorException } from '@nestjs/common'
 import { MailboxDeliveryKindEnum } from './models/mailbox-delivery.enums'
 
 /**
+ * Stafrænt Ísland's mailbox categories and types (Pósthólf skjalatilkynning
+ * interface,
+ * docs.devland.is/products/postholf/postholf-02-interface-skjalatilkynning),
+ * as OneSystems listed them on 26 Nov 2026. Stafrænt Ísland may change them;
+ * a value island.is no longer knows is refused at the send.
+ */
+export const ISLAND_IS_CATEGORIES = [
+  'Fjármál',
+  'Börn og ungmenni',
+  'Líf og heilsa',
+  'Húsnæði og eignir',
+  'Atvinna',
+  'Menntun og tómstundir',
+  'Starfsleyfi',
+  'Umhverfi og skipulag',
+  'Stjórnir og samþykktir',
+  'Annað',
+  'Inn- og útflutningur',
+  'Dómsmál',
+] as const
+
+export const ISLAND_IS_TYPES = [
+  'Launaseðill',
+  'Greiðsluseðill',
+  'Yfirlit',
+  'Tilkynning',
+  'Kvittun',
+  'Staða',
+  'Launamiði',
+] as const
+
+export type IslandIsCategory = (typeof ISLAND_IS_CATEGORIES)[number]
+export type IslandIsType = (typeof ISLAND_IS_TYPES)[number]
+
+/**
  * How one notice kind is filed in One and classified in island.is.
  *
  * Every string is a value One or island.is defines, not one we choose, so none
  * can be guessed. `caseType` is required. One's own classification
  * (`docCategory`, `docType`, `author`) may be empty strings, which One accepts
  * (OneSystems, 9 Oct 2026). The island.is pair is unrelated to it: it must be
- * one of Stafrænt Ísland's values (see `ISLAND_IS_CATEGORY`), and island.is
- * refuses a send without it ("Nauðsynleg gildi vantar").
+ * one of Stafrænt Ísland's values (`ISLAND_IS_CATEGORIES`, `ISLAND_IS_TYPES`),
+ * and island.is refuses a send without it ("Nauðsynleg gildi vantar"), so a
+ * kind without it is not configured.
  */
 export interface MailboxDeliveryKindConfig {
   /** CreateCase `CaseType`: the unique key of the case template. */
@@ -22,9 +58,9 @@ export interface MailboxDeliveryKindConfig {
   /** CreateDocument `Author`: shown as the document's author in One. May be `''`. */
   author: string
   /** SendDocToIslandIs `Category`: one of Stafrænt Ísland's categories. */
-  islandIsCategory: string
+  islandIsCategory: IslandIsCategory
   /** SendDocToIslandIs `Type`: one of Stafrænt Ísland's types. */
-  islandIsType: string
+  islandIsType: IslandIsType
   /**
    * CreateCase / CreateDocument `Portal`. Left unset (One's default) until
    * OneSystems says what the flag does.
@@ -64,33 +100,22 @@ const SALARY_CASE_TYPE: string | undefined = 'SKYRSLA'
 const EQUALITY_CASE_TYPE: string | undefined = 'J-AAETLUN'
 
 /**
- * The island.is mailbox classification of every DoE notice. Both must be
- * values from Stafrænt Ísland's lists (Pósthólf skjalatilkynning interface,
- * docs.devland.is/products/postholf/postholf-02-interface-skjalatilkynning).
- * As of 26 Nov 2026 the categories are Fjármál, Börn og ungmenni, Líf og
- * heilsa, Húsnæði og eignir, Atvinna, Menntun og tómstundir, Starfsleyfi,
- * Umhverfi og skipulag, Stjórnir og samþykktir, Annað, Inn- og útflutningur
- * and Dómsmál; the types are Launaseðill, Greiðsluseðill, Yfirlit, Tilkynning,
- * Kvittun, Staða and Launamiði (OneSystems, 26 Nov 2026). Stafrænt Ísland may
- * change the lists.
+ * How every DoE notice is classified, in two unrelated halves:
+ * - One's own (`docCategory`, `docType`, `author`) stays empty, which One
+ *   accepts, until Jafnréttisstofa asks for values.
+ * - island.is's is Atvinna / Tilkynning for every notice kind (chosen 26 Nov
+ *   2026 from Stafrænt Ísland's lists).
  */
-const ISLAND_IS_CATEGORY = 'Atvinna'
-const ISLAND_IS_TYPE = 'Tilkynning'
-
-/**
- * One's own classification stays empty, which One accepts, until
- * Jafnréttisstofa asks for values. Unrelated to the island.is pair.
- */
-const CLASSIFICATION = {
+const NOTICE_CLASSIFICATION = {
   docCategory: '',
   docType: '',
   author: '',
-  islandIsCategory: ISLAND_IS_CATEGORY,
-  islandIsType: ISLAND_IS_TYPE,
+  islandIsCategory: 'Atvinna',
+  islandIsType: 'Tilkynning',
 } as const satisfies Partial<MailboxDeliveryKindConfig>
 
-const salary = { caseType: SALARY_CASE_TYPE, ...CLASSIFICATION }
-const equality = { caseType: EQUALITY_CASE_TYPE, ...CLASSIFICATION }
+const salary = { caseType: SALARY_CASE_TYPE, ...NOTICE_CLASSIFICATION }
+const equality = { caseType: EQUALITY_CASE_TYPE, ...NOTICE_CLASSIFICATION }
 
 /**
  * The classification of each notice kind.
@@ -125,30 +150,58 @@ export const MAILBOX_DELIVERY_KINDS_IN_USE: readonly MailboxDeliveryKindEnum[] =
       kind !== MailboxDeliveryKindEnum.FINES_PRECURSOR,
   )
 
-/** Whether `kind` has a case template, so `resolveKindConfig` will not throw. */
+/** The first field `config` lacks for a send, or null when it has them all. */
+function missingField(
+  config: Partial<MailboxDeliveryKindConfig> | undefined,
+): 'caseType' | 'islandIsCategory' | 'islandIsType' | null {
+  if (!config?.caseType?.trim()) {
+    return 'caseType'
+  }
+  if (
+    !config.islandIsCategory ||
+    !(ISLAND_IS_CATEGORIES as readonly string[]).includes(
+      config.islandIsCategory,
+    )
+  ) {
+    return 'islandIsCategory'
+  }
+  if (
+    !config.islandIsType ||
+    !(ISLAND_IS_TYPES as readonly string[]).includes(config.islandIsType)
+  ) {
+    return 'islandIsType'
+  }
+  return null
+}
+
+/**
+ * Whether `kind` has a case template and an island.is classification, so
+ * `resolveKindConfig` will not throw.
+ */
 export function isKindConfigured(
   kind: MailboxDeliveryKindEnum,
   configs: MailboxDeliveryKindConfigs = MAILBOX_DELIVERY_KINDS,
 ): boolean {
-  return Boolean(configs[kind]?.caseType?.trim())
+  return missingField(configs[kind]) === null
 }
 
 /**
  * The complete config for `kind`, or an `InternalServerErrorException` when it
- * has no `caseType`. A missing classification field becomes `''`.
- * `deliverToMailbox` checks `isKindConfigured` first and answers
- * `UNCONFIGURED` without writing a row, so this throw is a backstop.
+ * has no `caseType` or no valid island.is `Category`/`Type`. A missing field
+ * of One's own classification becomes `''`. `deliverToMailbox` checks
+ * `isKindConfigured` first and answers `UNCONFIGURED` without writing a row,
+ * so this throw is a backstop.
  */
 export function resolveKindConfig(
   kind: MailboxDeliveryKindEnum,
   configs: MailboxDeliveryKindConfigs = MAILBOX_DELIVERY_KINDS,
 ): MailboxDeliveryKindConfig {
   const config = configs[kind]
-  const caseType = config?.caseType?.trim()
+  const missing = missingField(config)
 
-  if (!config || !caseType) {
+  if (!config || missing) {
     throw new InternalServerErrorException(
-      `Mailbox delivery kind ${kind} is not configured: missing caseType`,
+      `Mailbox delivery kind ${kind} is not configured: missing ${missing ?? 'caseType'}`,
     )
   }
 
@@ -158,7 +211,7 @@ export function resolveKindConfig(
     docCategory: config.docCategory ?? '',
     docType: config.docType ?? '',
     author: config.author ?? '',
-    islandIsCategory: config.islandIsCategory ?? '',
-    islandIsType: config.islandIsType ?? '',
+    islandIsCategory: config.islandIsCategory as IslandIsCategory,
+    islandIsType: config.islandIsType as IslandIsType,
   }
 }

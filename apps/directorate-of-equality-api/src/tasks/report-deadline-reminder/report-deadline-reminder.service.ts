@@ -616,9 +616,10 @@ export class ReportDeadlineReminderService
     if (!delivery) {
       return null
     }
-    // `interrupted` needs two things: recording the failure itself failed (a
-    // call that throws clears its in-flight marker before rethrowing), and
-    // the lease has lapsed since. Read straight after the throw the lease is
+    // `interrupted` (a CreateDocument marker only: an interrupted send is
+    // resumed) needs two things: recording the failure itself failed (a call
+    // that throws clears its in-flight marker before rethrowing), and the
+    // lease has lapsed since. Read straight after the throw the lease is
     // usually still live, so such a row reads `inProgress` and gets no event
     // this run; the next run's call claims it, marks it UNCERTAIN, and the
     // UNCONFIRMED event is written then.

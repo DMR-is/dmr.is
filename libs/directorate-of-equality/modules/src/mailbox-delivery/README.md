@@ -135,9 +135,10 @@ claim adds one to `attempts`, except one whose Login fails (see
 returns the row's own status with `skipped: 'ATTEMPTS_EXHAUSTED'`, and logs an
 error with the `deliveryId` and `attempts`. Without the cap a permanent
 rejection would be retried on every call. See
-[Exhausted rows](#exhausted-rows). A row whose last claim died mid-call is still
-claimed once more: mid-CreateDocument it becomes UNCERTAIN as usual,
-mid-send the send is made again.
+[Exhausted rows](#exhausted-rows). A row whose last claim died
+mid-CreateDocument is still claimed past the cap, so it becomes UNCERTAIN as
+usual. One that died mid-send is not: resuming the send spends an attempt, and
+a row out of attempts with a send marker is exhausted like any other.
 
 ## One unreachable
 
@@ -242,7 +243,7 @@ SELECT id, company_id, kind, idempotency_key, status,
 FROM mailbox_delivery
 WHERE status <> 'SENT'
   AND status <> 'UNCERTAIN'
-  AND in_flight_step IS NULL
+  AND (in_flight_step IS NULL OR in_flight_step = 'SEND_DOC_TO_ISLAND_IS')
   AND attempts >= 5
 ORDER BY last_attempt_at;
 ```
@@ -262,8 +263,11 @@ SET attempts = 0,
     last_error = 'Re-armed by <name> on <date>: <what was fixed>'
 WHERE id = '<delivery id>'
   AND status = 'FAILED'
-  AND in_flight_step IS NULL;
+  AND (in_flight_step IS NULL OR in_flight_step = 'SEND_DOC_TO_ISLAND_IS');
 ```
+
+A send marker left on an exhausted row is harmless: the next call clears it and
+sends the filed document again.
 
 For a row in a forward status, put that status in place of `'FAILED'`.
 Re-arming does not send anything by itself; the next `deliverToMailbox` call
@@ -392,10 +396,11 @@ the id is in the logs.
      sends it again, and island.is answers a repeat as already sent.
 
 3. Ask Jafnréttisstofa or OneSystems to check in One, or check island.is,
-   whenever One does not show it clearly. A row left UNCERTAIN by a duplicate
-   answer that did not name the document ([A duplicate answer](#a-duplicate-answer))
-   was most likely sent before; confirm it in OneCRM's list of documents sent
-   to the mailbox before settling it SENT.
+   whenever One does not show it clearly. A row from before 26 Nov 2026 left
+   UNCERTAIN by a duplicate answer that did not name the document was most
+   likely sent before; confirm it in OneCRM's list of documents sent to the
+   mailbox before settling it SENT. Such an answer now leaves the row FAILED
+   ([A duplicate answer](#a-duplicate-answer)).
 
 4. Set the status by hand, each in its own statement. Match on `status` too,
    so a row that has changed since you looked is left alone. Clear the lease in

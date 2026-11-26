@@ -63,8 +63,8 @@ const CONFIG = {
   docCategory: 'doc-category',
   docType: 'doc-type',
   author: 'Jafnréttisstofa',
-  islandIsCategory: 'island-category',
-  islandIsType: 'island-type',
+  islandIsCategory: 'Atvinna' as const,
+  islandIsType: 'Tilkynning' as const,
 }
 
 const KINDS = Object.fromEntries(
@@ -847,21 +847,60 @@ describe('MailboxDeliveryService', () => {
       ).toThrow(/FINES_PRECURSOR.*missing caseType/)
     })
 
-    it('sends a missing classification field as an empty string', () => {
+    it("sends a missing field of One's own classification as an empty string", () => {
       expect(
         resolveKindConfig(MailboxDeliveryKindEnum.OVERDUE_NOTICE, {
           ...KINDS,
-          [MailboxDeliveryKindEnum.OVERDUE_NOTICE]: { caseType: 'case-type' },
+          [MailboxDeliveryKindEnum.OVERDUE_NOTICE]: {
+            caseType: 'case-type',
+            islandIsCategory: 'Atvinna',
+            islandIsType: 'Tilkynning',
+          },
         }),
       ).toEqual({
         caseType: 'case-type',
         docCategory: '',
         docType: '',
         author: '',
-        islandIsCategory: '',
-        islandIsType: '',
+        islandIsCategory: 'Atvinna',
+        islandIsType: 'Tilkynning',
       })
     })
+
+    it.each([
+      ['islandIsCategory', { islandIsCategory: undefined }],
+      ['islandIsCategory', { islandIsCategory: 'Skýrslur' }],
+      ['islandIsType', { islandIsType: undefined }],
+      ['islandIsType', { islandIsType: 'island-type' }],
+    ])(
+      'is not configured without a valid %s, which island.is refuses a send without',
+      (field, override) => {
+        const configs = {
+          ...KINDS,
+          [MailboxDeliveryKindEnum.OVERDUE_NOTICE]: {
+            ...CONFIG,
+            ...override,
+          },
+        } as MailboxDeliveryKindConfigs
+
+        expect(
+          isKindConfigured(MailboxDeliveryKindEnum.OVERDUE_NOTICE, configs),
+        ).toBe(false)
+        expect(() =>
+          resolveKindConfig(MailboxDeliveryKindEnum.OVERDUE_NOTICE, configs),
+        ).toThrow(new RegExp(`missing ${field}`))
+      },
+    )
+
+    it.each(MAILBOX_DELIVERY_KINDS_IN_USE)(
+      '%s goes to island.is as Atvinna / Tilkynning',
+      (kind) => {
+        expect(resolveKindConfig(kind)).toMatchObject({
+          islandIsCategory: 'Atvinna',
+          islandIsType: 'Tilkynning',
+        })
+      },
+    )
 
     /*
      * ⚠️ Pins the confirmed case templates (Jafnréttisstofa, 30 Sep 2026). A
@@ -1507,7 +1546,7 @@ describe('MailboxDeliveryService', () => {
             {
               [Op.or]: [
                 { attempts: { [Op.lt]: MAILBOX_DELIVERY_MAX_ATTEMPTS } },
-                { inFlightStep: { [Op.ne]: null } },
+                { inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT },
               ],
             },
           ],
@@ -1694,6 +1733,37 @@ describe('MailboxDeliveryService', () => {
       expect(onlyRow()).toMatchObject({
         status: MailboxDeliveryStatusEnum.UNCERTAIN,
         inFlightStep: null,
+      })
+    })
+
+    it('does not resume a send marker past the cap: it reports the row exhausted, and lists it for a person', async () => {
+      const seeded = seedFailed({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        oneCaseItemId: 'case-saved',
+        oneDocumentItemId: 'doc-saved',
+        attempts: CAP,
+        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        leaseToken: 'crashed-worker',
+        leaseExpiresAt: new Date(Date.now() - MINUTE),
+      })
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        deliveryId: seeded.id,
+        attempts: CAP,
+        skipped: 'ATTEMPTS_EXHAUSTED',
+      })
+      expect(oneCalls()).toBe(0)
+      expect(onlyRow().attempts).toBe(CAP)
+      await expect(service.findStuckDeliveries(50)).resolves.toEqual([
+        expect.objectContaining({
+          deliveryId: seeded.id,
+          reason: 'ATTEMPTS_EXHAUSTED',
+        }),
+      ])
+      await expect(service.findDelivery(KEY)).resolves.toMatchObject({
+        interrupted: false,
+        exhausted: true,
       })
     })
 
@@ -1998,126 +2068,130 @@ describe('MailboxDeliveryService', () => {
         operation: 'CreateDocument' as const,
         fail: (error: unknown) =>
           one.createDocument.mockRejectedValueOnce(error),
+        // Repeating it would file a second copy: an unclear outcome stays
+        // UNCERTAIN, and nothing retries it.
+        expectOutcome: () =>
+          expect(onlyRow()).toMatchObject({
+            status: MailboxDeliveryStatusEnum.UNCERTAIN,
+            inFlightStep: null,
+            leaseToken: null,
+          }),
+        retryAnswers: 'UNCERTAIN',
       },
       {
         operation: 'SendDocToIslandIs' as const,
         fail: (error: unknown) =>
           one.sendDocToIslandIs.mockRejectedValueOnce(error),
-      },
-    ]
-
-    describe.each(steps)('$operation', ({ operation, fail }) => {
-      it.each([
-        [
-          'Success: false (One may have acted first)',
-          () => rejected(operation),
-        ],
-        ['a 400 that is not model validation', () => http(operation, 400)],
-        // A 401/403/404 with a body may come from inside One's action.
-        ['a 401 with a body', () => http(operation, 401)],
-        ['a 403 with a body', () => http(operation, 403)],
-        ['a 404 with a body', () => http(operation, 404)],
-        // An empty body alone proves nothing: Unauthorized(null),
-        // NotFound(null) and Forbid() from inside the action look like this.
-        [
-          'an empty-body 401 without a Bearer challenge',
-          () => http(operation, 401, { hasEmptyBody: true }),
-        ],
-        [
-          'an empty-body 403',
-          () => http(operation, 403, { hasEmptyBody: true }),
-        ],
-        [
-          'an empty-body 404',
-          () => http(operation, 404, { hasEmptyBody: true }),
-        ],
-        ['a 409', () => http(operation, 409)],
-        ['a 5xx', () => http(operation, 503)],
-        ['no answer', () => transport(operation)],
-        [
-          'a 2xx without a usable body',
-          () =>
-            new OneSystemsError(`${operation} answered oddly`, {
-              operation,
-              reason: 'UNEXPECTED_RESPONSE',
-            }),
-        ],
-        [
-          'a 400 model-validation body labelled with another operation',
-          () => http('CreateCase', 400, { isValidationProblemBody: true }),
-        ],
-        ['an error that is not a OneSystemsError', () => new Error('boom')],
-      ])(
-        // CreateDocument would file a second copy, so an unclear outcome is
-        // UNCERTAIN. A repeated send is answered as already in the mailbox
-        // (OneSystems, 26 Nov 2026), so every send failure is retryable.
-        `records %s as ${operation === 'CreateDocument' ? 'UNCERTAIN' : 'FAILED, and retries the send'}`,
-        async (_why, makeError) => {
-          fail(makeError())
-
-          await expect(service.deliverToMailbox(input())).rejects.toThrow()
-
-          if (operation === 'CreateDocument') {
-            expect(onlyRow()).toMatchObject({
-              status: MailboxDeliveryStatusEnum.UNCERTAIN,
-              inFlightStep: null,
-              leaseToken: null,
-            })
-            await expect(
-              service.deliverToMailbox(input()),
-            ).resolves.toMatchObject({ status: 'UNCERTAIN' })
-            return
-          }
-
+        // Safe to repeat with the same document (OneSystems, 26 Nov 2026):
+        // FAILED, and the retry sends the filed document without filing
+        // another.
+        expectOutcome: () => {
           expect(onlyRow()).toMatchObject({
             status: MailboxDeliveryStatusEnum.FAILED,
             oneDocumentItemId: 'doc-1',
             inFlightStep: null,
             leaseToken: null,
           })
-          await expect(
-            service.deliverToMailbox(input()),
-          ).resolves.toMatchObject({ status: 'SENT' })
           expect(one.createDocument).toHaveBeenCalledTimes(1)
         },
-      )
+        retryAnswers: 'SENT',
+      },
+    ]
 
-      it.each([
-        [
-          'the JwtBearer challenge (an empty 401 with WWW-Authenticate: Bearer)',
-          () =>
-            http(operation, 401, {
-              hasEmptyBody: true,
-              hasBearerChallenge: true,
-            }),
-        ],
-        [
-          'a 400 model-validation body',
-          () => http(operation, 400, { isValidationProblemBody: true }),
-        ],
-        [
-          'input that cannot be sent',
-          () =>
-            new OneSystemsError(`${operation} input is invalid`, {
-              operation,
-              reason: 'INVALID_INPUT',
-            }),
-        ],
-      ])(
-        'records %s as FAILED, since One never acted',
-        async (_why, makeError) => {
-          fail(makeError())
+    describe.each(steps)(
+      '$operation',
+      ({ operation, fail, expectOutcome, retryAnswers }) => {
+        it.each([
+          [
+            'Success: false (One may have acted first)',
+            () => rejected(operation),
+          ],
+          ['a 400 that is not model validation', () => http(operation, 400)],
+          // A 401/403/404 with a body may come from inside One's action.
+          ['a 401 with a body', () => http(operation, 401)],
+          ['a 403 with a body', () => http(operation, 403)],
+          ['a 404 with a body', () => http(operation, 404)],
+          // An empty body alone proves nothing: Unauthorized(null),
+          // NotFound(null) and Forbid() from inside the action look like this.
+          [
+            'an empty-body 401 without a Bearer challenge',
+            () => http(operation, 401, { hasEmptyBody: true }),
+          ],
+          [
+            'an empty-body 403',
+            () => http(operation, 403, { hasEmptyBody: true }),
+          ],
+          [
+            'an empty-body 404',
+            () => http(operation, 404, { hasEmptyBody: true }),
+          ],
+          ['a 409', () => http(operation, 409)],
+          ['a 5xx', () => http(operation, 503)],
+          ['no answer', () => transport(operation)],
+          [
+            'a 2xx without a usable body',
+            () =>
+              new OneSystemsError(`${operation} answered oddly`, {
+                operation,
+                reason: 'UNEXPECTED_RESPONSE',
+              }),
+          ],
+          [
+            'a 400 model-validation body labelled with another operation',
+            () => http('CreateCase', 400, { isValidationProblemBody: true }),
+          ],
+          ['an error that is not a OneSystemsError', () => new Error('boom')],
+        ])(
+          `records %s, and the next call answers ${retryAnswers}`,
+          async (_why, makeError) => {
+            fail(makeError())
 
-          await expect(service.deliverToMailbox(input())).rejects.toThrow()
+            await expect(service.deliverToMailbox(input())).rejects.toThrow()
 
-          expect(onlyRow()).toMatchObject({
-            status: MailboxDeliveryStatusEnum.FAILED,
-            inFlightStep: null,
-            leaseToken: null,
-          })
-        },
-      )
-    })
+            expectOutcome()
+            await expect(
+              service.deliverToMailbox(input()),
+            ).resolves.toMatchObject({ status: retryAnswers })
+          },
+        )
+
+        it.each([
+          [
+            'the JwtBearer challenge (an empty 401 with WWW-Authenticate: Bearer)',
+            () =>
+              http(operation, 401, {
+                hasEmptyBody: true,
+                hasBearerChallenge: true,
+              }),
+          ],
+          [
+            'a 400 model-validation body',
+            () => http(operation, 400, { isValidationProblemBody: true }),
+          ],
+          [
+            'input that cannot be sent',
+            () =>
+              new OneSystemsError(`${operation} input is invalid`, {
+                operation,
+                reason: 'INVALID_INPUT',
+              }),
+          ],
+        ])(
+          'records %s as FAILED, since One never acted',
+          async (_why, makeError) => {
+            fail(makeError())
+
+            await expect(service.deliverToMailbox(input())).rejects.toThrow()
+
+            expect(onlyRow()).toMatchObject({
+              status: MailboxDeliveryStatusEnum.FAILED,
+              inFlightStep: null,
+              leaseToken: null,
+            })
+          },
+        )
+      },
+    )
   })
 
   describe('when One cannot be reached', () => {
@@ -2721,35 +2795,72 @@ describe('MailboxDeliveryService', () => {
       expect(one.sendDocToIslandIs).toHaveBeenCalledTimes(1)
     })
 
-    it('lets exactly one of two late saves win, and logs the other as a duplicate', async () => {
+    it('lets the first of two sends win, and answers the repeat as already sent', async () => {
       const winnerSentAt = new Date('2026-09-24T09:00:00.000Z')
       one.sendDocToIslandIs.mockImplementation(async () => {
-        // The other worker's save lands while this call is out.
+        // The other worker's save lands while this call is out; island.is
+        // answers this repeat of the same document as already in the mailbox.
         Object.assign(onlyRow(), {
           status: MailboxDeliveryStatusEnum.SENT,
           sentAt: winnerSentAt,
           islandIsDocumentId: null,
           inFlightStep: null,
         })
-        return { islandIsDocumentId: null, alreadyInMailbox: false }
+        return { islandIsDocumentId: 'doc-1', alreadyInMailbox: true }
       })
 
-      await expect(service.deliverToMailbox(input())).rejects.toThrow(
-        InternalServerErrorException,
-      )
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'SENT',
+        sentAt: winnerSentAt,
+        alreadySent: true,
+      })
 
       expect(onlyRow()).toMatchObject({
         status: MailboxDeliveryStatusEnum.SENT,
         sentAt: winnerSentAt,
         islandIsDocumentId: null,
+        inFlightStep: null,
+        leaseToken: null,
       })
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(logger.error).not.toHaveBeenCalledWith(
         expect.stringContaining('is a duplicate in One'),
-        expect.objectContaining({
-          step: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
-          duplicate: { islandIsDocumentId: null, sentAt: expect.any(Date) },
-        }),
+        expect.anything(),
       )
+    })
+
+    it('makes no send when a late save settles the row before the send marker', async () => {
+      store.seed({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        oneCaseItemId: 'case-saved',
+        oneDocumentItemId: 'doc-saved',
+      })
+      const winnerSentAt = new Date('2026-09-24T09:00:00.000Z')
+      interceptUpdate(async (values, apply) => {
+        if (
+          values.inFlightStep === MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS
+        ) {
+          // A slow earlier send's save lands between this claim and its marker.
+          Object.assign(onlyRow(), {
+            status: MailboxDeliveryStatusEnum.SENT,
+            sentAt: winnerSentAt,
+            inFlightStep: null,
+          })
+        }
+        return apply()
+      })
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'SENT',
+        sentAt: winnerSentAt,
+        alreadySent: true,
+      })
+
+      expect(one.sendDocToIslandIs).not.toHaveBeenCalled()
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.SENT,
+        inFlightStep: null,
+        leaseToken: null,
+      })
     })
   })
 

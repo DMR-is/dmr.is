@@ -166,6 +166,8 @@ describe('OneSystemsService', () => {
     service.sendDocToIslandIs({
       documentItemId: 'doc-1',
       nationalId: NATIONAL_ID,
+      category: 'Atvinna',
+      type: 'Tilkynning',
     })
   const closeCase = () => service.closeCase({ caseId: 'case-1' })
 
@@ -633,6 +635,8 @@ describe('OneSystemsService', () => {
           service.sendDocToIslandIs({
             documentItemId: '',
             nationalId: NATIONAL_ID,
+            category: 'Atvinna',
+            type: 'Tilkynning',
           }),
       ],
       [
@@ -642,6 +646,30 @@ describe('OneSystemsService', () => {
           service.sendDocToIslandIs({
             documentItemId: 'doc-1',
             nationalId: '',
+            category: 'Atvinna',
+            type: 'Tilkynning',
+          }),
+      ],
+      [
+        'sendDocToIslandIs with an empty category',
+        'SendDocToIslandIs',
+        () =>
+          service.sendDocToIslandIs({
+            documentItemId: 'doc-1',
+            nationalId: NATIONAL_ID,
+            category: '',
+            type: 'Tilkynning',
+          }),
+      ],
+      [
+        'sendDocToIslandIs with a blank type',
+        'SendDocToIslandIs',
+        () =>
+          service.sendDocToIslandIs({
+            documentItemId: 'doc-1',
+            nationalId: NATIONAL_ID,
+            category: 'Atvinna',
+            type: '  ',
           }),
       ],
       [

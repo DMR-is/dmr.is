@@ -51,9 +51,9 @@ export interface OneSystemsSendDocToIslandIsInput {
    * `Category`: one of Stafrænt Ísland's mailbox categories. Required by
    * island.is, and unrelated to `CreateDocument`'s `DocCategory`.
    */
-  category?: string
+  category: string
   /** `Type`: one of Stafrænt Ísland's mailbox types. Required by island.is. */
-  type?: string
+  type: string
 }
 
 export type OneSystemsSendDocToIslandIsResult =

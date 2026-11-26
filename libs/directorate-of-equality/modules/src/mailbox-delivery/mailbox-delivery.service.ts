@@ -115,9 +115,10 @@ export const MAILBOX_DELIVERY_LEASE_MINUTES = Math.ceil(
  *
  * An exhausted row is left as it is and reported as `ATTEMPTS_EXHAUSTED`. A
  * person fixes the cause and re-arms it by resetting `attempts` (see the
- * module README). A row whose last claim died mid-call is still claimed: a
- * CreateDocument marker turns it UNCERTAIN without a call to One, a send
- * marker has the send made once more.
+ * module README). A row whose last claim died mid-CreateDocument is still
+ * claimed, so its marker turns it UNCERTAIN without a call to One. A send
+ * marker gets no such pass: the resumed send is an attempt like any other,
+ * and a row out of attempts with one is reported exhausted.
  */
 export const MAILBOX_DELIVERY_MAX_ATTEMPTS = 5
 
@@ -157,9 +158,29 @@ const SETTLED_STATUSES = [
 ]
 
 /**
+ * The one step whose interrupted or unclear call needs a person: repeating
+ * CreateDocument files a second copy. The send is safe to repeat with the
+ * same document (OneSystems, 26 Nov 2026), so its marker is resumed and its
+ * failures are retryable.
+ */
+const UNCERTAIN_WHEN_INTERRUPTED = MailboxDeliveryStepEnum.CREATE_DOCUMENT
+
+/**
+ * No marker a person must look at: none, or a send marker, which the next
+ * claim resumes and which counts towards the attempts cap like no marker.
+ */
+const NO_UNCERTAIN_MARKER: WhereOptions<MailboxDeliveryModel> = {
+  [Op.or]: [
+    { inFlightStep: null },
+    { inFlightStep: { [Op.ne]: UNCERTAIN_WHEN_INTERRUPTED } },
+  ],
+}
+
+/**
  * The rows that need a person, one filter per reason. A row matches at most
- * one: UNCERTAIN is settled, and an exhausted row has no marker. A lapsed send
- * marker needs nobody: the next call with its key sends again.
+ * one: UNCERTAIN is settled, and an exhausted row has no CreateDocument
+ * marker. A lapsed send marker with attempts left needs nobody: the next call
+ * with its key sends again. Out of attempts it is exhausted like any other.
  */
 const STUCK_WHERE: Record<
   StuckMailboxDeliveryReason,
@@ -168,7 +189,7 @@ const STUCK_WHERE: Record<
   UNCERTAIN: { status: MailboxDeliveryStatusEnum.UNCERTAIN },
   INTERRUPTED: {
     status: { [Op.notIn]: SETTLED_STATUSES },
-    inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT,
+    inFlightStep: UNCERTAIN_WHEN_INTERRUPTED,
     [Op.or]: LEASE_FREE,
   },
   // The same test as `findExhausted`: a row whose last attempt still holds its
@@ -176,8 +197,7 @@ const STUCK_WHERE: Record<
   ATTEMPTS_EXHAUSTED: {
     status: { [Op.notIn]: SETTLED_STATUSES },
     attempts: { [Op.gte]: MAILBOX_DELIVERY_MAX_ATTEMPTS },
-    inFlightStep: null,
-    [Op.or]: LEASE_FREE,
+    [Op.and]: [NO_UNCERTAIN_MARKER, { [Op.or]: LEASE_FREE }],
   },
 }
 
@@ -395,12 +415,10 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       )
     }
 
-    if (claimed.inFlightStep === MailboxDeliveryStepEnum.CREATE_DOCUMENT) {
-      return this.markInterrupted(claimed, claimed.inFlightStep, leaseToken)
+    if (claimed.inFlightStep === UNCERTAIN_WHEN_INTERRUPTED) {
+      return this.markInterrupted(claimed, leaseToken)
     }
-    if (
-      claimed.inFlightStep === MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS
-    ) {
+    if (claimed.inFlightStep) {
       const settledMeanwhile = await this.resumeInterruptedSend(
         claimed,
         leaseToken,
@@ -604,7 +622,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       reason:
         row.status === MailboxDeliveryStatusEnum.UNCERTAIN
           ? 'UNCERTAIN'
-          : row.inFlightStep
+          : row.inFlightStep === UNCERTAIN_WHEN_INTERRUPTED
             ? 'INTERRUPTED'
             : 'ATTEMPTS_EXHAUSTED',
       attempts: row.attempts,
@@ -698,7 +716,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
     // template keeps its own answer.
     if (
       skipped === 'UNAVAILABLE' &&
-      !row.inFlightStep &&
+      row.inFlightStep !== UNCERTAIN_WHEN_INTERRUPTED &&
       row.attempts >= MAILBOX_DELIVERY_MAX_ATTEMPTS
     ) {
       return {
@@ -818,10 +836,12 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
    * ({@link MAILBOX_DELIVERY_MAX_ATTEMPTS}). No `FOR UPDATE`, which would hold
    * a connection open across the calls to One.
    *
-   * A row with a marker is claimed even with no attempts left: its last claim
-   * died mid-call. For CreateDocument, claiming it is what turns it UNCERTAIN
+   * A row with a CreateDocument marker is claimed even with no attempts left:
+   * its last claim died mid-call, and claiming it is what turns it UNCERTAIN
    * (no call to One follows); refusing it would leave it looking merely
-   * exhausted. For the send, the send is made once more, past the cap.
+   * exhausted. A send marker gets no such pass: the resumed send is an
+   * attempt like any other, so a process that keeps dying mid-send runs out
+   * of attempts and is reported exhausted.
    */
   private async claim(
     id: string,
@@ -843,7 +863,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
             {
               [Op.or]: [
                 { attempts: { [Op.lt]: MAILBOX_DELIVERY_MAX_ATTEMPTS } },
-                { inFlightStep: { [Op.ne]: null } },
+                { inFlightStep: UNCERTAIN_WHEN_INTERRUPTED },
               ],
             },
           ],
@@ -857,27 +877,23 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
 
   /**
    * The row, if the claim was refused only because it has no attempts left:
-   * unsettled, no live lease, no marker, and `attempts` at the cap. A row
-   * whose last attempt still holds its lease is left to report IN_PROGRESS.
+   * unsettled, no live lease, no CreateDocument marker, and `attempts` at the
+   * cap. A row whose last attempt still holds its lease is left to report
+   * IN_PROGRESS.
    */
   private async findExhausted(
     id: string,
   ): Promise<MailboxDeliveryModel | null> {
     return this.deliveryModel.findOne({
-      where: {
-        id,
-        status: { [Op.notIn]: SETTLED_STATUSES },
-        attempts: { [Op.gte]: MAILBOX_DELIVERY_MAX_ATTEMPTS },
-        inFlightStep: null,
-        [Op.or]: LEASE_FREE,
-      },
+      where: { [Op.and]: [{ id }, STUCK_WHERE.ATTEMPTS_EXHAUSTED] },
       attributes: ['id', 'status', 'attempts'],
       transaction: null,
     })
   }
 
   /**
-   * A marker left by a process that died mid-call: the outcome is unknown.
+   * A CreateDocument marker left by a process that died mid-call: whether
+   * One filed the document is unknown.
    *
    * Matches the marker as well as the lease. If that call was merely slow and
    * its late save cleared the marker between the claim and this write, nothing
@@ -887,9 +903,9 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
    */
   private async markInterrupted(
     row: MailboxDeliveryModel,
-    step: MailboxDeliveryStepEnum,
     leaseToken: string,
   ): Promise<DeliverToMailboxResult> {
+    const step = UNCERTAIN_WHEN_INTERRUPTED
     const [count] = await this.deliveryModel.update(
       {
         status: MailboxDeliveryStatusEnum.UNCERTAIN,
@@ -1013,7 +1029,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
           throw new InternalServerErrorException('The rendered PDF is empty')
         }
 
-        await this.setMarker(
+        const marked = await this.setMarker(
           row.id,
           leaseToken,
           MailboxDeliveryStepEnum.CREATE_DOCUMENT,
@@ -1022,6 +1038,9 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
             pdfSizeBytes: pdf.length,
           },
         )
+        if (marked === 'SETTLED') {
+          return this.markerClearedMeanwhile(row.id, leaseToken)
+        }
         // After the marker write: until it lands, One has not been called.
         inFlight = MailboxDeliveryStepEnum.CREATE_DOCUMENT
 
@@ -1055,11 +1074,15 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       let islandIsDocumentId = row.islandIsDocumentId
       let sentAt = row.sentAt
       if (!sentAt) {
-        await this.setMarker(
+        const marked = await this.setMarker(
           row.id,
           leaseToken,
           MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
         )
+        if (marked === 'SETTLED') {
+          // A slow earlier send's late save settled the row after this claim.
+          return this.markerClearedMeanwhile(row.id, leaseToken)
+        }
         inFlight = MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS
 
         const sent = await this.oneSystems.sendDocToIslandIs({
@@ -1090,6 +1113,9 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
         inFlight = null
         if (saved === 'KEPT_UNCERTAIN') {
           return { status: 'UNCERTAIN', deliveryId: row.id }
+        }
+        if (saved === 'ALREADY_SENT') {
+          return this.markerClearedMeanwhile(row.id, leaseToken)
         }
       }
 
@@ -1126,7 +1152,7 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       // document, which island.is answers as already sent if it got there.
       // Anything before a marker (a render, CreateCase) left One untouched.
       const outcome =
-        inFlight === MailboxDeliveryStepEnum.CREATE_DOCUMENT &&
+        inFlight === UNCERTAIN_WHEN_INTERRUPTED &&
         !isDefinitiveFor(inFlight, error)
           ? MailboxDeliveryStatusEnum.UNCERTAIN
           : MailboxDeliveryStatusEnum.FAILED
@@ -1342,15 +1368,18 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
    * result is still saved there as that person's evidence, and
    * `KEPT_UNCERTAIN` is returned.
    *
-   * A step already saved means another worker's call got there first; ours is
-   * then a duplicate in One, which is logged with its id and thrown.
+   * A CreateDocument already saved means another worker's call got there
+   * first; ours is then a duplicate in One, which is logged with its id and
+   * thrown. A send already saved is no duplicate: island.is answers a repeat
+   * of the same document as already in the mailbox, so it answers
+   * `ALREADY_SENT`.
    */
   private async saveResult(
     id: string,
     step: MailboxDeliveryStepEnum,
     result: StepResult,
     status: MailboxDeliveryStatusEnum,
-  ): Promise<'SAVED' | 'KEPT_UNCERTAIN'> {
+  ): Promise<'SAVED' | 'KEPT_UNCERTAIN' | 'ALREADY_SENT'> {
     const unsaved = { id, [SAVED_WHEN_SET[step]]: null }
 
     const [count] = await this.deliveryModel.update(
@@ -1386,6 +1415,14 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
       return 'KEPT_UNCERTAIN'
     }
 
+    if (step === MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS) {
+      this.logger.warn(
+        `Mailbox delivery ${id} was already recorded as sent; this send was a repeat of the same document`,
+        { context: LOGGING_CONTEXT, deliveryId: id, step },
+      )
+      return 'ALREADY_SENT'
+    }
+
     this.logger.error(
       `Mailbox delivery ${id} already had ${STEP_OPERATION[step]}'s result; what One just returned is a duplicate in One`,
       { context: LOGGING_CONTEXT, deliveryId: id, step, duplicate: result },
@@ -1399,22 +1436,44 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
    * Writes the marker for the call about to be made, and renews the lease so it
    * covers that call. Requires the lease still to be ours: if another worker
    * has taken the row, this one must not call One.
+   *
+   * Never on a settled row (a marker there breaks
+   * `mailbox_delivery_in_flight_settled_chk`): a slow earlier call's late save
+   * may have settled it after this claim. That answers `SETTLED`, and the
+   * caller makes no call.
    */
   private async setMarker(
     id: string,
     leaseToken: string,
     step: MailboxDeliveryStepEnum,
     extra: { pdfSha256?: string; pdfSizeBytes?: number } = {},
-  ): Promise<void> {
+  ): Promise<'MARKED' | 'SETTLED'> {
     const [count] = await this.deliveryModel.update(
       { inFlightStep: step, leaseExpiresAt: LEASE_EXPIRY, ...extra },
-      { where: { id, leaseToken }, transaction: null },
+      {
+        where: { id, leaseToken, status: { [Op.notIn]: SETTLED_STATUSES } },
+        transaction: null,
+      },
     )
-    if (count === 0) {
-      throw new InternalServerErrorException(
-        `Lost the lease on mailbox delivery ${id} before ${step}`,
-      )
+    if (count > 0) {
+      return 'MARKED'
     }
+
+    const current = await this.deliveryModel.findOne({
+      where: { id, leaseToken },
+      attributes: ['id', 'status'],
+      transaction: null,
+    })
+    if (current && SETTLED_STATUSES.includes(current.status)) {
+      this.logger.warn(
+        `Mailbox delivery ${id} settled before ${step}; not calling One`,
+        { context: LOGGING_CONTEXT, deliveryId: id, step },
+      )
+      return 'SETTLED'
+    }
+    throw new InternalServerErrorException(
+      `Lost the lease on mailbox delivery ${id} before ${step}`,
+    )
   }
 
   private async release(id: string, leaseToken: string): Promise<void> {
@@ -1487,9 +1546,14 @@ export class MailboxDeliveryService implements IMailboxDeliveryService {
           leaseExpiresAt: null,
         },
         {
-          where: step
-            ? { id, leaseToken, [SAVED_WHEN_SET[step]]: null }
-            : { id, leaseToken },
+          // Never over a settled row: a late save may have settled it, and
+          // a SENT row must stay SENT.
+          where: {
+            id,
+            leaseToken,
+            status: { [Op.notIn]: SETTLED_STATUSES },
+            ...(step ? { [SAVED_WHEN_SET[step]]: null } : {}),
+          },
           transaction: null,
         },
       )
@@ -1540,12 +1604,12 @@ export function classifyDelivery(
     // is resumed by the next claim.
     interrupted:
       unsettled &&
-      row.inFlightStep === MailboxDeliveryStepEnum.CREATE_DOCUMENT &&
+      row.inFlightStep === UNCERTAIN_WHEN_INTERRUPTED &&
       !leaseLive,
     inProgress: unsettled && leaseLive,
     exhausted:
       unsettled &&
-      !row.inFlightStep &&
+      row.inFlightStep !== UNCERTAIN_WHEN_INTERRUPTED &&
       !leaseLive &&
       row.attempts >= MAILBOX_DELIVERY_MAX_ATTEMPTS,
   }

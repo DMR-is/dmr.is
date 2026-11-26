@@ -169,8 +169,9 @@ export class OneSystemsService implements IOneSystemsService {
         input.documentItemId,
       ),
       IDNumber: this.requireText(operation, 'nationalId', input.nationalId),
-      Category: input.category,
-      Type: input.type,
+      // Required by island.is ("Nauðsynleg gildi vantar" without them).
+      Category: this.requireText(operation, 'category', input.category),
+      Type: this.requireText(operation, 'type', input.type),
       // `SendNotification` is left out: island.is no longer acts on it (its
       // "hnipp" replaced it) and One keeps it only for compatibility
       // (OneSystems, 26 Nov 2026).
