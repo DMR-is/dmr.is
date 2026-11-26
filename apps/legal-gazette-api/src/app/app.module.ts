@@ -50,7 +50,6 @@ import { TaskModule } from '../modules/advert/tasks/task.module'
 import { ApplicationWebSwaggerModule } from '../modules/swagger/application-web.swagger.module'
 import { ExternalSystemsSwaggerModule } from '../modules/swagger/external-systems.swagger.module'
 import { InternalWebSwaggerModule } from '../modules/swagger/internal-web.swagger.module'
-import { IslandIsApplicationSwaggerModule } from '../modules/swagger/island-is-application.swagger.module'
 import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.module'
 
 // Added comment to trigger redeploy
@@ -125,7 +124,6 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
     ApplicationWebSwaggerModule,
     ExternalSystemsSwaggerModule,
     InternalWebSwaggerModule,
-    IslandIsApplicationSwaggerModule,
     PublicWebSwaggerModule,
     PublicationListenerModule,
   ],

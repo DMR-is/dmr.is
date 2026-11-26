@@ -40,7 +40,6 @@ import { TypeModel } from '../../models/type.model'
 import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
 import {
   GetApplicationsDto,
-  IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../modules/applications/dto/application-extra.dto'
 import { IAdvertService } from '../advert/advert.service.interface'
@@ -421,40 +420,6 @@ export class ApplicationService implements IApplicationService {
     return { applications: mapped, paging: paging }
   }
 
-  async submitIslandIsApplication(
-    body: IslandIsSubmitApplicationDto,
-    user: DMRUser,
-  ): Promise<void> {
-    const newCase = await this.caseModel.create(
-      { involvedPartyNationalId: user.nationalId },
-      { returning: ['id'] },
-    )
-
-    const category = await this.categoryModel.findByPkOrThrow(body.categoryId)
-
-    await this.advertService.createAdvert({
-      caseId: newCase.id,
-      typeId: body.typeId,
-      categoryId: body.categoryId,
-      islandIsApplicationId: body.islandIsApplicationId,
-      createdBy: user.name,
-      createdByNationalId: user.nationalId,
-      signature: {
-        name: body.signature.name,
-        date: body.signature.date,
-        location: body.signature.location,
-        onBehalfOf: body.signature.onBehalfOf,
-      },
-      title: `${category.title} - ${body.caption}`,
-      caption: body.caption,
-      additionalText: body.additionalText,
-      content: body.html,
-      communicationChannels: [],
-      scheduledAt: body.publishingDates.map(
-        (publishingDate) => new Date(publishingDate),
-      ),
-    })
-  }
   async submitApplication(applicationId: string, user: DMRUser): Promise<void> {
     const application =
       await this.applicationModel.findByPkOrThrow(applicationId)

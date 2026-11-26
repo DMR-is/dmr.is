@@ -8,7 +8,7 @@ export interface ReportPdfResult {
 export interface IReportPdfService {
   /**
    * Generates the PDF for a report, choosing the layout
-   * ("Jafnlaunaúttekt" vs. "Jafnréttisáætlun") from the report type.
+   * ("Niðurstaða launagreiningar" vs. "Jafnréttisáætlun") from the report type.
    */
   generateReportPdf(reportId: string): Promise<ReportPdfResult>
 
