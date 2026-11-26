@@ -666,7 +666,8 @@ flag off: approvals and denials emailed, receipts not picked. An approval or den
 mailbox delivery already got somewhere is not emailed when the flag goes off: one One
 sent is recorded `DONE` by mailbox, an UNCERTAIN or interrupted-at-CreateDocument one is `FAILED` for a person,
 and one whose document One holds unsent waits `PENDING` for the flag. With the flag on, a
-mailbox kind with no case template holds its rows `PENDING` without counting an attempt.
+mailbox kind with no case template or island.is classification holds its rows `PENDING`
+without counting an attempt.
 
 **Still owed.** A row is sent only while the report has a status its notice is owed in,
 checked when it is sent: a receipt while the report is `SUBMITTED`, `POSTPONED` or

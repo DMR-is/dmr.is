@@ -439,18 +439,29 @@ export class NoticeIssuesService implements INoticeIssuesService {
   }
 }
 
-/** The shared rule (`classifyDelivery`), plus what the page acts on. */
+/**
+ * The shared rule (`classifyDelivery`), plus what the page acts on.
+ *
+ * An exhausted row that holds a filed but unsent document is reconciled too,
+ * not re-armed: its send may well have reached the mailbox with a repeat
+ * answer the client did not recognise as one, and re-arming it would only buy
+ * more of the same answer. A person checks One and settles it SENT, or NOT
+ * SENT, which keeps the document and resets the attempts like a re-arm.
+ */
 function needsAction(row: MailboxDeliveryModel): {
   exhausted: boolean
   needsReconciling: boolean
   inProgress: boolean
 } {
   const state = classifyDelivery(row)
+  const filedNotSent = Boolean(row.oneDocumentItemId) && !row.sentAt
   return {
     exhausted: state.exhausted,
     inProgress: state.inProgress,
     needsReconciling:
-      row.status === MailboxDeliveryStatusEnum.UNCERTAIN || state.interrupted,
+      row.status === MailboxDeliveryStatusEnum.UNCERTAIN ||
+      state.interrupted ||
+      (state.exhausted && filedNotSent),
   }
 }
 

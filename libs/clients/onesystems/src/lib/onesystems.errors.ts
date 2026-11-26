@@ -213,9 +213,11 @@ export function isOneSystemsError(error: unknown): error is OneSystemsError {
 
 /**
  * The operations that file or deliver a document, which the client never
- * repeats on its own. A repeated SendDocToIslandIs with the same `ItemID` is
- * answered as already in the mailbox (OneSystems, 26 Nov 2026), so a caller
- * may retry it; a repeated CreateDocument files a second copy.
+ * repeats on its own: it leaves the decision to the caller. Only
+ * CreateDocument is unsafe to repeat (a second copy is filed). SendDocToIslandIs
+ * with the same `ItemID` is safe to repeat: island.is answers a repeat as
+ * already in the mailbox (OneSystems, 26 Nov 2026), and the mailbox delivery
+ * retries every send failure.
  */
 export type OneSystemsNonIdempotentOperation =
   | 'CreateDocument'
@@ -226,11 +228,13 @@ export type OneSystemsNonIdempotentOperation =
  * (CreateDocument) or sent to island.is (SendDocToIslandIs). An error carrying
  * one of these is definitive for that operation whatever its reason or status.
  *
- * TODO(OneSystems): empty on purpose. The spec has no `ErrorNumber` catalogue,
- * and One calls island.is itself inside SendDocToIslandIs, so a
- * `Success: false` may come back after island.is registered the document.
- * OneSystems must confirm which error numbers are raised before a document is
- * filed or sent; add only those, per operation.
+ * TODO(OneSystems): empty on purpose. The spec has no `ErrorNumber` catalogue.
+ * For CreateDocument, OneSystems must confirm which error numbers are raised
+ * before a document is filed; add only those. For SendDocToIslandIs the list
+ * no longer matters: `Success: false` means the mailbox did not take the
+ * document, every error is passed through from the Pósthólf service, and a
+ * repeat is safe (OneSystems, 26 Nov 2026), so the mailbox delivery retries
+ * every send failure whatever this list says.
  */
 export const ONESYSTEMS_PREFLIGHT_ERROR_NUMBERS: Readonly<
   Record<OneSystemsNonIdempotentOperation, ReadonlyArray<string>>

@@ -133,14 +133,18 @@ function matches(row: Row, where: Record<string | symbol, unknown>): boolean {
       !isLiteral(condition)
     ) {
       const ops = condition as Record<symbol, unknown>
+      // As in Postgres, NULL compared with a value is never true: `NULL <> 'X'`,
+      // `NULL IN (...)` and `NULL NOT IN (...)` all filter the row out.
+      const isNull = actual === null || actual === undefined
+      if (Op.in in ops) {
+        return !isNull && (ops[Op.in] as Array<unknown>).includes(actual)
+      }
       if (Op.notIn in ops) {
-        return !(ops[Op.notIn] as Array<unknown>).includes(actual)
+        return !isNull && !(ops[Op.notIn] as Array<unknown>).includes(actual)
       }
       if (Op.ne in ops) {
         // Sequelize writes `{ [Op.ne]: null }` as IS NOT NULL.
-        return ops[Op.ne] === null
-          ? actual !== null && actual !== undefined
-          : actual !== ops[Op.ne]
+        return ops[Op.ne] === null ? !isNull : !isNull && actual !== ops[Op.ne]
       }
       if (Op.lt in ops) {
         const bound = evaluate(ops[Op.lt], row)
@@ -1546,7 +1550,11 @@ describe('MailboxDeliveryService', () => {
             {
               [Op.or]: [
                 { attempts: { [Op.lt]: MAILBOX_DELIVERY_MAX_ATTEMPTS } },
-                { inFlightStep: MailboxDeliveryStepEnum.CREATE_DOCUMENT },
+                {
+                  inFlightStep: {
+                    [Op.in]: [MailboxDeliveryStepEnum.CREATE_DOCUMENT],
+                  },
+                },
               ],
             },
           ],
@@ -1859,6 +1867,61 @@ describe('MailboxDeliveryService', () => {
         status: MailboxDeliveryStatusEnum.SENT,
         inFlightStep: null,
         leaseToken: null,
+        attempts: 1,
+      })
+    })
+
+    it('resumes a send marker on the last attempt left, and spends it', async () => {
+      store.seed({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        oneCaseItemId: 'case-saved',
+        oneDocumentItemId: 'doc-saved',
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS - 1,
+        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        leaseToken: 'crashed-worker',
+        leaseExpiresAt: new Date(Date.now() - MINUTE),
+      })
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'SENT',
+      })
+      expect(one.sendDocToIslandIs).toHaveBeenCalledTimes(1)
+      expect(onlyRow().attempts).toBe(MAILBOX_DELIVERY_MAX_ATTEMPTS)
+    })
+
+    it('stops a send that keeps failing at the cap, with the document filed once, and lists it for a person', async () => {
+      one.sendDocToIslandIs.mockImplementation(async () => {
+        throw new OneSystemsError('SendDocToIslandIs failed', {
+          operation: 'SendDocToIslandIs',
+          reason: 'HTTP',
+          upstreamStatus: 503,
+        })
+      })
+
+      for (let i = 0; i < MAILBOX_DELIVERY_MAX_ATTEMPTS; i++) {
+        await expect(service.deliverToMailbox(input())).rejects.toThrow(
+          OneSystemsError,
+        )
+      }
+      const exhausted = await service.deliverToMailbox(input())
+
+      expect(exhausted).toMatchObject({
+        status: MailboxDeliveryStatusEnum.FAILED,
+        skipped: 'ATTEMPTS_EXHAUSTED',
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+      })
+      expect(one.createDocument).toHaveBeenCalledTimes(1)
+      expect(one.sendDocToIslandIs).toHaveBeenCalledTimes(
+        MAILBOX_DELIVERY_MAX_ATTEMPTS,
+      )
+      expect(onlyRow()).toMatchObject({
+        oneDocumentItemId: 'doc-1',
+        status: MailboxDeliveryStatusEnum.FAILED,
+      })
+      await expect(service.countStuckDeliveries()).resolves.toEqual({
+        UNCERTAIN: 0,
+        INTERRUPTED: 0,
+        ATTEMPTS_EXHAUSTED: 1,
       })
     })
   })
@@ -2578,6 +2641,33 @@ describe('MailboxDeliveryService', () => {
       })
     })
 
+    it('re-arms an exhausted row that still holds a send marker, which the next call resumes', async () => {
+      const row = store.seed({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        oneCaseItemId: 'case-1',
+        oneDocumentItemId: 'doc-1',
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+      })
+
+      await expect(
+        service.rearmExhausted(
+          row.id,
+          MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+          'note',
+        ),
+      ).resolves.toBe(true)
+      expect(onlyRow().attempts).toBe(0)
+
+      await expect(service.deliverToMailbox(input())).resolves.toMatchObject({
+        status: 'SENT',
+      })
+      expect(one.createDocument).not.toHaveBeenCalled()
+      expect(one.sendDocToIslandIs).toHaveBeenCalledWith(
+        expect.objectContaining({ documentItemId: 'doc-1' }),
+      )
+    })
+
     it.each([
       ['attempts left', { attempts: 2 }],
       [
@@ -2656,6 +2746,31 @@ describe('MailboxDeliveryService', () => {
         inFlightStep: null,
         attempts: 0,
         lastError: 'note: filed, not sent',
+      })
+    })
+
+    it('settles an exhausted row holding a filed document as SENT, marker and all', async () => {
+      const row = store.seed({
+        status: MailboxDeliveryStatusEnum.DOCUMENT_CREATED,
+        oneCaseItemId: 'case-1',
+        oneDocumentItemId: 'doc-1',
+        inFlightStep: MailboxDeliveryStepEnum.SEND_DOC_TO_ISLAND_IS,
+        attempts: MAILBOX_DELIVERY_MAX_ATTEMPTS,
+      })
+
+      await expect(
+        service.settleUncertain(row.id, read(row), 'SENT', 'doc-1', 'note'),
+      ).resolves.toBe(true)
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.SENT,
+        oneDocumentItemId: 'doc-1',
+        inFlightStep: null,
+        sentAt: expect.any(Date),
+      })
+      await expect(service.countStuckDeliveries()).resolves.toEqual({
+        UNCERTAIN: 0,
+        INTERRUPTED: 0,
+        ATTEMPTS_EXHAUSTED: 0,
       })
     })
 
@@ -2872,6 +2987,62 @@ describe('MailboxDeliveryService', () => {
         leaseToken: null,
         leaseExpiresAt: null,
       })
+
+    /*
+     * The lease is still this call's (another worker's write that settled the
+     * row did not take it), so only the status guard in `recordFailure` keeps
+     * a definitive failure from rewriting it FAILED, which a retry would then
+     * file a second copy from.
+     */
+    it('records no failure over a row another worker settled while the call was out', async () => {
+      one.createDocument.mockImplementation(async () => {
+        Object.assign(onlyRow(), {
+          status: MailboxDeliveryStatusEnum.UNCERTAIN,
+          inFlightStep: null,
+        })
+        throw new OneSystemsError('CreateDocument answered 400', {
+          operation: 'CreateDocument',
+          reason: 'HTTP',
+          upstreamStatus: 400,
+          isValidationProblemBody: true,
+        })
+      })
+
+      await expect(service.deliverToMailbox(input())).rejects.toThrow(
+        OneSystemsError,
+      )
+
+      expect(onlyRow().status).toBe(MailboxDeliveryStatusEnum.UNCERTAIN)
+    })
+
+    it('makes no CreateDocument when a late save settles the row before its marker', async () => {
+      store.seed({
+        status: MailboxDeliveryStatusEnum.CASE_CREATED,
+        oneCaseItemId: 'case-saved',
+      })
+      interceptUpdate(async (values, apply) => {
+        if (values.inFlightStep === MailboxDeliveryStepEnum.CREATE_DOCUMENT) {
+          // Another worker marks the row UNCERTAIN between this claim and its
+          // marker, keeping this call's lease token in place.
+          Object.assign(onlyRow(), {
+            status: MailboxDeliveryStatusEnum.UNCERTAIN,
+          })
+        }
+        return apply()
+      })
+
+      await expect(service.deliverToMailbox(input())).resolves.toEqual({
+        status: 'UNCERTAIN',
+        deliveryId: onlyRow().id,
+      })
+
+      expect(one.createDocument).not.toHaveBeenCalled()
+      expect(onlyRow()).toMatchObject({
+        status: MailboxDeliveryStatusEnum.UNCERTAIN,
+        inFlightStep: null,
+        leaseToken: null,
+      })
+    })
 
     it('saves a late document id into an UNCERTAIN row but keeps it UNCERTAIN', async () => {
       one.createDocument.mockImplementation(async () => {

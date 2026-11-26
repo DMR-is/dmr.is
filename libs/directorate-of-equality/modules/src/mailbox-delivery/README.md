@@ -16,12 +16,14 @@ A company gets a letter only when all three hold:
    it with `PATCH /api/v1/config/onesystems_mailbox_allowlist` (`none`, `*`, or
    comma-separated kennitölur); no deploy. Dev talks to production One, so on
    dev it names only Jafnréttisstofa's own kennitala.
-3. The kind has a case template in `mailbox-delivery.kinds.ts`. Every kind in
-   use has one (`SKYRSLA` salary, `J-AAETLUN` equality, confirmed by
-   Jafnréttisstofa 30 Sep 2026). A kind without one answers `UNCONFIGURED`,
-   logged at error, before it writes a row. (A delivery whose template is unset
-   after it reached One, by a rollback, answers as its row stands instead; see
-   [Statuses](#statuses).) The dispatcher holds the notice without counting an
+3. The kind has a case template and a valid island.is Category/Type in
+   `mailbox-delivery.kinds.ts`. Every kind in use has both (`SKYRSLA` salary,
+   `J-AAETLUN` equality, confirmed by Jafnréttisstofa 30 Sep 2026; Atvinna /
+   Tilkynning, chosen 26 Nov 2026). `OVERDUE_NOTICE` and `FINES_PRECURSOR`
+   have neither: nothing sends them yet. A kind without them answers
+   `UNCONFIGURED`, logged at error, before it writes a row. (A delivery whose
+   template is unset after it reached One, by a rollback, answers as its row
+   stands instead; see [Statuses](#statuses).) The dispatcher holds the notice without counting an
    attempt, and the reminder task emails the reminder instead.
 
 A company failing 1 or 2 is treated as though mailbox delivery were off: the
@@ -231,10 +233,24 @@ for when the page is not an option.
 An exhausted row has used all its attempts without being sent or becoming
 UNCERTAIN. It is usually FAILED, and `last_error_number` says why. A forward
 status (`PENDING`, `CASE_CREATED`, `DOCUMENT_CREATED`) means the last attempt
-ended while no call was marked (the process died, or it lost the lease), so
-no document call of that attempt is in doubt: anything it got back from One
-is saved in the row's ids. Only an unanswered CreateCase can have left
-something in One that the row does not name (see below).
+ended without recording its outcome (the process died, or it lost the lease).
+No CreateDocument of that attempt is in doubt: a CreateDocument marker would
+have made the row UNCERTAIN, not exhausted. It may still hold a send marker
+(`in_flight_step = 'SEND_DOC_TO_ISLAND_IS'`), which the next call resumes.
+Anything else the attempt got back from One is saved in the row's ids. Only an
+unanswered CreateCase can have left something in One that the row does not
+name (see below).
+
+**A row holding a filed document** (`one_document_item_id` set) is reconciled,
+not re-armed: its send may have reached the mailbox, with a repeat answer the
+client did not recognise as one (only "Færsla þegar skráð." naming this
+document counts; see [A duplicate answer](#a-duplicate-answer)), and re-arming
+it would only buy more of that answer. Check OneCRM's list of documents sent
+to the mailbox. On the Tilkynningar page, **Staðfesta stöðu** offers it:
+"Var sent" settles it SENT, "Var ekki sent" re-arms it from the filed document.
+By SQL, settle it SENT as in step 4 of
+[Reconciling an UNCERTAIN row](#reconciling-an-uncertain-row), matching its
+own status instead of `'UNCERTAIN'`, or re-arm it as below.
 
 ```sql
 SELECT id, company_id, kind, idempotency_key, status,
@@ -262,14 +278,15 @@ UPDATE mailbox_delivery
 SET attempts = 0,
     last_error = 'Re-armed by <name> on <date>: <what was fixed>'
 WHERE id = '<delivery id>'
-  AND status = 'FAILED'
+  AND status = '<status as listed>'
+  AND attempts >= 5
   AND (in_flight_step IS NULL OR in_flight_step = 'SEND_DOC_TO_ISLAND_IS');
 ```
 
-A send marker left on an exhausted row is harmless: the next call clears it and
-sends the filed document again.
-
-For a row in a forward status, put that status in place of `'FAILED'`.
+Use the status the list showed: `FAILED`, or the forward status it stopped at
+(a `DOCUMENT_CREATED` row with a send marker is one). A send marker left on an
+exhausted row is harmless: the next call clears it and sends the filed
+document again.
 Re-arming does not send anything by itself; the next `deliverToMailbox` call
 with the same key does. Who makes that call depends on the kind:
 

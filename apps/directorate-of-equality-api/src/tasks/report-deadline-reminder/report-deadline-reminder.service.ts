@@ -245,7 +245,7 @@ export class ReportDeadlineReminderService
         : null
 
     for (const company of companies) {
-      // A kind with no case template yet falls back to email, so a band that
+      // A kind with no case template or island.is classification yet falls back to email, so a band that
       // closes before the template is set is not lost. A company not on the
       // mailbox allowlist goes by email too, as with the flag off. Both
       // channels write `kind.sentEventType`, so the mailbox does not send it
@@ -518,7 +518,7 @@ export class ReportDeadlineReminderService
     // Logged at error by `deliverToMailbox`, once per kind per process.
     if (result?.status === 'UNCONFIGURED') {
       this.logger.info(
-        `${kind.reportType} ${tier} reminder for company ${company.id} goes by email: mailbox kind ${result.kind} has no case template`,
+        `${kind.reportType} ${tier} reminder for company ${company.id} goes by email: mailbox kind ${result.kind} has no case template or island.is classification`,
         meta,
       )
       return false

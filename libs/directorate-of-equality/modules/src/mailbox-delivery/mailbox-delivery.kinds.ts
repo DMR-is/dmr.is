@@ -103,8 +103,8 @@ const EQUALITY_CASE_TYPE: string | undefined = 'J-AAETLUN'
  * How every DoE notice is classified, in two unrelated halves:
  * - One's own (`docCategory`, `docType`, `author`) stays empty, which One
  *   accepts, until Jafnréttisstofa asks for values.
- * - island.is's is Atvinna / Tilkynning for every notice kind (chosen 26 Nov
- *   2026 from Stafrænt Ísland's lists).
+ * - island.is's is Atvinna / Tilkynning for every notice kind in use (chosen
+ *   26 Nov 2026 from Stafrænt Ísland's lists).
  */
 const NOTICE_CLASSIFICATION = {
   docCategory: '',
@@ -122,8 +122,9 @@ const equality = { caseType: EQUALITY_CASE_TYPE, ...NOTICE_CLASSIFICATION }
  *
  * The report kinds use their report type's case template (see
  * `SALARY_CASE_TYPE`).
- * `OVERDUE_NOTICE` and `FINES_PRECURSOR` have no template at all: whether
- * those notices go to the mailbox is still open.
+ * `OVERDUE_NOTICE` and `FINES_PRECURSOR` have no template and no island.is
+ * classification at all: nothing sends them yet, and whether those notices
+ * go to the mailbox is still open. Both must be set before either can be.
  */
 export const MAILBOX_DELIVERY_KINDS: MailboxDeliveryKindConfigs = {
   [MailboxDeliveryKindEnum.OVERDUE_NOTICE]: {},

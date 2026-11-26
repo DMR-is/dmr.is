@@ -50,7 +50,7 @@ export class NoticeIssueDeliveryDto {
 
   @ApiBoolean({
     description:
-      'A call to One may have gone through: UNCERTAIN, or a call interrupted mid-way. Must be reconciled against One before anything is sent again.',
+      'A call to One may have gone through: UNCERTAIN, a call interrupted mid-way, or out of attempts with a filed document that may have reached the mailbox. Must be reconciled against One before anything is sent again.',
   })
   needsReconciling!: boolean
 

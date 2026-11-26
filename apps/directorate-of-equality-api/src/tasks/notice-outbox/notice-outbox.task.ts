@@ -244,7 +244,7 @@ export class NoticeOutboxTask implements OnModuleInit {
     }
 
     this.logger.error(
-      `ONESYSTEMS_ENABLED is on but ${plural(kinds.length, 'mailbox kind has', 'mailbox kinds have')} no case template: their notices are held and their reminders emailed`,
+      `ONESYSTEMS_ENABLED is on but ${plural(kinds.length, 'mailbox kind has', 'mailbox kinds have')} no case template or island.is classification: their notices are held and their reminders emailed`,
       { context: LOGGING_CONTEXT, kinds, when },
     )
   }
