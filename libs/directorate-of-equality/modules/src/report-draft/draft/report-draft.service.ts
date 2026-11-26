@@ -12,6 +12,7 @@ import { InjectConnection, InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { IEqualityPlanUploadService } from '../../equality-plan-upload/equality-plan-upload.service.interface'
 import { resolveOptionalEqualityContent } from '../../report/lib/equality-content'
 import { providerIdConflictMessages } from '../../report/lib/provider-id-conflict'
 import { isReportIdentifierCollision } from '../../report/lib/report-identifier'
@@ -77,6 +78,8 @@ export class ReportDraftService implements IReportDraftService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectConnection() private readonly sequelize: Sequelize,
+    @Inject(IEqualityPlanUploadService)
+    private readonly equalityPlanUploadService: IEqualityPlanUploadService,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
     @InjectModel(ReportEmployeeModel)
@@ -184,17 +187,26 @@ export class ReportDraftService implements IReportDraftService {
       resolveDraftSalaryDataBasis(input, report.salaryDataBasis),
     )
 
-    // Null when the patch mentions neither content field, which is the common
-    // case — a PATCH setting only a phone number must not touch the narrative.
-    const equalityContent = resolveOptionalEqualityContent(input)
+    // A staged plan PDF (`equalityReportPdfKey`) is resolved to its inline
+    // base64 form first, so the rest of the PATCH cannot tell the two apart.
+    await this.equalityPlanUploadService.withStagedPlan(
+      report.id,
+      input,
+      async (content) => {
+        // Null when the patch mentions neither content field, which is the
+        // common case — a PATCH setting only a phone number must not touch the
+        // narrative.
+        const equalityContent = resolveOptionalEqualityContent(content)
 
-    if (equalityContent) {
-      Object.assign(patch, equalityContent)
-    }
+        if (equalityContent) {
+          Object.assign(patch, equalityContent)
+        }
 
-    if (Object.keys(patch).length > 0) {
-      await this.reportModel.update(patch, { where: { id: report.id } })
-    }
+        if (Object.keys(patch).length > 0) {
+          await this.reportModel.update(patch, { where: { id: report.id } })
+        }
+      },
+    )
 
     return this.getDraftDetail(providerId, company)
   }

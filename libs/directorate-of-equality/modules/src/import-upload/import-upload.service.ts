@@ -114,16 +114,39 @@ const BOUNDARY_EXTENSIONS: Record<ImportUploadBoundary, readonly string[]> = {
   ],
   // Mirrors ReportAttachmentExtensionEnum and the report_attachment CHECK.
   [ImportUploadBoundary.EQUALITY_ATTACHMENT]: ['pdf', 'docx', 'xlsx', 'xls'],
+  // The plan is stored as a PDF or as HTML; only the PDF arrives as a file.
+  [ImportUploadBoundary.EQUALITY_PLAN]: ['pdf'],
 }
 
 const extensionGroup = (boundary: ImportUploadBoundary) =>
   BOUNDARY_EXTENSIONS[boundary].join('|')
 
-/** doe-imports/<boundary>/<uuid>.<ext>, with <ext> allowed for that boundary. */
+/**
+ * Boundaries whose keys carry the id of the record they were issued for:
+ * `doe-imports/<boundary>/<scope>/<uuid>.<ext>`.
+ *
+ * A key is a bearer credential for its object until the object is consumed or
+ * expires, and keys reach logs (the shared AWS service logs its arguments).
+ * Where the object can be read back by whoever registers it — the plan PDF is
+ * served on `GET equality-content/pdf` — the key has to be useless to anyone
+ * but the record it was minted for, so the scope is in the key and the
+ * consumer checks it against the record it is writing to.
+ */
+const SCOPED_BOUNDARIES: ReadonlySet<ImportUploadBoundary> = new Set([
+  ImportUploadBoundary.EQUALITY_PLAN,
+])
+
+const keyPatternSource = (boundary: ImportUploadBoundary) =>
+  SCOPED_BOUNDARIES.has(boundary)
+    ? `^${KEY_PREFIX}/${boundary}/${UUID}/${UUID}\\.(?:${extensionGroup(boundary)})$`
+    : `^${KEY_PREFIX}/${boundary}/${UUID}\\.(?:${extensionGroup(boundary)})$`
+
+/**
+ * doe-imports/<boundary>/<uuid>.<ext>, or doe-imports/<boundary>/<scope>/<uuid>.<ext>
+ * for a scoped boundary, with <ext> allowed for that boundary.
+ */
 const keyPattern = (boundary: ImportUploadBoundary) =>
-  new RegExp(
-    `^${KEY_PREFIX}/${boundary}/${UUID}\\.(?:${extensionGroup(boundary)})$`,
-  )
+  new RegExp(keyPatternSource(boundary))
 
 /**
  * Matches a key for any known boundary — used when the boundary isn't known yet.
@@ -132,13 +155,10 @@ const keyPattern = (boundary: ImportUploadBoundary) =>
  * extension, which would accept `doe-imports/admin/<uuid>.png`.
  */
 const anyKeyPattern = new RegExp(
-  Object.values(ImportUploadBoundary)
-    .map(
-      (boundary) =>
-        `^${KEY_PREFIX}/${boundary}/${UUID}\\.(?:${extensionGroup(boundary)})$`,
-    )
-    .join('|'),
+  Object.values(ImportUploadBoundary).map(keyPatternSource).join('|'),
 )
+
+const UUID_PATTERN = new RegExp(`^${UUID}$`)
 
 const isAllowedExtension = (
   boundary: ImportUploadBoundary,
@@ -172,7 +192,7 @@ export class ImportUploadService implements IImportUploadService {
 
   async createUpload(
     boundary: ImportUploadBoundary,
-    opts: { extension?: string } = {},
+    opts: { extension?: string; scope?: string } = {},
   ): Promise<PresignUploadResponseDto> {
     // Defaults to xlsx so every existing caller — and the import path's whole
     // key contract — is unchanged by this parameter existing.
@@ -184,7 +204,21 @@ export class ImportUploadService implements IImportUploadService {
       throw new BadRequestException(`Unsupported file type: .${extension}`)
     }
 
-    const key = `${KEY_PREFIX}/${boundary}/${randomUUID()}.${extension}`
+    // A programming error either way, never the caller's: the scope comes from
+    // a record the API resolved, not from the request.
+    const scoped = SCOPED_BOUNDARIES.has(boundary)
+    if (scoped !== (opts.scope !== undefined)) {
+      throw new Error(
+        `Boundary ${boundary} ${scoped ? 'requires' : 'does not take'} a key scope`,
+      )
+    }
+    if (opts.scope !== undefined && !UUID_PATTERN.test(opts.scope)) {
+      throw new Error('A key scope must be a lowercase UUID')
+    }
+
+    const key = opts.scope
+      ? `${KEY_PREFIX}/${boundary}/${opts.scope}/${randomUUID()}.${extension}`
+      : `${KEY_PREFIX}/${boundary}/${randomUUID()}.${extension}`
 
     if (this.isLocal) {
       // The web's putWorkbookToPresignedUrl PUTs the file to whatever URL it's
@@ -194,7 +228,7 @@ export class ImportUploadService implements IImportUploadService {
       this.logger.debug('Issued local import upload URL (S3 bypassed)', {
         context: LOGGING_CONTEXT,
         boundary,
-        key,
+        keyHash: hashKey(key),
       })
 
       return { url, key }
@@ -204,10 +238,12 @@ export class ImportUploadService implements IImportUploadService {
       await this.aws.getPresignedUrl(key, getDoeImportsBucket())
     ).unwrap()
 
+    // The hash, not the key: a key is a bearer credential for its object
+    // until the object is consumed or expires.
     this.logger.debug('Issued presigned import upload URL', {
       context: LOGGING_CONTEXT,
       boundary,
-      key,
+      keyHash: hashKey(key),
     })
 
     return { url, key }
@@ -222,8 +258,21 @@ export class ImportUploadService implements IImportUploadService {
    * inside the gated region would let an invalid key sit in the queue and
    * delay its own 400.
    */
-  assertKeyWithinBoundary(key: string, boundary: ImportUploadBoundary): void {
+  assertKeyWithinBoundary(
+    key: string,
+    boundary: ImportUploadBoundary,
+    scope?: string,
+  ): void {
     if (!keyPattern(boundary).test(key)) {
+      throw new BadRequestException('Invalid import upload key')
+    }
+
+    // Same 400 as a malformed key: the caller learns nothing about whose
+    // upload it holds.
+    if (
+      scope !== undefined &&
+      !key.startsWith(`${KEY_PREFIX}/${boundary}/${scope}/`)
+    ) {
       throw new BadRequestException('Invalid import upload key')
     }
   }
@@ -360,7 +409,7 @@ export class ImportUploadService implements IImportUploadService {
       // (or, locally, by the OS temp dir).
       this.logger.warn('Failed to delete staged import object', {
         context: LOGGING_CONTEXT,
-        key,
+        keyHash: hashKey(key),
         error,
       })
     }
@@ -389,7 +438,7 @@ export class ImportUploadService implements IImportUploadService {
 
     this.logger.debug('Staged local import upload (S3 bypassed)', {
       context: LOGGING_CONTEXT,
-      key,
+      keyHash: hashKey(key),
     })
   }
 

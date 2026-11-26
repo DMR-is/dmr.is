@@ -16,8 +16,10 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
+import { IEqualityPlanUploadService } from '../../equality-plan-upload/equality-plan-upload.service.interface'
 import { REPORT_IDENTIFIER_INDEX } from '../../report/lib/report-identifier'
 import {
+  EqualityContentTypeEnum,
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
@@ -82,6 +84,12 @@ const mockLogger = {
   error: jest.fn(),
 }
 
+const equalityPlanPresign = jest.fn()
+const equalityPlanWithStagedPlan = jest.fn(
+  (_reportId: string, input: unknown, write: (content: unknown) => unknown) =>
+    write(input),
+)
+
 describe('ReportDraftService', () => {
   let service: ReportDraftService
   let reportCreate: jest.Mock
@@ -103,6 +111,8 @@ describe('ReportDraftService', () => {
   })
 
   beforeEach(async () => {
+    equalityPlanPresign.mockClear()
+    equalityPlanWithStagedPlan.mockClear()
     reportCreate = jest.fn().mockResolvedValue({ id: REPORT_ID })
     reportFindOne = jest.fn().mockResolvedValue(null)
     reportFindAll = jest.fn().mockResolvedValue([])
@@ -123,6 +133,15 @@ describe('ReportDraftService', () => {
       providers: [
         ReportDraftService,
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
+        {
+          // Passthrough: a request without a staged key reaches the write
+          // unchanged. The key path is covered by the service's own spec.
+          provide: IEqualityPlanUploadService,
+          useValue: {
+            presign: equalityPlanPresign,
+            withStagedPlan: equalityPlanWithStagedPlan,
+          },
+        },
         {
           // createDraft wraps its insert in a nested transaction so the
           // replay-recovery SELECT is legal after a unique violation aborts the
@@ -383,6 +402,44 @@ describe('ReportDraftService', () => {
       createdAt: new Date('2026-06-30T00:00:00Z'),
       updatedAt: new Date('2026-06-30T00:00:00Z'),
     }
+
+    it('resolves a staged plan PDF key before writing the content', async () => {
+      reportFindOne.mockResolvedValue(draftRow)
+      reportUpdate.mockResolvedValueOnce([1])
+      // Stands in for the fetched upload: what the plan service hands `write`.
+      equalityPlanWithStagedPlan.mockImplementationOnce(
+        (_reportId: string, _input: unknown, write: (c: unknown) => unknown) =>
+          write({
+            equalityReportPdf: Buffer.from('%PDF-1.7\n').toString('base64'),
+            equalityReportPdfFilename: 'plan.pdf',
+          }),
+      )
+      const input = {
+        contactName: 'Jóna',
+        equalityReportPdfKey:
+          'doe-imports/equality-plan/11111111-1111-4111-8111-111111111111.pdf',
+        equalityReportPdfFilename: 'plan.pdf',
+      }
+
+      await service.updateDraft(PROVIDER_ID, COMPANY, input)
+
+      expect(equalityPlanWithStagedPlan).toHaveBeenCalledWith(
+        REPORT_ID,
+        input,
+        expect.any(Function),
+      )
+      // One update: the header keys and the resolved plan land together.
+      expect(reportUpdate).toHaveBeenCalledTimes(1)
+      expect(reportUpdate).toHaveBeenCalledWith(
+        {
+          contactName: 'Jóna',
+          equalityReportContent: Buffer.from('%PDF-1.7\n').toString('base64'),
+          equalityReportContentType: EqualityContentTypeEnum.PDF,
+          equalityReportContentFilename: 'plan.pdf',
+        },
+        { where: { id: REPORT_ID } },
+      )
+    })
 
     it('writes only the provided keys and clears on explicit null', async () => {
       // 1st findOne → ownership/draft check; 2nd findOne → getDraftDetail reload.
