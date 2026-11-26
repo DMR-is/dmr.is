@@ -33,12 +33,6 @@ export interface ICaseCreateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<CaseChannel>>
 
-  createCaseCategory(
-    caseId: string,
-    categoryId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
-
   createCaseAddition(
     caseId: string,
     title: string,

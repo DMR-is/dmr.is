@@ -3,7 +3,6 @@ import { Transaction } from 'sequelize'
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import {
   AddCaseAdditionalPartyBody,
-  AddCaseAdvertCorrection,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
@@ -11,7 +10,6 @@ import {
   CreateCaseResponseDto,
   CreateRegulationCancelBody,
   CreateRegulationChangeBody,
-  DeleteCaseAdvertCorrection,
   DepartmentEnum,
   GetCaseResponse,
   GetCasesQuery,
@@ -24,7 +22,6 @@ import {
   GetCasesWithStatusCountQuery,
   GetCommunicationSatusesResponse,
   GetInstitutionsResponse,
-  GetNextPublicationNumberResponse,
   GetPaymentQuery,
   GetPaymentResponse,
   GetTagsResponse,
@@ -135,11 +132,6 @@ export interface ICaseService {
     body: UpdateCaseTypeBody,
   ): Promise<ResultWrapper>
 
-  updateCaseCategories(
-    caseId: string,
-    body: UpdateCategoriesBody,
-  ): Promise<ResultWrapper>
-
   updateCaseAndAdvertCategories(
     caseId: string,
     body: UpdateCategoriesBody,
@@ -185,22 +177,6 @@ export interface ICaseService {
   updateCaseCommunicationStatusByStatus(
     caseId: string,
     body: CaseCommunicationStatus,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
-
-  getNextCasePublicationNumber(
-    departmentId: string,
-  ): Promise<ResultWrapper<GetNextPublicationNumberResponse>>
-
-  postCaseCorrection(
-    caseId: string,
-    body: AddCaseAdvertCorrection,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
-
-  deleteCorrection(
-    caseId: string,
-    body: DeleteCaseAdvertCorrection,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 

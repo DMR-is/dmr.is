@@ -172,7 +172,6 @@ const getStatusText = (regulation: RegulationMaybeDiff): string => {
   return `Útgáfa sem gilti á tímabilinu ${fmtDateFrom} til ${fmtDateTo}`
 }
 
-console.log('Current working directory:', process.cwd())
 // ---------------------------------------------------------------------------
 // esbuild flattens the bundle, so in production the stylesheet ends up right
 // next to this module. Loaded unbundled (tests, scripts) it is still at its

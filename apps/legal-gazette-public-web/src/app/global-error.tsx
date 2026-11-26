@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 
+import { getLogger } from '@dmr.is/logging-next'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
@@ -9,16 +10,17 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+const logger = getLogger('global-error')
+
 export default function GlobalError({
   error,
   reset,
 }: {
-  error: Error
+  error: Error & { digest?: string }
   reset: () => void
 }) {
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log(error)
+    logger.error('Unhandled error', { error, digest: error.digest })
   }, [error])
 
   return (

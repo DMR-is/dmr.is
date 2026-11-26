@@ -1,13 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
-import { ApiOptionalBoolean, ApiOptionalNumber } from '@dmr.is/decorators'
-
-export class BackfillHtmlQueryDto {
-  @ApiOptionalBoolean({
-    description: 'If true, no changes are persisted to the database',
-  })
-  dryRun?: boolean
-}
+import { ApiOptionalNumber } from '@dmr.is/decorators'
 
 export class BackfillHtmlItemDto {
   @ApiProperty({ description: 'Publication ID' })

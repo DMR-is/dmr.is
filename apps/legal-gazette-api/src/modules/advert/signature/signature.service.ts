@@ -16,20 +16,6 @@ export class SignatureService implements ISignatureService {
     private readonly advertModel: typeof AdvertModel,
   ) {}
 
-  async getSignatureById(id: string): Promise<SignatureDto> {
-    const signature = await this.signatureModel.findByPkOrThrow(id)
-
-    return signature.fromModel()
-  }
-
-  async getAdvertSignature(advertId: string): Promise<SignatureDto> {
-    const signature = await this.signatureModel.findOneOrThrow({
-      where: { advertId },
-    })
-
-    return signature.fromModel()
-  }
-
   async updateSignature(
     id: string,
     advertId: string,

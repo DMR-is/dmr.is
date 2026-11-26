@@ -107,7 +107,7 @@ describe('buildSalaryReportHtml', () => {
   it('renders all overview sections', () => {
     const html = buildSalaryReportHtml(makeData())
 
-    expect(html).toContain('Jafnlaunaúttekt')
+    expect(html).toContain('Niðurstaða launagreiningar')
     expect(html).toContain('Testing-hugbúnaður ehf.')
     expect(html).toContain('000000-0000')
     expect(html).toContain('Æðsti stjórnandi')

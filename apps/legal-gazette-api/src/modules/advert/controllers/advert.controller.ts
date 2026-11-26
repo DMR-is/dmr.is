@@ -57,13 +57,6 @@ export class AdvertController {
   }
 
   @ApplicationWebScopes()
-  @Get('getMyAdverts')
-  @LGResponse({ operationId: 'getMyAdverts', type: GetMyAdvertsDto })
-  getMyAdverts(@Query() query: PagingQuery, @CurrentUser() user: DMRUser) {
-    return this.advertService.getMyAdverts(query, user)
-  }
-
-  @ApplicationWebScopes()
   @Get('getMyLegacyAdverts')
   @LGResponse({ operationId: 'getMyLegacyAdverts', type: GetMyAdvertsDto })
   getMyLegacyAdverts(

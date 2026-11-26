@@ -9,10 +9,6 @@ import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
-  CreateAdvertDto,
-  CreateAdvertResponseDto,
-} from '../../../modules/advert/dto/advert.dto'
-import {
   CreateCommonAdvertAndApplicationDto,
   CreateRecallBankruptcyAdvertAndApplicationDto,
   CreateRecallDeceasedAdvertAndApplicationDto,
@@ -30,19 +26,6 @@ export class AdvertCreateController {
   constructor(
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
   ) {}
-
-  @Post()
-  @LGResponse({ operationId: 'createAdvert', type: CreateAdvertResponseDto })
-  createAdvert(
-    @Body() body: CreateAdvertDto,
-    @CurrentUser() user: DMRUser,
-  ): Promise<CreateAdvertResponseDto> {
-    return this.advertService.createAdvert({
-      ...body,
-      createdBy: user.fullName,
-      createdByNationalId: user.nationalId,
-    })
-  }
 
   @Post('/template/common')
   @LGResponse({ operationId: 'createAdvertAndCommonApplication' })

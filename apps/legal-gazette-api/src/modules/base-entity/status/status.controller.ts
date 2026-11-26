@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  NotFoundException,
-  Param,
-  UseGuards,
-} from '@nestjs/common'
+import { Controller, Get, UseGuards } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
@@ -13,7 +7,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
-import { StatusDto, StatusModel } from '../../../models/status.model'
+import { StatusModel } from '../../../models/status.model'
 import { GetStatusesDto } from '../../base-entity/dto/base-entity-query.dto'
 
 @Controller({
@@ -36,29 +30,5 @@ export class StatusController {
     return {
       statuses: statuses.map((status) => status.fromModel()),
     }
-  }
-
-  @Get(':id')
-  @LGResponse({ operationId: 'getStatus', type: StatusDto })
-  async findById(@Param('id') id: string): Promise<StatusDto> {
-    const model = await this.statusModel.findByPk(id)
-
-    if (!model) {
-      throw new NotFoundException()
-    }
-
-    return model.fromModel()
-  }
-
-  @Get('slug/:slug')
-  @LGResponse({ operationId: 'getStatusBySlug', type: StatusDto })
-  async findBySlug(@Param('slug') slug: string): Promise<StatusDto> {
-    const model = await this.statusModel.findOne({ where: { slug: slug } })
-
-    if (!model) {
-      throw new NotFoundException()
-    }
-
-    return model.fromModel()
   }
 }

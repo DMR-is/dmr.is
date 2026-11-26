@@ -17,11 +17,6 @@ export interface IUserService {
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUsersResponse>>
 
-  getUsersByUserInvolvedParties(
-    query: GetUsersQuery,
-    currentUser: UserDto,
-  ): Promise<ResultWrapper<GetUsersResponse>>
-
   getUserByNationalId(
     nationalId: string,
   ): Promise<ResultWrapper<GetUserResponse>>
@@ -48,14 +43,6 @@ export interface IUserService {
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUserResponse>>
 
-  createUserFromInvolvedParty(
-    body: {
-      firstName: string
-      lastName?: string
-      nationalId: string
-    },
-    involvedPartyId: string,
-  ): Promise<ResultWrapper<GetUserResponse>>
   updateUser(
     userId: string,
     body: UpdateUserDto,

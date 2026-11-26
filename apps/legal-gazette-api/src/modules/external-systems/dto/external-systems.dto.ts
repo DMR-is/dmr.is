@@ -15,27 +15,6 @@ import { ApiDateTime } from '@dmr.is/decorators'
 
 import { CreateSignatureDto } from '../../advert/signature/dto/signature.dto'
 
-export enum AnnouncementItem {
-  A = 'A',
-  B = 'B',
-  C = 'C',
-  D = 'D',
-  E = 'E',
-  F = 'F',
-  G = 'G',
-  H = 'H',
-  J = 'J',
-  K = 'K',
-  L = 'L',
-  M = 'M',
-  N = 'N',
-  O = 'O',
-  P = 'P',
-  R = 'R',
-  S = 'S',
-  T = 'T',
-}
-
 export class ResponsiblePartySignature extends CreateSignatureDto {}
 
 export class ObjectIssuer {

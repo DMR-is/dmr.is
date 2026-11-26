@@ -6208,7 +6208,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Generates and returns the report as a PDF. The layout (\"Jafnlaunaúttekt\" or \"Jafnréttisáætlun\") is chosen from the report type.",
+            "description": "Generates and returns the report as a PDF. The layout (\"Niðurstaða launagreiningar\" or \"Jafnréttisáætlun\") is chosen from the report type.",
             "content": {
               "application/pdf": {
                 "schema": { "type": "string", "format": "binary" }

@@ -8,7 +8,6 @@ import {
 } from '../../models/communication-channel.model'
 import {
   CreateCommunicationChannelDto,
-  GetCommunicationChannelsDto,
   UpdateCommunicationChannelDto,
 } from './dto/communication-channel.dto'
 import { ICommunicationChannelService } from './communication-channel.service.interface'
@@ -23,17 +22,6 @@ export class CommunicationChannelService
     private readonly advertModel: typeof AdvertModel,
   ) {}
 
-  async getChannelsByAdvertId(
-    advertId: string,
-  ): Promise<GetCommunicationChannelsDto> {
-    const channels = await this.communicationChannelModel.findAll({
-      where: { advertId: advertId },
-    })
-
-    return {
-      channels: channels.map((channel) => channel.fromModel()),
-    }
-  }
   async createChannel(
     advertId: string,
     body: CreateCommunicationChannelDto,

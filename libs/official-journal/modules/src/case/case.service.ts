@@ -29,7 +29,6 @@ import {
   CreateCaseResponseDto,
   CreateRegulationCancelBody,
   CreateRegulationChangeBody,
-  DeleteCaseAdvertCorrection,
   DepartmentEnum,
   GetCaseResponse,
   GetCasesQuery,
@@ -42,7 +41,6 @@ import {
   GetCasesWithStatusCountQuery,
   GetCommunicationSatusesResponse,
   GetInstitutionsFullResponse,
-  GetNextPublicationNumberResponse,
   GetPaymentQuery,
   GetPaymentResponse,
   GetTagsResponse,
@@ -670,16 +668,6 @@ export class CaseService implements ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseType(caseId, body, transaction)
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  updateCaseCategories(
-    caseId: string,
-    body: UpdateCategoriesBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseCategories(caseId, body, transaction)
   }
 
   @LogAndHandle()
@@ -1923,55 +1911,6 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  @Transactional()
-  async deleteCorrection(
-    caseId: string,
-    body: DeleteCaseAdvertCorrection,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['advertId'],
-    })
-
-    if (!caseLookup) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Case not found',
-      })
-    }
-
-    const { advertId } = caseLookup
-
-    if (!advertId) {
-      return ResultWrapper.err({
-        code: 409,
-        message: 'Advert id not found, case not published.',
-      })
-    }
-
-    const correctionLookup = await this.advertCorrectionModel.findOne({
-      where: {
-        id: body.correctionId,
-        advertId: advertId,
-      },
-      transaction,
-    })
-
-    if (!correctionLookup) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Correction not found for this case',
-      })
-    }
-
-    await correctionLookup.destroy({ transaction })
-
-    return ResultWrapper.ok({
-      message: 'Correction deleted successfully',
-    })
-  }
-
-  @LogAndHandle()
   async getCases(
     params: GetCasesQuery,
   ): Promise<ResultWrapper<GetCasesReponse>> {
@@ -2136,20 +2075,6 @@ export class CaseService implements ICaseService {
       departments: counterResults,
       cases: mapped,
       paging,
-    })
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async getNextCasePublicationNumber(
-    departmentId: string,
-  ): Promise<ResultWrapper<GetNextPublicationNumberResponse>> {
-    const publicationNumber = (
-      await this.utilityService.getNextPublicationNumber(departmentId)
-    ).unwrap()
-
-    return ResultWrapper.ok({
-      publicationNumber,
     })
   }
 

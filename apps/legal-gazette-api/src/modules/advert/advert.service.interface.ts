@@ -66,8 +66,6 @@ export interface IAdvertService {
     currentUser: DMRUser,
   ): Promise<void>
 
-  getMyAdverts(query: PagingQuery, user: DMRUser): Promise<GetMyAdvertsDto>
-
   getMyLegacyAdverts(
     query: PagingQuery,
     user: DMRUser,

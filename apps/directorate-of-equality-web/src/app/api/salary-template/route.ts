@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 
 import { getBaseUrl } from '../../../lib/api/createClient'
-import { authOptions } from '../../../lib/auth/authOptions'
+import { getServerIdToken } from '../../../lib/auth/getServerToken'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -14,14 +13,14 @@ const XLSX_MIME =
  * file with an attachment disposition so the browser downloads it.
  */
 export async function GET() {
-  const session = await getServerSession(authOptions)
-  if (session?.invalid || !session?.idToken) {
+  const idToken = await getServerIdToken()
+  if (!idToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const res = await fetch(
     `${getBaseUrl()}/api/v1/admin-report/reports/excel/template`,
-    { headers: { Authorization: `Bearer ${session.idToken}` } },
+    { headers: { Authorization: `Bearer ${idToken}` } },
   )
 
   if (!res.ok) {

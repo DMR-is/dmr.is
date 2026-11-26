@@ -1,8 +1,12 @@
+import { NextRequest, NextResponse } from 'next/server'
+
 import {
   appAuthCookies,
+  expireAppAuthCookies,
   expiredAuthCookieOptions,
   isAppAuthCookie,
   sessionCookieName,
+  sessionCookieNames,
 } from './sessionCookies'
 
 // The point of the prefix is that two apps on one host stop sharing a session
@@ -122,5 +126,135 @@ describe('sessionCookies', () => {
       setEnv({ NODE_ENV: 'development' })
       expect(expiredAuthCookieOptions().secure).toBe(false)
     })
+  })
+
+  describe('sessionCookieNames', () => {
+    it('is the one prefixed name for an app with its own prefix', () => {
+      setEnv({ NODE_ENV: 'development' })
+      expect(sessionCookieNames('lg-web')).toEqual(['lg-web.session-token'])
+    })
+
+    it('is both variants of the default name otherwise, secure first', () => {
+      setEnv({ NODE_ENV: 'development' })
+      expect(sessionCookieNames()).toEqual([
+        '__Secure-next-auth.session-token',
+        'next-auth.session-token',
+      ])
+    })
+  })
+
+  describe('expireAppAuthCookies', () => {
+    const expire = (cookies: Record<string, string>, prefix?: string) => {
+      const request = new NextRequest('http://localhost:3000/api/auth/logout', {
+        headers: {
+          cookie: Object.entries(cookies)
+            .map(([k, v]) => `${k}=${v}`)
+            .join('; '),
+        },
+      })
+      const response = NextResponse.next()
+      expireAppAuthCookies(request, response, prefix)
+
+      return Object.fromEntries(
+        response.headers.getSetCookie().map((header) => {
+          const [pair, ...attrs] = header.split(/;\s*/)
+          return [
+            pair.split('=')[0],
+            { pair, attrs: attrs.map((a) => a.toLowerCase()) },
+          ]
+        }),
+      )
+    }
+
+    it('expires the full set under the prefix, plain, in development', () => {
+      setEnv({ NODE_ENV: 'development' })
+      const cookies = expire({}, 'lg-web')
+
+      expect(Object.keys(cookies).sort()).toEqual([
+        'lg-web.callback-url',
+        'lg-web.csrf-token',
+        'lg-web.nonce',
+        'lg-web.pkce.code_verifier',
+        'lg-web.session-token',
+        'lg-web.state',
+      ])
+      for (const cookie of Object.values(cookies)) {
+        expect(cookie.attrs).toEqual(
+          expect.arrayContaining([
+            'path=/',
+            'max-age=0',
+            'httponly',
+            'samesite=lax',
+          ]),
+        )
+        expect(cookie.attrs).not.toContain('secure')
+        expect(
+          cookie.attrs.some((a) => a.startsWith('expires=thu, 01 jan 1970')),
+        ).toBe(true)
+        expect(cookie.pair).toMatch(/=$/)
+      }
+    })
+
+    it('uses __Secure- / __Host- names, each with Secure, in production', () => {
+      setEnv({ NODE_ENV: 'production' })
+      const cookies = expire({}, 'lg-web')
+
+      expect(Object.keys(cookies).sort()).toEqual([
+        '__Host-lg-web.csrf-token',
+        '__Secure-lg-web.callback-url',
+        '__Secure-lg-web.nonce',
+        '__Secure-lg-web.pkce.code_verifier',
+        '__Secure-lg-web.session-token',
+        '__Secure-lg-web.state',
+      ])
+      for (const cookie of Object.values(cookies)) {
+        expect(cookie.attrs).toEqual(
+          expect.arrayContaining(['secure', 'path=/', 'max-age=0']),
+        )
+      }
+    })
+
+    it('expires session chunks of this app only', () => {
+      setEnv({ NODE_ENV: 'development' })
+      const cookies = expire(
+        {
+          'lg-web.session-token.0': 'a',
+          'lg-web.session-token.1': 'b',
+          'other.session-token.0': 'z',
+        },
+        'lg-web',
+      )
+
+      expect(cookies['lg-web.session-token.0'].attrs).toContain('max-age=0')
+      expect(cookies['lg-web.session-token.1'].attrs).toContain('max-age=0')
+      expect(cookies['other.session-token.0']).toBeUndefined()
+    })
+
+    it.each(['development', 'production'])(
+      'expires both variants of the default names in %s',
+      (nodeEnv) => {
+        setEnv({ NODE_ENV: nodeEnv })
+        const cookies = expire({ 'next-auth.session-token.0': 'a' })
+
+        expect(Object.keys(cookies).sort()).toEqual([
+          '__Host-next-auth.csrf-token',
+          '__Secure-next-auth.callback-url',
+          '__Secure-next-auth.nonce',
+          '__Secure-next-auth.pkce.code_verifier',
+          '__Secure-next-auth.session-token',
+          '__Secure-next-auth.state',
+          'next-auth.callback-url',
+          'next-auth.csrf-token',
+          'next-auth.nonce',
+          'next-auth.pkce.code_verifier',
+          'next-auth.session-token',
+          'next-auth.session-token.0',
+          'next-auth.state',
+        ])
+        expect(cookies['next-auth.state'].attrs).not.toContain('secure')
+        expect(cookies['__Secure-next-auth.state'].attrs).toContain('secure')
+        expect(cookies['__Host-next-auth.csrf-token'].attrs).toContain('secure')
+      },
+    )
   })
 })

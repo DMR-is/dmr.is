@@ -52,13 +52,15 @@ describe('notice letters', () => {
       { type: ReportTypeEnum.SALARY, validUntil: new Date('2029-10-08') },
       COMPANY,
       DATE,
-      ['jafnlaunaúttekt', 'úrbótaáætlun'],
+      ['niðurstaða launagreiningar', 'úrbótaáætlun'],
       { serviceSurvey: false },
     )
 
     expect(letter.subject).toBe('Skýrslugjöf samþykkt')
     expect(letter.html).toContain('Samþykktin gildir til 08.10.2029.')
-    expect(letter.html).toContain('Fylgiskjöl: jafnlaunaúttekt, úrbótaáætlun.')
+    expect(letter.html).toContain(
+      'Fylgiskjöl: niðurstaða launagreiningar, úrbótaáætlun.',
+    )
     expect(letter.html).not.toContain('viðhengi')
     expect(letter.html).not.toContain(SERVICE_SURVEY_URL)
   })

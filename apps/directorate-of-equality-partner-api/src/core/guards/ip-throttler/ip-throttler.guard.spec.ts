@@ -34,12 +34,13 @@ const okIncrement = () =>
 const build = async <T>(
   Guard: new (...args: never[]) => T,
   increment: jest.Mock,
+  options: unknown[] = OPTIONS,
 ): Promise<T> => {
   const reflector = new Reflector()
   jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined as never)
 
   const guard = new Guard(
-    ...([OPTIONS, storageFor(increment), reflector] as never[]),
+    ...([options, storageFor(increment), reflector] as never[]),
   )
 
   await (guard as { onModuleInit(): Promise<void> }).onModuleInit()
@@ -73,6 +74,25 @@ describe('IpThrottlerGuard', () => {
 
     expect(increment).toHaveBeenCalledTimes(1)
     expect(increment.mock.calls[0][4]).toBe(PER_IP_THROTTLER)
+  })
+
+  it('keeps only the per-IP throttler when it is configured', async () => {
+    const increment = okIncrement()
+    const guard = await build(IpThrottlerGuard, increment)
+
+    expect(
+      (guard as unknown as { throttlers: Array<{ name: string }> }).throttlers,
+    ).toEqual([expect.objectContaining({ name: PER_IP_THROTTLER })])
+  })
+
+  it('refuses to start when no per-IP throttler is configured', async () => {
+    // An empty list would make canActivate allow every request, silently
+    // failing open on the only unauthenticated bound.
+    await expect(
+      build(IpThrottlerGuard, okIncrement(), [
+        { name: PER_KEY_THROTTLER, ttl: 3600000, limit: 5000 },
+      ]),
+    ).rejects.toThrow(PER_IP_THROTTLER)
   })
 
   it('buckets the whole surface together rather than per route', async () => {

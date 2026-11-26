@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 
 import { getLogger } from '@dmr.is/logging-next'
 
 import { getBaseUrl } from '../../../../lib/api/createClient'
-import { authOptions } from '../../../../lib/auth/authOptions'
+import { getServerIdToken } from '../../../../lib/auth/getServerToken'
 
 const logger = getLogger('equality-content')
 
@@ -62,8 +61,8 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ reportId: string }> },
 ) {
-  const session = await getServerSession(authOptions)
-  if (session?.invalid || !session?.idToken) {
+  const idToken = await getServerIdToken()
+  if (!idToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -79,7 +78,7 @@ export async function GET(
     res = await fetch(
       `${getBaseUrl()}/api/v1/reports/${reportId}/equality-content/pdf`,
       {
-        headers: { Authorization: `Bearer ${session.idToken}` },
+        headers: { Authorization: `Bearer ${idToken}` },
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       },
     )

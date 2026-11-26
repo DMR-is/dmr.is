@@ -1,9 +1,11 @@
 import { NextRequest } from 'next/server'
 
 import { endSessionHandler } from '@dmr.is/auth/logoutHandler'
-import { sessionCookieName } from '@dmr.is/auth/sessionCookies'
 
-import { AUTH_COOKIE_PREFIX } from '../../../../lib/auth/authOptions'
+import {
+  AUTH_COOKIE_PREFIX,
+  identityServerConfig,
+} from '../../../../lib/auth/authOptions'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +19,8 @@ const handler = (request: NextRequest) => {
   return endSessionHandler(
     request,
     postLogoutRedirectUri,
-    sessionCookieName(AUTH_COOKIE_PREFIX),
+    AUTH_COOKIE_PREFIX,
+    identityServerConfig,
   )
 }
 

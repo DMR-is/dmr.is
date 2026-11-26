@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 
 import { getLogger } from '@dmr.is/logging-next'
 
 import { getBaseUrl } from '../../../../lib/api/createClient'
-import { authOptions } from '../../../../lib/auth/authOptions'
+import { getServerIdToken } from '../../../../lib/auth/getServerToken'
 
 const logger = getLogger('data-export')
 
@@ -33,14 +32,14 @@ export async function GET(
     return NextResponse.json({ error: 'Unknown dataset' }, { status: 404 })
   }
 
-  const session = await getServerSession(authOptions)
-  if (session?.invalid || !session?.idToken) {
+  const idToken = await getServerIdToken()
+  if (!idToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const query = request.nextUrl.search
   const res = await fetch(`${getBaseUrl()}/api/v1/export/${dataset}${query}`, {
-    headers: { Authorization: `Bearer ${session.idToken}` },
+    headers: { Authorization: `Bearer ${idToken}` },
   })
 
   if (!res.ok) {
