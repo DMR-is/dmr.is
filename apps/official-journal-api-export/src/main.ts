@@ -1925,12 +1925,8 @@ async function legalGazetteMain() {
 
   // Step 1.1: Select all legacy data from GoPro
 
-  //const subscribers = await exec('get subscribers', getSubscribers)
-  //console.log(subscribers)
   const types = await exec('get types', getLogbirtingTypes)
-  //console.log(types)
   const dbCategories = await exec('get categories', getLogbirtingCategories)
-  //console.log(dbCategories)
   const typesCategoriesMap = await exec(
     'get categories mapped with types ',
     getLogbirtingTypesAndCategories,
@@ -1971,6 +1967,8 @@ async function legalGazetteMain() {
   return Promise.resolve()
 }
 
-//main().catch(console.error)
-// eslint-disable-next-line no-console
-legalGazetteMain().catch(console.error)
+legalGazetteMain().catch((error) => {
+  // eslint-disable-next-line no-console
+  console.error(error)
+  process.exitCode = 1
+})
