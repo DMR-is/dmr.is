@@ -35,6 +35,19 @@ export const isApplicationParty = (
 }
 
 /**
+ * True when `ids` holds `id`. UUIDs are compared case-insensitively: the DB
+ * returns them lower-case, but a path parameter or an application answer may
+ * spell the same id in upper case.
+ */
+export const includesId = (
+  ids: ReadonlyArray<string> | undefined,
+  id: string,
+): boolean => {
+  const wanted = id.toLowerCase()
+  return (ids ?? []).some((candidate) => candidate.toLowerCase() === wanted)
+}
+
+/**
  * The involved-party ids on a request user. `RoleGuard` stores ids, the party
  * guard stores the party objects, and a user loaded from the DB carries
  * objects too, so compare by id whichever shape arrives.

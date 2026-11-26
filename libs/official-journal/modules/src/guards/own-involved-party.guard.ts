@@ -7,7 +7,7 @@ import {
 
 import { UserRoleEnum } from '@dmr.is/constants'
 
-import { involvedPartyIdsOf } from '../auth/application-party'
+import { includesId, involvedPartyIdsOf } from '../auth/application-party'
 
 /**
  * Lets a request through only when `:involvedPartyId` is one of the caller's
@@ -29,7 +29,10 @@ export class OwnInvolvedPartyGuard implements CanActivate {
 
     if (
       !involvedPartyId ||
-      !involvedPartyIdsOf(req.user?.involvedParties).includes(involvedPartyId)
+      !includesId(
+        involvedPartyIdsOf(req.user?.involvedParties),
+        involvedPartyId,
+      )
     ) {
       throw new NotFoundException('Involved party not found')
     }

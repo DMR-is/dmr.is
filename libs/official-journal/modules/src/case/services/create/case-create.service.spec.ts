@@ -73,6 +73,15 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
       )
   })
 
+  it("matches the caller's own party whatever the case of the answer's id", async () => {
+    await submit(
+      { ...applicant, involvedPartyIds: [PARTY_ID] },
+      PARTY_ID.toUpperCase(),
+    )
+
+    expect(getCreateCaseBody).toHaveBeenCalled()
+  })
+
   it("allows one of the caller's own involved parties", async () => {
     await submit({ ...applicant, involvedPartyIds: [PARTY_ID] }, PARTY_ID)
 
@@ -180,6 +189,17 @@ describe('CaseCreateService.createCaseByApplication involved party', () => {
         '0404040000',
       )
       expect(getUserByNationalId).not.toHaveBeenCalled()
+    })
+
+    it("matches what the applicant was offered whatever the case of the answer's id", async () => {
+      personApplicantOffered(PARTY_ID)
+
+      await submitAsAssignee(
+        { ...assignee, involvedPartyIds: [] },
+        PARTY_ID.toUpperCase(),
+      )
+
+      expect(getCreateCaseBody).toHaveBeenCalled()
     })
 
     it('is refused an institution the applicant could not have picked', async () => {

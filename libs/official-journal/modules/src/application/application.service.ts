@@ -135,7 +135,8 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @LogAndHandle()
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   async getPrice(
     application: Application,
   ): Promise<ResultWrapper<CasePriceResponse>> {
@@ -342,7 +343,8 @@ export class ApplicationService implements IApplicationService {
    * @returns A `ResultWrapper` containing the result of the operation.
    * @throws {InternalServerErrorException} If an error occurs while posting the application.
    */
-  @LogAndHandle()
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   @Transactional()
   async postApplication(
     application: Application,

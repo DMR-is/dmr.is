@@ -34,6 +34,7 @@ import { AdditionalPartiesService } from '../../../additional-parties'
 import { IAttachmentService } from '../../../attachments/attachment.service.interface'
 import {
   ApplicationCaller,
+  includesId,
   isApplicationParty,
   normalizeNationalId,
 } from '../../../auth/application-party'
@@ -334,7 +335,8 @@ export class CaseCreateService implements ICaseCreateService {
         )
   }
 
-  @LogAndHandle()
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   @Transactional()
   private async getCreateCaseBody(
     application: Application,
@@ -753,7 +755,10 @@ export class CaseCreateService implements ICaseCreateService {
       return forbidden()
     }
 
-    if (caller.isAdmin || caller.involvedPartyIds?.includes(involvedPartyId)) {
+    if (
+      caller.isAdmin ||
+      includesId(caller.involvedPartyIds, involvedPartyId)
+    ) {
       return ResultWrapper.ok()
     }
 
@@ -779,8 +784,9 @@ export class CaseCreateService implements ICaseCreateService {
     }
 
     if (
-      offered.result.value.involvedParties.some(
-        (party) => party.id === involvedPartyId,
+      includesId(
+        offered.result.value.involvedParties.map((party) => party.id),
+        involvedPartyId,
       )
     ) {
       return ResultWrapper.ok()
@@ -831,7 +837,8 @@ export class CaseCreateService implements ICaseCreateService {
     return this.userService.getInvolvedPartiesByUser(user.result.value.user)
   }
 
-  @LogAndHandle()
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   async createCaseByApplication(
     application: Application,
     caller: ApplicationCaller,

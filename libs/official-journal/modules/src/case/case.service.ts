@@ -1726,7 +1726,8 @@ export class CaseService implements ICaseService {
    * We do not use the transactional parameter here
    * because we want to use multiple transactions
    */
-  @LogAndHandle()
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   async createCaseByApplication(
     application: Application,
     caller: ApplicationCaller,

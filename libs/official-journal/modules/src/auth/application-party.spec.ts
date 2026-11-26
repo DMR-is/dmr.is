@@ -1,4 +1,5 @@
 import {
+  includesId,
   involvedPartyIdsOf,
   isApplicationParty,
   normalizeNationalId,
@@ -49,6 +50,32 @@ describe('involvedPartyIdsOf', () => {
     expect(involvedPartyIdsOf(['a', 'b'])).toEqual(['a', 'b'])
     expect(involvedPartyIdsOf([{ id: 'a' }])).toEqual(['a'])
     expect(involvedPartyIdsOf(undefined)).toEqual([])
+  })
+})
+
+describe('includesId', () => {
+  it('matches an id whatever its case, and nothing else', () => {
+    expect(
+      includesId(
+        ['6f1c1a3e-2b4d-4c5e-9f60-7a8b9c0d1e2f'],
+        '6F1C1A3E-2B4D-4C5E-9F60-7A8B9C0D1E2F',
+      ),
+    ).toBe(true)
+    expect(
+      includesId(
+        ['6F1C1A3E-2B4D-4C5E-9F60-7A8B9C0D1E2F'],
+        '6f1c1a3e-2b4d-4c5e-9f60-7a8b9c0d1e2f',
+      ),
+    ).toBe(true)
+    expect(
+      includesId(
+        ['6f1c1a3e-2b4d-4c5e-9f60-7a8b9c0d1e2f'],
+        '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d',
+      ),
+    ).toBe(false)
+    expect(includesId(undefined, '6f1c1a3e-2b4d-4c5e-9f60-7a8b9c0d1e2f')).toBe(
+      false,
+    )
   })
 })
 

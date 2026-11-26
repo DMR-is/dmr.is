@@ -140,6 +140,25 @@ describe('OwnInvolvedPartyGuard', () => {
     expect(guard.canActivate(requestFor([{ id: 'party-1' }]))).toBe(true)
   })
 
+  it("matches the caller's own id whatever its case", () => {
+    expect(
+      guard.canActivate(
+        requestFor(
+          ['6f1c1a3e-2b4d-4c5e-9f60-7a8b9c0d1e2f'],
+          '6F1C1A3E-2B4D-4C5E-9F60-7A8B9C0D1E2F',
+        ),
+      ),
+    ).toBe(true)
+    expect(() =>
+      guard.canActivate(
+        requestFor(
+          ['6f1c1a3e-2b4d-4c5e-9f60-7a8b9c0d1e2f'],
+          '0A1B2C3D-4E5F-4A6B-8C7D-9E0F1A2B3C4D',
+        ),
+      ),
+    ).toThrow(NotFoundException)
+  })
+
   it('refuses another party, and a caller with none, as a 404', () => {
     expect(() => guard.canActivate(requestFor(['party-2']))).toThrow(
       NotFoundException,

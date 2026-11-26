@@ -80,7 +80,8 @@ export class PriceService implements IPriceService {
   ) {}
 
   /** The fee for an application the caller has already fetched. */
-  @LogAndHandle()
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   @Transactional()
   async getFeeForApplication(
     application: Application,
