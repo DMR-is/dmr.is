@@ -555,7 +555,7 @@ export class ApplicationController {
     operationId: 'editApplicationEqualityContent',
     include404: true,
     description:
-      'Replaces the narrative body of an EQUALITY report in place. Allowed only on reports in status `IN_REVIEW`. Emits an `EDITED` event; status is preserved. island.is-filed reports only.',
+      'Replaces the narrative body of an EQUALITY report in place. Allowed only on reports in status `IN_REVIEW`. Emits an `EDITED` event; status is preserved. island.is-filed reports only. A plan PDF may arrive inline (`equalityReportPdf`, base64) or by `equalityReportPdfKey` from `POST …/equality-content/presign`; the key is single use.',
     type: ApplicationReportDetailDto,
   })
   async editEqualityContent(
@@ -583,7 +583,7 @@ export class ApplicationController {
     operationId: 'presignApplicationEqualityPlan',
     include404: true,
     description:
-      'Presigned PUT URL for the plan PDF of an EQUALITY report in status `DRAFT` or `IN_REVIEW`. PDF only; takes no body. Upload the bytes to `url`, then send `key` as `equalityReportPdfKey` (with `equalityReportPdfFilename`) on `PATCH …/draft` or `PUT …/equality-content`. The plan is then stored exactly as an inline `equalityReportPdf` would be: at most 4 MB, must be a PDF. An upload that is never registered expires after 24 hours.',
+      'Presigned PUT URL for the plan PDF of an EQUALITY report in status `DRAFT` or `IN_REVIEW`. PDF only; takes no body. Upload the bytes to `url`, then send `key` as `equalityReportPdfKey` (with `equalityReportPdfFilename`) on `PATCH …/draft` or `PUT …/equality-content`. The plan is then stored exactly as an inline `equalityReportPdf` would be: at most 4 MB, must be a PDF. A key is single use: a successful request consumes the upload, and resending it fails the request. An upload that is never registered expires after 24 hours.',
     type: PresignUploadResponseDto,
   })
   async presignEqualityPlan(

@@ -41,7 +41,7 @@ export class EditEqualityContentDto {
   @ApiOptionalString({
     maxLength: 256,
     description:
-      'Object key from `POST …/equality-content/presign` for a plan PDF already uploaded to the presigned URL. Stored exactly as an inline `equalityReportPdf` would be (max 4MB, must be a PDF). Mutually exclusive with `equalityReportPdf` and `equalityReportContent`; requires `equalityReportPdfFilename`.',
+      'Object key from `POST …/equality-content/presign` for a plan PDF already uploaded to the presigned URL. Stored exactly as an inline `equalityReportPdf` would be (max 4MB, must be a PDF). Requires `equalityReportPdfFilename`. Cannot be combined with a non-empty `equalityReportPdf` or `equalityReportContent` (400); a null beside the key is ignored and the key wins. **Single use:** a successful request consumes the upload; presign again for another file.',
   })
   equalityReportPdfKey?: string
 }

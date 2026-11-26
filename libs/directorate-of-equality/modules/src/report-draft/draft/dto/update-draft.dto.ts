@@ -113,7 +113,7 @@ export class UpdateDraftDto {
     nullable: true,
     maxLength: 256,
     description:
-      'Object key from `POST …/equality-content/presign` for a plan PDF already uploaded to the presigned URL. Stored exactly as an inline `equalityReportPdf` would be (max 4MB, must be a PDF). Mutually exclusive with `equalityReportPdf` and `equalityReportContent`; requires `equalityReportPdfFilename`. A null or empty key is ignored — clear the plan with `equalityReportContent: null`.',
+      'Object key from `POST …/equality-content/presign` for a plan PDF already uploaded to the presigned URL. Stored exactly as an inline `equalityReportPdf` would be (max 4MB, must be a PDF). Requires `equalityReportPdfFilename`. Cannot be combined with a non-empty `equalityReportPdf` or `equalityReportContent` (400); a null beside the key is ignored and the key wins. **Single use:** a successful request consumes the upload, so send the key once and omit it from later saves — resending it fails the whole PATCH, header fields included. A null or empty key is ignored; clear the plan with `equalityReportContent: null`.',
   })
   equalityReportPdfKey?: string | null
 }

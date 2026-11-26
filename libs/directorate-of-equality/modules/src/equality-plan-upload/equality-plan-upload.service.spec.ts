@@ -1,3 +1,6 @@
+import { createHash } from 'crypto'
+import { inspect } from 'util'
+
 import {
   BadRequestException,
   HttpStatus,
@@ -339,6 +342,19 @@ describe('EqualityPlanUploadService', () => {
 
       expect(reportModel.findOne).toHaveBeenCalledWith(
         expect.objectContaining({ transaction: null }),
+      )
+      // The landed check must match this report, as a PDF, by the md5 of the
+      // exact base64 stored. `Op.and` is a symbol key, so inspect rather than
+      // JSON.stringify, which would drop the whole clause.
+      const where = inspect(reportModel.findOne.mock.calls[0][0].where, {
+        depth: null,
+      })
+      expect(where).toContain(REPORT_ID)
+      expect(where).toContain(EqualityContentTypeEnum.PDF)
+      expect(where).toContain("fn: 'md5'")
+      expect(where).toContain("col: 'equality_report_content'")
+      expect(where).toContain(
+        createHash('md5').update(PDF_BYTES.toString('base64')).digest('hex'),
       )
       // Success: no error, so `cleanupAfter` treats it as terminal and deletes.
       expect(importUpload.cleanupAfter).toHaveBeenCalledWith(KEY, BOUNDARY)

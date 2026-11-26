@@ -2297,6 +2297,10 @@ describe('ApplicationService', () => {
           ),
       ],
       [
+        'presignEqualityPlan',
+        (svc) => svc.presignEqualityPlan(PROVIDER_ID, COMPANY),
+      ],
+      [
         'addEqualityAttachment',
         (svc) => svc.addEqualityAttachment(PROVIDER_ID, INPUT, COMPANY),
       ],
@@ -2316,6 +2320,7 @@ describe('ApplicationService', () => {
       ...attachmentAdd.mock.calls,
       ...attachmentList.mock.calls,
       ...attachmentRemove.mock.calls,
+      ...equalityPlanPresign.mock.calls,
     ]
 
     it.each(ROUTES)(

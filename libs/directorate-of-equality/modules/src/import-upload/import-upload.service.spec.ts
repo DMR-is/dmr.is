@@ -154,6 +154,37 @@ describe('ImportUploadService', () => {
       },
     )
 
+    it('stages an equality plan as PDF only, under its own boundary', async () => {
+      aws.getPresignedUrl.mockResolvedValue(
+        ResultWrapper.ok({ url: 'https://s3/presigned' }),
+      )
+      aws.getObjectBuffer.mockResolvedValue(ResultWrapper.ok(bufferOfSize(10)))
+
+      const { key } = await service.createUpload(
+        ImportUploadBoundary.EQUALITY_PLAN,
+        { extension: 'pdf' },
+      )
+
+      expect(key).toMatch(/^doe-imports\/equality-plan\/[0-9a-f-]{36}\.pdf$/)
+      await expect(
+        service.fetchObject(key, ImportUploadBoundary.EQUALITY_PLAN),
+      ).resolves.toBeDefined()
+
+      // The plan is stored as a PDF or as HTML; any other file is a forgery.
+      await expect(
+        service.createUpload(ImportUploadBoundary.EQUALITY_PLAN, {
+          extension: 'docx',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+      // And a fylgiskjal key is not a plan key, though both may be PDFs.
+      expect(() =>
+        service.assertKeyWithinBoundary(
+          key.replace('equality-plan', 'equality-attachment'),
+          ImportUploadBoundary.EQUALITY_PLAN,
+        ),
+      ).toThrow(BadRequestException)
+    })
+
     it('does not let the mail-attachment extensions leak into the import boundaries', async () => {
       // The allow-list is per boundary for this reason: widening it
       // globally would have retired the import path's own extension check,
