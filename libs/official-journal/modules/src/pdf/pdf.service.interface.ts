@@ -1,15 +1,12 @@
 import { ResultWrapper } from '@dmr.is/types'
 
+import { ApplicationCaller } from '../auth/application-party'
+
 export interface IssuePdfAdvertInput {
   html: string
   issueTopMeta?: string
   publicationDate: string | Date
   serial: number | string
-}
-
-export interface PdfCaller {
-  /** The token subject: the applicant, or the party a delegate acts for. */
-  nationalId?: string
 }
 
 export interface IPdfService {
@@ -22,7 +19,7 @@ export interface IPdfService {
 
   getPdfByApplicationId(
     applicationId: string,
-    caller: PdfCaller,
+    caller: Pick<ApplicationCaller, 'nationalId'>,
     showDate?: boolean,
   ): Promise<ResultWrapper<Buffer>>
 

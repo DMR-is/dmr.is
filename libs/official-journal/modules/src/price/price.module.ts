@@ -1,9 +1,8 @@
-import { forwardRef, Module } from '@nestjs/common'
+import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { LoggingModule } from '@dmr.is/logging'
 
-import { ApplicationModule } from '../application/application.module'
 import { AuthModule } from '../auth/auth.module'
 import {
   CaseModel,
@@ -25,7 +24,6 @@ export { IPriceService, PriceService }
       TransactionFeeCodesModel,
     ]),
     AuthModule,
-    forwardRef(() => ApplicationModule),
     LoggingModule,
   ],
   controllers: [],

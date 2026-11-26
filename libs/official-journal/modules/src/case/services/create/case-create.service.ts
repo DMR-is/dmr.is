@@ -1,3 +1,4 @@
+import { isUUID } from 'class-validator'
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
@@ -14,6 +15,7 @@ import {
   CaseChannel,
   CreateCaseDto,
   CreateCaseResponseDto,
+  GetInvoledPartiesByUserResponse,
   UserDto,
 } from '@dmr.is/shared-dto'
 import {
@@ -24,18 +26,23 @@ import {
   CaseTagEnum,
   CreateCaseBody,
   CreateCaseChannelBody,
-  PostApplicationBody,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack } from '@dmr.is/utils-server/serverUtils'
 
 import { AdditionalPartiesService } from '../../../additional-parties'
-import { IApplicationService } from '../../../application/application.service.interface'
 import { IAttachmentService } from '../../../attachments/attachment.service.interface'
+import {
+  ApplicationCaller,
+  includesId,
+  isApplicationParty,
+  normalizeNationalId,
+} from '../../../auth/application-party'
 import { ICommentServiceV2 } from '../../../comment/v2'
 import { IPriceService } from '../../../price/price.service.interface'
 import { IRegulationsAdminService } from '../../../regulations-admin/regulations-admin.service.interface'
 import { ISignatureService } from '../../../signature/signature.service.interface'
+import { IUserService } from '../../../user/user.service.interface'
 import { IUtilityService } from '../../../utility/utility.service.interface'
 import { caseChannelMigrate } from '../../migrations/case-channel.migrate'
 import {
@@ -106,8 +113,7 @@ export class CaseCreateService implements ICaseCreateService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
-    @Inject(IApplicationService)
-    private readonly applicationService: IApplicationService,
+    @Inject(IUserService) private readonly userService: IUserService,
     @Inject(IAttachmentService)
     private readonly attachmentService: IAttachmentService,
     @Inject(ISignatureService)
@@ -329,7 +335,8 @@ export class CaseCreateService implements ICaseCreateService {
         )
   }
 
-  @LogAndHandle()
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   @Transactional()
   private async getCreateCaseBody(
     application: Application,
@@ -704,13 +711,158 @@ export class CaseCreateService implements ICaseCreateService {
     return ResultWrapper.ok({ id: caseId })
   }
 
-  @LogAndHandle()
+  /**
+   * A case is filed for the involved party named in the application's
+   * answers. The caller must be a party to the application, and the involved
+   * party must be one of: every institution for an editorial admin, or the
+   * involved parties the caller belongs to or acts for
+   * (`caller.involvedPartyIds`, which is what the party picker offers them).
+   * An assignee may also file for any institution the picker offered the
+   * applicant, since the applicant picks the institution and the assignee
+   * (another ministry the applicant added) may be the one who submits.
+   * Every refusal is the same 403, so the answer does not reveal which
+   * institution ids exist.
+   */
+  private async checkSubmitterMayFileFor(
+    application: Application,
+    caller: ApplicationCaller,
+  ): Promise<ResultWrapper> {
+    const involvedPartyId = application.answers?.advert?.involvedPartyId
+
+    const forbidden = () => {
+      this.logger.warn('Submitter may not file for the involved party', {
+        applicationId: application.id,
+        category: LOGGING_CATEGORY,
+      })
+      return ResultWrapper.err({
+        code: 403,
+        message: 'Þú hefur ekki heimild til að senda inn fyrir þessa stofnun',
+      })
+    }
+
+    if (!isApplicationParty(application, caller)) {
+      return forbidden()
+    }
+
+    if (!involvedPartyId) {
+      return ResultWrapper.err({
+        code: 400,
+        message: 'Stofnun vantar í umsókn',
+      })
+    }
+
+    if (!isUUID(involvedPartyId)) {
+      return forbidden()
+    }
+
+    if (
+      caller.isAdmin ||
+      includesId(caller.involvedPartyIds, involvedPartyId)
+    ) {
+      return ResultWrapper.ok()
+    }
+
+    // For the applicant, `involvedPartyIds` already is what the party picker
+    // offered, so nothing else is allowed: a party merely registered under
+    // their national id (e.g. a sole proprietorship) was never offered.
+    const isApplicant =
+      normalizeNationalId(caller.nationalId) ===
+      normalizeNationalId(application.applicant)
+
+    if (isApplicant) {
+      return forbidden()
+    }
+
+    // An assignee may file for what the picker offered the applicant.
+    const offered = await this.partiesOfferedToApplicant(application)
+
+    if (!offered.result.ok) {
+      // The applicant is unknown to us: nothing was offered.
+      return offered.result.error.code === 404
+        ? forbidden()
+        : ResultWrapper.err(offered.result.error)
+    }
+
+    if (
+      includesId(
+        offered.result.value.involvedParties.map((party) => party.id),
+        involvedPartyId,
+      )
+    ) {
+      return ResultWrapper.ok()
+    }
+
+    return forbidden()
+  }
+
+  /**
+   * The involved parties the party picker (`GET :id/involved-parties`) may
+   * have offered the applicant. The picker answers per request: a token with
+   * an actor goes through `PartyGuard`'s lookup (the parties under the
+   * represented national id, narrowed to those linked to the actor when
+   * several share it), any other token gets the applicant's own linked
+   * parties (every party for an editorial admin). The same applicant can
+   * sign in either way, so this is the union of both: the `PartyGuard` lookup
+   * for every actor recorded on the application, and the applicant's own
+   * links. A 404 from either path means that path offered nothing.
+   *
+   * `applicantActors` grants no access here: the submitter is checked as a
+   * party on their own token (`isApplicationParty`). The actors only
+   * reconstruct what the applicant could have picked.
+   */
+  private async partiesOfferedToApplicant(
+    application: Application,
+  ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>> {
+    const applicant = normalizeNationalId(application.applicant)
+    const actors = new Set(
+      (application.applicantActors ?? [])
+        .map(normalizeNationalId)
+        .filter(Boolean),
+    )
+    const involvedParties: GetInvoledPartiesByUserResponse['involvedParties'] =
+      []
+
+    for (const actor of actors) {
+      const lookup = await this.userService.getInvolvedPartiesByNationalId(
+        applicant,
+        actor,
+      )
+      if (!lookup.result.ok) {
+        if (lookup.result.error.code === 404) continue
+        return ResultWrapper.err(lookup.result.error)
+      }
+      involvedParties.push(...lookup.result.value.involvedParties)
+    }
+
+    const user = await this.userService.getUserByNationalId(applicant)
+    if (!user.result.ok) {
+      if (user.result.error.code === 404) {
+        return ResultWrapper.ok({ involvedParties })
+      }
+      return ResultWrapper.err(user.result.error)
+    }
+
+    const own = await this.userService.getInvolvedPartiesByUser(
+      user.result.value.user,
+    )
+    if (!own.result.ok) {
+      return ResultWrapper.err(own.result.error)
+    }
+    involvedParties.push(...own.result.value.involvedParties)
+
+    return ResultWrapper.ok({ involvedParties })
+  }
+
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   async createCaseByApplication(
-    body: PostApplicationBody,
+    application: Application,
+    caller: ApplicationCaller,
   ): Promise<ResultWrapper<{ id: string }>> {
-    const { application } = (
-      await this.applicationService.getApplication(body.applicationId)
-    ).unwrap()
+    const partyCheck = await this.checkSubmitterMayFileFor(application, caller)
+    if (!partyCheck.result.ok) {
+      return ResultWrapper.err(partyCheck.result.error)
+    }
 
     const valuesResult = await this.getCreateCaseBody(application)
 

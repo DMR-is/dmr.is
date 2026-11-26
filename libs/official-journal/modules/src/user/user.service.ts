@@ -24,6 +24,7 @@ import {
   getLimitAndOffset,
 } from '@dmr.is/utils-server/serverUtils'
 
+import { involvedPartyIdsOf } from '../auth/application-party'
 import { advertInvolvedPartyMigrate } from '../journal/migrations'
 import { AdvertInvolvedPartyModel } from '../journal/models'
 import {
@@ -37,16 +38,6 @@ import { UserRoleModel } from './models/user-role.model'
 import { IUserService } from './user.service.interface'
 const LOGGING_CONTEXT = 'UserService'
 const LOGGING_CATEGORY = 'user-service'
-
-/**
- * Involved-party ids of a user. `RoleGuard` replaces `currentUser.involvedParties`
- * with an array of id strings, while a user loaded from the DB carries
- * objects, so compare by id whichever shape arrives.
- */
-const partyIds = (
-  parties: ReadonlyArray<string | { id: string }> | undefined,
-): string[] =>
-  (parties ?? []).map((party) => (typeof party === 'string' ? party : party.id))
 
 /**
  * A non-admin may manage an account only when every one of its parties is one
@@ -82,7 +73,7 @@ export class UserService implements IUserService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetUserResponse>> {
     const isAdmin = currentUser.role.title === UserRoleEnum.Admin
-    const currentUserPartyIds = partyIds(currentUser.involvedParties)
+    const currentUserPartyIds = involvedPartyIdsOf(currentUser.involvedParties)
     // A non-admin who names no parties creates the account in all of their
     // own; named parties must all be the caller's, as in `updateUser`.
     const involedPartyIds: string[] = isAdmin
@@ -215,8 +206,10 @@ export class UserService implements IUserService {
     }
 
     if (!isAdmin) {
-      const currentUserPartyIds = partyIds(currentUser.involvedParties)
-      const targetPartyIds = partyIds(userToUpdate.involvedParties)
+      const currentUserPartyIds = involvedPartyIdsOf(
+        currentUser.involvedParties,
+      )
+      const targetPartyIds = involvedPartyIdsOf(userToUpdate.involvedParties)
 
       // Only an admin may touch an admin account or hand out the admin role
       const newRole = body.roleId
@@ -342,13 +335,15 @@ export class UserService implements IUserService {
     }
 
     if (!isAdmin) {
-      const currentUserPartyIds = partyIds(currentUser.involvedParties)
+      const currentUserPartyIds = involvedPartyIdsOf(
+        currentUser.involvedParties,
+      )
       const hasDeletePermission =
         userToDelete.role.title !== UserRoleEnum.User &&
         userToDelete.role.title !== UserRoleEnum.Admin
       // The same rule as update: deleting is the more destructive of the two
       const hasInvoledParty = canManagePartiesOf(
-        partyIds(userToDelete.involvedParties),
+        involvedPartyIdsOf(userToDelete.involvedParties),
         currentUserPartyIds,
       )
 
@@ -393,7 +388,8 @@ export class UserService implements IUserService {
     return ResultWrapper.ok()
   }
 
-  @LogAndHandle()
+  // Takes national ids or a user: never log the arguments
+  @LogAndHandle({ logArgs: false })
   async getInvolvedPartiesByUser(
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>> {
@@ -427,7 +423,8 @@ export class UserService implements IUserService {
     })
   }
 
-  @LogAndHandle()
+  // Takes national ids or a user: never log the arguments
+  @LogAndHandle({ logArgs: false })
   async getInvolvedPartiesByNationalId(
     nationalId: string,
     userNationalId?: string,
@@ -548,7 +545,7 @@ export class UserService implements IUserService {
     query: GetUsersQuery,
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUsersResponse>> {
-    const involedPartyIds = partyIds(currentUser.involvedParties)
+    const involedPartyIds = involvedPartyIdsOf(currentUser.involvedParties)
 
     const { limit, offset } = getLimitAndOffset({
       page: query.page,
@@ -641,7 +638,8 @@ export class UserService implements IUserService {
    * ## ☢️ Should only be used by role guard! ☢️
    * @returns
    */
-  @LogAndHandle()
+  // Takes national ids or a user: never log the arguments
+  @LogAndHandle({ logArgs: false })
   async getUserByNationalId(
     nationalId: string,
   ): Promise<ResultWrapper<GetUserResponse>> {

@@ -24,10 +24,7 @@ export { ApplicationService } from './application.service'
   imports: [
     SequelizeModule.forFeature([...caseModels, ...advertModels]),
     AwsModule,
-    // `forwardRef` because price.module.ts imports this module back.
-    // Named bare, this resolves to `undefined` whenever the cycle is
-    // entered at price rather than here.
-    forwardRef(() => PriceModule),
+    PriceModule,
     LoggingModule,
     AuthModule,
     AdditionalPartiesModule,

@@ -3,6 +3,7 @@ import { CanActivate, ExecutionContext, Inject } from '@nestjs/common'
 import { UserRoleEnum } from '@dmr.is/constants'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { involvedPartyIdsOf } from '../auth/application-party'
 import { IUtilityService } from '../utility/utility.service.interface'
 
 export class InvolvedPartyGuard implements CanActivate {
@@ -19,7 +20,7 @@ export class InvolvedPartyGuard implements CanActivate {
         return true
       }
 
-      const involvedPartyIds = request.user.involvedParties
+      const involvedPartyIds = involvedPartyIdsOf(request.user.involvedParties)
 
       const applicationId = request.params.id
 
@@ -41,7 +42,7 @@ export class InvolvedPartyGuard implements CanActivate {
       const caseInvoledPartyId =
         caseInvolvedPartyResult.result.value.involvedPartyId
 
-      if (involvedPartyIds?.includes(caseInvoledPartyId)) {
+      if (involvedPartyIds.includes(caseInvoledPartyId)) {
         return true
       }
 

@@ -33,10 +33,15 @@ import {
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  ApplicationCaller,
+  ApplicationOwnershipGuard,
+  CurrentApplication,
   IApplicationService,
   InvolvedPartyGuard,
+  involvedPartyIdsOf,
   ISignatureService,
   IUserService,
+  OwnInvolvedPartyGuard,
 } from '@dmr.is/ojoi-modules'
 import {
   EnumValidationPipe,
@@ -47,6 +52,7 @@ import {
 import {
   AdvertTemplateDetails,
   AdvertTemplateTypeEnums,
+  Application,
   CasePriceResponse,
   GetAdvertTemplateResponse,
   GetApplicationAdvertsQuery,
@@ -71,6 +77,12 @@ import { ResultWrapper } from '@dmr.is/types'
 import { ApplicationGuard } from '../guards/application.guard'
 
 import 'multer'
+
+const callerOf = (user: UserDto): ApplicationCaller => ({
+  nationalId: user.nationalId,
+  involvedPartyIds: involvedPartyIdsOf(user.involvedParties),
+  isAdmin: user.role?.title === UserRoleEnum.Admin,
+})
 
 @Controller({
   path: 'applications',
@@ -110,35 +122,43 @@ export class ApplicationController {
   }
 
   @Get(':id/price')
+  @UseGuards(ApplicationOwnershipGuard)
+  @ApiParam({ name: 'id', type: String })
   @ApiOperation({ operationId: 'getPrice' })
   @ApiResponse({ type: CasePriceResponse })
   async getPrice(
-    @Param('id', new UUIDValidationPipe()) applicationId: string,
+    @CurrentApplication() application: Application,
   ): Promise<CasePriceResponse> {
     return ResultWrapper.unwrap(
-      await this.applicationService.getPrice(applicationId),
+      await this.applicationService.getPrice(application),
     )
   }
 
   @Get(':id')
+  @UseGuards(ApplicationOwnershipGuard)
+  @ApiParam({ name: 'id', type: String })
   @ApiOperation({ operationId: 'getApplication' })
   @ApiResponse({ type: GetApplicationResponse })
-  async getApplication(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<GetApplicationResponse> {
-    return ResultWrapper.unwrap(
-      await this.applicationService.getApplication(id),
-    )
+  getApplication(
+    @CurrentApplication() application: Application,
+  ): GetApplicationResponse {
+    return { application }
   }
 
   @Post(':id/post')
+  @UseGuards(ApplicationOwnershipGuard)
+  @ApiParam({ name: 'id', type: String })
   @ApiOperation({ operationId: 'postApplication' })
   @ApiResponse({ status: 200 })
   async postApplication(
-    @Param('id', new UUIDValidationPipe()) applicationId: string,
+    @CurrentApplication() application: Application,
+    @CurrentUser() user: UserDto,
   ) {
     return ResultWrapper.unwrap(
-      await this.applicationService.postApplication(applicationId),
+      await this.applicationService.postApplication(
+        application,
+        callerOf(user),
+      ),
     )
   }
 
@@ -173,6 +193,7 @@ export class ApplicationController {
   }
 
   @Post(':id/upload')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'uploadApplicationAttachment' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -223,6 +244,7 @@ export class ApplicationController {
   }
 
   @Post(':id/presigned-url/:type')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'getPresignedUrl' })
   @ApiParam({ name: 'type', enum: AttachmentTypeParam })
   @ApiResponse({ type: PresignedUrlResponse })
@@ -243,6 +265,7 @@ export class ApplicationController {
   }
 
   @Post(':id/attachments/:type')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'addApplicationAttachment' })
   @ApiParam({ name: 'type', enum: AttachmentTypeParam })
   @ApiNoContentResponse()
@@ -262,6 +285,7 @@ export class ApplicationController {
   }
 
   @Get(':id/attachments/:type')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'getApplicationAttachments' })
   @ApiParam({ name: 'type', enum: AttachmentTypeParam })
   @ApiResponse({ type: GetApplicationAttachmentsResponse })
@@ -279,6 +303,7 @@ export class ApplicationController {
   }
 
   @Delete(':id/attachments/delete')
+  @UseGuards(ApplicationOwnershipGuard)
   @ApiOperation({ operationId: 'deleteApplicationAttachment' })
   @ApiNoContentResponse()
   async deleteApplicationAttachment(
@@ -348,6 +373,7 @@ export class ApplicationController {
   }
 
   @Get('involved-party/:involvedPartyId')
+  @UseGuards(OwnInvolvedPartyGuard)
   @ApiOperation({ operationId: 'getSignaturesForInvolvedParty' })
   @ApiResponse({ status: 200, type: GetSignature })
   @ApiResponse({ status: 404 })

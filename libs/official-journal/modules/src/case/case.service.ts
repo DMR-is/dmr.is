@@ -20,6 +20,7 @@ import {
   AddCaseAdditionalPartyBody,
   AddCaseAdvertCorrection,
   AdvertStatus,
+  Application,
   Case,
   CaseChannel,
   CaseCommunicationStatus,
@@ -45,7 +46,6 @@ import {
   GetPaymentResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
-  PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
   RegulationDraft,
@@ -84,6 +84,7 @@ import {
   ApplicationAttachmentModel,
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
+import { ApplicationCaller } from '../auth/application-party'
 import { IExternalService } from '../external/external.service.interface'
 import { IJournalService } from '../journal'
 import {
@@ -1725,12 +1726,14 @@ export class CaseService implements ICaseService {
    * We do not use the transactional parameter here
    * because we want to use multiple transactions
    */
-  @LogAndHandle()
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   async createCaseByApplication(
-    body: PostApplicationBody,
+    application: Application,
+    caller: ApplicationCaller,
   ): Promise<ResultWrapper> {
     const { id } = ResultWrapper.unwrap(
-      await this.createService.createCaseByApplication(body),
+      await this.createService.createCaseByApplication(application, caller),
     )
 
     await this.createCaseHistory(id)

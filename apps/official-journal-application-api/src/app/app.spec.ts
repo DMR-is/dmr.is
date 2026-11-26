@@ -50,4 +50,31 @@ describe('Swagger documentation', () => {
 
     expect(Object.keys(document.paths).length).toBeGreaterThan(0)
   })
+
+  // `CurrentApplication` is not a `@Param`, so Swagger infers nothing from it;
+  // routes that use it declare `id` with `@ApiParam`. Every operation under a
+  // path with an `{id}` segment must declare it, so a new guarded route
+  // without `@ApiParam` fails here.
+  it('declares the id path parameter on every route with an {id} segment', () => {
+    const document = SwaggerModule.createDocument(app, openApi, {
+      autoTagControllers: false,
+    })
+    const idPaths = Object.entries(document.paths).filter(([path]) =>
+      path.includes('{id}'),
+    )
+
+    expect(idPaths.length).toBeGreaterThan(0)
+    for (const [path, item] of idPaths) {
+      for (const [method, operation] of Object.entries(item)) {
+        const parameters = (operation as { parameters?: unknown[] }).parameters
+        expect({ path, method, parameters }).toEqual({
+          path,
+          method,
+          parameters: expect.arrayContaining([
+            expect.objectContaining({ name: 'id', in: 'path', required: true }),
+          ]),
+        })
+      }
+    }
+  })
 })

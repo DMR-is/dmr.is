@@ -4,6 +4,7 @@ import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import {
   AdvertTemplateDetails,
   AdvertTemplateType,
+  Application,
   CasePriceResponse,
   GetAdvertTemplateResponse,
   GetApplicationAdverts,
@@ -20,6 +21,8 @@ import {
   UserDto,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
+
+import { ApplicationCaller } from '../auth/application-party'
 
 import 'multer'
 
@@ -42,7 +45,10 @@ export interface IApplicationService {
    */
   reopenApplication(id: string): Promise<ResultWrapper>
 
-  postApplication(id: string): Promise<ResultWrapper>
+  postApplication(
+    application: Application,
+    caller: ApplicationCaller,
+  ): Promise<ResultWrapper>
 
   getComments(applicationId: string): Promise<ResultWrapper<GetComments>>
 
@@ -52,7 +58,7 @@ export interface IApplicationService {
     applicationUser: UserDto,
   ): Promise<ResultWrapper>
 
-  getPrice(applicationId: string): Promise<ResultWrapper<CasePriceResponse>>
+  getPrice(application: Application): Promise<ResultWrapper<CasePriceResponse>>
 
   uploadAttachments(
     applicationId: string,

@@ -19,6 +19,7 @@ import { RegulationPublishModule } from '../regulation-publish/regulation-publis
 import { RegulationsAdminModule } from '../regulations-admin/regulations-admin.module'
 import { OpenSearchModule, OpsModule } from '../search'
 import { SignatureModule } from '../signature/signature.module'
+import { UserModule } from '../user/user.module'
 import { UtilityModule } from '../utility/utility.module'
 import { CaseCreateService } from './services/create/case-create.service'
 import { ICaseCreateService } from './services/create/case-create.service.interface'
@@ -73,6 +74,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
     forwardRef(() => SharedJournalModule),
     RegulationsAdminModule,
     RegulationPublishModule,
+    UserModule,
   ],
   providers: [
     {

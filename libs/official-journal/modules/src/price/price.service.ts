@@ -1,13 +1,14 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertFeeType,
+  Application,
   CaseFeeCalculationBody,
   CasePriceResponse,
   CaseTransaction,
@@ -26,7 +27,6 @@ import {
   MAX_CHARACTER_HTML,
 } from '@dmr.is/utils-server/serverUtils'
 
-import { IApplicationService } from '../application/application.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
 import { TransactionFeeCodeMigrate } from '../case/migrations/transaction-fee-codes.migrate'
 import {
@@ -62,9 +62,6 @@ export class PriceService implements IPriceService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
 
-    @Inject(forwardRef(() => IApplicationService))
-    private applicationService: IApplicationService,
-
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
 
     @InjectModel(AdvertDepartmentModel)
@@ -82,23 +79,14 @@ export class PriceService implements IPriceService {
     private readonly sequelize: Sequelize,
   ) {}
 
-  @LogAndHandle()
+  /** The fee for an application the caller has already fetched. */
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   @Transactional()
-  async getFeeByApplication(
-    applicationId: string,
+  async getFeeForApplication(
+    application: Application,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CasePriceResponse>> {
-    const { application } = (
-      await this.applicationService.getApplication(applicationId)
-    ).unwrap()
-
-    if (!application) {
-      return ResultWrapper.err({
-        code: 404,
-        message: `Application <${applicationId}> not found`,
-        category: LOGGING_CATEGORY,
-      })
-    }
     // try {
     const isFastTrack = application.answers?.advert.requestedDate
       ? getFastTrack(new Date(application.answers?.advert.requestedDate))
@@ -128,7 +116,7 @@ export class PriceService implements IPriceService {
     if (!price) {
       return ResultWrapper.err({
         code: 404,
-        message: `No price found for <${applicationId}>`,
+        message: `No price found for <${application.id}>`,
         category: LOGGING_CATEGORY,
       })
     }

@@ -58,6 +58,7 @@ import {
 import { AdditionalPartiesService } from '../additional-parties'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
+import { ApplicationCaller } from '../auth/application-party'
 import { IAuthService } from '../auth/auth.service.interface'
 import { ICaseService } from '../case/case.service.interface'
 import { ICommentServiceV2 } from '../comment/v2'
@@ -134,16 +135,17 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @LogAndHandle()
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   async getPrice(
-    applicationId: string,
+    application: Application,
   ): Promise<ResultWrapper<CasePriceResponse>> {
     try {
-      return await this.priceService.getFeeByApplication(applicationId)
+      return await this.priceService.getFeeForApplication(application)
     } catch (error) {
       return ResultWrapper.err({
         code: 500,
-        message: `Fee calculation failed on application<${applicationId}>. ${error}`,
+        message: `Fee calculation failed on application<${application.id}>. ${error}`,
       })
     }
   }
@@ -151,8 +153,9 @@ export class ApplicationService implements IApplicationService {
   /**
    * Builds the island.is application-callback URL for one application id.
    *
-   * Defence in depth, not a live hole: every caller today either runs the id
-   * through `UUIDValidationPipe` at the route or reads it from
+   * Defence in depth, not a live hole: every caller today either validates the
+   * id as a UUID before it gets here (`UUIDValidationPipe`, or
+   * `ApplicationOwnershipGuard`, which runs ahead of the pipe) or reads it from
    * `case_case.application_id`, a `UUID NOT NULL` column. This makes the sink
    * safe on its own so that stops being load-bearing — concatenated raw, a
    * `..` payload would be normalised away by `fetch`'s URL parser and redirect
@@ -335,16 +338,20 @@ export class ApplicationService implements IApplicationService {
    * If case with the given applicationId does not exist, it will be created.
    * If case with the given applicationId already exists, it will be reposted.
    *
-   * @param applicationId - The ID of the application to be posted.
+   * @param application - The application to be posted, already fetched and authorised.
+   * @param caller - Who is posting; checked against the application's involved party.
    * @returns A `ResultWrapper` containing the result of the operation.
    * @throws {InternalServerErrorException} If an error occurs while posting the application.
    */
-  @LogAndHandle()
+  // The application carries answers and national ids: never log it
+  @LogAndHandle({ logArgs: false })
   @Transactional()
   async postApplication(
-    applicationId: string,
+    application: Application,
+    caller: ApplicationCaller,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
+    const applicationId = application.id
     const caseResult = await this.utilityService.caseLookupByApplicationId(
       applicationId,
       transaction,
@@ -354,16 +361,10 @@ export class ApplicationService implements IApplicationService {
     // throws, so the transaction rolls back instead of committing half a
     // re-post, and a 404 from a later step cannot create a duplicate case.
     if (!caseResult.result.ok && caseResult.result.error.code === 404) {
-      return await this.caseService.createCaseByApplication({
-        applicationId,
-      })
+      return await this.caseService.createCaseByApplication(application, caller)
     }
 
     const caseLookup = caseResult.unwrap()
-
-    const { application } = ResultWrapper.unwrap(
-      await this.getApplication(applicationId),
-    )
 
     const updateBody = await this.buildUpdateCaseBody(
       caseLookup.id,
@@ -609,8 +610,6 @@ export class ApplicationService implements IApplicationService {
     applicationId: string,
     files: Array<Express.Multer.File>,
   ): Promise<ResultWrapper<S3UploadFilesResponse>> {
-    ResultWrapper.unwrap(await this.getApplication(applicationId))
-
     const uploadedFiles = (
       await this.s3Service.uploadApplicationAttachments(applicationId, files)
     ).unwrap()

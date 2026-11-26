@@ -3,6 +3,7 @@ import { Transaction } from 'sequelize'
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import {
   AddCaseAdditionalPartyBody,
+  Application,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
@@ -26,7 +27,6 @@ import {
   GetPaymentResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
-  PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
   RegulationDraft,
@@ -51,6 +51,8 @@ import {
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { ApplicationCaller } from '../auth/application-party'
+
 export interface ICaseService {
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>
   getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>>
@@ -65,7 +67,8 @@ export interface ICaseService {
     query?: GetCasesWithDepartmentCountQuery,
   ): Promise<ResultWrapper<GetCasesWithDepartmentCount>>
   createCaseByApplication(
-    body: PostApplicationBody,
+    application: Application,
+    caller: ApplicationCaller,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
