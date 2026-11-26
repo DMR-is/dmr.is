@@ -202,32 +202,6 @@ export class AttachmentService implements IAttachmentService {
 
   @LogAndHandle()
   @Transactional()
-  async getAttachment(
-    attachmentId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetApplicationAttachmentResponse>> {
-    const found = await this.applicationAttachmentModel.findOne({
-      where: {
-        id: attachmentId,
-        deleted: false,
-      },
-      include: [ApplicationAttachmentTypeModel],
-      transaction: transaction,
-    })
-
-    if (!found) {
-      throw new NotFoundException(`Attachment<${attachmentId}> not found`)
-    }
-
-    const attachment = attachmentMigrate(found)
-
-    return ResultWrapper.ok({
-      attachment: attachment,
-    })
-  }
-
-  @LogAndHandle()
-  @Transactional()
   async getApplicationAttachment(
     applicationId: string,
     typeId?: string,

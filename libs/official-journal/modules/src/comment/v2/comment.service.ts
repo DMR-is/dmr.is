@@ -80,61 +80,6 @@ export class CommentServiceV2 implements ICommentServiceV2 {
   }
 
   @LogAndHandle()
-  async getCommentById(
-    caseId: string,
-    commentId: string,
-  ): Promise<ResultWrapper<GetComment>> {
-    const comment = await this.commentModel.findByPk(commentId, {
-      include: [
-        {
-          attributes: ['id'],
-          model: CaseModel,
-          required: true,
-          where: {
-            id: caseId,
-          },
-        },
-        {
-          model: CaseStatusModel,
-          attributes: ['id', 'title', 'slug'],
-          as: 'createdCaseStatus',
-        },
-        { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
-        {
-          model: UserModel,
-          as: 'userCreator',
-        },
-        {
-          model: UserModel,
-          as: 'userReceiver',
-        },
-        {
-          model: AdvertInvolvedPartyModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-        {
-          model: CaseStatusModel,
-          attributes: ['id', 'title', 'slug'],
-          as: 'caseStatusReceiver',
-        },
-      ],
-    })
-
-    if (!comment) {
-      this.logger.warn(`Comment with id ${commentId} not found`, {
-        commentId,
-        context: LOGGING_CONTEXT,
-        category: LOGGING_CATEGORY,
-      })
-      throw new NotFoundException(`Comment with id ${commentId} not found`)
-    }
-
-    const migrated = commentMigrate(comment)
-
-    return ResultWrapper.ok({ comment: migrated })
-  }
-
-  @LogAndHandle()
   async getComments(
     caseId: string,
     query?: GetCommentsQuery,

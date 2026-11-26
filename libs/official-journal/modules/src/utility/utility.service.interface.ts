@@ -80,14 +80,6 @@ export interface IUtilityService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<CaseModel>>
 
-  userLookup(userId: string): Promise<ResultWrapper>
-
-  getNextCaseNumber(
-    departmentId: string,
-    year: number,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<number>>
-
   getNextPublicationNumber(
     departmentId: string,
     signatureYear?: number,

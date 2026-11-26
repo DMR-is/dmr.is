@@ -387,7 +387,9 @@ describe('CaseService', () => {
       const [, body] = updatePublishedAdvert.mock.calls[0]
       expect(body).not.toHaveProperty('title')
       expect(body.subject).not.toBe('Leiðrétting á villu')
-      expect(caseService.postCaseCorrection).toHaveBeenCalledWith(
+      expect(
+        (caseService as CaseService).postCaseCorrection,
+      ).toHaveBeenCalledWith(
         'case-1',
         expect.objectContaining({ title: 'Leiðrétting á villu' }),
         expect.anything(),
