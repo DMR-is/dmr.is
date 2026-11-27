@@ -57,7 +57,8 @@ const APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
  * The equality-content trio is absent for the same reason: content, its type
  * and the PDF filename only make sense set together, and copying
  * `equalityReportContent` on its own would leave a row claiming PDF while
- * holding HTML. `resolveOptionalEqualityContent` writes all three or none.
+ * holding HTML. `resolveOptionalEqualityContent` writes all of them (with
+ * the staged-upload key) or none.
  */
 const DRAFT_HEADER_KEYS = [
   'companyAdminName',

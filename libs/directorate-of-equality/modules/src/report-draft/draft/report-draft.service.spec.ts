@@ -443,6 +443,23 @@ describe('ReportDraftService', () => {
       )
     })
 
+    it('clears the plan key when the plan is replaced any other way', async () => {
+      reportFindOne.mockResolvedValue(draftRow)
+      reportUpdate.mockResolvedValueOnce([1])
+
+      await service.updateDraft(PROVIDER_ID, COMPANY, {
+        equalityReportContent: '<p>Áætlun</p>',
+      })
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          equalityReportContentType: EqualityContentTypeEnum.HTML,
+          equalityReportPdfKey: null,
+        }),
+        { where: { id: REPORT_ID } },
+      )
+    })
+
     it('still writes the header fields when the key was already registered', async () => {
       reportFindOne.mockResolvedValue(draftRow)
       reportUpdate.mockResolvedValueOnce([1])

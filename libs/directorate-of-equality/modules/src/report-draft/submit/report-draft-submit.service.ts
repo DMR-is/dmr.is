@@ -191,6 +191,11 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
         equalityReportId,
         equalitySource,
         equalityLegacyValidUntil,
+        // The draft-era plan key stops being replayable here: a draft PATCH
+        // retry cannot arrive after submit (it 404s), and keeping it would
+        // let a correction that resends it pass as a replay, recording no
+        // response from the applicant.
+        equalityReportPdfKey: null,
         ...(salaryDataBasis ?? {}),
       })
     } catch (error) {

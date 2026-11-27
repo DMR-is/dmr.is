@@ -673,9 +673,11 @@ export class ApplicationService implements IApplicationService {
       },
     )
 
-    if (written) {
-      await this.markApplicantResponded(report.id)
+    // Also on a replay: idempotent (it only moves AWAITING_RESPONSE), and a
+    // resend after the reviewer asked again is still the applicant answering.
+    await this.markApplicantResponded(report.id)
 
+    if (written) {
       await this.reportEventService.emitEdited(
         report.id,
         report.status,

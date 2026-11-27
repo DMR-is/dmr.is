@@ -2511,9 +2511,25 @@ describe('ApplicationService', () => {
       )
 
       // The same answer as the first request: the report detail.
-      expect(result).toBeDefined()
-      expect(reportUpdate).not.toHaveBeenCalled()
+      expect(result.id).toBe(REPORT_ID)
+      // The plan is left alone and no second EDITED is recorded...
+      expect(reportUpdate).not.toHaveBeenCalledWith(
+        expect.objectContaining({ equalityReportContent: expect.anything() }),
+        expect.anything(),
+      )
       expect(emitEdited).not.toHaveBeenCalled()
+      // ...but the thread is still handed back: a resend after the reviewer
+      // asked again is the applicant answering. Idempotent by its WHERE.
+      expect(reportUpdate).toHaveBeenCalledTimes(1)
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED },
+        {
+          where: {
+            id: REPORT_ID,
+            communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
+          },
+        },
+      )
     })
 
     it('checks the status before touching a staged upload', async () => {

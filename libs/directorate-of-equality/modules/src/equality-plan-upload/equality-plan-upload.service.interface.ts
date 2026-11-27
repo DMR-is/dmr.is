@@ -13,8 +13,9 @@ export type StagedEqualityContentInput = EqualityContentInput & {
  *
  * Exists because island.is caps request bodies at 350 kb, which a base64 plan
  * PDF outgrows at ~260 KB. The staged object is only a carrier: the plan is
- * stored exactly as an inline base64 PDF is, so nothing that reads it can tell
- * which path it came by.
+ * stored exactly as an inline base64 PDF is. Only
+ * `report.equality_report_pdf_key` records that a key delivered it, so a
+ * resend of that key can be recognised.
  */
 export interface IEqualityPlanUploadService {
   /**

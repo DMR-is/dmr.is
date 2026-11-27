@@ -16,6 +16,14 @@
  * whose plan has since been replaced is never mistaken for a replay. Existing
  * rows are left null: none of them can be replayed, their objects are gone.
  *
+ * No CHECK tying it to `equality_report_content_type = 'PDF'`: code without
+ * this column in its model (a rollback, or an old task during a rolling
+ * deploy) writes the plan without clearing the key, and the CHECK would turn
+ * that HTML correction into a 500. The resolver is the only writer that sets
+ * it. To roll back, revert the code and clear the column
+ * (`UPDATE report SET equality_report_pdf_key = NULL`), so a later
+ * roll-forward cannot mistake a key left beside a replaced plan for a replay.
+ *
  * @type {import('sequelize-cli').Migration}
  */
 module.exports = {
@@ -26,18 +34,6 @@ module.exports = {
       ALTER TABLE report
         ADD COLUMN IF NOT EXISTS equality_report_pdf_key TEXT DEFAULT NULL;
 
-      ALTER TABLE report
-        DROP CONSTRAINT IF EXISTS report_equality_report_pdf_key_check;
-
-      -- Only a PDF arrives by staged upload; a key beside HTML would describe
-      -- a plan the row no longer holds.
-      ALTER TABLE report
-        ADD CONSTRAINT report_equality_report_pdf_key_check
-        CHECK (
-          equality_report_pdf_key IS NULL
-          OR equality_report_content_type = 'PDF'
-        );
-
       COMMENT ON COLUMN report.equality_report_pdf_key IS 'Staged upload key (doe-imports/equality-plan/...) that delivered the current plan PDF, so a client retrying with the same key is answered as the success it was. Null when the plan arrived any other way; reset by every plan write.';
 
       COMMIT;
@@ -47,9 +43,6 @@ module.exports = {
   async down(queryInterface) {
     await queryInterface.sequelize.query(`
       BEGIN;
-
-      ALTER TABLE report
-        DROP CONSTRAINT IF EXISTS report_equality_report_pdf_key_check;
 
       ALTER TABLE report DROP COLUMN IF EXISTS equality_report_pdf_key;
 

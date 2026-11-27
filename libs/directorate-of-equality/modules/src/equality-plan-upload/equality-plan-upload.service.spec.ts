@@ -251,6 +251,30 @@ describe('EqualityPlanUploadService', () => {
       expect(reportModel.findOne).not.toHaveBeenCalled()
       expect(resolvingWrite).not.toHaveBeenCalled()
     })
+
+    it.each([
+      [
+        'inline content beside the key',
+        {
+          equalityReportPdfKey: KEY,
+          equalityReportPdfFilename: FILENAME,
+          equalityReportContent: '<p>x</p>',
+        },
+      ],
+      ['no filename', { equalityReportPdfKey: KEY }],
+    ])(
+      'rejects %s even when the key is the stored one: the request checks run first',
+      async (_case, input) => {
+        storedRow = { id: REPORT_ID }
+
+        await expect(
+          service.withStagedPlan(REPORT_ID, input, resolvingWrite),
+        ).rejects.toBeInstanceOf(BadRequestException)
+
+        expect(reportModel.findOne).not.toHaveBeenCalled()
+        expect(resolvingWrite).not.toHaveBeenCalled()
+      },
+    )
   })
 
   describe('withStagedPlan — by key', () => {

@@ -583,7 +583,7 @@ export class ApplicationController {
     operationId: 'presignApplicationEqualityPlan',
     include404: true,
     description:
-      'Presigned PUT URL for the plan PDF of an EQUALITY report in status `DRAFT` or `IN_REVIEW`. PDF only; takes no body. Upload the bytes to `url`, then send `key` as `equalityReportPdfKey` (with `equalityReportPdfFilename`) on `PATCH …/draft` or `PUT …/equality-content`. The plan is then stored exactly as an inline `equalityReportPdf` would be: at most 4 MB, must be a PDF. A key is single use: a successful request consumes the upload. Resending it succeeds only as a retry, while it still names the current plan of the report; otherwise it fails the request. An upload that is never registered expires after 24 hours.',
+      'Presigned PUT URL for the plan PDF of an EQUALITY report in status `DRAFT` or `IN_REVIEW`. PDF only; takes no body. Upload the bytes to `url`, then send `key` as `equalityReportPdfKey` (with `equalityReportPdfFilename`) on `PATCH …/draft` or `PUT …/equality-content`. The plan is then stored exactly as an inline `equalityReportPdf` would be: at most 4 MB, must be a PDF. A key is single use: a successful request consumes the upload. Resending it succeeds while it still names the current plan of the report (meant for a retry after a lost response) and leaves the plan unchanged; otherwise it fails the request. An upload that is never registered expires after 24 hours.',
     type: PresignUploadResponseDto,
   })
   async presignEqualityPlan(
