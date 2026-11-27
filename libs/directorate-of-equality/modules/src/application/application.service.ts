@@ -625,7 +625,8 @@ export class ApplicationService implements IApplicationService {
    * `IN_REVIEW` reports — i.e. a reviewer has picked the report up and asked
    * for changes via comment. Status is preserved (reviewer keeps their
    * pickup); the EDITED event is the audit signal that the applicant
-   * responded.
+   * responded. A resend of the key that delivered the current plan writes
+   * nothing and emits no EDITED, but still hands the thread back.
    */
   async editEqualityContent(
     providerId: string,

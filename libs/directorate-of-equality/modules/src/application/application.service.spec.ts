@@ -2512,13 +2512,10 @@ describe('ApplicationService', () => {
 
       // The same answer as the first request: the report detail.
       expect(result.id).toBe(REPORT_ID)
-      // The plan is left alone and no second EDITED is recorded...
-      expect(reportUpdate).not.toHaveBeenCalledWith(
-        expect.objectContaining({ equalityReportContent: expect.anything() }),
-        expect.anything(),
-      )
+      // No second EDITED; the only write is the thread hand-back, so the plan
+      // is left alone.
       expect(emitEdited).not.toHaveBeenCalled()
-      // ...but the thread is still handed back: a resend after the reviewer
+      // The thread is still handed back: a resend after the reviewer
       // asked again is the applicant answering. Idempotent by its WHERE.
       expect(reportUpdate).toHaveBeenCalledTimes(1)
       expect(reportUpdate).toHaveBeenCalledWith(

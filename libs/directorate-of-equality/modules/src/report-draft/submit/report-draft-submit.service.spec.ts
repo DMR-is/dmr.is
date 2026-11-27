@@ -429,11 +429,12 @@ describe('ReportDraftSubmitService', () => {
     expect(persistScores).not.toHaveBeenCalled()
     expect(createForReport).not.toHaveBeenCalled()
     expect(reportUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: ReportStatusEnum.SUBMITTED,
-        // A key registered on the draft is no longer a replay once submitted.
-        equalityReportPdfKey: null,
-      }),
+      expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
+    )
+    // The plan key carries through submit, so a resend of it on a correction
+    // gets the same answer as in any later round.
+    expect(reportUpdate).not.toHaveBeenCalledWith(
+      expect.objectContaining({ equalityReportPdfKey: expect.anything() }),
     )
     expect(emitSubmittedEvent).toHaveBeenCalledWith(
       REPORT_ID,
@@ -463,7 +464,6 @@ describe('ReportDraftSubmitService', () => {
       equalityReportId: EQUALITY_REPORT_ID,
       equalitySource: EqualityCoverageSourceEnum.REPORT,
       equalityLegacyValidUntil: null,
-      equalityReportPdfKey: null,
       salaryDataBasis: SalaryDataBasisEnum.MONTH,
       salaryDataPeriod: PERIOD_STORED,
     })

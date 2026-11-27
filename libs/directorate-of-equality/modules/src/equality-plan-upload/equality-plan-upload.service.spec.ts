@@ -209,9 +209,15 @@ describe('EqualityPlanUploadService', () => {
           resolvingWrite,
         ),
       ).resolves.toBeNull()
+      // Nothing is scheduled after the fact either.
+      await flush()
 
       expect(reportModel.findOne).toHaveBeenCalledWith({
-        where: { id: REPORT_ID, equalityReportPdfKey: KEY },
+        where: {
+          id: REPORT_ID,
+          equalityReportPdfKey: KEY,
+          equalityReportContentType: EqualityContentTypeEnum.PDF,
+        },
         attributes: ['id'],
       })
       expect(resolvingWrite).toHaveBeenCalledWith(null)
@@ -465,7 +471,11 @@ describe('EqualityPlanUploadService', () => {
       // Landed = the row records this key, which only this write sets and
       // every other plan write clears.
       expect(reportModel.findOne).toHaveBeenCalledWith({
-        where: { id: REPORT_ID, equalityReportPdfKey: KEY },
+        where: {
+          id: REPORT_ID,
+          equalityReportPdfKey: KEY,
+          equalityReportContentType: EqualityContentTypeEnum.PDF,
+        },
         attributes: ['id'],
         transaction: null,
       })

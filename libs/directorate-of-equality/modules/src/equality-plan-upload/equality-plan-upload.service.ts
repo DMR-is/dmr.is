@@ -16,7 +16,11 @@ import {
   EqualityContentInput,
   MAX_EQUALITY_PDF_BYTES,
 } from '../report/lib/equality-content'
-import { ReportStatusEnum, ReportTypeEnum } from '../report/models/report.enums'
+import {
+  EqualityContentTypeEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import {
   IEqualityPlanUploadService,
@@ -123,7 +127,13 @@ export class EqualityPlanUploadService implements IEqualityPlanUploadService {
      * been replaced is not a replay.
      */
     const alreadyStored = await this.reportModel.findOne({
-      where: { id: reportId, equalityReportPdfKey: key },
+      where: {
+        id: reportId,
+        equalityReportPdfKey: key,
+        // A key beside a non-PDF plan is stale (code without this column
+        // wrote over it); never a replay.
+        equalityReportContentType: EqualityContentTypeEnum.PDF,
+      },
       attributes: ['id'],
     })
     if (alreadyStored) {
@@ -199,7 +209,11 @@ export class EqualityPlanUploadService implements IEqualityPlanUploadService {
         // The key column is written with the plan and cleared by every other
         // plan write, so it names exactly the commit this hook is for.
         const landed = await this.reportModel.findOne({
-          where: { id: reportId, equalityReportPdfKey: key },
+          where: {
+            id: reportId,
+            equalityReportPdfKey: key,
+            equalityReportContentType: EqualityContentTypeEnum.PDF,
+          },
           attributes: ['id'],
           transaction: null,
         })

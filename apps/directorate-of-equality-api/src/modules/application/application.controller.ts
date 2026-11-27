@@ -555,7 +555,7 @@ export class ApplicationController {
     operationId: 'editApplicationEqualityContent',
     include404: true,
     description:
-      'Replaces the narrative body of an EQUALITY report in place. Allowed only on reports in status `IN_REVIEW`. Emits an `EDITED` event; status is preserved. island.is-filed reports only. A plan PDF may arrive inline (`equalityReportPdf`, base64) or by `equalityReportPdfKey` from `POST …/equality-content/presign`; the key is single use; a retry of the request that registered it still succeeds.',
+      'Replaces the narrative body of an EQUALITY report in place. Allowed only on reports in status `IN_REVIEW`. Emits an `EDITED` event; status is preserved. island.is-filed reports only. A plan PDF may arrive inline (`equalityReportPdf`, base64) or by `equalityReportPdfKey` from `POST …/equality-content/presign`; the key is single use. Resending the key of the current plan (a retry after a lost response) answers 200 without writing the plan or emitting `EDITED`, but still marks the applicant as responded.',
     type: ApplicationReportDetailDto,
   })
   async editEqualityContent(

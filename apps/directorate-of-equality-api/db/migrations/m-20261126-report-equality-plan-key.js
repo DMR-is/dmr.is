@@ -20,7 +20,9 @@
  * this column in its model (a rollback, or an old task during a rolling
  * deploy) writes the plan without clearing the key, and the CHECK would turn
  * that HTML correction into a 500. The resolver is the only writer that sets
- * it. To roll back, revert the code and clear the column
+ * it; the replay lookup also requires a PDF plan. To roll back, revert the
+ * code and, once the reverted code has fully rolled out (a draining task can
+ * still set a key), clear the column
  * (`UPDATE report SET equality_report_pdf_key = NULL`), so a later
  * roll-forward cannot mistake a key left beside a replaced plan for a replay.
  *
@@ -33,6 +35,11 @@ module.exports = {
 
       ALTER TABLE report
         ADD COLUMN IF NOT EXISTS equality_report_pdf_key TEXT DEFAULT NULL;
+
+      -- An earlier version of this migration added a CHECK; a database that
+      -- ran it keeps it, since SequelizeMeta records only the filename.
+      ALTER TABLE report
+        DROP CONSTRAINT IF EXISTS report_equality_report_pdf_key_check;
 
       COMMENT ON COLUMN report.equality_report_pdf_key IS 'Staged upload key (doe-imports/equality-plan/...) that delivered the current plan PDF, so a client retrying with the same key is answered as the success it was. Null when the plan arrived any other way; reset by every plan write.';
 
