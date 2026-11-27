@@ -106,6 +106,7 @@ type ReportAttributes = {
   equalityReportContent: string | null
   equalityReportContentType: EqualityContentTypeEnum
   equalityReportContentFilename: string | null
+  equalityReportPdfKey: string | null
 }
 
 type ReportCreateAttributes = {
@@ -148,6 +149,7 @@ type ReportCreateAttributes = {
   equalityReportContent?: string | null
   equalityReportContentType?: EqualityContentTypeEnum
   equalityReportContentFilename?: string | null
+  equalityReportPdfKey?: string | null
 }
 
 /**
@@ -477,6 +479,19 @@ export class ReportModel extends MutableModel<
     field: 'equality_report_content_filename',
   })
   equalityReportContentFilename!: string | null
+
+  /**
+   * The staged upload key that delivered the current plan PDF, or null when it
+   * arrived any other way. Lets a resend of that key after a lost response be
+   * answered as a success instead of a missing-object error. Written only
+   * through `resolveEqualityContent`, which resets it on every other plan write.
+   */
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    field: 'equality_report_pdf_key',
+  })
+  equalityReportPdfKey!: string | null
 
   @BelongsTo(() => ReportModel, {
     foreignKey: 'equalityReportId',

@@ -158,7 +158,7 @@ export class ReportDraftController {
     include404: true,
     type: DraftDetailDto,
     description:
-      'Patches report-level header fields (contact / admin / headcount / equality narrative) on a DRAFT report. PATCH semantics: omitted keys are left untouched, an explicit null clears the column. A plan PDF may arrive inline (`equalityReportPdf`, base64) or by `equalityReportPdfKey` from `POST …/equality-content/presign`; the key is single use, so omit it from later saves. Returns the refreshed draft detail. 404 if the draft is not owned by the company or has already been submitted.',
+      'Patches report-level header fields (contact / admin / headcount / equality narrative) on a DRAFT report. PATCH semantics: omitted keys are left untouched, an explicit null clears the column. A plan PDF may arrive inline (`equalityReportPdf`, base64) or by `equalityReportPdfKey` from `POST …/equality-content/presign`; the key is single use, so omit it from later saves (a retry of the request that registered it still succeeds). Returns the refreshed draft detail. 404 if the draft is not owned by the company or has already been submitted.',
   })
   async updateDraft(
     @Param('providerId') providerId: string,

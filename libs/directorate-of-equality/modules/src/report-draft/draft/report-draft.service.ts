@@ -57,7 +57,8 @@ const APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
  * The equality-content trio is absent for the same reason: content, its type
  * and the PDF filename only make sense set together, and copying
  * `equalityReportContent` on its own would leave a row claiming PDF while
- * holding HTML. `resolveOptionalEqualityContent` writes all three or none.
+ * holding HTML. `resolveOptionalEqualityContent` writes all of them (with
+ * the staged-upload key) or none.
  */
 const DRAFT_HEADER_KEYS = [
   'companyAdminName',
@@ -195,8 +196,11 @@ export class ReportDraftService implements IReportDraftService {
       async (content) => {
         // Null when the patch mentions neither content field, which is the
         // common case — a PATCH setting only a phone number must not touch the
-        // narrative.
-        const equalityContent = resolveOptionalEqualityContent(content)
+        // narrative — and when `content` is null: a resent key whose plan is
+        // already stored, where the header fields still apply.
+        const equalityContent = content
+          ? resolveOptionalEqualityContent(content)
+          : null
 
         if (equalityContent) {
           Object.assign(patch, equalityContent)

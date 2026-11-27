@@ -191,6 +191,9 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
         equalityReportId,
         equalitySource,
         equalityLegacyValidUntil,
+        // `equalityReportPdfKey` is deliberately left: the plan is unchanged by
+        // submit, so a resend of its key on a correction is answered as in any
+        // other round (200, thread handed back, no EDITED).
         ...(salaryDataBasis ?? {}),
       })
     } catch (error) {

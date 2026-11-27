@@ -431,6 +431,11 @@ describe('ReportDraftSubmitService', () => {
     expect(reportUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
     )
+    // The plan key carries through submit, so a resend of it on a correction
+    // gets the same answer as in any later round.
+    expect(reportUpdate).not.toHaveBeenCalledWith(
+      expect.objectContaining({ equalityReportPdfKey: expect.anything() }),
+    )
     expect(emitSubmittedEvent).toHaveBeenCalledWith(
       REPORT_ID,
       ReportStatusEnum.SUBMITTED,

@@ -412,6 +412,7 @@ describe('ReportDraftService', () => {
           write({
             equalityReportPdf: Buffer.from('%PDF-1.7\n').toString('base64'),
             equalityReportPdfFilename: 'plan.pdf',
+            registeredPdfKey: input.equalityReportPdfKey,
           }),
       )
       const input = {
@@ -436,7 +437,49 @@ describe('ReportDraftService', () => {
           equalityReportContent: Buffer.from('%PDF-1.7\n').toString('base64'),
           equalityReportContentType: EqualityContentTypeEnum.PDF,
           equalityReportContentFilename: 'plan.pdf',
+          equalityReportPdfKey: input.equalityReportPdfKey,
         },
+        { where: { id: REPORT_ID } },
+      )
+    })
+
+    it('clears the plan key when the plan is replaced any other way', async () => {
+      reportFindOne.mockResolvedValue(draftRow)
+      reportUpdate.mockResolvedValueOnce([1])
+
+      await service.updateDraft(PROVIDER_ID, COMPANY, {
+        equalityReportContent: '<p>Áætlun</p>',
+      })
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          equalityReportContentType: EqualityContentTypeEnum.HTML,
+          equalityReportPdfKey: null,
+        }),
+        { where: { id: REPORT_ID } },
+      )
+    })
+
+    it('still writes the header fields when the key was already registered', async () => {
+      reportFindOne.mockResolvedValue(draftRow)
+      reportUpdate.mockResolvedValueOnce([1])
+      // A retry after a lost response: the plan service reports the key's plan
+      // is already the draft's.
+      equalityPlanWithStagedPlan.mockImplementationOnce(
+        (_reportId: string, _input: unknown, write: (c: unknown) => unknown) =>
+          write(null),
+      )
+
+      await service.updateDraft(PROVIDER_ID, COMPANY, {
+        contactName: 'Jóna',
+        equalityReportPdfKey:
+          'doe-imports/equality-plan/11111111-1111-4111-8111-111111111111.pdf',
+        equalityReportPdfFilename: 'plan.pdf',
+      })
+
+      expect(reportUpdate).toHaveBeenCalledTimes(1)
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { contactName: 'Jóna' },
         { where: { id: REPORT_ID } },
       )
     })

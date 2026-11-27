@@ -61,13 +61,24 @@ export type EqualityContentInput = {
   /** The uploaded PDF, still base64 — never decoded in transit. */
   equalityReportPdf?: string | null
   equalityReportPdfFilename?: string | null
+  /**
+   * The staged key the PDF in `equalityReportPdf` was read from. Set only by
+   * `IEqualityPlanUploadService.withStagedPlan`, never from a request body (no
+   * DTO declares it, and the global whitelist strips it).
+   */
+  registeredPdfKey?: string
 }
 
-/** The three content columns, ready to write onto `ReportModel`. */
+/**
+ * The content columns, ready to write onto `ReportModel`. They are always
+ * written together, so a plan write that is not by key clears the stored key
+ * without code of its own.
+ */
 export type EqualityContentColumns = {
   equalityReportContent: string | null
   equalityReportContentType: EqualityContentTypeEnum
   equalityReportContentFilename: string | null
+  equalityReportPdfKey: string | null
 }
 
 const isPresent = (value?: string | null): value is string =>
@@ -162,6 +173,7 @@ export function resolveEqualityContent(
       equalityReportContent: input.equalityReportContent as string,
       equalityReportContentType: EqualityContentTypeEnum.HTML,
       equalityReportContentFilename: null,
+      equalityReportPdfKey: null,
     }
   }
 
@@ -182,6 +194,7 @@ export function resolveEqualityContent(
     equalityReportContent: pdf,
     equalityReportContentType: EqualityContentTypeEnum.PDF,
     equalityReportContentFilename: input.equalityReportPdfFilename.trim(),
+    equalityReportPdfKey: input.registeredPdfKey ?? null,
   }
 }
 
@@ -217,6 +230,7 @@ export function resolveOptionalEqualityContent(
       equalityReportContent: null,
       equalityReportContentType: EqualityContentTypeEnum.HTML,
       equalityReportContentFilename: null,
+      equalityReportPdfKey: null,
     }
   }
 

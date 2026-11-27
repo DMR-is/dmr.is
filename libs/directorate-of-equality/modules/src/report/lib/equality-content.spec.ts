@@ -30,6 +30,7 @@ describe('resolveEqualityContent', () => {
       equalityReportContent: '<p>Áætlun</p>',
       equalityReportContentType: EqualityContentTypeEnum.HTML,
       equalityReportContentFilename: null,
+      equalityReportPdfKey: null,
     })
   })
 
@@ -46,6 +47,40 @@ describe('resolveEqualityContent', () => {
     expect(result.equalityReportContent).toBe(base64)
     expect(result.equalityReportContentType).toBe(EqualityContentTypeEnum.PDF)
     expect(result.equalityReportContentFilename).toBe('aaetlun.pdf')
+  })
+
+  describe('the staged key column', () => {
+    const KEY =
+      'doe-imports/equality-plan/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.pdf'
+
+    it('records the key a PDF was registered by', () => {
+      expect(
+        resolveEqualityContent({
+          equalityReportPdf: asBase64(realPdf),
+          equalityReportPdfFilename: 'aaetlun.pdf',
+          registeredPdfKey: KEY,
+        }).equalityReportPdfKey,
+      ).toBe(KEY)
+    })
+
+    // Every other plan write clears it, which is what keeps a key whose plan
+    // was replaced from being mistaken for a replay.
+    it('clears it for an inline PDF, HTML, and an explicit clear', () => {
+      expect(
+        resolveEqualityContent({
+          equalityReportPdf: asBase64(realPdf),
+          equalityReportPdfFilename: 'aaetlun.pdf',
+        }).equalityReportPdfKey,
+      ).toBeNull()
+      expect(
+        resolveEqualityContent({ equalityReportContent: '<p>x</p>' })
+          .equalityReportPdfKey,
+      ).toBeNull()
+      expect(
+        resolveOptionalEqualityContent({ equalityReportPdf: null })
+          ?.equalityReportPdfKey,
+      ).toBeNull()
+    })
   })
 
   it('trims the stored filename', () => {
@@ -179,6 +214,7 @@ describe('resolveOptionalEqualityContent', () => {
       equalityReportContent: null,
       equalityReportContentType: EqualityContentTypeEnum.HTML,
       equalityReportContentFilename: null,
+      equalityReportPdfKey: null,
     })
   })
 
@@ -192,6 +228,7 @@ describe('resolveOptionalEqualityContent', () => {
       equalityReportContent: asBase64(realPdf),
       equalityReportContentType: EqualityContentTypeEnum.PDF,
       equalityReportContentFilename: 'aaetlun.pdf',
+      equalityReportPdfKey: null,
     })
   })
 

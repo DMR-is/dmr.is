@@ -2453,6 +2453,7 @@ describe('ApplicationService', () => {
           write({
             equalityReportPdf: pdf,
             equalityReportPdfFilename: 'plan.pdf',
+            registeredPdfKey: input.equalityReportPdfKey,
           }),
       )
       const input = {
@@ -2473,8 +2474,58 @@ describe('ApplicationService', () => {
           equalityReportContent: pdf,
           equalityReportContentType: EqualityContentTypeEnum.PDF,
           equalityReportContentFilename: 'plan.pdf',
+          equalityReportPdfKey: input.equalityReportPdfKey,
         },
         { where: { id: REPORT_ID } },
+      )
+    })
+
+    it('answers a resent key without rewriting the plan or recording a second edit', async () => {
+      const equalityReport = makeReportRow({
+        id: REPORT_ID,
+        providerId: PROVIDER_ID,
+        type: ReportTypeEnum.EQUALITY,
+        status: ReportStatusEnum.IN_REVIEW,
+      })
+      reportFindOne
+        .mockResolvedValueOnce(equalityReport)
+        .mockResolvedValueOnce(equalityReport)
+      companyReportFindAll
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+      getCommentsByReportId.mockResolvedValueOnce([])
+      // The plan service found this key already stored on the report.
+      equalityPlanWithStagedPlan.mockImplementationOnce(
+        (_reportId: string, _input: unknown, write: (c: unknown) => unknown) =>
+          write(null),
+      )
+
+      const result = await service.editEqualityContent(
+        PROVIDER_ID,
+        {
+          equalityReportPdfKey:
+            'doe-imports/equality-plan/11111111-1111-4111-8111-111111111111.pdf',
+          equalityReportPdfFilename: 'plan.pdf',
+        },
+        COMPANY,
+      )
+
+      // The same answer as the first request: the report detail.
+      expect(result.id).toBe(REPORT_ID)
+      // No second EDITED; the only write is the thread hand-back, so the plan
+      // is left alone.
+      expect(emitEdited).not.toHaveBeenCalled()
+      // The thread is still handed back: a resend after the reviewer
+      // asked again is the applicant answering. Idempotent by its WHERE.
+      expect(reportUpdate).toHaveBeenCalledTimes(1)
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED },
+        {
+          where: {
+            id: REPORT_ID,
+            communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
+          },
+        },
       )
     })
 
@@ -2538,6 +2589,7 @@ describe('ApplicationService', () => {
           equalityReportContent: 'Revised narrative',
           equalityReportContentType: EqualityContentTypeEnum.HTML,
           equalityReportContentFilename: null,
+          equalityReportPdfKey: null,
         },
         { where: { id: REPORT_ID } },
       )
